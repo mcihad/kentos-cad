@@ -248,6 +248,15 @@ class Case:
                 uid, slot = got["output"]["uids"][i], got["output"]["ids"][i]
                 assert slots[slot].uid == uid, f"{at}: output.uids[{i}] {uid} is not slot {slot}'s"
                 wanted["uids"][i] = uid
+        # “$uid” in `added` (cad.sensors.ingest, docs/adr/0646 §4): each the persistent id of an object the drawing holds.
+        if isinstance(wanted.get("added"), list) and "$uid" in wanted["added"]:
+            held = {r.uid for r in self.slots().values()}
+            for i, w in enumerate(wanted["added"]):
+                if w != "$uid":
+                    continue
+                uid = got["output"]["added"][i]
+                assert uid in held, f"{at}: output.added[{i}] {uid} is not an object of the drawing"
+                wanted["added"][i] = uid
         same(got, self.fill(want, at), f"{at}: result", step.get("within"))
 
     def check(self, expect: dict[str, Any] | None, before: str, at: str, within: float | None = None) -> None:

@@ -11,12 +11,16 @@
 //!   Mevcut durum as changes of the tree's visibility (as the eye: an edit,
 //!   not an undo step), Senaryo oluştur and Senaryoyu uygula through
 //!   `cad.scenarios.edit`.
-//! - The windows: Zaman ayarları ([`layer`]) and Senaryo oluştur
-//!   ([`scenario`]); the bar under the drawing ([`bar`]).
+//! - The windows: Zaman ayarları ([`layer`]), Senaryo oluştur
+//!   ([`scenario`]) and Sensör gözlemleri ([`sensors`], docs/adr/0646 §6);
+//!   the bar under the drawing ([`bar`]).
+//! - An export with the slider's time ([`App::export_time`], docs/adr/0646
+//!   §2): Zaman sürgüsünün zamanıyla in the export windows.
 
 pub mod bar;
 pub mod layer;
 pub mod scenario;
+pub mod sensors;
 
 use std::time::{Duration, Instant};
 
@@ -224,6 +228,9 @@ pub enum Event {
     AskApply(String),
     Layer(layer::Event),
     Scenario(scenario::Event),
+    Sensors(sensors::Event),
+    /// Zaman sürgüsünün zamanıyla in an export window (docs/adr/0646 §2).
+    ExportTime,
 }
 
 /// The open windows of Zaman and Senaryo.
@@ -232,6 +239,9 @@ pub struct State {
     pub slider: Slider,
     pub layer: Option<layer::Window>,
     pub scenario: Option<scenario::Window>,
+    pub sensors: Option<sensors::Window>,
+    /// The export windows write with the slider's time (docs/adr/0646 §2).
+    pub export: bool,
 }
 
 pub(crate) fn msg(event: Event) -> Message {
@@ -354,6 +364,52 @@ impl App {
             q.known_at = s.known_at.map(utc);
         }
         Some(q)
+    }
+
+    /// The slider's time an export writes with (docs/adr/0646 §2): its window and its day known while the slider is
+    /// open and Zaman sürgüsünün zamanıyla is ticked; each written layer's own time fields.
+    pub(crate) fn export_time(&self) -> Option<kentos_commands::QueryTime> {
+        let s = &self.time.slider;
+        if !self.time.export {
+            return None;
+        }
+        let utc = |t: f64| {
+            let w = time::write(t, false);
+            if w.contains('T') { format!("{w}Z") } else { w }
+        };
+        let mut q = kentos_commands::QueryTime::default();
+        match s.window()? {
+            Window::Instant(a) => q.at = Some(utc(a)),
+            Window::Range(a, b) => {
+                q.from = Some(utc(a));
+                q.to = Some(utc(b));
+            }
+        }
+        q.known_at = s.known_at.map(utc);
+        Some(q)
+    }
+
+    /// Zaman sürgüsünün zamanıyla, the row an export window shows while the slider is open.
+    pub(crate) fn export_time_row(&self) -> Option<iced::Element<'_, Message>> {
+        let s = &self.time.slider;
+        let window = s.window()?;
+        let shown = time::show_window(&window, s.step.unit);
+        let known = s
+            .known_at
+            .map(|k| format!(", {} günü bilindiği gibi", time::show(k, Unit::Day)))
+            .unwrap_or_default();
+        Some(crate::exchange::words::field(
+            "Zaman",
+            crate::exchange::words::check(
+                self.time.export,
+                format!("Zaman sürgüsünün zamanıyla: {shown}{known}"),
+                Some(msg(Event::ExportTime)),
+            ),
+            Some(
+                "Zamansal katmanların yalnız bu zamanda gösterilen nesneleri yazılır; zamansız katmanlar bütünüyle."
+                    .to_owned(),
+            ),
+        ))
     }
 
     /// The source questions open on a temporal layer asked again when the slider's time changes (docs/adr/0595 §4):
@@ -605,6 +661,16 @@ impl App {
             Event::AskApply(id) => self.ask_scenario_apply(Some(id)),
             Event::Layer(e) => return self.time_layer_event(e),
             Event::Scenario(e) => return self.scenario_event(e),
+            Event::Sensors(e) => return self.sensors_event(e),
+            Event::ExportTime => {
+                self.time.export = !self.time.export;
+                self.export_replan();
+                return Task::none();
+            }
+        }
+        // The latest each sensor had at the slider's moment.
+        if self.time.sensors.is_some() {
+            self.sensors_refresh();
         }
         Task::none()
     }

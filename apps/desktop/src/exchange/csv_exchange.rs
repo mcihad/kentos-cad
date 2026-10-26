@@ -172,7 +172,7 @@ impl ImportState {
 }
 
 impl App {
-    fn csv_plan(
+    pub(super) fn csv_plan(
         &self,
         geometry: CsvGeometry,
         separator: CsvSeparator,
@@ -186,6 +186,7 @@ impl App {
             geometry,
             separator,
             overwrite: false,
+            time: self.export_time(),
         };
         csv_table::export(&doc.model, &input)
             .map(|m| m.output)
@@ -292,6 +293,7 @@ impl App {
             }
             Event::SavePicked(None) | Event::Picked(None) => {}
             Event::SavePicked(Some(path)) => {
+                let time = self.export_time();
                 let (Some(doc), Some(Window::CsvExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
@@ -303,6 +305,7 @@ impl App {
                     separator: s.separator,
                     // The save dialog asked about writing over it.
                     overwrite: true,
+                    time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 let model = doc.model.clone();
@@ -547,6 +550,9 @@ impl App {
                 false
             }
         };
+        if let Some(row) = self.export_time_row() {
+            body = body.push(row);
+        }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(

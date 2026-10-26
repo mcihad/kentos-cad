@@ -28,4 +28,13 @@ unrecorded: number,
 /**
  * Values of the layer's time attributes that are not moments.
  */
-unreadable: number, revision: string, };
+unreadable: number, 
+/**
+ * The state asked: “Şimdiki hâl”, “1 adım geri, “Taşı” öncesi” or the file's name.
+ */
+state: string, 
+/**
+ * The layer's digest in that state (the SHA-256 of its objects' kinds, geometries and attributes by lasting
+ * id): given back as `expectedStamp`, the same question asks the same data.
+ */
+stamp: string, revision: string, };

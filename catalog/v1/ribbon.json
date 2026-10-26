@@ -2973,6 +2973,7 @@
        }
       ],
       "overflow": [
+       "time.sensors",
        "tool.timeVersion",
        "tool.timeEnd",
        "time.compare",

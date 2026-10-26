@@ -574833,7 +574833,7 @@
       "id": "cad.time.query",
       "version": 1,
       "title": "Zamanda sorgu",
-      "summary": "Zamansal bir katmanın (layer) hangi nesnelerinin bir geçerlilik zamanında ve bilinen bir günde gösterildiğini söyler; çizimi değiştirmez. Geçerlilik zamanı bir an (at) ya da [from, to) aralığıdır, katmanın zaman ayarının kuralıyla (aralıklı, anlık, birikimli); zamansız nesne her zaman gösterilir. Bilinen gün (knownAt) yalnız o güne dek kaydedilmiş ve henüz yerine başkası geçmemiş sürümleri bırakır: katmanın recordedStart ve recordedEnd alanlarıyla (.kcad şema 90); kayıt zamanı tutmayan katmanda not_recorded. “O gün geçerli olan” ile “o gün sistemde bilinen” ayrı sorulur. An bir tarih ya da tarih ve saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar. Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable.",
+      "summary": "Zamansal bir katmanın (layer) hangi nesnelerinin bir geçerlilik zamanında ve bilinen bir günde gösterildiğini söyler; çizimi değiştirmez. Geçerlilik zamanı bir an (at) ya da [from, to) aralığıdır, katmanın zaman ayarının kuralıyla (aralıklı, anlık, birikimli); zamansız nesne her zaman gösterilir. Bilinen gün (knownAt) yalnız o güne dek kaydedilmiş ve henüz yerine başkası geçmemiş sürümleri bırakır: katmanın recordedStart ve recordedEnd alanlarıyla (.kcad şema 90); kayıt zamanı tutmayan katmanda not_recorded. “O gün geçerli olan” ile “o gün sistemde bilinen” ayrı sorulur. An bir tarih ya da tarih ve saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar. Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable. Soru çizimin değişmez bir durumuna bağlanır: revision geri alma geçmişinde n adım önceki çizimi (history) ya da bir çizim dosyasını (file) sorar; cevap durumu (state) ve katmanın o durumdaki içerik özetini (stamp: nesnelerin türleri, geometrileri ve öznitelikleri kalıcı kimlikleriyle) verir. Özeti expectedStamp olarak veren soru katman o durumda başkaysa state_changed çakışmasıyla döner: aynı özetle iki cevap aynı veridendir.",
       "aliases": [
         "zamandasor",
         "bilinendurum"
@@ -574850,12 +574850,65 @@
       "undo": "none",
       "cost": "instant",
       "input": {
+        "$defs": {
+          "CompareAgainst": {
+            "description": "The state the drawing is compared with.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "The drawing `steps` undo steps back (the open drawing's history, 1 to what it holds).",
+                "properties": {
+                  "kind": {
+                    "const": "history",
+                    "type": "string"
+                  },
+                  "steps": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "steps"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A drawing file: its absolute path (`.kcad`, v2 or a v1 JSON file).",
+                "properties": {
+                  "kind": {
+                    "const": "file",
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.time.query` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`,\n`invalid_window`, `not_recorded`.",
+        "description": "Input of `cad.time.query` v1. Refusals: `no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`\n(the state asked), `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`, `invalid_period`,\n`not_recorded`; the conflict `state_changed` (docs/adr/0646 §1).",
         "properties": {
           "at": {
             "description": "The valid time's instant; with `from` and `to` refused.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedStamp": {
+            "description": "The layer's digest a former answer gave (`stamp`): the state must hold the layer as it did, else\n`state_changed`.",
             "type": [
               "string",
               "null"
@@ -574878,6 +574931,17 @@
           "layer": {
             "description": "The temporal layer's id.",
             "type": "string"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CompareAgainst"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The state asked (docs/adr/0646 §1): the drawing some undo steps back or a drawing file; none, the drawing as\nit is."
           },
           "to": {
             "type": [
@@ -574942,6 +575006,14 @@
             },
             "type": "array"
           },
+          "stamp": {
+            "description": "The layer's digest in that state (the SHA-256 of its objects' kinds, geometries and attributes by lasting\nid): given back as `expectedStamp`, the same question asks the same data.",
+            "type": "string"
+          },
+          "state": {
+            "description": "The state asked: “Şimdiki hâl”, “1 adım geri, “Taşı” öncesi” or the file's name.",
+            "type": "string"
+          },
           "timeless": {
             "description": "Objects without a valid time (shown: a timeless object shows at every time).",
             "format": "uint32",
@@ -574978,6 +575050,8 @@
           "timeless",
           "unrecorded",
           "unreadable",
+          "state",
+          "stamp",
           "revision"
         ],
         "title": "TimeQueried",
@@ -575033,6 +575107,14 @@
             },
             "type": "array"
           },
+          "stamp": {
+            "description": "The layer's digest in that state (the SHA-256 of its objects' kinds, geometries and attributes by lasting\nid): given back as `expectedStamp`, the same question asks the same data.",
+            "type": "string"
+          },
+          "state": {
+            "description": "The state asked: “Şimdiki hâl”, “1 adım geri, “Taşı” öncesi” or the file's name.",
+            "type": "string"
+          },
           "timeless": {
             "description": "Objects without a valid time (shown: a timeless object shows at every time).",
             "format": "uint32",
@@ -575069,6 +575151,8 @@
           "timeless",
           "unrecorded",
           "unreadable",
+          "state",
+          "stamp",
           "revision"
         ],
         "title": "TimeQueried",
@@ -575076,12 +575160,16 @@
       },
       "capabilities": {
         "refusals": [
+          "no_such_step",
+          "invalid_file_path",
+          "file_not_found",
           "layer_not_found",
           "not_a_layer",
           "not_temporal",
           "invalid_moment",
           "invalid_period",
-          "not_recorded"
+          "not_recorded",
+          "state_changed"
         ]
       },
       "examples": [
@@ -575099,6 +575187,774 @@
             "from": "2023-01-01",
             "layer": "parsel",
             "to": "2024-01-01"
+          }
+        },
+        {
+          "title": "Bir dosyada saklanan durumda, özetiyle sabitlenmiş",
+          "input": {
+            "at": "2024-06-01",
+            "expectedStamp": "9a3f6d0c2b8e4f7a1c5d9e2b6f0a3c7d1e4b8f2a5c9d3e6f0b4a7c1d5e8f2b6a",
+            "layer": "parsel",
+            "revision": {
+              "kind": "file",
+              "path": "/arsiv/parsel-2023.kcad"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.sensors.ingest",
+      "version": 1,
+      "title": "Sensör gözlemlerini al",
+      "summary": "Bir sensör katmanına (layer: zaman ayarı kimlik alanını, key, adlandıran zamansal katman) gözlemleri tek geri alma adımında (“Sensör gözlemleri”) geometrisiz kayıt olarak yazar. Kaynak tam olarak biri: observations (asset, at, value, quality satırları), file (SensorThings Observations cevabının mutlak yolu) ya da url (SensorThings Observations adresi; @iot.nextLink en çok pages sayfa izlenir, kalan sayfa more ile söylenir); file ve url'nin gözlemleri tek varlığındır (asset). Varlık katmanın key alanına, olay zamanı (SensorThings'te phenomenonTime, aralıkta başlangıcı) start alanına UTC olarak, alım zamanı (receivedAt; yoksa şimdi) recordedStart'a, değer valueField'a, kalite qualityField'a yazılır; değerler katmanın alanlarının kuralından geçer. Yinelenen gözlem (aynı varlığın aynı andaki, katmanın şimdiki sürümlerinde ya da partide) duplicates ile: first eskisi kalır, last yenisi geçer (recordedEnd tutan katmanda eski sürümün kayıt bitişi alım zamanı olur, tutmayanda eskinin değeri yerinde değişir), all hepsi yazılır. Geç gelen gözlem (varlığın en son anından önceki) late ile: accept yazılır ve sayılır (lateField'a evet), reject yazılmaz. Yazılamayan satır (boş varlık, okunmayan an, alanın kuralına uymayan değer, reddedilen geç gözlem) rejected'da sırası, kodu ve nedeniyle söylenir; öbürleri yazılır.",
+      "aliases": [
+        "sensoral",
+        "gozlemal"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "DuplicatePolicy": {
+            "description": "What a duplicate observation (an asset's at a moment it has) does.",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The one there stays; the new one is skipped.",
+                "type": "string"
+              },
+              {
+                "const": "last",
+                "description": "The new one takes its place: a layer that records versions ends the old one at the receipt, one that does\nnot changes the old one's value and quality in place.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Both are kept.",
+                "type": "string"
+              }
+            ]
+          },
+          "LatePolicy": {
+            "description": "What a late observation (earlier than the asset's latest) does.",
+            "oneOf": [
+              {
+                "const": "accept",
+                "description": "Written and counted (marked in `lateField` when given).",
+                "type": "string"
+              },
+              {
+                "const": "reject",
+                "description": "Not written: said among the rows refused.",
+                "type": "string"
+              }
+            ]
+          },
+          "Observation": {
+            "additionalProperties": false,
+            "description": "One observation: its asset, its moment, its value and quality (a number, a text, a boolean, an object; written\nas text, ADR 0646 §4).",
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "at": {
+                "description": "The observation's moment: a date, or a date and a time with an optional zone.",
+                "type": "string"
+              },
+              "quality": true,
+              "value": true
+            },
+            "required": [
+              "asset",
+              "at"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sensors.ingest` v1. Exactly one source: `observations`, `file` or `url`. Refusals, in order:\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `not_temporal`,\n`no_asset_field`, `invalid_input` (the value field, the asset, the pages), `invalid_source`, `invalid_moment`\n(the receipt), `invalid_file_path`, `file_not_found`, `import_unreadable`, `source_unreachable`, `invalid_count`.\nA row it cannot write is said in `rejected`, the others written.",
+        "properties": {
+          "asset": {
+            "description": "The asset a file's or an address's observations are of (a Datastream's).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duplicates": {
+            "$ref": "#/$defs/DuplicatePolicy",
+            "default": "first"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file": {
+            "description": "A SensorThings Observations answer (`{\"value\": [...]}` or the list): its absolute path.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "late": {
+            "$ref": "#/$defs/LatePolicy",
+            "default": "accept"
+          },
+          "lateField": {
+            "description": "The field a late observation written gets `evet` in.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The sensor layer's id: a temporal layer whose time names the asset field (`key`).",
+            "type": "string"
+          },
+          "observations": {
+            "description": "The observations given here.",
+            "items": {
+              "$ref": "#/$defs/Observation"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "pages": {
+            "description": "The most pages an address is read for, 1 to 100; none: 10.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "qualityField": {
+            "description": "The field each observation's quality is written to; none: the quality is not written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "receivedAt": {
+            "description": "The moment the observations were received, written to the layer's recorded start; none: now.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "A SensorThings Observations address; `@iot.nextLink` followed up to `pages` pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "valueField": {
+            "description": "The field each observation's value is written to.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "valueField"
+        ],
+        "title": "SensorsIngest",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SensorRejected": {
+            "description": "A row not written: its place among the observations read, its asset and moment as given, and why.",
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "at": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "asset",
+              "at",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sensors.ingest` v1.",
+        "properties": {
+          "added": {
+            "description": "The records written, by persistent id, in the observations' order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "late": {
+            "description": "Late observations written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "more": {
+            "description": "Whether the source names a page not read.",
+            "type": "boolean"
+          },
+          "pages": {
+            "description": "The pages read (a file one, given observations none).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "receivedAt": {
+            "description": "The receipt written, in UTC.",
+            "type": "string"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/$defs/SensorRejected"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "The records a duplicate took the place of (ended, or changed in place).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "description": "Duplicates not written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "added",
+          "replaced",
+          "skipped",
+          "late",
+          "rejected",
+          "pages",
+          "more",
+          "receivedAt",
+          "revision"
+        ],
+        "title": "SensorsIngested",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SensorRejected": {
+            "description": "A row not written: its place among the observations read, its asset and moment as given, and why.",
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "at": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "asset",
+              "at",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.sensors.ingest` would write: as its output, the records to add counted.",
+        "properties": {
+          "adds": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "late": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "pages": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "receivedAt": {
+            "type": "string"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/$defs/SensorRejected"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "adds",
+          "replaced",
+          "skipped",
+          "late",
+          "rejected",
+          "pages",
+          "more",
+          "receivedAt",
+          "revision"
+        ],
+        "title": "SensorsIngestPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "not_temporal",
+          "no_asset_field",
+          "invalid_input",
+          "invalid_source",
+          "invalid_moment",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "source_unreachable",
+          "invalid_count",
+          "invalid_asset",
+          "late_observation",
+          "invalid_attribute"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki gözlem, aynı andaki gözlemin yenisi geçer",
+          "input": {
+            "duplicates": "last",
+            "layer": "olcum",
+            "observations": [
+              {
+                "asset": "S1",
+                "at": "2024-06-01T10:20:00Z",
+                "quality": "iyi",
+                "value": 13.5
+              },
+              {
+                "asset": "S2",
+                "at": "2024-06-01T10:20:00Z",
+                "value": 7.25
+              }
+            ],
+            "qualityField": "kalite",
+            "valueField": "deger"
+          }
+        },
+        {
+          "title": "Bir SensorThings veri akışının gözlemleri, geç gelenler reddedilerek",
+          "input": {
+            "asset": "S8",
+            "late": "reject",
+            "layer": "olcum",
+            "url": "https://sensors.example.org/v1.1/Datastreams(8)/Observations",
+            "valueField": "deger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.sensors.latest",
+      "version": 1,
+      "title": "Sensörlerin son gözlemi",
+      "summary": "Bir sensör katmanının (layer) her varlığının bir andaki (at; yoksa şimdi) son gözlemini, değerini (valueField), kalitesini (qualityField) ve yaşını verir; çizimi değiştirmez. Son gözlem, anı sorulan andan geç olmayan en geç gözlemdir; eşitlikte alımı geç olan, sonra çizimde sonra gelen. Bilinen gün (knownAt) yalnız o gün bilinen sürümleri alır; verilmezse yerine başkası geçmemiş sürümler. Yaşı staleAfter saniyeden büyük gözlem stale'dir: akışı kesilen varlığın son değeri güncel gibi gösterilmez. expectedAssets verilen varlıklardan gözlemi olmayanlar missing'de söylenir. Varlıklar doğal sırayla.",
+      "aliases": [
+        "sonolcum",
+        "sensordurumu"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sensors.latest` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `no_asset_field`,\n`invalid_input` (the value field, a negative `staleAfter`), `invalid_moment`, `not_recorded`.",
+        "properties": {
+          "at": {
+            "description": "The moment asked; none: now.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedAssets": {
+            "description": "The assets expected (`expectedAssets`): those without an observation are said in `missing`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "knownAt": {
+            "description": "The day known: only the versions recorded by then and not yet superseded.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "qualityField": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "staleAfter": {
+            "description": "An observation older than this many seconds is stale.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "s"
+          },
+          "valueField": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "valueField"
+        ],
+        "title": "SensorsLatest",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SensorLatest": {
+            "description": "An asset's latest observation.",
+            "properties": {
+              "ageSeconds": {
+                "description": "The moment asked less its moment.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "observedAt": {
+                "description": "Its moment, in UTC.",
+                "type": "string"
+              },
+              "quality": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "stale": {
+                "description": "Older than `staleAfter`.",
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "asset",
+              "uid",
+              "observedAt",
+              "ageSeconds",
+              "stale"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sensors.latest` v1.",
+        "properties": {
+          "assets": {
+            "description": "Each asset's latest, in the assets' natural order.",
+            "items": {
+              "$ref": "#/$defs/SensorLatest"
+            },
+            "type": "array"
+          },
+          "at": {
+            "description": "The moment asked, in UTC.",
+            "type": "string"
+          },
+          "knownAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "missing": {
+            "description": "The expected assets without an observation.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unreadable": {
+            "description": "Objects without an asset or a readable moment.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "at",
+          "assets",
+          "stale",
+          "missing",
+          "unreadable",
+          "revision"
+        ],
+        "title": "SensorsLatestAnswer",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SensorLatest": {
+            "description": "An asset's latest observation.",
+            "properties": {
+              "ageSeconds": {
+                "description": "The moment asked less its moment.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "observedAt": {
+                "description": "Its moment, in UTC.",
+                "type": "string"
+              },
+              "quality": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "stale": {
+                "description": "Older than `staleAfter`.",
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "asset",
+              "uid",
+              "observedAt",
+              "ageSeconds",
+              "stale"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sensors.latest` v1.",
+        "properties": {
+          "assets": {
+            "description": "Each asset's latest, in the assets' natural order.",
+            "items": {
+              "$ref": "#/$defs/SensorLatest"
+            },
+            "type": "array"
+          },
+          "at": {
+            "description": "The moment asked, in UTC.",
+            "type": "string"
+          },
+          "knownAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "missing": {
+            "description": "The expected assets without an observation.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unreadable": {
+            "description": "Objects without an asset or a readable moment.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "at",
+          "assets",
+          "stale",
+          "missing",
+          "unreadable",
+          "revision"
+        ],
+        "title": "SensorsLatestAnswer",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "not_temporal",
+          "no_asset_field",
+          "invalid_input",
+          "invalid_moment",
+          "not_recorded"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Öğlen her sensörün son değeri, bir saatten eskisi eskimiş",
+          "input": {
+            "at": "2024-06-01T12:00:00Z",
+            "expectedAssets": [
+              "S1",
+              "S2",
+              "S3"
+            ],
+            "layer": "olcum",
+            "staleAfter": 3600,
+            "valueField": "deger"
           }
         }
       ]
@@ -1049311,7 +1050167,7 @@
           },
           "QueryTime": {
             "additionalProperties": false,
-            "description": "A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
             "properties": {
               "at": {
                 "type": [
@@ -1264236,6 +1265092,95 @@
       "undo": "none",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object\na row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves\nwritten as chords).",
         "properties": {
@@ -1264254,6 +1265199,17 @@
           "path": {
             "description": "The file to write, an absolute path (`.gpkg`).",
             "type": "string"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1264560,6 +1265516,93 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "ShpEncoding": {
             "description": "The .dbf's text code page.",
             "oneOf": [
@@ -1264599,6 +1265642,17 @@
           "path": {
             "description": "An absolute path: `.zip`, `.shp`, or a folder.",
             "type": "string"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1265323,6 +1266377,93 @@
               "tab"
             ],
             "type": "string"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1265351,6 +1266492,17 @@
           "separator": {
             "$ref": "#/$defs/CsvSeparator",
             "default": "comma"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1265579,6 +1266731,95 @@
       "undo": "none",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.export.fgb` v1: the layers' objects as one FlatGeobuf at `path`, the layers' fields as its columns\n(with more than one layer a `katman` column names each feature's), the project's system as its EPSG code, the\nspatial index written unless a record (an object without a position) is among them. Written whole or not at all.\nRefusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`.\nWarnings: `export_losses`.",
         "properties": {
@@ -1265597,6 +1266838,17 @@
           "path": {
             "description": "An absolute path ending `.fgb`.",
             "type": "string"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1266540,6 +1267792,51 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
           "ParquetCompression": {
             "description": "How the pages are compressed.",
             "enum": [
@@ -1266547,6 +1267844,48 @@
               "none"
             ],
             "type": "string"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1266575,6 +1267914,17 @@
           "path": {
             "description": "An absolute path ending `.parquet`.",
             "type": "string"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1267604,6 +1268954,95 @@
       "undo": "none",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.export.gml` v1: the layers' objects as one GML 3.2 file at `path`, each layer a feature type named\nas the layer (made an XML name), its fields the feature's properties, its geometry the `geometryProperty`; the\nproject's system as `srsName` with the coordinates in the order EPSG gives the system's axes (TUREF's TM zones and\nthe geographic systems north or latitude first). An application schema `<name>.xsd` is written beside it unless\n`schema` is false. Written whole or not at all (the schema first, the GML last). Refusals, in order:\n`invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings:\n`export_losses`.",
         "properties": {
@@ -1267626,6 +1269065,17 @@
           "schema": {
             "description": "Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.",
             "type": "boolean"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           }
         },
         "required": [
@@ -1271626,6 +1273076,93 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "XyzSeparator": {
             "description": "The XYZ file's column separator.",
             "enum": [
@@ -1271705,6 +1273242,17 @@
           "separator": {
             "$ref": "#/$defs/XyzSeparator",
             "default": "space"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each\nwritten layer with time settings (of every one when `fields` names them); a layer without them whole."
           },
           "vertices": {
             "$ref": "#/$defs/XyzVertices",
@@ -1286297,6 +1287845,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Geri alma geçmişi bu kadar adım tutmuyor; 1 ile geçmişin adım sayısı arasında bir sayı verin."
+    },
+    {
+      "code": "no_asset_field",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın zaman ayarında kimlik (varlık) alanı yok; sensör gözlemleri varlığa göre tutulur."
+    },
+    {
+      "code": "invalid_source",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Gözlemler tek bir kaynaktan verilir: satırlar, dosya ya da adres."
+    },
+    {
+      "code": "invalid_asset",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Gözlemin varlığı (sensör, sayaç) boş; satır yazılmadı."
+    },
+    {
+      "code": "late_observation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Geç gelen gözlem: varlığın en son gözleminden önce; geç gelenler reddedildiği için yazılmadı."
+    },
+    {
+      "code": "state_changed",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Sorulan durumda katmanın içeriği beklenen özetle aynı değil; soruyu yeni durumla yeniden sorun."
+    },
+    {
+      "code": "time_left_out",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Zamanın dışında kalan nesneler dışa aktarılmadı."
     },
     {
       "code": "invalid_limit",

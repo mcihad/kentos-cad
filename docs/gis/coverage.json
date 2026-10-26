@@ -4618,7 +4618,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 168,
+   "cases": 174,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -4647,7 +4647,8 @@
     "fixtures/commands/v1/cad.tables.edit.json",
     "fixtures/commands/v1/cad.tags.check.json",
     "fixtures/commands/v1/cad.tags.create.json",
-    "fixtures/commands/v1/cad.texts.check.json"
+    "fixtures/commands/v1/cad.texts.check.json",
+    "fixtures/commands/v1/cad.time.query.json"
    ],
    "options": [],
    "kinds": [
@@ -16672,6 +16673,68 @@
    "kinds": []
   },
   {
+   "id": "cad.sensors.ingest",
+   "title": "Sensör gözlemlerini al",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 41,
+   "files": [
+    "fixtures/commands/v1/cad.sensors.ingest.json"
+   ],
+   "options": [
+    {
+     "key": "duplicates",
+     "value": "all",
+     "covered": true
+    },
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": true
+    },
+    {
+     "key": "duplicates",
+     "value": "last",
+     "covered": true
+    },
+    {
+     "key": "late",
+     "value": "accept",
+     "covered": true
+    },
+    {
+     "key": "late",
+     "value": "reject",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.sensors.latest",
+   "title": "Sensörlerin son gözlemi",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 28,
+   "files": [
+    "fixtures/commands/v1/cad.sensors.latest.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.settings.set",
    "title": "Proje ayarları",
    "effect": "document",
@@ -21846,11 +21909,22 @@
     "mcp": true,
     "server": false
    },
-   "cases": 33,
+   "cases": 48,
    "files": [
     "fixtures/commands/v1/cad.time.query.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "kind",
+     "value": "file",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "history",
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -22923,6 +22997,11 @@
    "files": [],
    "options": [
     {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "geometry",
      "value": "none",
      "covered": false
@@ -23094,6 +23173,11 @@
    "files": [],
    "options": [
     {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "overwrite",
      "value": true,
      "covered": false
@@ -23168,6 +23252,11 @@
    "files": [],
    "options": [
     {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "overwrite",
      "value": true,
      "covered": false
@@ -23194,6 +23283,11 @@
    "cases": 0,
    "files": [],
    "options": [
+    {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
     {
      "key": "overwrite",
      "value": true,
@@ -23264,6 +23358,11 @@
      "covered": false
     },
     {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "overwrite",
      "value": true,
      "covered": false
@@ -23330,6 +23429,11 @@
    "files": [],
    "options": [
     {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "encoding",
      "value": "utf-8",
      "covered": false
@@ -23383,6 +23487,11 @@
    "cases": 0,
    "files": [],
    "options": [
+    {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
     {
      "key": "header",
      "value": true,

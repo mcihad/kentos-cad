@@ -5,8 +5,8 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 272 komut; masaüstü 251, başsız 272, Python 272, MCP 251, sunucu 21.
-- Seçenekler: 4609 hücre, 1492 tanesi bir durumda deneniyor (3117 açık).
+- 274 komut; masaüstü 253, başsız 274, Python 274, MCP 253, sunucu 21.
+- Seçenekler: 4623 hücre, 1499 tanesi bir durumda deneniyor (3124 açık).
 - Veri türleri (hedef türler): 186 hücre, 128 tanesi bir durumda deneniyor (58 açık).
 - Ortak komut durumu olmayan: 39; 21 sunucu komutu (sunucunun veritabanı testlerinde), 18 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dwg, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.maplibre, file.export.parquet, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package, file.preflight.sheets).
 
@@ -132,20 +132,20 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `cad.walls.edit` | caps="closed", cleanup=true, discipline="architecture", discipline="electrical", discipline="interior", discipline="landscape", discipline="mechanical", discipline="plumbing", end="auto", end="end", end="none", end="start", end="through", justify="center", justify="left", phase="existing", phase="temporary", start="auto", start="miter", start="through", status="approved", status="proposed", status="underConstruction" | — |
 | `file.export.atlas` | coverage="drawing", coverage="source", overwrite=true, role="coverage", role="map" | — |
 | `file.export.block` | overwrite=true | — |
-| `file.export.csv` | geometry="none", geometry="wkt", geometry="xy", overwrite=true, separator="comma", separator="semicolon", separator="tab" | — |
+| `file.export.csv` | cumulative=true, geometry="none", geometry="wkt", geometry="xy", overwrite=true, separator="comma", separator="semicolon", separator="tab" | — |
 | `file.export.dwg` | allowPolylineLoss=true, dimensions="block", dimensions="native", metadata=true, overwrite=true, version="AC1014", version="AC1015", version="AC1018", version="AC1021", version="AC1024", version="AC1027", version="AC1032" | — |
 | `file.export.dxf` | allowPolylineLoss=true, dimensions="block", dimensions="native", metadata=true, overwrite=true | — |
-| `file.export.fgb` | overwrite=true | — |
+| `file.export.fgb` | cumulative=true, overwrite=true | — |
 | `file.export.gis` | annotations="skip", annotations="table", format="geojson", format="geopackage", format="postgis", format="shapefile", overwrite=true | — |
-| `file.export.gml` | overwrite=true, schema=true | — |
-| `file.export.gpkg` | overwrite=true | — |
+| `file.export.gml` | cumulative=true, overwrite=true, schema=true | — |
+| `file.export.gpkg` | cumulative=true, overwrite=true | — |
 | `file.export.maplibre` | overwrite=true, sourceKind="geojson", sourceKind="vector" | — |
-| `file.export.parquet` | compression="none", compression="snappy", covering=true, overwrite=true | — |
+| `file.export.parquet` | compression="none", compression="snappy", covering=true, cumulative=true, overwrite=true | — |
 | `file.export.pdf` | overwrite=true | — |
 | `file.export.qml` | overwrite=true | — |
-| `file.export.shp` | encoding="utf-8", encoding="windows-1254", overwrite=true | — |
+| `file.export.shp` | cumulative=true, encoding="utf-8", encoding="windows-1254", overwrite=true | — |
 | `file.export.sld` | overwrite=true | — |
-| `file.export.xyz` | header=true, overwrite=true, separator="comma", separator="semicolon", separator="space", separator="tab", vertices="all", vertices="points", withoutZ="skip", withoutZ="zero" | — |
+| `file.export.xyz` | cumulative=true, header=true, overwrite=true, separator="comma", separator="semicolon", separator="space", separator="tab", vertices="all", vertices="points", withoutZ="skip", withoutZ="zero" | — |
 | `file.import.csv` | duplicates="first", duplicates="none", geometry=true, kind="auto", kind="none", matched="fillEmpty", matched="keep", unmatched="skip" | — |
 | `file.import.dwg` | allowPolylineLoss=true, closedPolylines="area", closedPolylines="line", fileUnit="cm", fileUnit="dm", fileUnit="ft", fileUnit="in", fileUnit="km", fileUnit="m", fileUnit="mi", fileUnit="usFt", fileUnit="yd" | — |
 | `file.import.dxf` | fileUnit="dm", fileUnit="in", fileUnit="km", fileUnit="m", fileUnit="mi", fileUnit="usFt", fileUnit="yd" | — |

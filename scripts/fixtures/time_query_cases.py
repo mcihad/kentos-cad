@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The shared cases of cad.time.query (docs/adr/0537; plan/gis.md CBS-33).
+"""The shared cases of cad.time.query (docs/adr/0537, 0646 §1; plan/gis.md CBS-33).
 
     python3 scripts/fixtures/time_query_cases.py           # writes fixtures/commands/v1/cad.time.query.json
     python3 scripts/fixtures/time_query_cases.py --check   # compares
@@ -10,6 +10,12 @@ rule written here: [recorded start, recorded end) with an empty end still curren
 known; a version is known on a day it was recorded by and not yet superseded. The drawing holds parcels with
 versions, a late correction, a version superseded on a day, an empty valid range, a zone, a timeless object, an
 unrecorded and an unreadable one; an instant layer, a cumulative one, one without a system time, one without a time.
+
+ADR 0646 §1: a question asks a state of the drawing (some undo steps back, after a delete step the case runs, or a
+drawing file written here by the independent KCAD v2 writer, kcad_v2_reference.py) and the answer gives the layer's
+digest there: the SHA-256 of the canonical JSON (protocol_cases.py's) of `[[uid, {kind, attrs, pts}], …]` in the ids'
+order, the drawing given with its ids (a v2 setup). A question that gives a digest the state does not have is a
+conflict, `state_changed`.
 """
 import json
 import sys
@@ -17,10 +23,16 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hashlib  # noqa: E402
+
+import kcad_v2_reference as kr  # noqa: E402
+import protocol_cases as pc  # noqa: E402
 import temporal_cases as tc  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.time.query.json"
+FILES = ROOT / "fixtures/temporal/v1/revisions"
+NOW = "Şimdiki hâl"
 STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
 
 PARSEL_TIME = {"start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no",
@@ -58,8 +70,12 @@ SINCE = [(12, {"baslangic": "2020-01-01", "bitis": "2021-01-01"}), (13, {"baslan
 PLAIN = [(14, {"baslangic": "2020-01-01", "bitis": "2030-01-01"})]
 
 
+def uid(n):
+    return f"0192f5a3-4444-7000-8000-{n:012d}"
+
+
 def square(id_, layer, attrs):
-    x, y = 500000 + 30 * id_, 4400000
+    x, y = 500000.0 + 30 * id_, 4400000.0
     pts = [{"x": x, "y": y}, {"x": x + 20, "y": y}, {"x": x + 20, "y": y + 20}, {"x": x, "y": y + 20}]
     return {"kind": "polygon", "id": id_, "layerId": layer, "attrs": attrs, "pts": pts}
 
@@ -75,11 +91,11 @@ def drawing():
     ]
     ents = [square(i, "parsel", a) for i, a in PARCELS] + [square(i, "ariza", a) for i, a in FAULTS]
     ents += [square(i, "birikim", a) for i, a in SINCE] + [square(i, "plan", a) for i, a in PLAIN]
-    return {"format": "kentos.document", "version": 1, "name": "Zamanda sorgu",
+    return {"format": "kentos.document", "version": 2, "name": "Zamanda sorgu",
             "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000, "workspace": "gis"},
             "origin": {"x": 500000.0, "y": 4400000.0}, "layers": layers, "activeLayer": "parsel", "entities": ents,
-            "styles": {"items": [], "categories": []}}
+            "uids": [uid(e["id"]) for e in ents], "styles": {"items": [], "categories": []}}
 
 
 LAYER_TIMES = {"parsel": PARSEL_TIME, "ariza": {"start": "an"},
@@ -102,7 +118,19 @@ def recorded_interval(start, end):
     return (s, tc.INF if e == "empty" else e)
 
 
-def answer(layer, at=None, frm=None, to=None, known=None):
+def stamp(layer, objects):
+    """ADR 0646 §1: the layer's digest, the SHA-256 of the canonical JSON of `[[uid, essence], …]` in the ids' order;
+    an object's essence its kind, attributes and geometry (here every object a square)."""
+    items = []
+    for id_, attrs in objects:
+        e = square(id_, layer, attrs)
+        items.append([uid(id_), {"attrs": attrs, "kind": "polygon", "pts": e["pts"]}])
+    items.sort(key=lambda it: it[0])
+    return hashlib.sha256(pc.canonical(items).encode("utf-8")).hexdigest()
+
+
+def answer(layer, at=None, frm=None, to=None, known=None, objects=None, state=NOW):
+    objects = OBJECTS[layer] if objects is None else objects
     t = LAYER_TIMES[layer]
     rule = {"ranged": "end" in t, "cumulative": t.get("cumulative", False)}
     window = None
@@ -119,7 +147,7 @@ def answer(layer, at=None, frm=None, to=None, known=None):
     if k is not None:
         out["knownAt"] = utc(k)
     shown, not_valid, not_known, timeless, unrecorded, unreadable = [], 0, 0, 0, 0, 0
-    for id_, attrs in OBJECTS[layer]:
+    for id_, attrs in objects:
         start, end = attrs.get(t["start"]), attrs.get(t.get("end")) if "end" in t else None
         unreadable += (start is not None and tc.read(start) == "unreadable") + (
             rule["ranged"] and end is not None and tc.read(end) == "unreadable")
@@ -136,9 +164,10 @@ def answer(layer, at=None, frm=None, to=None, known=None):
                 not_known += ok
                 ok = False
         if ok:
-            shown.append(f"$uidOf:{id_}")
+            shown.append(uid(id_))
     out.update({"shown": shown, "notValid": not_valid, "notKnown": not_known, "timeless": timeless,
-                "unrecorded": unrecorded, "unreadable": unreadable, "revision": "$current"})
+                "unrecorded": unrecorded, "unreadable": unreadable, "state": state,
+                "stamp": stamp(layer, objects), "revision": "$current"})
     return out
 
 
@@ -172,8 +201,85 @@ def moment_refused(text, path):
                   "bölgesiyle 2024-06-01T14:30+03:00) yazın.", path)
 
 
-def cases():
+# ── ADR 0646 §1: a past state ─────────────────────────────────────────
+
+PAST = [(1, {k: v for k, v in PARCELS[0][1].items() if k not in ("gecerlilik_bitis", "kayit_bitis")}),
+        (4, PARCELS[3][1]), (5, PARCELS[4][1])]
+PAST_FILE = "parsel-2023.kcad"
+
+
+def past_drawing():
+    """The parcels as a file kept them in 2023: one version of 101, 103 and 104; no other layer."""
+    d = drawing()
+    d["layers"] = [d["layers"][0]]
+    # A file numbers its objects 1, 2 … in order; their lasting ids are the drawing's.
+    d["entities"] = [{**square(i, "parsel", a), "id": k + 1} for k, (i, a) in enumerate(PAST)]
+    d["uids"] = [uid(i) for i, _ in PAST]
+    d["name"] = "Parseller 2023"
+    return d
+
+
+def state_changed(name):
+    """A conflict, as a revision's (ADR 0646 §1): asked again of the state now it may answer."""
+    return {"status": "conflict", "error": {"code": "state_changed", "message": f"“{name}” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı "
+                  "değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.", "path": "expectedStamp"}}
+
+
+DELETE_3 = {"op": "execute", "command": "cad.entities.delete", "input": {"uids": [uid(3)]},
+            "result": {"status": "completed", "output": {"removed": [uid(3)], "locked": [], "revision": "$current"},
+                       "warnings": []}}
+DELETE_ATTR = {"op": "execute", "command": "cad.entities.delete", "input": {"uids": [uid(4)]},
+               "result": {"status": "completed", "output": {"removed": [uid(4)], "locked": [], "revision": "$current"},
+                          "warnings": []}}
+FILE = {"kind": "file", "path": f"$fixture:temporal/v1/revisions/{PAST_FILE}"}
+WITHOUT_3 = [o for o in PARCELS if o[0] != 3]
+
+
+def revision_cases():
+    q = {"layer": "parsel", "at": "2024-06-01", "knownAt": "2025-02-01"}
+    full = answer("parsel", "2024-06-01", known="2025-02-01")
+    back = answer("parsel", "2024-06-01", known="2025-02-01", state="1 adım geri, “Sil” öncesi")
+    now = answer("parsel", "2024-06-01", known="2025-02-01", objects=WITHOUT_3)
+    in_file = answer("parsel", "2024-06-01", objects=PAST, state=PAST_FILE)
     return [
+        case("bir adım önce: silinen geç düzeltme o durumda görünür", DELETE_3,
+             step({**q, "revision": {"kind": "history", "steps": 1}}, done(back)),
+             step(q, done(now))),
+        case("şimdiki hâl özetiyle sabitlenir", step({**q, "expectedStamp": full["stamp"]}, done(full))),
+        case("geçmişteki durum özetiyle sabitlenir", DELETE_3,
+             step({**q, "revision": {"kind": "history", "steps": 1}, "expectedStamp": full["stamp"]}, done(back))),
+        case("çizim değişince eski özet şimdiki hâlde reddedilir", DELETE_3,
+             step({**q, "expectedStamp": full["stamp"]}, state_changed("Parsel"))),
+        case("geri alma adımı kayınca eski özet reddedilir", DELETE_3, DELETE_ATTR,
+             step({**q, "revision": {"kind": "history", "steps": 1}, "expectedStamp": full["stamp"]},
+                  state_changed("Parsel"))),
+        case("tutmayan özet", step({**q, "expectedStamp": "0" * 64}, state_changed("Parsel"))),
+        case("dosyadaki durum", step({"layer": "parsel", "at": "2024-06-01", "revision": FILE}, done(in_file))),
+        case("dosyadaki durum özetiyle", step({"layer": "parsel", "at": "2024-06-01", "revision": FILE,
+                                               "expectedStamp": in_file["stamp"]}, done(in_file))),
+        case("dosyadaki durum şimdiki hâlin özetiyle reddedilir",
+             step({"layer": "parsel", "at": "2024-06-01", "revision": FILE, "expectedStamp": full["stamp"]},
+                  state_changed("Parsel"))),
+        case("dosyada olmayan katman", step({"layer": "ariza", "revision": FILE}, failed(
+            "layer_not_found", "“ariza” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layer"))),
+        case("geri alma geçmişi boş", step({"layer": "parsel", "revision": {"kind": "history", "steps": 1}}, failed(
+            "no_such_step", "Geri alma geçmişinde adım yok; önce çizimde bir değişiklik yapın.", "revision.steps"))),
+        case("geri alma geçmişinde o kadar adım yok", DELETE_3,
+             step({"layer": "parsel", "revision": {"kind": "history", "steps": 3}}, failed(
+                 "no_such_step", "Geri alma geçmişi 1 adım tutuyor; 3 adım geri istendi. 1 ile 1 arasında bir sayı "
+                 "verin.", "revision.steps"))),
+        case("göreli dosya yolu", step({"layer": "parsel", "revision": {"kind": "file", "path": PAST_FILE}}, failed(
+            "invalid_file_path", f"“{PAST_FILE}” mutlak bir dosya yolu değil; dosyanın tam yolunu verin "
+            "(/klasör/ad.kcad).", "revision.path"))),
+        case("olmayan dosya", step({"layer": "parsel", "revision": {"kind": "file",
+                                                                    "path": "$fixture:temporal/v1/revisions/yok.kcad"}},
+                                   failed("file_not_found", "$fixture:temporal/v1/revisions/yok.kcad okunamadı: dosya "
+                                          "yok ya da açılamıyor.", "revision.path"))),
+    ]
+
+
+def cases():
+    return revision_cases() + [
         asked("1 Haziran 2024'te geçerli parseller, bugün bilindiği gibi", "parsel", at="2024-06-01"),
         asked("1 Haziran 2024'te geçerli, 1 Ocak 2025'te bilinen: geç gelen düzeltme yok", "parsel", at="2024-06-01",
               known="2025-01-01"),
@@ -243,14 +349,19 @@ def build():
 
 def main():
     text = json.dumps(build(), ensure_ascii=False, indent=1) + "\n"
+    past = kr.container(kr.document(past_drawing()))
+    target = FILES / PAST_FILE
     if "--check" in sys.argv:
-        if not OUT.exists() or OUT.read_text("utf-8") != text:
-            print(f"{OUT.relative_to(ROOT)} eski: betiği --check'siz çalıştırın", file=sys.stderr)
+        if not OUT.exists() or OUT.read_text("utf-8") != text or not target.exists() or target.read_bytes() != past:
+            print(f"{OUT.relative_to(ROOT)} ya da {target.relative_to(ROOT)} eski: betiği --check'siz çalıştırın",
+                  file=sys.stderr)
             return 1
         print(f"Zamanda sorgu durumları tutarlı: {len(build()['cases'])} durum")
         return 0
+    FILES.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(past)
     OUT.write_text(text, "utf-8")
-    print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(build()['cases'])} durum)")
+    print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(build()['cases'])} durum), {target.relative_to(ROOT)}")
     return 0
 
 

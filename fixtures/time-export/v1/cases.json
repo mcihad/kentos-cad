@@ -1,0 +1,478 @@
+{
+ "format": "kentos.time-export-cases",
+ "version": 1,
+ "note": "ADR 0646 §2. Bağımsız başvuru scripts/fixtures/time_export_cases.py: anlar ve pencerenin kuralı temporal_cases.py'den (ADR 0210), kayıt zamanı ADR 0537'nin kuralıyla; KentOS kodu yok. KentOS'un yazdığı dosyalar --written ile OGR ve pyarrow'la okunur.",
+ "drawing": "drawing.kcad",
+ "cases": [
+  {
+   "name": "an.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:an.gpkg",
+    "layers": [
+     "parsel",
+     "ariza",
+     "zamansiz"
+    ],
+    "time": {
+     "at": "2024-06-01T10:00:00Z"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 4 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     3,
+     5,
+     6
+    ],
+    "ariza": [
+     7
+    ],
+    "zamansiz": [
+     10,
+     11,
+     12
+    ]
+   }
+  },
+  {
+   "name": "aralik.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:aralik.gpkg",
+    "layers": [
+     "parsel",
+     "ariza",
+     "zamansiz"
+    ],
+    "time": {
+     "from": "2024-05-15",
+     "to": "2024-06-02"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 3 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     3,
+     5,
+     6
+    ],
+    "ariza": [
+     7,
+     9
+    ],
+    "zamansiz": [
+     10,
+     11,
+     12
+    ]
+   }
+  },
+  {
+   "name": "bilinen.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:bilinen.gpkg",
+    "layers": [
+     "parsel",
+     "ariza",
+     "zamansiz"
+    ],
+    "time": {
+     "at": "2024-06-01",
+     "knownAt": "2025-01-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 6 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     5,
+     6
+    ],
+    "ariza": [],
+    "zamansiz": [
+     10,
+     11,
+     12
+    ]
+   }
+  },
+  {
+   "name": "bilinen-sonra.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:bilinen-sonra.gpkg",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2024-06-01",
+     "knownAt": "2025-02-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 2 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     3,
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "name": "alanlarla.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:alanlarla.gpkg",
+    "layers": [
+     "zamansiz"
+    ],
+    "time": {
+     "at": "2020-01-01",
+     "fields": {
+      "start": "baslangic"
+     }
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 2 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "zamansiz": [
+     12
+    ]
+   }
+  },
+  {
+   "name": "an.csv",
+   "command": "file.export.csv",
+   "input": {
+    "path": "$out:an.csv",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2022-07-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 2 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     1,
+     3,
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "name": "aralik.fgb",
+   "command": "file.export.fgb",
+   "input": {
+    "path": "$out:aralik.fgb",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "from": "2023-01-01",
+     "to": "2024-03-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 3 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     1,
+     3,
+     5
+    ]
+   }
+  },
+  {
+   "name": "bilinen.parquet",
+   "command": "file.export.parquet",
+   "input": {
+    "path": "$out:bilinen.parquet",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2024-06-01",
+     "knownAt": "2024-03-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 5 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     5
+    ]
+   }
+  },
+  {
+   "name": "an.gml",
+   "command": "file.export.gml",
+   "input": {
+    "path": "$out:an.gml",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2024-02-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 3 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     1,
+     3,
+     5
+    ]
+   }
+  },
+  {
+   "name": "an-shp.zip",
+   "command": "file.export.shp",
+   "input": {
+    "path": "$out:an-shp.zip",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2024-05-31T21:00:00Z"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 3 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     3,
+     5
+    ]
+   }
+  },
+  {
+   "name": "an.xyz",
+   "command": "file.export.xyz",
+   "input": {
+    "path": "$out:an.xyz",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "2021-06-01"
+    },
+    "vertices": "all"
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 3 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     1,
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "name": "hepsi.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:hepsi.gpkg",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "knownAt": "2030-01-01"
+    }
+   },
+   "status": "completed",
+   "warnings": [
+    {
+     "code": "time_left_out",
+     "message": "Zamanın dışında kalan 2 nesne yazılmadı.",
+     "path": "time"
+    }
+   ],
+   "kept": {
+    "parsel": [
+     2,
+     3,
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "name": "zamansiz.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:zamansiz.gpkg",
+    "layers": [
+     "zamansiz"
+    ],
+    "time": {
+     "at": "2024-06-01"
+    }
+   },
+   "status": "failed",
+   "error": {
+    "code": "not_temporal",
+    "message": "Yazılan katmanların hiçbirinin zaman ayarı yok; zaman alanlarını (time.fields) verin.",
+    "path": "time"
+   }
+  },
+  {
+   "name": "kayitsiz.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:kayitsiz.gpkg",
+    "layers": [
+     "ariza",
+     "zamansiz"
+    ],
+    "time": {
+     "knownAt": "2024-06-01"
+    }
+   },
+   "status": "failed",
+   "error": {
+    "code": "not_recorded",
+    "message": "Yazılan katmanların hiçbiri sürümlerinin kayıt zamanını tutmuyor; bilinen günle yazmak için kayıt başlangıcı alanını (time.fields.recordedStart) verin.",
+    "path": "time.knownAt"
+   }
+  },
+  {
+   "name": "okunmayan.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:okunmayan.gpkg",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "at": "dün"
+    }
+   },
+   "status": "failed",
+   "error": {
+    "code": "invalid_moment",
+    "message": "“dün” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+    "path": "time.at"
+   }
+  },
+  {
+   "name": "bos.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:bos.gpkg",
+    "layers": [
+     "parsel"
+    ],
+    "time": {}
+   },
+   "status": "failed",
+   "error": {
+    "code": "invalid_period",
+    "message": "Zaman sorusunda bir an (at), bir aralık (from, to) ya da bilinen gün (knownAt) verin.",
+    "path": "time"
+   }
+  },
+  {
+   "name": "ters.csv",
+   "command": "file.export.csv",
+   "input": {
+    "path": "$out:ters.csv",
+    "layers": [
+     "parsel"
+    ],
+    "time": {
+     "from": "2024-06-01",
+     "to": "2024-01-01"
+    }
+   },
+   "status": "failed",
+   "error": {
+    "code": "invalid_period",
+    "message": "Aralığın bitişi başlangıcından sonra olmalı; [from, to) bitişi içermez.",
+    "path": "time.to"
+   }
+  }
+ ]
+}

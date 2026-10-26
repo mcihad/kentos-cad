@@ -135,6 +135,7 @@ fn kinds_timing() {
         println!("  alanlar: {kinds_read:?}");
         let path = dir.join(format!("olcum-{word}.parquet"));
         let input = ExportParquet {
+            time: None,
             path: path.display().to_string(),
             layers: Vec::new(),
             overwrite: true,

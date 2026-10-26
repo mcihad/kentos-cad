@@ -3062,7 +3062,8 @@ pub fn catalog() -> CommandCatalog {
                       Geçerlilik zamanı bir an (at) ya da [from, to) aralığıdır, katmanın zaman ayarının kuralıyla (aralıklı, anlık, birikimli); zamansız nesne her zaman gösterilir. \
                       Bilinen gün (knownAt) yalnız o güne dek kaydedilmiş ve henüz yerine başkası geçmemiş sürümleri bırakır: katmanın recordedStart ve recordedEnd alanlarıyla (.kcad şema 90); kayıt zamanı tutmayan katmanda not_recorded. \
                       “O gün geçerli olan” ile “o gün sistemde bilinen” ayrı sorulur. An bir tarih ya da tarih ve saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar. \
-                      Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable."
+                      Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable. \
+                      Soru çizimin değişmez bir durumuna bağlanır: revision geri alma geçmişinde n adım önceki çizimi (history) ya da bir çizim dosyasını (file) sorar; cevap durumu (state) ve katmanın o durumdaki içerik özetini (stamp: nesnelerin türleri, geometrileri ve öznitelikleri kalıcı kimlikleriyle) verir. Özeti expectedStamp olarak veren soru katman o durumda başkaysa state_changed çakışmasıyla döner: aynı özetle iki cevap aynı veridendir."
                 .into(),
             aliases: vec!["zamandasor".into(), "bilinendurum".into()],
             effect: CommandEffect::Query,
@@ -3087,7 +3088,102 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({ "layer": "parsel", "from": "2023-01-01", "to": "2024-01-01" }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Bir dosyada saklanan durumda, özetiyle sabitlenmiş".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "at": "2024-06-01",
+                        "revision": { "kind": "file", "path": "/arsiv/parsel-2023.kcad" },
+                        "expectedStamp": "9a3f6d0c2b8e4f7a1c5d9e2b6f0a3c7d1e4b8f2a5c9d3e6f0b4a7c1d5e8f2b6a"
+                    }),
+                    output: None,
+                },
             ],
+        },
+        // Sensor observations (docs/adr/0646 §3–§5), held together by
+        // fixtures/commands/v1/cad.sensors.{ingest,latest}.json. The web is paused.
+        CommandDescriptor {
+            id: crate::CAD_SENSORS_INGEST.into(),
+            version: crate::CAD_SENSORS_INGEST_VERSION,
+            title: "Sensör gözlemlerini al".into(),
+            summary: "Bir sensör katmanına (layer: zaman ayarı kimlik alanını, key, adlandıran zamansal katman) gözlemleri tek geri alma adımında (“Sensör gözlemleri”) geometrisiz kayıt olarak yazar. \
+                      Kaynak tam olarak biri: observations (asset, at, value, quality satırları), file (SensorThings Observations cevabının mutlak yolu) ya da url (SensorThings Observations adresi; @iot.nextLink en çok pages sayfa izlenir, kalan sayfa more ile söylenir); file ve url'nin gözlemleri tek varlığındır (asset). \
+                      Varlık katmanın key alanına, olay zamanı (SensorThings'te phenomenonTime, aralıkta başlangıcı) start alanına UTC olarak, alım zamanı (receivedAt; yoksa şimdi) recordedStart'a, değer valueField'a, kalite qualityField'a yazılır; değerler katmanın alanlarının kuralından geçer. \
+                      Yinelenen gözlem (aynı varlığın aynı andaki, katmanın şimdiki sürümlerinde ya da partide) duplicates ile: first eskisi kalır, last yenisi geçer (recordedEnd tutan katmanda eski sürümün kayıt bitişi alım zamanı olur, tutmayanda eskinin değeri yerinde değişir), all hepsi yazılır. \
+                      Geç gelen gözlem (varlığın en son anından önceki) late ile: accept yazılır ve sayılır (lateField'a evet), reject yazılmaz. \
+                      Yazılamayan satır (boş varlık, okunmayan an, alanın kuralına uymayan değer, reddedilen geç gözlem) rejected'da sırası, kodu ve nedeniyle söylenir; öbürleri yazılır."
+                .into(),
+            aliases: vec!["sensoral".into(), "gozlemal".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SensorsIngest>(),
+            output: schema::<crate::SensorsIngested>(),
+            plan: Some(schema::<crate::SensorsIngestPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki gözlem, aynı andaki gözlemin yenisi geçer".into(),
+                    input: json!({
+                        "layer": "olcum",
+                        "valueField": "deger",
+                        "qualityField": "kalite",
+                        "duplicates": "last",
+                        "observations": [
+                            { "asset": "S1", "at": "2024-06-01T10:20:00Z", "value": 13.5, "quality": "iyi" },
+                            { "asset": "S2", "at": "2024-06-01T10:20:00Z", "value": 7.25 }
+                        ]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir SensorThings veri akışının gözlemleri, geç gelenler reddedilerek".into(),
+                    input: json!({
+                        "layer": "olcum",
+                        "valueField": "deger",
+                        "url": "https://sensors.example.org/v1.1/Datastreams(8)/Observations",
+                        "asset": "S8",
+                        "late": "reject"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SENSORS_LATEST.into(),
+            version: crate::CAD_SENSORS_LATEST_VERSION,
+            title: "Sensörlerin son gözlemi".into(),
+            summary: "Bir sensör katmanının (layer) her varlığının bir andaki (at; yoksa şimdi) son gözlemini, değerini (valueField), kalitesini (qualityField) ve yaşını verir; çizimi değiştirmez. \
+                      Son gözlem, anı sorulan andan geç olmayan en geç gözlemdir; eşitlikte alımı geç olan, sonra çizimde sonra gelen. Bilinen gün (knownAt) yalnız o gün bilinen sürümleri alır; verilmezse yerine başkası geçmemiş sürümler. \
+                      Yaşı staleAfter saniyeden büyük gözlem stale'dir: akışı kesilen varlığın son değeri güncel gibi gösterilmez. expectedAssets verilen varlıklardan gözlemi olmayanlar missing'de söylenir. Varlıklar doğal sırayla."
+                .into(),
+            aliases: vec!["sonolcum".into(), "sensordurumu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SensorsLatest>(),
+            output: schema::<crate::SensorsLatestAnswer>(),
+            plan: Some(schema::<crate::SensorsLatestAnswer>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Öğlen her sensörün son değeri, bir saatten eskisi eskimiş".into(),
+                input: json!({
+                    "layer": "olcum",
+                    "valueField": "deger",
+                    "at": "2024-06-01T12:00:00Z",
+                    "staleAfter": 3600,
+                    "expectedAssets": ["S1", "S2", "S3"]
+                }),
+                output: None,
+            }],
         },
         // A point cloud's source metadata and its points by a lasting id (docs/adr/0536), held together by
         // fixtures/commands/v1/cad.pointclouds.{describe,query}.json. The web is paused.
@@ -10277,6 +10373,12 @@ mod tests {
                     }
                     crate::CAD_TIME_QUERY => {
                         serde_json::from_value::<crate::TimeQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SENSORS_INGEST => {
+                        serde_json::from_value::<crate::SensorsIngest>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SENSORS_LATEST => {
+                        serde_json::from_value::<crate::SensorsLatest>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_DESCRIBE => {
                         serde_json::from_value::<crate::PointCloudsDescribe>(e.input.clone())

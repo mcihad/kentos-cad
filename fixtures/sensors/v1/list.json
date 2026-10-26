@@ -1,0 +1,23 @@
+[
+ {
+  "phenomenonTime": "2024-06-01T05:00:00Z",
+  "result": 3,
+  "resultQuality": {
+   "kod": 1
+  }
+ },
+ {
+  "phenomenonTime": "2024-06-01T06:00:00Z",
+  "result": true
+ },
+ {
+  "phenomenonTime": "2024-06-01T07:00:00Z",
+  "result": [
+   1,
+   2
+  ]
+ },
+ {
+  "result": 4
+ }
+]

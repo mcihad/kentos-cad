@@ -302,6 +302,9 @@ pub mod pointclouds;
 pub mod pointcloud_areas;
 pub mod meshes;
 mod source_bytes;
+pub mod sensors_ingest;
+pub mod sensors_latest;
+pub mod time_export;
 mod time_filter;
 pub mod time_query;
 pub mod points_construct;
@@ -686,6 +689,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_TIME_QUERY,
         kentos_commands::CAD_TIME_QUERY_VERSION,
+    ),
+    // Sensör gözlemleri ([`sensors_ingest`], [`sensors_latest`], docs/adr/0646).
+    (
+        kentos_commands::CAD_SENSORS_INGEST,
+        kentos_commands::CAD_SENSORS_INGEST_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SENSORS_LATEST,
+        kentos_commands::CAD_SENSORS_LATEST_VERSION,
     ),
     // Nokta bulutunun bilgisi ve XYZ sor ([`pointclouds`], docs/adr/0536).
     (

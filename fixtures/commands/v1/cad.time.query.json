@@ -7,7 +7,7 @@
  "note": "ADR 0537. Bağımsız başvuru scripts/fixtures/time_query_cases.py: anların okunuşu, geçerlilik zamanı ve pencerenin kuralı temporal_cases.py'den (ADR 0210), kayıt zamanı ADR 0537'nin kuralıyla; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
-  "version": 1,
+  "version": 2,
   "name": "Zamanda sorgu",
   "settings": {
    "srid": 5256,
@@ -157,20 +157,20 @@
     },
     "pts": [
      {
-      "x": 500030,
-      "y": 4400000
+      "x": 500030.0,
+      "y": 4400000.0
      },
      {
-      "x": 500050,
-      "y": 4400000
+      "x": 500050.0,
+      "y": 4400000.0
      },
      {
-      "x": 500050,
-      "y": 4400020
+      "x": 500050.0,
+      "y": 4400020.0
      },
      {
-      "x": 500030,
-      "y": 4400020
+      "x": 500030.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -185,20 +185,20 @@
     },
     "pts": [
      {
-      "x": 500060,
-      "y": 4400000
+      "x": 500060.0,
+      "y": 4400000.0
      },
      {
-      "x": 500080,
-      "y": 4400000
+      "x": 500080.0,
+      "y": 4400000.0
      },
      {
-      "x": 500080,
-      "y": 4400020
+      "x": 500080.0,
+      "y": 4400020.0
      },
      {
-      "x": 500060,
-      "y": 4400020
+      "x": 500060.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -213,20 +213,20 @@
     },
     "pts": [
      {
-      "x": 500090,
-      "y": 4400000
+      "x": 500090.0,
+      "y": 4400000.0
      },
      {
-      "x": 500110,
-      "y": 4400000
+      "x": 500110.0,
+      "y": 4400000.0
      },
      {
-      "x": 500110,
-      "y": 4400020
+      "x": 500110.0,
+      "y": 4400020.0
      },
      {
-      "x": 500090,
-      "y": 4400020
+      "x": 500090.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -243,20 +243,20 @@
     },
     "pts": [
      {
-      "x": 500120,
-      "y": 4400000
+      "x": 500120.0,
+      "y": 4400000.0
      },
      {
-      "x": 500140,
-      "y": 4400000
+      "x": 500140.0,
+      "y": 4400000.0
      },
      {
-      "x": 500140,
-      "y": 4400020
+      "x": 500140.0,
+      "y": 4400020.0
      },
      {
-      "x": 500120,
-      "y": 4400020
+      "x": 500120.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -270,20 +270,20 @@
     },
     "pts": [
      {
-      "x": 500150,
-      "y": 4400000
+      "x": 500150.0,
+      "y": 4400000.0
      },
      {
-      "x": 500170,
-      "y": 4400000
+      "x": 500170.0,
+      "y": 4400000.0
      },
      {
-      "x": 500170,
-      "y": 4400020
+      "x": 500170.0,
+      "y": 4400020.0
      },
      {
-      "x": 500150,
-      "y": 4400020
+      "x": 500150.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -297,20 +297,20 @@
     },
     "pts": [
      {
-      "x": 500180,
-      "y": 4400000
+      "x": 500180.0,
+      "y": 4400000.0
      },
      {
-      "x": 500200,
-      "y": 4400000
+      "x": 500200.0,
+      "y": 4400000.0
      },
      {
-      "x": 500200,
-      "y": 4400020
+      "x": 500200.0,
+      "y": 4400020.0
      },
      {
-      "x": 500180,
-      "y": 4400020
+      "x": 500180.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -325,20 +325,20 @@
     },
     "pts": [
      {
-      "x": 500210,
-      "y": 4400000
+      "x": 500210.0,
+      "y": 4400000.0
      },
      {
-      "x": 500230,
-      "y": 4400000
+      "x": 500230.0,
+      "y": 4400000.0
      },
      {
-      "x": 500230,
-      "y": 4400020
+      "x": 500230.0,
+      "y": 4400020.0
      },
      {
-      "x": 500210,
-      "y": 4400020
+      "x": 500210.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -354,20 +354,20 @@
     },
     "pts": [
      {
-      "x": 500240,
-      "y": 4400000
+      "x": 500240.0,
+      "y": 4400000.0
      },
      {
-      "x": 500260,
-      "y": 4400000
+      "x": 500260.0,
+      "y": 4400000.0
      },
      {
-      "x": 500260,
-      "y": 4400020
+      "x": 500260.0,
+      "y": 4400020.0
      },
      {
-      "x": 500240,
-      "y": 4400020
+      "x": 500240.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -382,20 +382,20 @@
     },
     "pts": [
      {
-      "x": 500270,
-      "y": 4400000
+      "x": 500270.0,
+      "y": 4400000.0
      },
      {
-      "x": 500290,
-      "y": 4400000
+      "x": 500290.0,
+      "y": 4400000.0
      },
      {
-      "x": 500290,
-      "y": 4400020
+      "x": 500290.0,
+      "y": 4400020.0
      },
      {
-      "x": 500270,
-      "y": 4400020
+      "x": 500270.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -408,20 +408,20 @@
     },
     "pts": [
      {
-      "x": 500300,
-      "y": 4400000
+      "x": 500300.0,
+      "y": 4400000.0
      },
      {
-      "x": 500320,
-      "y": 4400000
+      "x": 500320.0,
+      "y": 4400000.0
      },
      {
-      "x": 500320,
-      "y": 4400020
+      "x": 500320.0,
+      "y": 4400020.0
      },
      {
-      "x": 500300,
-      "y": 4400020
+      "x": 500300.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -434,20 +434,20 @@
     },
     "pts": [
      {
-      "x": 500330,
-      "y": 4400000
+      "x": 500330.0,
+      "y": 4400000.0
      },
      {
-      "x": 500350,
-      "y": 4400000
+      "x": 500350.0,
+      "y": 4400000.0
      },
      {
-      "x": 500350,
-      "y": 4400020
+      "x": 500350.0,
+      "y": 4400020.0
      },
      {
-      "x": 500330,
-      "y": 4400020
+      "x": 500330.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -461,20 +461,20 @@
     },
     "pts": [
      {
-      "x": 500360,
-      "y": 4400000
+      "x": 500360.0,
+      "y": 4400000.0
      },
      {
-      "x": 500380,
-      "y": 4400000
+      "x": 500380.0,
+      "y": 4400000.0
      },
      {
-      "x": 500380,
-      "y": 4400020
+      "x": 500380.0,
+      "y": 4400020.0
      },
      {
-      "x": 500360,
-      "y": 4400020
+      "x": 500360.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -487,20 +487,20 @@
     },
     "pts": [
      {
-      "x": 500390,
-      "y": 4400000
+      "x": 500390.0,
+      "y": 4400000.0
      },
      {
-      "x": 500410,
-      "y": 4400000
+      "x": 500410.0,
+      "y": 4400000.0
      },
      {
-      "x": 500410,
-      "y": 4400020
+      "x": 500410.0,
+      "y": 4400020.0
      },
      {
-      "x": 500390,
-      "y": 4400020
+      "x": 500390.0,
+      "y": 4400020.0
      }
     ]
    },
@@ -514,23 +514,39 @@
     },
     "pts": [
      {
-      "x": 500420,
-      "y": 4400000
+      "x": 500420.0,
+      "y": 4400000.0
      },
      {
-      "x": 500440,
-      "y": 4400000
+      "x": 500440.0,
+      "y": 4400000.0
      },
      {
-      "x": 500440,
-      "y": 4400020
+      "x": 500440.0,
+      "y": 4400020.0
      },
      {
-      "x": 500420,
-      "y": 4400020
+      "x": 500420.0,
+      "y": 4400020.0
      }
     ]
    }
+  ],
+  "uids": [
+   "0192f5a3-4444-7000-8000-000000000001",
+   "0192f5a3-4444-7000-8000-000000000002",
+   "0192f5a3-4444-7000-8000-000000000003",
+   "0192f5a3-4444-7000-8000-000000000004",
+   "0192f5a3-4444-7000-8000-000000000005",
+   "0192f5a3-4444-7000-8000-000000000006",
+   "0192f5a3-4444-7000-8000-000000000007",
+   "0192f5a3-4444-7000-8000-000000000008",
+   "0192f5a3-4444-7000-8000-000000000009",
+   "0192f5a3-4444-7000-8000-000000000010",
+   "0192f5a3-4444-7000-8000-000000000011",
+   "0192f5a3-4444-7000-8000-000000000012",
+   "0192f5a3-4444-7000-8000-000000000013",
+   "0192f5a3-4444-7000-8000-000000000014"
   ],
   "styles": {
    "items": [],
@@ -538,6 +554,602 @@
   }
  },
  "cases": [
+  {
+   "name": "bir adım önce: silinen geç düzeltme o durumda görünür",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000003"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "revision": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "state": "1 adım geri, “Sil” öncesi",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "a612c3a5b45c1b7efd800d4abaebefc28b74e0f5f30fca67c57986f29fbf1346",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "şimdiki hâl özetiyle sabitlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "expectedStamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmişteki durum özetiyle sabitlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000003"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "revision": {
+       "kind": "history",
+       "steps": 1
+      },
+      "expectedStamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "state": "1 adım geri, “Sil” öncesi",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizim değişince eski özet şimdiki hâlde reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000003"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "expectedStamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "state_changed",
+       "message": "“Parsel” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.",
+       "path": "expectedStamp"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma adımı kayınca eski özet reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000003"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000004"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "revision": {
+       "kind": "history",
+       "steps": 1
+      },
+      "expectedStamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "state_changed",
+       "message": "“Parsel” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.",
+       "path": "expectedStamp"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tutmayan özet",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01",
+      "expectedStamp": "0000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "state_changed",
+       "message": "“Parsel” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.",
+       "path": "expectedStamp"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyadaki durum",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "revision": {
+       "kind": "file",
+       "path": "$fixture:temporal/v1/revisions/parsel-2023.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000005"
+       ],
+       "notValid": 1,
+       "notKnown": 0,
+       "timeless": 1,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "state": "parsel-2023.kcad",
+       "stamp": "422600c2ca2885870fabf30c8902a4c4554b521c189a538f7d0d0701270d9fd1",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyadaki durum özetiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "revision": {
+       "kind": "file",
+       "path": "$fixture:temporal/v1/revisions/parsel-2023.kcad"
+      },
+      "expectedStamp": "422600c2ca2885870fabf30c8902a4c4554b521c189a538f7d0d0701270d9fd1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "shown": [
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000005"
+       ],
+       "notValid": 1,
+       "notKnown": 0,
+       "timeless": 1,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "state": "parsel-2023.kcad",
+       "stamp": "422600c2ca2885870fabf30c8902a4c4554b521c189a538f7d0d0701270d9fd1",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyadaki durum şimdiki hâlin özetiyle reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "revision": {
+       "kind": "file",
+       "path": "$fixture:temporal/v1/revisions/parsel-2023.kcad"
+      },
+      "expectedStamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "state_changed",
+       "message": "“Parsel” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.",
+       "path": "expectedStamp"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyada olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "ariza",
+      "revision": {
+       "kind": "file",
+       "path": "$fixture:temporal/v1/revisions/parsel-2023.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“ariza” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma geçmişi boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "revision": {
+       "kind": "history",
+       "steps": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişinde adım yok; önce çizimde bir değişiklik yapın.",
+       "path": "revision.steps"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma geçmişinde o kadar adım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-4444-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-4444-7000-8000-000000000003"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "revision": {
+       "kind": "history",
+       "steps": 3
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişi 1 adım tutuyor; 3 adım geri istendi. 1 ile 1 arasında bir sayı verin.",
+       "path": "revision.steps"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "göreli dosya yolu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "revision": {
+       "kind": "file",
+       "path": "parsel-2023.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“parsel-2023.kcad” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad).",
+       "path": "revision.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "revision": {
+       "kind": "file",
+       "path": "$fixture:temporal/v1/revisions/yok.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:temporal/v1/revisions/yok.kcad okunamadı: dosya yok ya da açılamıyor.",
+       "path": "revision.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
   {
    "name": "1 Haziran 2024'te geçerli parseller, bugün bilindiği gibi",
    "steps": [
@@ -553,18 +1165,20 @@
        "layer": "parsel",
        "at": "2024-06-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -592,15 +1206,17 @@
        "at": "2024-06-01",
        "knownAt": "2025-01-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:5",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 3,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -628,16 +1244,18 @@
        "at": "2024-06-01",
        "knownAt": "2025-02-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 2,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -665,16 +1283,18 @@
        "at": "2024-06-01",
        "knownAt": "2025-01-10T06:00:00Z",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 2,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -702,15 +1322,17 @@
        "at": "2024-06-01",
        "knownAt": "2025-01-10T05:59:00Z",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:5",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 3,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -738,14 +1360,16 @@
        "at": "2023-06-01",
        "knownAt": "2023-06-01",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:5"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000005"
        ],
        "notValid": 4,
        "notKnown": 3,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -771,17 +1395,19 @@
        "layer": "parsel",
        "at": "2024-03-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007"
        ],
        "notValid": 4,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -809,13 +1435,15 @@
        "at": "2024-02-01",
        "knownAt": "2024-03-02",
        "shown": [
-        "$uidOf:5"
+        "0192f5a3-4444-7000-8000-000000000005"
        ],
        "notValid": 4,
        "notKnown": 4,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -843,14 +1471,16 @@
        "at": "2024-02-01",
        "knownAt": "2024-03-01",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:5"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000005"
        ],
        "notValid": 4,
        "notKnown": 3,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -878,18 +1508,20 @@
        "from": "2022-01-01",
        "to": "2023-01-01",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:3",
-        "$uidOf:4",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000004",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007"
        ],
        "notValid": 3,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -917,18 +1549,20 @@
        "from": "2023-05-01",
        "to": "2023-06-01",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7",
-        "$uidOf:8"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007",
+        "0192f5a3-4444-7000-8000-000000000008"
        ],
        "notValid": 3,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -954,17 +1588,19 @@
        "layer": "parsel",
        "at": "2023-05-05",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007"
        ],
        "notValid": 4,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -992,18 +1628,20 @@
        "from": "2024-05-31T21:00:00Z",
        "to": "2024-05-31T22:00:00Z",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -1029,17 +1667,19 @@
        "layer": "parsel",
        "at": "2024-05-31T21:00:00Z",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007"
        ],
        "notValid": 4,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -1065,18 +1705,20 @@
        "layer": "parsel",
        "at": "2024-06-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -1102,15 +1744,17 @@
        "layer": "parsel",
        "knownAt": "2024-01-01",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:5",
-        "$uidOf:8"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000008"
        ],
        "notValid": 0,
        "notKnown": 6,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -1134,21 +1778,23 @@
       "output": {
        "layer": "parsel",
        "shown": [
-        "$uidOf:1",
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:4",
-        "$uidOf:5",
-        "$uidOf:6",
-        "$uidOf:7",
-        "$uidOf:8",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000001",
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000004",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000006",
+        "0192f5a3-4444-7000-8000-000000000007",
+        "0192f5a3-4444-7000-8000-000000000008",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 0,
        "notKnown": 0,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []
@@ -1174,13 +1820,15 @@
        "layer": "ariza",
        "at": "2024-06-01T10:00:00Z",
        "shown": [
-        "$uidOf:10"
+        "0192f5a3-4444-7000-8000-000000000010"
        ],
        "notValid": 1,
        "notKnown": 0,
        "timeless": 0,
        "unrecorded": 0,
        "unreadable": 0,
+       "state": "Şimdiki hâl",
+       "stamp": "b82755725906b755b7d6a6a5622c09980feeb8bdd4a31fa525db07c5f5ffb95a",
        "revision": "$current"
       },
       "warnings": []
@@ -1208,14 +1856,16 @@
        "from": "2024-06-01",
        "to": "2024-06-03",
        "shown": [
-        "$uidOf:10",
-        "$uidOf:11"
+        "0192f5a3-4444-7000-8000-000000000010",
+        "0192f5a3-4444-7000-8000-000000000011"
        ],
        "notValid": 0,
        "notKnown": 0,
        "timeless": 0,
        "unrecorded": 0,
        "unreadable": 0,
+       "state": "Şimdiki hâl",
+       "stamp": "b82755725906b755b7d6a6a5622c09980feeb8bdd4a31fa525db07c5f5ffb95a",
        "revision": "$current"
       },
       "warnings": []
@@ -1241,14 +1891,16 @@
        "layer": "birikim",
        "at": "2026-01-01",
        "shown": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "0192f5a3-4444-7000-8000-000000000012",
+        "0192f5a3-4444-7000-8000-000000000013"
        ],
        "notValid": 0,
        "notKnown": 0,
        "timeless": 0,
        "unrecorded": 0,
        "unreadable": 0,
+       "state": "Şimdiki hâl",
+       "stamp": "07429592bcd865e6cc3d6571bdb5cbea5b64368ab426a6eb7831f0a6bce9f997",
        "revision": "$current"
       },
       "warnings": []
@@ -1274,13 +1926,15 @@
        "layer": "plan",
        "at": "2025-01-01",
        "shown": [
-        "$uidOf:14"
+        "0192f5a3-4444-7000-8000-000000000014"
        ],
        "notValid": 0,
        "notKnown": 0,
        "timeless": 0,
        "unrecorded": 0,
        "unreadable": 0,
+       "state": "Şimdiki hâl",
+       "stamp": "c1d5f9b12a199c48d201fa97cb9c3b370565962116d107dfd1ab9ace6ffbf26a",
        "revision": "$current"
       },
       "warnings": []
@@ -1308,16 +1962,18 @@
        "at": "2024-06-01",
        "knownAt": "2025-02-01",
        "shown": [
-        "$uidOf:2",
-        "$uidOf:3",
-        "$uidOf:5",
-        "$uidOf:9"
+        "0192f5a3-4444-7000-8000-000000000002",
+        "0192f5a3-4444-7000-8000-000000000003",
+        "0192f5a3-4444-7000-8000-000000000005",
+        "0192f5a3-4444-7000-8000-000000000009"
        ],
        "notValid": 3,
        "notKnown": 2,
        "timeless": 2,
        "unrecorded": 2,
        "unreadable": 2,
+       "state": "Şimdiki hâl",
+       "stamp": "769cf5ede089a730d50adba34cb2cdd878ce3aa2aa9f9f496cd200a32765525a",
        "revision": "$current"
       },
       "warnings": []

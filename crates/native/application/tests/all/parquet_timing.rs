@@ -79,6 +79,7 @@ fn parquet_timing() {
     for compression in [ParquetCompression::Snappy, ParquetCompression::None] {
         let path = dir.join(format!("parsel-{compression:?}.parquet").to_lowercase());
         let input = ExportParquet {
+            time: None,
             path: path.display().to_string(),
             layers: Vec::new(),
             overwrite: true,

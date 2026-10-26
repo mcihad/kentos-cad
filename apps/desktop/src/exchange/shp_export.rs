@@ -84,13 +84,19 @@ fn event(e: Event) -> Message {
 
 impl App {
     /// What the export would write with `encoding`: every layer with objects.
-    fn shp_plan(&self, encoding: ShpEncoding) -> Result<(Vec<Planned>, Vec<String>), String> {
+    pub(super) fn shp_plan(&self, encoding: ShpEncoding) -> Result<(Vec<Planned>, Vec<String>), String> {
         let Some(doc) = &self.document else {
             return Err("Açık çizim yok.".into());
         };
-        let ids = kentos_native_application::shapefile::layer_ids(&doc.model, &[])
+        // The objects the export's time shows (docs/adr/0646 §2).
+        let time = self.export_time();
+        let (model, _) =
+            kentos_native_application::time_export::filtered(&doc.model, &[], time.as_ref())
+                .map_err(|(_, why, _)| why)?;
+        let model = model.as_ref();
+        let ids = kentos_native_application::shapefile::layer_ids(model, &[])
             .map_err(|(_, id)| format!("{id} katmanı yok"))?;
-        let written = kentos_native_application::shapefile::write(&doc.model, &ids, encoding)?;
+        let written = kentos_native_application::shapefile::write(model, &ids, encoding)?;
         if written.sets.is_empty() {
             return Err("Çizimde Shapefile'a yazılacak nesne yok: yazı, ölçü, tablo, resim, raster ve nokta bulutunun Shapefile'da geometrisi yok.".into());
         }
@@ -105,7 +111,7 @@ impl App {
             .collect();
         Ok((
             sets,
-            kentos_headless::shp_export::losses(&doc.model, &written),
+            kentos_headless::shp_export::losses(model, &written),
         ))
     }
 
@@ -185,6 +191,7 @@ impl App {
             }
             Event::Picked(None) => Task::none(),
             Event::Picked(Some(path)) => {
+                let time = self.export_time();
                 let (Some(doc), Some(Window::ShpExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
@@ -195,6 +202,7 @@ impl App {
                     encoding: s.encoding,
                     // A folder is never written over; an archive or a .shp the dialog asked about is.
                     overwrite: s.target != Target::Folder,
+                    time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 let model = doc.model.clone();
@@ -311,6 +319,9 @@ impl App {
             }
             .to_owned()),
         ));
+        if let Some(row) = self.export_time_row() {
+            body = body.push(row);
+        }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(

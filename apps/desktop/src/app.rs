@@ -216,6 +216,8 @@ pub enum Dialog {
     AddressProviders,
     /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
     TimeLayer,
+    /// Sensör gözlemleri (temporal/sensors.rs, docs/adr/0646 §6); the window is `App::time.sensors`.
+    Sensors,
     /// Senaryo oluştur and Senaryoyu uygula's question (temporal/scenario.rs); the window is `App::time.scenario`.
     Scenario,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
@@ -2863,6 +2865,7 @@ impl App {
             // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
             "time.slider" => self.time_toggle(),
             "time.layer" => self.open_time_layer(None),
+            "time.sensors" => self.open_sensors(),
             "time.compare" => self.open_time_compare(),
             "scenario.create" => self.open_scenario_create(),
             "scenario.show" => {

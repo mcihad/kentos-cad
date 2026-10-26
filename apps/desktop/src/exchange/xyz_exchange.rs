@@ -106,7 +106,7 @@ fn event(e: Event) -> Message {
 }
 
 impl ExportState {
-    fn input(&self, path: String) -> ExportXyz {
+    fn input(&self, path: String, time: Option<kentos_commands::QueryTime>) -> ExportXyz {
         ExportXyz {
             path,
             layers: Vec::new(),
@@ -117,18 +117,19 @@ impl ExportState {
             without_z: self.without_z,
             // The dialog asked before writing over.
             overwrite: true,
+            time,
         }
     }
 }
 
 impl App {
     /// The plan for the window's choices.
-    fn xyz_replan(&mut self) {
+    pub(super) fn xyz_replan(&mut self) {
         let Some(Window::XyzExport(s)) = &self.exchange else {
             return;
         };
         let plan = match &self.document {
-            Some(doc) => xyz_table::export(&doc.model, &s.input(self.export_name(".xyz")))
+            Some(doc) => xyz_table::export(&doc.model, &s.input(self.export_name(".xyz"), self.export_time()))
                 .map(|m| m.output)
                 .map_err(|(_, message, _)| message),
             None => Err("Açık çizim yok.".into()),
@@ -208,11 +209,12 @@ impl App {
             }
             Event::Saved(None) => {}
             Event::Saved(Some(path)) => {
+                let time = self.export_time();
                 let (Some(doc), Some(Window::XyzExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
                 };
-                let input = s.input(path.display().to_string());
+                let input = s.input(path.display().to_string(), time);
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 let model = doc.model.clone();
                 return off_thread(
@@ -335,6 +337,9 @@ impl App {
                 false
             }
         };
+        if let Some(row) = self.export_time_row() {
+            body = body.push(row);
+        }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(

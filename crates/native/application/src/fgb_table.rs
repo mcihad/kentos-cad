@@ -19,6 +19,8 @@ use crate::geopackage::{self, Read};
 pub struct Made {
     pub bytes: Vec<u8>,
     pub output: FgbExported,
+    /// The objects the export's time left out (docs/adr/0646 §2).
+    pub time_left_out: u32,
 }
 
 /// GDAL's name of a layer's geometry type, as `ogrinfo` says it.
@@ -52,8 +54,16 @@ fn type_word(gs: &[&Geometry]) -> String {
     }
 }
 
-/// The layers' objects as a FlatGeobuf, or why none can be written: (code, message, path).
+/// The export of `input`, of the objects its time shows (docs/adr/0646 §2).
 pub fn export(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String, String)> {
+    let (doc, left) = crate::time_export::filtered(doc, &input.layers, input.time.as_ref())?;
+    let mut made = export_all(&doc, input)?;
+    made.time_left_out = left;
+    Ok(made)
+}
+
+/// The layers' objects as a FlatGeobuf, or why none can be written: (code, message, path).
+fn export_all(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String, String)> {
     let ids = crate::shapefile::layer_ids(doc, &input.layers).map_err(|(i, id)| {
         (
             kentos_commands::codes::LAYER_NOT_FOUND.to_owned(),
@@ -226,7 +236,7 @@ pub fn export(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { bytes, output })
+    Ok(Made { bytes, output, time_left_out: 0 })
 }
 
 /// The file's layer as the GeoPackage import reads a table.

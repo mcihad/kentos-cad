@@ -24,6 +24,8 @@ pub struct Made {
     /// The schema first, the GML last: the order they are written in.
     pub files: Vec<(String, Vec<u8>)>,
     pub output: GmlExported,
+    /// The objects the export's time left out (docs/adr/0646 §2).
+    pub time_left_out: u32,
 }
 
 fn unique(taken: &mut Vec<String>, want: String) -> String {
@@ -37,8 +39,16 @@ fn unique(taken: &mut Vec<String>, want: String) -> String {
     name
 }
 
-/// The layers' objects as GML 3.2, or why none can be written: (code, message, path).
+/// The export of `input`, of the objects its time shows (docs/adr/0646 §2).
 pub fn export(doc: &Document, input: &ExportGml) -> Result<Made, (String, String, String)> {
+    let (doc, left) = crate::time_export::filtered(doc, &input.layers, input.time.as_ref())?;
+    let mut made = export_all(&doc, input)?;
+    made.time_left_out = left;
+    Ok(made)
+}
+
+/// The layers' objects as GML 3.2, or why none can be written: (code, message, path).
+fn export_all(doc: &Document, input: &ExportGml) -> Result<Made, (String, String, String)> {
     let ids = crate::shapefile::layer_ids(doc, &input.layers).map_err(|(i, id)| {
         (
             kentos_commands::codes::LAYER_NOT_FOUND.to_owned(),
@@ -236,7 +246,7 @@ pub fn export(doc: &Document, input: &ExportGml) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { files, output })
+    Ok(Made { files, output, time_left_out: 0 })
 }
 
 /// The file's feature types as the GeoPackage import reads tables; the schema and `.gfs` beside `path` are read when

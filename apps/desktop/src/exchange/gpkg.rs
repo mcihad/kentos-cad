@@ -533,6 +533,8 @@ impl App {
             path: path.display().to_string(),
             layers: Vec::new(),
             overwrite: true,
+            // GeoPackage dışa aktar has no window to ask Zaman sürgüsünün zamanıyla in (docs/adr/0646 §2).
+            time: None,
         };
         match kentos_headless::file_commands::export_gpkg(&doc.model, &input) {
             Ok((output, warnings)) => {

@@ -19,8 +19,9 @@ use crate::cad::REVISION_TEXT;
 pub const CAD_TIME_QUERY: &str = "cad.time.query";
 pub const CAD_TIME_QUERY_VERSION: u32 = 1;
 
-/// Input of `cad.time.query` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`,
-/// `invalid_window`, `not_recorded`.
+/// Input of `cad.time.query` v1. Refusals: `no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`
+/// (the state asked), `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`, `invalid_period`,
+/// `not_recorded`; the conflict `state_changed` (docs/adr/0646 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -44,6 +45,16 @@ pub struct TimeQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub known_at: Option<String>,
+    /// The state asked (docs/adr/0646 §1): the drawing some undo steps back or a drawing file; none, the drawing as
+    /// it is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub revision: Option<crate::CompareAgainst>,
+    /// The layer's digest a former answer gave (`stamp`): the state must hold the layer as it did, else
+    /// `state_changed`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expected_stamp: Option<String>,
 }
 
 /// Output of `cad.time.query` v1: the objects shown (persistent ids, in the drawing's order) and why the others are
@@ -84,6 +95,11 @@ pub struct TimeQueried {
     /// Values of the layer's time attributes that are not moments.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub unreadable: u32,
+    /// The state asked: “Şimdiki hâl”, “1 adım geri, “Taşı” öncesi” or the file's name.
+    pub state: String,
+    /// The layer's digest in that state (the SHA-256 of its objects' kinds, geometries and attributes by lasting
+    /// id): given back as `expectedStamp`, the same question asks the same data.
+    pub stamp: String,
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
     pub revision: String,
 }

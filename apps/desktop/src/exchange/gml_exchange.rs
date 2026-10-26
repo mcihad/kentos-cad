@@ -64,7 +64,7 @@ fn event(e: Event) -> Message {
 }
 
 impl App {
-    fn gml_plan(&self, schema: bool) -> Result<GmlExported, String> {
+    pub(super) fn gml_plan(&self, schema: bool) -> Result<GmlExported, String> {
         let Some(doc) = &self.document else {
             return Err("Açık çizim yok.".into());
         };
@@ -73,6 +73,7 @@ impl App {
             layers: Vec::new(),
             schema,
             overwrite: true,
+            time: self.export_time(),
         };
         gml_table::export(&doc.model, &input)
             .map(|m| m.output)
@@ -195,6 +196,7 @@ impl App {
             }
             Event::Saved(None) | Event::Opened(None) => {}
             Event::Saved(Some(path)) => {
+                let time = self.export_time();
                 let (Some(doc), Some(Window::GmlExport(s))) = (&self.document, &mut self.exchange)
                 else {
                     return Task::none();
@@ -205,6 +207,7 @@ impl App {
                     schema: s.schema,
                     // The dialog asked before writing over.
                     overwrite: true,
+                    time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 let model = doc.model.clone();
@@ -392,6 +395,9 @@ impl App {
             "Yanına uygulama şemasını (.xsd) yaz",
             Some(event(Event::Schema)),
         ));
+        if let Some(row) = self.export_time_row() {
+            body = body.push(row);
+        }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(

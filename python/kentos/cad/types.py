@@ -1265,6 +1265,22 @@ DrawingUnitName = Literal["mm", "cm", "m", "in", "ft"]
 """The names of :class:`DrawingUnit`, for a plain string."""
 
 
+class DuplicatePolicy(_StrEnum):
+    """What a duplicate observation (an asset's at a moment it has) does.
+
+    - ``first``: The one there stays; the new one is skipped.
+    - ``last``: The new one takes its place: a layer that records versions ends the old one at the receipt, one that does
+    - ``all``: Both are kept.
+    """
+    FIRST = "first"
+    LAST = "last"
+    ALL = "all"
+
+
+DuplicatePolicyName = Literal["first", "last", "all"]
+"""The names of :class:`DuplicatePolicy`, for a plain string."""
+
+
 class DwgVersion(_StrEnum):
     """The binary format signature, not the release year of the application saving it."""
     AC1014 = "AC1014"
@@ -2204,6 +2220,20 @@ class LabelsMode(_StrEnum):
 
 LabelsModeName = Literal["single", "rules", "off"]
 """The names of :class:`LabelsMode`, for a plain string."""
+
+
+class LatePolicy(_StrEnum):
+    """What a late observation (earlier than the asset's latest) does.
+
+    - ``accept``: Written and counted (marked in `lateField` when given).
+    - ``reject``: Not written: said among the rows refused.
+    """
+    ACCEPT = "accept"
+    REJECT = "reject"
+
+
+LatePolicyName = Literal["accept", "reject"]
+"""The names of :class:`LatePolicy`, for a plain string."""
 
 
 class LayerEditOperation(_StrEnum):
@@ -20691,12 +20721,15 @@ class ExportCsv(_Model):
         path: An absolute path ending `.csv`.
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the CSV and its `.csvt` and `.prj` when they are there.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     geometry: CsvGeometry | CsvGeometryName = CsvGeometry.WKT
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
     separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20706,6 +20739,8 @@ class ExportCsv(_Model):
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
         out["separator"] = _enum_out(self.separator)
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -20716,6 +20751,7 @@ class ExportCsv(_Model):
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
             separator=_enum_in(CsvSeparator, data["separator"]) if "separator" in data else CsvSeparator.COMMA,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -20819,10 +20855,13 @@ class ExportFgb(_Model):
         path: An absolute path ending `.fgb`.
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the file when it is there.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20830,6 +20869,8 @@ class ExportFgb(_Model):
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -20838,6 +20879,7 @@ class ExportFgb(_Model):
             path=data["path"],
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -20908,11 +20950,14 @@ class ExportGml(_Model):
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the GML and its `.xsd` when they are there.
         schema: Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
     schema: bool | Unset = UNSET
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20922,6 +20967,8 @@ class ExportGml(_Model):
         out["overwrite"] = self.overwrite
         if self.schema is not UNSET:
             out["schema"] = self.schema
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -20931,6 +20978,7 @@ class ExportGml(_Model):
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
             schema=data.get("schema", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -20945,10 +20993,13 @@ class ExportGpkg(_Model):
         path: The file to write, an absolute path (`.gpkg`).
         layers: The layers, by id; empty: every layer with objects.
         overwrite: Write over a file that is there.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20956,6 +21007,8 @@ class ExportGpkg(_Model):
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -20964,6 +21017,7 @@ class ExportGpkg(_Model):
             path=data["path"],
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -21031,12 +21085,15 @@ class ExportParquet(_Model):
         covering: Whether the `bbox` covering column is written (GeoParquet 1.1).
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the file when it is there.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     compression: ParquetCompression | ParquetCompressionName = ParquetCompression.SNAPPY
     covering: bool | Unset = UNSET
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -21047,6 +21104,8 @@ class ExportParquet(_Model):
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -21057,6 +21116,7 @@ class ExportParquet(_Model):
             covering=data.get("covering", UNSET),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -21165,11 +21225,14 @@ class ExportShp(_Model):
         encoding: The .dbf's code page; UTF-8 when not given.
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the archive, or the `.shp`'s parts, that are there (a folder is never written over).
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
+    time: QueryTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -21178,6 +21241,8 @@ class ExportShp(_Model):
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -21187,6 +21252,7 @@ class ExportShp(_Model):
             encoding=_enum_in(ShpEncoding, data["encoding"]) if "encoding" in data else ShpEncoding.UTF_8,
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
         )
 
 
@@ -21234,6 +21300,8 @@ class ExportXyz(_Model):
         header: A first line naming the columns (`X Y Z`).
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
         overwrite: Write over the file when it is there.
+        time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+            written layer with time settings (of every one when `fields` names them); a layer without them whole.
     """
     path: str
     decimals: int | None | Unset = UNSET
@@ -21241,6 +21309,7 @@ class ExportXyz(_Model):
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
     separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE
+    time: QueryTime | None | Unset = UNSET
     vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS
     without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO
 
@@ -21254,6 +21323,8 @@ class ExportXyz(_Model):
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
         out["separator"] = _enum_out(self.separator)
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         out["vertices"] = _enum_out(self.vertices)
         out["withoutZ"] = _enum_out(self.without_z)
         return out
@@ -21267,6 +21338,7 @@ class ExportXyz(_Model):
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
             separator=_enum_in(XyzSeparator, data["separator"]) if "separator" in data else XyzSeparator.SPACE,
+            time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
             vertices=_enum_in(XyzVertices, data["vertices"]) if "vertices" in data else XyzVertices.POINTS,
             without_z=_enum_in(XyzWithoutZ, data["withoutZ"]) if "withoutZ" in data else XyzWithoutZ.ZERO,
         )
@@ -35825,6 +35897,38 @@ class ObjectsDerived(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Observation(_Model):
+    """One observation: its asset, its moment, its value and quality (a number, a text, a boolean, an object; written
+    as text, ADR 0646 §4).
+    Attributes:
+        at: The observation's moment: a date, or a date and a time with an optional zone.
+    """
+    asset: str
+    at: str
+    quality: Any | Unset = UNSET
+    value: Any | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["asset"] = self.asset
+        out["at"] = self.at
+        if self.quality is not UNSET:
+            out["quality"] = self.quality
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Observation:
+        return cls(
+            asset=data["asset"],
+            at=data["at"],
+            quality=data.get("quality", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningEntity(Entity):
     """An opening in a wall (docs/adr/0341).
     Attributes:
@@ -44032,7 +44136,7 @@ class QueryPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class QueryTime(_Model):
-    """A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
+    """A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
     known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
     (or a layer without them) names them in `fields`.
     Attributes:
@@ -47728,6 +47832,351 @@ class SelectLeftOut(_Model):
             kinds=data["kinds"],
             layers=data["layers"],
             hidden=data["hidden"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorLatest(_Model):
+    """An asset's latest observation.
+    Attributes:
+        observed_at: Its moment, in UTC.
+        age_seconds: The moment asked less its moment. Unit: s.
+        stale: Older than `staleAfter`.
+    """
+    asset: str
+    uid: str
+    observed_at: str
+    age_seconds: float
+    stale: bool
+    quality: str | None | Unset = UNSET
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["asset"] = self.asset
+        out["uid"] = self.uid
+        out["observedAt"] = self.observed_at
+        out["ageSeconds"] = float(self.age_seconds)
+        out["stale"] = self.stale
+        if self.quality is not UNSET:
+            out["quality"] = self.quality
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorLatest:
+        return cls(
+            asset=data["asset"],
+            uid=data["uid"],
+            observed_at=data["observedAt"],
+            age_seconds=float(data["ageSeconds"]),
+            stale=data["stale"],
+            quality=data.get("quality", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorRejected(_Model):
+    """A row not written: its place among the observations read, its asset and moment as given, and why.
+    Attributes:
+        index: Unit: index.
+    """
+    index: int
+    asset: str
+    at: str
+    code: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["asset"] = self.asset
+        out["at"] = self.at
+        out["code"] = self.code
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorRejected:
+        return cls(
+            index=data["index"],
+            asset=data["asset"],
+            at=data["at"],
+            code=data["code"],
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorsIngest(_Model):
+    """Input of `cad.sensors.ingest` v1. Exactly one source: `observations`, `file` or `url`. Refusals, in order:
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `not_temporal`,
+    `no_asset_field`, `invalid_input` (the value field, the asset, the pages), `invalid_source`, `invalid_moment`
+    (the receipt), `invalid_file_path`, `file_not_found`, `import_unreadable`, `source_unreachable`, `invalid_count`.
+    A row it cannot write is said in `rejected`, the others written.
+    Attributes:
+        layer: The sensor layer's id: a temporal layer whose time names the asset field (`key`).
+        value_field: The field each observation's value is written to.
+        asset: The asset a file's or an address's observations are of (a Datastream's).
+        file: A SensorThings Observations answer (`{"value": [...]}` or the list): its absolute path.
+        late_field: The field a late observation written gets `evet` in.
+        observations: The observations given here.
+        pages: The most pages an address is read for, 1 to 100; none: 10. Unit: count.
+        quality_field: The field each observation's quality is written to; none: the quality is not written.
+        received_at: The moment the observations were received, written to the layer's recorded start; none: now.
+        url: A SensorThings Observations address; `@iot.nextLink` followed up to `pages` pages.
+    """
+    layer: str
+    value_field: str
+    asset: str | None | Unset = UNSET
+    duplicates: DuplicatePolicy | DuplicatePolicyName = DuplicatePolicy.FIRST
+    expected_revision: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    late: LatePolicy | LatePolicyName = LatePolicy.ACCEPT
+    late_field: str | None | Unset = UNSET
+    observations: list[Observation] | None | Unset = UNSET
+    pages: int | None | Unset = UNSET
+    quality_field: str | None | Unset = UNSET
+    received_at: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["valueField"] = self.value_field
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        out["duplicates"] = _enum_out(self.duplicates)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.file is not UNSET:
+            out["file"] = self.file
+        out["late"] = _enum_out(self.late)
+        if self.late_field is not UNSET:
+            out["lateField"] = self.late_field
+        if self.observations is not UNSET:
+            out["observations"] = None if self.observations is None else [e0.to_json() for e0 in self.observations]
+        if self.pages is not UNSET:
+            out["pages"] = self.pages
+        if self.quality_field is not UNSET:
+            out["qualityField"] = self.quality_field
+        if self.received_at is not UNSET:
+            out["receivedAt"] = self.received_at
+        if self.url is not UNSET:
+            out["url"] = self.url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorsIngest:
+        return cls(
+            layer=data["layer"],
+            value_field=data["valueField"],
+            asset=data.get("asset", UNSET),
+            duplicates=_enum_in(DuplicatePolicy, data["duplicates"]) if "duplicates" in data else DuplicatePolicy.FIRST,
+            expected_revision=data.get("expectedRevision", UNSET),
+            file=data.get("file", UNSET),
+            late=_enum_in(LatePolicy, data["late"]) if "late" in data else LatePolicy.ACCEPT,
+            late_field=data.get("lateField", UNSET),
+            observations=UNSET if "observations" not in data else None if data["observations"] is None else [Observation.from_json(e0) for e0 in data["observations"]],
+            pages=data.get("pages", UNSET),
+            quality_field=data.get("qualityField", UNSET),
+            received_at=data.get("receivedAt", UNSET),
+            url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorsIngestPlan(_Model):
+    """What `cad.sensors.ingest` would write: as its output, the records to add counted.
+    Attributes:
+        adds: Unit: count.
+        skipped: Unit: count.
+        late: Unit: count.
+        pages: Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    adds: int
+    replaced: list[str]
+    skipped: int
+    late: int
+    rejected: list[SensorRejected]
+    pages: int
+    more: bool
+    received_at: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["adds"] = self.adds
+        out["replaced"] = list(self.replaced)
+        out["skipped"] = self.skipped
+        out["late"] = self.late
+        out["rejected"] = [e0.to_json() for e0 in self.rejected]
+        out["pages"] = self.pages
+        out["more"] = self.more
+        out["receivedAt"] = self.received_at
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorsIngestPlan:
+        return cls(
+            adds=data["adds"],
+            replaced=list(data["replaced"]),
+            skipped=data["skipped"],
+            late=data["late"],
+            rejected=[SensorRejected.from_json(e0) for e0 in data["rejected"]],
+            pages=data["pages"],
+            more=data["more"],
+            received_at=data["receivedAt"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorsIngested(_Model):
+    """Output of `cad.sensors.ingest` v1.
+    Attributes:
+        added: The records written, by persistent id, in the observations' order.
+        replaced: The records a duplicate took the place of (ended, or changed in place).
+        skipped: Duplicates not written. Unit: count.
+        late: Late observations written. Unit: count.
+        pages: The pages read (a file one, given observations none). Unit: count.
+        more: Whether the source names a page not read.
+        received_at: The receipt written, in UTC.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    added: list[str]
+    replaced: list[str]
+    skipped: int
+    late: int
+    rejected: list[SensorRejected]
+    pages: int
+    more: bool
+    received_at: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = list(self.added)
+        out["replaced"] = list(self.replaced)
+        out["skipped"] = self.skipped
+        out["late"] = self.late
+        out["rejected"] = [e0.to_json() for e0 in self.rejected]
+        out["pages"] = self.pages
+        out["more"] = self.more
+        out["receivedAt"] = self.received_at
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorsIngested:
+        return cls(
+            added=list(data["added"]),
+            replaced=list(data["replaced"]),
+            skipped=data["skipped"],
+            late=data["late"],
+            rejected=[SensorRejected.from_json(e0) for e0 in data["rejected"]],
+            pages=data["pages"],
+            more=data["more"],
+            received_at=data["receivedAt"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorsLatest(_Model):
+    """Input of `cad.sensors.latest` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `no_asset_field`,
+    `invalid_input` (the value field, a negative `staleAfter`), `invalid_moment`, `not_recorded`.
+    Attributes:
+        at: The moment asked; none: now.
+        expected_assets: The assets expected (`expectedAssets`): those without an observation are said in `missing`.
+        known_at: The day known: only the versions recorded by then and not yet superseded.
+        stale_after: An observation older than this many seconds is stale. Unit: s.
+    """
+    layer: str
+    value_field: str
+    at: str | None | Unset = UNSET
+    expected_assets: list[str] | Unset = UNSET
+    known_at: str | None | Unset = UNSET
+    quality_field: str | None | Unset = UNSET
+    stale_after: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["valueField"] = self.value_field
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.expected_assets is not UNSET:
+            out["expectedAssets"] = list(self.expected_assets)
+        if self.known_at is not UNSET:
+            out["knownAt"] = self.known_at
+        if self.quality_field is not UNSET:
+            out["qualityField"] = self.quality_field
+        if self.stale_after is not UNSET:
+            out["staleAfter"] = None if self.stale_after is None else float(self.stale_after)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorsLatest:
+        return cls(
+            layer=data["layer"],
+            value_field=data["valueField"],
+            at=data.get("at", UNSET),
+            expected_assets=list(data["expectedAssets"]) if "expectedAssets" in data else UNSET,
+            known_at=data.get("knownAt", UNSET),
+            quality_field=data.get("qualityField", UNSET),
+            stale_after=UNSET if "staleAfter" not in data else None if data["staleAfter"] is None else float(data["staleAfter"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SensorsLatestAnswer(_Model):
+    """Output of `cad.sensors.latest` v1.
+    Attributes:
+        at: The moment asked, in UTC.
+        assets: Each asset's latest, in the assets' natural order.
+        stale: Unit: count.
+        missing: The expected assets without an observation.
+        unreadable: Objects without an asset or a readable moment. Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    layer: str
+    at: str
+    assets: list[SensorLatest]
+    stale: int
+    missing: list[str]
+    unreadable: int
+    revision: str
+    known_at: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["at"] = self.at
+        out["assets"] = [e0.to_json() for e0 in self.assets]
+        out["stale"] = self.stale
+        out["missing"] = list(self.missing)
+        out["unreadable"] = self.unreadable
+        out["revision"] = self.revision
+        if self.known_at is not UNSET:
+            out["knownAt"] = self.known_at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SensorsLatestAnswer:
+        return cls(
+            layer=data["layer"],
+            at=data["at"],
+            assets=[SensorLatest.from_json(e0) for e0 in data["assets"]],
+            stale=data["stale"],
+            missing=list(data["missing"]),
+            unreadable=data["unreadable"],
+            revision=data["revision"],
+            known_at=data.get("knownAt", UNSET),
         )
 
 
@@ -55380,6 +55829,9 @@ class TimeQueried(_Model):
         timeless: Objects without a valid time (shown: a timeless object shows at every time). Unit: count.
         unrecorded: Objects without a recorded start (with `knownAt` not shown). Unit: count.
         unreadable: Values of the layer's time attributes that are not moments. Unit: count.
+        state: The state asked: “Şimdiki hâl”, “1 adım geri, “Taşı” öncesi” or the file's name.
+        stamp: The layer's digest in that state (the SHA-256 of its objects' kinds, geometries and attributes by lasting
+            id): given back as `expectedStamp`, the same question asks the same data.
         revision: ^(0|[1-9][0-9]*)$
         at: The instant read (`YYYY-MM-DDTHH:MM:SSZ`, a midnight `YYYY-MM-DD`).
     """
@@ -55390,6 +55842,8 @@ class TimeQueried(_Model):
     timeless: int
     unrecorded: int
     unreadable: int
+    state: str
+    stamp: str
     revision: str
     at: str | None | Unset = UNSET
     from_: str | None | Unset = UNSET
@@ -55405,6 +55859,8 @@ class TimeQueried(_Model):
         out["timeless"] = self.timeless
         out["unrecorded"] = self.unrecorded
         out["unreadable"] = self.unreadable
+        out["state"] = self.state
+        out["stamp"] = self.stamp
         out["revision"] = self.revision
         if self.at is not UNSET:
             out["at"] = self.at
@@ -55426,6 +55882,8 @@ class TimeQueried(_Model):
             timeless=data["timeless"],
             unrecorded=data["unrecorded"],
             unreadable=data["unreadable"],
+            state=data["state"],
+            stamp=data["stamp"],
             revision=data["revision"],
             at=data.get("at", UNSET),
             from_=data.get("from", UNSET),
@@ -55436,18 +55894,25 @@ class TimeQueried(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TimeQuery(_Model):
-    """Input of `cad.time.query` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`,
-    `invalid_window`, `not_recorded`.
+    """Input of `cad.time.query` v1. Refusals: `no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`
+    (the state asked), `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`, `invalid_period`,
+    `not_recorded`; the conflict `state_changed` (docs/adr/0646 §1).
     Attributes:
         layer: The temporal layer's id.
         at: The valid time's instant; with `from` and `to` refused.
+        expected_stamp: The layer's digest a former answer gave (`stamp`): the state must hold the layer as it did, else
+            `state_changed`.
         from_: The valid time's period [from, to): both or neither.
         known_at: The day known: only the versions recorded by then and not yet superseded (a layer that records them).
+        revision: The state asked (docs/adr/0646 §1): the drawing some undo steps back or a drawing file; none, the drawing as
+            it is.
     """
     layer: str
     at: str | None | Unset = UNSET
+    expected_stamp: str | None | Unset = UNSET
     from_: str | None | Unset = UNSET
     known_at: str | None | Unset = UNSET
+    revision: CompareAgainst | None | Unset = UNSET
     to: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -55455,10 +55920,14 @@ class TimeQuery(_Model):
         out["layer"] = self.layer
         if self.at is not UNSET:
             out["at"] = self.at
+        if self.expected_stamp is not UNSET:
+            out["expectedStamp"] = self.expected_stamp
         if self.from_ is not UNSET:
             out["from"] = self.from_
         if self.known_at is not UNSET:
             out["knownAt"] = self.known_at
+        if self.revision is not UNSET:
+            out["revision"] = None if self.revision is None else self.revision.to_json()
         if self.to is not UNSET:
             out["to"] = self.to
         return out
@@ -55468,8 +55937,10 @@ class TimeQuery(_Model):
         return cls(
             layer=data["layer"],
             at=data.get("at", UNSET),
+            expected_stamp=data.get("expectedStamp", UNSET),
             from_=data.get("from", UNSET),
             known_at=data.get("knownAt", UNSET),
+            revision=UNSET if "revision" not in data else None if data["revision"] is None else CompareAgainst.from_json(data["revision"]),
             to=data.get("to", UNSET),
         )
 
@@ -74831,6 +75302,8 @@ __all__ = [
     "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
+    "DuplicatePolicy",
+    "DuplicatePolicyName",
     "DuplicateSheetPaperOp",
     "DwgVersion",
     "DwgVersionName",
@@ -75313,6 +75786,8 @@ __all__ = [
     "LabelsPinned",
     "LabelsReport",
     "LabelsReported",
+    "LatePolicy",
+    "LatePolicyName",
     "LayerAction",
     "LayerCompose",
     "LayerDerivation",
@@ -75619,6 +76094,7 @@ __all__ = [
     "ObjectsPaperCoordSource",
     "ObjectsSelectRegion",
     "ObjectsTrimBoundaries",
+    "Observation",
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
@@ -76274,6 +76750,13 @@ __all__ = [
     "SelectLeftOut",
     "SelectRegion",
     "SelectionPaperCoordSource",
+    "SensorLatest",
+    "SensorRejected",
+    "SensorsIngest",
+    "SensorsIngestPlan",
+    "SensorsIngested",
+    "SensorsLatest",
+    "SensorsLatestAnswer",
     "SequencePaperPointNaming",
     "SeriesSide",
     "SeriesSideName",

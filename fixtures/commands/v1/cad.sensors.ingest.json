@@ -1,0 +1,2426 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sensors.ingest",
+ "commandVersion": 1,
+ "title": "Sensör gözlemlerini al",
+ "note": "ADR 0646 §3–§4. Bağımsız başvuru scripts/fixtures/sensor_cases.py: anlar temporal_cases.py'den, alanların kuralı layer_field_cases.py'den, yinelenen ve geç gözlemin kuralı ADR 0646'dan; SensorThings dosyaları fixtures/sensors/v1. KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Sensörler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "olcum",
+    "name": "Ölçüm",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "olcum_zamani",
+     "key": "sensor",
+     "recordedStart": "alim",
+     "recordedEnd": "alim_bitis"
+    },
+    "fields": [
+     {
+      "name": "sensor",
+      "kind": "text"
+     },
+     {
+      "name": "olcum_zamani",
+      "kind": "text"
+     },
+     {
+      "name": "alim",
+      "kind": "text"
+     },
+     {
+      "name": "alim_bitis",
+      "kind": "text"
+     },
+     {
+      "name": "deger",
+      "alias": "Değer",
+      "kind": "decimal",
+      "min": "-50",
+      "max": "100"
+     },
+     {
+      "name": "kalite",
+      "alias": "Kalite",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi"
+       },
+       {
+        "code": "supheli",
+        "label": "Şüpheli"
+       }
+      ]
+     },
+     {
+      "name": "gec",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "sayac",
+    "name": "Sayaç",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "sayac_no"
+    }
+   },
+   {
+    "id": "duz",
+    "name": "Düz",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "no",
+     "recordedStart": "alim"
+    }
+   },
+   {
+    "id": "plan",
+    "name": "Plan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "baslangic"
+    }
+   },
+   {
+    "id": "zamansiz",
+    "name": "Zamansız",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "sayac_no"
+    }
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "ic",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "olcum",
+  "entities": [
+   {
+    "kind": "record",
+    "id": 1,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:00:00Z",
+     "deger": "12.5",
+     "kalite": "iyi",
+     "alim": "2024-06-01T10:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 2,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:10:00Z",
+     "deger": "13",
+     "alim": "2024-06-01T10:11:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 3,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:05:00Z",
+     "deger": "99",
+     "kalite": "supheli",
+     "alim": "2024-06-01T10:06:00Z",
+     "alim_bitis": "2024-06-01T10:30:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 4,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:05:00Z",
+     "deger": "12.8",
+     "kalite": "iyi",
+     "alim": "2024-06-01T10:30:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 5,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S2",
+     "olcum_zamani": "2024-06-01T09:00:00Z",
+     "deger": "7",
+     "alim": "2024-06-01T09:02:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 6,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S10",
+     "olcum_zamani": "2024-06-01T02:00:00+03:00",
+     "deger": "3",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 7,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S3",
+     "olcum_zamani": "dün",
+     "deger": "1",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 8,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": " ",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "2",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 9,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S20",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "21",
+     "alim": "2024-06-01T08:02:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 10,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S20",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "20",
+     "alim": "2024-06-01T08:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 11,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S30",
+     "olcum_zamani": "2024-06-01T07:00:00Z",
+     "alim": "2024-06-01T07:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 20,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "A",
+     "an": "2024-06-01",
+     "deger": "100"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 21,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "A",
+     "an": "2024-06-01T01:00:00Z",
+     "deger": "105"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 22,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "B",
+     "an": "2024-06-01T00:30:00Z",
+     "deger": "40"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 30,
+    "layerId": "duz",
+    "attrs": {
+     "no": "N1",
+     "an": "2024-06-01",
+     "deger": "5",
+     "alim": "2024-06-01T00:00:10Z"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "iki yeni gözlem: değer sayı, kalite etiketiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid",
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:20:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "13.5",
+         "kalite": "iyi"
+        }
+       },
+       "32": {
+        "kind": "record",
+        "id": 32,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:30:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "13.75"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Sensör gözlemleri",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geç gelen gözlem kabul edilir ve işaretlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "lateField": "gec",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T09:50:00Z",
+        "value": 12
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 1,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T09:50:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "12",
+         "gec": "evet"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "geç gelen gözlem işaret alanı olmadan da sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S2",
+        "at": "2024-06-01T08:00:00Z",
+        "value": 6
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 1,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S2",
+         "olcum_zamani": "2024-06-01T08:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "6"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "geç gelen gözlem reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "late": "reject",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T09:50:00Z",
+        "value": 12
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [
+        {
+         "index": 0,
+         "asset": "S1",
+         "at": "2024-06-01T09:50:00Z",
+         "code": "late_observation",
+         "message": "S1 için 2024-06-01T10:10:00Z anında gözlem var; 2024-06-01T09:50:00Z ondan önce (geç gelen gözlem)."
+        }
+       ],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yinelenen gözlem: ilki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:10:00Z",
+        "value": 14
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "skipped": 1,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yinelenen gözlem: sonuncusu geçer, eski sürümün kayıt bitişi yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:10:00Z",
+        "value": 14
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [
+        "$uidOf:2"
+       ],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:10:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "14"
+        }
+       },
+       "2": {
+        "kind": "record",
+        "id": 2,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:10:00Z",
+         "deger": "13",
+         "alim": "2024-06-01T10:11:00Z",
+         "alim_bitis": "2024-06-01T10:31:00Z"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Sensör gözlemleri",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bölgeli yazılmış aynı an da yinelenendir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T13:10:00+03:00",
+        "value": 14
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [
+        "$uidOf:2"
+       ],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:10:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "14"
+        }
+       },
+       "2": {
+        "kind": "record",
+        "id": 2,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:10:00Z",
+         "deger": "13",
+         "alim": "2024-06-01T10:11:00Z",
+         "alim_bitis": "2024-06-01T10:31:00Z"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yinelenen gözlem: hepsi yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "all",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:10:00Z",
+        "value": 14
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:10:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "14"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "partinin içinde yinelenen: ilki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S2",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S2",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 2
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 1,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S2",
+         "olcum_zamani": "2024-06-01T11:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "1"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "partinin içinde yinelenen: sonuncusu kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "S2",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S2",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 2
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 1,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S2",
+         "olcum_zamani": "2024-06-01T11:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "2"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yerine yenisi geçmiş sürüm yinelenen sayılmaz, şimdiki sürüm sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:05:00Z",
+        "value": 12.9,
+        "quality": "Şüpheli"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [
+        "$uidOf:4"
+       ],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:05:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "12.9",
+         "kalite": "supheli"
+        }
+       },
+       "4": {
+        "kind": "record",
+        "id": 4,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S1",
+         "olcum_zamani": "2024-06-01T10:05:00Z",
+         "deger": "12.8",
+         "kalite": "iyi",
+         "alim": "2024-06-01T10:30:00Z",
+         "alim_bitis": "2024-06-01T10:31:00Z"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt bitişi tutmayan katmanda sonuncusu eskinin değerini yerinde değiştirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "duz",
+      "valueField": "deger",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "N1",
+        "at": "2024-06-01",
+        "value": 6
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "$uidOf:30"
+       ],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "30": {
+        "kind": "record",
+        "id": 30,
+        "layerId": "duz",
+        "attrs": {
+         "no": "N1",
+         "an": "2024-06-01",
+         "deger": "6",
+         "alim": "2024-06-01T10:31:00Z"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Sensör gözlemleri",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt zamanı tutmayan katman: alım anı yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "observations": [
+       {
+        "asset": "A",
+        "at": "2024-06-01T01:00:00Z",
+        "value": 106
+       },
+       {
+        "asset": "B",
+        "at": "2024-06-01T02:00:00Z",
+        "value": 41
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [
+        "$uidOf:21"
+       ],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "B",
+         "an": "2024-06-01T02:00:00Z",
+         "deger": "41"
+        }
+       },
+       "21": {
+        "kind": "record",
+        "id": 21,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "A",
+         "an": "2024-06-01T01:00:00Z",
+         "deger": "106"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alım anı verilmezse şimdi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "C",
+        "at": "2024-06-01",
+        "value": "7"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "C",
+         "an": "2024-06-01",
+         "deger": "7"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni varlık, partide geç gelen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S4",
+        "at": "2024-06-01T10:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S4",
+        "at": "2024-06-01T09:00:00Z",
+        "value": 2
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid",
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 1,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S4",
+         "olcum_zamani": "2024-06-01T10:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "1"
+        }
+       },
+       "32": {
+        "kind": "record",
+        "id": 32,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S4",
+         "olcum_zamani": "2024-06-01T09:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "2"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "satır retleri: boş varlık, okunmayan an, sayı olmayan değer, aralık dışı değer, listede olmayan kalite",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S5",
+        "at": "dün",
+        "value": 1
+       },
+       {
+        "asset": "S5",
+        "at": "2024-06-01T11:00:00Z",
+        "value": "abc"
+       },
+       {
+        "asset": "S5",
+        "at": "2024-06-01T11:01:00Z",
+        "value": 150
+       },
+       {
+        "asset": "S5",
+        "at": "2024-06-01T11:02:00Z",
+        "value": 1,
+        "quality": "bozuk"
+       },
+       {
+        "asset": "S5",
+        "at": "2024-06-01T11:03:00Z",
+        "value": "2,5"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [
+        {
+         "index": 0,
+         "asset": "",
+         "at": "2024-06-01T11:00:00Z",
+         "code": "invalid_asset",
+         "message": "Gözlemin varlığı (asset) boş; sensörün ya da sayacın kimliğini verin."
+        },
+        {
+         "index": 1,
+         "asset": "S5",
+         "at": "dün",
+         "code": "invalid_moment",
+         "message": "“dün” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın."
+        },
+        {
+         "index": 2,
+         "asset": "S5",
+         "at": "2024-06-01T11:00:00Z",
+         "code": "invalid_attribute",
+         "message": "“Değer” alanı ondalık sayı ister; “abc” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın."
+        },
+        {
+         "index": 3,
+         "asset": "S5",
+         "at": "2024-06-01T11:01:00Z",
+         "code": "invalid_attribute",
+         "message": "“Değer” alanı -50 ile 100 arasında olmalı; 150 verildi."
+        },
+        {
+         "index": 4,
+         "asset": "S5",
+         "at": "2024-06-01T11:02:00Z",
+         "code": "invalid_attribute",
+         "message": "“Kalite” alanı listedeki değerlerden birini ister; “bozuk” listede yok."
+        }
+       ],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S5",
+         "olcum_zamani": "2024-06-01T11:03:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "2.5"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün satırlar reddedilirse adım açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "",
+        "at": "2024-06-01T11:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S5",
+        "at": "31.02.2024",
+        "value": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [
+        {
+         "index": 0,
+         "asset": "",
+         "at": "2024-06-01T11:00:00Z",
+         "code": "invalid_asset",
+         "message": "Gözlemin varlığı (asset) boş; sensörün ya da sayacın kimliğini verin."
+        },
+        {
+         "index": 1,
+         "asset": "S5",
+         "at": "31.02.2024",
+         "code": "invalid_moment",
+         "message": "“31.02.2024” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın."
+        }
+       ],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bölgeli alım anı UTC yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T13:31:00+03:00",
+      "observations": [
+       {
+        "asset": "S6",
+        "at": "2024-06-01T10:00:00Z",
+        "value": 4,
+        "quality": "Şüpheli"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S6",
+         "olcum_zamani": "2024-06-01T10:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "4",
+         "kalite": "supheli"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "değeri olmayan gözlem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S7",
+        "at": "2024-06-01T10:00:00Z"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S7",
+         "olcum_zamani": "2024-06-01T10:00:00Z",
+         "alim": "2024-06-01T10:31:00Z"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "SensorThings dosyası: değer listesi, aralıklı an, boş sonuç, sonraki sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "file": "$fixture:sensors/v1/observations.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid",
+        "$uid",
+        "$uid",
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 1,
+       "rejected": [],
+       "pages": 1,
+       "more": true,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S8",
+         "olcum_zamani": "2024-06-01T11:00:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "21.5",
+         "kalite": "iyi"
+        }
+       },
+       "32": {
+        "kind": "record",
+        "id": 32,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S8",
+         "olcum_zamani": "2024-06-01T11:10:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "22"
+        }
+       },
+       "33": {
+        "kind": "record",
+        "id": 33,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S8",
+         "olcum_zamani": "2024-06-01T11:20:00Z",
+         "alim": "2024-06-01T10:31:00Z"
+        }
+       },
+       "34": {
+        "kind": "record",
+        "id": 34,
+        "layerId": "olcum",
+        "attrs": {
+         "sensor": "S8",
+         "olcum_zamani": "2024-06-01T11:05:00Z",
+         "alim": "2024-06-01T10:31:00Z",
+         "deger": "23.25",
+         "kalite": "supheli"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "SensorThings dosyası: gözlemlerin dizisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "D",
+      "file": "$fixture:sensors/v1/list.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$uid",
+        "$uid",
+        "$uid"
+       ],
+       "replaced": [],
+       "skipped": 0,
+       "late": 0,
+       "rejected": [
+        {
+         "index": 3,
+         "asset": "D",
+         "at": "",
+         "code": "invalid_moment",
+         "message": "Gözlemin anı boş; olay zamanını verin (at; SensorThings'te phenomenonTime)."
+        }
+       ],
+       "pages": 1,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "31": {
+        "kind": "record",
+        "id": 31,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "D",
+         "an": "2024-06-01T05:00:00Z",
+         "deger": "3",
+         "kalite": "{\"kod\":1}"
+        }
+       },
+       "32": {
+        "kind": "record",
+        "id": 32,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "D",
+         "an": "2024-06-01T06:00:00Z",
+         "deger": "true"
+        }
+       },
+       "33": {
+        "kind": "record",
+        "id": 33,
+        "layerId": "sayac",
+        "attrs": {
+         "sayac_no": "D",
+         "an": "2024-06-01T07:00:00Z",
+         "deger": "[1,2]"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı sonucu verir, yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "duplicates": "last",
+      "lateField": "gec",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:10:00Z",
+        "value": 14
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T09:00:00Z",
+        "value": 1
+       },
+       {
+        "asset": "S9",
+        "at": "2024-06-01T09:00:00Z",
+        "value": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "adds": 3,
+       "replaced": [
+        "$uidOf:2"
+       ],
+       "skipped": 0,
+       "late": 1,
+       "rejected": [],
+       "pages": 0,
+       "more": false,
+       "receivedAt": "2024-06-01T10:31:00Z",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "expectedRevision": "abc",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizim değişmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "expectedRevision": "999",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "JSON olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "file": "$fixture:sensors/v1/not-json.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "not-json.json bir SensorThings gözlem listesi olarak okunamadı: JSON değil.",
+       "path": "file"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gözlem dizisi olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "file": "$fixture:sensors/v1/no-value.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "no-value.json bir SensorThings gözlem listesi olarak okunamadı: gözlemlerin dizisi (value) yok.",
+       "path": "file"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "file": "$fixture:sensors/v1/yok.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:sensors/v1/yok.json okunamadı: dosya yok ya da açılamıyor.",
+       "path": "file"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "file": "gozlem.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“gozlem.json” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.json).",
+       "path": "file"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyada varlık yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "file": "$fixture:sensors/v1/list.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dosyanın ve adresin gözlemleri tek bir varlığındır; varlığı (asset) verin.",
+       "path": "asset"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kaynak yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_source",
+       "message": "Gözlemleri tek bir kaynaktan verin: observations, file ya da url.",
+       "path": "observations"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kaynak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "asset": "S8",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ],
+      "file": "$fixture:sensors/v1/list.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_source",
+       "message": "Gözlemleri tek bir kaynaktan verin: observations, file ya da url.",
+       "path": "observations"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş gözlem listesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Gözlem sayısı 1 ile 100000 arasında olmalı.",
+       "path": "observations"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer alanı boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": " ",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Değer alanının adını (valueField) verin.",
+       "path": "valueField"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayfa sayısı dışarıda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "2024-06-01T10:31:00Z",
+      "url": "https://example.org/v1.1/Datastreams(1)/Observations",
+      "asset": "S8",
+      "pages": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Sayfa sayısı (pages) 1 ile 100 arasında olmalı.",
+       "path": "pages"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okunmayan alım anı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "receivedAt": "bugün",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“bugün” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "receivedAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zaman ayarı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "zamansiz",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_temporal",
+       "message": "“Zamansız” katmanının zaman ayarı yok; önce Zaman ayarları ile başlangıç alanını seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik alanı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "plan",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_asset_field",
+       "message": "“Plan” katmanının zaman ayarında kimlik alanı yok; gözlemler varlığa göre tutulur. Zaman ayarları'nda kimlik alanını seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kilitli",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "valueField": "deger",
+      "observations": [
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:20:00Z",
+        "value": 13.5,
+        "quality": "İyi"
+       },
+       {
+        "asset": "S1",
+        "at": "2024-06-01T10:30:00Z",
+        "value": 13.75
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

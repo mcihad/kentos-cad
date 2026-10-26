@@ -1884,6 +1884,7 @@ impl App {
             Asking::AddressData => self.address_data_view(),
             Asking::AddressProviders => self.address_providers_view(),
             Asking::TimeLayer => self.time_layer_view(),
+            Asking::Sensors => self.sensors_view(),
             Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::Views => self.views_view(),

@@ -155,6 +155,16 @@ fn file_name(path: &str) -> String {
 
 /// The other state: the document and what to call it; why not.
 fn other(doc: &Document, against: &CompareAgainst) -> Result<(Document, String), Stop> {
+    other_state(doc, against, "against")
+}
+
+/// A state of the drawing a question names (docs/adr/0576, 0646 §1): the document and what to call it; why not, at
+/// `prefix.steps` or `prefix.path`.
+pub(crate) fn other_state(
+    doc: &Document,
+    against: &CompareAgainst,
+    prefix: &str,
+) -> Result<(Document, String), Stop> {
     match against {
         CompareAgainst::History { steps } => {
             let held = doc.undo_labels();
@@ -173,7 +183,7 @@ fn other(doc: &Document, against: &CompareAgainst) -> Result<(Document, String),
                     Stop::failed(error(
                         codes::NO_SUCH_STEP,
                         message,
-                        Some("against.steps".into()),
+                        Some(format!("{prefix}.steps")),
                     ))
                 })
         }
@@ -185,14 +195,14 @@ fn other(doc: &Document, against: &CompareAgainst) -> Result<(Document, String),
                     format!(
                         "“{path}” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad)."
                     ),
-                    Some("against.path".into()),
+                    Some(format!("{prefix}.path")),
                 )));
             }
             let bytes = std::fs::read(p).map_err(|_| {
                 Stop::failed(error(
                     codes::FILE_NOT_FOUND,
                     format!("{path} okunamadı: dosya yok ya da açılamıyor."),
-                    Some("against.path".into()),
+                    Some(format!("{prefix}.path")),
                 ))
             })?;
             let unreadable = |why: String| {
@@ -202,7 +212,7 @@ fn other(doc: &Document, against: &CompareAgainst) -> Result<(Document, String),
                         "{} bir KentOS çizimi olarak okunamadı: {why}",
                         file_name(path)
                     ),
-                    Some("against.path".into()),
+                    Some(format!("{prefix}.path")),
                 ))
             };
             let snapshot = read_drawing(&bytes).map_err(unreadable)?;
@@ -213,7 +223,7 @@ fn other(doc: &Document, against: &CompareAgainst) -> Result<(Document, String),
                         "{} bir KentOS çizimi olarak okunamadı: {why}",
                         file_name(path)
                     ),
-                    Some("against.path".into()),
+                    Some(format!("{prefix}.path")),
                 ))
             })?;
             Ok((drawing, file_name(path)))

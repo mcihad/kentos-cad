@@ -1,6 +1,10 @@
 //! `cad.time.query` (docs/adr/0537): which objects of a temporal layer show for a valid time and a day known. The
 //! valid time is read by the layer time's rules (`time::object_time`, `time::shows`, ADR 0210 §4); the day known by
 //! the versions' system time (`time::recorded_interval`, `time::known`). Read only.
+//!
+//! The state asked (docs/adr/0646 §1) is the drawing as it is, the drawing some undo steps back or a drawing file
+//! (`drawing_compare::other_state`); the answer gives the layer's digest in it (`sources::layer_digest`), and a
+//! question that gives it back as `expectedStamp` is answered only of the same data (`state_changed`).
 
 use kentos_commands::{CommandResult, LayerNodeType, TimeQueried, TimeQuery};
 use kentos_domain::Document;
@@ -16,8 +20,19 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 
 use crate::time_filter::{moment, utc};
 
+/// The state's name when none is asked.
+const NOW: &str = "Şimdiki hâl";
+
 /// What `cad.time.query` answers; why not.
-pub(crate) fn query_in(doc: &Document, input: &TimeQuery) -> Result<TimeQueried, Stop> {
+pub(crate) fn query_in(now: &Document, input: &TimeQuery) -> Result<TimeQueried, Stop> {
+    let past;
+    let (doc, state) = match &input.revision {
+        Some(against) => {
+            past = crate::drawing_compare::other_state(now, against, "revision")?;
+            (&past.0, past.1.clone())
+        }
+        None => (now, NOW.to_owned()),
+    };
     let id = &input.layer;
     let Some(node) = doc.layers().get(id) else {
         return Err(refuse(
@@ -72,9 +87,24 @@ pub(crate) fn query_in(doc: &Document, input: &TimeQuery) -> Result<TimeQueried,
         ranged: setting.ranged(),
         cumulative: setting.cumulative,
     };
+    let stamp = crate::sources::layer_digest(doc, id);
+    if let Some(expected) = &input.expected_stamp
+        && *expected != stamp
+    {
+        return Err(Stop::conflict(checks::error(
+            codes::STATE_CHANGED,
+            format!(
+                "“{}” katmanı sorulan durumda değişmiş: içeriğinin özeti beklenenle aynı değil. Soruyu bu durumla yeniden sorun ya da sabitlenmiş durumun dosyasını verin.",
+                node.name
+            ),
+            Some("expectedStamp".into()),
+        )));
+    }
     let mut out = TimeQueried {
         layer: id.clone(),
-        revision: doc.revision().to_string(),
+        state,
+        stamp,
+        revision: now.revision().to_string(),
         known_at: known_at.map(utc),
         ..TimeQueried::default()
     };

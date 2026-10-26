@@ -1011,6 +1011,7 @@ impl App {
             Some(Dialog::FindReplace) => self.find_replace = None,
             Some(Dialog::LayerMerge) => self.layer_merge = None,
             Some(Dialog::TimeLayer) => self.time.layer = None,
+            Some(Dialog::Sensors) => self.time.sensors = None,
             Some(Dialog::LayerFilter) => self.layer_filter = None,
             Some(Dialog::FieldsWrite) => self.features.write = None,
             Some(Dialog::LayerInfo) => self.layer_info = None,

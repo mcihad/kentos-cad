@@ -8873,6 +8873,23 @@
    "tests": 2
   },
   {
+   "id": "time.sensors",
+   "kind": "command",
+   "title": "Sensör gözlemleri",
+   "level": "semantic",
+   "via": [
+    "cad.sensors.latest",
+    "cad.sensors.ingest"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sensors.latest, kentos.cad.sensors.ingest",
+   "mcp": "cad.sensors.latest, cad.sensors.ingest",
+   "note": "Pencere her varlığın son gözlemini kentos.cad.sensors.latest ile sorar (Zaman sürgüsü açıkken onun anıyla); Gözlem al… SensorThings dosyasını kentos.cad.sensors.ingest'e verir (ADR 0646 §6).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "time.slider",
    "kind": "command",
    "title": "Zaman sürgüsü",

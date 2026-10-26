@@ -53,6 +53,11 @@ pub struct ExportGml {
     /// Write over the GML and its `.xsd` when they are there.
     #[serde(default)]
     pub overwrite: bool,
+    /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+    /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// A file written.
@@ -234,6 +239,11 @@ pub struct ExportXyz {
     /// Write over the file when it is there.
     #[serde(default)]
     pub overwrite: bool,
+    /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+    /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<crate::temporal::QueryTime>,
 }
 
 /// What `file.export.xyz` wrote (or with `plan` would write).

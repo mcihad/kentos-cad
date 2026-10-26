@@ -101,7 +101,7 @@ fn rasters_go_out_as_cogs_through_the_headless_files() {
 
 #[test]
 fn what_the_headless_files_cannot_read_is_said() {
-    // A raster at an address: read only on the desktop.
+    // A raster at an address: read where the host has a network (docs/adr/0645 §5); this test's host has none.
     let text = std::fs::read_to_string(folder().join("cog.kcad")).expect("reads");
     let mut v: Value = serde_json::from_str(&text).expect("json");
     v["entities"][0]["file"] = Value::Null;
@@ -115,7 +115,7 @@ fn what_the_headless_files_cannot_read_is_said() {
             "input": { "scope": "layer", "layerId": "kot" }, "output": "/tmp/kentos-uzak.tif" } }),
     );
     assert_ne!(got["status"], "completed", "{got}");
-    assert!(got.to_string().contains("yalnız masaüstünde"), "{got}");
+    assert!(got.to_string().contains("ağa çıkmıyor"), "{got}");
     // A file that is not there names itself.
     v["entities"][0]["url"] = Value::Null;
     v["entities"][0]["file"] = json!("/yok/kot.tif");

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    CompareAgainst,
     EntitiesEditPlan,
     TimeQueried,
     TimeQuery,
@@ -36,7 +37,12 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
     saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar.
     Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin
     nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o
-    gün bilinmiyor), timeless, unrecorded, unreadable.
+    gün bilinmiyor), timeless, unrecorded, unreadable. Soru çizimin değişmez bir
+    durumuna bağlanır: revision geri alma geçmişinde n adım önceki çizimi (history) ya
+    da bir çizim dosyasını (file) sorar; cevap durumu (state) ve katmanın o durumdaki
+    içerik özetini (stamp: nesnelerin türleri, geometrileri ve öznitelikleri kalıcı
+    kimlikleriyle) verir. Özeti expectedStamp olarak veren soru katman o durumda
+    başkaysa state_changed çakışmasıyla döner: aynı özetle iki cevap aynı veridendir.
     """
     __slots__ = ()
     id = "cad.time.query"
@@ -54,8 +60,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         *,
         layer: str,
         at: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         known_at: str | None | Unset = UNSET,
+        revision: CompareAgainst | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -71,14 +79,23 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         bölgesiz saat UTC'dir; cevap anları UTC yazar. Cevap gösterilenlerin kalıcı
         kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid
         (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless,
-        unrecorded, unreadable.
+        unrecorded, unreadable. Soru çizimin değişmez bir durumuna bağlanır: revision geri
+        alma geçmişinde n adım önceki çizimi (history) ya da bir çizim dosyasını (file)
+        sorar; cevap durumu (state) ve katmanın o durumdaki içerik özetini (stamp:
+        nesnelerin türleri, geometrileri ve öznitelikleri kalıcı kimlikleriyle) verir. Özeti
+        expectedStamp olarak veren soru katman o durumda başkaysa state_changed çakışmasıyla
+        döner: aynı özetle iki cevap aynı veridendir.
 
         Args:
             doc: The drawing it works on.
             layer: The temporal layer's id.
             at: The valid time's instant; with `from` and `to` refused.
+            expected_stamp: The layer's digest a former answer gave (`stamp`): the state must hold the layer as it did, else
+                `state_changed`.
             from_: The valid time's period [from, to): both or neither.
             known_at: The day known: only the versions recorded by then and not yet superseded (a layer that records them).
+            revision: The state asked (docs/adr/0646 §1): the drawing some undo steps back or a drawing file; none, the drawing as
+                it is.
             to:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -95,8 +112,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         return self.execute_input(doc, TimeQuery(
             layer=layer,
             at=at,
+            expected_stamp=expected_stamp,
             from_=from_,
             known_at=known_at,
+            revision=revision,
             to=to,
         ), request_id=request_id, expected=expected)
 
@@ -107,8 +126,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         *,
         layer: str,
         at: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         known_at: str | None | Unset = UNSET,
+        revision: CompareAgainst | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
     ) -> TimeQueried:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -117,8 +138,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         return self.plan_input(doc, TimeQuery(
             layer=layer,
             at=at,
+            expected_stamp=expected_stamp,
             from_=from_,
             known_at=known_at,
+            revision=revision,
             to=to,
         ))
 
@@ -129,8 +152,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         *,
         layer: str,
         at: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         known_at: str | None | Unset = UNSET,
+        revision: CompareAgainst | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -139,8 +164,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         return self.validate_input(doc, TimeQuery(
             layer=layer,
             at=at,
+            expected_stamp=expected_stamp,
             from_=from_,
             known_at=known_at,
+            revision=revision,
             to=to,
         ))
 
@@ -151,8 +178,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         *,
         layer: str,
         at: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         known_at: str | None | Unset = UNSET,
+        revision: CompareAgainst | None | Unset = UNSET,
         to: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -166,8 +195,10 @@ class _TimeQuery(LocalCommand[TimeQuery, TimeQueried, TimeQueried]):
         return self.answer_input(doc, TimeQuery(
             layer=layer,
             at=at,
+            expected_stamp=expected_stamp,
             from_=from_,
             known_at=known_at,
+            revision=revision,
             to=to,
         ), op=op, request_id=request_id, expected=expected)
 

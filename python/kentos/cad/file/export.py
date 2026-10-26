@@ -57,6 +57,7 @@ from ..types import (  # noqa: F401
     ParquetExported,
     PdfExported,
     QmlExported,
+    QueryTime,
     ShpEncoding,
     ShpEncodingName,
     ShpExported,
@@ -468,6 +469,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CsvExported:
@@ -492,6 +494,8 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the CSV and its `.csvt` and `.prj` when they are there.
             separator:
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -510,6 +514,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -522,6 +527,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA,
+        time: QueryTime | None | Unset = UNSET,
     ) -> CsvExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -532,6 +538,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
         ))
 
     def validate(
@@ -544,6 +551,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -554,6 +562,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
         ))
 
     def answer(
@@ -566,6 +575,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -581,6 +591,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -940,6 +951,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> FgbExported:
@@ -963,6 +975,8 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
             path: An absolute path ending `.fgb`.
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the file when it is there.
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -979,6 +993,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -989,6 +1004,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> FgbExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -997,6 +1013,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def validate(
@@ -1007,6 +1024,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1015,6 +1033,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def answer(
@@ -1025,6 +1044,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1038,6 +1058,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -1273,6 +1294,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         schema: bool | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> GmlExported:
@@ -1298,6 +1320,8 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the GML and its `.xsd` when they are there.
             schema: Write the `.xsd` beside the file (GDAL and QGIS read the fields' types from it); absent: written.
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1315,6 +1339,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             schema=schema,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1326,6 +1351,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         schema: bool | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> GmlExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1335,6 +1361,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             schema=schema,
+            time=time,
         ))
 
     def validate(
@@ -1346,6 +1373,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         schema: bool | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1355,6 +1383,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             schema=schema,
+            time=time,
         ))
 
     def answer(
@@ -1366,6 +1395,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         schema: bool | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1380,6 +1410,7 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             schema=schema,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -1420,6 +1451,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> GpkgExported:
@@ -1443,6 +1475,8 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             path: The file to write, an absolute path (`.gpkg`).
             layers: The layers, by id; empty: every layer with objects.
             overwrite: Write over a file that is there.
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1459,6 +1493,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1469,6 +1504,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> GpkgExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1477,6 +1513,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def validate(
@@ -1487,6 +1524,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1495,6 +1533,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def answer(
@@ -1505,6 +1544,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         path: str,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1518,6 +1558,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             path=path,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -1739,6 +1780,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
         covering: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ParquetExported:
@@ -1766,6 +1808,8 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
             covering: Whether the `bbox` covering column is written (GeoParquet 1.1).
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the file when it is there.
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1784,6 +1828,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
             covering=covering,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1796,6 +1841,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
         covering: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> ParquetExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1806,6 +1852,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
             covering=covering,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def validate(
@@ -1818,6 +1865,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
         covering: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1828,6 +1876,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
             covering=covering,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def answer(
@@ -1840,6 +1889,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
         covering: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1855,6 +1905,7 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
             covering=covering,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -2172,6 +2223,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
         encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ShpExported:
@@ -2199,6 +2251,8 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
             encoding: The .dbf's code page; UTF-8 when not given.
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the archive, or the `.shp`'s parts, that are there (a folder is never written over).
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -2216,6 +2270,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
             encoding=encoding,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -2227,6 +2282,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
         encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> ShpExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -2236,6 +2292,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
             encoding=encoding,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def validate(
@@ -2247,6 +2304,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
         encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -2256,6 +2314,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
             encoding=encoding,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ))
 
     def answer(
@@ -2267,6 +2326,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
         encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -2281,6 +2341,7 @@ class _FileExportShp(LocalCommand[ExportShp, ShpExported, ShpExported]):
             encoding=encoding,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -2463,6 +2524,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE,
+        time: QueryTime | None | Unset = UNSET,
         vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS,
         without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO,
         request_id: str | None = None,
@@ -2490,6 +2552,8 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
             overwrite: Write over the file when it is there.
             separator:
+            time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
+                written layer with time settings (of every one when `fields` names them); a layer without them whole.
             vertices:
             without_z:
             request_id: Names this write: sent again with the same call it is answered as
@@ -2511,6 +2575,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
             vertices=vertices,
             without_z=without_z,
         ), request_id=request_id, expected=expected)
@@ -2526,6 +2591,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE,
+        time: QueryTime | None | Unset = UNSET,
         vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS,
         without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO,
     ) -> XyzExported:
@@ -2539,6 +2605,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
             vertices=vertices,
             without_z=without_z,
         ))
@@ -2554,6 +2621,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE,
+        time: QueryTime | None | Unset = UNSET,
         vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS,
         without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO,
     ) -> list[CommandNote]:
@@ -2567,6 +2635,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
             vertices=vertices,
             without_z=without_z,
         ))
@@ -2582,6 +2651,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         separator: XyzSeparator | XyzSeparatorName = XyzSeparator.SPACE,
+        time: QueryTime | None | Unset = UNSET,
         vertices: XyzVertices | XyzVerticesName = XyzVertices.POINTS,
         without_z: XyzWithoutZ | XyzWithoutZName = XyzWithoutZ.ZERO,
         op: str = "execute",
@@ -2600,6 +2670,7 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             separator=separator,
+            time=time,
             vertices=vertices,
             without_z=without_z,
         ), op=op, request_id=request_id, expected=expected)

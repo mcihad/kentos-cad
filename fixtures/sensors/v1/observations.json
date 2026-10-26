@@ -1,0 +1,29 @@
+{
+ "@iot.count": 5,
+ "@iot.nextLink": "https://example.org/v1.1/Datastreams(8)/Observations?$skip=4",
+ "value": [
+  {
+   "@iot.id": 101,
+   "phenomenonTime": "2024-06-01T11:00:00Z",
+   "resultTime": "2024-06-01T11:00:05Z",
+   "result": 21.5,
+   "resultQuality": "İyi"
+  },
+  {
+   "@iot.id": 102,
+   "phenomenonTime": "2024-06-01T11:10:00Z/2024-06-01T11:15:00Z",
+   "result": 22
+  },
+  {
+   "@iot.id": 103,
+   "phenomenonTime": "2024-06-01T11:20:00Z",
+   "result": null
+  },
+  {
+   "@iot.id": 104,
+   "phenomenonTime": "2024-06-01T11:05:00Z",
+   "result": "23.25",
+   "resultQuality": "Şüpheli"
+  }
+ ]
+}

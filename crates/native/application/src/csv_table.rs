@@ -26,6 +26,8 @@ pub struct Made {
     pub csvt: Vec<u8>,
     pub prj: Option<Vec<u8>>,
     pub output: CsvExported,
+    /// The objects the export's time left out (docs/adr/0646 §2).
+    pub time_left_out: u32,
 }
 
 /// A column written: its name, its GDAL type, and where its values come from.
@@ -98,8 +100,16 @@ fn num(v: f64) -> String {
     }
 }
 
-/// The layers' objects as a CSV, or why none can be written.
+/// The export of `input`, of the objects its time shows (docs/adr/0646 §2).
 pub fn export(doc: &Document, input: &ExportCsv) -> Result<Made, (String, String, String)> {
+    let (doc, left) = crate::time_export::filtered(doc, &input.layers, input.time.as_ref())?;
+    let mut made = export_all(&doc, input)?;
+    made.time_left_out = left;
+    Ok(made)
+}
+
+/// The layers' objects as a CSV, or why none can be written.
+fn export_all(doc: &Document, input: &ExportCsv) -> Result<Made, (String, String, String)> {
     let ids = crate::shapefile::layer_ids(doc, &input.layers).map_err(|(i, id)| {
         (
             kentos_commands::codes::LAYER_NOT_FOUND.to_owned(),
@@ -310,6 +320,7 @@ pub fn export(doc: &Document, input: &ExportCsv) -> Result<Made, (String, String
         csvt,
         prj,
         output,
+        time_left_out: 0,
     })
 }
 

@@ -98,11 +98,12 @@ impl App {
             overwrite: true,
             compression: s.compression,
             covering: s.covering,
+            time: self.export_time(),
         }
     }
 
     /// What the window's choices would write, made in memory.
-    fn parquet_replan(&mut self) {
+    pub(super) fn parquet_replan(&mut self) {
         let (Some(doc), Some(Window::ParquetExport(s))) = (&self.document, &self.exchange) else {
             return;
         };
@@ -451,6 +452,9 @@ impl App {
                 false
             }
         };
+        if let Some(row) = self.export_time_row() {
+            body = body.push(row);
+        }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(

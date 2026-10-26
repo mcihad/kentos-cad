@@ -95,6 +95,7 @@ fn a_layer_of_another_name_is_chosen_for_the_merge() {
     let (written, _) = kentos_headless::file_commands::export_parquet(
         &model,
         &ExportParquet {
+            time: None,
             path: path.display().to_string(),
             layers: vec!["cizim".into()],
             overwrite: true,
@@ -239,6 +240,7 @@ fn screens() {
             kentos_headless::file_commands::export_parquet(
                 &model,
                 &ExportParquet {
+            time: None,
                     path: path.display().to_string(),
                     layers: vec!["cizim".into()],
                     overwrite: true,

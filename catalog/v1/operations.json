@@ -902,6 +902,14 @@
     "time.slider": {
       "level": "session"
     },
+    "time.sensors": {
+      "level": "semantic",
+      "via": [
+        "cad.sensors.latest",
+        "cad.sensors.ingest"
+      ],
+      "note": "Pencere her varlığın son gözlemini kentos.cad.sensors.latest ile sorar (Zaman sürgüsü açıkken onun anıyla); Gözlem al… SensorThings dosyasını kentos.cad.sensors.ingest'e verir (ADR 0646 §6)."
+    },
     "time.compare": {
       "level": "none"
     },

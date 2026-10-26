@@ -310,6 +310,41 @@ fn off_thread<T: Send + 'static>(
 }
 
 impl App {
+    /// The open export window's plan made again (Zaman sürgüsünün zamanıyla changed, docs/adr/0646 §2).
+    pub(crate) fn export_replan(&mut self) {
+        match &self.exchange {
+            Some(Window::FgbExport(_)) => {
+                let plan = self.fgb_plan();
+                if let Some(Window::FgbExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(Window::CsvExport(s)) => {
+                let plan = self.csv_plan(s.geometry, s.separator);
+                if let Some(Window::CsvExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(Window::GmlExport(s)) => {
+                let plan = self.gml_plan(s.schema);
+                if let Some(Window::GmlExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(Window::ShpExport(s)) => {
+                let plan = self.shp_plan(s.encoding);
+                if let Some(Window::ShpExport(s)) = &mut self.exchange {
+                    s.plan = plan;
+                }
+            }
+            Some(Window::ParquetExport(_)) => self.parquet_replan(),
+            Some(Window::XyzExport(_)) => self.xyz_replan(),
+            _ => {}
+        }
+    }
+}
+
+impl App {
     pub(crate) fn exchange_command(&mut self, id: &'static str) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");

@@ -431,6 +431,11 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(0);
     let (path, exists) = target(&input.path, input.overwrite)?;
+    // An export's time (docs/adr/0646 §2): the objects it shows, off a copy.
+    let (timed, left) =
+        kentos_native_application::time_export::filtered(doc, &input.layers, input.time.as_ref())
+            .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let doc = timed.as_ref();
     let mut ids = Vec::new();
     for (i, id) in input.layers.iter().enumerate() {
         let Some(node) = doc.layers().get(id) else {
@@ -560,6 +565,7 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             .collect(),
         styles: written.profile.styles,
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, exists, bytes, output, warnings))
 }
 
@@ -671,6 +677,7 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
             ));
         }
     }
+    let left = made.time_left_out;
     let mut output = made.output;
     output.path = path.display().to_string();
     output.files = files
@@ -683,7 +690,7 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
             sha256: sha256_hex(b),
         })
         .collect();
-    let warnings = if output.lost.is_empty() {
+    let mut warnings = if output.lost.is_empty() {
         Vec::new()
     } else {
         vec![CommandWarning {
@@ -692,6 +699,7 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
             path: Some("layers".into()),
         }]
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((files, output, warnings))
 }
 
@@ -703,9 +711,10 @@ fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Re
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::fgb_table::export(doc, input)
         .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let left = made.time_left_out;
     let mut output = made.output;
     output.path = path.display().to_string();
-    let warnings = if output.lost.is_empty() {
+    let mut warnings = if output.lost.is_empty() {
         Vec::new()
     } else {
         vec![CommandWarning {
@@ -714,6 +723,7 @@ fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Re
             path: Some("layers".into()),
         }]
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, made.bytes, output, warnings))
 }
 
@@ -731,9 +741,10 @@ fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<Par
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::parquet_write::export(doc, input)
         .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let left = made.time_left_out;
     let mut output = made.output;
     output.path = path.display().to_string();
-    let warnings = if output.lost.is_empty() {
+    let mut warnings = if output.lost.is_empty() {
         Vec::new()
     } else {
         vec![CommandWarning {
@@ -742,6 +753,7 @@ fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<Par
             path: Some("layers".into()),
         }]
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, made.bytes, output, warnings))
 }
 
@@ -791,9 +803,10 @@ fn gml(doc: &Document, input: &kentos_commands::ExportGml) -> Result<GmlMade, Re
             ));
         }
     }
+    let left = made.time_left_out;
     let mut output = made.output;
     output.path = path.display().to_string();
-    let warnings = if output.lost.is_empty() {
+    let mut warnings = if output.lost.is_empty() {
         Vec::new()
     } else {
         vec![CommandWarning {
@@ -802,6 +815,7 @@ fn gml(doc: &Document, input: &kentos_commands::ExportGml) -> Result<GmlMade, Re
             path: Some("layers".into()),
         }]
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((files, output, warnings))
 }
 
@@ -825,9 +839,10 @@ fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Re
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::xyz_table::export(doc, input)
         .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let left = made.time_left_out;
     let mut output = made.output;
     output.path = path.display().to_string();
-    let warnings = if output.lost.is_empty() {
+    let mut warnings = if output.lost.is_empty() {
         Vec::new()
     } else {
         vec![CommandWarning {
@@ -836,6 +851,7 @@ fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Re
             path: Some("layers".into()),
         }]
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, made.bytes, output, warnings))
 }
 

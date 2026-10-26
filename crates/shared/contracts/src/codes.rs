@@ -1401,6 +1401,18 @@ codes! {
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A drawing compared with a state of its history that is not there: no steps back asked, or more than it holds (docs/adr/0576).
     NO_SUCH_STEP = "no_such_step", Failed, false, "Geri alma geçmişi bu kadar adım tutmuyor; 1 ile geçmişin adım sayısı arasında bir sayı verin.";
+    /// A temporal layer asked about its sensors has no asset field in its time settings (docs/adr/0646 §3).
+    NO_ASSET_FIELD = "no_asset_field", Failed, false, "Katmanın zaman ayarında kimlik (varlık) alanı yok; sensör gözlemleri varlığa göre tutulur.";
+    /// Observations from none of their sources, or from more than one (docs/adr/0646 §4).
+    INVALID_SOURCE = "invalid_source", Failed, false, "Gözlemler tek bir kaynaktan verilir: satırlar, dosya ya da adres.";
+    /// An observation without an asset, not written (docs/adr/0646 §4).
+    INVALID_ASSET = "invalid_asset", Failed, false, "Gözlemin varlığı (sensör, sayaç) boş; satır yazılmadı.";
+    /// An observation earlier than its asset's latest, refused by the late policy (docs/adr/0646 §4).
+    LATE_OBSERVATION = "late_observation", Failed, false, "Geç gelen gözlem: varlığın en son gözleminden önce; geç gelenler reddedildiği için yazılmadı.";
+    /// The state asked holds the layer otherwise than the digest given says (docs/adr/0646 §1).
+    STATE_CHANGED = "state_changed", Conflict, true, "Sorulan durumda katmanın içeriği beklenen özetle aynı değil; soruyu yeni durumla yeniden sorun.";
+    /// An export with a time left objects out (docs/adr/0646 §2).
+    TIME_LEFT_OUT = "time_left_out", Warning, false, "Zamanın dışında kalan nesneler dışa aktarılmadı.";
     /// A list limit out of its range (docs/adr/0576).
     INVALID_LIMIT = "invalid_limit", Failed, false, "Liste sınırı 1 ile 1 000 000 arasında bir tam sayı olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).

@@ -92,7 +92,7 @@ impl App {
     }
 
     /// A layer's attribute names: its fields first, then its objects' other keys, in the order met.
-    fn attribute_names(&self, layer: &str) -> Vec<String> {
+    pub(super) fn attribute_names(&self, layer: &str) -> Vec<String> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };

@@ -1,0 +1,1632 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sensors.latest",
+ "commandVersion": 1,
+ "title": "Sensörlerin son gözlemi",
+ "note": "ADR 0646 §5. Bağımsız başvuru scripts/fixtures/sensor_cases.py: anlar temporal_cases.py'den, doğal sıra layer_field_cases.py'den, son gözlemin kuralı ADR 0646'dan. KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Sensörler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "olcum",
+    "name": "Ölçüm",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "olcum_zamani",
+     "key": "sensor",
+     "recordedStart": "alim",
+     "recordedEnd": "alim_bitis"
+    },
+    "fields": [
+     {
+      "name": "sensor",
+      "kind": "text"
+     },
+     {
+      "name": "olcum_zamani",
+      "kind": "text"
+     },
+     {
+      "name": "alim",
+      "kind": "text"
+     },
+     {
+      "name": "alim_bitis",
+      "kind": "text"
+     },
+     {
+      "name": "deger",
+      "alias": "Değer",
+      "kind": "decimal",
+      "min": "-50",
+      "max": "100"
+     },
+     {
+      "name": "kalite",
+      "alias": "Kalite",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi"
+       },
+       {
+        "code": "supheli",
+        "label": "Şüpheli"
+       }
+      ]
+     },
+     {
+      "name": "gec",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "sayac",
+    "name": "Sayaç",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "sayac_no"
+    }
+   },
+   {
+    "id": "duz",
+    "name": "Düz",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "no",
+     "recordedStart": "alim"
+    }
+   },
+   {
+    "id": "plan",
+    "name": "Plan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "baslangic"
+    }
+   },
+   {
+    "id": "zamansiz",
+    "name": "Zamansız",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an",
+     "key": "sayac_no"
+    }
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "ic",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "olcum",
+  "entities": [
+   {
+    "kind": "record",
+    "id": 1,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:00:00Z",
+     "deger": "12.5",
+     "kalite": "iyi",
+     "alim": "2024-06-01T10:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 2,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:10:00Z",
+     "deger": "13",
+     "alim": "2024-06-01T10:11:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 3,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:05:00Z",
+     "deger": "99",
+     "kalite": "supheli",
+     "alim": "2024-06-01T10:06:00Z",
+     "alim_bitis": "2024-06-01T10:30:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 4,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S1",
+     "olcum_zamani": "2024-06-01T10:05:00Z",
+     "deger": "12.8",
+     "kalite": "iyi",
+     "alim": "2024-06-01T10:30:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 5,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S2",
+     "olcum_zamani": "2024-06-01T09:00:00Z",
+     "deger": "7",
+     "alim": "2024-06-01T09:02:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 6,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S10",
+     "olcum_zamani": "2024-06-01T02:00:00+03:00",
+     "deger": "3",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 7,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S3",
+     "olcum_zamani": "dün",
+     "deger": "1",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 8,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": " ",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "2",
+     "alim": "2024-06-01"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 9,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S20",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "21",
+     "alim": "2024-06-01T08:02:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 10,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S20",
+     "olcum_zamani": "2024-06-01T08:00:00Z",
+     "deger": "20",
+     "alim": "2024-06-01T08:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 11,
+    "layerId": "olcum",
+    "attrs": {
+     "sensor": "S30",
+     "olcum_zamani": "2024-06-01T07:00:00Z",
+     "alim": "2024-06-01T07:01:00Z"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 20,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "A",
+     "an": "2024-06-01",
+     "deger": "100"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 21,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "A",
+     "an": "2024-06-01T01:00:00Z",
+     "deger": "105"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 22,
+    "layerId": "sayac",
+    "attrs": {
+     "sayac_no": "B",
+     "an": "2024-06-01T00:30:00Z",
+     "deger": "40"
+    }
+   },
+   {
+    "kind": "record",
+    "id": 30,
+    "layerId": "duz",
+    "attrs": {
+     "no": "N1",
+     "an": "2024-06-01",
+     "deger": "5",
+     "alim": "2024-06-01T00:00:10Z"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "öğlen her varlığın son gözlemi, doğal sırayla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T12:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T12:00:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 6600.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 10800.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 46800.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 14400.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 18000.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "10:07'de: yerine yenisi geçmiş sürüm alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T10:07:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T10:07:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:4",
+         "observedAt": "2024-06-01T10:05:00Z",
+         "value": "12.8",
+         "quality": "iyi",
+         "ageSeconds": 120.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 4020.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 40020.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 7620.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 11220.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "10:07'de, 10:20'de bilindiği gibi: eski sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T10:07:00Z",
+      "knownAt": "2024-06-01T10:20:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T10:07:00Z",
+       "knownAt": "2024-06-01T10:20:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:3",
+         "observedAt": "2024-06-01T10:05:00Z",
+         "value": "99",
+         "quality": "supheli",
+         "ageSeconds": 120.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 4020.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 40020.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 7620.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 11220.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün sürümün yerine başkasının geçtiği an: yenisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T10:07:00Z",
+      "knownAt": "2024-06-01T10:30:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T10:07:00Z",
+       "knownAt": "2024-06-01T10:30:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:4",
+         "observedAt": "2024-06-01T10:05:00Z",
+         "value": "12.8",
+         "quality": "iyi",
+         "ageSeconds": 120.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 4020.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 40020.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 7620.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 11220.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinen gün kayıttan önce: hiç gözlem yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T12:00:00Z",
+      "knownAt": "2024-05-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T12:00:00Z",
+       "knownAt": "2024-05-01",
+       "assets": [],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eskime süresi: bir saatten eski olanlar eskimiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T10:40:00Z",
+      "staleAfter": 3600
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T10:40:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 1800.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 6000.0,
+         "stale": true
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 42000.0,
+         "stale": true
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 9600.0,
+         "stale": true
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 13200.0,
+         "stale": true
+        }
+       ],
+       "stale": 4,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eskime süresine eşit yaş eskimiş sayılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T11:10:00Z",
+      "staleAfter": 3600
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T11:10:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 3600.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 7800.0,
+         "stale": true
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 43800.0,
+         "stale": true
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 11400.0,
+         "stale": true
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 15000.0,
+         "stale": true
+        }
+       ],
+       "stale": 4,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklenen ve gelmeyen varlıklar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T12:00:00Z",
+      "expectedAssets": [
+       "S1",
+       "S7",
+       "S2",
+       "S7",
+       "S40"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T12:00:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 6600.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 10800.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 46800.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 14400.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 18000.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [
+        "S7",
+        "S40"
+       ],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hiçbir gözlemden önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-05-01",
+      "expectedAssets": [
+       "S1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-05-01",
+       "assets": [],
+       "stale": 0,
+       "missing": [
+        "S1"
+       ],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı anda iki şimdiki sürüm: alımı geç olan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T08:30:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T08:30:00Z",
+       "assets": [
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 34200.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 1800.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 5400.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değeri olmayan gözlem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T07:30:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T07:30:00Z",
+       "assets": [
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 30600.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 1800.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bölgeli an",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T02:00:00+03:00"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-05-31T23:00:00Z",
+       "assets": [
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 0.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kalite alanı verilmezse kalite yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "at": "2024-06-01T12:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T12:00:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 6600.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 10800.0,
+         "stale": false
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 46800.0,
+         "stale": false
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 14400.0,
+         "stale": false
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 18000.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt zamanı tutmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "at": "2024-06-01T00:45:00Z",
+      "staleAfter": 600
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "sayac",
+       "at": "2024-06-01T00:45:00Z",
+       "assets": [
+        {
+         "asset": "A",
+         "uid": "$uidOf:20",
+         "observedAt": "2024-06-01",
+         "value": "100",
+         "ageSeconds": 2700.0,
+         "stale": true
+        },
+        {
+         "asset": "B",
+         "uid": "$uidOf:22",
+         "observedAt": "2024-06-01T00:30:00Z",
+         "value": "40",
+         "ageSeconds": 900.0,
+         "stale": true
+        }
+       ],
+       "stale": 2,
+       "missing": [],
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gün.ay.yıl biçimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "at": "02.06.2024"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "sayac",
+       "at": "2024-06-02",
+       "assets": [
+        {
+         "asset": "A",
+         "uid": "$uidOf:21",
+         "observedAt": "2024-06-01T01:00:00Z",
+         "value": "105",
+         "ageSeconds": 82800.0,
+         "stale": false
+        },
+        {
+         "asset": "B",
+         "uid": "$uidOf:22",
+         "observedAt": "2024-06-01T00:30:00Z",
+         "value": "40",
+         "ageSeconds": 84600.0,
+         "stale": false
+        }
+       ],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt bitişi tutmayan katman: kayıt başlangıcıyla bilinen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "duz",
+      "valueField": "deger",
+      "at": "2024-06-02",
+      "knownAt": "2024-06-01T00:00:05Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "duz",
+       "at": "2024-06-02",
+       "knownAt": "2024-06-01T00:00:05Z",
+       "assets": [],
+       "stale": 0,
+       "missing": [],
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T12:00:00Z",
+      "staleAfter": 7200
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "olcum",
+       "at": "2024-06-01T12:00:00Z",
+       "assets": [
+        {
+         "asset": "S1",
+         "uid": "$uidOf:2",
+         "observedAt": "2024-06-01T10:10:00Z",
+         "value": "13",
+         "ageSeconds": 6600.0,
+         "stale": false
+        },
+        {
+         "asset": "S2",
+         "uid": "$uidOf:5",
+         "observedAt": "2024-06-01T09:00:00Z",
+         "value": "7",
+         "ageSeconds": 10800.0,
+         "stale": true
+        },
+        {
+         "asset": "S10",
+         "uid": "$uidOf:6",
+         "observedAt": "2024-05-31T23:00:00Z",
+         "value": "3",
+         "ageSeconds": 46800.0,
+         "stale": true
+        },
+        {
+         "asset": "S20",
+         "uid": "$uidOf:9",
+         "observedAt": "2024-06-01T08:00:00Z",
+         "value": "21",
+         "ageSeconds": 14400.0,
+         "stale": true
+        },
+        {
+         "asset": "S30",
+         "uid": "$uidOf:11",
+         "observedAt": "2024-06-01T07:00:00Z",
+         "ageSeconds": 18000.0,
+         "stale": true
+        }
+       ],
+       "stale": 4,
+       "missing": [],
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01T12:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sorulan an verilmezse şimdi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "sayac",
+       "at": "$any",
+       "assets": "$any",
+       "stale": 0,
+       "missing": [],
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt zamanı tutmayan katmanda bilinen gün",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "sayac",
+      "valueField": "deger",
+      "at": "2024-06-02",
+      "knownAt": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_recorded",
+       "message": "“Sayaç” katmanı sürümlerinin kayıt zamanını tutmuyor; Zaman ayarları'nda kayıt başlangıcı alanını seçin.",
+       "path": "knownAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okunmayan an",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "geçen hafta"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“geçen hafta” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okunmayan bilinen gün",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01",
+      "knownAt": "31.02.2024"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“31.02.2024” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "knownAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksi eskime süresi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "deger",
+      "qualityField": "kalite",
+      "at": "2024-06-01",
+      "staleAfter": -1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Eskime süresi (staleAfter) sıfır ya da pozitif bir saniye olmalı.",
+       "path": "staleAfter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer alanı boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olcum",
+      "valueField": "",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Değer alanının adını (valueField) verin.",
+       "path": "valueField"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zaman ayarı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "zamansiz",
+      "valueField": "deger",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_temporal",
+       "message": "“Zamansız” katmanının zaman ayarı yok; önce Zaman ayarları ile başlangıç alanını seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik alanı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "plan",
+      "valueField": "deger",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_asset_field",
+       "message": "“Plan” katmanının zaman ayarında kimlik alanı yok; gözlemler varlığa göre tutulur. Zaman ayarları'nda kimlik alanını seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "valueField": "deger",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; zaman katmanın ayarıdır. Grubun içinden bir katman seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "valueField": "deger",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

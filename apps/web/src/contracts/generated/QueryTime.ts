@@ -2,7 +2,7 @@
 import type { LayerTime } from "./LayerTime";
 
 /**
- * A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
+ * A question's time (docs/adr/0595 §1, 0646 §2: an export's too): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
  * known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
  * (or a layer without them) names them in `fields`.
  */

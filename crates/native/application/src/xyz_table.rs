@@ -18,6 +18,8 @@ use crate::geopackage;
 pub struct Made {
     pub bytes: Vec<u8>,
     pub output: XyzExported,
+    /// The objects the export's time left out (docs/adr/0646 §2).
+    pub time_left_out: u32,
 }
 
 fn same(a: &Coord, b: &Coord) -> bool {
@@ -98,8 +100,16 @@ fn number(v: f64, decimals: Option<u8>) -> String {
     }
 }
 
-/// The layers' positions as XYZ lines, or why none can be written: (code, message, path).
+/// The export of `input`, of the objects its time shows (docs/adr/0646 §2).
 pub fn export(doc: &Document, input: &ExportXyz) -> Result<Made, (String, String, String)> {
+    let (doc, left) = crate::time_export::filtered(doc, &input.layers, input.time.as_ref())?;
+    let mut made = export_all(&doc, input)?;
+    made.time_left_out = left;
+    Ok(made)
+}
+
+/// The layers' positions as XYZ lines, or why none can be written: (code, message, path).
+fn export_all(doc: &Document, input: &ExportXyz) -> Result<Made, (String, String, String)> {
     if input.decimals.is_some_and(|d| d > 15) {
         return Err((
             kentos_commands::codes::INVALID_INPUT.to_owned(),
@@ -236,5 +246,5 @@ pub fn export(doc: &Document, input: &ExportXyz) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { bytes, output })
+    Ok(Made { bytes, output, time_left_out: 0 })
 }

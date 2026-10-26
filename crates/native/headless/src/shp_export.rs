@@ -154,6 +154,11 @@ fn target(path: &str, overwrite: bool) -> Result<Target, Refused> {
 /// The Shapefiles' bytes and what they hold, or the refusal.
 pub fn make(doc: &Document, input: &ExportShp) -> Result<Made, Refused> {
     let into = target(&input.path, input.overwrite)?;
+    // An export's time (docs/adr/0646 §2): the objects it shows, off a copy.
+    let (timed, left) =
+        kentos_native_application::time_export::filtered(doc, &input.layers, input.time.as_ref())
+            .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let doc = timed.as_ref();
     let ids = kentos_native_application::shapefile::layer_ids(doc, &input.layers).map_err(
         |(i, id)| {
             refuse(
@@ -295,6 +300,7 @@ pub fn make(doc: &Document, input: &ExportShp) -> Result<Made, Refused> {
         blank_text: written.blank_text,
         report: written.report,
     };
+    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok(Made {
         into,
         files,

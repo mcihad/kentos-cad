@@ -7,7 +7,12 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-yeni-surum,zaman-bilinen,zaman-ayarlari-kayit,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=sensor-gozlemleri,sensor-gozlemleri-an,zaman-disa-aktar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
+//!
+//! The sensors' (docs/adr/0646 §6): a water meter layer of four meters through `cad.sensors.ingest`, one silent for
+//! an hour and a half; Sensör gözlemleri now and at a moment typed; FlatGeobuf dışa aktar with
+//! Zaman sürgüsünün zamanıyla.
 //!
 //! Test code only.
 
@@ -89,6 +94,53 @@ fn recorded(app: &mut App) {
     app.spatial.sync(&doc.model);
 }
 
+/// A meter layer (Sayaçlar: a temporal layer of records, its asset field `sayac`, its moment `an`, its receipt
+/// `alim`) and the meters' readings through `cad.sensors.ingest` (docs/adr/0646 §4): S-04 silent since 09:50.
+pub(crate) fn meters(app: &mut App) {
+    use kentos_native_application::{ExecutionContext, registry};
+    let doc = app.document.as_mut().expect("open");
+    let mut call = |command: &str, input: serde_json::Value| {
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            command,
+            kentos_commands::CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{command}: {answer}");
+        answer
+    };
+    let added = call(
+        "cad.layers.edit",
+        serde_json::json!({ "operation": "add", "kind": "layer", "name": "Sayaçlar" }),
+    );
+    let layer = added["output"]["layer"].as_str().expect("a layer").to_owned();
+    call(
+        "cad.layers.time",
+        serde_json::json!({ "layer": layer, "time": {
+            "start": "an", "key": "sayac", "recordedStart": "alim", "recordedEnd": "alim_bitis" } }),
+    );
+    let mut observations = Vec::new();
+    for (meter, from, n, base) in [("S-01", 10, 12, 4.2), ("S-02", 10, 12, 3.1), ("S-03", 10, 12, 5.6), ("S-04", 10, 6, 2.4)] {
+        for k in 0..n {
+            let minutes = from * 60 - 60 + k * 10;
+            observations.push(serde_json::json!({
+                "asset": meter,
+                "at": format!("2024-06-01T{:02}:{:02}:00Z", minutes / 60, minutes % 60),
+                "value": ((base + 0.05 * k as f64) * 100.0_f64).round() / 100.0,
+                "quality": if k % 5 == 4 { "şüpheli" } else { "iyi" },
+            }));
+        }
+    }
+    call(
+        "cad.sensors.ingest",
+        serde_json::json!({ "layer": layer, "valueField": "debi", "qualityField": "kalite",
+            "receivedAt": "2024-06-01T11:55:00Z", "observations": observations }),
+    );
+    let doc = app.document.as_ref().expect("open");
+    app.spatial.sync(&doc.model);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         // The CBS ribbon's Harita tab with its Zaman and Senaryo panels.
@@ -166,5 +218,30 @@ pub(crate) fn scenes() -> Vec<Scene> {
             run(app, "time.compare");
             let _ = app.update(Message::DataCompare(crate::data_compare::Event::Compare));
         }),
+        // Sensör gözlemleri now: the moment asked is now, every meter's stream stopped long ago.
+        ("sensor-gozlemleri", |app| {
+            opened(app);
+            meters(app);
+            run(app, "time.sensors");
+        }),
+        // At 11:50 on 1 June 2024, typed: S-04 silent for an hour and a half, the others current.
+        ("sensor-gozlemleri-an", |app| {
+            opened(app);
+            meters(app);
+            run(app, "time.sensors");
+            let _ = app.update(Message::Time(crate::temporal::Event::Sensors(
+                crate::temporal::sensors::Event::At("01.06.2024 11:50".into()),
+            )));
+        }),
+        // FlatGeobuf dışa aktar with the slider open on 2015 and Zaman sürgüsünün zamanıyla ticked.
+        ("zaman-disa-aktar", |app| {
+            opened(app);
+            run(app, "time.slider");
+            let k = app.time.slider.last - 9;
+            let _ = app.update(Message::Time(crate::temporal::Event::Go(k)));
+            let _ = app.update(Message::Time(crate::temporal::Event::ExportTime));
+            run(app, "file.export.fgb");
+        }),
     ]
 }
+

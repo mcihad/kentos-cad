@@ -3145,7 +3145,11 @@
        "revision": "$current"
       },
       "warnings": [
-       "$any"
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[0].sources[0]"
+       }
       ]
      },
      "expect": {
@@ -3195,7 +3199,11 @@
        "revision": "$current"
       },
       "warnings": [
-       "$any"
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[0].sources[0]"
+       }
       ]
      },
      "expect": {
@@ -3245,7 +3253,11 @@
        "revision": "$current"
       },
       "warnings": [
-       "$any"
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[0].sources[0]"
+       }
       ]
      },
      "expect": {

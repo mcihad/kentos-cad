@@ -68,6 +68,7 @@ impl App {
             Dialog::AddressData => crate::address::data::TITLE.to_owned(),
             Dialog::AddressProviders => crate::address::providers::TITLE.to_owned(),
             Dialog::TimeLayer => crate::temporal::layer::TITLE.to_owned(),
+            Dialog::Sensors => crate::temporal::sensors::TITLE.to_owned(),
             Dialog::LayerFilter => crate::layer_filters::TITLE.to_owned(),
             Dialog::FieldsWrite => crate::features::write::TITLE_CALC.to_owned(),
             Dialog::LayerInfo => crate::layer_info::TITLE.to_owned(),

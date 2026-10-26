@@ -70,6 +70,7 @@ use crate::sources::{
 use crate::sources_query;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::time_query;
+use crate::{sensors_ingest, sensors_latest};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
     annotations_write, arc, arch_edit, areas, array, arrays_edit, assets_check, blocks_define,
@@ -119,6 +120,7 @@ use kentos_commands::{
     MeshesDescribe, MeshesProfile, MeshesQuery, MeshesRegion, PointCloudsDescribe,
     PointCloudsProfile, PointCloudsQuery, PointCloudsRegion, TimeQuery,
 };
+use kentos_commands::{SensorsIngest, SensorsLatest};
 use kentos_commands::{RastersGpkgRead, RastersGpkgWrite};
 use kentos_commands::{StacPrepare, StacSearch};
 use kentos_commands::{TopologyCheck, TopologyExceptions};
@@ -295,6 +297,8 @@ macro_rules! by_command {
             kentos_commands::CAD_MESHES_REGION => $then!(meshes_region, MeshesRegion),
             kentos_commands::CAD_MESHES_PROFILE => $then!(meshes_profile, MeshesProfile),
             kentos_commands::CAD_TIME_QUERY => $then!(time_query, TimeQuery),
+            kentos_commands::CAD_SENSORS_INGEST => $then!(sensors_ingest, SensorsIngest),
+            kentos_commands::CAD_SENSORS_LATEST => $then!(sensors_latest, SensorsLatest),
             kentos_commands::CAD_INSERTS_CLIP => $then!(inserts_clip, InsertsClip),
             kentos_commands::CAD_RASTERS_GEOREF => $then!(rasters_georef, RastersGeoref),
             kentos_commands::CAD_SCHEDULES_CREATE => $then!(schedules_create, SchedulesCreate),

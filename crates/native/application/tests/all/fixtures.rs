@@ -68,6 +68,7 @@ use kentos_native_application::sources::{
 use kentos_native_application::sources_query;
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::time_query;
+use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, adjoin_cmd,
     annotations_scales, annotations_write, arc, areas, array, blocks_define, blocks_edit, circle,
@@ -1067,6 +1068,21 @@ impl Input for kentos_commands::MeshesProfile {
 impl Input for kentos_commands::TimeQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_commands::SensorsIngest {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SensorsLatest {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "staleAfter" => self.stale_after.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -3780,6 +3796,12 @@ fn run_op(
         kentos_commands::CAD_TIME_QUERY => {
             run!(time_query, kentos_commands::TimeQuery)
         }
+        kentos_commands::CAD_SENSORS_INGEST => {
+            run!(sensors_ingest, kentos_commands::SensorsIngest)
+        }
+        kentos_commands::CAD_SENSORS_LATEST => {
+            run!(sensors_latest, kentos_commands::SensorsLatest)
+        }
         kentos_commands::CAD_POINTCLOUDS_REGION => {
             run!(pointclouds_region, kentos_commands::PointCloudsRegion)
         }
@@ -4069,6 +4091,33 @@ fn run_command(
             if let Some(field) = want.pointer_mut(&format!("/output/uids/{i}")) {
                 *field = Value::String(text.to_owned());
             }
+        }
+    }
+    // “$uid” in `added` (cad.sensors.ingest, docs/adr/0646 §4): each the persistent id of an object the drawing now
+    // holds, in the order written (the entities' expectation checks what they are).
+    let added = want
+        .pointer("/output/added")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    for i in 0..added {
+        if want.pointer(&format!("/output/added/{i}")) != Some(&json!("$uid")) {
+            continue;
+        }
+        let text = got
+            .pointer(&format!("/output/added/{i}"))
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let held = Uuid::parse_str(text)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .is_some();
+        if !held {
+            return Err(format!(
+                "{at}: output.added[{i}] {text} çizimdeki bir nesnenin kimliği değil"
+            ));
+        }
+        if let Some(field) = want.pointer_mut(&format!("/output/added/{i}")) {
+            *field = Value::String(text.to_owned());
         }
     }
     // “$layer:K”: the layers the command added (execute) or would add (plan), ids the tree did not have, by their number

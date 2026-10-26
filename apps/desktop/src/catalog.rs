@@ -728,6 +728,7 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0210: Zaman and Senaryo (temporal/, kentos_interaction::time_version).
     "time.slider",
     "time.layer",
+    "time.sensors",
     "tool.timeVersion",
     "tool.timeEnd",
     "time.compare",

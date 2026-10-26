@@ -554,15 +554,15 @@ def describe_cases():
     rec = drawing()["entities"][14]["sources"][0]
     missing = unread(rec, ANY)
     out.append(case("dosyası olmayan kaynak okunmaz, söylenir", step(
-        {"uids": ["$uidOf:15"]}, done(answer([described(15, [missing])]), [ANY]))))
+        {"uids": ["$uidOf:15"]}, done(answer([described(15, [missing])]), [{"code": "cloud_source_unreadable", "message": ANY, "path": "clouds[0].sources[0]"}]))))
     rec = drawing()["entities"][15]["sources"][0]
     # The address is .invalid: a host with no network says so, one with a network that the name is not found
     # (docs/adr/0645 §5); either way the source is not read and said.
     out.append(case("adresteki kaynak okunamazsa söylenir", step(
-        {"uids": ["$uidOf:16"]}, done(answer([described(16, [unread(rec, ANY)])]), [ANY]))))
+        {"uids": ["$uidOf:16"]}, done(answer([described(16, [unread(rec, ANY)])]), [{"code": "cloud_source_unreadable", "message": ANY, "path": "clouds[0].sources[0]"}]))))
     rec = drawing()["entities"][16]["sources"][0]
     out.append(case("bozuk dosya okunmaz, söylenir", step(
-        {"uids": ["$uidOf:17"]}, done(answer([described(17, [unread(rec, ANY)])]), [ANY]))))
+        {"uids": ["$uidOf:17"]}, done(answer([described(17, [unread(rec, ANY)])]), [{"code": "cloud_source_unreadable", "message": ANY, "path": "clouds[0].sources[0]"}]))))
     emb = describe("las12-f0.las")
     del emb["file"]
     emb = {"asset": ASSET, **emb}
