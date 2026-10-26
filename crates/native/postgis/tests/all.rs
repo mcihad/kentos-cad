@@ -837,6 +837,80 @@ fn layers_of_one_database_go_in_together() {
     assert_eq!(z["error"]["code"], "geometry_mismatch", "{z}");
 }
 
+/// docs/adr/0648 §3: layers of one database are reconciled together, field by field, in one transaction: here the
+/// plane moved and the table renamed, the line renamed in the table; nothing is a conflict and both tables take both.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn layers_of_one_database_are_reconciled_together() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    // Tables of its own: the other tests write boyut's at the same time.
+    psql(
+        &url,
+        "CREATE SCHEMA uzlas; \
+         CREATE TABLE uzlas.alan (fid bigint PRIMARY KEY, ad text, geom geometry(Polygon, 5256)); \
+         CREATE TABLE uzlas.yol (fid bigint PRIMARY KEY, ad text, geom geometry(LineString, 5256)); \
+         INSERT INTO uzlas.alan VALUES (1, 'ilk', ST_GeomFromText('POLYGON((487000 4420000,487010 4420000,487010 4420010,487000 4420010,487000 4420000))', 5256)); \
+         INSERT INTO uzlas.yol VALUES (1, 'ilk', ST_GeomFromText('LINESTRING(487000 4420020,487010 4420020)', 5256));",
+    );
+    let mut d = doc();
+    let (duz, duz_uid) = bind(&mut d, &url, "uzlas.alan");
+    let (cizgi, _) = bind(&mut d, &url, "uzlas.yol");
+    let (_, wkt_before) = row_in(&url, "uzlas.alan", "ilk");
+    // Someone else renames both rows in the database.
+    let mut other = doc();
+    let (o_duz, o_duz_uid) = bind(&mut other, &url, "uzlas.alan");
+    let (o_cizgi, o_cizgi_uid) = bind(&mut other, &url, "uzlas.yol");
+    rename(&mut other, &o_duz_uid, "uzlas");
+    rename(&mut other, &o_cizgi_uid, "uzlas");
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": o_duz, "direction": "write", "with": [o_cizgi] }),
+    ));
+    // Here the plane moves.
+    ok(&run(
+        &mut d,
+        "cad.entities.transform",
+        CallOp::Execute,
+        json!({ "uids": [duz_uid], "transform": { "kind": "move", "dx": 0.5, "dy": 0.25 } }),
+    ));
+    let planned = ok(&run(
+        &mut d,
+        "cad.sources.reconcile",
+        CallOp::Plan,
+        json!({ "layer": duz, "with": [cizgi] }),
+    ))
+    .clone();
+    assert_eq!(planned["unresolved"], json!(0), "{planned}");
+    assert!(planned.get("conflicts").is_none(), "{planned}");
+    let done = ok(&run(
+        &mut d,
+        "cad.sources.reconcile",
+        CallOp::Execute,
+        json!({ "layer": duz, "with": [cizgi] }),
+    ))
+    .clone();
+    assert_eq!(done["merged"].as_array().map(Vec::len), Some(1), "{done}");
+    assert_eq!(ad_in(&url, "uzlas.alan"), "uzlas");
+    assert_eq!(ad_in(&url, "uzlas.yol"), "uzlas");
+    let (_, wkt_after) = row_in(&url, "uzlas.alan", "uzlas");
+    assert_ne!(wkt_after, wkt_before, "the plane's move is in the table");
+    // Both layers are at their tables now: a second reconcile finds nothing.
+    let again = ok(&run(
+        &mut d,
+        "cad.sources.reconcile",
+        CallOp::Plan,
+        json!({ "layer": duz, "with": [cizgi] }),
+    ))
+    .clone();
+    assert!(again.get("conflicts").is_none(), "{again}");
+    assert!(again.get("merged").is_none(), "{again}");
+}
+
 /// The row of `table` whose `ad` is `ad`: its lasting id and its WKT, as a question to the database reads them.
 fn row_in(url: &str, table: &str, ad: &str) -> (String, String) {
     let mut d = doc();

@@ -95,6 +95,12 @@ fn vertex_hash((x, y): (u64, u64)) -> u32 {
 /// The hashes of an object's vertices, rising and once each; none when it has more than `MAX_BASE_VERTICES` (or
 /// the point is in a bare `x`, `y` it does not have).
 pub(super) fn vertex_set(e: &Entity) -> Option<Vec<u32>> {
+    let all = vertex_set_all(e);
+    (all.len() <= MAX_BASE_VERTICES).then_some(all)
+}
+
+/// The hashes of all of an object's vertices, rising and once each, however many (parts and holes too).
+pub(super) fn vertex_set_all(e: &Entity) -> Vec<u32> {
     let essence = gp::essence(e);
     let mut raw = Vec::new();
     if let Some(m) = essence.as_object() {
@@ -104,11 +110,8 @@ pub(super) fn vertex_set(e: &Entity) -> Option<Vec<u32>> {
             }
         }
     }
-    if raw.len() > MAX_BASE_VERTICES {
-        return None;
-    }
     let set: BTreeSet<u32> = raw.into_iter().map(vertex_hash).collect();
-    Some(set.into_iter().collect())
+    set.into_iter().collect()
 }
 
 /// An object's attribute hashes by rising name hash; none when two names share a hash.

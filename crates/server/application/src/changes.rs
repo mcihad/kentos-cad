@@ -118,6 +118,25 @@ struct Planned {
     stored: Option<Stored>,
 }
 
+/// `input` with every `edit` judged as an update, and the bases those edits were made from, by id.
+fn split_bases(
+    mut input: ProjectChanges,
+) -> (ProjectChanges, HashMap<Uuid, kentos_contracts::Entity>) {
+    let mut bases = HashMap::new();
+    for change in &mut input.features {
+        if let FeatureChange::Edit { id, entity, base } = change {
+            if let Ok(uid) = Uuid::parse_str(id) {
+                bases.insert(uid, (**base).clone());
+            }
+            *change = FeatureChange::Update {
+                id: std::mem::take(id),
+                entity: entity.clone(),
+            };
+        }
+    }
+    (input, bases)
+}
+
 async fn current_copies(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
@@ -156,7 +175,7 @@ async fn guard_forms(
             FeatureChange::Create { id, entity } | FeatureChange::Update { id, entity } => {
                 Some((i, id.as_str(), entity))
             }
-            FeatureChange::Delete { .. } => None,
+            FeatureChange::Delete { .. } | FeatureChange::Edit { .. } => None,
         })
         .collect();
     let forms: Vec<&kentos_contracts::ProjectForm> = settings
@@ -498,6 +517,9 @@ pub(crate) async fn commit_in(
     let key = envelope.idempotency_key.as_str();
     let input: ProjectChanges = serde_json::from_value(envelope.input.clone())
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))?;
+    // An `edit` is an update made from the client's last known copy (docs/adr/0648 §1): judged as an update, its base
+    // kept for the merge a moved version asks for.
+    let (input, bases) = split_bases(input);
     if input.features.len() + input.blocks.len() > max_changes {
         return Err(AppError::invalid(format!(
             "Bir komutta en çok {max_changes} nesne değişikliği olabilir; değişiklikleri parçalara bölün."
@@ -600,6 +622,7 @@ pub(crate) async fn commit_in(
         }
         _ => input,
     };
+    let mut input = input;
 
     // 4. Plan and check: layer tree after the patch, stored forms, versions.
     let current_tree: Vec<LayerNode> = serde_json::from_value(layers)
@@ -734,6 +757,7 @@ pub(crate) async fn commit_in(
             FeatureChange::Create { id, entity } => (id, FeatureOp::Create, Some(entity)),
             FeatureChange::Update { id, entity } => (id, FeatureOp::Update, Some(entity)),
             FeatureChange::Delete { id } => (id, FeatureOp::Delete, None),
+            FeatureChange::Edit { .. } => unreachable!("edits are judged as updates (split_bases)"),
         };
         let id = parse_uuid(id, "nesne kimliği").map_err(|e| e.at(format!("features[{i}].id")))?;
         if !seen.insert(id) {
@@ -792,6 +816,7 @@ pub(crate) async fn commit_in(
         _ => HashSet::new(),
     };
     let mut conflicting_ids = Vec::new();
+    let mut to_merge: Vec<Uuid> = Vec::new();
     for p in &plan {
         let key = p.id.to_string();
         if hidden.contains(&p.id) {
@@ -809,6 +834,16 @@ pub(crate) async fn commit_in(
                 })?;
                 match actual {
                     None => Some(ConflictReason::Deleted),
+                    // Someone saved a newer version of an object edited from a known copy: merged below, if it can be.
+                    Some(v)
+                        if v != want
+                            && p.op == FeatureOp::Update
+                            && !entry
+                            && bases.contains_key(&p.id) =>
+                    {
+                        to_merge.push(p.id);
+                        None
+                    }
                     Some(v) if v != want => Some(ConflictReason::Changed),
                     Some(_) => None,
                 }
@@ -833,6 +868,56 @@ pub(crate) async fn commit_in(
                 &current_tree
             };
             writable_layer(judged, layer)?;
+        }
+    }
+    // The merges (docs/adr/0648 §1): the stored copy and the client's, field by field against its base; a clean merge is
+    // what this command writes, fields both changed differently stay a conflict.
+    let mut merged_ids: HashSet<Uuid> = HashSet::new();
+    if !to_merge.is_empty() {
+        let stored_copies = current_copies(tx, access, &to_merge).await?;
+        for id in &to_merge {
+            let key = id.to_string();
+            let Some(i) = plan.iter().position(|p| p.id == *id) else {
+                continue;
+            };
+            let merge = match (stored_copies.get(id), bases.get(id), &input.features[i]) {
+                (Some(theirs), Some(base), FeatureChange::Update { entity, .. }) => {
+                    kentos_contracts::merge_entities(base, entity, &theirs.entity).ok()
+                }
+                _ => None,
+            };
+            let written = merge.and_then(|m| {
+                to_stored(&m.entity, new_srid, &placing)
+                    .ok()
+                    .filter(|s| writable_layer(&tree, &s.layer_id).is_ok())
+                    .map(|s| (m.entity, s))
+            });
+            match written {
+                Some((entity, stored)) => {
+                    let layer = &existing[id].1;
+                    let judged = if find_layer(&tree, layer).is_some() {
+                        &tree
+                    } else {
+                        &current_tree
+                    };
+                    writable_layer(judged, layer)?;
+                    plan[i].stored = Some(stored);
+                    if let FeatureChange::Update { entity: e, .. } = &mut input.features[i] {
+                        *e = entity;
+                    }
+                    merged_ids.insert(*id);
+                }
+                None => {
+                    conflicting_ids.push(*id);
+                    conflicts.push(FeatureConflict {
+                        id: key.clone(),
+                        reason: ConflictReason::Changed,
+                        expected: envelope.expected_versions.get(&key).cloned(),
+                        actual: existing.get(id).map(|(v, _)| v.to_string()),
+                        current: None,
+                    });
+                }
+            }
         }
     }
     if !conflicts.is_empty() {
@@ -1205,6 +1290,23 @@ pub(crate) async fn commit_in(
     .fetch_one(&mut **tx)
     .await?;
     event.seq = seq.to_string();
+    // The merged objects as written, for the client to take.
+    let merged: Vec<kentos_contracts::FeatureRecord> = input
+        .features
+        .iter()
+        .filter_map(|c| match c {
+            FeatureChange::Update { id, entity }
+                if Uuid::parse_str(id).is_ok_and(|u| merged_ids.contains(&u)) =>
+            {
+                Some(kentos_contracts::FeatureRecord {
+                    id: id.clone(),
+                    version: versions.get(id)?.clone(),
+                    entity: entity.clone(),
+                })
+            }
+            _ => None,
+        })
+        .collect();
     let result = CommitResult {
         data_revision: new_revision.to_string(),
         meta_version: new_meta.to_string(),
@@ -1212,6 +1314,7 @@ pub(crate) async fn commit_in(
         deleted,
         event_seq: seq.to_string(),
         replayed: false,
+        merged,
     };
     idempotency::record(tx, access, &envelope, &text, &result).await?;
     Ok(result)

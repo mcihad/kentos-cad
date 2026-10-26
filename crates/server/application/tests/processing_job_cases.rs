@@ -230,7 +230,7 @@ fn what_a_tool_changed_is_found_as_the_reference_finds_it() {
             .iter()
             .map(|c| match c {
                 FeatureChange::Create { .. } => 0,
-                FeatureChange::Update { .. } => 1,
+                FeatureChange::Update { .. } | FeatureChange::Edit { .. } => 1,
                 FeatureChange::Delete { .. } => 2,
             })
             .collect();

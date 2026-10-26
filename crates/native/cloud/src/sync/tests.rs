@@ -88,7 +88,9 @@ pub(super) fn committed(env: &CommandEnvelope, revision: u64) -> CommitResult {
     let mut deleted = Vec::new();
     for c in changes.features {
         match c {
-            FeatureChange::Create { id, .. } | FeatureChange::Update { id, .. } => {
+            FeatureChange::Create { id, .. }
+            | FeatureChange::Update { id, .. }
+            | FeatureChange::Edit { id, .. } => {
                 versions.insert(id, revision.to_string());
             }
             FeatureChange::Delete { id } => deleted.push(id),
@@ -101,6 +103,7 @@ pub(super) fn committed(env: &CommandEnvelope, revision: u64) -> CommitResult {
         deleted,
         event_seq: "10".into(),
         replayed: false,
+        merged: Vec::new(),
     }
 }
 
@@ -156,7 +159,7 @@ fn a_change_and_a_removal_name_the_version_they_are_based_on() {
     assert!(
         changes
             .iter()
-            .any(|c| matches!(c, FeatureChange::Update { id, .. } if *id == a.to_string()))
+            .any(|c| matches!(c, FeatureChange::Edit { id, .. } if *id == a.to_string()))
     );
     sync.answered(&o.document, &committed(&env, 2));
     assert_eq!((sync.version_of(a), sync.version_of(b)), (Some("2"), None));
@@ -712,11 +715,13 @@ fn an_object_changed_here_and_elsewhere_in_other_fields_is_merged_and_sent_over_
         Some("5")
     );
     match &input(&env).features[0] {
-        FeatureChange::Update { id: sent, entity } => {
+        FeatureChange::Edit {
+            id: sent, entity, ..
+        } => {
             assert_eq!(sent, &id.to_string());
             assert_eq!(entity.base().label.as_deref(), Some("ortak"));
         }
-        other => panic!("an update: {other:?}"),
+        other => panic!("an edit: {other:?}"),
     }
 }
 
@@ -1048,6 +1053,7 @@ fn the_command_on_its_way_goes_again_with_its_key() {
         &again.document,
         &CommitResult {
             replayed: true,
+            merged: Vec::new(),
             ..committed(&resent, 2)
         },
     );
@@ -2031,4 +2037,74 @@ fn every_part_the_effects_table_names_rides_its_patch_field() {
             assert_eq!(set, p == part, "{part:?}: the patch's {p:?}");
         }
     }
+}
+
+/// docs/adr/0648 §2: an update goes as an `edit` with its base; the server's merged copy comes back in the answer and the
+/// drawing takes it, the version known is the merged one, nothing waits.
+#[test]
+fn the_servers_merge_comes_back_into_the_drawing() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    let base = o.document.get(Slot(1)).unwrap().clone();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    sync.observe(&o.document);
+    let env = sync.next(&o.document).unwrap();
+    let FeatureChange::Edit {
+        base: sent_base, ..
+    } = &input(&env).features[0]
+    else {
+        panic!("an edit");
+    };
+    assert_eq!(**sent_base, base);
+    // Someone labelled it meanwhile: the server writes both at version 7.
+    let mut merged = o.document.get(Slot(1)).unwrap().clone();
+    merged.base_mut().label = Some("ortak".into());
+    let mut answer = committed(&env, 7);
+    answer.merged = vec![record(id, "7", merged)];
+    let sent = sync.sending();
+    sync.answered(&o.document, &answer);
+    assert_eq!(sync.merged_in(&mut o.document, &answer, &sent), 1);
+    let slot = o.document.slot_of(id).unwrap();
+    assert_eq!(
+        o.document.get(slot).unwrap().base().label.as_deref(),
+        Some("ortak")
+    );
+    assert_eq!(x_of(&o.document, id), Some(486700.0));
+    assert_eq!(sync.version_of(id), Some("7"));
+    assert!(sync.next(&o.document).is_none(), "nothing left to send");
+}
+
+/// An edit made while the command was on its way is put over the server's merge field by field and goes next.
+#[test]
+fn an_edit_made_meanwhile_goes_over_the_servers_merge() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    sync.observe(&o.document);
+    let env = sync.next(&o.document).unwrap();
+    let mut merged = o.document.get(Slot(1)).unwrap().clone();
+    merged.base_mut().label = Some("ortak".into());
+    // Meanwhile here: an attribute.
+    let mut now = o.document.get(Slot(1)).unwrap().clone();
+    now.base_mut().attrs.insert("Not".into(), "yeni".into());
+    assert!(o.document.update(Slot(1), now));
+    sync.observe(&o.document);
+    let mut answer = committed(&env, 7);
+    answer.merged = vec![record(id, "7", merged)];
+    let sent = sync.sending();
+    sync.answered(&o.document, &answer);
+    sync.merged_in(&mut o.document, &answer, &sent);
+    let slot = o.document.slot_of(id).unwrap();
+    let e = o.document.get(slot).unwrap();
+    assert_eq!(e.base().label.as_deref(), Some("ortak"));
+    assert_eq!(e.base().attrs.get("Not").map(String::as_str), Some("yeni"));
+    let env = sync.next(&o.document).expect("the edit goes next");
+    assert_eq!(
+        env.expected_versions
+            .get(&id.to_string())
+            .map(String::as_str),
+        Some("7")
+    );
 }

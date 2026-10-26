@@ -119,6 +119,8 @@ enum Planned {
         id: Uuid,
         entity: Entity,
         expected: String,
+        /// The copy this device last knew of it: the server merges with a newer version field by field (docs/adr/0648).
+        base: Option<Box<Entity>>,
     },
     Delete {
         id: Uuid,
@@ -138,6 +140,16 @@ impl Planned {
             Self::Create { id, entity } => FeatureChange::Create {
                 id: id.to_string(),
                 entity: entity.clone(),
+            },
+            Self::Update {
+                id,
+                entity,
+                base: Some(base),
+                ..
+            } => FeatureChange::Edit {
+                id: id.to_string(),
+                entity: entity.clone(),
+                base: base.clone(),
             },
             Self::Update { id, entity, .. } => FeatureChange::Update {
                 id: id.to_string(),
@@ -458,6 +470,7 @@ impl ProjectSync {
                 id,
                 entity: entity.clone(),
                 expected: t.version.clone(),
+                base: Some(Box::new(t.entity.clone())),
             }),
             (Some(_), Some(_)) | (None, None) => None,
             (None, Some(t)) => Some(Planned::Delete {
@@ -641,6 +654,67 @@ impl ProjectSync {
     /// stays on this device and does not count (it was told so).
     pub fn all_sent(&self) -> bool {
         self.pending() == 0 && self.inflight.is_none()
+    }
+
+    /// The objects the server merged with someone else's newer version (docs/adr/0648 §2), taken into the drawing: the
+    /// server's copy where the object was not edited since it was sent, else that edit put over it field by field (an
+    /// edit clashing with the merge stays as it is and goes next). The count taken.
+    pub fn merged_in(&mut self, doc: &mut Document, result: &CommitResult, sent: &[(Uuid, Entity)]) -> usize {
+        let mut taken = 0;
+        for record in &result.merged {
+            let Ok(id) = Uuid::parse_str(&record.id) else {
+                continue;
+            };
+            let Some((_, mine)) = sent.iter().find(|(s, _)| *s == id) else {
+                continue;
+            };
+            let now = current(doc, id).cloned();
+            let put = match &now {
+                Some(now) if same(now, mine) => Some(record.entity.clone()),
+                Some(now) => kentos_contracts::merge_entities(mine, now, &record.entity)
+                    .ok()
+                    .map(|m| m.entity),
+                None => None,
+            };
+            self.know(
+                id,
+                Tracked {
+                    version: record.version.clone(),
+                    entity: record.entity.clone(),
+                },
+            );
+            if let Some(entity) = put
+                && doc.layers().get(&entity.base().layer_id).is_some()
+            {
+                let mut change = kentos_domain::External::default();
+                change.put.push((id, entity));
+                if self.apply(doc, change).is_ok() {
+                    taken += 1;
+                }
+            }
+            if self.plan(doc, id).is_some() {
+                self.dirty.insert(id);
+            } else {
+                self.dirty.remove(&id);
+            }
+        }
+        taken
+    }
+
+    /// The objects the command on its way carries, as sent (for [`Self::merged_in`]).
+    pub fn sending(&self) -> Vec<(Uuid, Entity)> {
+        self.inflight
+            .as_ref()
+            .map(|f| {
+                f.planned
+                    .iter()
+                    .filter_map(|p| match p {
+                        Planned::Update { id, entity, .. } => Some((*id, entity.clone())),
+                        _ => None,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// The server committed the command on its way (`result` is its answer).

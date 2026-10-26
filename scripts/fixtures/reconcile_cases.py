@@ -967,7 +967,7 @@ def cases():
     steps.append(bs.step({"layer": LAYER, "with": [KOMSU]},
                          bs.failed("transaction_split", f"“{KOMSU}” katmanı $tmp:uz-with-dosya-b.gpkg kaynağında, "
                                    f"“{LAYER}” katmanı $tmp:uz-with-dosya-a.gpkg dosyasında; birlikte uzlaştırılacak "
-                                   "katmanlar tek GeoPackage dosyasında olmalı. Katmanları ayrı ayrı uzlaştırın.",
+                                   "katmanlar tek GeoPackage dosyasında ya da tek veritabanında olmalı. Katmanları ayrı ayrı uzlaştırın.",
                                    "with"), op="plan"))
     out.append(bs.case("başka dosyadaki katman birlikte uzlaştırılmaz", *steps))
     layer, steps = bound("uz-kayip.gpkg", edits=[*EDITS, ("set", 8, {"durum": "x"})])

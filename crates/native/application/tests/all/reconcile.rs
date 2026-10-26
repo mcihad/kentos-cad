@@ -381,3 +381,85 @@ fn a_base_without_field_records_conflicts_as_a_whole_and_says_so() {
     let _ = std::fs::remove_file(&tmp);
     let _ = std::fs::remove_file(&tmp2);
 }
+
+/// docs/adr/0648 §4: a parcel of more corners than a base record keeps (here K2 with two hundred) still ties to its
+/// neighbour through the corner they share: both sides moved it, the two are one group.
+#[test]
+fn a_many_cornered_parcel_still_groups_with_its_neighbour() {
+    let tmp = std::env::temp_dir().join(format!("kentos-uzlas-cok-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("uzlas-komsu.gpkg"), &tmp).expect("copied");
+    let path = tmp.display().to_string();
+    let k = "import-komsu";
+    let link = |d: &mut Document| {
+        ok(&run(
+            d,
+            "cad.sources.edit",
+            CallOp::Execute,
+            json!({ "edit": { "kind": "link", "path": path, "table": "komsu" } }),
+        ));
+    };
+    let (x0, y0) = (487000.0, 4420000.0);
+    let p = |x: f64, y: f64| json!({ "x": x0 + x, "y": y0 + y });
+    // K2 with 200 corners on its bottom edge, the corner (40, 20) shared with K3.
+    let dense = |corner: (f64, f64)| {
+        let mut pts: Vec<Value> = (0..200)
+            .map(|i| p(20.0 + 0.1 * f64::from(i), 0.0))
+            .collect();
+        pts.push(p(40.0, 0.0));
+        pts.push(p(corner.0, corner.1));
+        pts.push(p(20.0, 20.0));
+        Value::Array(pts)
+    };
+    let grip = |d: &mut Document, n: u32, pts: Value| {
+        let u = uid_by(d, k, "ad", &format!("K{n}"));
+        ok(&run(
+            d,
+            "cad.entities.edit",
+            CallOp::Execute,
+            json!({ "operation": "grip", "changes": [{ "kind": "update", "uid": u,
+                "geometry": { "kind": "polygon", "pts": pts } }] }),
+        ));
+    };
+    let mut d = doc();
+    link(&mut d);
+    grip(&mut d, 2, dense((40.0, 20.0)));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": k, "direction": "write" }),
+    ));
+    // The table: someone moves the shared corner of K2 only.
+    let mut other = doc();
+    link(&mut other);
+    grip(&mut other, 2, dense((41.0, 21.0)));
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": k, "direction": "write" }),
+    ));
+    // The layer: the corner moves in both.
+    grip(&mut d, 2, dense((42.0, 22.0)));
+    grip(
+        &mut d,
+        3,
+        json!([p(40.0, 0.0), p(60.0, 0.0), p(60.0, 20.0), p(42.0, 22.0)]),
+    );
+    let plan = ok(&run(
+        &mut d,
+        "cad.sources.reconcile",
+        CallOp::Plan,
+        json!({ "layer": k }),
+    ))
+    .clone();
+    let groups = plan["groups"].as_array().cloned().unwrap_or_default();
+    assert_eq!(groups.len(), 1, "{plan}");
+    assert_eq!(
+        groups[0]["objects"].as_array().map(Vec::len),
+        Some(2),
+        "{plan}"
+    );
+    assert_eq!(groups[0]["reasons"], json!(["sharedVertex"]), "{plan}");
+    let _ = std::fs::remove_file(&tmp);
+}

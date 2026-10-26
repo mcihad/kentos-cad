@@ -146,6 +146,13 @@ fn planned_of(change: &FeatureChange, expected: &BTreeMap<String, String>) -> Op
             id: Uuid::parse_str(id).ok()?,
             entity: entity.clone(),
             expected: expected.get(id)?.clone(),
+            base: None,
+        },
+        FeatureChange::Edit { id, entity, base } => Planned::Update {
+            id: Uuid::parse_str(id).ok()?,
+            entity: entity.clone(),
+            expected: expected.get(id)?.clone(),
+            base: Some(base.clone()),
         },
         FeatureChange::Delete { id } => Planned::Delete {
             id: Uuid::parse_str(id).ok()?,

@@ -15,8 +15,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use kentos_commands::{
     BaseDetail, CommandResult, CommandWarning, ConflictField, ConflictKind, Entity, GroupReason,
     ReconcileConflict, ReconcileCounts, ReconcileGroup, ReconcileLayer, ReconcileMerge,
-    ReconcileSide, SourceKind, SourceLink, SourcesReconcile, SourcesReconciled, SourcesSync,
-    SyncDirection,
+    ReconcileSide, SourceLink, SourcesReconcile, SourcesReconciled, SourcesSync, SyncDirection,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -389,11 +388,12 @@ fn groups_of(doc: &Document, lays: &[Lay], objs: &[Obj]) -> Vec<Grp> {
                 return None;
             }
             let base = o.detail.as_ref()?.vertices.clone()?;
+            // The sides' vertices however many: the base keeps a many-cornered object's shared ones (docs/adr/0648 §4).
             let of = |e: &Option<Entity>| match e {
-                None => Some(Vec::new()),
-                Some(e) => merge::vertex_set(e),
+                None => Vec::new(),
+                Some(e) => merge::vertex_set_all(e),
             };
-            Some((base, of(&o.layer)?, of(&o.table)?))
+            Some((base, of(&o.layer), of(&o.table)))
         })
         .collect();
     let mut at_vertex: HashMap<u32, Vec<usize>> = HashMap::new();
@@ -538,14 +538,12 @@ fn run(
     if lays.len() > 1 {
         let first = &lays[0].link;
         for (i, l) in lays.iter().enumerate().skip(1) {
-            if l.link.kind != SourceKind::Geopackage
-                || first.kind != SourceKind::Geopackage
-                || l.link.path != first.path
-            {
+            // One GeoPackage file or one database (docs/adr/0648 §3): a transaction spans no two sources.
+            if l.link.kind != first.kind || l.link.path != first.path {
                 return Err(refuse(
                     codes::TRANSACTION_SPLIT,
                     format!(
-                        "“{}” katmanı {} kaynağında, “{}” katmanı {} dosyasında; birlikte uzlaştırılacak katmanlar tek GeoPackage dosyasında olmalı. Katmanları ayrı ayrı uzlaştırın.",
+                        "“{}” katmanı {} kaynağında, “{}” katmanı {} dosyasında; birlikte uzlaştırılacak katmanlar tek GeoPackage dosyasında ya da tek veritabanında olmalı. Katmanları ayrı ayrı uzlaştırın.",
                         l.link.layer, l.link.path, first.layer, first.path
                     ),
                     at(i),
@@ -553,7 +551,6 @@ fn run(
             }
         }
     }
-    let sha = lays[0].sha.clone();
     let multi = lays.len() > 1;
     let (objs, agreed, missing) = classify(&lays);
     let groups = groups_of(doc, &lays, &objs);
@@ -785,7 +782,11 @@ fn run(
         with: input.with.clone(),
         topology: None,
     };
-    let links: Vec<SourceLink> = lays.iter().map(|l| l.link.clone()).collect();
+    // Each layer at its own table's state (a database's tables have each their own revision).
+    let links: Vec<(SourceLink, String)> = lays
+        .iter()
+        .map(|l| (l.link.clone(), l.sha.clone()))
+        .collect();
     let body = |doc: &mut Document| {
         if !updates.is_empty() {
             doc.update_many(updates, &label);
@@ -799,8 +800,8 @@ fn run(
             doc.remove(&gone);
         }
         // The layers now hold the table's side: they are written against the file as it is.
-        for mut link in links {
-            link.revision = sha.clone();
+        for (mut link, sha) in links {
+            link.revision = sha;
             set_link(doc, Some(link), None);
         }
         sync_run(doc, &sync, write)

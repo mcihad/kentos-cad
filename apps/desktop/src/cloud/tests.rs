@@ -254,6 +254,7 @@ fn answer(app: &App, version: &str) -> CommitResult {
             let id = match c {
                 kentos_commands::FeatureChange::Create { id, .. }
                 | kentos_commands::FeatureChange::Update { id, .. }
+                | kentos_commands::FeatureChange::Edit { id, .. }
                 | kentos_commands::FeatureChange::Delete { id } => id.clone(),
             };
             (id, version.to_owned())
@@ -266,6 +267,7 @@ fn answer(app: &App, version: &str) -> CommitResult {
         deleted: Vec::new(),
         event_seq: "10".into(),
         replayed: false,
+        merged: Vec::new(),
     }
 }
 

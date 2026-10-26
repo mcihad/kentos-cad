@@ -678,6 +678,14 @@ pub enum FeatureChange {
         id: String,
         entity: Entity,
     },
+    /// An update made from `base`, the copy the client last knew (docs/adr/0648 §1): when `expectedVersions[id]` is
+    /// no longer the object's version, the server puts `entity` and its stored copy together field by field against
+    /// `base`; a clean merge is written (and answered in `merged`), fields both changed differently are a conflict.
+    Edit {
+        id: String,
+        entity: Entity,
+        base: Box<Entity>,
+    },
     Delete {
         id: String,
     },
@@ -752,6 +760,11 @@ pub struct CommitResult {
     pub event_seq: String,
     #[serde(default)]
     pub replayed: bool,
+    /// The objects of `edit` changes the server merged with someone else's newer version (docs/adr/0648 §1), as
+    /// written: the client takes them into its drawing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FeatureRecord>>", optional))]
+    pub merged: Vec<FeatureRecord>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

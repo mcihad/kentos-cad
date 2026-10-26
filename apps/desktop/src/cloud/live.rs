@@ -428,7 +428,19 @@ impl App {
         let heard = result.as_ref().err().cloned();
         match result {
             Ok(answer) => {
+                let sent = live.sync.sending();
                 live.sync.answered(&doc.model, &answer);
+                // Objects the server merged with someone else's newer version (docs/adr/0648 §2).
+                if !answer.merged.is_empty() {
+                    live.sync.merged_in(&mut doc.model, &answer, &sent);
+                    say.push((
+                        false,
+                        format!(
+                            "{} nesneyi başka biri de değiştirmişti, ama farklı alanlarını: sunucu ikisini birleştirdi.",
+                            answer.merged.len()
+                        ),
+                    ));
+                }
                 live.last_saved = Some(crate::cloud::now_ms());
                 live.sent = None;
                 live.retry_at = None;

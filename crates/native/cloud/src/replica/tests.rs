@@ -269,6 +269,7 @@ fn a_compaction_rewrites_the_copy_from_the_syncs_base() {
             deleted: vec![],
             event_seq: "10".into(),
             replayed: false,
+            merged: Vec::new(),
         },
     );
     let _ = env;

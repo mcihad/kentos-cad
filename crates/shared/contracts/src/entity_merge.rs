@@ -184,6 +184,68 @@ mod tests {
         assert_eq!(m.entity, point(1.0, None, json!({ "b": "2" })));
     }
 
+    /// fixtures/cloud/v1/merge.json, written by scripts/fixtures/entity_merge_cases.py from the ADRs without KentOS code.
+    #[test]
+    fn the_shared_cases_merge_alike() {
+        let text = include_str!("../../../../fixtures/cloud/v1/merge.json");
+        let data: Value = serde_json::from_str(text).expect("the cases");
+        let entity = |v: &Value| serde_json::from_value::<Entity>(v.clone()).expect("an object");
+        let cases = data["cases"].as_array().expect("cases");
+        assert!(cases.len() >= 20);
+        for case in cases {
+            let name = case["name"].as_str().expect("name");
+            let got = merge_entities(
+                &entity(&case["base"]),
+                &entity(&case["mine"]),
+                &entity(&case["theirs"]),
+            );
+            match (&case["merged"], got) {
+                (Value::Null, Err(clashes)) => {
+                    let want: Vec<String> =
+                        serde_json::from_value(case["clashes"].clone()).expect("clashes");
+                    assert_eq!(clashes, want, "{name}");
+                }
+                (merged, Ok(m)) if !merged.is_null() => {
+                    assert_eq!(m.entity, entity(merged), "{name}");
+                    let names = |k: &str| -> Vec<String> {
+                        serde_json::from_value(case[k].clone()).expect("names")
+                    };
+                    assert_eq!(m.from_mine, names("fromMine"), "{name}");
+                    assert_eq!(m.from_theirs, names("fromTheirs"), "{name}");
+                }
+                (_, got) => panic!("{name}: {got:?}"),
+            }
+        }
+    }
+
+    /// `cargo test --release -p kentos-contracts --lib entity_merge::tests::merge_timing -- --ignored --nocapture`
+    /// (docs/adr/0648 Ölçümler): 10 000 merges of a 200-corner parcel whose sides changed a corner and an attribute.
+    #[test]
+    #[ignore = "a timing, run on its own in release"]
+    fn merge_timing() {
+        let ring = |dx: f64| -> Value {
+            Value::Array(
+                (0..200)
+                    .map(|i| {
+                        let a = f64::from(i) * std::f64::consts::TAU / 200.0;
+                        json!({ "x": 487000.0 + 10.0 * a.cos() + if i == 0 { dx } else { 0.0 }, "y": 4420000.0 + 10.0 * a.sin() })
+                    })
+                    .collect(),
+            )
+        };
+        let parcel = |dx: f64, malik: &str| -> Entity {
+            serde_json::from_value(json!({ "kind": "polygon", "id": 1, "layerId": "parsel",
+                "attrs": { "parsel_no": "5", "malik": malik }, "pts": ring(dx) }))
+            .expect("a parcel")
+        };
+        let (base, mine, theirs) = (parcel(0.0, "Ali"), parcel(0.5, "Ali"), parcel(0.0, "Veli"));
+        let t = std::time::Instant::now();
+        for _ in 0..10_000 {
+            merge_entities(&base, &mine, &theirs).expect("merged");
+        }
+        println!("10 000 birleştirme (200 köşe): {:?}", t.elapsed());
+    }
+
     #[test]
     fn the_object_keeps_my_slot_id() {
         let base = point(1.0, None, json!({}));

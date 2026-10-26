@@ -372,7 +372,9 @@ impl Delta {
         self.features
             .iter()
             .filter_map(|c| match c {
-                FeatureChange::Update { id, .. } | FeatureChange::Delete { id } => Some(id.clone()),
+                FeatureChange::Update { id, .. }
+                | FeatureChange::Edit { id, .. }
+                | FeatureChange::Delete { id } => Some(id.clone()),
                 FeatureChange::Create { .. } => None,
             })
             .collect()

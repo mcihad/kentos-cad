@@ -6467,6 +6467,7 @@ class FeatureChange(_Union):
 
     - :class:`CreateFeatureChange` (``op: create``)
     - :class:`UpdateFeatureChange` (``op: update``)
+    - :class:`EditFeatureChange` (``op: edit``)
     - :class:`DeleteFeatureChange` (``op: delete``)
     """
     __slots__ = ()
@@ -14063,12 +14064,15 @@ class CommitResult(_Model):
     """The committed result; a retry with the same idempotency key gets the same one (`replayed`).
     Attributes:
         versions: New version of every created or updated object.
+        merged: The objects of `edit` changes the server merged with someone else's newer version (docs/adr/0648 §1), as
+            written: the client takes them into its drawing.
     """
     data_revision: str
     meta_version: str
     versions: dict[str, str]
     deleted: list[str]
     event_seq: str
+    merged: list[FeatureRecord] | Unset = UNSET
     replayed: bool = False
 
     def to_json(self) -> dict[str, Any]:
@@ -14078,6 +14082,8 @@ class CommitResult(_Model):
         out["versions"] = dict(self.versions)
         out["deleted"] = list(self.deleted)
         out["eventSeq"] = self.event_seq
+        if self.merged is not UNSET:
+            out["merged"] = [e0.to_json() for e0 in self.merged]
         out["replayed"] = self.replayed
         return out
 
@@ -14089,6 +14095,7 @@ class CommitResult(_Model):
             versions=dict(data["versions"]),
             deleted=list(data["deleted"]),
             event_seq=data["eventSeq"],
+            merged=[FeatureRecord.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
             replayed=data["replayed"] if "replayed" in data else False,
         )
 
@@ -21563,6 +21570,29 @@ class FeatureFeed(_Model):
             name=data.get("name", UNSET),
             srid=data.get("srid", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FeatureRecord(_Model):
+    """One stored object. `entity.id` is meaningless on the wire (the browser numbers objects itself)."""
+    id: str
+    version: str
+    entity: Entity
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["version"] = self.version
+        out["entity"] = self.entity.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeatureRecord:
+        return cls(
+            id=data["id"],
+            version=data["version"],
+            entity=Entity.from_json(data["entity"]),
         )
 
 
@@ -64813,6 +64843,33 @@ class UpdateFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class EditFeatureChange(FeatureChange):
+    """An update made from `base`, the copy the client last knew (docs/adr/0648 §1): when `expectedVersions[id]` is
+    no longer the object's version, the server puts `entity` and its stored copy together field by field against
+    `base`; a clean merge is written (and answered in `merged`), fields both changed differently are a conflict.
+    """
+    TAG_VALUE: ClassVar[str] = "edit"
+    id: str
+    entity: Entity
+    base: Entity
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "edit"}
+        out["id"] = self.id
+        out["entity"] = self.entity.to_json()
+        out["base"] = self.base.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EditFeatureChange:
+        return cls(
+            id=data["id"],
+            entity=Entity.from_json(data["entity"]),
+            base=Entity.from_json(data["base"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DeleteFeatureChange(FeatureChange):
     TAG_VALUE: ClassVar[str] = "delete"
     id: str
@@ -74725,7 +74782,7 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensity, "step": StepExplodeDensity, "deviation": DeviationExplodeDensity}
 
 
-_FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
+_FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "edit": EditFeatureChange, "delete": DeleteFeatureChange}
 
 
 _FIELD_EDIT: dict[str, type[FieldEdit]] = {"insert": InsertFieldEdit, "remove": RemoveFieldEdit, "format": FormatFieldEdit, "update": UpdateFieldEdit}
@@ -75516,6 +75573,7 @@ __all__ = [
     "EdgeRectangleFrame",
     "EdgeRegularFrame",
     "EdgeShiftShapeWork",
+    "EditFeatureChange",
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",
@@ -75632,6 +75690,7 @@ __all__ = [
     "ExtentsPaperPlotArea",
     "FeatureChange",
     "FeatureFeed",
+    "FeatureRecord",
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",

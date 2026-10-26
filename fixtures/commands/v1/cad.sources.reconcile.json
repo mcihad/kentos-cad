@@ -11373,7 +11373,7 @@
       "status": "failed",
       "error": {
        "code": "transaction_split",
-       "message": "“import-komsu” katmanı $tmp:uz-with-dosya-b.gpkg kaynağında, “import-parsel” katmanı $tmp:uz-with-dosya-a.gpkg dosyasında; birlikte uzlaştırılacak katmanlar tek GeoPackage dosyasında olmalı. Katmanları ayrı ayrı uzlaştırın.",
+       "message": "“import-komsu” katmanı $tmp:uz-with-dosya-b.gpkg kaynağında, “import-parsel” katmanı $tmp:uz-with-dosya-a.gpkg dosyasında; birlikte uzlaştırılacak katmanlar tek GeoPackage dosyasında ya da tek veritabanında olmalı. Katmanları ayrı ayrı uzlaştırın.",
        "path": "with"
       }
      },

@@ -1,0 +1,1598 @@
+{
+ "format": "kentos.entity-merge-cases",
+ "version": 1,
+ "cases": [
+  {
+   "name": "ikisi de değiştirmedi: aynı",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "yalnız benim taşımam",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "p"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "yalnız onların taşıması",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [],
+   "fromTheirs": [
+    "p"
+   ]
+  },
+  {
+   "name": "ben taşıdım, onlar öznitelik değiştirdi: ikisi de",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "p"
+   ],
+   "fromTheirs": [
+    "attrs.ada"
+   ]
+  },
+  {
+   "name": "aynı özniteliği farklı: çatışma",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "103"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "attrs.ada"
+   ]
+  },
+  {
+   "name": "aynı özniteliği aynı değere: çatışma değil",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "farklı öznitelikler: ikisi de",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A2",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A2",
+     "ada": "102"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "attrs.ad"
+   ],
+   "fromTheirs": [
+    "attrs.ada"
+   ]
+  },
+  {
+   "name": "ben öznitelik ekledim, onlar sildi başkasını",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101",
+     "kod": "K"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "kod": "K"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "attrs.kod"
+   ],
+   "fromTheirs": [
+    "attrs.ada"
+   ]
+  },
+  {
+   "name": "ben sildim, onlar değiştirdi: çatışma",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "102"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "attrs.ada"
+   ]
+  },
+  {
+   "name": "ikisi de aynı özniteliği sildi",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "ikisi de farklı yere taşıdı: geometri çatışması",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487006.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "p"
+   ]
+  },
+  {
+   "name": "ikisi de aynı yere taşıdı",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "onlar etiket verdi, ben renk",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "color": "#FF0000"
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "label": "kapı"
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "color": "#FF0000",
+    "id": 1,
+    "kind": "point",
+    "label": "kapı",
+    "layerId": "parsel",
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "color"
+   ],
+   "fromTheirs": [
+    "label"
+   ]
+  },
+  {
+   "name": "ikisi farklı etiket: çatışma",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "label": "a"
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "label": "b"
+   },
+   "clashes": [
+    "label"
+   ]
+  },
+  {
+   "name": "onlar katmanını değiştirdi, ben taşıdım",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "nokta",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "nokta",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "p"
+   ],
+   "fromTheirs": [
+    "layerId"
+   ]
+  },
+  {
+   "name": "ikisi farklı katmana: çatışma",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "a",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "b",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "layerId"
+   ]
+  },
+  {
+   "name": "benim yuvamın kimliği kalır",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 9,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "label": "x"
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 9,
+    "kind": "point",
+    "label": "x",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "fromMine": [
+    "p"
+   ],
+   "fromTheirs": [
+    "label"
+   ]
+  },
+  {
+   "name": "kot yalnız onlarda",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "z": 1024.5
+   },
+   "merged": {
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "id": 1,
+    "kind": "point",
+    "layerId": "parsel",
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    },
+    "z": 1024.5
+   },
+   "fromMine": [
+    "p"
+   ],
+   "fromTheirs": [
+    "z"
+   ]
+  },
+  {
+   "name": "geometri ve iki öznitelik çatışması, sırası adlarına göre",
+   "base": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "A1",
+     "ada": "101"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "B",
+     "ada": "1"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "point",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ad": "C",
+     "ada": "2"
+    },
+    "p": {
+     "x": 487006.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "attrs.ad",
+    "attrs.ada",
+    "p"
+   ]
+  },
+  {
+   "name": "alan: ben köşe taşıdım, onlar malik değiştirdi",
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Veli"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "malik": "Veli",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "pts"
+   ],
+   "fromTheirs": [
+    "attrs.malik"
+   ]
+  },
+  {
+   "name": "alan: ikisi de köşe taşıdı farklı: çatışma",
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487011,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "clashes": [
+    "pts"
+   ]
+  },
+  {
+   "name": "alan: onlar delik ekledi, ben parsel no",
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "6",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487004,
+        "y": 4420002
+       },
+       {
+        "x": 487004,
+        "y": 4420004
+       }
+      ]
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "malik": "Ali",
+     "parsel_no": "6"
+    },
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487004,
+        "y": 4420002
+       },
+       {
+        "x": 487004,
+        "y": 4420004
+       }
+      ]
+     }
+    ],
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.parsel_no"
+   ],
+   "fromTheirs": [
+    "holes"
+   ]
+  },
+  {
+   "name": "çizgi: ben bir ucu, onlar öbür ucu",
+   "base": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487001.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487051.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "a": {
+     "x": 487001.0,
+     "y": 4420000.0
+    },
+    "attrs": {},
+    "b": {
+     "x": 487051.0,
+     "y": 4420000.0
+    },
+    "id": 2,
+    "kind": "line",
+    "layerId": "yol"
+   },
+   "fromMine": [
+    "a"
+   ],
+   "fromTheirs": [
+    "b"
+   ]
+  },
+  {
+   "name": "çizgi: öznitelik yokken ikisi de ekledi farklı",
+   "base": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "X"
+    },
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "Y"
+    },
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "clashes": [
+    "attrs.ad"
+   ]
+  },
+  {
+   "name": "çizgi: öznitelik yokken yalnız onlar ekledi",
+   "base": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "mine": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "theirs": {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "Y"
+    },
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   "merged": {
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "attrs": {
+     "ad": "Y"
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    },
+    "id": 2,
+    "kind": "line",
+    "layerId": "yol"
+   },
+   "fromMine": [],
+   "fromTheirs": [
+    "attrs.ad"
+   ]
+  }
+ ]
+}

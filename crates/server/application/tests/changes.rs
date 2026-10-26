@@ -944,3 +944,164 @@ async fn an_area_of_two_corners_with_an_arc_edge_is_stored_and_projected() {
     assert!(null && kept, "no geometry, the definition kept");
     db.close().await;
 }
+
+/// docs/adr/0648 §1: an `edit` made from a known copy is merged on the server with a newer version, field by field; the
+/// fields both changed differently, a deleted object and a plain update stay conflicts; a replay answers the same merge.
+#[tokio::test]
+async fn an_edit_from_a_known_copy_is_merged_with_a_newer_version() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 5)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let bora = member(&db, "buro", "bora", TenantRole::Editor).await;
+    let project = new_project(&db, &ayse).await;
+    share_with(&db, &ayse, project, &[&bora], GrantRole::Editor).await;
+    let (ayse_p, bora_p) = (
+        open(&db, &ayse, project).await,
+        open(&db, &bora, project).await,
+    );
+    let layer = sample().active_layer;
+    let id = Uuid::new_v4().to_string();
+    let uid = Uuid::parse_str(&id).unwrap();
+    changes::commit(
+        &db.app,
+        &ayse_p,
+        envelope(
+            &ayse,
+            project,
+            changes_of(vec![FeatureChange::Create {
+                id: id.clone(),
+                entity: a_point(&layer, 486512.0),
+            }]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    // Both start from version 1 as the server keeps it.
+    let base = projects::features_by_id(&db.app, &ayse_p, &[uid])
+        .await
+        .unwrap()[0]
+        .entity
+        .clone();
+    let with_attr = |name: &str, value: &str| {
+        let mut e = base.clone();
+        e.base_mut().attrs.insert(name.into(), value.into());
+        e
+    };
+    // Bora gives it an attribute: version 2.
+    changes::commit(
+        &db.app,
+        &bora_p,
+        envelope(
+            &bora,
+            project,
+            changes_of(vec![FeatureChange::Update {
+                id: id.clone(),
+                entity: with_attr("Ada", "101"),
+            }]),
+            &[(id.as_str(), "1")],
+        ),
+    )
+    .await
+    .unwrap();
+    // A plain update from version 1 is still a conflict.
+    let mut moved = base.clone();
+    if let Entity::Point(p) = &mut moved {
+        p.p.x = 486600.0;
+    }
+    let plain = envelope(
+        &ayse,
+        project,
+        changes_of(vec![FeatureChange::Update {
+            id: id.clone(),
+            entity: moved.clone(),
+        }]),
+        &[(id.as_str(), "1")],
+    );
+    assert!(matches!(
+        changes::commit(&db.app, &ayse_p, plain).await,
+        Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Changed
+    ));
+    // Ayşe moves it from version 1 as an edit: both are kept.
+    let edit = envelope(
+        &ayse,
+        project,
+        changes_of(vec![FeatureChange::Edit {
+            id: id.clone(),
+            entity: moved.clone(),
+            base: Box::new(base.clone()),
+        }]),
+        &[(id.as_str(), "1")],
+    );
+    let done = changes::commit(&db.app, &ayse_p, edit.clone())
+        .await
+        .unwrap();
+    assert_eq!(done.versions[&id], "3");
+    assert_eq!(done.merged.len(), 1);
+    let stored = projects::features_by_id(&db.app, &ayse_p, &[uid])
+        .await
+        .unwrap();
+    let Entity::Point(p) = &stored[0].entity else {
+        panic!()
+    };
+    assert_eq!(p.p.x, 486600.0);
+    assert_eq!(
+        stored[0].entity.base().attrs.get("Ada").map(String::as_str),
+        Some("101")
+    );
+    assert_eq!(done.merged[0].entity, stored[0].entity);
+    // The same request again: the stored answer, the same merge.
+    let again = changes::commit(&db.app, &ayse_p, edit).await.unwrap();
+    assert!(again.replayed && again.merged == done.merged);
+    // The same attribute changed differently from version 1: a conflict with the server's copy.
+    let clash = envelope(
+        &ayse,
+        project,
+        changes_of(vec![FeatureChange::Edit {
+            id: id.clone(),
+            entity: with_attr("Ada", "102"),
+            base: Box::new(base.clone()),
+        }]),
+        &[(id.as_str(), "1")],
+    );
+    match changes::commit(&db.app, &ayse_p, clash).await {
+        Err(AppError::Conflict { conflicts, .. }) => {
+            assert_eq!(conflicts[0].reason, ConflictReason::Changed);
+            assert_eq!(conflicts[0].actual.as_deref(), Some("3"));
+            assert!(conflicts[0].current.is_some());
+        }
+        other => panic!("expected a conflict, got {other:?}"),
+    }
+    // Deleted meanwhile: an edit is a deletion conflict.
+    changes::commit(
+        &db.app,
+        &bora_p,
+        envelope(
+            &bora,
+            project,
+            changes_of(vec![FeatureChange::Delete { id: id.clone() }]),
+            &[(id.as_str(), "3")],
+        ),
+    )
+    .await
+    .unwrap();
+    let late = envelope(
+        &ayse,
+        project,
+        changes_of(vec![FeatureChange::Edit {
+            id: id.clone(),
+            entity: moved,
+            base: Box::new(base),
+        }]),
+        &[(id.as_str(), "1")],
+    );
+    assert!(matches!(
+        changes::commit(&db.app, &ayse_p, late).await,
+        Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Deleted
+    ));
+    db.close().await;
+}

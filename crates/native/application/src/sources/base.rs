@@ -52,6 +52,7 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
                 ((*u.as_bytes(), lh, th), detail)
             })
             .collect();
+        shared_corners(&layer, &mut kept);
         kept.sort_by_key(|(row, _)| row.0);
         let details: Vec<BaseDetail> = kept.iter().map(|(_, d)| d.clone()).collect();
         let rows: Vec<BaseRow> = kept.into_iter().map(|(r, _)| r).collect();
@@ -67,6 +68,41 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
     settings.source_bases.retain(|b| b.source != link.id);
     settings.source_bases.extend(base);
     doc.set_settings(settings);
+}
+
+/// docs/adr/0648 §4: an object of more vertices than a record keeps (a many-cornered or many-part one) keeps the
+/// vertices it shares with another object of the layer, when they are few enough: its neighbours whose shared corner both
+/// sides moved are still one group. `kept` is in `layer`'s order.
+fn shared_corners(layer: &[(Uuid, &Entity)], kept: &mut [(BaseRow, BaseDetail)]) {
+    let big: Vec<usize> = kept
+        .iter()
+        .enumerate()
+        .filter(|(_, (_, d))| d.vertices.is_none() && d.shape.0 == d.shape.1)
+        .map(|(i, _)| i)
+        .collect();
+    if big.is_empty() {
+        return;
+    }
+    let all: Vec<Vec<u32>> = layer
+        .iter()
+        .map(|(_, e)| merge::vertex_set_all(e))
+        .collect();
+    let mut count: HashMap<u32, u32> = HashMap::new();
+    for set in &all {
+        for q in set {
+            *count.entry(*q).or_default() += 1;
+        }
+    }
+    for i in big {
+        let shared: Vec<u32> = all[i]
+            .iter()
+            .copied()
+            .filter(|q| count.get(q).is_some_and(|n| *n > 1))
+            .collect();
+        if shared.len() <= kentos_commands::MAX_BASE_VERTICES {
+            kept[i].1.vertices = Some(shared);
+        }
+    }
 }
 
 /// One object of a base: the layer's hash, the table's and what the base keeps besides (none when the base has no
