@@ -148,6 +148,16 @@
      "layer": {
       "newName": "Hücre istatistiği"
      }
+    },
+    "raster.cog": {
+     "input": {
+      "scope": "selection"
+     },
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "COG"
+     }
     }
    }
   }
@@ -718,6 +728,75 @@
     },
     "rasterOpsOf": {
      "yil3-hesap.tif": "hesap-ilk-anilan"
+    }
+   }
+  },
+  {
+   "id": "cog",
+   "title": "COG olarak kaydet: hücreler, değersizleri ve konumuyla olduğu gibi, karolu ve önizleme katlarıyla",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.cog"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kot"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "COG olarak kaydet",
+    "summary": "9 × 7 hücrelik raster; “kot-cog.tif” yazıldı.",
+    "outputs": {
+     "file": "kot-cog.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-cog",
+      "name": "COG",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-cog",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       2.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -2.0
+      ],
+      "width": 9,
+      "height": 7,
+      "bands": 1,
+      "sample": "f32",
+      "file": "kot-cog.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-cog": "kot"
+    },
+    "rasterOpsOf": {
+     "kot-cog.tif": "kopya-kot"
     }
    }
   },

@@ -22,6 +22,7 @@ Needs laspy with LASzip and numpy; when this Python lacks them the script runs i
 """
 
 import argparse
+import datetime
 import io
 import json
 import math
@@ -366,7 +367,8 @@ def frame_cell(f, cell, x, y):
     return c, r
 
 
-def rasterize(c: Cloud, plan, cell, value, radius=None):
+def rasterize_values(c: Cloud, plan, cell, value, radius=None):
+    """The grid's cells in rows from the top, −9999 for an empty one."""
     f = frame(plan, cell)
     x0, top, cols, rows = f
     k = cols * rows
@@ -420,6 +422,12 @@ def rasterize(c: Cloud, plan, cell, value, radius=None):
             out.append(a[j] / n[j])
         else:
             out.append(float(n[j]))
+    return out
+
+
+def rasterize(c: Cloud, plan, cell, value, radius=None):
+    out = rasterize_values(c, plan, cell, value, radius)
+    _, _, cols, rows = frame(plan, cell)
     bits = np.asarray(out, dtype=np.float64).astype(np.float32).tobytes()
     return {"cols": cols, "rows": rows, "filled": sum(1 for v in out if v != -9999.0), "values": fnv(bits)}
 
@@ -575,6 +583,8 @@ def write(points, scale, offset, fmt, version="1.4"):
     header = laspy.LasHeader(point_format=fmt, version=version)
     header.scales = scale
     header.offsets = offset
+    # The files' own day, so that writing them again gives the same bytes (laspy puts today's).
+    header.creation_date = datetime.date(2026, 10, 8)
     las = laspy.LasData(header)
     las.x = np.asarray([p[0] for p in points])
     las.y = np.asarray([p[1] for p in points])

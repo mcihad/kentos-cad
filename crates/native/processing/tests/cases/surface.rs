@@ -23,6 +23,9 @@ pub(crate) fn surface_fixture(rel: &str) -> Vec<u8> {
     std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
+/// A COPC index's scratch folders, one a run.
+static COPC_RUN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// The cases' rasters by their file's name, and what a run writes, by its name.
 pub(crate) struct FixtureFiles {
     pub(crate) rasters: BTreeMap<String, Vec<u8>>,
@@ -65,9 +68,43 @@ impl Sink for Kept {
     }
 }
 
+/// A file's bytes kept in memory, read as a host reads a file (`cloud_files::ReadAt`).
+pub(crate) struct Held(pub(crate) Vec<u8>);
+
+impl kentos_processing::cloud_files::ReadAt for Held {
+    fn size(&self) -> u64 {
+        self.0.len() as u64
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        let (at, end) = (offset as usize, (offset + len) as usize);
+        self.0
+            .get(at..end)
+            .map(<[u8]>::to_vec)
+            .ok_or_else(|| format!("{at}..{end}: past the file's end"))
+    }
+}
+
+impl FixtureFiles {
+    /// A linked file's bytes: one of the cases' files, else one a run wrote.
+    fn bytes_named(&self, name: &str) -> Result<Vec<u8>, String> {
+        if let Some(b) = self.rasters.get(name) {
+            return Ok(b.clone());
+        }
+        self.written
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(name)
+            .cloned()
+            .ok_or_else(|| format!("{name}: not among the cases' files"))
+    }
+}
+
 impl Files for FixtureFiles {
-    fn open_cloud(&self, _: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
-        Err("no clouds here".into())
+    fn open_cloud(&self, source: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
+        let name = source.file.as_deref().ok_or("a linked cloud")?;
+        let bytes = self.bytes_named(name)?;
+        kentos_processing::cloud_files::cloud_read(Box::new(Held(bytes)), source.format, None)
     }
 
     fn output_path(
@@ -92,11 +129,41 @@ impl Files for FixtureFiles {
         }))
     }
 
-    fn copc(&self, _: &str, _: &str, _: &mut dyn Feedback, _: f64, _: f64) -> Result<(), String> {
-        Err("no clouds here".into())
+    /// A COPC of the written LAZ `from`, kept as `to`: the index is built in a scratch folder of its own (its bins
+    /// beside it), as the desktop builds it beside the result.
+    fn copc(
+        &self,
+        from: &str,
+        to: &str,
+        _: &mut dyn Feedback,
+        _: f64,
+        _: f64,
+    ) -> Result<(), String> {
+        let bytes = self.bytes_named(from)?;
+        let scratch = std::env::temp_dir().join(format!(
+            "kentos-copc-{}-{}",
+            std::process::id(),
+            COPC_RUN.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&scratch).map_err(|e| e.to_string())?;
+        let at = scratch.join("bulut.copc.laz");
+        let made =
+            kentos_processing::cloud_files::copc_file(Box::new(Held(bytes)), &at, &mut |_| false)
+                .and_then(|()| std::fs::read(&at).map_err(|e| e.to_string()));
+        let _ = std::fs::remove_dir_all(&scratch);
+        self.written
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(to.to_owned(), made?);
+        Ok(())
     }
 
-    fn remove(&self, _: &str) {}
+    fn remove(&self, path: &str) {
+        self.written
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .remove(path);
+    }
 
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
         let name = raster.file.as_deref().ok_or("a linked raster")?;

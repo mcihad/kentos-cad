@@ -4652,7 +4652,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 174,
+   "cases": 175,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -8587,7 +8587,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1027,
+   "cases": 1032,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -8773,7 +8773,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 344,
+   "cases": 345,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -11717,10 +11717,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 41,
    "files": [
     "fixtures/commands/v1/cad.layers.filter.json",
     "fixtures/commands/v1/cad.records.page.json",
+    "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.sync.renamed.json"
    ],
    "options": [],
@@ -13992,7 +13993,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 75,
+   "cases": 76,
    "files": [
     "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
@@ -19801,7 +19802,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 59,
+   "cases": 79,
    "files": [
     "fixtures/commands/v1/cad.processing.batch.sink.json",
     "fixtures/commands/v1/cad.processing.run.json",
@@ -19822,7 +19823,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 537,
+   "cases": 555,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -26294,6 +26295,11 @@
     },
     {
      "key": "op",
+     "value": "edit",
+     "covered": false
+    },
+    {
+     "key": "op",
      "value": "update",
      "covered": false
     },
@@ -31645,7 +31651,7 @@
    "id": "multidim.meshCalculator",
    "title": "Mesh hesaplayıcı",
    "cases": 3,
-   "command": 0,
+   "command": 3,
    "options": [
     {
      "key": "summary",
@@ -31688,7 +31694,7 @@
    "id": "multidim.profile",
    "title": "Kesit",
    "cases": 2,
-   "command": 0,
+   "command": 2,
    "options": [
     {
      "key": "draw",
@@ -31706,7 +31712,7 @@
    "id": "multidim.series",
    "title": "Zaman serisi",
    "cases": 4,
-   "command": 0,
+   "command": 4,
    "options": []
   },
   {
@@ -31796,42 +31802,42 @@
   {
    "id": "pointcloud.areaStats",
    "title": "Nokta bulutu alan sorgusu",
-   "cases": 0,
-   "command": 0,
+   "cases": 1,
+   "command": 1,
    "options": []
   },
   {
    "id": "pointcloud.boundary",
    "title": "Sınır çıkar",
-   "cases": 0,
-   "command": 0,
+   "cases": 1,
+   "command": 1,
    "options": []
   },
   {
    "id": "pointcloud.classify",
    "title": "Yüksekliğe göre sınıfla",
-   "cases": 0,
-   "command": 0,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "all",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "all",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
@@ -31841,83 +31847,83 @@
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.clip",
    "title": "Bulutu kırp",
-   "cases": 0,
-   "command": 0,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "side",
      "value": "inside",
-     "covered": false
+     "covered": true
     },
     {
      "key": "side",
      "value": "outside",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.ground",
    "title": "Zemin süzgeci",
-   "cases": 0,
-   "command": 0,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "lastOnly",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "lastOnly",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
@@ -31927,25 +31933,25 @@
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.merge",
    "title": "Bulutları birleştir",
-   "cases": 0,
-   "command": 0,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
@@ -31960,161 +31966,161 @@
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.rasterize",
    "title": "Rasterleştir",
-   "cases": 0,
-   "command": 0,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "value",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "value",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "value",
      "value": "mean",
-     "covered": false
+     "covered": true
     },
     {
      "key": "value",
      "value": "count",
-     "covered": false
+     "covered": true
     },
     {
      "key": "value",
      "value": "idw",
-     "covered": false
+     "covered": true
     },
     {
      "key": "classes",
      "value": "all",
-     "covered": false
+     "covered": true
     },
     {
      "key": "classes",
      "value": "ground",
-     "covered": false
+     "covered": true
     },
     {
      "key": "classes",
      "value": "list",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.thin",
    "title": "Seyrelt",
-   "cases": 0,
-   "command": 0,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "method",
      "value": "cell",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "radius",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "nth",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "pointcloud.tile",
    "title": "Karola",
-   "cases": 0,
-   "command": 0,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "vpc",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "vpc",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "laz",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -32446,13 +32452,13 @@
   {
    "id": "raster.cog",
    "title": "COG olarak kaydet",
-   "cases": 0,
-   "command": 0,
+   "cases": 1,
+   "command": 1,
    "options": [
     {
      "key": "add",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",

@@ -838,6 +838,8 @@ def cases():
     calc("hesap-bantlar", "([A@1] - [A@2]) / ([A@1] + [A@2])", [rgb], [(0, 0), (0, 1)],
          lambda v, x, y, s: None if v[0] + v[1] == 0 else (v[0] - v[1]) / (v[0] + v[1]))
     calc("hesap-64", "[A] / 3", [a], [(0, 0)], lambda v, x, y, s: v[0] / 3, sample="f64")
+    # COG olarak kaydet (docs/adr/0515): the raster as it is, every cell and the empty ones.
+    case("kopya-kot", {"kind": "copy"}, [a], result(a.width, a.height, 1, a.affine, list(a.values)))
     case("hesap-ad-yok", {"kind": "calculator", "expression": "[X] + 1", "empty": "propagate", "sample": "f32"},
          [a], {"refused": "adında raster bandı yok"})
 

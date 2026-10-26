@@ -180,14 +180,16 @@ LABELS = {
     "raster.calculator": "Raster hesaplayıcı", "raster.reclassify": "Yeniden sınıflandır", "raster.clipByMask": "Maskeyle kırp",
     "raster.mosaic": "Mozaik", "raster.resample": "Yeniden örnekle", "raster.zonalStatistics": "Bölgesel istatistik",
     "raster.histogram": "Histogram", "raster.focalStatistics": "Komşuluk istatistiği", "raster.cellStatistics": "Hücre istatistiği",
+    "raster.cog": "COG olarak kaydet",
 }
 SUFFIX = {
     "raster.calculator": "-hesap", "raster.reclassify": "-sinif", "raster.clipByMask": "-kirpik", "raster.mosaic": "-mozaik",
-    "raster.resample": "-ornek", "raster.focalStatistics": "-komsuluk", "raster.cellStatistics": "-hucre",
+    "raster.resample": "-ornek", "raster.focalStatistics": "-komsuluk", "raster.cellStatistics": "-hucre", "raster.cog": "-cog",
 }
 LAYER = {
     "raster.calculator": "Hesap", "raster.reclassify": "Sınıflar", "raster.clipByMask": "Kırpılmış", "raster.mosaic": "Mozaik",
     "raster.resample": "Örneklenmiş", "raster.focalStatistics": "Komşuluk", "raster.cellStatistics": "Hücre istatistiği",
+    "raster.cog": "COG",
 }
 ARAZI = {"render": "ramp", "bands": [1], "stretch": "minMax", "ramp": "Arazi"}
 
@@ -322,6 +324,7 @@ def defaults():
         "raster.focalStatistics": {"input": {"scope": "selection"}, "band": 1, "shape": "rect", "width": 3, "height": 3, "radius": 3, "inner": 1,
                                    "stat": "mean", "ignore": True, **ends("Komşuluk")},
         "raster.cellStatistics": {"input": {"scope": "selection"}, "band": 1, "stat": "mean", "ignore": True, **ends("Hücre istatistiği")},
+        "raster.cog": {"input": {"scope": "selection"}, **ends("COG")},
     }
 
 
@@ -353,6 +356,9 @@ def cases():
                     "dosyası yok); sonuç ilk andığının ızgarasında, adıyla ve katmanının üstünde", "raster.calculator",
                     {"input": {"scope": "all"}, "expression": "[Yıl 3] - [Yıl 1]"}, "hesap-ilk-anilan", first="yil3.tif",
                     files=["yil3.tif", "yil1.tif"], style=ramp("Viridis")),
+        raster_case("cog", "COG olarak kaydet: hücreler, değersizleri ve konumuyla olduğu gibi, karolu ve önizleme katlarıyla",
+                    "raster.cog", {"input": {"scope": "layer", "layerId": "kot"}}, "kopya-kot", first="kot.tif", files=["kot.tif"],
+                    style=ARAZI),
         zonal_case(),
         histogram_case(),
     ]

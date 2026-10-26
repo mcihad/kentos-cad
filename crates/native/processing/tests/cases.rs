@@ -2529,6 +2529,10 @@ fn every_case_does_what_it_says() {
 #[path = "cases/surface.rs"]
 mod surface;
 
+// Nokta bulutu araçları (docs/adr/0207 §7, 0652): the clouds read back from the files the runs write.
+#[path = "cases/clouds.rs"]
+mod clouds;
+
 // The analysis environment (docs/adr/0643): its grids, its values whichever block layout the raster has.
 #[path = "cases/environment.rs"]
 mod environment;

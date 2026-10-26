@@ -54,7 +54,7 @@ fn tree_shape(doc: &Document) -> Value {
 /// The case files of the raster tools: the window's run reads the cases' rasters from memory and keeps what it
 /// writes (cases/surface.rs); the command's reads them beside the drawing's file in a folder of its own and writes
 /// its results there, as Python and MCP do (`drawing`, docs/adr/0548 §3).
-const RASTER_FILES: [&str; 8] = [
+const RASTER_FILES: [&str; 10] = [
     "surface.json",
     "interpolation.json",
     "raster-ops.json",
@@ -63,6 +63,8 @@ const RASTER_FILES: [&str; 8] = [
     "distance.json",
     "suitability.json",
     "remote.json",
+    "multidim.json",
+    "pointcloud.json",
 ];
 
 /// Where a raster case's command reads and writes: a folder of its own with the case's rasters in it.

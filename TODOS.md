@@ -574,6 +574,7 @@ Liste:
   Uygunluk satırı ve süzgecin notu, tam olmayan alma uyarı olarak; bilinen bozulma: web OGC API'ye süzgeç yazınca reddedilir.
 - [ ] `CBS-02` bağlı katmanın parçası (ADR 0510, 18 Ekim): web'de gerekenler: bağlama penceresinde “Yalnız görünen alanın
   satırları”, `SourceLink.extent`'in okunması ve yazılması (TS türleri üretildi).
+- [ ] `CBS-41` nokta bulutu araçlarının ortak durumları (ADR 0652, 26 Ekim): web'de gerekenler: web'in İşlemler durum koşucusu `pointcloud.json`'u bulut okuyan ev sahibiyle oynatır (nokta bulutu web'de yok, ADR 0207: araçlar gelince).
 - [ ] `CBS-41` işlem araçları komut olarak (ADR 0508, 18 Ekim): web'de gerekenler: `cad.processing.tools` ve `.run`'ın işleyicisi
   (web'in `processing/` çalıştırıcısıyla); TS türleri üretildi.
 - [ ] `CBS-20` toplu yazma (ADR 0507, 18 Ekim): web'de gerekenler: `cad.fields.write` işleyicisi, Öznitelik tablosunda Alan
@@ -2425,6 +2426,8 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   resmi, JPEG sıkıştırmalı TIFF'i ve bağlı VRT mozaiğini açar, gömülü mozaiği nedeniyle reddeder (`test_headless_rasters.py`,
   `headless_raster_cases.py`: GDAL'ın özetleri). Kalan: adresteki raster, bulut ve NetCDF, açık seçenek hücreleri. — **21 Ekim,
   [ADR 0573](docs/adr/0573-headless-mosaic-and-jpeg-rasters.md).**
+- [ ] `CBS-41` her aracın ortak durumu ve komutla çalışması (dilim): nokta bulutunun dokuz aracı `fixtures/processing/v1/pointcloud.json`'da (26 durum, `pointcloud_processing_cases.py`, yazılan dosyalar okunup denetlenir), bellekteki ev sahibi bulut okur ve COPC yazar, COG olarak kaydet `raster-ops.json`'da, eşdeğerlik pointcloud ve multidim'i de oynatır; durumsuz araç 10 → 0, komutsuz araç 13 → 0, denenen seçenek 453 → 501. Kalan: açık seçenek hücreleri, modellerin ve uzun işin kalanı, doğal dil başarısının ayrı ölçümü. — **26 Ekim,
+  [ADR 0652](docs/adr/0652-every-processing-tool-through-the-command.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,

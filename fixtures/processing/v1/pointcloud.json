@@ -1,0 +1,1560 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "toleranceFields": [
+  "bounds",
+  "sources"
+ ],
+ "rasters": {
+  "koy.laz": "../../interaction/v1/pointclouds/koy.laz",
+  "ikinci.laz": "../../pointcloud/v1/ops/ikinci.laz",
+  "sinir.laz": "../../pointcloud/v1/ops/sinir.laz"
+ },
+ "documents": {
+  "pointcloud.kcad": {
+   "defaults": {
+    "lengthDecimals": 2,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 500.0,
+    "activeLayer": "alanlar"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "thin-cell",
+   "title": "Seyrelt, Hücreyle 1 m: her küpte merkezine en yakın nokta; LAZ, çizime eklenir",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.thin"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "size": 1.0,
+    "layer": {
+     "newName": "Seyreltilmiş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 13.967 nokta kaldı; “koy-seyrek.laz” yazıldı.",
+    "outputs": {
+     "count": 13967
+    },
+    "cloudOf": {
+     "koy-seyrek.laz": {
+      "count": 13967,
+      "points": "d787ca789166dd48"
+     }
+    },
+    "undo": "Seyrelt",
+    "layers": [
+     {
+      "id": "islem-seyreltilmis-bulut",
+      "name": "Seyreltilmiş bulut",
+      "style": {
+       "color": "#4C9A6A",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-seyreltilmis-bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "koy-seyrek.laz",
+        "format": "laz",
+        "count": 13967,
+        "bounds": [
+         487600.133,
+         4420300.13,
+         838.991,
+         487719.794,
+         4420389.991,
+         862.407
+        ]
+       }
+      ],
+      "bounds": [
+       487600.133,
+       4420300.13,
+       838.991,
+       487719.794,
+       4420389.991,
+       862.407
+      ],
+      "count": 13967,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "thin-radius-las",
+   "title": "Seyrelt, Yarıçapla 0,6 m: dosyanın sırasıyla, yakın olan atılır; LAS, çizime eklenmez",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.thin"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "method": "radius",
+    "size": 0.6,
+    "format": "las",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 19.894 nokta kaldı; “koy-seyrek.las” yazıldı.",
+    "outputs": {
+     "count": 19894
+    },
+    "cloudOf": {
+     "koy-seyrek.las": {
+      "count": 19894,
+      "points": "23979bad6f63cf79"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "thin-nth-copc",
+   "title": "Seyrelt, Her 7'nci: ilk nokta ve her yedinci; COPC adı verilen dosyaya, dizini kurularak",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.thin"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "method": "nth",
+    "n": 7,
+    "format": "copc",
+    "output": "seyrek",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 10.174 nokta kaldı; “seyrek.copc.laz” yazıldı.",
+    "outputs": {
+     "count": 10174
+    },
+    "cloudOf": {
+     "seyrek.copc.laz": {
+      "count": 10174,
+      "points": "2ae11ca24d046d36",
+      "copc": true
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "ground",
+   "title": "Zemin süzgeci (SMRF), yalnız son dönüşler: zemin 2'ye, zemin olmayan 2'ler 1'e",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.ground"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "layer": {
+     "newName": "Zemini ayrılmış bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 57.461 nokta zemin (2) sınıfında; “koy-zemin.laz” yazıldı.",
+    "outputs": {
+     "ground": 57461
+    },
+    "cloudOf": {
+     "koy-zemin.laz": {
+      "count": 71212,
+      "points": "e109f69a7aa97f79",
+      "classes": "6514434da9cb3178"
+     }
+    },
+    "undo": "Zemin süzgeci",
+    "layers": [
+     {
+      "id": "islem-zemini-ayrilmis-bulut",
+      "name": "Zemini ayrılmış bulut",
+      "style": {
+       "color": "#8A6A3E",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-zemini-ayrilmis-bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "koy-zemin.laz",
+        "format": "laz",
+        "count": 71212,
+        "bounds": [
+         487600.0,
+         4420300.0,
+         838.991,
+         487719.838,
+         4420389.999,
+         862.618
+        ]
+       }
+      ],
+      "bounds": [
+       487600.0,
+       4420300.0,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "classification",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "ground-all-returns",
+   "title": "Zemin süzgeci, bütün dönüşler yüzeyi kurar; LAS, çizime eklenmez",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.ground"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "lastOnly": false,
+    "format": "las",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 57.452 nokta zemin (2) sınıfında; “koy-zemin.las” yazıldı.",
+    "outputs": {
+     "ground": 57452
+    },
+    "cloudOf": {
+     "koy-zemin.las": {
+      "count": 71212,
+      "points": "e109f69a7aa97f79",
+      "classes": "9fc892d3118af9ad"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "classify-all",
+   "title": "Yüksekliğe göre sınıfla, zemin olmayan bütün noktalar: zeminden yüksekliğe göre 3, 4, 5",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.classify"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "all": true,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "15.214 nokta sınıflandı: düşük bitki 1.288, orta bitki 504, yüksek bitki 13.422; “koy-sinifli.laz” yazıldı.",
+    "outputs": {
+     "classed": 15214
+    },
+    "cloudOf": {
+     "koy-sinifli.laz": {
+      "count": 71212,
+      "points": "e109f69a7aa97f79",
+      "classes": "b8f09499d8d51754"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "classify-unclassed",
+   "title": "Yüksekliğe göre sınıfla, yalnız sınıfsızlar (0, 1); LAS, çizime eklenir",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.classify"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "format": "las",
+    "layer": {
+     "newName": "Sınıflanmış bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "0 nokta sınıflandı: düşük bitki 0, orta bitki 0, yüksek bitki 0; “koy-sinifli.las” yazıldı.",
+    "outputs": {
+     "classed": 0
+    },
+    "cloudOf": {
+     "koy-sinifli.las": {
+      "count": 71212,
+      "points": "e109f69a7aa97f79",
+      "classes": "94df93210a29de64"
+     }
+    },
+    "undo": "Yüksekliğe göre sınıfla",
+    "layers": [
+     {
+      "id": "islem-siniflanmis-bulut",
+      "name": "Sınıflanmış bulut",
+      "style": {
+       "color": "#3E8A4C",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-siniflanmis-bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "koy-sinifli.las",
+        "format": "las",
+        "count": 71212,
+        "bounds": [
+         487600.0,
+         4420300.0,
+         838.991,
+         487719.838,
+         4420389.999,
+         862.618
+        ]
+       }
+      ],
+      "bounds": [
+       487600.0,
+       4420300.0,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "classification",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "clip-inside",
+   "title": "Bulutu kırp, içindekiler: dikdörtgen, daire ve delikli alan birlikte; kenardaki nokta içeride",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.clip"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "areas": {
+     "scope": "layer",
+     "layerId": "alanlar"
+    },
+    "layer": {
+     "newName": "Kırpılmış bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 15.570 nokta alanların içinde; “koy-kirpik.laz” yazıldı.",
+    "outputs": {
+     "count": 15570
+    },
+    "cloudOf": {
+     "koy-kirpik.laz": {
+      "count": 15570,
+      "points": "efbc739813416adf"
+     }
+    },
+    "undo": "Bulutu kırp",
+    "layers": [
+     {
+      "id": "islem-kirpilmis-bulut",
+      "name": "Kırpılmış bulut",
+      "style": {
+       "color": "#4C7A9A",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-kirpilmis-bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "koy-kirpik.laz",
+        "format": "laz",
+        "count": 15570,
+        "bounds": [
+         487604.065,
+         4420304.032,
+         841.032,
+         487701.946,
+         4420387.907,
+         858.787
+        ]
+       }
+      ],
+      "bounds": [
+       487604.065,
+       4420304.032,
+       841.032,
+       487701.946,
+       4420387.907,
+       858.787
+      ],
+      "count": 15570,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "clip-outside",
+   "title": "Bulutu kırp, dışındakiler; LAS, çizime eklenmez",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.clip"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "areas": {
+     "scope": "layer",
+     "layerId": "alanlar"
+    },
+    "side": "outside",
+    "format": "las",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 55.642 nokta alanların dışında; “koy-kirpik.las” yazıldı.",
+    "outputs": {
+     "count": 55642
+    },
+    "cloudOf": {
+     "koy-kirpik.las": {
+      "count": 55642,
+      "points": "6c09b70ffca392d7"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "clip-copc",
+   "title": "Bulutu kırp, içindekiler COPC olarak",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.clip"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "areas": {
+     "scope": "layer",
+     "layerId": "alanlar"
+    },
+    "format": "copc",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 15.570 nokta alanların içinde; “koy-kirpik.copc.laz” yazıldı.",
+    "outputs": {
+     "count": 15570
+    },
+    "cloudOf": {
+     "koy-kirpik.copc.laz": {
+      "count": 15570,
+      "points": "1abeec4d7fb0d8eb",
+      "copc": true
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "area-stats",
+   "title": "Nokta bulutu alan sorgusu: üç alanın sayısı, yoğunluğu, kotları ve sınıfları",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.areaStats"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "areas": {
+     "scope": "layer",
+     "layerId": "alanlar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "3 alanın içinde 15.570 nokta sayıldı.",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Nesne",
+       "Ad",
+       "Nokta",
+       "Alan (m²)",
+       "Yoğunluk (nokta/m²)",
+       "Z en küçük",
+       "Z en büyük",
+       "Z ortalama",
+       "Z std. sapma",
+       "Sınıflar"
+      ],
+      "rows": [
+       [
+        "#1",
+        "Dikdörtgen",
+        "7406",
+        "1088,00",
+        "6,81",
+        "842,251",
+        "858,787",
+        "847,898",
+        "3,094",
+        "2: 5490; 4: 26; 5: 1219; 6: 662; 7: 2; 11: 7"
+       ],
+       [
+        "#2",
+        "Daire",
+        "2640",
+        "452,39",
+        "5,84",
+        "845,099",
+        "855,581",
+        "848,954",
+        "3,785",
+        "2: 1751; 5: 75; 6: 814"
+       ],
+       [
+        "#3",
+        "Delikli",
+        "5524",
+        "800,00",
+        "6,91",
+        "841,032",
+        "857,292",
+        "847,205",
+        "3,492",
+        "2: 4520; 5: 1001; 7: 3"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "tile",
+   "title": "Karola, 50 m: altı karo köşelerinin adlarıyla, sanal bulutu yanında; çizime sanal bulut olarak",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.tile"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "size": 50.0,
+    "layer": {
+     "newName": "Karolar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta 6 karoya bölündü; “” klasörüne yazıldı, sanal bulutu “koy.vpc”.",
+    "outputs": {
+     "tiles": 6
+    },
+    "cloudOf": {
+     "koy_487600_4420300.laz": {
+      "count": 16726,
+      "points": "06150bfe994cda71"
+     },
+     "koy_487600_4420350.laz": {
+      "count": 12846,
+      "points": "bf604ec3ab9c79f8"
+     },
+     "koy_487650_4420300.laz": {
+      "count": 16268,
+      "points": "59dd4061e9cb4304"
+     },
+     "koy_487650_4420350.laz": {
+      "count": 14213,
+      "points": "b4a8cbbd1de3e5ef"
+     },
+     "koy_487700_4420300.laz": {
+      "count": 5836,
+      "points": "5a34def2b0150360"
+     },
+     "koy_487700_4420350.laz": {
+      "count": 5323,
+      "points": "d2ae024c39ada7da"
+     }
+    },
+    "written": [
+     "koy_487600_4420300.laz",
+     "koy_487600_4420350.laz",
+     "koy_487650_4420300.laz",
+     "koy_487650_4420350.laz",
+     "koy_487700_4420300.laz",
+     "koy_487700_4420350.laz",
+     "koy.vpc"
+    ],
+    "undo": "Karola",
+    "layers": [
+     {
+      "id": "islem-karolar",
+      "name": "Karolar",
+      "style": {
+       "color": "#9A7A4C",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-karolar",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "koy_487600_4420300.laz",
+        "format": "laz",
+        "count": 16726,
+        "bounds": [
+         487600.001,
+         4420300.002,
+         838.991,
+         487649.996,
+         4420349.999,
+         856.201
+        ]
+       },
+       {
+        "file": "koy_487600_4420350.laz",
+        "format": "laz",
+        "count": 12846,
+        "bounds": [
+         487600.0,
+         4420350.001,
+         839.719,
+         487649.999,
+         4420389.999,
+         858.787
+        ]
+       },
+       {
+        "file": "koy_487650_4420300.laz",
+        "format": "laz",
+        "count": 16268,
+        "bounds": [
+         487650.001,
+         4420300.0,
+         839.866,
+         487699.999,
+         4420349.999,
+         857.292
+        ]
+       },
+       {
+        "file": "koy_487650_4420350.laz",
+        "format": "laz",
+        "count": 14213,
+        "bounds": [
+         487650.002,
+         4420350.002,
+         844.282,
+         487699.998,
+         4420389.996,
+         862.618
+        ]
+       },
+       {
+        "file": "koy_487700_4420300.laz",
+        "format": "laz",
+        "count": 5836,
+        "bounds": [
+         487700.001,
+         4420300.0,
+         845.311,
+         487719.838,
+         4420349.996,
+         858.726
+        ]
+       },
+       {
+        "file": "koy_487700_4420350.laz",
+        "format": "laz",
+        "count": 5323,
+        "bounds": [
+         487700.0,
+         4420350.003,
+         846.08,
+         487719.836,
+         4420389.995,
+         858.659
+        ]
+       }
+      ],
+      "bounds": [
+       487600.0,
+       4420300.0,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "tile-las",
+   "title": "Karola, LAS, sanal bulut yazılmaz",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.tile"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "size": 50.0,
+    "format": "las",
+    "vpc": false,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta 6 karoya bölündü; “” klasörüne yazıldı.",
+    "outputs": {
+     "tiles": 6
+    },
+    "cloudOf": {
+     "koy_487600_4420300.las": {
+      "count": 16726,
+      "points": "06150bfe994cda71"
+     },
+     "koy_487600_4420350.las": {
+      "count": 12846,
+      "points": "bf604ec3ab9c79f8"
+     },
+     "koy_487650_4420300.las": {
+      "count": 16268,
+      "points": "59dd4061e9cb4304"
+     },
+     "koy_487650_4420350.las": {
+      "count": 14213,
+      "points": "b4a8cbbd1de3e5ef"
+     },
+     "koy_487700_4420300.las": {
+      "count": 5836,
+      "points": "5a34def2b0150360"
+     },
+     "koy_487700_4420350.las": {
+      "count": 5323,
+      "points": "d2ae024c39ada7da"
+     }
+    },
+    "written": [
+     "koy_487600_4420300.las",
+     "koy_487600_4420350.las",
+     "koy_487650_4420300.las",
+     "koy_487650_4420350.las",
+     "koy_487700_4420300.las",
+     "koy_487700_4420350.las"
+    ],
+    "undo": null
+   }
+  },
+  {
+   "id": "tile-copc",
+   "title": "Karola, COPC istendi: karolar LAZ yazılır ve söylenir",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.tile"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "size": 50.0,
+    "format": "copc",
+    "vpc": false,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta 6 karoya bölündü; “” klasörüne yazıldı.",
+    "outputs": {
+     "tiles": 6
+    },
+    "cloudOf": {
+     "koy_487600_4420300.laz": {
+      "count": 16726,
+      "points": "06150bfe994cda71"
+     },
+     "koy_487600_4420350.laz": {
+      "count": 12846,
+      "points": "bf604ec3ab9c79f8"
+     },
+     "koy_487650_4420300.laz": {
+      "count": 16268,
+      "points": "59dd4061e9cb4304"
+     },
+     "koy_487650_4420350.laz": {
+      "count": 14213,
+      "points": "b4a8cbbd1de3e5ef"
+     },
+     "koy_487700_4420300.laz": {
+      "count": 5836,
+      "points": "5a34def2b0150360"
+     },
+     "koy_487700_4420350.laz": {
+      "count": 5323,
+      "points": "d2ae024c39ada7da"
+     }
+    },
+    "written": [
+     "koy_487600_4420300.laz",
+     "koy_487600_4420350.laz",
+     "koy_487650_4420300.laz",
+     "koy_487650_4420350.laz",
+     "koy_487700_4420300.laz",
+     "koy_487700_4420350.laz"
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "Karolar LAZ olarak yazıldı; karoların dizini ilk gösterilişlerinde hazırlanır."
+     }
+    ],
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-min",
+   "title": "Rasterleştir, en düşük, 2 m: hücreye düşen en düşük kot; çizime eklenir",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "layer": {
+     "newName": "Yükseklik rasteri"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.700 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2700
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2700,
+      "values": "6116c226d3fa8424"
+     }
+    },
+    "undo": "Rasterleştir",
+    "layers": [
+     {
+      "id": "islem-yukseklik-rasteri",
+      "name": "Yükseklik rasteri",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-yukseklik-rasteri",
+      "attrs": {},
+      "affine": [
+       487600.0,
+       2.0,
+       0.0,
+       4420390.0,
+       0.0,
+       -2.0
+      ],
+      "width": 60,
+      "height": 45,
+      "bands": 1,
+      "sample": "f32",
+      "file": "koy-dem.tif",
+      "srid": 5256,
+      "style": {
+       "render": "rampShade",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "min": 838.991,
+       "max": 858.664,
+       "ramp": "Arazi",
+       "nodata": -9999.0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rasterize-max",
+   "title": "Rasterleştir, en yüksek",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "value": "max",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.700 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2700
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2700,
+      "values": "61aa1d99e9c7e1ee"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-mean",
+   "title": "Rasterleştir, ortalama",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "value": "mean",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.700 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2700
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2700,
+      "values": "0d72fa072569dbb1"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-count",
+   "title": "Rasterleştir, nokta sayısı",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "value": "count",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.700 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2700
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2700,
+      "values": "513d35e380c43a3d"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-idw",
+   "title": "Rasterleştir, IDW 2,5 m: hücre merkezine uzaklığın karesinin tersiyle",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "value": "idw",
+    "radius": 2.5,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.700 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2700
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2700,
+      "values": "310ee93865b5f913"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-ground",
+   "title": "Rasterleştir, yalnız zemin (2)",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "classes": "ground",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.432 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2432
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2432,
+      "values": "26bee1ee999239a4"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "rasterize-list",
+   "title": "Rasterleştir, yazılan sınıflar “2, 6”",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "cell": 2.0,
+    "value": "max",
+    "classes": "list",
+    "list": "2, 6",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "60 × 45 hücrelik raster (hücre 2 m), 2.547 dolu hücre; “koy-dem.tif” yazıldı.",
+    "outputs": {
+     "cells": 2547
+    },
+    "cloudRasterOf": {
+     "koy-dem.tif": {
+      "cols": 60,
+      "rows": 45,
+      "filled": 2547,
+      "values": "41dcad03a7b0cc15"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "boundary",
+   "title": "Sınır çıkar, 1 m, en az 2 nokta: delikli iki parça ve köşeden değen ayrı parça; tek çok parçalı alan",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.boundary"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "sinir"
+    },
+    "cell": 1.0,
+    "least": 2,
+    "layer": {
+     "newName": "Bulut sınırı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Sınır çıkar",
+    "summary": "32 hücreden 6 parçalı sınır çizildi (1 m'lik hücreler).",
+    "outputs": {
+     "parts": 6
+    },
+    "layers": [
+     {
+      "id": "islem-bulut-siniri",
+      "name": "Bulut sınırı",
+      "style": {
+       "color": "#5B8FCF",
+       "fill": "#5B8FCF26",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2008.0
+       },
+       {
+        "x": 1000.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1004.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1004.0,
+        "y": 2007.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2007.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2008.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1001.0,
+          "y": 2007.0
+         },
+         {
+          "x": 1003.0,
+          "y": 2007.0
+         },
+         {
+          "x": 1003.0,
+          "y": 2005.0
+         },
+         {
+          "x": 1001.0,
+          "y": 2005.0
+         }
+        ]
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 1005.0,
+          "y": 2006.0
+         },
+         {
+          "x": 1005.0,
+          "y": 2003.0
+         },
+         {
+          "x": 1008.0,
+          "y": 2003.0
+         },
+         {
+          "x": 1008.0,
+          "y": 2006.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 1006.0,
+            "y": 2005.0
+           },
+           {
+            "x": 1007.0,
+            "y": 2005.0
+           },
+           {
+            "x": 1007.0,
+            "y": 2004.0
+           },
+           {
+            "x": 1006.0,
+            "y": 2004.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 1000.0,
+          "y": 2003.0
+         },
+         {
+          "x": 1000.0,
+          "y": 2002.0
+         },
+         {
+          "x": 1001.0,
+          "y": 2002.0
+         },
+         {
+          "x": 1001.0,
+          "y": 2003.0
+         }
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 1001.0,
+          "y": 2002.0
+         },
+         {
+          "x": 1001.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1002.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1002.0,
+          "y": 2002.0
+         }
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 1004.0,
+          "y": 2002.0
+         },
+         {
+          "x": 1004.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1005.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1005.0,
+          "y": 2002.0
+         }
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 1009.0,
+          "y": 2002.0
+         },
+         {
+          "x": 1009.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1008.0,
+          "y": 2001.0
+         },
+         {
+          "x": 1008.0,
+          "y": 2000.0
+         },
+         {
+          "x": 1010.0,
+          "y": 2000.0
+         },
+         {
+          "x": 1010.0,
+          "y": 2002.0
+         }
+        ]
+       }
+      ],
+      "layerId": "islem-bulut-siniri",
+      "attrs": {
+       "Hücre": "1",
+       "En az nokta": "2"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "merge",
+   "title": "Bulutları birleştir, iki dosya: biçim 7'ye genişletilir, ince ızgaraya taşınır, yarım sıfırdan uzağa",
+   "document": "pointcloud.kcad",
+   "selection": [
+    4,
+    5
+   ],
+   "run": {
+    "tool": "pointcloud.merge"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "2 dosyanın 71.712 noktası “koy-birlesik.laz” dosyasında birleşti.",
+    "outputs": {
+     "count": 71712
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "56.204 noktanın koordinatı sonucun ölçeğine yuvarlandı (kaynakların ölçek ve ötelemeleri farklı)."
+     }
+    ],
+    "cloudOf": {
+     "koy-birlesik.laz": {
+      "count": 71712,
+      "records": "74020edfe5b1e88f"
+     }
+    }
+   }
+  },
+  {
+   "id": "thin-two-clouds",
+   "title": "Seyrelt, iki bulut seçili: ret",
+   "document": "pointcloud.kcad",
+   "selection": [
+    4,
+    5
+   ],
+   "run": {
+    "tool": "pointcloud.thin"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "2 nokta bulutu seçildi; bu araç bir bulutu işler. Bir bulut seçin (birden çok dosyayı Bulutları birleştir tek dosyada toplar)."
+   }
+  },
+  {
+   "id": "merge-one",
+   "title": "Bulutları birleştir, tek dosya: ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.merge"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Birleştirmek için en az iki dosya gerekir: birden çok bulut ya da birden çok dosyalı bir sanal bulut seçin."
+   }
+  },
+  {
+   "id": "merge-systems",
+   "title": "Bulutları birleştir, iki koordinat sistemi: ret",
+   "document": "pointcloud.kcad",
+   "selection": [
+    4,
+    6
+   ],
+   "run": {
+    "tool": "pointcloud.merge"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu yeniden izdüşürmez. Aynı sistemdeki bulutları seçin."
+   }
+  }
+ ]
+}
