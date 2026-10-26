@@ -18,7 +18,9 @@ use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
     ProjectStorage,
 };
+use kentos_expression::pushdown::{Dialect, Param};
 use kentos_forms::reach::{Caller, Reach};
+use kentos_forms::scope::ScopeSql;
 use kentos_postgres::Scope;
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
@@ -772,15 +774,24 @@ pub(crate) async fn reached_ids(
     access: &ProjectAccess,
     reading: &Reading,
 ) -> AppResult<Vec<Uuid>> {
-    let scoped = reading.scoped_layers();
-    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)"
-    )))
-    .bind(access.tenant)
-    .bind(access.project)
-    .bind(&scoped)
-    .fetch_all(&mut **tx)
-    .await?;
+    let (sql, params) = reached_condition(reading);
+    if sql.is_empty() {
+        return Ok(Vec::new());
+    }
+    let text = format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and ({sql})"
+    );
+    let mut query = sqlx::query_as::<_, FeatureRow>(sqlx::AssertSqlSafe(text))
+        .bind(access.tenant)
+        .bind(access.project);
+    for p in params {
+        query = match p {
+            ScopeParam::Layers(l) => query.bind(l),
+            ScopeParam::Pushed(Param::Text(t)) => query.bind(t),
+            ScopeParam::Pushed(Param::Number(x)) => query.bind(x),
+        };
+    }
+    let rows = query.fetch_all(&mut **tx).await?;
     let mut seen = Vec::new();
     for row in rows {
         let r = record(row)?;
@@ -789,6 +800,50 @@ pub(crate) async fn reached_ids(
         }
     }
     Ok(seen)
+}
+
+/// A value [`reached_condition`] binds after the tenant and the project.
+enum ScopeParam {
+    Layers(Vec<String>),
+    Pushed(Param),
+}
+
+/// The condition the scoped layers' rows are read with (docs/adr/0649 §1): a layer whose scope has a part
+/// the database can check is read with it (`layer_id = $n and …`), one whose scope has none is read whole,
+/// one that reaches nothing is not read. The rows read are judged again with the scope, so the SQL only
+/// has to keep every row within reach. Empty: no row is read. Its placeholders start at `$3`.
+fn reached_condition(reading: &Reading) -> (String, Vec<ScopeParam>) {
+    let column = |name: &str| format!("(properties->>'{}')", name.replace('\'', "''"));
+    let mut whole = Vec::new();
+    let mut parts = Vec::new();
+    let mut pushed: Vec<Param> = Vec::new();
+    for layer in reading.scoped_layers() {
+        // `$3` is the layers read whole; a pushed layer binds its id, then its scope's values.
+        let at = 4 + pushed.len();
+        match reading
+            .reach
+            .scope_sql(&layer, &column, Dialect::Postgres, at)
+        {
+            Some(ScopeSql::Nothing) => {}
+            Some(ScopeSql::Where(p)) => {
+                parts.push(format!("(layer_id = ${at} and {})", p.sql));
+                pushed.push(Param::Text(layer));
+                pushed.extend(p.params);
+            }
+            None | Some(ScopeSql::Judge) => whole.push(layer),
+        }
+    }
+    if whole.is_empty() && parts.is_empty() {
+        return (String::new(), Vec::new());
+    }
+    let mut sql = "layer_id = any($3)".to_owned();
+    for p in parts {
+        sql.push_str(" or ");
+        sql.push_str(&p);
+    }
+    let mut params = vec![ScopeParam::Layers(whole)];
+    params.extend(pushed.into_iter().map(ScopeParam::Pushed));
+    (sql, params)
 }
 
 /// How many objects a narrowed Veri girişi reads: the unscoped layers' counted, the scoped ones'

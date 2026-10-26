@@ -328,6 +328,24 @@ impl Reach {
         out
     }
 
+    /// What a source is sent of the caller's reach over `layer`'s records (docs/adr/0649 §1); none:
+    /// every record is within reach. A closed layer reaches none. See [`crate::scope::Scopes::sql_of`].
+    pub fn scope_sql(
+        &self,
+        layer: &str,
+        column: &dyn Fn(&str) -> String,
+        dialect: kentos_expression::pushdown::Dialect,
+        taken: usize,
+    ) -> Option<crate::scope::ScopeSql> {
+        if !self.caller.through_forms {
+            return None;
+        }
+        if matches!(self.layers.get(layer), Some(Binding::Closed)) {
+            return Some(crate::scope::ScopeSql::Nothing);
+        }
+        self.scopes.sql_of(layer, column, dialect, taken)
+    }
+
     /// Whether any layer's records are narrowed for the caller.
     pub fn narrows_rows(&self) -> bool {
         !self.limited_layers().is_empty()

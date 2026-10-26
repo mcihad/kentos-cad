@@ -19,19 +19,24 @@ const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json"
 
 /// The damage layer with its fields, and a published form of them whose scope is `scope`.
 fn patch(scope: &str) -> ProjectPatch {
+    patch_in(["Durum", "Sorumlu", "Not"], scope)
+}
+
+/// [`patch`] with other names for the three fields.
+fn patch_in([state, who, note]: [&str; 3], scope: &str) -> ProjectPatch {
     let layers: Vec<LayerNode> = serde_json::from_value(json!([{
         "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [],
         "fields": [
-            { "name": "Durum", "kind": "text" },
-            { "name": "Sorumlu", "kind": "text" },
-            { "name": "Not", "kind": "text" }
+            { "name": state, "kind": "text" },
+            { "name": who, "kind": "text" },
+            { "name": note, "kind": "text" }
         ]
     }]))
     .unwrap();
     let body = json!({ "revision": 1, "scope": scope, "items": [
-        { "type": "field", "id": "durum", "field": "Durum" },
-        { "type": "field", "id": "sorumlu", "field": "Sorumlu" }
+        { "type": "field", "id": "durum", "field": state },
+        { "type": "field", "id": "sorumlu", "field": who }
     ]});
     let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).unwrap();
     let mut settings: ProjectSettings = DocumentSnapshotV1::from_json(SAMPLE).unwrap().settings;
@@ -281,4 +286,268 @@ async fn a_veri_girisi_reads_counts_and_writes_only_its_scope() {
     assert!(broken.is_ok(), "{broken:?}");
     assert!(page(&ali_p).await.is_empty());
     assert_eq!(page(&ed).await.len(), 3, "the editor is not scoped");
+}
+
+/// Field names that are none of the language's words (`Durum` and `Not` are).
+const NAMES: [&str; 3] = ["Hal", "Sorumlu", "Aciklama"];
+
+/// The form's release history ending with `scopes`' last: each a version after the one before.
+fn patch_of(scopes: &[&str]) -> ProjectPatch {
+    let mut p = patch_in(NAMES, scopes[scopes.len() - 1]);
+    let s = p.settings.as_mut().unwrap();
+    s.forms[0].releases = scopes
+        .iter()
+        .enumerate()
+        .map(|(i, scope)| kentos_contracts::FormRelease {
+            version: i as u32 + 1,
+            ..patch_in(NAMES, scope).settings.unwrap().forms[0].releases[0].clone()
+        })
+        .collect();
+    s.forms[0].draft = s.forms[0].releases.last().unwrap().body.clone();
+    p
+}
+
+/// The scope reaches the same records whether the database checks a part of it or not (docs/adr/0649 §1):
+/// each scope's records are worked out by hand, and the Veri girişi's page and count give them. A value with
+/// a quote and SQL in it is bound, not run.
+#[tokio::test]
+async fn a_scope_sent_to_the_database_reaches_what_it_reaches_judged() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 6)
+        .await
+        .unwrap();
+    let pm = common::member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let editor = person(&db, "duzenleyici", "duzen@belediye.test").await;
+    let ali = person(&db, "ali", "ali@belediye.test").await;
+    let project = new_project(&db, &pm, "Hasar tespiti").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &editor.actor, GrantRole::Editor).await;
+    share(&db, &owner, &ali.actor, GrantRole::Entry).await;
+    let ed = open(&db, &editor, project).await;
+    let ali_p = open(&db, &ali, project).await;
+    let meta: i64 = sqlx::query_scalar("select meta_version from kentos.project where id = $1")
+        .bind(project)
+        .fetch_one(&db.owner)
+        .await
+        .unwrap();
+    let mut meta = meta.to_string();
+    let first = changes::commit(
+        &db.app,
+        &owner,
+        envelope(
+            &pm,
+            project,
+            ProjectChanges {
+                project: Some(patch_of(&["Sorumlu = @kullanici_eposta"])),
+                ..features(Vec::new())
+            },
+            &[("@project", meta.as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    meta = first.meta_version;
+    let records = [
+        json!({ "Hal": "iyi", "Sorumlu": "ali@belediye.test", "Aciklama": "ofis" }),
+        json!({ "Hal": "kötü", "Sorumlu": "ayse@belediye.test", "Aciklama": "saha" }),
+        json!({ "Hal": "iyi", "Sorumlu": "ali@belediye.test", "Aciklama": "a'b" }),
+        json!({ "Hal": "", "Sorumlu": "veli@belediye.test", "Aciklama": "12" }),
+        json!({ "Sorumlu": "ALI@belediye.test", "Aciklama": "x'); delete from kentos.feature; --" }),
+    ];
+    let ids: Vec<String> = records.iter().map(|_| Uuid::new_v4().to_string()).collect();
+    changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(
+                ids.iter()
+                    .zip(&records)
+                    .enumerate()
+                    .map(|(i, (id, r))| FeatureChange::Create {
+                        id: id.clone(),
+                        entity: building(r.clone(), 20.0 * i as f64),
+                    })
+                    .collect(),
+            ),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    let cases: [(&str, &[usize]); 13] = [
+        ("Sorumlu = @kullanici_eposta", &[0, 2]),
+        ("Hal = 'iyi'", &[0, 2]),
+        ("'iyi' = Hal", &[0, 2]),
+        ("Hal içinde ('iyi', 'kötü')", &[0, 1, 2]),
+        ("Hal = 'iyi' ve Aciklama = 'ofis'", &[0]),
+        ("Hal = 'kötü' veya Sorumlu = 'veli@belediye.test'", &[1, 3]),
+        ("Aciklama = 'a''b'", &[2]),
+        ("Hal boş", &[3, 4]),
+        ("Hal boş değil", &[0, 1, 2]),
+        ("Sorumlu = 'ALI@belediye.test'", &[4]),
+        ("Aciklama = 'x''); delete from kentos.feature; --'", &[4]),
+        ("Hal = 'iyi' ve uzunluk(Aciklama) = 4", &[0]),
+        ("Hal = 'yok'", &[]),
+    ];
+    let mut history = vec!["Sorumlu = @kullanici_eposta"];
+    for (scope, reached) in cases {
+        if history.last() != Some(&scope) {
+            history.push(scope);
+            let done = changes::commit(
+                &db.app,
+                &owner,
+                envelope(
+                    &pm,
+                    project,
+                    ProjectChanges {
+                        project: Some(patch_of(&history)),
+                        ..features(Vec::new())
+                    },
+                    &[("@project", meta.as_str())],
+                ),
+            )
+            .await
+            .unwrap_or_else(|e| panic!("{scope}: {e:?}"));
+            meta = done.meta_version;
+        }
+        let mut read: Vec<String> = projects::features(&db.app, &ali_p, None, 100)
+            .await
+            .unwrap()
+            .features
+            .into_iter()
+            .map(|f| f.id)
+            .collect();
+        read.sort();
+        let mut want: Vec<String> = reached.iter().map(|i| ids[*i].clone()).collect();
+        want.sort();
+        assert_eq!(read, want, "{scope}");
+        assert_eq!(
+            projects::info(&db.app, &ali_p).await.unwrap().feature_count,
+            reached.len().to_string(),
+            "{scope}"
+        );
+    }
+    let left: i64 = sqlx::query_scalar("select count(*) from kentos.feature where project_id = $1")
+        .bind(project)
+        .fetch_one(&db.owner)
+        .await
+        .unwrap();
+    assert_eq!(left, records.len() as i64, "the quoted value was bound");
+}
+
+/// How long a narrowed Veri girişi's count takes on 100 000 records (docs/adr/0649, Ölçümler): a scope the
+/// database checks against one it cannot (`uzunluk(…)`), both reaching the same 1 000.
+#[tokio::test]
+#[ignore = "süre ölçümü: cargo test --release -p kentos-application --test project_form_scope scope_timing -- --ignored --nocapture"]
+async fn scope_timing() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 6)
+        .await
+        .unwrap();
+    let pm = common::member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let editor = person(&db, "duzenleyici", "duzen@belediye.test").await;
+    let ali = person(&db, "ali", "ali@belediye.test").await;
+    let project = new_project(&db, &pm, "Hasar tespiti").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &editor.actor, GrantRole::Editor).await;
+    share(&db, &owner, &ali.actor, GrantRole::Entry).await;
+    let ed = open(&db, &editor, project).await;
+    let ali_p = open(&db, &ali, project).await;
+    let meta: i64 = sqlx::query_scalar("select meta_version from kentos.project where id = $1")
+        .bind(project)
+        .fetch_one(&db.owner)
+        .await
+        .unwrap();
+    let pushed = "Sorumlu = @kullanici_eposta";
+    let judged = "uzunluk(Sorumlu) = 17 ve Sorumlu gibi 'ali%'";
+    let done = changes::commit(
+        &db.app,
+        &owner,
+        envelope(
+            &pm,
+            project,
+            ProjectChanges {
+                project: Some(patch_of(&[pushed])),
+                ..features(Vec::new())
+            },
+            &[("@project", meta.to_string().as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    let seed = Uuid::new_v4();
+    changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(vec![FeatureChange::Create {
+                id: seed.to_string(),
+                entity: building(json!({ "Hal": "iyi", "Sorumlu": "x" }), 0.0),
+            }]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    sqlx::query(
+        "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition,
+                                     properties, projection_version, created_by, updated_by)
+         select tenant_id, project_id, gen_random_uuid(), layer_id, kind, source_kind, srid, geom, cad_definition,
+                jsonb_build_object('Hal', 'iyi', 'Sorumlu',
+                  case when i % 100 = 0 then 'ali@belediye.test' else 'baska@belediye.test' end),
+                projection_version, created_by, updated_by
+           from kentos.feature, generate_series(1, 100000) i where id = $1",
+    )
+    .bind(seed)
+    .execute(&db.owner)
+    .await
+    .unwrap();
+    sqlx::query("delete from kentos.feature where id = $1")
+        .bind(seed)
+        .execute(&db.owner)
+        .await
+        .unwrap();
+    sqlx::query("analyze kentos.feature")
+        .execute(&db.owner)
+        .await
+        .unwrap();
+    let time = |label: &'static str| {
+        let db = &db;
+        let ali_p = ali_p.clone();
+        async move {
+            let mut best = f64::MAX;
+            for _ in 0..5 {
+                let t = std::time::Instant::now();
+                let n = projects::info(&db.app, &ali_p).await.unwrap().feature_count;
+                best = best.min(t.elapsed().as_secs_f64() * 1000.0);
+                assert_eq!(n, "1000", "{label}");
+            }
+            println!("{label}: {best:.1} ms (en iyi 5)");
+        }
+    };
+    time("SQL'e itilen kapsam").await;
+    changes::commit(
+        &db.app,
+        &owner,
+        envelope(
+            &pm,
+            project,
+            ProjectChanges {
+                project: Some(patch_of(&[pushed, judged])),
+                ..features(Vec::new())
+            },
+            &[("@project", done.meta_version.as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    time("burada yargılanan kapsam").await;
 }

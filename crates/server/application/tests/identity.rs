@@ -491,3 +491,84 @@ async fn openid_identities_are_found_by_issuer_and_subject() {
     assert!(verified(deniz).await.unwrap());
     db.close().await;
 }
+
+/// A scope does not outlive its transaction on a pooled connection (docs/adr/0649 §2): one connection is
+/// used by tenant A, then committed, then left by a failed statement, then used without a scope and by
+/// tenant B; neither sees A's rows, and the settings are empty between transactions.
+#[tokio::test]
+async fn a_pooled_connection_keeps_no_scope() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (a, b, ayse, bora) = two_tenants(&db).await;
+    let one = kentos_postgres::Db {
+        pool: sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_with((*db.app.pool.connect_options()).clone())
+            .await
+            .unwrap(),
+    };
+    let pid = || async {
+        let p: i32 = sqlx::query_scalar("select pg_backend_pid()")
+            .fetch_one(&one.pool)
+            .await
+            .unwrap();
+        p
+    };
+    let first = pid().await;
+    let settings = || async {
+        let s: (Option<String>, Option<String>, Option<String>) = sqlx::query_as(
+            "select current_setting('app.tenant_id', true), current_setting('app.user_id', true), current_setting('app.project_id', true)",
+        )
+        .fetch_one(&one.pool)
+        .await
+        .unwrap();
+        s
+    };
+    let blank = |s: Option<String>| s.unwrap_or_default().is_empty();
+    let in_a = Scope {
+        tenant: Some(a),
+        user: Some(ayse),
+        project: None,
+    };
+    // A committed transaction of A.
+    let mut tx = one.scoped(in_a).await.unwrap();
+    let n: i64 = sqlx::query_scalar("select count(*) from kentos.membership")
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+    assert_eq!(n, 1);
+    tx.commit().await.unwrap();
+    let (t, u, p) = settings().await;
+    assert!(blank(t) && blank(u) && blank(p));
+    // A transaction of A ended by an error and dropped.
+    let mut tx = one.scoped(in_a).await.unwrap();
+    assert!(sqlx::query("select 1/0").execute(&mut *tx).await.is_err());
+    drop(tx);
+    let (t, u, p) = settings().await;
+    assert!(blank(t) && blank(u) && blank(p));
+    let n: i64 = sqlx::query_scalar("select count(*) from kentos.membership")
+        .fetch_one(&one.pool)
+        .await
+        .unwrap();
+    assert_eq!(n, 0);
+    // B on the same connection sees B's membership only.
+    let mut tx = one
+        .scoped(Scope {
+            tenant: Some(b),
+            user: Some(bora),
+            project: None,
+        })
+        .await
+        .unwrap();
+    let tenants: Vec<Uuid> = sqlx::query_scalar("select tenant_id from kentos.membership")
+        .fetch_all(&mut *tx)
+        .await
+        .unwrap();
+    assert_eq!(tenants, vec![b]);
+    tx.commit().await.unwrap();
+    // It was the one connection all along.
+    assert_eq!(pid().await, first);
+    one.pool.close().await;
+    db.close().await;
+}

@@ -112,11 +112,18 @@ pub type Columns<'a> = dyn Fn(&str) -> Option<(String, ColumnSort)> + 'a;
 
 /// The part of `e` a source can check (docs/adr/0581 §3).
 pub fn push(e: &Expr, columns: &Columns<'_>, dialect: Dialect) -> Pushed {
+    push_after(e, columns, dialect, 0)
+}
+
+/// [`push`] into a query that already binds `taken` values: PostgreSQL's placeholders start at `$taken+1`
+/// (docs/adr/0649 §1). SQLite's `?` are not numbered.
+pub fn push_after(e: &Expr, columns: &Columns<'_>, dialect: Dialect, taken: usize) -> Pushed {
     let mut w = Writer {
         e,
         columns,
         dialect,
         params: Vec::new(),
+        taken,
     };
     match w.node(&e.root) {
         Some((sql, exact)) => Pushed {
@@ -133,6 +140,8 @@ struct Writer<'a, 'c> {
     columns: &'a Columns<'c>,
     dialect: Dialect,
     params: Vec<Param>,
+    /// Values the query binds before these.
+    taken: usize,
 }
 
 /// A literal as a number to send: finite and below 2⁵³ (a number, or a text that reads as one).
@@ -181,8 +190,8 @@ impl Writer<'_, '_> {
         self.params.push(p);
         match self.dialect {
             Dialect::Sqlite => "?".into(),
-            Dialect::Postgres if number => format!("${}::float8", self.params.len()),
-            Dialect::Postgres => format!("${}", self.params.len()),
+            Dialect::Postgres if number => format!("${}::float8", self.taken + self.params.len()),
+            Dialect::Postgres => format!("${}", self.taken + self.params.len()),
         }
     }
 

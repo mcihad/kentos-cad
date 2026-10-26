@@ -4,9 +4,10 @@
 //! edits is not scoped. A scope that does not compile, or whose answer is empty or false, gives
 //! nothing: what is not shown to be allowed is not.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_contracts::{FormBody, LayerField, ProjectForm};
+use kentos_contracts::{FormBody, LayerField, LayerFieldKind, ProjectForm};
+use kentos_expression::pushdown::{ColumnSort, Dialect, Pushed, push_after};
 use kentos_expression::{Expr, Unit, Variable, compile_with};
 
 use crate::record::{Attrs, Object, evaluate, schema_in};
@@ -46,6 +47,20 @@ enum Reach {
 #[derive(Clone, Debug, Default)]
 pub struct Scopes {
     layers: BTreeMap<String, Vec<Reach>>,
+    /// Each scoped layer's fields the language reads as text: the ones a source may be sent an equality on.
+    texts: BTreeMap<String, BTreeSet<String>>,
+}
+
+/// What a source is sent of a layer's scope (docs/adr/0649 §1). The records it hands over are judged
+/// again with the scope, so the SQL only has to keep every record within reach.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ScopeSql {
+    /// No record of the layer is within reach: none is read.
+    Nothing,
+    /// The scope has no part the source can check: every record is read and judged.
+    Judge,
+    /// The records the SQL keeps are read and judged: a superset of the ones within reach.
+    Where(Pushed),
 }
 
 impl Scopes {
@@ -57,6 +72,7 @@ impl Scopes {
         unit: Unit,
     ) -> Scopes {
         let mut layers: BTreeMap<String, Vec<Reach>> = BTreeMap::new();
+        let mut texts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         for form in forms.iter().filter(|f| !f.withdrawn) {
             let Some(release) = form.releases.last() else {
                 continue;
@@ -69,8 +85,64 @@ impl Scopes {
                 },
             };
             layers.entry(form.layer.clone()).or_default().push(reach);
+            texts.entry(form.layer.clone()).or_insert_with(|| {
+                fields_of(&form.layer)
+                    .iter()
+                    .filter(|f| reads_as_text(f.kind))
+                    .map(|f| f.name.clone())
+                    .collect()
+            });
         }
-        Scopes { layers }
+        Scopes { layers, texts }
+    }
+
+    /// The SQL a source can check of `layer`'s scope (docs/adr/0649 §1); none: the layer is not scoped
+    /// (every record is within reach). `column` writes a field's SQL (quoted) and `taken` is how many
+    /// values the query binds before these. The forms' scopes are joined with `OR`: a record is within
+    /// reach when one of them holds; a form whose scope has no part to send makes the whole layer judged.
+    pub fn sql_of(
+        &self,
+        layer: &str,
+        column: &dyn Fn(&str) -> String,
+        dialect: Dialect,
+        taken: usize,
+    ) -> Option<ScopeSql> {
+        let reaches = self.layers.get(layer)?;
+        if reaches.iter().any(|r| matches!(r, Reach::All)) {
+            return None;
+        }
+        let texts = self.texts.get(layer);
+        let columns = |name: &str| {
+            texts
+                .is_some_and(|t| t.contains(name))
+                .then(|| (column(name), ColumnSort::Text))
+        };
+        let mut parts = Vec::new();
+        let mut params = Vec::new();
+        let mut exact = true;
+        for r in reaches {
+            let Reach::Where(e) = r else { continue };
+            let p = push_after(e, &columns, dialect, taken + params.len());
+            if p.sql.is_empty() {
+                return Some(ScopeSql::Judge);
+            }
+            parts.push(p.sql);
+            params.extend(p.params);
+            exact &= p.exact;
+        }
+        Some(match parts.len() {
+            0 => ScopeSql::Nothing,
+            1 => ScopeSql::Where(Pushed {
+                sql: parts.remove(0),
+                params,
+                exact,
+            }),
+            _ => ScopeSql::Where(Pushed {
+                sql: format!("({})", parts.join(" OR ")),
+                params,
+                exact,
+            }),
+        })
     }
 
     /// Whether any layer is narrowed (a layer every form of which reaches all is not).
@@ -100,6 +172,21 @@ impl Scopes {
             Reach::Nothing => false,
         })
     }
+}
+
+/// Whether the language reads a field of `kind` as its stored text (docs/adr/0412 §3, 0629 §3): an
+/// equality on it is the stored text's.
+fn reads_as_text(kind: LayerFieldKind) -> bool {
+    matches!(
+        kind,
+        LayerFieldKind::Text
+            | LayerFieldKind::Time
+            | LayerFieldKind::BigInt
+            | LayerFieldKind::Instant
+            | LayerFieldKind::Uuid
+            | LayerFieldKind::Json
+            | LayerFieldKind::Binary
+    )
 }
 
 /// Why a body's scope keeps it from being published: it does not compile over the layer's fields.
@@ -223,5 +310,65 @@ mod tests {
             "{issues:?}"
         );
         assert!(scope_problem(&body, &fields(), &me("a@k.test"), Unit::METRE).is_some());
+    }
+
+    fn pg(name: &str) -> String {
+        format!("(properties->>'{}')", name.replace('\'', "''"))
+    }
+
+    #[test]
+    fn a_scope_is_sent_as_sql_on_its_text_fields() {
+        let s = scopes(&[form("bina", Some("Sorumlu = @kullanici_eposta"), false)], "ali@k.test");
+        let Some(ScopeSql::Where(p)) = s.sql_of("bina", &pg, Dialect::Postgres, 3) else {
+            panic!("{:?}", s.sql_of("bina", &pg, Dialect::Postgres, 3));
+        };
+        assert_eq!(p.sql, "(properties->>'Sorumlu') = $4");
+        assert_eq!(p.params, vec![kentos_expression::pushdown::Param::Text("ali@k.test".into())]);
+        assert!(p.exact);
+        // A layer no form edits, or one a form reaches all of, is not narrowed.
+        assert_eq!(s.sql_of("yol", &pg, Dialect::Postgres, 3), None);
+        let all = scopes(&[form("bina", Some("Kat > 3"), false), form("bina", None, false)], "a@k.test");
+        assert_eq!(all.sql_of("bina", &pg, Dialect::Postgres, 0), None);
+    }
+
+    #[test]
+    fn two_forms_are_joined_and_what_cannot_be_sent_is_judged() {
+        let two = scopes(
+            &[
+                form("bina", Some("Sorumlu = 'a@k.test'"), false),
+                form("bina", Some("Sorumlu in ('b@k.test', 'c@k.test')"), false),
+            ],
+            "x@k.test",
+        );
+        let Some(ScopeSql::Where(p)) = two.sql_of("bina", &pg, Dialect::Postgres, 3) else {
+            panic!()
+        };
+        assert_eq!(
+            p.sql,
+            "((properties->>'Sorumlu') = $4 OR ((properties->>'Sorumlu') = $5 OR (properties->>'Sorumlu') = $6))"
+        );
+        assert_eq!(p.params.len(), 3);
+        // A number field is read as a number: its stored text is not compared in SQL.
+        let number = scopes(&[form("bina", Some("Kat > 3"), false)], "x@k.test");
+        assert_eq!(number.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Judge));
+        // One form with nothing to send makes the layer judged, whatever the other sends.
+        let mixed = scopes(
+            &[form("bina", Some("Sorumlu = 'a@k.test'"), false), form("bina", Some("Kat > 3"), false)],
+            "x@k.test",
+        );
+        assert_eq!(mixed.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Judge));
+        // A part of an `and` the source cannot check is left out: the SQL keeps more, not fewer.
+        let and = scopes(&[form("bina", Some("Sorumlu = 'a@k.test' and Kat > 3"), false)], "x@k.test");
+        let Some(ScopeSql::Where(p)) = and.sql_of("bina", &pg, Dialect::Postgres, 0) else { panic!() };
+        assert_eq!(p.sql, "(properties->>'Sorumlu') = $1");
+        assert!(!p.exact);
+    }
+
+    #[test]
+    fn a_scope_that_does_not_compile_reads_nothing() {
+        let s = scopes(&[form("bina", Some("Yok = 1"), false)], "x@k.test");
+        assert_eq!(s.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Nothing));
+        // A field name with a quote is quoted, not run.
+        assert_eq!(pg("a'b"), "(properties->>'a''b')");
     }
 }
