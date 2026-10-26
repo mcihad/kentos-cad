@@ -236,10 +236,15 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kaynak takibi ve yeniden açma, 26 ham ekran/11 bağımsız KCAD ile doğrulandı.
   [ADR 0656](../docs/adr/0656-visible-tag-settings.md),
   [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md).
-- [ ] GUI takip bulgusu: önceki nesne özelliklerinde aşağı kaydırılmış
+- [x] GUI takip bulgusu: önceki nesne özelliklerinde aşağı kaydırılmış
   panelden yeni mimari araca geçildiğinde etkin ayarların başlangıcını göster.
   Aynı araçta alan düzenleme/önizleme sırasında kullanıcının kaydırmasını
   sıfırlama; mevcut seçim özellikleri ve panel yaşam döngüsü korunsun.
+  Dar kapsam [ADR 0657](../docs/adr/0657-reveal-new-tool-settings.md) ile
+  doğrulandı: eski widget 508 px hata, yeni başlangıç 0; gerçek seçili
+  mahal/etiket/kapı, özellik düzenle/undo/iptal/kapat-aç; 62 test, 19 ham
+  ekran/beş bağımsız tam KCAD. [Kanıt](../docs/baseline/2026-10-26-architecture-settings-scroll/README.md).
+  Bütün docking yaşam döngüsü/yerleşim kalıcılığı ve tam matris açık kalır.
 
 ### ARCH-UX-02 — Mimari şerit ve bağlam [x]
 
@@ -844,3 +849,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-BASE-01 / ADR 0654 | CommandLine ve EditCell odaktayken Cmd-S harf eklemeden mevcut Kaydet yoluna ulaşır; onaylanmamış tampon/araç önizlemesi korunur. Gerçek GUI ikinci giriş yolunu yakaladı; 38 test, clippy/build, 15 ham görüntü, dokuz bağımsız disk kopyası geçti. | [~] İki bileşenli düzeltme doğrulandı; diğer girişler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-commandline-save/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0655 | Gerçek etiket tutamacının boş geometri yazımı mevcut anlamsal Move'a yönlendirildi; sıcak alt küme ve kaynak bağı korunur. Duvar/mahal silme, 40 cm→20.16 m² zinciri, şablon/undo/redo/iptal/kaydet-aç gerçek fareyle doğrulandı; 692 interaction/219 application/303 Python, 22 ham görüntü ve 18 bağımsız dosya. | [~] Etiket yeri/izleme dilimi doğrulandı; listeler, Koru/Yenile, kot şablonları ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-follow/README.md) |
 | 2026-10-26 | ARCH-UX-01 / ARCH-SPACE-02 / ADR 0656 | Görünür yeni etiket ayarları; GUI’deki ilk yapıştırma ve uzun komut düğmesi kusuru düzeltildi. 697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python; clippy/build, 26 ham ekran/11 bağımsız tam KCAD. | [~] Panel dilimi doğrulandı; eski panel kaydırması için yeni takip, zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md) |
+| 2026-10-26 | ARCH-UX-01 takip / ADR 0657 | Yeni ayarlı araç başlarken Özellikler başlangıcı gösterilir; aynı araçta düzenleme/önizleme kaydırmayı korur. Eski 508 px hata, 62 ilgili test, clippy/build; 19 ham ekran/beş bağımsız tam dosya. | [x] Kaydırma takip işi doğrulandı; genel docking/matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-settings-scroll/README.md) |

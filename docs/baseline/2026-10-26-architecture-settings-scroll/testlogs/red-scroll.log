@@ -1,0 +1,41 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 53.63s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 1 test
+test architecture_settings::scroll_tests::a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits ... FAILED
+
+failures:
+
+---- architecture_settings::scroll_tests::a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits stdout ----
+
+thread 'architecture_settings::scroll_tests::a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits' (4235091) panicked at apps/desktop/src/architecture_settings_scroll_tests.rs:75:5:
+assertion `left == right` failed: New settings must start in view
+  left: 508.0
+ right: 0.0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    architecture_settings::scroll_tests::a_new_tool_reveals_defaults_without_resetting_scroll_on_setting_edits
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1509 filtered out; finished in 51.90s
+
+error: test failed, to rerun pass `-p kentos-desktop --bin kentos-cad`

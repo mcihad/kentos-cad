@@ -297,6 +297,7 @@ impl App {
             self.with_tool(|s, cx| s.activate(cx));
             if !self.session.settings(&self.format()).is_empty() {
                 self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
+                return crate::architecture_settings::reveal();
             }
         }
         Task::none()

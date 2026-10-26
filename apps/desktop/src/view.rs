@@ -119,8 +119,8 @@ impl App {
                     // Kaynaklar's list scrolls itself (sources/view.rs).
                     (Panel::Sources, _) => pane,
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
-                        Some(meta) => pane.actions(label::caption(meta)).scrollable(),
-                        None => pane.scrollable(),
+                        Some(meta) => pane.actions(label::caption(meta)),
+                        None => pane,
                     },
                     _ => pane.scrollable(),
                 }
@@ -1017,7 +1017,7 @@ impl App {
             // Kaynaklar: folders and KentOS projects to add layers from (sources/, docs/adr/0199 §7).
             Panel::Sources => self.sources_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
-            Panel::Properties => column![self.architecture_settings_view(), self.properties_view(doc)].into(),
+            Panel::Properties => self.architecture_properties_view(doc),
         }
     }
 

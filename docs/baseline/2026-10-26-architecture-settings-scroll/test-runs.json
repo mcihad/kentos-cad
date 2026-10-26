@@ -1,0 +1,169 @@
+[
+  {
+    "name": "red-scroll",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "architecture_settings::scroll_tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984294.396784,
+    "finishedAt": 1792984400.02587,
+    "exitCode": 101,
+    "log": "testlogs/red-scroll.log",
+    "sha256": "e6c95b42ef762aa0bd062247748d73253fd8b970b14299bd6976dd6aba4f2c09",
+    "testResultLines": [
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1509 filtered out; finished in 51.90s"
+    ]
+  },
+  {
+    "name": "green-scroll",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "architecture_settings::scroll_tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984465.930571,
+    "finishedAt": 1792984543.908028,
+    "exitCode": 0,
+    "log": "testlogs/green-scroll.log",
+    "sha256": "d4153275766e273b2a3ae0f64122bc5a2160a13c59c63924f3cec5576b2536f1",
+    "testResultLines": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1509 filtered out; finished in 49.12s"
+    ]
+  },
+  {
+    "name": "settings-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "architecture_settings::",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984580.078846,
+    "finishedAt": 1792984648.5706902,
+    "exitCode": 0,
+    "log": "testlogs/settings-final.log",
+    "sha256": "4f96bc76dc91bb11a38493cae62460bf16b9faf67ecb854161072a3713a747f2",
+    "testResultLines": [
+      "test result: ok. 4 passed; 0 failed; 2 ignored; 0 measured; 1504 filtered out; finished in 47.28s"
+    ]
+  },
+  {
+    "name": "properties-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "properties::tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984648.601535,
+    "finishedAt": 1792984669.166562,
+    "exitCode": 0,
+    "log": "testlogs/properties-final.log",
+    "sha256": "6096e65e0fc269d581d972c6c05317c6c468ea866d76d5575d5f40e2f2e00088",
+    "testResultLines": [
+      "test result: ok. 42 passed; 0 failed; 4 ignored; 0 measured; 1464 filtered out; finished in 20.02s"
+    ]
+  },
+  {
+    "name": "saving-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "saving::tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984669.19731,
+    "finishedAt": 1792984689.6710951,
+    "exitCode": 0,
+    "log": "testlogs/saving-final.log",
+    "sha256": "6763ccb9850bdcc79484727bd13ae459a4ffb3dd292d2ad2aafe347a3ba72f2e",
+    "testResultLines": [
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1504 filtered out; finished in 20.23s"
+    ]
+  },
+  {
+    "name": "keys-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "keys::tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792984689.7022588,
+    "finishedAt": 1792984709.541215,
+    "exitCode": 0,
+    "log": "testlogs/keys-final.log",
+    "sha256": "99d37d2ec367394eb86bde585ab4a7c8e4a1cdaee3af1f58b766f8fa5af904c6",
+    "testResultLines": [
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 1500 filtered out; finished in 19.58s"
+    ]
+  },
+  {
+    "name": "clippy-final",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-desktop",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1792984709.57169,
+    "finishedAt": 1792984758.360666,
+    "exitCode": 0,
+    "log": "testlogs/clippy-final.log",
+    "sha256": "22cd3a5b7be3cc9b92409e64e120e581f367ae21b34ae87a86c92a9eca6d70da",
+    "testResultLines": []
+  },
+  {
+    "name": "build-final",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "startedAt": 1792984758.3951309,
+    "finishedAt": 1792984779.083345,
+    "exitCode": 0,
+    "log": "testlogs/build-final.log",
+    "sha256": "c219de4403f951d08f8c53a93ecffe838aca6c6294224ce1d9018e17a75469e3",
+    "testResultLines": []
+  },
+  {
+    "name": "independent-final",
+    "command": [
+      "python3",
+      "docs/baseline/2026-10-26-architecture-settings-scroll/verify.py"
+    ],
+    "startedAt": 1792985428.561419,
+    "finishedAt": 1792985432.1182022,
+    "exitCode": 0,
+    "log": "testlogs/independent-final.log",
+    "sha256": "90501430740bde98b6b02601e747358912a8b5188319879373ccb85d3b4e83be",
+    "testResultLines": []
+  }
+]

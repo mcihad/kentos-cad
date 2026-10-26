@@ -1,10 +1,23 @@
 //! Active tool defaults, separate from the selected object's inspector.
+#[cfg(test)]
+#[path = "architecture_settings_scroll_tests.rs"]
+mod scroll_tests;
+
 use crate::app::{App, Message};
-use iced::widget::{column, container};
+use iced::widget::{column, container, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_ui::label;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
 use kentos_ui::widget::{EditCell, Menu};
+
+const PROPERTIES_SCROLL: &str = "drawing-properties";
+
+pub(crate) fn reveal() -> Task<Message> {
+    iced::widget::operation::snap_to(
+        PROPERTIES_SCROLL,
+        scrollable::RelativeOffset { x: 0.0, y: 0.0 },
+    )
+}
 
 #[derive(Clone, Debug)]
 pub struct Commit {
@@ -14,6 +27,21 @@ pub struct Commit {
 }
 
 impl App {
+    pub(crate) fn architecture_properties_view<'a>(
+        &'a self,
+        doc: &'a crate::document::Document,
+    ) -> Element<'a, Message> {
+        // The inspector owns its existing single scroll. A new tool can
+        // reveal the controls without resetting edits, previews or other docks.
+        scrollable(column![self.architecture_settings_view(), self.properties_view(doc)])
+            .id(PROPERTIES_SCROLL)
+            .direction(kentos_ui::style::field::thin_scrollbar())
+            .spacing(0)
+            .width(Fill)
+            .height(Fill)
+            .into()
+    }
+
     pub(crate) fn architecture_settings_view(&self) -> Element<'_, Message> {
         let rows = self.session.settings(&self.format());
         if rows.is_empty() {

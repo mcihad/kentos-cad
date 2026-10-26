@@ -1,0 +1,230 @@
+[
+  {
+    "file": "01-before-settings-hidden.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "02-before-ribbon-mahal.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "03-after-selected-scrolled.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "04-after-tag-start-visible.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "05-after-context-tag-visible.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "06-after-same-tool-property-scroll.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "07-after-property-edit-stays.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "08-after-property-undo-stays.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "09-after-mahal-start-visible.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "10-after-door-start-visible.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "11-after-panel-closed.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "12-after-panel-reopened.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "13-after-compact-light18-mahal.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "14-after-compact-light18-door.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "15-after-compact-light18-tag.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "16-after-compact-setting-stays.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "17-after-compact-preview-stays.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "18-after-compact-cancel.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "19-after-fresh-reopened.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  }
+]

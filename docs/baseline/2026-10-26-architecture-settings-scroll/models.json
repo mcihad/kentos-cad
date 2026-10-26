@@ -1,0 +1,27 @@
+[
+  {
+    "file": "settings-only.kcad",
+    "note": "Selected room and active Tag properties scrolled; Cmd-S did not add or change any entity.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "renamed.kcad",
+    "note": "One actual property Enter: Oturma; Tag active and scroll retained; source/two tags/table follow.",
+    "sha256": "6e4346c3fb91d4feb6524194d0a848df4c2c26e27c2c07e655ae16f8938959d6"
+  },
+  {
+    "file": "undo.kcad",
+    "note": "One actual Cmd-Z restores Salon/tags/table; active Tag and property scroll unchanged.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "preview-cancel.kcad",
+    "note": "Compact light18 actual source/wheel preview cancelled; all 14 objects unchanged.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Fresh process Home/Cmd-S; same full 14-entity model after settings/rename undo/cancel.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  }
+]
