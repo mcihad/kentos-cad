@@ -65,3 +65,11 @@ Aynı makine (Linux, release), `perf::kcad` (her işlem ayrı süreçte, tepe i�
 1 milyon parselde kaydın tepesi artık dosyanın baytları ve kodlayıcının ara bellekleri kadardır. Toplam bellek (belge, uygulama ve
 çizim) 3,9 GB'tır. Kayıt süresi 1 milyon parselde 10–12 s, 250 000'de 1,32 s'dir (geçici dosyanın `fsync`'i dahil). Aynı
 boyutta önceki bir süre ölçülmediği için süre karşılaştırılmadı.
+
+## Ek (26 Ekim): alanın dışındaki satırların dizini
+
+5. Alanla bağlı katmanın dışarıdaki satırlarının kimlik dizini (`sources::Outside`) karma tablo yerine sıralı bir dizidir,
+   ikili aramayla sorulur: satır başına 24 bayt. ADR 0597'nin 10 milyon satırdaki 634 MB'lık tepesinin büyük kısmı bu karma
+   tabloydu; dizi aynı satırlar için yaklaşık 240 MB tutar. Yalnız birkaç kimlik (alanın dışına taşınan nesneler) sorulur.
+   Sonuç aynıdır: kaynak testleri değişmeden geçer. 10 milyon satırda yeniden ölçülmedi (sahibin kararı, belleği kısıtlı
+   makine).

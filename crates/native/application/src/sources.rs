@@ -266,7 +266,7 @@ struct Stored {
     objects: Vec<(Uuid, kentos_commands::Entity)>,
     /// A part's working copy (docs/adr/0510): the table's rows outside the area, by lasting id. An object of the layer
     /// moved out of the area is written over its row, not as a new one.
-    outside: HashMap<Uuid, i64>,
+    outside: Outside,
     /// The columns as the layer's fields, and what does not come over (linking onto a new layer).
     fields: Vec<kentos_commands::LayerField>,
     losses: BTreeSet<String>,
@@ -332,21 +332,22 @@ fn load(path: &Path, table: &str, area: Option<[f64; 4]>) -> Result<Stored, Stri
         .into_iter()
         .map(|r| (r.fid, r))
         .collect();
-    let outside: HashMap<Uuid, i64> = match area {
-        None => HashMap::new(),
-        // The rows outside walked once with their ids, the table's ids not held beside them (docs/adr/0597).
+    let outside = match area {
+        None => Outside::default(),
+        // The rows outside walked once with their ids, the table's ids not held beside them (docs/adr/0597), kept as a
+        // sorted list: 24 bytes a row instead of a hash map's (docs/adr/0654 §5).
         Some(_) => {
-            let mut outside = HashMap::new();
+            let mut outside = Vec::new();
             file.each_uid(&layer, |fid, uid| {
                 if !raw.contains_key(&fid) {
                     let uid = uid
                         .and_then(|u| Uuid::parse_str(u).ok())
                         .unwrap_or_else(|| gp::row_uid(table, fid));
-                    outside.insert(uid, fid);
+                    outside.push((uid, fid));
                 }
             })
             .map_err(|e| e.0)?;
-            outside
+            Outside::from(outside)
         }
     };
     Ok(Stored {
@@ -361,6 +362,52 @@ fn load(path: &Path, table: &str, area: Option<[f64; 4]>) -> Result<Stored, Stri
         sha256: read.sha256,
         ..stored_of(layer, &mut raw, t)
     })
+}
+
+/// A part's rows outside its area by lasting id (docs/adr/0654 §5): sorted pairs searched in halves, so ten million rows
+/// hold 240 MB, not a hash map's 600; a few of them are ever asked for (objects moved out of the area).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct Outside(Vec<(Uuid, i64)>);
+
+impl From<Vec<(Uuid, i64)>> for Outside {
+    fn from(mut list: Vec<(Uuid, i64)>) -> Outside {
+        list.sort_unstable_by_key(|(u, _)| *u);
+        list.dedup_by_key(|(u, _)| *u);
+        list.shrink_to_fit();
+        Outside(list)
+    }
+}
+
+impl Outside {
+    pub(crate) fn get(&self, uid: &Uuid) -> Option<&i64> {
+        self.0
+            .binary_search_by_key(uid, |(u, _)| *u)
+            .ok()
+            .map(|i| &self.0[i].1)
+    }
+
+    pub(crate) fn contains_key(&self, uid: &Uuid) -> bool {
+        self.get(uid).is_some()
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &i64> {
+        self.0.iter().map(|(_, f)| f)
+    }
+}
+
+impl std::ops::Index<&Uuid> for Outside {
+    type Output = i64;
+    fn index(&self, uid: &Uuid) -> &i64 {
+        self.get(uid).unwrap_or(&-1)
+    }
 }
 
 /// A table's rows by lasting id, as read (`t`) and as stored (`raw`, taken by fid).
@@ -382,7 +429,7 @@ fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::Table
         srid: None,
         rows,
         objects: t.objects,
-        outside: HashMap::new(),
+        outside: Outside::default(),
         fields: t.fields,
         losses: t.losses,
         writable: false,
@@ -630,7 +677,7 @@ fn load_meta(path: &Path, table: &str) -> Result<Stored, String> {
         srid,
         rows: HashMap::new(),
         objects: Vec::new(),
-        outside: HashMap::new(),
+        outside: Outside::default(),
         fields: Vec::new(),
         losses: BTreeSet::new(),
         writable,
@@ -1219,7 +1266,7 @@ fn follow_pins(
     doc: &Document,
     link: &SourceLink,
     objects: &[(Uuid, kentos_commands::Entity)],
-    outside: &HashMap<Uuid, i64>,
+    outside: &Outside,
 ) -> PinPlan {
     let bearers: Vec<(Uuid, &kentos_commands::Entity)> = doc
         .by_layer_with_uids(&link.layer)
