@@ -116,6 +116,15 @@ pub fn probe(url: &str) -> Result<Probe, String> {
     Ok(Probe { size, version })
 }
 
+/// The words of a read refused because the address changed since it was opened (another version): a reader that
+/// finds them opens the address again (docs/adr/0642 §2).
+pub const CHANGED: &str = "açıldıktan sonra değişmiş";
+
+/// Whether a read's failure is the address having changed since it was opened.
+pub fn is_changed(why: &str) -> bool {
+    why.contains(CHANGED)
+}
+
 /// `len` bytes of `url` from `offset`; refused when the address changed (another version).
 pub fn read(url: &str, offset: u64, len: u64, version: Option<&str>) -> Result<Vec<u8>, String> {
     if len == 0 {
@@ -130,7 +139,7 @@ pub fn read(url: &str, offset: u64, len: u64, version: Option<&str>) -> Result<V
         && was != now
     {
         return Err(format!(
-            "“{url}” açıldıktan sonra değişmiş; nesneyi yeniden ekleyin ya da çizimi yeniden açın."
+            "“{url}” {CHANGED}; yeni sürümü yeniden açılarak okunur."
         ));
     }
     if bytes.len() as u64 != len {
@@ -140,4 +149,95 @@ pub fn read(url: &str, offset: u64, len: u64, version: Option<&str>) -> Result<V
         ));
     }
     Ok(bytes)
+}
+
+/// The most bytes `download` takes (docs/adr/0642 §3).
+pub const DOWNLOAD_MOST: u64 = 8 << 30;
+
+/// `url` whole into the file `to` (written beside it as `<name>.part`, then renamed): for an address that is not read
+/// by ranges (docs/adr/0642 §3). At most `most` bytes; `stop` set leaves no file. The bytes written.
+pub fn download(
+    url: &str,
+    to: &std::path::Path,
+    most: u64,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+) -> Result<u64, String> {
+    let part = to.with_extension(match to.extension() {
+        Some(e) => format!("{}.part", e.to_string_lossy()),
+        None => "part".to_owned(),
+    });
+    let work = fetch_to(url.to_owned(), part.clone(), most, stop);
+    let result = crate::runtime::wait(async move { work.await.map_err(ApiFailure::local) })
+        .map_err(|f| f.message.clone());
+    match result {
+        Ok(n) => {
+            std::fs::rename(&part, to)
+                .map_err(|e| format!("“{}” yazılamadı: {e}.", to.display()))?;
+            Ok(n)
+        }
+        Err(why) => {
+            let _ = std::fs::remove_file(&part);
+            Err(why)
+        }
+    }
+}
+
+async fn fetch_to(
+    url: String,
+    part: std::path::PathBuf,
+    most: u64,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+) -> Result<u64, String> {
+    use std::io::Write;
+    use std::sync::atomic::Ordering;
+    let c = client()?;
+    let mut res = c
+        .get(&url)
+        .timeout(Duration::from_secs(3600))
+        .send()
+        .await
+        .map_err(|e| format!("“{url}” indirilemedi: {e}."))?;
+    if !res.status().is_success() {
+        return Err(format!(
+            "“{url}” indirilemedi: sunucu {} dedi.",
+            res.status()
+        ));
+    }
+    let total = res.content_length();
+    if total.is_some_and(|t| t > most) {
+        return Err(format!(
+            "“{url}” {} MB; en çok {} MB indirilir.",
+            total.unwrap_or(0) >> 20,
+            most >> 20
+        ));
+    }
+    let mut file = std::fs::File::create(&part)
+        .map_err(|e| format!("“{}” açılamadı: {e}.", part.display()))?;
+    let mut written = 0u64;
+    loop {
+        if stop.load(Ordering::Relaxed) {
+            return Err("İndirme durduruldu.".into());
+        }
+        match res.chunk().await {
+            Ok(Some(bytes)) => {
+                written += bytes.len() as u64;
+                if written > most {
+                    return Err(format!("“{url}” {} MB'tan büyük; indirilmedi.", most >> 20));
+                }
+                file.write_all(&bytes)
+                    .map_err(|e| format!("“{}” yazılamadı: {e}.", part.display()))?;
+            }
+            Ok(None) => break,
+            Err(e) => return Err(format!("“{url}” indirilirken kesildi: {e}.")),
+        }
+    }
+    if total.is_some_and(|t| t != written) {
+        return Err(format!(
+            "“{url}”: {} bayt bildirildi, {written} bayt geldi.",
+            total.unwrap_or(0)
+        ));
+    }
+    file.sync_all()
+        .map_err(|e| format!("“{}” yazılamadı: {e}.", part.display()))?;
+    Ok(written)
 }

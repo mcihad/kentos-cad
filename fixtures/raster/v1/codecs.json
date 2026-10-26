@@ -1,0 +1,560 @@
+{
+ "format": "kentos.raster-codecs",
+ "version": 1,
+ "gdal": "3.12.2",
+ "convert": "gdal_translate -co TILED=YES -co COMPRESS=DEFLATE",
+ "profile": [
+  {
+   "code": 1,
+   "name": "NONE",
+   "read": true
+  },
+  {
+   "code": 5,
+   "name": "LZW",
+   "read": true
+  },
+  {
+   "code": 7,
+   "name": "JPEG",
+   "read": true
+  },
+  {
+   "code": 8,
+   "name": "DEFLATE",
+   "read": true
+  },
+  {
+   "code": 32773,
+   "name": "PACKBITS",
+   "read": true
+  },
+  {
+   "code": 32946,
+   "name": "DEFLATE",
+   "read": true
+  },
+  {
+   "code": 50000,
+   "name": "ZSTD",
+   "read": true
+  },
+  {
+   "code": 50001,
+   "name": "WEBP",
+   "read": true
+  },
+  {
+   "code": 2,
+   "name": "CCITTRLE",
+   "read": false
+  },
+  {
+   "code": 3,
+   "name": "CCITTFAX3",
+   "read": false
+  },
+  {
+   "code": 4,
+   "name": "CCITTFAX4",
+   "read": false
+  },
+  {
+   "code": 34887,
+   "name": "LERC",
+   "read": false
+  },
+  {
+   "code": 34925,
+   "name": "LZMA",
+   "read": false
+  },
+  {
+   "code": 50002,
+   "name": "JXL",
+   "read": false
+  }
+ ],
+ "cases": [
+  {
+   "file": "rgb-zstd-predictor2.tif",
+   "compression": "ZSTD",
+   "code": 50000,
+   "info": {
+    "width": 420,
+    "height": 300,
+    "bands": 3,
+    "sample": "u8"
+   },
+   "fnv": "2ac55d271ff6e253"
+  },
+  {
+   "file": "f32-zstd-predictor3.tif",
+   "compression": "ZSTD",
+   "code": 50000,
+   "info": {
+    "width": 300,
+    "height": 260,
+    "bands": 1,
+    "sample": "f32"
+   },
+   "fnv": "d40a3d1c171189e2"
+  },
+  {
+   "file": "u16-zstd-strips.tif",
+   "compression": "ZSTD",
+   "code": 50000,
+   "info": {
+    "width": 233,
+    "height": 201,
+    "bands": 1,
+    "sample": "u16"
+   },
+   "fnv": "305d5288a436f1dd"
+  },
+  {
+   "file": "i16-zstd-planar.tif",
+   "compression": "ZSTD",
+   "code": 50000,
+   "info": {
+    "width": 150,
+    "height": 120,
+    "bands": 2,
+    "sample": "i16"
+   },
+   "fnv": "d60eb484d15842fb"
+  },
+  {
+   "file": "rgb-webp-lossless.tif",
+   "compression": "WEBP",
+   "code": 50001,
+   "info": {
+    "width": 420,
+    "height": 300,
+    "bands": 3,
+    "sample": "u8"
+   },
+   "fnv": "2ac55d271ff6e253"
+  },
+  {
+   "file": "rgba-webp-lossless.tif",
+   "compression": "WEBP",
+   "code": 50001,
+   "info": {
+    "width": 260,
+    "height": 260,
+    "bands": 4,
+    "sample": "u8"
+   },
+   "fnv": "df8a2ed86a4b6ebb"
+  },
+  {
+   "file": "rgb-webp-lossy.tif",
+   "compression": "WEBP",
+   "code": 50001,
+   "info": {
+    "width": 512,
+    "height": 256,
+    "bands": 3,
+    "sample": "u8"
+   },
+   "means": [
+    146.6288299560547,
+    146.64039611816406,
+    146.6561737060547
+   ],
+   "points": [
+    [
+     0,
+     0,
+     [
+      128,
+      128,
+      128
+     ]
+    ],
+    [
+     53,
+     37,
+     [
+      173,
+      97,
+      102
+     ]
+    ],
+    [
+     106,
+     74,
+     [
+      107,
+      98,
+      183
+     ]
+    ],
+    [
+     159,
+     111,
+     [
+      112,
+      134,
+      108
+     ]
+    ],
+    [
+     212,
+     148,
+     [
+      186,
+      181,
+      155
+     ]
+    ],
+    [
+     265,
+     185,
+     [
+      138,
+      197,
+      186
+     ]
+    ],
+    [
+     318,
+     222,
+     [
+      105,
+      174,
+      112
+     ]
+    ],
+    [
+     371,
+     3,
+     [
+      121,
+      115,
+      224
+     ]
+    ],
+    [
+     424,
+     40,
+     [
+      121,
+      87,
+      144
+     ]
+    ],
+    [
+     477,
+     77,
+     [
+      200,
+      91,
+      203
+     ]
+    ],
+    [
+     18,
+     114,
+     [
+      224,
+      118,
+      193
+     ]
+    ],
+    [
+     71,
+     151,
+     [
+      170,
+      152,
+      140
+     ]
+    ],
+    [
+     124,
+     188,
+     [
+      151,
+      142,
+      224
+     ]
+    ],
+    [
+     177,
+     225,
+     [
+      224,
+      105,
+      168
+     ]
+    ],
+    [
+     230,
+     6,
+     [
+      72,
+      64,
+      206
+     ]
+    ],
+    [
+     283,
+     43,
+     [
+      141,
+      53,
+      187
+     ]
+    ],
+    [
+     336,
+     80,
+     [
+      94,
+      79,
+      153
+     ]
+    ],
+    [
+     389,
+     117,
+     [
+      71,
+      126,
+      235
+     ]
+    ],
+    [
+     442,
+     154,
+     [
+      150,
+      157,
+      170
+     ]
+    ],
+    [
+     495,
+     191,
+     [
+      138,
+      145,
+      197
+     ]
+    ],
+    [
+     36,
+     228,
+     [
+      174,
+      73,
+      217
+     ]
+    ],
+    [
+     89,
+     9,
+     [
+      156,
+      63,
+      117
+     ]
+    ],
+    [
+     142,
+     46,
+     [
+      103,
+      71,
+      198
+     ]
+    ],
+    [
+     195,
+     83,
+     [
+      84,
+      113,
+      115
+     ]
+    ],
+    [
+     248,
+     120,
+     [
+      162,
+      155,
+      168
+     ]
+    ],
+    [
+     301,
+     157,
+     [
+      138,
+      161,
+      187
+     ]
+    ],
+    [
+     354,
+     194,
+     [
+      87,
+      132,
+      122
+     ]
+    ],
+    [
+     407,
+     231,
+     [
+      151,
+      97,
+      208
+     ]
+    ],
+    [
+     460,
+     12,
+     [
+      129,
+      96,
+      77
+     ]
+    ],
+    [
+     1,
+     49,
+     [
+      138,
+      128,
+      132
+     ]
+    ],
+    [
+     54,
+     86,
+     [
+      211,
+      174,
+      121
+     ]
+    ],
+    [
+     107,
+     123,
+     [
+      178,
+      199,
+      80
+     ]
+    ],
+    [
+     160,
+     160,
+     [
+      136,
+      183,
+      162
+     ]
+    ],
+    [
+     213,
+     197,
+     [
+      202,
+      145,
+      101
+     ]
+    ],
+    [
+     266,
+     234,
+     [
+      214,
+      122,
+      119
+     ]
+    ],
+    [
+     319,
+     15,
+     [
+      146,
+      131,
+      97
+     ]
+    ],
+    [
+     372,
+     52,
+     [
+      121,
+      163,
+      69
+     ]
+    ],
+    [
+     425,
+     89,
+     [
+      77,
+      210,
+      149
+     ]
+    ],
+    [
+     478,
+     126,
+     [
+      149,
+      230,
+      82
+     ]
+    ],
+    [
+     19,
+     163,
+     [
+      204,
+      183,
+      104
+     ]
+    ]
+   ]
+  },
+  {
+   "file": "u8-lerc.tif",
+   "compression": "LERC",
+   "code": 34887,
+   "refused": [
+    "LERC",
+    "(34887)",
+    "gdal_translate -co TILED=YES -co COMPRESS=DEFLATE"
+   ]
+  },
+  {
+   "file": "f32-lerc-zstd.tif",
+   "compression": "LERC",
+   "code": 34887,
+   "refused": [
+    "LERC",
+    "(34887)",
+    "gdal_translate -co TILED=YES -co COMPRESS=DEFLATE"
+   ]
+  },
+  {
+   "file": "u8-lzma.tif",
+   "compression": "LZMA",
+   "code": 34925,
+   "refused": [
+    "LZMA",
+    "(34925)",
+    "gdal_translate -co TILED=YES -co COMPRESS=DEFLATE"
+   ]
+  }
+ ]
+}

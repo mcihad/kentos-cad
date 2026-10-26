@@ -466,6 +466,10 @@ Liste:
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
   `ops::geocode::check`), web'in Adres verisi penceresi dururken yok.
+- [ ] `CBS-28` codec profili, değişen adres, Range'siz sunucu ve önbellek bütçesi (ADR 0642, 26 Ekim): web'de gerekenler: raster
+  işçisinin WASM'ı yeniden derlenince ZSTD ve WebP sıkıştırmalı TIFF okunur ve ret sözü aynı; web'in adresten okumasında ETag
+  değişince kaynağın yeniden açılması ve karoların anahtarında sürüm; Range'siz adres için tarayıcıda indirip dosya olarak ekleme;
+  web'in önizleme piramidi önbelleğine (IndexedDB) bütçe.
 - [ ] `CBS-27` ağın artımlı kurulması ve olayların yalnız dokunulanlarla yerleşmesi (ADR 0641, 26 Ekim): web'de gerekenler: ağın
   işçisinde son girdinin ve grafın saklanması, servisin yalnız değişen nesneleri okuması (`networks::read`'in kuralı) ve `rebuild_known`
   WASM'da; olay bağlarının yalnız dokunulanları yerleştirmesi web'in belgesinde (`step_objects`'in karşılığı), `cad.linearref.follow`'un
@@ -2709,6 +2713,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   önce); salt okunur `cad.addresses.check` (sayılar, dışarıda kalanlar, `repeats`, `codes`, `spellings`, kalıcı kimliklerle; `no_address_data`);
   Adres verisi penceresinde iki satır; Python ve MCP; başvuru `address_check_command_cases.py` (21 durum). Kalan: yazılışları düzeltmek,
   mahalle ve ilçe yazılışları, dış kayıtla karşılaştırma. — **21 Ekim, [ADR 0579](docs/adr/0579-address-check.md).**
+- [x] `CBS-28` codec profili, değişen adres, Range'siz sunucu ve önbellek bütçesi: `raster::layout::TIFF_CODECS` (GDAL'ın yazdığı her
+  TIFF sıkıştırması; ZSTD ve WebP okunur, okunmayanlar adlarıyla ve Deflate'e çevirme komutuyla reddedilir); adresteki dosya değişince
+  karo işçisi kaynağı yeniden açar, karoların anahtarı kaynağın sayacını taşır, bir kez söylenir (`range::is_changed`); Raster ekle'de
+  İndir ve dosya olarak ekle (`range::download`, çizimin `veri` klasörü, 8 GB); piramit klasörüne 8 GB bütçe (`pyramid::prune`); büyük
+  ortofotoda ilk görüntünün aktarımı ve süresi ölçüldü. Başvuru `raster_codec_cases.py` (10 dosya, 14 sıkıştırma). Kalan (ADR'de):
+  LERC, LZMA, JPEG XL; indirmenin ilerlemesi; kimlikli ham raster adresi. — **26 Ekim,
+  [ADR 0642](docs/adr/0642-raster-codecs-remote-versions-and-cache.md).**
 - [x] `CBS-27` ağın artımlı kurulması ve olayların yalnız dokunulanlarla yerleşmesi: `Graph::build_kept` kurduğunu saklar (kesimler,
   düğümler, özetler, hücre dizinleri), `Graph::rebuild` (özetlerle) ve `rebuild_known` (ev sahibinin eşlemesiyle) yalnız değişen noktaların
   toleransındaki kenarları yeniden keser, dağılan düğümleri yeniden birleştirir, öteki kenarların parçalarını önceki graftan alır; tam

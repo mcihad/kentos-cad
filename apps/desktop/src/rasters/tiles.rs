@@ -683,6 +683,9 @@ pub(super) struct Source {
     pub(super) building: AtomicBool,
     /// Its pyramid's pass was stopped: its coarse levels come from level 0.
     pub(super) declined: AtomicBool,
+    /// How many times it was opened again because its address changed (docs/adr/0642 §2): its tiles' keys carry it,
+    /// so a tile of an earlier version is never shown.
+    pub(super) epoch: AtomicU64,
 }
 
 impl Source {
@@ -693,6 +696,12 @@ impl Source {
             *o = Some(open(&self.origin, self.part.as_ref()).map(Arc::new));
         }
         o.clone().unwrap_or_else(|| Err("Raster açılamadı.".into()))
+    }
+
+    /// Its address changed since it was opened: it is opened again on the next tile, its tiles made anew.
+    fn renew(&self) {
+        *self.opened.lock().unwrap_or_else(PoisonError::into_inner) = None;
+        self.epoch.fetch_add(1, Ordering::Relaxed);
     }
 
     fn failed(&self) -> bool {
@@ -727,6 +736,8 @@ pub(super) struct Shared {
     work: Condvar,
     tiles: Mutex<TileCache>,
     generation: AtomicU64,
+    /// What the workers have to say to the window (an address that changed), taken by `notices`.
+    notices: Mutex<Vec<String>>,
     /// A tile was made since the window last heard.
     fresh: Mutex<bool>,
     told: Condvar,
@@ -756,6 +767,7 @@ pub fn service() -> &'static Service {
             work: Condvar::new(),
             tiles: Mutex::new(TileCache::default()),
             generation: AtomicU64::new(0),
+            notices: Mutex::new(Vec::new()),
             fresh: Mutex::new(false),
             told: Condvar::new(),
         });
@@ -833,6 +845,7 @@ impl Service {
                     opened: Mutex::new(None),
                     building: AtomicBool::new(false),
                     declined: AtomicBool::new(false),
+                    epoch: AtomicU64::new(0),
                 }),
             );
         }
@@ -942,6 +955,32 @@ impl Service {
         self.shared.told.notify_one();
     }
 
+    /// Something for the window to say; the window hears of it with the next tiles.
+    fn notice(&self, words: String) {
+        self.shared
+            .notices
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(words);
+        *self
+            .shared
+            .fresh
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner) = true;
+        self.shared.told.notify_one();
+    }
+
+    /// What the workers had to say since last asked.
+    pub fn notices(&self) -> Vec<String> {
+        std::mem::take(
+            &mut *self
+                .shared
+                .notices
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner),
+        )
+    }
+
     /// A frame begins: what is not asked for again by its end may be dropped.
     pub fn frame(&self) {
         self.shared.generation.fetch_add(1, Ordering::Relaxed);
@@ -957,8 +996,10 @@ impl Service {
         tx: u32,
         ty: u32,
     ) -> Option<Arc<Vec<u8>>> {
+        let source = self.source(raster)?;
+        let epoch = source.epoch.load(Ordering::Relaxed);
         let key = TileKey {
-            paint: paint_hash(raster, look, affine),
+            paint: paint_hash(raster, look, affine) ^ epoch.wrapping_mul(0x9e37_79b9_7f4a_7c15),
             level,
             tx,
             ty,
@@ -972,7 +1013,6 @@ impl Service {
         {
             return Some(t);
         }
-        let source = self.source(raster)?;
         if source.failed() {
             return None;
         }
@@ -1084,13 +1124,34 @@ fn make(service: &Service, want: &Want, key: TileKey) -> Option<Vec<u8>> {
             return None;
         }
     }
+    // The address changed since it was opened: opened again on the next frame, said once.
+    let changed = |why: &str| {
+        if kentos_cloud::range::is_changed(why) {
+            source.renew();
+            service.notice(match &source.origin {
+                Origin::Url(u) => {
+                    format!("“{u}” adresindeki raster değişti; yeni sürümü okunuyor.")
+                }
+                _ => why.to_owned(),
+            });
+        }
+    };
     let stats = if wants_stats(&style, sample) {
-        Some(opened.stats().ok()?)
+        match opened.stats() {
+            Ok(s) => Some(s),
+            Err(why) => {
+                changed(&why);
+                return None;
+            }
+        }
     } else {
         None
     };
     let (x, y, w, h) = Reader::tile_region(key.tx, key.ty);
-    opened.fill(level, x, y, w, h).ok()?;
+    if let Err(why) = opened.fill(level, x, y, w, h) {
+        changed(&why);
+        return None;
+    }
     let parts = opened
         .reader
         .lock()
@@ -1159,6 +1220,65 @@ mod tests {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/interaction/v1/rasters")
             .join(name)
+    }
+
+    /// An address whose file changes (docs/adr/0642 §2): the first read of a block after the change finds it, the
+    /// raster is opened again and said once, and every tile from then on is the new file's; none of the old one's is
+    /// shown with them.
+    #[test]
+    fn a_changed_address_is_opened_again_and_its_tiles_made_anew() {
+        use crate::range_server::{Mode, serve};
+        let s = service();
+        // The photograph (1280 × 864, tiles of 256), then another RGB file in its place.
+        let orto = std::fs::read(fixture("orto.tif")).expect("orto");
+        let other_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/raster/v1/files/rgb-deflate-overviews.tif");
+        let other = std::fs::read(&other_path).expect("another RGB file");
+        let server = serve(vec![("degisen.tif", orto)], Mode::Ranges);
+        let url = server.url("degisen.tif");
+        let key = format!("url:{url}");
+        let look = r#"{"render":"rgb","bands":[1,2,3]}"#;
+        let affine = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0];
+        let ask = |key: &str, origin: Origin, tx: u32, ty: u32| {
+            for _ in 0..2000 {
+                s.register(key, || Some(origin.clone()));
+                s.frame();
+                if let Some(t) = s.tile(key, look, &affine, 0, tx, ty) {
+                    return t;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            panic!("{key}: the tile was not made");
+        };
+        let first = ask(&key, Origin::Url(url.clone()), 0, 0);
+        server.replace("degisen.tif", other);
+        // A tile not made yet reads blocks: the change is found and said.
+        let mut said = Vec::new();
+        for _ in 0..2000 {
+            s.register(&key, || Some(Origin::Url(url.clone())));
+            s.frame();
+            let _ = s.tile(&key, look, &affine, 0, 4, 3);
+            said.extend(s.notices());
+            if said.iter().any(|w| w.contains(&url)) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert!(
+            said.iter()
+                .any(|w| w.contains(&url) && w.contains("değişti")),
+            "{said:?}"
+        );
+        // The first tile again: the new file's, as the file itself gives it.
+        let second = ask(&key, Origin::Url(url.clone()), 0, 0);
+        let from_file = ask(
+            "file:test/degisen-baska.tif",
+            Origin::File(other_path.clone()),
+            0,
+            0,
+        );
+        assert!(second != first, "not the old file's tile");
+        assert!(second == from_file, "the new file's tile");
     }
 
     /// A tile asked for is made by the workers and kept: the photograph's

@@ -306,6 +306,38 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             },
             tiles_made,
         ),
+        // Raster ekle from an address whose server reads no ranges (docs/adr/0642 §3): the refusal and
+        // İndir ve dosya olarak ekle, the file's place beside the drawing.
+        (
+            "raster-ekle-indir",
+            |app| {
+                adding(app, "dem.tif");
+                if let Some(doc) = app.document.as_mut() {
+                    doc.path = Some(std::path::PathBuf::from("/home/kullanici/projeler/sivas/cizim.kcad"));
+                }
+                let server = crate::range_server::serve(
+                    vec![(
+                        "ortofoto-2025.tif",
+                        std::fs::read(folder().join("orto.tif")).expect("the photograph"),
+                    )],
+                    crate::range_server::Mode::Whole,
+                );
+                let add = |app: &mut App, e: crate::rasters::add::Event| {
+                    let task = app.update(Message::Rasters(crate::rasters::Event::Add(e)));
+                    crate::files_testing::drive(app, task);
+                };
+                add(
+                    app,
+                    crate::rasters::add::Event::From(crate::rasters::add::From::Address),
+                );
+                add(
+                    app,
+                    crate::rasters::add::Event::Address(server.url("ortofoto-2025.tif")),
+                );
+                add(app, crate::rasters::add::Event::ReadAddress);
+            },
+            tiles_made,
+        ),
         // Raster ekle: the scanned sheet, its world file says no system: the user's yes is asked.
         (
             "raster-ekle-tarama",

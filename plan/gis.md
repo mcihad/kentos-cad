@@ -522,7 +522,9 @@ birer birer çalıştırın.
 
 ## F — Raster, uzaktan algılama ve büyük coğrafi veri
 
-- [ ] **CBS-28 — Raster kaynağına sanal mozaik ve doğrulanan COG export ekle — P0 provider; P1 genişleme**
+- [x] **CBS-28 — Raster kaynağına sanal mozaik ve doğrulanan COG export ekle — P0 provider; P1 genişleme**
+
+  *Tamamlandı (26 Ekim 2026; [ADR 0642](../docs/adr/0642-raster-codecs-remote-versions-and-cache.md)): codec profili (`raster::layout::TIFF_CODECS`: GDAL'ın yazdığı her TIFF sıkıştırması ve okunup okunmadığı; ZSTD ve WebP artık okunur, okunmayanlar adlarıyla ve Deflate'e çevirme komutuyla reddedilir), adresteki dosya değişince kaynak kendiliğinden yeniden açılır ve karoların anahtarı kaynağın sayacını taşır (eski sürümün karosu karışmaz, bir kez söylenir), Range'siz sunucu ya da adresteki PNG ve JPEG için Raster ekle'de İndir ve dosya olarak ekle (çizimin `veri` klasörüne, en çok 8 GB), önizleme piramitlerinin klasörüne 8 GB'lık disk bütçesi (en uzun süredir kullanılmayan önce gider); çok gigabaytlı ortofotoda ilk görüntü ölçüldü. Sanal mozaik ADR 0517'de, doğrulanan COG yazımı ADR 0515'te. Kalan (ADR'de): LERC, LZMA ve JPEG XL; indirmenin ilerlemesi ve durdurulması; kimlikli ham raster adresi.*
 
   *Kısmen (19 Ekim 2026; [ADR 0517](../docs/adr/0517-virtual-raster-mosaic.md)): çok dosyalı sanal mozaik GDAL'ın VRT'siyle, sıra, çözünürlük ve tarih önceliği, kopyasız; okuyucu ve komutun yazdığı GDAL'la piksel piksel aynı.*
 

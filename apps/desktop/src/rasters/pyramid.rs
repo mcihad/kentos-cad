@@ -6,7 +6,9 @@
 //! is the SHA-256 of the file's path, size and change time. The pass runs on
 //! a thread of its own, its progress for the bottom panel, Durdur stops it
 //! (the raster's coarse levels are then made from level 0 as they are asked
-//! for). A file made before is taken as it is.
+//! for). A file made before is taken as it is, its time set to now. The
+//! folder holds at most `CACHE_MOST` bytes: after a pass, the files used
+//! longest ago go first (docs/adr/0642 §4).
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -79,6 +81,50 @@ fn folder() -> Option<PathBuf> {
     Some(base.join("kentos-cad").join("raster"))
 }
 
+/// The most bytes the pyramid files may take on the device (docs/adr/0642 §4).
+pub(super) const CACHE_MOST: u64 = 8 << 30;
+
+/// Lets the pyramid files of `dir` used longest ago (their change time; taking one sets it) go while they hold more
+/// than `most` bytes; `keep`, files being written (`.part`) and files touched in the last minute stay. The bytes freed.
+pub(super) fn prune(dir: &std::path::Path, most: u64, keep: &[PathBuf]) -> u64 {
+    let Ok(list) = std::fs::read_dir(dir) else {
+        return 0;
+    };
+    let now = std::time::SystemTime::now();
+    let mut files: Vec<(std::time::SystemTime, u64, PathBuf)> = list
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().is_some_and(|x| x == "tif"))
+        .filter_map(|e| {
+            let m = e.metadata().ok()?;
+            Some((m.modified().ok()?, m.len(), e.path()))
+        })
+        .collect();
+    let mut total: u64 = files.iter().map(|f| f.1).sum();
+    files.sort();
+    let mut freed = 0;
+    for (at, len, path) in files {
+        if total <= most {
+            break;
+        }
+        let recent = now.duration_since(at).is_ok_and(|d| d.as_secs() < 60);
+        if recent || keep.contains(&path) {
+            continue;
+        }
+        if std::fs::remove_file(&path).is_ok() {
+            total -= len;
+            freed += len;
+        }
+    }
+    freed
+}
+
+/// Marks a pyramid file used now: the folder's budget lets it go last.
+fn touch(path: &std::path::Path) {
+    if let Ok(f) = File::options().write(true).open(path) {
+        let _ = f.set_modified(std::time::SystemTime::now());
+    }
+}
+
 /// The pyramid file's name: the raster's identity hashed (a linked file's
 /// path, size and change time; an address with its size and version).
 fn cache_path(identity: &str) -> Option<PathBuf> {
@@ -125,6 +171,7 @@ pub(super) fn start(service: &Service, key: &str, source: &Arc<Source>, opened: 
         return;
     };
     if target.is_file() && attach(opened, &target).is_ok() {
+        touch(&target);
         source.building.store(false, Ordering::Relaxed);
         service.forget_tiles();
         return;
@@ -194,6 +241,9 @@ pub(super) fn start(service: &Service, key: &str, source: &Arc<Source>, opened: 
             }
             if made {
                 service.forget_tiles();
+                if let Some(dir) = target.parent() {
+                    prune(dir, CACHE_MOST, std::slice::from_ref(&target));
+                }
             }
             service.wake();
         });

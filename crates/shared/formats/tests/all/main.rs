@@ -27,6 +27,7 @@ mod pat;
 mod pdf;
 mod multidim;
 mod raster;
+mod raster_codecs;
 mod raster_gcp;
 mod raster_georef;
 mod raster_mosaic;

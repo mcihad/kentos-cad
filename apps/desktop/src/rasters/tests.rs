@@ -657,3 +657,167 @@ fn a_linked_tile_table_draws_from_its_file() {
         }
     }
 }
+
+/// An address whose server reads no ranges (docs/adr/0642 §3): the window says why and offers İndir ve dosya olarak
+/// ekle; the file comes whole into the drawing's `veri` folder and is read as a linked file, the same pixels.
+#[test]
+fn an_address_without_ranges_is_downloaded_and_added_as_a_file() {
+    use crate::range_server::{Mode, serve};
+    let data = std::fs::read(fixture("dem.tif")).expect("the elevation model");
+    let server = serve(vec![("dem.tif", data.clone())], Mode::Whole);
+    let url = server.url("dem.tif");
+    let dir = std::env::temp_dir().join(format!("kentos-indir-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let mut app = app_with_drawing();
+    app.document.as_mut().expect("a drawing").path = Some(dir.join("cizim.kcad"));
+    app.picker = Picker::File(fixture("dem.tif"));
+    let task = app.run("raster.add");
+    drive(&mut app, task);
+    let add =
+        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    add(&mut app, super::add::Event::From(super::add::From::Address));
+    add(&mut app, super::add::Event::Address(format!("{url}?imza=1")));
+    add(&mut app, super::add::Event::ReadAddress);
+    let s = app.rasters.add.as_ref().expect("the window");
+    let why = s.read.as_ref().expect("read").as_ref().expect_err("refused");
+    assert!(super::add::downloadable(why), "{why}");
+    add(&mut app, super::add::Event::Download);
+    let s = app.rasters.add.as_ref().expect("the window");
+    assert_eq!(s.from, super::add::From::File, "read now as a file");
+    let want = dir.join("veri").join("dem.tif");
+    assert_eq!(s.path, want);
+    assert_eq!(std::fs::read(&want).expect("downloaded"), data);
+    let read = s.read.as_ref().expect("read").as_ref().expect("a raster");
+    assert_eq!((read.info.width, read.info.height), (480, 324));
+    // Taken again: the next name, the first kept.
+    assert_eq!(
+        super::add::download_place(Some(&dir.join("cizim.kcad")), &url),
+        dir.join("veri").join("dem-2.tif")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The pyramid files' budget (docs/adr/0642 §4): over it, the files used longest ago go first; the one just made, the
+/// ones being written and the ones touched in the last minute stay.
+#[test]
+fn the_pyramid_files_keep_within_their_budget_the_oldest_going_first() {
+    use std::time::{Duration, SystemTime};
+    let dir = std::env::temp_dir().join(format!("kentos-piramit-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let now = SystemTime::now();
+    let file = |name: &str, len: usize, ago: u64| {
+        let p = dir.join(name);
+        std::fs::write(&p, vec![0u8; len]).expect("written");
+        let f = std::fs::File::options().write(true).open(&p).expect("opened");
+        f.set_modified(now - Duration::from_secs(ago)).expect("time");
+        p
+    };
+    let oldest = file("a.tif", 400, 3600 * 24);
+    let old = file("b.tif", 300, 3600);
+    let kept = file("c.tif", 500, 7200);
+    let recent = file("d.tif", 200, 5);
+    let writing = file("e.tif.part", 900, 9999);
+    // 1 400 bytes of pyramids, at most 800: the oldest goes, the kept one stays, then the next oldest.
+    let freed = super::pyramid::prune(&dir, 800, std::slice::from_ref(&kept));
+    assert_eq!(freed, 700);
+    assert!(!oldest.exists() && !old.exists());
+    assert!(kept.exists() && recent.exists() && writing.exists());
+    // Within the budget: nothing goes.
+    assert_eq!(super::pyramid::prune(&dir, 800, &[]), 0);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The first useful view of a multi-gigabyte orthophoto by HTTP ranges (docs/adr/0642 §5): its header, the whole
+/// raster in a 1100-pixel window (an overview's tiles) and a close view (level 0's), each with the bytes it fetched and
+/// how long it took. The file is `scripts/perf/big_cog.py`'s (.run/perf/orto-buyuk.tif). Release, by hand:
+/// `cargo test --release -p kentos-desktop --bin kentos-cad rasters::tests::first_view_of_a_large_cog -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn first_view_of_a_large_cog() {
+    use crate::range_server::serve_paths;
+    use std::time::Instant;
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/perf/orto-buyuk.tif");
+    let Ok(meta) = std::fs::metadata(&path) else {
+        println!("{} yok: önce /usr/bin/python3 scripts/perf/big_cog.py", path.display());
+        return;
+    };
+    let size = meta.len();
+    let server = serve_paths(vec![("orto.tif", path.clone())]);
+    let url = server.url("orto.tif");
+    let fetched = |server: &crate::range_server::Server| -> u64 {
+        server.asked().iter().map(|(a, b)| b - a + 1).sum()
+    };
+    let row = |what: &str, ms: f64, bytes: u64, asks: usize| {
+        println!(
+            "{what:<52} {ms:>9.1} ms  {:>9.2} MB  {asks:>5} istek",
+            bytes as f64 / 1e6
+        );
+    };
+    println!("dosya {:.2} GB", size as f64 / 1e9);
+    let t = Instant::now();
+    let opened = super::tiles::open(&super::tiles::Origin::Url(url.clone()), None).expect("opens");
+    let levels: Vec<(u32, u32)> = {
+        let r = opened.reader.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        r.levels.iter().map(|l| (l.width, l.height)).collect()
+    };
+    row(
+        &format!("açılış: başlık ({} kat)", levels.len()),
+        t.elapsed().as_secs_f64() * 1e3,
+        fetched(&server),
+        server.asked().len(),
+    );
+    let s = super::tiles::service();
+    let key = format!("url:{url}");
+    let look = r#"{"render":"rgb","bands":[1,2,3]}"#;
+    let affine = [500_000.0, 0.1, 0.0, 4_500_000.0, 0.0, -0.1];
+    // Every tile of a window at a level, made by the service as the scene asks for them.
+    let view = |level: usize, x0: u32, y0: u32, w: u32, h: u32| {
+        let (tx0, ty0, tx1, ty1) = (x0 / 256, y0 / 256, (x0 + w - 1) / 256, (y0 + h - 1) / 256);
+        let mut left: Vec<(u32, u32)> =
+            (ty0..=ty1).flat_map(|ty| (tx0..=tx1).map(move |tx| (tx, ty))).collect();
+        let n = left.len();
+        for _ in 0..60_000 {
+            s.register(&key, || Some(super::tiles::Origin::Url(url.clone())));
+            s.frame();
+            left.retain(|&(tx, ty)| s.tile(&key, look, &affine, level as u32, tx, ty).is_none());
+            if left.is_empty() {
+                return n;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        panic!("the view's tiles were not made");
+    };
+    // The whole raster in a window 1100 pixels wide: the first level no wider than twice that.
+    let whole = levels
+        .iter()
+        .position(|(w, _)| *w <= 2200)
+        .unwrap_or(levels.len() - 1);
+    let (ww, wh) = levels[whole];
+    let (before, asks) = (fetched(&server), server.asked().len());
+    let t = Instant::now();
+    let n = view(whole, 0, 0, ww, wh);
+    row(
+        &format!("bütün görüntü: {whole}. kat {ww} × {wh}, {n} karo"),
+        t.elapsed().as_secs_f64() * 1e3,
+        fetched(&server) - before,
+        server.asked().len() - asks,
+    );
+    // A close view in the middle: 1100 × 650 pixels of level 0.
+    let (w0, h0) = levels[0];
+    let (before, asks) = (fetched(&server), server.asked().len());
+    let t = Instant::now();
+    let n = view(0, w0 / 2, h0 / 2, 1100, 650);
+    row(
+        &format!("yakın görünüm: 0. kat 1100 × 650, {n} karo"),
+        t.elapsed().as_secs_f64() * 1e3,
+        fetched(&server) - before,
+        server.asked().len() - asks,
+    );
+    println!(
+        "toplam aktarılan {:.2} MB, dosyanın %{:.3}'ü",
+        fetched(&server) as f64 / 1e6,
+        fetched(&server) as f64 / size as f64 * 100.0
+    );
+}

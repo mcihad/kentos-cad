@@ -97,6 +97,8 @@ pub struct State {
     pub keep: Keep,
     pub layer: String,
     status: Option<String>,
+    /// İndir ve dosya olarak ekle is under way (docs/adr/0642 §3).
+    pub downloading: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -115,6 +117,9 @@ pub enum Event {
     Another,
     Run,
     Close,
+    /// İndir ve dosya olarak ekle: the address not read by ranges, taken whole into a file (docs/adr/0642 §3).
+    Download,
+    Downloaded(Result<PathBuf, String>),
 }
 
 fn msg(e: Event) -> Message {
@@ -124,6 +129,61 @@ fn msg(e: Event) -> Message {
 /// Raster ekle with the file (Kaynaklar, docs/adr/0599 §1).
 pub(crate) fn open_file(path: PathBuf) -> Message {
     msg(Event::Picked(Some(path)))
+}
+
+/// Whether a refused address can be taken whole into a file: its server reads no ranges, or it is a PNG or JPEG.
+pub(crate) fn downloadable(why: &str) -> bool {
+    why.contains("HTTP Range") || why.contains("Adresten yalnız GeoTIFF")
+}
+
+/// Where an address is downloaded to: the drawing's `veri` folder beside it when it has a file, else the device's
+/// downloads; the address's last name (without its query), made unique with `-2`, `-3`, … when taken.
+pub(crate) fn download_place(drawing: Option<&Path>, address: &str) -> PathBuf {
+    let dir = drawing
+        .and_then(Path::parent)
+        .map(|d| d.join("veri"))
+        .unwrap_or_else(|| {
+            std::env::var_os("XDG_DATA_HOME")
+                .map(PathBuf::from)
+                .filter(|p| p.is_absolute())
+                .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
+                .unwrap_or_else(std::env::temp_dir)
+                .join("kentos-cad")
+                .join("indirilen")
+        });
+    let path = address.split(['?', '#']).next().unwrap_or_default();
+    let last = path
+        .trim_end_matches('/')
+        .rsplit('/')
+        .next()
+        .unwrap_or_default();
+    let name: String = last
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    let name = if name.trim_matches('.').is_empty() {
+        "raster".to_owned()
+    } else {
+        name
+    };
+    let first = dir.join(&name);
+    if !first.exists() {
+        return first;
+    }
+    let (stem, ext) = match name.rsplit_once('.') {
+        Some((a, b)) if !a.is_empty() => (a.to_owned(), format!(".{b}")),
+        _ => (name.clone(), String::new()),
+    };
+    (2..)
+        .map(|k| dir.join(format!("{stem}-{k}{ext}")))
+        .find(|p| !p.exists())
+        .unwrap_or(first)
 }
 
 /// The world file beside `path`, as GDAL looks for it: its name and text.
@@ -293,6 +353,7 @@ impl App {
             keep: Keep::Linked,
             layer,
             status: None,
+            downloading: false,
         });
         self.dialog = Some(Asking::RasterAdd);
         id
@@ -402,6 +463,48 @@ impl App {
                 if let Some(s) = &mut self.rasters.add {
                     s.layer = t;
                 }
+            }
+            Event::Download => {
+                let Some(s) = &mut self.rasters.add else {
+                    return Task::none();
+                };
+                if s.downloading {
+                    return Task::none();
+                }
+                let address = s.address.trim().to_owned();
+                let drawing = self.document.as_ref().and_then(|d| d.path.clone());
+                let to = download_place(drawing.as_deref(), &address);
+                s.downloading = true;
+                s.status = None;
+                return super::off_thread(move || {
+                    let done = (|| {
+                        if let Some(dir) = to.parent() {
+                            std::fs::create_dir_all(dir)
+                                .map_err(|e| format!("“{}” açılamadı: {e}.", dir.display()))?;
+                        }
+                        kentos_cloud::range::download(
+                            &address,
+                            &to,
+                            kentos_cloud::range::DOWNLOAD_MOST,
+                            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                        )?;
+                        Ok(to)
+                    })();
+                    msg(Event::Downloaded(done))
+                });
+            }
+            Event::Downloaded(Err(why)) => {
+                if let Some(s) = &mut self.rasters.add {
+                    s.downloading = false;
+                    s.status = Some(why);
+                }
+            }
+            Event::Downloaded(Ok(path)) => {
+                self.say(
+                    Level::Info,
+                    format!("Adresteki raster “{}” olarak indirildi.", path.display()),
+                );
+                return Task::done(msg(Event::Picked(Some(path))));
             }
             Event::Another => return self.raster_add_pick(),
             Event::Run => self.raster_add_run(),
@@ -650,7 +753,29 @@ impl App {
                 body = body.push(words::summary(vec![words::text_line(
                     Line::Error,
                     why.clone(),
-                )]))
+                )]));
+                // An address not read by ranges, or not a GeoTIFF: taken whole into a file beside the drawing.
+                if s.from == From::Address && downloadable(why) {
+                    let drawing = self.document.as_ref().and_then(|d| d.path.clone());
+                    let place = download_place(drawing.as_deref(), &s.address);
+                    let button = if s.downloading {
+                        words::secondary("İndiriliyor…", None)
+                    } else {
+                        words::secondary("İndir ve dosya olarak ekle", Some(msg(Event::Download)))
+                    };
+                    body = body.push(words::field(
+                        "Dosya olarak",
+                        row![button].spacing(8),
+                        Some(format!(
+                            "Bütün dosya “{}” olarak iner (en çok {} GB) ve bağlı dosya olarak eklenir.",
+                            place.display(),
+                            kentos_cloud::range::DOWNLOAD_MOST >> 30
+                        )),
+                    ));
+                    if let Some(why) = &s.status {
+                        body = body.push(words::text_line(Line::Error, why.clone()));
+                    }
+                }
             }
             Some(Ok(r)) => {
                 body = body.push(self.raster_add_facts(r));

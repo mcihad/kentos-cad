@@ -1926,7 +1926,12 @@ impl App {
             Message::BandRead(read) => self.band_read(read),
             Message::WindowResized(size) => self.window_resized(size),
             // The next frame draws them; the bottom panel shows the pyramids' progress.
-            Message::RastersReady => {}
+            Message::RastersReady => {
+                // A raster's address changed: it is read again, said once (docs/adr/0642 §2).
+                for words in crate::rasters::tiles::service().notices() {
+                    self.say(Level::Info, words);
+                }
+            }
             Message::Rasters(event) => return self.rasters_event(event),
             // The next frame draws them; the panel shows the indexes' progress.
             Message::CloudsReady => {}

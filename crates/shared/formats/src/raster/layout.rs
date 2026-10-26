@@ -1,8 +1,10 @@
 //! How a TIFF directory's blocks lie and how one block's bytes become
 //! samples (docs/adr/0204 §1): the sample type of its bits and format, the
 //! checks that refuse what is not read (with why), and the block decoded:
-//! LZW, Deflate or PackBits undone, the predictor undone, white-is-zero grey
-//! turned round; a JPEG block handed back as a stream for the host.
+//! LZW, Deflate, PackBits or ZSTD undone, a WebP tile decoded, the predictor
+//! undone, white-is-zero grey turned round; a JPEG block handed back as a
+//! stream for the host. The compressions a TIFF may have and which are read
+//! are one table, the codec profile (`TIFF_CODECS`, docs/adr/0642 §1).
 
 use kentos_contracts::RasterSample;
 
@@ -90,6 +92,28 @@ fn sample_of(bits: u64, format: u64) -> Option<RasterSample> {
     })
 }
 
+/// The TIFF compressions GDAL writes (docs/adr/0642 §1): the tag's value, the name, whether it is read here. The
+/// ones not read are refused by name with the way to convert them (`CONVERT`).
+pub const TIFF_CODECS: &[(u64, &str, bool)] = &[
+    (1, "NONE", true),
+    (5, "LZW", true),
+    (7, "JPEG", true),
+    (8, "DEFLATE", true),
+    (32773, "PACKBITS", true),
+    (32946, "DEFLATE", true),
+    (50000, "ZSTD", true),
+    (50001, "WEBP", true),
+    (2, "CCITTRLE", false),
+    (3, "CCITTFAX3", false),
+    (4, "CCITTFAX4", false),
+    (34887, "LERC", false),
+    (34925, "LZMA", false),
+    (50002, "JXL", false),
+];
+
+/// The conversion a refused compression's words give: GDAL writes the file again as tiles in Deflate.
+pub const CONVERT: &str = "gdal_translate -co TILED=YES -co COMPRESS=DEFLATE";
+
 /// A compression's name, as the window says it; none when not read.
 pub fn compression_name(c: u64) -> Option<&'static str> {
     Some(match c {
@@ -98,8 +122,21 @@ pub fn compression_name(c: u64) -> Option<&'static str> {
         7 => "JPEG",
         8 | 32946 => "Deflate",
         32773 => "PackBits",
+        50000 => "ZSTD",
+        50001 => "WebP",
         _ => return None,
     })
+}
+
+/// Why a compression is not read: its name and number, what is read, and the way to convert the file.
+pub fn compression_refused(c: u64) -> String {
+    let name = TIFF_CODECS
+        .iter()
+        .find(|(code, _, _)| *code == c)
+        .map_or("bilinmeyen", |(_, n, _)| n);
+    format!(
+        "TIFF'in sıkıştırması {name} ({c}) okunmuyor: sıkıştırmasız, LZW, Deflate, PackBits, JPEG, ZSTD ve WebP okunur. Dosyayı Deflate'e çevirip ekleyin: {CONVERT} girdi.tif cikti.tif"
+    )
 }
 
 /// A directory's layout, or why it is not read.
@@ -125,10 +162,7 @@ pub fn layout(file: u8, ifd_index: usize, ifd: &Ifd, little: bool) -> Result<Lay
         ))
     })?;
     if compression_name(ifd.compression).is_none() {
-        return Err(RasterError::new(format!(
-            "TIFF'in sıkıştırması ({}) okunmuyor: sıkıştırmasız, LZW, Deflate, PackBits ve JPEG okunur.",
-            ifd.compression
-        )));
+        return Err(RasterError::new(compression_refused(ifd.compression)));
     }
     let photometric = ifd.photometric.unwrap_or(1);
     if !matches!(photometric, 0..=3 | 6) {
@@ -144,6 +178,14 @@ pub fn layout(file: u8, ifd_index: usize, ifd: &Ifd, little: bool) -> Result<Lay
     if ifd.compression == 7 && sample != RasterSample::U8 {
         return Err(RasterError::new(
             "JPEG sıkıştırmalı TIFF yalnız 8 bitse okunur.",
+        ));
+    }
+    // A WebP tile is an 8-bit RGB or RGBA image of all the bands (GDAL writes no other).
+    if ifd.compression == 50001
+        && (sample != RasterSample::U8 || !matches!(bands, 3 | 4) || (ifd.planar == 2 && bands > 1))
+    {
+        return Err(RasterError::new(
+            "WebP sıkıştırmalı TIFF yalnız 8 bitlik, bantları iç içe RGB ya da RGBA ise okunur.",
         ));
     }
     if !matches!(ifd.predictor, 1..=3) {
@@ -220,6 +262,31 @@ pub fn layout(file: u8, ifd_index: usize, ifd: &Ifd, little: bool) -> Result<Lay
     })
 }
 
+/// A WebP tile's pixels as the block's samples: its bands in the block's order, rows past the image's left empty.
+fn webp_block(l: &Layout, bytes: &[u8], expected: usize) -> Result<Vec<u8>, RasterError> {
+    let img = super::webp::decode(bytes)?;
+    let bands = l.per_block as usize;
+    let (bw, iw, ih) = (l.block_w as usize, img.width as usize, img.height as usize);
+    let channels = img.channels as usize;
+    let mut out = vec![0u8; expected];
+    let rows = expected / (bw * bands).max(1);
+    for y in 0..ih.min(rows) {
+        for x in 0..iw.min(bw) {
+            let src = (y * iw + x) * channels;
+            let dst = (y * bw + x) * bands;
+            for b in 0..bands {
+                // An RGB image in an RGBA block is opaque.
+                out[dst + b] = if b < channels {
+                    img.pixels[src + b]
+                } else {
+                    255
+                };
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// A block's bytes made samples, or its JPEG stream.
 pub fn decode_block(l: &Layout, index: u32, bytes: &[u8]) -> Result<Put2, RasterError> {
     let expected = l.expected(index);
@@ -238,6 +305,9 @@ pub fn decode_block(l: &Layout, index: u32, bytes: &[u8]) -> Result<Put2, Raster
         5 => codec::lzw(bytes, expected)?,
         8 | 32946 => codec::inflate(bytes, expected)?,
         32773 => codec::packbits(bytes, expected),
+        50000 => crate::compress::zstd::decompress(bytes, expected)
+            .map_err(|e| RasterError::new(format!("TIFF'in ZSTD bloğu açılamadı: {e}.")))?,
+        50001 => webp_block(l, bytes, expected)?,
         7 => {
             return Ok(Put2::Jpeg(codec::jpeg_stream(
                 l.jpeg_tables.as_deref(),
