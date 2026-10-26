@@ -718,7 +718,11 @@ pub fn encode_watched(
     doc: &DocumentSnapshotV2,
     watch: &mut dyn Watch,
 ) -> Result<Vec<u8>, KcadError> {
-    header::write(&encode::payload(doc, watch)?)
+    header::write(&encode::payload(
+        doc,
+        encode::Objs::Plain(&doc.entities),
+        watch,
+    )?)
 }
 
 /// The file a drawing is saved as, read back before it is handed out: the
@@ -736,13 +740,72 @@ pub fn encode_verified_watched(
     doc: &DocumentSnapshotV2,
     watch: &mut dyn Watch,
 ) -> Result<Vec<u8>, KcadError> {
-    let bytes = encode_watched(doc, watch)?;
+    verified(doc, encode::Objs::Plain(&doc.entities), watch)
+}
+
+/// `encode_verified_watched` of a drawing whose objects are held apart, as the open document shares them
+/// (docs/adr/0654): `head` is the drawing with no objects and with their ids (`uids`), `objects` the objects in the
+/// same order. Nothing is copied: the writer reads the objects where they are, and the bytes are read back object by
+/// object, each compared with its original and dropped, so a large drawing is never in memory twice.
+pub fn encode_verified_parts_watched(
+    head: &DocumentSnapshotV2,
+    objects: &[std::sync::Arc<contracts::Entity>],
+    watch: &mut dyn Watch,
+) -> Result<Vec<u8>, KcadError> {
+    if !head.entities.is_empty() {
+        return Err(KcadError::new(
+            Code::BadValue,
+            "Çizimin başı nesne taşımamalı; nesneler ayrı verilir. Bu bir yazılım hatasıdır; durumu bildirin.",
+        ));
+    }
+    verified(head, encode::Objs::Shared(objects), watch)
+}
+
+/// The bytes of `doc` with `objects`, read back before they are handed out: the objects compared one by one as they
+/// are read (`columns::Same`), then everything else.
+fn verified(
+    doc: &DocumentSnapshotV2,
+    objects: encode::Objs<'_>,
+    watch: &mut dyn Watch,
+) -> Result<Vec<u8>, KcadError> {
+    let bytes = header::write(&encode::payload(doc, objects, watch)?)?;
     watch::report(watch, Step::Verifying)?;
-    let back = decode_watched(&bytes, watch).map_err(not_read_back)?;
-    if let Some(what) = difference(doc, &back) {
+    let mut check = Verify {
+        objects,
+        uids: &doc.uids,
+        same: columns::Same::default(),
+    };
+    let (_, payload) = header::read_watched(&bytes, watch).map_err(not_read_back)?;
+    let back = decode::payload_checked(payload, watch, &mut check).map_err(not_read_back)?;
+    if back.uids.len() != objects.len() {
+        return Err(unverified("nesne sayısı"));
+    }
+    if let Some(what) = head_difference(doc, &back) {
         return Err(unverified(&what));
     }
     Ok(bytes)
+}
+
+/// A verifying read's comparison of each object read with the one written.
+struct Verify<'a> {
+    objects: encode::Objs<'a>,
+    uids: &'a [contracts::EntityId],
+    same: columns::Same,
+}
+
+impl decode::Check for Verify<'_> {
+    fn object(
+        &mut self,
+        i: usize,
+        entity: &contracts::Entity,
+        uid: &contracts::EntityId,
+    ) -> Option<String> {
+        let differs = match (self.objects.get(i), self.uids.get(i)) {
+            (Some(a), Some(a_uid)) => self.same.differs(a, a_uid, entity, uid),
+            _ => true,
+        };
+        differs.then(|| format!("nesne {}", i + 1))
+    }
 }
 
 /// Bytes that did not read back: a verification failure, unless the watcher stopped the reading.
@@ -888,10 +951,9 @@ pub fn sniff(data: &[u8]) -> Sniff {
     }
 }
 
-/// Where two drawings differ: the small parts as their JSON text (every
-/// float64 bit for bit, `-0.0` apart from `0.0`), the objects through their
-/// typed columns; the objects' slots are not compared.
-fn difference(a: &DocumentSnapshotV2, b: &DocumentSnapshotV2) -> Option<String> {
+/// Where two drawings differ but for their objects: the small parts as their JSON text (every float64 bit for bit,
+/// `-0.0` apart from `0.0`); the objects' ids are compared, the objects are not.
+fn head_difference(a: &DocumentSnapshotV2, b: &DocumentSnapshotV2) -> Option<String> {
     fn same<T: Serialize + ?Sized>(x: &T, y: &T) -> bool {
         match (serde_json::to_vec(x), serde_json::to_vec(y)) {
             (Ok(x), Ok(y)) => x == y,
@@ -911,14 +973,8 @@ fn difference(a: &DocumentSnapshotV2, b: &DocumentSnapshotV2) -> Option<String> 
         ("projectId", a.project_id == b.project_id),
         ("migratedFrom", a.migrated_from == b.migrated_from),
     ];
-    if let Some((name, _)) = parts.iter().find(|(_, same)| !same) {
-        return Some((*name).to_owned());
-    }
-    if a.entities.len() != b.entities.len() {
-        return Some("nesne sayısı".to_owned());
-    }
-    // Object by object through the typed columns: every field, every float bit for bit, no JSON
-    // text of a large drawing (docs/adr/0030).
-    columns::first_difference(&a.entities, &a.uids, &b.entities, &b.uids)
-        .map(|i| format!("nesne {}", i + 1))
+    parts
+        .iter()
+        .find(|(_, same)| !same)
+        .map(|(name, _)| (*name).to_owned())
 }

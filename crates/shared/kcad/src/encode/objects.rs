@@ -178,11 +178,12 @@ impl<'d> Encoder<'d> {
     }
 
     pub(super) fn objects(&mut self, doc: &'d DocumentSnapshotV2) -> Result<(), KcadError> {
-        self.open(doc.entities.len(), false)?;
+        let objs = self.objs;
+        self.open(objs.len(), false)?;
         let mut seen = HashSet::with_capacity(doc.uids.len());
         let mut fields = Vec::with_capacity(16);
-        let total = doc.entities.len();
-        for (i, (entity, uid)) in doc.entities.iter().zip(&doc.uids).enumerate() {
+        let total = objs.len();
+        for (i, (entity, uid)) in objs.iter().zip(&doc.uids).enumerate() {
             if i % EVERY == 0 {
                 self.report(Step::Writing { done: i, total })?;
             }

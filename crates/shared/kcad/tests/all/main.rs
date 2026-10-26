@@ -40,6 +40,7 @@ mod requests;
 mod robustness;
 mod carriage;
 mod schemas;
+mod shared_objects;
 mod services;
 mod sheets;
 mod subref_extras;

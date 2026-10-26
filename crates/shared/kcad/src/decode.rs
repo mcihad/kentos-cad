@@ -50,7 +50,34 @@ const PREALLOCATE: usize = 4096;
 /// stop the reading (docs/adr/0030).
 pub(crate) fn payload(data: &[u8], watch: &mut dyn Watch) -> Result<DocumentSnapshotV2, KcadError> {
     let mut r = Reader::watched(data, watch);
-    let doc = root(&mut r)?;
+    read_whole(&mut r)
+}
+
+/// What a verifying read does with each object instead of keeping it (docs/adr/0654).
+pub(crate) trait Check {
+    /// `None` when object `i` as read is the one written, otherwise where it differs.
+    fn object(
+        &mut self,
+        i: usize,
+        entity: &kentos_contracts::Entity,
+        uid: &kentos_contracts::EntityId,
+    ) -> Option<String>;
+}
+
+/// `payload` checking each object with `check` as it is read: the drawing returned has no objects (their ids are
+/// kept), so a large drawing is not in memory a second time. Every rule of the reading holds but the one that needs
+/// the objects together, a service layer's objects, which the writer checked before writing.
+pub(crate) fn payload_checked(
+    data: &[u8],
+    watch: &mut dyn Watch,
+    check: &mut dyn Check,
+) -> Result<DocumentSnapshotV2, KcadError> {
+    let mut r = Reader::checking(data, watch, check);
+    read_whole(&mut r)
+}
+
+fn read_whole(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
+    let doc = root(r)?;
     if !r.at_end() {
         return Err(r.fail(Code::CborTrailing, "yükte belgeden sonra fazladan bayt var"));
     }

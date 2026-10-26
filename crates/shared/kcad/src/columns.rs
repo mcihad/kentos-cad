@@ -3847,26 +3847,48 @@ pub fn first_difference(
     if a.len() != b.len() || a_uids.len() != a.len() || b_uids.len() != b.len() {
         return Some(a.len().min(b.len()));
     }
-    let mut x = Packer {
-        out: Columns::default(),
-    };
-    let mut y = Packer {
-        out: Columns::default(),
-    };
-    (0..a.len()).find(|&i| {
+    let mut same = Same::default();
+    (0..a.len()).find(|&i| same.differs(&a[i], &a_uids[i], &b[i], &b_uids[i]))
+}
+
+/// Two objects compared through their typed columns, the buffers kept from one pair to the next.
+#[derive(Default)]
+pub(crate) struct Same {
+    x: Columns,
+    y: Columns,
+}
+
+impl Same {
+    /// Whether the objects differ: every field, every float bit for bit; the slots apart.
+    pub(crate) fn differs(
+        &mut self,
+        a: &Entity,
+        a_uid: &EntityId,
+        b: &Entity,
+        b_uid: &EntityId,
+    ) -> bool {
+        let mut x = Packer {
+            out: std::mem::take(&mut self.x),
+        };
+        let mut y = Packer {
+            out: std::mem::take(&mut self.y),
+        };
         x.out.clear();
         y.out.clear();
-        x.object(&a[i], &a_uids[i], 0);
-        y.object(&b[i], &b_uids[i], 0);
+        x.object(a, a_uid, 0);
+        y.object(b, b_uid, 0);
         let (p, q) = (&x.out, &y.out);
-        a[i].base().layer_id != b[i].base().layer_id
+        let differs = a.base().layer_id != b.base().layer_id
             || p.kinds != q.kinds
             || p.uids != q.uids
             || p.ints != q.ints
             || !same_bits(&p.floats, &q.floats)
             || p.text != q.text
-            || p.text_lengths != q.text_lengths
-    })
+            || p.text_lengths != q.text_lengths;
+        self.x = x.out;
+        self.y = y.out;
+        differs
+    }
 }
 
 #[cfg(test)]

@@ -160,6 +160,8 @@ pub(crate) struct Reader<'a> {
     path: Vec<Seg<'a>>,
     /// Hears the reading's progress and may stop it (`watch`, docs/adr/0030).
     watch: Option<&'a mut dyn Watch>,
+    /// A verifying read's comparison: each object is checked against the one written and not kept (docs/adr/0654).
+    check: Option<&'a mut dyn crate::decode::Check>,
 }
 
 impl<'a> Reader<'a> {
@@ -170,7 +172,32 @@ impl<'a> Reader<'a> {
             depth: 0,
             path: Vec::with_capacity(16),
             watch: None,
+            check: None,
         }
+    }
+
+    /// A verifying reader: its objects go to `check` one by one and are not kept (docs/adr/0654).
+    pub fn checking(
+        data: &'a [u8],
+        watch: &'a mut dyn Watch,
+        check: &'a mut dyn crate::decode::Check,
+    ) -> Self {
+        Self {
+            watch: Some(watch),
+            check: Some(check),
+            ..Self::new(data)
+        }
+    }
+
+    /// `None` when the reader keeps its objects; otherwise the check of object `i`: `Some(None)` when it is the one
+    /// written, `Some(Some(what))` when it differs.
+    pub fn check_object(
+        &mut self,
+        i: usize,
+        entity: &kentos_contracts::Entity,
+        uid: &kentos_contracts::EntityId,
+    ) -> Option<Option<String>> {
+        self.check.as_deref_mut().map(|c| c.object(i, entity, uid))
     }
 
     /// A reader whose progress `watch` hears (and may stop).

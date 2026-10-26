@@ -950,7 +950,11 @@ pub(super) fn objects(
             return Err(e);
         }
         uids.push(uid);
-        entities.push(entity);
+        match r.check_object(i, &entity, &uid) {
+            None => entities.push(entity),
+            Some(None) => {}
+            Some(Some(what)) => return Err(KcadError::new(Code::VerifyFailed, what)),
+        }
         r.pop();
     }
     r.leave();

@@ -948,6 +948,15 @@ pub fn service_links(
     connections: &[ServiceConnection],
     entities: &[crate::Entity],
 ) -> Option<ServiceLinkFault> {
+    service_links_of(layers, connections, entities)
+}
+
+/// `service_links` of objects held any way, as the open document shares them (docs/adr/0654).
+pub fn service_links_of<E: std::borrow::Borrow<crate::Entity>>(
+    layers: &[crate::LayerNode],
+    connections: &[ServiceConnection],
+    entities: &[E],
+) -> Option<ServiceLinkFault> {
     fn walk<'a>(nodes: &'a [crate::LayerNode], out: &mut Vec<&'a crate::LayerNode>) {
         for n in nodes {
             out.push(n);
@@ -984,7 +993,7 @@ pub fn service_links(
     }
     entities
         .iter()
-        .position(|e| served.contains(e.base().layer_id.as_str()))
+        .position(|e| served.contains(e.borrow().base().layer_id.as_str()))
         .map(|index| ServiceLinkFault::Object { index })
 }
 

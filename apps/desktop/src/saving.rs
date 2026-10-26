@@ -176,6 +176,29 @@ pub fn encode_watched(
     stop: &AtomicBool,
     tell: &mut dyn FnMut(Stage),
 ) -> Result<Vec<u8>, SaveError> {
+    encode_by(stop, tell, |watch| {
+        kentos_kcad::encode_verified_watched(snapshot, watch)
+    })
+}
+
+/// `encode_watched` of the open document's shared objects and its head (`Document::to_snapshot_v2_shared`): the
+/// objects are not copied to be written, nor read back into a second drawing (docs/adr/0654).
+pub fn encode_shared(
+    head: &DocumentSnapshotV2,
+    objects: &[Arc<kentos_commands::Entity>],
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+) -> Result<Vec<u8>, SaveError> {
+    encode_by(stop, tell, |watch| {
+        kentos_kcad::encode_verified_parts_watched(head, objects, watch)
+    })
+}
+
+fn encode_by(
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+    encode: impl FnOnce(&mut dyn kentos_kcad::Watch) -> Result<Vec<u8>, kentos_kcad::KcadError>,
+) -> Result<Vec<u8>, SaveError> {
     let mut watch = |s: Step<'_>| {
         match s {
             Step::Writing { done, total } => tell(Stage::Encoding { done, total }),
@@ -184,7 +207,7 @@ pub fn encode_watched(
         }
         !stop.load(Ordering::Relaxed)
     };
-    match kentos_kcad::encode_verified_watched(snapshot, &mut watch) {
+    match encode(&mut watch) {
         Ok(bytes) => Ok(bytes),
         Err(e) if e.code == Code::Cancelled => Err(SaveError::Stopped),
         Err(e) => Err(SaveError::Failed(e.message)),
@@ -202,6 +225,30 @@ pub fn write_watched(
     faults: &Faults,
 ) -> Result<(), SaveError> {
     let bytes = encode_watched(snapshot, stop, tell)?;
+    write_bytes(&bytes, path, stop, tell, faults)
+}
+
+/// `write_watched` of the open document's shared objects and its head (`encode_shared`, docs/adr/0654).
+pub fn write_shared(
+    head: &DocumentSnapshotV2,
+    objects: &[Arc<kentos_commands::Entity>],
+    path: &Path,
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+    faults: &Faults,
+) -> Result<(), SaveError> {
+    let bytes = encode_shared(head, objects, stop, tell)?;
+    write_bytes(&bytes, path, stop, tell, faults)
+}
+
+/// Writes checked bytes as the file `path` (see the module comment).
+fn write_bytes(
+    bytes: &[u8],
+    path: &Path,
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+    faults: &Faults,
+) -> Result<(), SaveError> {
     let dir = path
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
@@ -238,10 +285,23 @@ pub fn write_watched(
         file.sync_all()?;
         drop(file);
         faults.check(Fault::ReadBack)?;
-        if faults.read_back(std::fs::read(&temporary)?) != bytes {
-            return Err(std::io::Error::other(
-                "diskten geri okunan baytlar yazılanlarla aynı değil",
-            ));
+        // Chunk by chunk: the file is not in memory a second time (docs/adr/0654).
+        let mut back = std::fs::File::open(&temporary)?;
+        let mut chunk = vec![0u8; CHUNK];
+        let mut at = 0usize;
+        loop {
+            let n = std::io::Read::read(&mut back, &mut chunk)?;
+            if n == 0 {
+                break;
+            }
+            let read = faults.read_back(chunk[..n].to_vec());
+            if bytes.get(at..at + n) != Some(&read[..]) {
+                return Err(not_the_same());
+            }
+            at += n;
+        }
+        if at != bytes.len() {
+            return Err(not_the_same());
         }
         // The last moment a stop is taken: after the rename the file is written.
         if stopped() {
@@ -267,6 +327,10 @@ pub fn write_watched(
             Err(SaveError::Failed(disk_failure(path, &e)))
         }
     }
+}
+
+fn not_the_same() -> std::io::Error {
+    std::io::Error::other("diskten geri okunan baytlar yazılanlarla aynı değil")
 }
 
 // ── The app's save ───────────────────────────────────────────────────────
@@ -394,7 +458,8 @@ impl App {
                     let _ = out.try_send(Message::Saving(Event::Progress { id, stage }));
                 }
             };
-            let mut snapshot = model.to_snapshot_v2();
+            // The objects are shared with the document, not copied (docs/adr/0654).
+            let (mut snapshot, objects) = model.to_snapshot_v2_shared();
             drop(model);
             // Bound GeoPackages and external references get their path from the file's folder (docs/adr/0506, 0348).
             if let Target::File(path) = &target {
@@ -407,11 +472,11 @@ impl App {
             let done = match &target {
                 Target::File(path) => Event::Done {
                     id,
-                    result: write_watched(&snapshot, path, &stop, &mut tell, &faults),
+                    result: write_shared(&snapshot, &objects, path, &stop, &mut tell, &faults),
                 },
                 Target::Cloud { .. } => Event::Encoded {
                     id,
-                    result: encode_watched(&snapshot, &stop, &mut tell)
+                    result: encode_shared(&snapshot, &objects, &stop, &mut tell)
                         .map(crate::cloud::Once::new),
                 },
             };

@@ -1,5 +1,5 @@
 //! Saving and opening a large drawing on the desktop, measured (TODOS.md
-//! FILE-24; docs/adr/0025, 0030): the app's own save (`document::write`: the
+//! FILE-24; docs/adr/0025, 0030): the app's own save (`saving::write_shared`: the
 //! verified KCAD v2 bytes through a temporary file, flushed and read back)
 //! and open (`Document::read`: the file read, decoded and made the
 //! document), for drawings of parcels with 20 vertices, three attributes and
@@ -34,11 +34,13 @@ use kentos_render_wgpu::scene::{self, lod};
 use kentos_ui::theme::Mode;
 use serde_json::{Value, json};
 
-use crate::document::{self, Document};
+use crate::document::Document;
 
 mod clouds;
 mod file;
 mod frame;
+// Where a large drawing's memory goes (docs/adr/0654).
+mod memory;
 // Map services (docs/adr/0208 §16).
 mod services;
 
@@ -255,9 +257,18 @@ fn child() {
             let model = doc.model.clone();
             let snapshot_ms = ms(t);
             let t = Instant::now();
-            let snapshot = model.to_snapshot_v2();
+            // As the app saves (docs/adr/0654): the objects shared with the document, not copied.
+            let (head, objects) = model.to_snapshot_v2_shared();
             drop(model);
-            document::write(&snapshot, &file).expect("writes");
+            crate::saving::write_shared(
+                &head,
+                &objects,
+                &file,
+                &std::sync::atomic::AtomicBool::new(false),
+                &mut |_| {},
+                &crate::saving::Faults::NONE,
+            )
+            .expect("writes");
             let write_ms = ms(t);
             let (_, peak) = memory();
             json!({
@@ -450,7 +461,7 @@ fn kcad() {
             "{machine}, `--release` (lto thin). {runs} koşu, her hücre ortanca. Test `apps/desktop/src/perf.rs`: her işlem kendi sürecinde çalışır, bellek o sürecin en yüksek yerleşik belleğinin (VmHWM) işlemden önceki düzeyin üstündeki payıdır. Dosyalar `.run/perf`'e yazılır (yerel disk, `fsync` dahil)."
         ),
         String::new(),
-        "Çizim: parsel başına 20 köşeli bir alan, üç öznitelik ve etiket, tek katman (`crates/shared/kcad/tests/measure.rs` ile aynı). “Arayüzde” kaydın arayüz iş parçacığındaki payıdır (önce `to_snapshot_v2`, ADR 0030'dan beri nesneleri paylaşan kopya `Document::clone`); “yazma” kaydın kendi iş parçacığındaki payıdır: anlık görüntü (ADR 0030'dan beri), doğrulamalı kodlama, geçici dosya, `fsync`, geri okuma ve yer değiştirme (`document::write`). “Açma” dosyanın okunması, çözülmesi ve belgenin kurulmasıdır (`Document::read`); “sahne” ilk karenin arayüz iş parçacığında kurulan sahnesidir (çizgiler ve eğriler, bütün çizim görünürken).".to_owned(),
+        "Çizim: parsel başına 20 köşeli bir alan, üç öznitelik ve etiket, tek katman (`crates/shared/kcad/tests/measure.rs` ile aynı). “Arayüzde” kaydın arayüz iş parçacığındaki payıdır (önce `to_snapshot_v2`, ADR 0030'dan beri nesneleri paylaşan kopya `Document::clone`); “yazma” kaydın kendi iş parçacığındaki payıdır: anlık görüntü (ADR 0030'dan beri), doğrulamalı kodlama, geçici dosya, `fsync`, geri okuma ve yer değiştirme (`saving::write_shared`; ADR 0654'ten beri nesneler kopyalanmadan). “Açma” dosyanın okunması, çözülmesi ve belgenin kurulmasıdır (`Document::read`); “sahne” ilk karenin arayüz iş parçacığında kurulan sahnesidir (çizgiler ve eğriler, bütün çizim görünürken).".to_owned(),
         String::new(),
         "| Parsel | Dosya | Arayüzde | Yazma | Kayıtta bellek artışı | Açma | Açışta bellek artışı | Sahne | Açık çizimle süreç |".to_owned(),
         "|---|---|---|---|---|---|---|---|---|".to_owned(),

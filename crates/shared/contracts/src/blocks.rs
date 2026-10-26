@@ -401,6 +401,14 @@ pub fn check<B: Borrow<BlockDefinition>>(
     blocks: &[B],
     entities: &[Entity],
 ) -> Result<(), BlockFault> {
+    check_of(blocks, entities)
+}
+
+/// `check` of objects held any way, as the open document shares them (docs/adr/0654).
+pub fn check_of<B: Borrow<BlockDefinition>, E: Borrow<Entity>>(
+    blocks: &[B],
+    entities: &[E],
+) -> Result<(), BlockFault> {
     let index = definitions(blocks)?;
     for (i, block) in blocks.iter().enumerate() {
         inserts(&block.borrow().entities, Some(i), &index)?;
@@ -482,13 +490,14 @@ pub fn definitions<B: Borrow<BlockDefinition>>(
 
 /// The inserts among `entities` (a definition's, or the drawing's own) checked against their blocks' attributes
 /// (docs/adr/0317 §1): a place only for a movable attribute's tag. Every block known (`inserts` first).
-pub fn places<B: Borrow<BlockDefinition>>(
+pub fn places<B: Borrow<BlockDefinition>, E: Borrow<Entity>>(
     blocks: &[B],
-    entities: &[Entity],
+    entities: &[E],
     definition: Option<usize>,
     index: &HashMap<BlockId, usize>,
 ) -> Result<(), BlockFault> {
     for (entity, e) in entities.iter().enumerate() {
+        let e: &Entity = e.borrow();
         // Its parameter values: only a dynamic block's, each one of its parameter's (docs/adr/0318 §3).
         if let Entity::Insert(insert) = e
             && !insert.parameters.is_empty()
@@ -529,12 +538,13 @@ pub fn places<B: Borrow<BlockDefinition>>(
 
 /// The inserts among `entities` (a definition's, or the drawing's own when
 /// `definition` is `None`): each scale allowed, each block known.
-pub fn inserts(
-    entities: &[Entity],
+pub fn inserts<E: Borrow<Entity>>(
+    entities: &[E],
     definition: Option<usize>,
     index: &HashMap<BlockId, usize>,
 ) -> Result<(), BlockFault> {
     for (entity, e) in entities.iter().enumerate() {
+        let e: &Entity = e.borrow();
         if let Entity::Insert(insert) = e {
             let at = Place { definition, entity };
             if !scale_ok(insert.scale) || !insert.y_scale.is_none_or(scale_ok) {

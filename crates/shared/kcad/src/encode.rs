@@ -70,6 +70,7 @@ use names::{
 /// and may stop the writing (docs/adr/0030).
 pub(crate) fn payload(
     doc: &DocumentSnapshotV2,
+    objects: Objs<'_>,
     watch: &mut dyn Watch,
 ) -> Result<Vec<u8>, KcadError> {
     let mut e = Encoder {
@@ -77,9 +78,57 @@ pub(crate) fn payload(
         path: Vec::with_capacity(16),
         depth: 0,
         watch,
+        objs: objects,
     };
     e.root(doc)?;
     Ok(e.w.out)
+}
+
+/// A drawing's objects as the writer reads them: the snapshot's own, or the open document's shared ones, which a save
+/// does not copy (docs/adr/0654).
+#[derive(Clone, Copy)]
+pub(crate) enum Objs<'a> {
+    Plain(&'a [Entity]),
+    Shared(&'a [std::sync::Arc<Entity>]),
+}
+
+impl<'a> Objs<'a> {
+    pub(crate) fn len(self) -> usize {
+        match self {
+            Objs::Plain(l) => l.len(),
+            Objs::Shared(l) => l.len(),
+        }
+    }
+    pub(crate) fn get(self, i: usize) -> Option<&'a Entity> {
+        match self {
+            Objs::Plain(l) => l.get(i),
+            Objs::Shared(l) => l.get(i).map(|e| &**e),
+        }
+    }
+    pub(crate) fn iter(self) -> impl Iterator<Item = &'a Entity> + Clone {
+        (0..self.len()).filter_map(move |i| self.get(i))
+    }
+    /// `kentos_contracts::blocks::check` over these objects.
+    fn blocks_check(
+        self,
+        blocks: &[kentos_contracts::BlockDefinition],
+    ) -> Result<(), kentos_contracts::blocks::BlockFault> {
+        match self {
+            Objs::Plain(l) => kentos_contracts::blocks::check(blocks, l),
+            Objs::Shared(l) => kentos_contracts::blocks::check_of(blocks, l),
+        }
+    }
+    /// `kentos_contracts::service_links` over these objects.
+    fn service_fault(
+        self,
+        layers: &[LayerNode],
+        connections: &[kentos_contracts::ServiceConnection],
+    ) -> Option<kentos_contracts::ServiceLinkFault> {
+        match self {
+            Objs::Plain(l) => kentos_contracts::service_links(layers, connections, l),
+            Objs::Shared(l) => kentos_contracts::service_links_of(layers, connections, l),
+        }
+    }
 }
 
 struct Encoder<'d> {
@@ -87,6 +136,7 @@ struct Encoder<'d> {
     path: Vec<Seg<'d>>,
     depth: usize,
     watch: &'d mut dyn Watch,
+    objs: Objs<'d>,
 }
 
 impl<'d> Encoder<'d> {
@@ -210,7 +260,7 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        let schema = schema_of(doc);
+        let schema = schema_of(doc, self.objs);
         self.open(3, true)?;
         self.key("format");
         self.w.text(DOCUMENT_FORMAT);
@@ -223,25 +273,24 @@ impl<'d> Encoder<'d> {
     }
 
     fn body(&mut self, doc: &'d DocumentSnapshotV2) -> Result<(), KcadError> {
-        if doc.uids.len() != doc.entities.len() {
+        if doc.uids.len() != self.objs.len() {
             return Err(self.fail(
                 Code::BadValue,
                 &format!(
                     "{} nesne ama {} kalıcı kimlik var; her nesnenin bir kimliği olmalı",
-                    doc.entities.len(),
+                    self.objs.len(),
                     doc.uids.len()
                 ),
             ));
         }
-        if let Err(fault) = kentos_contracts::blocks::check(&doc.blocks, &doc.entities) {
+        if let Err(fault) = self.objs.blocks_check(&doc.blocks) {
             let said = crate::blocks::said(&fault, &doc.blocks);
             self.path.push(Seg::Name(said.list));
             self.path.extend(said.path);
             return Err(self.fail(said.code, &said.what));
         }
         // Schema 32's links (docs/adr/0208 §2), as a reader checks them.
-        if let Some(fault) =
-            kentos_contracts::service_links(&doc.layers, &doc.settings.connections, &doc.entities)
+        if let Some(fault) = self.objs.service_fault(&doc.layers, &doc.settings.connections)
         {
             match fault {
                 kentos_contracts::ServiceLinkFault::Object { index } => {
@@ -1910,7 +1959,7 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// one has its own line weight, else 2. A drawing without any stays as it
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
-fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
+fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
@@ -1978,9 +2027,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 106 (docs/adr/0633 §3): a layer's dataset description or derivation record.
     fn described(nodes: &[LayerNode]) -> bool {
-        nodes.iter().any(|n| {
-            n.dataset.is_some() || n.derivation.is_some() || described(&n.children)
-        })
+        nodes
+            .iter()
+            .any(|n| n.dataset.is_some() || n.derivation.is_some() || described(&n.children))
     }
     if described(&doc.layers) {
         return crate::SCHEMA_WITH_DATASETS;
@@ -1998,8 +2047,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_FIELD_KINDS;
     }
     // Schema 103 (docs/adr/0627 §3): a raster showing a GeoPackage tile table.
-    if doc
-        .entities
+    if objs
         .iter()
         .any(|e| matches!(e, Entity::Raster(r) if r.raster.tiles.is_some()))
     {
@@ -2019,7 +2067,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_LINEAGE;
     }
     // Schema 100 (docs/adr/0594 §1): a georeference record's targets' system as a definition.
-    if doc.entities.iter().any(
+    if objs.iter().any(
         |e| matches!(e, Entity::Raster(r) if r.raster.georef.as_ref().is_some_and(|g| g.crs.is_some())),
     ) {
         return crate::SCHEMA_WITH_GEOREF_CRS;
@@ -2099,8 +2147,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_JOIN_VIEWS;
     }
     // Schema 88 (docs/adr/0518 §1): a raster's georeference record.
-    if doc
-        .entities
+    if objs
         .iter()
         .any(|e| matches!(e, Entity::Raster(r) if r.raster.georef.is_some()))
     {
@@ -2117,13 +2164,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_HEIGHTS;
     }
     // Schema 85 (docs/adr/0351): an insert's clipping, a PDF underlay.
-    let clipped = |es: &[Entity]| {
+    let clipped = |es: Objs<'_>| {
         es.iter()
             .any(|e| matches!(e, Entity::Insert(i) if i.clipping.is_some()))
     };
-    if clipped(&doc.entities)
+    if clipped(objs)
         || doc.blocks.iter().any(|b| {
-            clipped(&b.entities)
+            clipped(Objs::Plain(&b.entities))
                 || b.xref
                     .as_ref()
                     .is_some_and(|x| x.page.is_some() || x.underlay.is_some())
@@ -2149,26 +2196,23 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_PHASES;
     }
     // Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
-    if doc
-        .entities
-        .iter()
-        .any(|e| matches!(e, Entity::ViewMark(_)))
+    if objs.iter().any(|e| matches!(e, Entity::ViewMark(_)))
         || doc.settings.named_views.iter().any(|v| !v.id.is_empty())
     {
         return crate::SCHEMA_WITH_VIEWMARKS;
     }
     // Schema 80 (docs/adr/0344): a tag, or a table's schedule of the drawing's objects.
-    let scheduled = |list: &[Entity]| {
+    let scheduled = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Tag(_))
                 || matches!(e, Entity::Table(t) if matches!(t.source, Some(kentos_contracts::TableSource::Schedule { .. })))
         })
     };
-    if scheduled(&doc.entities) {
+    if scheduled(objs) {
         return crate::SCHEMA_WITH_TAGS;
     }
     // Schema 79 (docs/adr/0343): a grid, a column, a stair or a ramp.
-    if doc.entities.iter().any(|e| {
+    if objs.iter().any(|e| {
         matches!(
             e,
             Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_)
@@ -2177,7 +2221,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_ARCH_ELEMENTS;
     }
     // Schema 78 (docs/adr/0342): a space, or the project's space method.
-    if doc.entities.iter().any(|e| matches!(e, Entity::Space(_)))
+    if objs.iter().any(|e| matches!(e, Entity::Space(_)))
         || doc
             .settings
             .arch
@@ -2187,19 +2231,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_SPACES;
     }
     // Schema 77 (docs/adr/0341): an opening.
-    if doc.entities.iter().any(|e| matches!(e, Entity::Opening(_))) {
+    if objs.iter().any(|e| matches!(e, Entity::Opening(_))) {
         return crate::SCHEMA_WITH_OPENINGS;
     }
     // Schema 76 (docs/adr/0340): a wall's joins or cleanup, a component's priority.
     let ranked = |cs: &[kentos_contracts::WallComponent]| cs.iter().any(|c| c.priority.is_some());
-    if doc.entities.iter().any(|e| {
+    if objs.iter().any(|e| {
         matches!(e, Entity::Wall(w) if !w.wall.joins.is_auto() || !w.wall.cleanup || ranked(&w.wall.components))
     }) || doc.settings.wall_styles.iter().any(|s| ranked(&s.components))
     {
         return crate::SCHEMA_WITH_WALL_JOINS;
     }
     // Schema 75 (docs/adr/0339): a wall, a wall style or the architectural settings.
-    if doc.entities.iter().any(|e| matches!(e, Entity::Wall(_)))
+    if objs.iter().any(|e| matches!(e, Entity::Wall(_)))
         || !doc.settings.wall_styles.is_empty()
         || doc.settings.arch.is_some()
     {
@@ -2254,13 +2298,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         || !doc.settings.domains.is_empty()
         || !doc.settings.relations.is_empty()
         || keyed(&doc.layers)
-        || doc.entities.iter().any(|e| matches!(e, Entity::Record(_)))
+        || objs.iter().any(|e| matches!(e, Entity::Record(_)))
     {
         return crate::SCHEMA_WITH_FORMS;
     }
     // Schema 71 (docs/adr/0331): the project's hatch patterns, a pattern's own origin, an annotative hatch.
     if !doc.settings.hatch_patterns.is_empty()
-        || doc.entities.iter().any(|e| {
+        || objs.iter().any(|e| {
             matches!(e, Entity::Hatch(h) if h.pattern.origin.is_some() || h.annotative.is_some())
         })
         || doc.blocks.iter().any(|b| {
@@ -2272,25 +2316,24 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_HATCH_EXTRAS;
     }
     // Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
-    if doc
-        .entities
+    if objs
         .iter()
         .any(|e| matches!(e, Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| a.gap.is_some())))
     {
         return crate::SCHEMA_WITH_HATCH_GAPS;
     }
     // Schema 69 (docs/adr/0328): a hatch's exact boundary or a tie to a face's line work.
-    let bounded = |list: &[Entity]| {
+    let bounded = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Hatch(h)
                 if h.boundary.is_some() || h.assoc.as_ref().is_some_and(|a| !a.bounds.is_empty()))
         })
     };
-    if bounded(&doc.entities) || doc.blocks.iter().any(|b| bounded(&b.entities)) {
+    if bounded(objs) || doc.blocks.iter().any(|b| bounded(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_HATCH_BOUNDARIES;
     }
     // Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
-    let tabled = |list: &[Entity]| {
+    let tabled = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Table(t)
                 if !t.styles.is_empty()
@@ -2301,32 +2344,32 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                         if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep()))
         })
     };
-    if tabled(&doc.entities) {
+    if tabled(objs) {
         return crate::SCHEMA_WITH_TABLE_CELLS;
     }
     // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the project's leader styles.
-    let multi = |list: &[Entity]| {
+    let multi = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Leader(l)
                 if !l.arms.is_empty() || l.tip.is_some() || !l.blocks.is_empty() || l.leader_style.is_some())
         })
     };
-    if multi(&doc.entities)
-        || doc.blocks.iter().any(|b| multi(&b.entities))
+    if multi(objs)
+        || doc.blocks.iter().any(|b| multi(Objs::Plain(&b.entities)))
         || !doc.settings.leader_styles.is_empty()
     {
         return crate::SCHEMA_WITH_MULTILEADER;
     }
     // Schema 66 (docs/adr/0325): a text's fields (of the drawing or of a block).
-    let fielded = |list: &[Entity]| {
+    let fielded = |list: Objs<'_>| {
         list.iter()
             .any(|e| matches!(e, Entity::Text(t) if !t.paragraph.fields.is_empty()))
     };
-    if fielded(&doc.entities) || doc.blocks.iter().any(|b| fielded(&b.entities)) {
+    if fielded(objs) || doc.blocks.iter().any(|b| fielded(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_TEXT_FIELDS;
     }
     // Schema 65 (docs/adr/0324): a text's layout or a stacked fraction (of the drawing or of a block).
-    let laid = |list: &[Entity]| {
+    let laid = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Text(t) => {
                 t.paragraph.layout.is_some()
@@ -2338,49 +2381,57 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             _ => false,
         })
     };
-    if laid(&doc.entities) || doc.blocks.iter().any(|b| laid(&b.entities)) {
+    if laid(objs) || doc.blocks.iter().any(|b| laid(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_PARAGRAPH_LAYOUT;
     }
     // Schema 64 (docs/adr/0323): an annotative text, dimension or leader (of the drawing or of a block).
-    let scaled = |list: &[Entity]| {
+    let scaled = |list: Objs<'_>| {
         list.iter()
             .any(|e| kentos_contracts::annotative_of(e).is_some())
     };
-    if scaled(&doc.entities) || doc.blocks.iter().any(|b| scaled(&b.entities)) {
+    if scaled(objs) || doc.blocks.iter().any(|b| scaled(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_ANNOTATIVE;
     }
     // Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides (of the drawing or of a block).
-    let overridden = |list: &[Entity]| {
+    let overridden = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Text(t) => !t.face.overrides.is_empty(),
             Entity::Dimension(d) => !d.look.overrides.is_empty(),
             _ => false,
         })
     };
-    if overridden(&doc.entities) || doc.blocks.iter().any(|b| overridden(&b.entities)) {
+    if overridden(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| overridden(Objs::Plain(&b.entities)))
+    {
         return crate::SCHEMA_WITH_OVERRIDES;
     }
     // Schema 62 (docs/adr/0322): a centre mark, an axis or a level (of the drawing or of a block), or a pair rule.
-    let marked = |list: &[Entity]| {
+    let marked = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Dimension(d)
                 if d.style.is_some_and(DimensionStyle::is_schema_62)
                     || d.refs.as_ref().is_some_and(|r| r.rule == Some(kentos_contracts::DimensionRule::Pair)))
         })
     };
-    if marked(&doc.entities) || doc.blocks.iter().any(|b| marked(&b.entities)) {
+    if marked(objs) || doc.blocks.iter().any(|b| marked(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_DIMENSION_MARKS;
     }
     // Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks (of the drawing or of a block), or a
     // dimension style's options.
-    let optioned = |list: &[Entity]| {
+    let optioned = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Dimension(d)
                 if d.look.options.is_some() || d.text_shift.is_some() || !d.breaks.is_empty())
         })
     };
-    if optioned(&doc.entities)
-        || doc.blocks.iter().any(|b| optioned(&b.entities))
+    if optioned(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| optioned(Objs::Plain(&b.entities)))
         || doc
             .settings
             .dimension_styles
@@ -2390,35 +2441,35 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_DIMENSION_OPTIONS;
     }
     // Schema 60 (docs/adr/0320 §1): a dimension's references' rule (in the drawing only: a block's dimensions keep none).
-    if doc.entities.iter().any(
+    if objs.iter().any(
         |e| matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some())),
     ) {
         return crate::SCHEMA_WITH_DIMENSION_RULES;
     }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
-    let valued = |list: &[Entity]| {
+    let valued = |list: Objs<'_>| {
         list.iter()
             .any(|e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.parameters.is_empty()))
     };
-    if valued(&doc.entities)
+    if valued(objs)
         || doc
             .blocks
             .iter()
-            .any(|b| b.dynamic.is_some() || valued(&b.entities))
+            .any(|b| b.dynamic.is_some() || valued(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_DYNAMIC_BLOCKS;
     }
     // Schema 58 (docs/adr/0317 §1, §4): an attribute definition's option, an insert's moved attribute (of the drawing
     // or of a block definition) or a block's card.
-    let placed = |list: &[Entity]| {
+    let placed = |list: Objs<'_>| {
         list.iter().any(
             |e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty()),
         )
     };
-    if placed(&doc.entities)
+    if placed(objs)
         || doc.blocks.iter().any(|b| {
             b.card.is_some()
-                || placed(&b.entities)
+                || placed(Objs::Plain(&b.entities))
                 || b.attributes
                     .iter()
                     .any(|a| a.options != kentos_contracts::AttributeOptions::default())
@@ -2428,16 +2479,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor, of the drawing or of a block definition, or a
     // block's unit.
-    let stretched = |list: &[Entity]| {
+    let stretched = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, kentos_contracts::Entity::Insert(i) if i.y_scale.is_some_and(|y| y != i.scale))
         })
     };
-    if stretched(&doc.entities)
+    if stretched(objs)
         || doc
             .blocks
             .iter()
-            .any(|b| b.units.is_some() || stretched(&b.entities))
+            .any(|b| b.units.is_some() || stretched(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_BLOCK_EXTRAS;
     }
@@ -2448,7 +2499,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.style.line_pattern.is_some() || patterned(&n.children))
     }
-    let named = |list: &[Entity]| list.iter().any(|e| e.base().look.line_pattern.is_some());
+    let named = |list: Objs<'_>| list.iter().any(|e| e.base().look.line_pattern.is_some());
     if !doc.settings.line_types.is_empty()
         || doc.settings.line_type_scale.is_some()
         || patterned(&doc.layers)
@@ -2458,8 +2509,8 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .flat_map(|s| &s.nodes)
             .any(|n| n.style.as_ref().is_some_and(|s| s.line_pattern.is_some()))
-        || named(&doc.entities)
-        || doc.blocks.iter().any(|b| named(&b.entities))
+        || named(objs)
+        || doc.blocks.iter().any(|b| named(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_PATTERNS;
     }
@@ -2480,8 +2531,8 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return crate::SCHEMA_WITH_FROZEN;
     }
     // Schema 54 (docs/adr/0310): an area's mask, a block definition's too.
-    let masks = |list: &[Entity]| list.iter().any(|e| e.base().look.wipeout.is_some());
-    if masks(&doc.entities) || doc.blocks.iter().any(|b| masks(&b.entities)) {
+    let masks = |list: Objs<'_>| list.iter().any(|e| e.base().look.wipeout.is_some());
+    if masks(objs) || doc.blocks.iter().any(|b| masks(Objs::Plain(&b.entities))) {
         return crate::SCHEMA_WITH_WIPEOUTS;
     }
     // Schema 53 (docs/adr/0300): an associative array.
@@ -2496,7 +2547,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     let extended = |r: &kentos_contracts::SubRef| {
         matches!(r.place, kentos_contracts::SubPlace::Along { .. }) || !r.path.is_empty()
     };
-    if doc.entities.iter().any(|e| {
+    if objs.iter().any(|e| {
         matches!(e, kentos_contracts::Entity::Dimension(d)
             if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| extended(s))))
     }) {
@@ -2518,26 +2569,26 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.plot == Some(false) || unprinted(&n.children))
     }
-    let looks = |list: &[Entity]| list.iter().any(|e| !e.base().look.is_empty());
-    if looks(&doc.entities)
-        || doc.blocks.iter().any(|b| looks(&b.entities))
+    let looks = |list: Objs<'_>| list.iter().any(|e| !e.base().look.is_empty());
+    if looks(objs)
+        || doc.blocks.iter().any(|b| looks(Objs::Plain(&b.entities)))
         || unprinted(&doc.layers)
     {
         return SCHEMA_WITH_LOOK;
     }
     // Schema 47 (docs/adr/0259): a NURBS curve, a block definition's too.
-    let curves = |list: &[Entity]| list.iter().any(|e| matches!(e, Entity::Nurbs(_)));
-    if curves(&doc.entities) || doc.blocks.iter().any(|b| curves(&b.entities)) {
+    let curves = |list: Objs<'_>| list.iter().any(|e| matches!(e, Entity::Nurbs(_)));
+    if curves(objs) || doc.blocks.iter().any(|b| curves(Objs::Plain(&b.entities))) {
         return SCHEMA_WITH_NURBS;
     }
     // Schema 46 (docs/adr/0258): a closed or a wide polyline, a block definition's too.
-    let extras = |list: &[Entity]| {
+    let extras = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Polyline(p) => p.closed || p.widths.is_some(),
             _ => false,
         })
     };
-    if extras(&doc.entities) || doc.blocks.iter().any(|b| extras(&b.entities)) {
+    if extras(objs) || doc.blocks.iter().any(|b| extras(Objs::Plain(&b.entities))) {
         return SCHEMA_WITH_POLYLINE_EXTRAS;
     }
     // Schema 45 (docs/adr/0253 §6): the requests the drawing executed.
@@ -2550,8 +2601,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 43 (docs/adr/0249 §4): a dimension's references (the drawing's only; a block
     // definition's are refused).
-    if doc
-        .entities
+    if objs
         .iter()
         .any(|e| matches!(e, Entity::Dimension(d) if d.refs.is_some()))
     {
@@ -2566,16 +2616,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return SCHEMA_WITH_COMPOSE;
     }
     // Schema 40 (docs/adr/0225): an object's attachment, a layer's action or card.
-    if doc
-        .entities
-        .iter()
-        .any(|e| !e.base().attachments.is_empty())
-        || informed(&doc.layers)
-    {
+    if objs.iter().any(|e| !e.base().attachments.is_empty()) || informed(&doc.layers) {
         return SCHEMA_WITH_ATTACHMENTS;
     }
     // Schema 39 (docs/adr/0224): a vertex measure of an object of the drawing or of a block definition.
-    if doc.entities.iter().any(has_measure)
+    if objs.iter().any(has_measure)
         || doc
             .blocks
             .iter()
@@ -2584,7 +2629,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return SCHEMA_WITH_MEASURES;
     }
     // Schema 38 (docs/adr/0243): a raster showing a NetCDF variable, or a mesh's lines.
-    if doc.entities.iter().any(|e| match e {
+    if objs.iter().any(|e| match e {
         Entity::Raster(r) => r.raster.dataset.is_some() || r.raster.style.edges.is_some(),
         _ => false,
     }) {
@@ -2597,7 +2642,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     // Schema 36 (docs/adr/0212): the label engine's fields, a layer's labelling, an object's pins (a layer
     // state's style counts too).
     if labelled(&doc.layers)
-        || doc.entities.iter().any(|e| !e.base().label_pins.is_empty())
+        || objs.iter().any(|e| !e.base().label_pins.is_empty())
         || doc
             .settings
             .layer_states
@@ -2629,7 +2674,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return SCHEMA_WITH_SERVICES;
     }
     // Schema 31 (docs/adr/0207): a point cloud, or a raster read from an address; the drawing's only.
-    if doc.entities.iter().any(|e| match e {
+    if objs.iter().any(|e| match e {
         Entity::PointCloud(_) => true,
         Entity::Raster(r) => r.raster.url.is_some(),
         _ => false,
@@ -2638,7 +2683,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     }
     // Schema 30 (docs/adr/0205): annotation heights, a dimension's lines, a
     // leader's arrowhead size or one of AutoCAD's arrowheads.
-    let annotated = |list: &[Entity]| {
+    let annotated = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Dimension(d) => d.look.has_lines(),
             Entity::Leader(l) => l.arrow_size.is_some() || l.arrow.is_some_and(|a| a.is_added()),
@@ -2651,8 +2696,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .dimension_styles
             .iter()
             .any(DimensionStyleDef::has_lines)
-        || annotated(&doc.entities)
-        || doc.blocks.iter().any(|b| annotated(&b.entities))
+        || annotated(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| annotated(Objs::Plain(&b.entities)))
     {
         return SCHEMA_WITH_ANNOTATION;
     }
@@ -2662,7 +2710,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .any(|n| !n.fields.is_empty() || schemas(&n.children))
     }
     // A raster is the drawing's only (docs/adr/0204 §2).
-    if doc.entities.iter().any(|e| matches!(e, Entity::Raster(_))) {
+    if objs.iter().any(|e| matches!(e, Entity::Raster(_))) {
         return SCHEMA_WITH_RASTERS;
     }
     if doc
@@ -2679,68 +2727,82 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     if schemas(&doc.layers) {
         return SCHEMA_WITH_LAYER_FIELDS;
     }
-    let line_parts = |list: &[Entity]| {
+    let line_parts = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Polyline(p) => p.parts.is_some(),
             Entity::Point(p) => p.parts.is_some(),
             _ => false,
         })
     };
-    let paragraphs = |list: &[Entity]| {
+    let paragraphs = |list: Objs<'_>| {
         list.iter()
             .any(|e| matches!(e, Entity::Text(t) if !t.paragraph.is_plain()))
     };
-    let styled = |list: &[Entity]| {
+    let styled = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Text(t) => !t.face.is_plain(),
             Entity::Dimension(d) => !d.look.is_plain(),
             _ => false,
         })
     };
-    let patterned = |list: &[Entity]| {
+    let patterned = |list: Objs<'_>| {
         list.iter().any(
             |e| matches!(e, Entity::Hatch(h) if h.pattern.has_definition() || h.assoc.is_some()),
         )
     };
-    let curved = |list: &[Entity]| {
+    let curved = |list: Objs<'_>| {
         list.iter()
             .any(|e| matches!(e, Entity::Text(t) if t.path.is_some()))
     };
-    if curved(&doc.entities) || doc.blocks.iter().any(|b| curved(&b.entities)) {
+    if curved(objs) || doc.blocks.iter().any(|b| curved(Objs::Plain(&b.entities))) {
         return SCHEMA_WITH_TEXT_PATHS;
     }
     // A picture is the drawing's only (docs/adr/0192 §1).
-    if doc.entities.iter().any(|e| matches!(e, Entity::Image(_))) {
+    if objs.iter().any(|e| matches!(e, Entity::Image(_))) {
         return SCHEMA_WITH_IMAGES;
     }
-    if patterned(&doc.entities) || doc.blocks.iter().any(|b| patterned(&b.entities)) {
+    if patterned(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| patterned(Objs::Plain(&b.entities)))
+    {
         return SCHEMA_WITH_HATCH_PATTERNS;
     }
-    if doc.entities.iter().any(|e| matches!(e, Entity::Table(_))) {
+    if objs.iter().any(|e| matches!(e, Entity::Table(_))) {
         return SCHEMA_WITH_TABLES;
     }
     if !doc.settings.text_styles.is_empty()
         || !doc.settings.dimension_styles.is_empty()
-        || styled(&doc.entities)
-        || doc.blocks.iter().any(|b| styled(&b.entities))
+        || styled(objs)
+        || doc.blocks.iter().any(|b| styled(Objs::Plain(&b.entities)))
     {
         return SCHEMA_WITH_STYLES;
     }
-    if paragraphs(&doc.entities) || doc.blocks.iter().any(|b| paragraphs(&b.entities)) {
+    if paragraphs(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| paragraphs(Objs::Plain(&b.entities)))
+    {
         return SCHEMA_WITH_PARAGRAPHS;
     }
     if !doc.settings.layer_states.is_empty() {
         return SCHEMA_WITH_LAYER_STATES;
     }
     // A block definition's texts have no link: only the drawing's (docs/adr/0175 §4).
-    if doc
-        .entities
+    if objs
         .iter()
         .any(|e| matches!(e, Entity::Text(t) if t.label_of.is_some() || t.label_scale.is_some()))
     {
         return SCHEMA_WITH_LINKED_TEXTS;
     }
-    if line_parts(&doc.entities) || doc.blocks.iter().any(|b| line_parts(&b.entities)) {
+    if line_parts(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| line_parts(Objs::Plain(&b.entities)))
+    {
         return SCHEMA_WITH_LINE_PARTS;
     }
     let s = &doc.settings;
@@ -2765,7 +2827,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     if snaps(&doc.layers) {
         return SCHEMA_WITH_LAYER_SNAP;
     }
-    let dimensions = |list: &[Entity]| {
+    let dimensions = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Dimension(d) if d.mask
                 || d.za.is_some()
@@ -2773,21 +2835,26 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || d.style.is_some_and(DimensionStyle::is_schema_9))
         })
     };
-    if dimensions(&doc.entities) || doc.blocks.iter().any(|b| dimensions(&b.entities)) {
+    if dimensions(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| dimensions(Objs::Plain(&b.entities)))
+    {
         return SCHEMA_WITH_DIMENSIONS;
     }
-    let leaders = |list: &[Entity]| list.iter().any(|e| matches!(e, Entity::Leader(_)));
-    if leaders(&doc.entities) || doc.blocks.iter().any(|b| leaders(&b.entities)) {
+    let leaders = |list: Objs<'_>| list.iter().any(|e| matches!(e, Entity::Leader(_)));
+    if leaders(objs) || doc.blocks.iter().any(|b| leaders(Objs::Plain(&b.entities))) {
         return SCHEMA_WITH_LEADERS;
     }
-    let extras = |list: &[Entity]| {
+    let extras = |list: Objs<'_>| {
         list.iter().any(|e| {
             matches!(e, Entity::Text(t) if t.align.is_some() || t.width_factor.is_some() || t.mask)
         })
     };
-    if extras(&doc.entities)
+    if extras(objs)
         || doc.blocks.iter().any(|b| {
-            extras(&b.entities)
+            extras(Objs::Plain(&b.entities))
                 || b.attributes
                     .iter()
                     .any(|a| a.align.is_some() || a.width_factor.is_some())
@@ -2799,7 +2866,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         return SCHEMA_WITH_BLOCKS;
     }
     let mut schema = DOCUMENT_VERSION_2;
-    for e in &doc.entities {
+    for e in objs.iter() {
         if matches!(e, Entity::Polygon(p) if p.parts.is_some()) {
             // The newest: nothing later in the drawing can change it.
             return SCHEMA_WITH_PARTS;

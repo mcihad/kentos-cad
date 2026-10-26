@@ -166,11 +166,8 @@ impl Document {
         .sanitized();
         let largest = entities.iter().map(|e| e.base().id).max().unwrap_or(0);
         let mut store = Store::default();
-        for (entity, uid) in entities.into_iter().zip(parts.uids) {
-            store.put(Stored {
-                uid,
-                entity: Arc::new(entity),
-            });
+        for (entity, uid) in shared(entities).into_iter().zip(parts.uids) {
+            store.put(Stored { uid, entity });
         }
         Self {
             name,
@@ -221,12 +218,23 @@ impl Document {
     /// copies, objects in document order with their persistent ids, the
     /// project's id and source record, its sheet book (docs/adr/0251).
     pub fn to_snapshot_v2(&self) -> DocumentSnapshotV2 {
-        let (entities, uids) = self
+        let (head, objects) = self.to_snapshot_v2_shared();
+        DocumentSnapshotV2 {
+            entities: objects.iter().map(|e| (**e).clone()).collect(),
+            ..head
+        }
+    }
+
+    /// `to_snapshot_v2` with the objects not copied (docs/adr/0654): the drawing with no objects but their ids, and
+    /// the objects themselves shared with the document, in the same order. What a save writes from
+    /// (`kentos_kcad::encode_verified_parts_watched`): a large drawing is not copied whole to be written.
+    pub fn to_snapshot_v2_shared(&self) -> (DocumentSnapshotV2, Vec<Arc<Entity>>) {
+        let (objects, uids): (Vec<Arc<Entity>>, Vec<EntityId>) = self
             .store
             .iter()
-            .map(|stored| ((*stored.entity).clone(), EntityId(stored.uid.into_bytes())))
+            .map(|stored| (stored.entity.clone(), EntityId(stored.uid.into_bytes())))
             .unzip();
-        DocumentSnapshotV2 {
+        let head = DocumentSnapshotV2 {
             constraints: (*self.constraints).clone(),
             format: DOCUMENT_FORMAT.to_owned(),
             version: DOCUMENT_VERSION_2,
@@ -236,7 +244,7 @@ impl Document {
             home_view: self.home_view,
             layers: self.layers.nodes().to_vec(),
             active_layer: self.layers.active().to_owned(),
-            entities,
+            entities: Vec::new(),
             uids,
             styles: self.styles.clone(),
             blocks: self.block_list(),
@@ -245,7 +253,8 @@ impl Document {
             sheets: self.sheets.as_deref().cloned(),
             requests: self.requests(),
             arrays: self.arrays.iter().map(|a| (**a).clone()).collect(),
-        }
+        };
+        (head, objects)
     }
 }
 
@@ -286,6 +295,21 @@ impl Document {
     fn block_list(&self) -> Vec<BlockDefinition> {
         self.blocks.iter().map(|b| (**b).clone()).collect()
     }
+}
+
+/// The objects shared, the list given back as it empties (docs/adr/0654): each object leaves the list from its end and
+/// the list is shrunk every so often, so a large drawing's objects are not held twice while they move.
+fn shared(mut list: Vec<Entity>) -> Vec<Arc<Entity>> {
+    const STEP: usize = 1 << 16;
+    let mut out = Vec::with_capacity(list.len());
+    while let Some(entity) = list.pop() {
+        out.push(Arc::new(entity));
+        if list.len().is_multiple_of(STEP) {
+            list.shrink_to_fit();
+        }
+    }
+    out.reverse();
+    out
 }
 
 /// What the document itself needs of a file; field by field validation of the
