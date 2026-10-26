@@ -1917,6 +1917,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_space_choices) {
+        return crate::SCHEMA_WITH_SPACE_CHOICES;
+    }
     let separators = |es: &[Entity]| es.iter().any(|e|matches!(e,Entity::Polyline(p) | Entity::Polygon(p) if p.space_separator.is_some()));
     if separators(&doc.entities) || doc.blocks.iter().any(|b|separators(&b.entities)) {
         return crate::SCHEMA_WITH_SPACE_SEPARATORS;

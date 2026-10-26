@@ -2214,6 +2214,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any((settings or {}).get("arch", {}).get(key) for key in ("spaceNames", "spaceUsages", "spaceNumberPrefixes")):
+        return 107
     if any("spaceSeparator" in e for e in entities) or any("spaceSeparator" in e for b in (blocks or []) for e in b["entities"]):
         return 106
     if any(e["kind"] == "space" and ("sources" in e or e.get("broken")=="sourceUnavailable") for e in entities):
@@ -2812,7 +2814,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-107.kcad"] = container(root(cmap(parts), version=uint(107)))
+    files["schema-version-108.kcad"] = container(root(cmap(parts), version=uint(108)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4746,6 +4748,29 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 107: independent project dictionaries; no existing room values change.
+    choice = load("space-choices.json")
+    out["space-choices.kcad"] = container(document(choice))
+    for name in ["space-names-only", "space-choice-limits"]:
+        out[name + ".kcad"] = container(document(load(name + ".json")))
+    choice_payload = document(choice)
+    assert choice_payload.count(b"\x67version\x18\x6b") == 1
+    out["broken/space-choices-in-schema-106.kcad"] = container(choice_payload.replace(b"\x67version\x18\x6b", b"\x67version\x18\x6a"))
+    def choice_bad(name, key, value):
+        d = copy.deepcopy(choice)
+        d["settings"]["arch"][key] = value
+        out["broken/space-choice-" + name + ".kcad"] = container(document(d))
+    for key in ["spaceNames", "spaceUsages"]:
+        for suffix, value in [("duplicate",["A","A"]),("blank",[""]),("leading",[" A"]),
+                              ("trailing",["A "]),("control",["A\nB"]),("long",["ç"*257]),
+                              ("many",[f"N{i}"for i in range(257)]),("type",True),("value-type",[True]),("empty",[])]:
+            choice_bad(key + "-" + suffix, key, value)
+    for suffix, value in [("unknown-level",{"absent":"Z-"}),("blank",{"zemin":""}),
+                          ("trailing",{"zemin":"Z- "}),("control",{"zemin":"Z\t"}),
+                          ("long",{"zemin":"ç"*254}),("value-type",{"zemin":3}),
+                          ("type",[]),("empty",{})]:
+        choice_bad("prefix-" + suffix, "spaceNumberPrefixes", value)
+    choice_bad("unknown-field", "spaceBogus", True)
     # Schema 106: a typed zero-thickness path role; old files never gain it.
     out["space-separators.kcad"] = container(document(load("space-separators.json")))
     sep_payload=document(load("space-separators.json"))

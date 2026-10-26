@@ -11,6 +11,9 @@ use kentos_commands::{AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, LayerNode
 use kentos_domain::Document;
 use kentos_project::format::Format;
 
+/// Shared wording for the desktop's preview and the native export report.
+pub const DXF_SPACE_CHOICES_WARNING: &str = "Mahal ad/kullanım listeleri ve kat numara önekleri DXF'e yazılmaz; yeniden açıldığında öneri olarak gelmez. Bu proje tercihlerini korumak için KCAD olarak kaydedin.";
+
 /// Objects by layer: the tree's order, then layers the tree does not have
 /// (their objects go to DXF layer 0), empty ones left out.
 pub fn by_layer<'a>(
@@ -119,6 +122,16 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let (layouts, layout_notes) = kentos_native_application::cad_layouts::export(doc);
     notes.extend(layout_notes);
     let settings = doc.settings();
+    if settings.arch.as_ref().is_some_and(|a| a.has_space_choices()) {
+        notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning),
+            details: Vec::new(),
+            what: "Mahal proje tercihleri".into(),
+            count: 1,
+            reason: DXF_SPACE_CHOICES_WARNING.into(),
+            lines: Vec::new(),
+        });
+    }
     let format = Format::of(settings);
     // What a dimension without its own text shows (project units): its
     // block draws it, the dimension keeps no text.

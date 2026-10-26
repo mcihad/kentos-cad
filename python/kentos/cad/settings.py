@@ -47,10 +47,14 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
     geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
     coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
-    sistem ister). Ayarlar projenin düzenlemesidir, geri alma adımı değildir.
-    Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir;
-    bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre,
+    isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı
+    spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç
+    içe yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez,
+    önek yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri
+    alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar)
+    projenin değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -99,16 +103,22 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün
         olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name,
         sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
-        (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister).
-        Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın
-        ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
-        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). arch
+        bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre, isteğe bağlı
+        spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
+        Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
+        Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık
+        seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma adımı
+        değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
+        değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
             angle_unit:
-            arch:
+            arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+                Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
+                These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
             area_decimals: Unit: count.
             area_unit:
             auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only

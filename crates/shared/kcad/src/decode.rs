@@ -1016,6 +1016,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if a.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş mimari ayar yazılmaz"));
                 }
+                if !has.space_choices && a.has_space_choices() {
+                    return Err(r.fail_at(Code::UnknownField, at, "projenin mahal listeleri ve kat önekleri şema 107'den beri yazılır"));
+                }
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

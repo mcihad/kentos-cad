@@ -51,6 +51,16 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR 0661: proje ArchSettings içinde isteğe bağlı sıralı
+  spaceNames/spaceUsages ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
+  Web dönüşünde proje formu, ayrı öneri seçimleri ve açık başlangıç alma
+  aynı settings/create/edit/number komutlarına bağlanmalı; eski serbest
+  metin/numara ve tek mahal undo korunmalı. Ayarlar iç içe yama veya ayrı
+  undo değildir. Opt-in KCAD107 ve DXF tercih kaybı uyarısı desteklenmeli.
+  29 yeni ortak settings durumu, 329 Python/dört MCP; masaüstü 42 ham ekran/
+  23 tam bağımsız kayıtla doğrulandı. İki mevcut TS tipi/katalog güncel;
+  web görünür kabulü koşulmadı. Koru/Yenile ve tam mimari matris açıktır.
+
 - ARCH-SPACE-02 / ADR 0660: mevcut `cad.tags.check` isteğe bağlı
   `missingSpaceNumbers` ile etiketli numarasız mahalleri de raporlar;
   yok/null/false eski bulguları korur. Web dönüşünde görünür seçenek,

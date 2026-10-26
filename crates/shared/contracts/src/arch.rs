@@ -990,6 +990,21 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub phase_view: Option<PhaseView>,
+    /// Suggested room names in project order. Free text and existing rooms remain unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub space_names: Vec<String>,
+    /// Suggested room usages in project order, never a mandatory classification.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub space_usages: Vec<String>,
+    /// Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
+    )]
+    pub space_number_prefixes: std::collections::BTreeMap<String, String>,
 }
 
 impl ArchSettings {
@@ -1000,6 +1015,20 @@ impl ArchSettings {
     /// The detail walls are drawn at in a drawing at 1:`scale`.
     pub fn detail_at(&self, scale: f64) -> WallDetail {
         self.detail.unwrap_or_else(|| WallDetail::at_scale(scale))
+    }
+
+    /// Whether this project uses the optional room dictionaries (KCAD107).
+    pub fn has_space_choices(&self) -> bool {
+        !self.space_names.is_empty()
+            || !self.space_usages.is_empty()
+            || !self.space_number_prefixes.is_empty()
+    }
+
+    /// An explicit starting suggestion; no room or user draft is changed by reading it.
+    pub fn space_first_number(&self, level: &str) -> Option<String> {
+        self.space_number_prefixes
+            .get(level)
+            .map(|p| format!("{p}001"))
     }
 
     /// What is wrong with it; none when it holds.
@@ -1025,6 +1054,61 @@ impl ArchSettings {
                     format!("levels[{i}].height"),
                     format!("“{}” katının yüksekliği sıfırdan büyük olmalı.", l.name),
                 ));
+            }
+        }
+        for (key, label, values) in [
+            ("spaceNames", "Mahal adı", &self.space_names),
+            ("spaceUsages", "Mahal kullanımı", &self.space_usages),
+        ] {
+            if values.len() > 256 {
+                return Some((
+                    key.into(),
+                    format!("{label} listesi en çok 256 değer içerir."),
+                ));
+            }
+            let mut seen = std::collections::BTreeSet::new();
+            for (i, value) in values.iter().enumerate() {
+                if value.is_empty()
+                    || value.trim() != value
+                    || value.chars().count() > 256
+                    || value.chars().any(char::is_control)
+                {
+                    return Some((
+                        format!("{key}[{i}]"),
+                        format!(
+                            "{label} boş, başında/sonunda boşluklu veya kontrol karakterli olamaz; en çok 256 karakterdir."
+                        ),
+                    ));
+                }
+                if !seen.insert(value) {
+                    return Some((
+                        format!("{key}[{i}]"),
+                        format!("“{value}” {} listesinde iki kez var.", label.to_lowercase()),
+                    ));
+                }
+            }
+        }
+        // Build once only for opted-in projects; do not scan all floors for every prefix.
+        let prefix_levels: std::collections::BTreeSet<_> = if self.space_number_prefixes.is_empty()
+        {
+            Default::default()
+        } else {
+            self.levels.iter().map(|l| l.id.as_str()).collect()
+        };
+        for (level, prefix) in &self.space_number_prefixes {
+            let path = format!("spaceNumberPrefixes.{level}");
+            if !prefix_levels.contains(level.as_str()) {
+                return Some((
+                    path,
+                    format!("Mahal numara önekinin “{level}” katı projede yok."),
+                ));
+            }
+            if prefix.is_empty()
+                || prefix.trim() != prefix
+                || prefix.chars().count() > 253
+                || prefix.chars().any(char::is_control)
+            {
+                return Some((path, "Mahal numara öneki boş, başında/sonunda boşluklu veya kontrol karakterli olamaz; en çok 253 karakterdir.".into()));
             }
         }
         None
@@ -1219,7 +1303,90 @@ mod tests {
             detail: Some(WallDetail::Detailed),
             space_method: None,
             phase_view: None,
+            ..Default::default()
         };
         assert_eq!(set.detail_at(500.0), WallDetail::Detailed);
+    }
+
+    #[test]
+    fn room_choices_are_optional_ordered_exact_text_and_reading_a_prefix_changes_nothing() {
+        let old = ArchSettings::default();
+        assert!(!old.has_space_choices());
+        assert_eq!(serde_json::to_value(&old).unwrap(), serde_json::json!({}));
+        let a: ArchSettings = serde_json::from_value(serde_json::json!({
+            "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.}],
+            "spaceNames":["Mutfak","mutfak","Çalışma"],"spaceUsages":["Konut","Ofis"],
+            "spaceNumberPrefixes":{"zemin":"Z-"}
+        }))
+        .unwrap();
+        let before = a.clone();
+        assert_eq!(a.problem(), None);
+        assert!(a.has_space_choices());
+        assert_eq!(a.space_first_number("zemin").as_deref(), Some("Z-001"));
+        assert_eq!(a.space_first_number("yok"), None);
+        assert_eq!(a, before);
+        assert_eq!(
+            serde_json::from_value::<ArchSettings>(serde_json::to_value(&a).unwrap()).unwrap(),
+            a
+        );
+    }
+
+    #[test]
+    fn room_choice_limits_and_unknown_prefix_levels_are_rejected_without_normalizing_values() {
+        for key in ["spaceNames", "spaceUsages"] {
+            for values in [
+                serde_json::json!([""]),
+                serde_json::json!([" "]),
+                serde_json::json!([" Mutfak"]),
+                serde_json::json!(["Mutfak "]),
+                serde_json::json!(["A\nB"]),
+                serde_json::json!(["A", "A"]),
+                serde_json::json!(["x".repeat(257)]),
+                serde_json::json!((0..257).map(|i| format!("N{i}")).collect::<Vec<_>>()),
+            ] {
+                let a: ArchSettings =
+                    serde_json::from_value(serde_json::json!({key:values})).unwrap();
+                assert!(a.problem().unwrap().0.starts_with(key));
+            }
+            let a: ArchSettings =
+                serde_json::from_value(serde_json::json!({key:["ç".repeat(256)]})).unwrap();
+            assert_eq!(a.problem(), None);
+        }
+        let mut a: ArchSettings = serde_json::from_value(serde_json::json!({
+            "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.}],
+            "spaceNumberPrefixes":{"yok":"Z-"}
+        }))
+        .unwrap();
+        assert_eq!(a.problem().unwrap().0, "spaceNumberPrefixes.yok");
+        a.space_number_prefixes.clear();
+        for prefix in [
+            "".to_owned(),
+            " ".into(),
+            "Z- ".into(),
+            "A\t".into(),
+            "ç".repeat(254),
+        ] {
+            a.space_number_prefixes.insert("zemin".into(), prefix);
+            assert_eq!(a.problem().unwrap().0, "spaceNumberPrefixes.zemin");
+        }
+        a.space_number_prefixes
+            .insert("zemin".into(), "ç".repeat(253));
+        assert_eq!(a.problem(), None);
+        assert_eq!(a.space_first_number("zemin").unwrap().chars().count(), 256);
+        let mut many = ArchSettings::default();
+        for i in 0..1500 {
+            let id = format!("floor-{i}");
+            many.levels.push(ArchLevel {
+                id: id.clone(),
+                name: format!("Kat {i}"),
+                elevation: i as f64,
+                height: None,
+            });
+            many.space_number_prefixes.insert(id, format!("{i}-"));
+        }
+        assert_eq!(many.problem(), None);
+        many.space_number_prefixes
+            .insert("missing".into(), "X-".into());
+        assert_eq!(many.problem().unwrap().0, "spaceNumberPrefixes.missing");
     }
 }

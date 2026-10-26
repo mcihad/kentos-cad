@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `106`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-107.kcad`) |
+| `version` | tam sayı | `2`'den `107`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-108.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -396,6 +396,20 @@ sıfırdır. Bağımsız örnek `space-separators.kcad`; önceki şema, yanlış
 uygunsuz geometri ve bilinmeyen rol örnekleri `broken/space-separator-*.kcad`.
 Mahalın seçilmiş kaynak listesi açık ayırıcı UUID'sini de adlandırabilir; eksik
 veya rolü kaldırılmış kaynak son geçerli sınırı `sourceUnavailable` ile korur.
+
+**Şema 107** (ADR 0661), `settings.arch` JSON bölümüne isteğe bağlı
+`spaceNames`, `spaceUsages` ve `spaceNumberPrefixes` ekler. İlk ikisi proje
+sırasındaki 1–256 metindir; her metin 1–256 karakter, baş/son boşluksuz ve
+Unicode kontrol karakteri (`Cc`) içermez. Aynı tam metin iki kez yazılmaz;
+harf büyüklüğü kendiliğinden dönüştürülmez. Sonuncu, mevcut kalıcı kat
+kimliğinden 1–253 karakterlik aynı metin kurallı öneke haritadır; listede
+olmayan kat `bad_value` olur. Boş liste/harita kanonik kayıtta yoktur.
+Bu tercihler mevcut mahal alanlarını ve nesne kimliğini değiştirmez.
+Yazıcı107'yi yalnız tercihlerden biri doluyken seçer; diğer dosyaların
+şema ve kanonik baytları aynıdır. Şema106 ve öncesinde yeni anlamlı alan
+`unknown_field` olur. Örnekler `space-choices.kcad`, `space-names-only.kcad`,
+`space-choice-limits.kcad`; eski şema ve geçersiz değerler
+`broken/space-choice-*.kcad` / `broken/space-choices-in-schema-106.kcad`.
 
 **Şema 105**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0649).
 `space.sources` varsa boş olmayan, sıralı, tekrarsız, en çok 10000 standart UUID

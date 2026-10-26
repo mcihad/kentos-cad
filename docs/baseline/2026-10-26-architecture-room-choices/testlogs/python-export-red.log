@@ -1,0 +1,14 @@
+F.....
+======================================================================
+FAIL: test_dxf_explicitly_reports_project_preference_loss_and_keeps_its_old_drawing_bytes (test_room_choices.RoomChoices.test_dxf_explicitly_reports_project_preference_loss_and_keeps_its_old_drawing_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_room_choices.py", line 106, in test_dxf_explicitly_reports_project_preference_loss_and_keeps_its_old_drawing_bytes
+    self.assertEqual(len(warnings), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.112s
+
+FAILED (failures=1)

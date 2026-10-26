@@ -15,6 +15,19 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mahal proje listeleri ve açık kat öneki (26 Ekim 2026; [ADR0661](docs/adr/0661-project-room-choices.md)).**
+  Projeyle sıralı ad/kullanım listeleri ve kata bağlı önek; ayrı öneri
+  alanları serbest metni korur, kat değişimi taslak numarayı değiştirmez.
+  Liste kaydı kaynakları yeniden adlandırmaz/numaralandırmaz; mevcut ayar
+  geçmişi/tek mahal undo korunur. Opt-in KCAD107; eski 1170 dosya baytı aynı.
+  DXF'in tercih kaybı yazmadan önce ve ortak raporda uyarılır.
+  [Kabul](docs/baseline/2026-10-26-architecture-room-choices/README.md):
+  385 ortak durum/329 Python/dört MCP/iki desktop; native takımlar,
+  clippy/build/WASM/1203 KCAD. Gerçek GUI açıklama yerini düzeltti;
+  42 ham ekran/23 tam bağımsız kayıt. 30.000 nesnede debug tercih yazımı
+  ortancası 15,183 ms; genel FPS garantisi değildir. İki mevcut TS tipi
+  yenilendi, yeni TS/TSX dosyası yok. Koru/Yenile/tam matris ve ARCH-SPACE-02 [~].
+
 - **Numarasız mahal denetimi (26 Ekim 2026; [ADR 0660](docs/adr/0660-room-number-review.md)).**
   Mevcut etiket denetiminde görünür seçenek; ad/kat/UUID ve kaynak Göster.
   API yok/null/false eski sonuçları, tam metin gruplarını ve sırayı korur;

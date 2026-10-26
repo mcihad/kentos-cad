@@ -1404,6 +1404,42 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(words("Numara", &x.number, Field::SpaceNumber(slot)));
             geo.push(words("Ad", &x.name, Field::SpaceName(slot)));
             geo.push(words("Kullanım", &x.usage, Field::SpaceUsage(slot)));
+            if let Some(arch) = &doc.settings().arch {
+                for (label, values, current, is_name) in [
+                    ("Ad listesi", &arch.space_names, &x.name, true),
+                    ("Kullanım listesi", &arch.space_usages, &x.usage, false),
+                ] {
+                    if values.is_empty() {
+                        continue;
+                    }
+                    let items = values
+                        .iter()
+                        .map(|value| {
+                            pick(
+                                value.clone(),
+                                current.as_ref() == Some(value),
+                                set(if is_name {
+                                    SpaceChange {
+                                        name: Some(Some(value.clone())),
+                                        ..Default::default()
+                                    }
+                                } else {
+                                    SpaceChange {
+                                        usage: Some(Some(value.clone())),
+                                        ..Default::default()
+                                    }
+                                }),
+                                None,
+                            )
+                        })
+                        .collect();
+                    let shown = current
+                        .clone()
+                        .filter(|v| values.contains(v))
+                        .unwrap_or_else(|| "Listeden seç".into());
+                    geo.push(Row::text(label, shown.clone()).editor(select(shown, items)));
+                }
+            }
             let methods = SpaceMethod::ALL
                 .iter()
                 .map(|&m| {

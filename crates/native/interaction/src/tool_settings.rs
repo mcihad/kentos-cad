@@ -62,6 +62,35 @@ pub fn choices(items: &[(&str, &str)], selected: &str) -> Vec<OptionChoice> {
         })
         .collect()
 }
+
+/// A separate suggestion row leaves the tool's original free-text field available.
+pub fn suggestions(
+    key: &'static str,
+    label: &'static str,
+    values: &[String],
+    selected: Option<&str>,
+) -> Setting {
+    let mut row = Setting::choice(
+        key,
+        label,
+        values
+            .iter()
+            .map(|value| OptionChoice {
+                typed: value.clone(),
+                label: value.clone(),
+                checked: selected == Some(value.as_str()),
+                icon: None,
+                preview: None,
+                command: None,
+            })
+            .collect(),
+    );
+    if row.value.is_empty() {
+        row.value = "Listeden seç".into();
+    }
+    row
+}
+
 pub fn wall_rows(memory: &Memory, styles: &[WallStyleDef], f: &Format) -> Vec<Setting> {
     let style = wall::chosen_in(memory, styles);
     let mut width = Setting::text("E", "Kalınlık", f.length(wall::width(memory, style)));

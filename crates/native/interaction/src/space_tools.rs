@@ -101,6 +101,11 @@ pub struct SpaceTool {
     /// The area of the space the plan would write, m²; or why it would not.
     area: Option<f64>,
     why: Option<String>,
+    choice_revision: Option<u64>,
+    choice_level: Option<String>,
+    names: Vec<String>,
+    usages: Vec<String>,
+    first_from_level: Option<String>,
 }
 
 impl SpaceTool {
@@ -169,6 +174,17 @@ impl SpaceTool {
     /// The plan at the hover, drawn.
     fn see(&mut self, cx: &Context<'_>) {
         self.level.see(cx.doc.settings());
+        let level = self.level.id();
+        if self.choice_revision != Some(cx.doc.revision()) || self.choice_level != level {
+            let arch = cx.doc.settings().arch.as_ref();
+            self.names = arch.map_or_else(Vec::new, |a| a.space_names.clone());
+            self.usages = arch.map_or_else(Vec::new, |a| a.space_usages.clone());
+            self.first_from_level = level
+                .as_deref()
+                .and_then(|id| arch.and_then(|a| a.space_first_number(id)));
+            self.choice_level = level;
+            self.choice_revision = Some(cx.doc.revision());
+        }
         self.drawn = Preview::default();
         self.area = None;
         self.why = None;
@@ -407,32 +423,96 @@ impl Tool for SpaceTool {
 
     fn settings(&self, _f: &Format) -> Vec<crate::tool_settings::Setting> {
         use crate::tool_settings::{Setting, choices};
-        vec![Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
+        let mut rows = vec![
+            Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
             self.level.setting(),
-            if self.draw { Setting::text("B","Kaynaklar","Çizilmiş sınır").read_only() } else {self.sources.setting()},
-            if self.draw { Setting::text("D", "Kolon alanı", "Düşme").read_only() }
-                else { Setting::choice("D", "Kolon alanı", column_choices(self.columns)) },
+            if self.draw {
+                Setting::text("B", "Kaynaklar", "Çizilmiş sınır").read_only()
+            } else {
+                self.sources.setting()
+            },
+            if self.draw {
+                Setting::text("D", "Kolon alanı", "Düşme").read_only()
+            } else {
+                Setting::choice("D", "Kolon alanı", column_choices(self.columns))
+            },
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
             Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
-            Setting::choice("Ç", "Sınır", choices(&[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")], if self.draw {"draw"} else {"find"}))]
+            Setting::choice(
+                "Ç",
+                "Sınır",
+                choices(
+                    &[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")],
+                    if self.draw { "draw" } else { "find" },
+                ),
+            ),
+        ];
+        if !self.names.is_empty() {
+            rows.push(crate::tool_settings::suggestions(
+                "LA",
+                "Ad listesi",
+                &self.names,
+                self.name.as_deref(),
+            ));
+        }
+        if !self.usages.is_empty() {
+            rows.push(crate::tool_settings::suggestions(
+                "LK",
+                "Kullanım listesi",
+                &self.usages,
+                self.usage.as_deref(),
+            ));
+        }
+        if self.first_from_level.is_some() {
+            let mut row = Setting::choice(
+                "P",
+                "Kat öneki",
+                choices(&[("use", "Bu katın başlangıcını al")], ""),
+            );
+            row.value = "Başlangıç al".into();
+            rows.push(row);
+        }
+        rows
     }
+
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if matches!(key, "Y" | "L" | "D" | "B") { return self.choose_option(key, value, cx); }
+        if matches!(key, "Y" | "L" | "D" | "B") {
+            return self.choose_option(key, value, cx);
+        }
         let text = (!value.trim().is_empty()).then(|| value.trim().to_owned());
         match key {
+            "LA" if self.names.iter().any(|s| Some(s) == text.as_ref()) => self.name = text,
+            "LK" if self.usages.iter().any(|s| Some(s) == text.as_ref()) => self.usage = text,
+            "P" if value == "use" => {
+                let Some(first) = self.level.id().as_deref().and_then(|id| {
+                    cx.doc
+                        .settings()
+                        .arch
+                        .as_ref()
+                        .and_then(|a| a.space_first_number(id))
+                }) else {
+                    return false;
+                };
+                self.number = Some(first);
+            }
             "N" => self.number = text,
             "A" => self.name = text,
             "K" => self.usage = text,
             "Ç" if matches!(value, "find" | "draw") => {
                 if !self.pts.is_empty() && self.draw != (value == "draw") {
-                    cx.say(Level::Warn, "Önce mahal sınırını tamamlayın veya Escape ile taslağı bırakın."); return false;
+                    cx.say(
+                        Level::Warn,
+                        "Önce mahal sınırını tamamlayın veya Escape ile taslağı bırakın.",
+                    );
+                    return false;
                 }
                 self.draw = value == "draw";
             }
             _ => return false,
         }
-        self.see(cx); true
+        self.see(cx);
+        true
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {

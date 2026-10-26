@@ -1,0 +1,120 @@
+    Checking kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+    Checking kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+    Checking kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Checking kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+    Checking kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+    Checking kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+    Checking kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+    Checking kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+    Checking kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+    Checking kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+    Checking kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+    Checking kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+    Checking kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+    Checking kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Checking kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-python v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/python)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16m 32s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

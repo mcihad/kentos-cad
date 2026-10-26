@@ -22,6 +22,53 @@ fn number(b: &Bench, id: u32) -> Option<&str> {
     };
     s.space.number.as_deref()
 }
+
+#[test]
+fn project_prefix_is_an_explicit_first_number_and_keeps_sources_until_one_confirm() {
+    let mut b = setup();
+    let mut settings = b.doc.settings().clone();
+    settings.arch=Some(serde_json::from_value(json!({
+        "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.},{"id":"kat-1","name":"1. kat","elevation":3.}],
+        "spaceNumberPrefixes":{"zemin":"Z-","kat-1":"01-"}
+    })).unwrap());
+    b.doc.set_settings(settings);
+    b.start("spaceNumber");
+    let before = b.doc.to_snapshot_v2();
+    assert!(set(&mut b, "N", "MAN-009"));
+    assert!(!set(&mut b, "P", "missing"));
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "N")
+            .unwrap()
+            .value,
+        "MAN-009"
+    );
+    assert!(set(&mut b, "P", "kat-1"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.click(2., 6.5);
+    b.click(2., 1.5);
+    b.click(8., 1.5);
+    b.confirm();
+    assert_eq!(
+        [number(&b, 1), number(&b, 2), number(&b, 3)],
+        [Some("01-002"), Some("01-003"), Some("01-001")]
+    );
+    let after = b.doc.to_snapshot_v2();
+    for (a, z) in before.entities.iter().zip(&after.entities) {
+        let (Entity::Space(a), Entity::Space(z)) = (a, z) else {
+            panic!("room")
+        };
+        assert_eq!(a.space.parts, z.space.parts);
+        assert_eq!(a.space.arch, z.space.arch);
+    }
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.doc.redo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), after);
+}
+
 #[test]
 fn click_toggle_preview_settings_cancel_and_one_confirm_keep_uuids() {
     let mut b = setup();

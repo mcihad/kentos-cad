@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 22, in <module>
+    assert previous_schema(a)==previous_schema(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

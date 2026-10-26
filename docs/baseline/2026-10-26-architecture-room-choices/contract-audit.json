@@ -1,0 +1,14 @@
+{
+  "parentCommit": "ac5c5bf7d",
+  "commands": 268,
+  "changedCommands": [
+    "project.changes",
+    "project.create",
+    "cad.settings.set"
+  ],
+  "oldSettingsCasesUnchanged": 62,
+  "newSettingsCases": 29,
+  "oldKcadBytesUnchanged": 1170,
+  "newTsTsxFiles": [],
+  "catalogSha256": "dc0eadb0bd819127c39d2f3866936c3e004f2570435f45300660ff857c678795"
+}

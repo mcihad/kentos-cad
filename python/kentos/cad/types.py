@@ -9642,11 +9642,17 @@ class ArchSettings(_Model):
     Attributes:
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
+        space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
+        space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
+        space_usages: Suggested room usages in project order, never a mandatory classification.
     """
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    space_names: list[str] | Unset = UNSET
+    space_number_prefixes: dict[str, str] | Unset = UNSET
+    space_usages: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -9658,6 +9664,12 @@ class ArchSettings(_Model):
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.space_method is not UNSET:
             out["spaceMethod"] = None if self.space_method is None else _enum_out(self.space_method)
+        if self.space_names is not UNSET:
+            out["spaceNames"] = list(self.space_names)
+        if self.space_number_prefixes is not UNSET:
+            out["spaceNumberPrefixes"] = dict(self.space_number_prefixes)
+        if self.space_usages is not UNSET:
+            out["spaceUsages"] = list(self.space_usages)
         return out
 
     @classmethod
@@ -9667,6 +9679,9 @@ class ArchSettings(_Model):
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
+            space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
+            space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
+            space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
         )
 
 
@@ -46236,6 +46251,9 @@ class SettingsSet(_Model):
     `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
     project without a system).
     Attributes:
+        arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+            Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
+            These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
         area_decimals: Unit: count.
         auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
             the active layer's. No object changes.

@@ -20,6 +20,8 @@ pub struct Number {
     drawn: Preview,
     error: Option<String>,
     last: String,
+    prefix_revision: Option<u64>,
+    prefixes: Vec<OptionChoice>,
 }
 impl Default for Number {
     fn default() -> Self {
@@ -33,6 +35,8 @@ impl Default for Number {
             drawn: Preview::default(),
             error: None,
             last: String::new(),
+            prefix_revision: None,
+            prefixes: Vec::new(),
         }
     }
 }
@@ -72,6 +76,23 @@ impl Number {
         )
     }
     fn see(&mut self, cx: &Context<'_>) {
+        if self.prefix_revision != Some(cx.doc.revision()) {
+            self.prefixes = cx.doc.settings().arch.as_ref().map_or_else(Vec::new, |a| {
+                a.levels
+                    .iter()
+                    .filter(|l| a.space_number_prefixes.contains_key(&l.id))
+                    .map(|l| OptionChoice {
+                        typed: l.id.clone(),
+                        label: l.name.clone(),
+                        checked: false,
+                        icon: None,
+                        preview: None,
+                        command: None,
+                    })
+                    .collect()
+            });
+            self.prefix_revision = Some(cx.doc.revision());
+        }
         self.revision = Some(cx.doc.revision());
         self.drawn = Preview::default();
         self.error = None;
@@ -142,6 +163,7 @@ impl Number {
             }
         }
     }
+
     fn direction_point(&mut self, p: Vec2, cx: &Context<'_>) {
         self.direction.push(p);
         self.see(cx);
@@ -343,6 +365,11 @@ impl Tool for Number {
             Setting::choice("S", "Sıralama", self.options()),
             Setting::text("A", "Seçilen mahal", self.uids.len().to_string()).read_only(),
         ];
+        if !self.prefixes.is_empty() {
+            let mut row = Setting::choice("P", "Kat önekinden", self.prefixes.clone());
+            row.value = "Kat seç".into();
+            rows.push(row);
+        }
         if self.directional {
             rows.push(Setting::choice(
                 "Y",
@@ -360,8 +387,22 @@ impl Tool for Number {
         }
         rows
     }
+
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         match (key, value) {
+            ("P", level) => {
+                let Some(first) = cx
+                    .doc
+                    .settings()
+                    .arch
+                    .as_ref()
+                    .and_then(|a| a.space_first_number(level))
+                else {
+                    return false;
+                };
+                self.first = first;
+                self.asking = false;
+            }
             ("N", _) => {
                 if !kentos_commands::valid_space_number(value) {
                     cx.say(Level::Warn, "İlk numara en çok 256 karakter olmalı ve rakamla bitmeli: Z-001 gibi. Başında/sonunda boşluk veya kontrol karakteri kullanmayın.");
@@ -382,6 +423,7 @@ impl Tool for Number {
         self.see(cx);
         true
     }
+
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
         match key {
             "S" => self.options(),

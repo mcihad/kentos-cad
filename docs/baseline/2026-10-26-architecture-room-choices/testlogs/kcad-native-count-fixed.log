@@ -1,0 +1,9 @@
+   Compiling kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.24s
+     Running tests/all/main.rs (target/debug/deps/all-a4397e864485efaa)
+
+running 1 test
+test fixtures::every_fixture_reads_as_expected_json_says ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 206 filtered out; finished in 0.16s
+

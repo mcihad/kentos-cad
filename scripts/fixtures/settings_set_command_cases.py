@@ -298,6 +298,42 @@ def cases():
     return out
 
 
+def room_choice_cases():
+    """Optional project suggestions: settings history stays unchanged; no source is renamed."""
+    levels=[dict(id='zemin',name='Zemin kat',elevation=0.0),dict(id='kat-1',name='1. kat',elevation=3.0)]
+    base=setup(workspace='cad',srid=0,secondSrid=None)
+    profiles=[dict(spaceNames=['Mutfak','mutfak','Çalışma'],spaceUsages=['Konut','Ofis'],levels=levels,
+                   spaceNumberPrefixes={'zemin':'Z-','kat-1':'01-'}),dict(spaceNames=['Mutfak','mutfak']),
+              dict(spaceUsages=['Konut']),dict(levels=levels,spaceNumberPrefixes={'zemin':'ç'*253}),
+              dict(spaceNames=['ç'*256]),dict(spaceUsages=[f'K{i}'for i in range(256)])]
+    out=[]
+    for i,arch in enumerate(profiles):
+        unchanged={**UNCHANGED,'entities':E,'settings':{'arch':None}}
+        out.append(dict(name=f'Mahal listeleri: sıra/tam metin/sınır, profil {i}',setup=copy.deepcopy(base),steps=[
+            step('validate',{'arch':arch},{'status':'completed','output':None,'warnings':[]},unchanged),
+            step('plan',{'arch':arch},done(['arch']),unchanged),
+            step('execute',{'arch':arch},done(['arch']),{**FLAGS,'entities':E,'settings':{'arch':arch}}),
+            step('execute',{'arch':arch},done([]),{'revision':'same','canUndo':False,'entities':E}),
+            step('execute',{'arch':{}},done(['arch']),{'revision':'changed','canUndo':False,'entities':E,'settings':{'arch':None}})]))
+    out.append(dict(name='Mahal listeleri: boş tercihler eski kanonik kaydı değiştirmez',setup=copy.deepcopy(base),steps=[
+        step('execute',{'arch':{'spaceNames':[],'spaceUsages':[],'spaceNumberPrefixes':{}}},done([]),
+             {**UNCHANGED,'entities':E,'settings':{'arch':None}})]))
+    def refuse(name,arch,path,message):
+        c=refused('Mahal listeleri: '+name,{'arch':arch},'invalid_arch',message,'arch.'+path,copy.deepcopy(base))
+        original=c['steps'][0];original['expect']['entities']=E
+        c['steps']=[dict(copy.deepcopy(original),op=op)for op in ['validate','plan','execute']];out.append(c)
+    for key,label in [('spaceNames','Mahal adı'),('spaceUsages','Mahal kullanımı')]:
+        for name,values in [('boş',['']),('boşluk',[' ']),('baş',[' A']),('son',['A ']),('kontrol',['A\nB']),('uzun',['ç'*257])]:
+            refuse(key+' '+name,{key:values},key+'[0]',f'{label} boş, başında/sonunda boşluklu veya kontrol karakterli olamaz; en çok 256 karakterdir.')
+        refuse(key+' yinelenen',{key:['A','A']},key+'[1]',f'“A” {label.lower()} listesinde iki kez var.')
+        refuse(key+' fazla',{key:[f'N{i}'for i in range(257)]},key,f'{label} listesi en çok 256 değer içerir.')
+    refuse('bilinmeyen kat',dict(levels=levels,spaceNumberPrefixes={'yok':'Z-'}),'spaceNumberPrefixes.yok','Mahal numara önekinin “yok” katı projede yok.')
+    for name,prefix in [('boş',''),('baş',' Z-'),('son','Z- '),('kontrol','Z\t'),('uzun','ç'*254)]:
+        refuse('önek '+name,dict(levels=levels,spaceNumberPrefixes={'zemin':prefix}),'spaceNumberPrefixes.zemin',
+               'Mahal numara öneki boş, başında/sonunda boşluklu veya kontrol karakterli olamaz; en çok 253 karakterdir.')
+    return out
+
+
 def build():
     return {
         "format": "kentos.command-cases",
@@ -307,7 +343,7 @@ def build():
         "title": "Proje ayarları",
         "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3; do not edit by hand.",
         "setup": setup(),
-        "cases": cases(),
+        "cases": cases()+room_choice_cases(),
     }
 
 

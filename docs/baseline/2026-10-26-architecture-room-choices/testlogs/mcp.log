@@ -1,0 +1,65 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+   Compiling kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+   Compiling kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+   Compiling kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+   Compiling kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+   Compiling kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+   Compiling kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+   Compiling kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+   Compiling kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+   Compiling kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+   Compiling kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 32s
+     Running tests/room_choices.rs (target/debug/deps/room_choices-3eb23ce921b8c0ff)
+
+running 1 test
+test project_lists_remain_advisory_and_survive_room_undo_and_real_reopen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.62s
+
+     Running tests/space_number_check.rs (target/debug/deps/space_number_check-77502cd0ca70a8af)
+
+running 1 test
+test room_number_review_is_read_only_and_repair_keeps_the_existing_single_undo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.56s
+
+     Running tests/spaces_number.rs (target/debug/deps/spaces_number-c9d246e31fa3d4e9)
+
+running 1 test
+test numbering_plan_keeps_ids_and_moved_tag_then_one_undo_restores_everything ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.59s
+
+     Running tests/tag_net_area.rs (target/debug/deps/tag_net_area-3773d16bc8ab2122)
+
+running 1 test
+test net_tag_plan_matches_write_and_wall_change_is_one_undo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.59s
+

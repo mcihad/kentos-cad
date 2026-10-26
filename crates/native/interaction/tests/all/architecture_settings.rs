@@ -12,6 +12,59 @@ fn local(id: &str) -> Bench {
 fn set(b: &mut Bench, k: &str, v: &str) -> bool {
     b.run(|s, cx| s.configure(k, v, cx))
 }
+
+#[test]
+fn room_suggestions_keep_free_text_and_level_changes_do_not_renumber_a_draft() {
+    let mut b = local("space");
+    let mut settings = b.doc.settings().clone();
+    settings.arch=Some(serde_json::from_value(serde_json::json!({
+        "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.},{"id":"kat-1","name":"1. kat","elevation":3.}],
+        "spaceNames":["Mutfak","mutfak"],"spaceUsages":["Konut","Ofis"],
+        "spaceNumberPrefixes":{"zemin":"Z-","kat-1":"01-"}
+    })).unwrap());
+    b.doc.set_settings(settings);
+    b.start("space");
+    let before = b.doc.to_snapshot_v2();
+    assert!(
+        !b.session
+            .settings(&Default::default())
+            .iter()
+            .any(|r| r.key == "P")
+    );
+    assert!(set(&mut b, "N", "K-009"));
+    assert!(set(&mut b, "L", "id:zemin"));
+    assert!(set(&mut b, "L", "id:kat-1"));
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "N")
+            .unwrap()
+            .value,
+        "K-009"
+    );
+    assert!(set(&mut b, "P", "use"));
+    assert!(set(&mut b, "LA", "Mutfak"));
+    assert!(set(&mut b, "LK", "Ofis"));
+    assert!(!set(&mut b, "LA", "Listede yok"));
+    assert!(set(&mut b, "A", "Özel serbest ad"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(set(&mut b, "Ç", "draw"));
+    for (x, y) in [(0., 0.), (4., 0.), (4., 3.), (0., 3.)] {
+        b.click(x, y);
+    }
+    b.confirm();
+    let Entity::Space(s) = b.newest() else {
+        panic!("room")
+    };
+    assert_eq!(s.space.number.as_deref(), Some("01-001"));
+    assert_eq!(s.space.name.as_deref(), Some("Özel serbest ad"));
+    assert_eq!(s.space.usage.as_deref(), Some("Ofis"));
+    assert_eq!(s.space.arch.level.as_deref(), Some("kat-1"));
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
 #[test]
 fn settings_never_edit_the_selection_or_write_a_draft_and_keep_the_first_corner() {
     let mut b = local("wallRectangle");

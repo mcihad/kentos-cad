@@ -1,0 +1,14 @@
+....F
+======================================================================
+FAIL: test_real_kcad_and_dxf_roundtrip_keep_lists_order_and_unlisted_source_values (test_room_choices.RoomChoices.test_real_kcad_and_dxf_roundtrip_keep_lists_order_and_unlisted_source_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_room_choices.py", line 98, in test_real_kcad_and_dxf_roundtrip_keep_lists_order_and_unlisted_source_values
+    self.assertEqual(back.info().settings.arch, doc.info().settings.arch)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: UNSET != ArchSettings(detail=UNSET, levels=[ArchLe[294 chars]is'])
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.906s
+
+FAILED (failures=1)

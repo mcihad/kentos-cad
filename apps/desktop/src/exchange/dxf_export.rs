@@ -584,6 +584,12 @@ impl App {
                 ),
             )
         }];
+        if doc.model.settings().arch.as_ref().is_some_and(|a| a.has_space_choices()) {
+            lines.push(words::text_line(
+                Line::Warn,
+                kentos_headless::export::DXF_SPACE_CHOICES_WARNING,
+            ));
+        }
         if dimensions > 0 {
             // What comes back is the form and the data written (docs/adr/0327 §6).
             let line = match (forms.dimensions, forms.metadata) {

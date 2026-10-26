@@ -1,0 +1,12 @@
+{
+  "ezdxfVersion": "1.4.5",
+  "file": "room-choices-gui.dxf",
+  "sha256": "5e126752bb9c45e421d0ec380e1e3174fea2ddeda6f63b7012d9e7b0aa23c305",
+  "entities": 11,
+  "exactRoomBoundaries": 6,
+  "exactSourceMetadata": 11,
+  "exactTagTexts": 5,
+  "auditErrors": 0,
+  "projectPreferences": "absent; visible warning before writing and in report",
+  "limitation": "DXF metadata carries UUIDs, but existing KentOS DXF import regenerates them; KCAD preserves them."
+}
