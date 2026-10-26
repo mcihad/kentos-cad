@@ -7,6 +7,7 @@
 
 pub mod access;
 pub mod admin;
+pub mod backup;
 pub mod blobs;
 pub mod blocks;
 pub mod cad;

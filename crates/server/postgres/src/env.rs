@@ -66,6 +66,47 @@ pub fn write_file(
     Ok(())
 }
 
+/// A database address split for a child process (`pg_dump`, `pg_restore`; docs/adr/0650): the address without its
+/// password, and the password (percent-decoded), which goes in `PGPASSWORD`, never on a command line other users of
+/// the machine can read. An address without a password, or not a URL, is returned as it is.
+pub fn split_password(url: &str) -> (String, Option<String>) {
+    let whole = || (url.to_owned(), None);
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return whole();
+    };
+    let end = rest.find(['/', '?']).unwrap_or(rest.len());
+    let (authority, tail) = rest.split_at(end);
+    let Some((who, host)) = authority.rsplit_once('@') else {
+        return whole();
+    };
+    let Some((user, pass)) = who.split_once(':') else {
+        return whole();
+    };
+    (
+        format!("{scheme}://{user}@{host}{tail}"),
+        Some(percent_decoded(pass)),
+    )
+}
+
+fn percent_decoded(s: &str) -> String {
+    let bytes = s.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%'
+            && let Some(hex) = s.get(i + 1..i + 3)
+            && let Ok(b) = u8::from_str_radix(hex, 16)
+        {
+            out.push(b);
+            i += 3;
+            continue;
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,5 +118,27 @@ mod tests {
         assert_eq!(v["B"], "x=y");
         assert_eq!(parse("A=1\nbozuk\n"), Err((2, "KEY=VALUE bekleniyor")));
         assert_eq!(parse("A-B=1"), Err((1, "geçersiz değişken adı")));
+    }
+
+    #[test]
+    fn a_password_leaves_the_address() {
+        assert_eq!(
+            split_password(
+                "postgres://kentos_cad_owner:p%40ss:w@127.0.0.1:5432/kentos_cad?sslmode=disable"
+            ),
+            (
+                "postgres://kentos_cad_owner@127.0.0.1:5432/kentos_cad?sslmode=disable".to_owned(),
+                Some("p@ss:w".to_owned())
+            )
+        );
+        assert_eq!(
+            split_password("postgres://u@h/db"),
+            ("postgres://u@h/db".to_owned(), None)
+        );
+        assert_eq!(split_password("host=h dbname=d").1, None);
+        assert_eq!(
+            split_password("postgres://u:%zz@h/d").1.as_deref(),
+            Some("%zz")
+        );
     }
 }

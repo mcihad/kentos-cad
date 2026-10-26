@@ -176,3 +176,106 @@ impl TestDb {
         }
     }
 }
+
+/// `url` naming the database `name` instead of its own.
+fn with_database(url: &str, name: &str) -> String {
+    let (base, query) = match url.split_once('?') {
+        Some((b, q)) => (b, Some(q)),
+        None => (url, None),
+    };
+    let base = match base.rfind('/') {
+        Some(i) if i > base.find("://").map_or(0, |s| s + 2) => &base[..i],
+        _ => base,
+    };
+    match query {
+        Some(q) => format!("{base}/{name}?{q}"),
+        None => format!("{base}/{name}"),
+    }
+}
+
+impl TestDb {
+    /// The owner role's address of this database (a backup is taken with it, docs/adr/0650).
+    pub fn owner_url(&self) -> String {
+        let vars = repo_env();
+        with_database(
+            &env::lookup(&vars, OWNER_URL).expect("sahip rolünün adresi"),
+            &self.name,
+        )
+    }
+
+    /// A new database restored from a backup's dump (`pg_restore` as the administrator, then the database's own
+    /// grants), with the two roles' pools: a restore drill (docs/adr/0650).
+    pub async fn restored(&self, dump: &std::path::Path) -> TestDb {
+        let vars = repo_env();
+        let admin_url =
+            std::env::var("KENTOS_TEST_ADMIN_URL").unwrap_or_else(|_| DEFAULT_ADMIN.into());
+        let name = format!(
+            "kentos_cad_test_{}_{}",
+            now_secs(),
+            &uuid::Uuid::new_v4().simple().to_string()[..10]
+        );
+        let root = PgPoolOptions::new()
+            .max_connections(1)
+            .connect_with(self.admin.clone())
+            .await
+            .expect("yönetici");
+        sqlx::query(AssertSqlSafe(format!(
+            "create database {name} owner {OWNER_ROLE}"
+        )))
+        .execute(&root)
+        .await
+        .expect("geri yükleme veritabanı açılamadı");
+        root.close().await;
+        // The password goes in the environment, never on the command line.
+        let (bare, password) = env::split_password(&with_database(&admin_url, &name));
+        let mut cmd = std::process::Command::new(
+            std::env::var("KENTOS_PG_RESTORE").unwrap_or_else(|_| "pg_restore".into()),
+        );
+        cmd.arg("--exit-on-error")
+            .arg("--dbname")
+            .arg(&bare)
+            .arg(dump);
+        if let Some(p) = password {
+            cmd.env("PGPASSWORD", p);
+        }
+        let out = cmd.output().expect("pg_restore çalıştırılamadı");
+        assert!(
+            out.status.success(),
+            "pg_restore: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let on_db = PgPoolOptions::new()
+            .max_connections(1)
+            .connect_with(self.admin.clone().database(&name))
+            .await
+            .expect("geri yüklenen veritabanı");
+        prepare_database(&on_db, &name)
+            .await
+            .expect("veritabanının izinleri");
+        on_db.close().await;
+        let pool = |url: &str, n: u32| {
+            let o: PgConnectOptions = url
+                .parse::<PgConnectOptions>()
+                .expect("adres")
+                .database(&name);
+            PgPoolOptions::new()
+                .max_connections(n)
+                .acquire_timeout(Duration::from_secs(10))
+                .connect_with(o)
+        };
+        let owner = pool(&env::lookup(&vars, OWNER_URL).expect("sahip"), 4)
+            .await
+            .expect("sahip rolüyle bağlanılamadı");
+        let app = Db {
+            pool: pool(&env::lookup(&vars, DATABASE_URL).expect("sunucu"), 8)
+                .await
+                .expect("sunucu rolüyle bağlanılamadı"),
+        };
+        TestDb {
+            name,
+            app,
+            owner,
+            admin: self.admin.clone(),
+        }
+    }
+}

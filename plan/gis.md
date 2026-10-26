@@ -680,6 +680,8 @@ birer birer çalıştırın.
 
   *Kısmen (20 Ekim 2026; [ADR 0542](../docs/adr/0542-durable-server-jobs.md)): kalıcı sunucu işi: kimlik, değişmez girdi ve SHA-256'sı, istendiği revizyon, durum ve ilerleme, istek kimliğiyle tek iş (duplicate dispatch), kira, yoklama ve çit (ölen işçinin işi sonrakine geçer, geç bitirme geçmez), deneme ve süre sınırı, iptal; `project.export`'un sonucu staged, bitirmede yetki ve revizyon yeniden sorulur, sahipsiz dosyayı temizlik siler; işçi `kentosd serve`'ün yanında ya da `kentosd worker`. Geçici PostGIS'te sınandı. Kalan: başka iş türleri, CPU/bellek/disk kotası, masaüstünde işler listesi, önbellek anahtarı, disk dolması ve yarım yükleme senaryoları, yedek ve geri yükleme tatbikatı, ölçümler.*
 
+  *Dördüncü dilim (26 Ekim 2026; [ADR 0650](../docs/adr/0650-server-backup-and-restore-drill.md)): yedek ve geri yükleme tatbikatı: `kentosd backup` veritabanının dökümünü ve satırlarının adladığı nesneleri (dosya revizyonları, kontrol noktası görüntüleri, işlerin dosyaları, iş girdileri) aynı anın görüntüsüyle ve SHA-256'larıyla alır, `kentosd backup check` yedeğin klasörünü ya da geri yüklenmiş sunucuyu denetler (eksik, farklı, adlanmamış); geçici PostGIS'te veritabanı ve dosya projesi, kontrol noktaları ve iş girdisiyle yedeklenip yeni veritabanına geri yüklenir, satırlar, kimlikler, sürümler ve revizyonların baytları aynıdır; yedeğin klasörü KentOS kodu olmadan hashlib ve `pg_restore --list` ile denetlenir. Kalan: PITR ve RPO/RTO, S3 deposu, düzenli yedek, önbellek anahtarı, kullanıcı başına kota, disk dolması senaryosu.*
+
 ## I — Kullanım, otomasyon, performans ve teslim kabulü
 
 - [ ] **CBS-40 — Yeni provider akışını mevcut GIS arayüzüne bağla ve kullanıcı kabulünü yap — P0**

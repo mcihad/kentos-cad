@@ -311,10 +311,71 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 .map_err(fail)?;
             print!("{}", jobs_report(&metrics));
         }
+        ["backup"] => {
+            let url = config
+                .owner_url
+                .as_deref()
+                .ok_or("KENTOS_DATABASE_OWNER_URL yok: önce `kentosd db-setup` çalıştırın.")?;
+            let dir = std::path::PathBuf::from(args.required("dir")?);
+            let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+            let m = kentos_application::backup::take(url, &blobs, &dir).await?;
+            println!(
+                "yedek alındı: {} ({}, göç {}, {} nesne, döküm {} bayt)",
+                dir.display(),
+                m.taken,
+                m.migration,
+                m.objects.len(),
+                m.dump_size
+            );
+            println!(
+                "geri yüklenen sunucuyu `kentosd backup check` ile denetleyin; denenmemiş yedek yedek değildir"
+            );
+        }
+        ["backup", "check"] => {
+            let checked = match args.value("dir") {
+                Some(dir) => kentos_application::backup::check_folder(std::path::Path::new(dir))?,
+                None => {
+                    let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+                    kentos_application::backup::check(&owner_pool(config).await?, &blobs).await?
+                }
+            };
+            print!("{}", backup_report(&checked));
+            if !checked.sound() {
+                return Err("Denetim geçmedi: eksik ya da farklı nesne var.".into());
+            }
+        }
         ["dev-seed"] => dev_seed(config).await?,
         _ => return Err(USAGE.into()),
     }
     Ok(())
+}
+
+/// A backup check as lines (docs/adr/0650): the counts, then each missing, changed and unnamed object by its key.
+fn backup_report(c: &kentos_application::backup::Checked) -> String {
+    let mut out = format!(
+        "sağlam\t{}\neksik\t{}\nfarklı\t{}\nadlanmamış\t{}\n",
+        c.sound,
+        c.missing.len(),
+        c.wrong.len(),
+        c.unnamed.len()
+    );
+    if let Some(dump) = c.dump {
+        out.push_str(if dump {
+            "döküm\tsağlam\n"
+        } else {
+            "döküm\tfarklı\n"
+        });
+    }
+    for n in &c.missing {
+        out.push_str(&format!("eksik\t{}\t{}\n", n.table, n.key));
+    }
+    for n in &c.wrong {
+        out.push_str(&format!("farklı\t{}\t{}\n", n.table, n.key));
+    }
+    for k in &c.unnamed {
+        out.push_str(&format!("adlanmamış\t{k}\n"));
+    }
+    out
 }
 
 /// The queue's numbers as lines of `name<TAB>value` (docs/adr/0547): no job's content, only counts and ids of
@@ -404,6 +465,8 @@ pub const USAGE: &str = "kullanım:
   kentosd project restore --tenant KISA --project KİMLİK
   kentosd jobs                                sunucu işlerinin sayıları: sırada, çalışan, son 24 saatte düşen, en eski bekleyen
   kentosd worker                              yalnız sunucu işi işçileri (KENTOS_WORKERS)
+  kentosd backup --dir KLASÖR                 veritabanının dökümü ve başvurduğu nesneler tek anda, yedek.json ile
+  kentosd backup check [--dir KLASÖR]         yedeğin klasörünü ya da çalışan sunucunun nesnelerini SHA-256'yla denetler
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 
 #[cfg(test)]
