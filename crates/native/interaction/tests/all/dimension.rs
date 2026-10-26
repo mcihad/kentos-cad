@@ -806,3 +806,50 @@ fn linear_measures_along_a_typed_direction() {
     b.click(10.0, 0.0);
     assert!(b.session.prompt().text().contains("Yön (O): 50.0000 g"));
 }
+
+#[test]
+fn native_endpoint_measure_binds_the_opening_owning_a_cut_wall_jamb_and_one_history_step() {
+    use common::{E, N};
+    use kentos_commands::CommandResult;
+    use kentos_native_application::{ExecutionContext, openings_create, walls_create};
+    use serde_json::json;
+    let mut b = Bench::new("dimension");
+    let CommandResult::Completed{output:wall,..}=walls_create::execute(&mut ExecutionContext::new(&mut b.doc),serde_json::from_value(json!({"layerId":"cizim","walls":[{"pts":[{"x":E,"y":N},{"x":E+10.,"y":N}],"width":0.2,"closed":false}]})).unwrap()) else{panic!()};
+    let CommandResult::Completed{output:opening,..}=openings_create::execute(&mut ExecutionContext::new(&mut b.doc),serde_json::from_value(json!({"layerId":"cizim","openings":[{"host":wall.uids[0],"at":4,"width":1,"form":"window"}]})).unwrap()) else{panic!()};
+    b.draft.snap = true;
+    b.draft.snap_kinds = kentos_geometry_core::store::snap::SnapKind::Endpoint.bit();
+    let before = b.doc.to_snapshot_v2();
+    b.click(3.5, 0.1);
+    b.click(4.5, 0.1);
+    b.move_to(4., 1.);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "preview is read only");
+    b.click(4., 1.);
+    let d = newest(&b);
+    for (actual, want) in [(rel(d.a), [3.5, 0.1]), (rel(d.b), [4.5, 0.1])] {
+        for (a, w) in actual.into_iter().zip(want) {
+            assert!((a - w).abs() < 1e-9);
+        }
+    }
+    for (key, r) in d.refs.as_ref().unwrap().each() {
+        assert_eq!(r.uid.to_string(), opening.uids[0]);
+        assert!(r.live());
+        let index = if key == "a" { 0 } else { 2 };
+        assert_eq!(
+            r.place,
+            kentos_commands::SubPlace::Vertex {
+                part: 0,
+                ring: 0,
+                index
+            }
+        );
+    }
+    let created = b.doc.to_snapshot_v2();
+    assert_eq!(created.entities[..2], before.entities);
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.doc.redo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), created);
+    b.click(3.5, 0.1);
+    b.run(|s, cx| s.cancel(cx));
+    assert_eq!(b.doc.to_snapshot_v2(), created);
+}

@@ -51,6 +51,17 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-DIM-01 / ADR0665: ortak SubPlace açıklığın dört jamb köşesini ve
+  başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı
+  kaynak saymaz. Ortak best/all Endpoint aynı host'un gerçek jamb sahibini
+  adlandırır; koordinat/tür/sıra ve görünürlük/kenet maskesi korunur.
+  Web dönüşünde ölçü/yeniden bağlama oturumu ve kaynak UID/place eşlemesi,
+  broken aktarımı, görünür kopuk bağ ve tek undo/kayıt bu anlamla sınanmalı.
+  Yeni komut/kalıcı alan/TS dosyası yok; katalog/SDK açıklamaları güncel.
+  Desktop36 ham ekran (iki tanısal)/21 tam model +dört tanısal kopya,
+  342 Python/76 MCP/809 commands ve native takımlar; eski1828 KCAD aynı.
+  Web GUI/çoklu görünüş matrisi ve otomatik sıra yaşam döngüsü açıktır.
+
 - ARCH-SPACE-02 / ADR0664: Etiket ve Hepsini etiketle'de sekiz görünür hazır
   içerik önerisi yalnız mevcut cad.tags.create.content metnini doldurur.
   Web dönüşünde ayrı serbest Şablon, kısa Özel değeri/özel metni koruma,

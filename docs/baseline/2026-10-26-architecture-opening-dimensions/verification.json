@@ -1,0 +1,24 @@
+{
+  "fullNativeModelsVerified": 21,
+  "diagnosticModelsVerified": 4,
+  "rawImagesVerified": 36,
+  "acceptedImages": 34,
+  "diagnosticImages": 2,
+  "imageDimensions": [
+    [
+      2200,
+      1364
+    ],
+    [
+      2880,
+      1720
+    ],
+    [
+      2880,
+      1726
+    ]
+  ],
+  "previousKcadBytesUnchanged": 1828,
+  "automaticDimensionChainsAccepted": false,
+  "wholeArchitectureAccepted": false
+}

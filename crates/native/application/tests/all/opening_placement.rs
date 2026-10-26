@@ -2,7 +2,8 @@
 use kentos_commands::*;
 use kentos_domain::Document;
 use kentos_native_application::{
-    ExecutionContext, opening_placement, openings_create, openings_edit, walls_create, walls_edit,
+    ExecutionContext, dimensions_create, opening_placement, openings_create, openings_edit,
+    walls_create, walls_edit,
 };
 use serde_json::{Value, json};
 
@@ -143,6 +144,168 @@ fn planned(doc: &Document, input: &OpeningsCreate) -> OpeningFields {
     };
     o.opening
 }
+
+fn opening_measure(uid: &str, a: Value, b: Value) -> DimensionsCreate {
+    serde_json::from_value(json!({"layerId":"duvar","height":0.15,"at":{"x":4,"y":-1},
+        "measure":{"kind":"aligned","a":{"kind":"place","uid":uid,"place":a},
+        "b":{"kind":"place","uid":uid,"place":b}}}))
+    .unwrap()
+}
+
+#[test]
+fn opening_dimensions_bind_real_jambs_and_one_undo_through_width_move_and_flip() {
+    for form in ["door", "window", "opening"] {
+        for reverse in [false, true] {
+            let (mut doc, host) = wall(reverse, false);
+            let made = done(openings_create::execute(
+                &mut ExecutionContext::new(&mut doc),
+                req(&host, json!({"at":4,"width":1,"form":form})),
+            ));
+            let uid = made["uids"][0].as_str().unwrap();
+            let input = opening_measure(
+                uid,
+                json!({"kind":"vertex","part":0,"ring":0,"index":0}),
+                json!({"kind":"vertex","part":0,"ring":0,"index":2}),
+            );
+            let before = doc.to_snapshot_v2();
+            let _ = done(dimensions_create::plan_in(&doc, &input));
+            assert_eq!(doc.to_snapshot_v2(), before);
+            let made = done(dimensions_create::execute(
+                &mut ExecutionContext::new(&mut doc),
+                input,
+            ));
+            let slot = doc
+                .slot_of(made["created"][0].as_str().unwrap().parse().unwrap())
+                .unwrap();
+            let check = |doc: &Document, start: f64, end: f64| {
+                let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+                    panic!()
+                };
+                let (x0, x1, y) = if reverse {
+                    (10. - start, 10. - end, -0.1)
+                } else {
+                    (start, end, 0.1)
+                };
+                assert_eq!(d.a, Vec2 { x: x0, y });
+                assert_eq!(d.b, Vec2 { x: x1, y });
+                let refs = d.refs.as_ref().unwrap();
+                assert_eq!(refs.a.as_ref().unwrap().uid.to_string(), uid);
+                assert_eq!(refs.b.as_ref().unwrap().uid.to_string(), uid);
+                assert!(refs.each().all(|(_, r)| r.live()));
+            };
+            check(&doc, 3.5, 4.5);
+            let created = doc.to_snapshot_v2();
+            assert_eq!(created.entities[..before.entities.len()], before.entities);
+            assert_eq!(created.settings, before.settings);
+            doc.undo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), before);
+            doc.redo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), created);
+            for (operation, start, end) in [
+                (json!({"kind":"set","width":2}), 3., 5.),
+                (json!({"kind":"move","at":6}), 5., 7.),
+                (json!({"kind":"flip","what":"both"}), 5., 7.),
+            ] {
+                let prior = doc.to_snapshot_v2();
+                done(openings_edit::execute(
+                    &mut ExecutionContext::new(&mut doc),
+                    serde_json::from_value(json!({"uids":[uid],"operation":operation})).unwrap(),
+                ));
+                check(&doc, start, end);
+                let after = doc.to_snapshot_v2();
+                assert_eq!(after.settings, prior.settings);
+                for i in 0..before.entities.len() - 1 {
+                    assert_eq!(after.entities[i], prior.entities[i]);
+                }
+                doc.undo().unwrap();
+                assert_eq!(doc.to_snapshot_v2(), prior);
+                doc.redo().unwrap();
+                assert_eq!(doc.to_snapshot_v2(), after);
+            }
+            let prior = doc.to_snapshot_v2();
+            done(walls_edit::execute(
+                &mut ExecutionContext::new(&mut doc),
+                serde_json::from_value(
+                    json!({"uids":[host],"operation":{"kind":"set","width":0.4}}),
+                )
+                .unwrap(),
+            ));
+            let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+                panic!()
+            };
+            let y = if reverse { -0.2 } else { 0.2 };
+            let (x0, x1) = if reverse { (5., 3.) } else { (5., 7.) };
+            assert_eq!((d.a, d.b), (Vec2 { x: x0, y }, Vec2 { x: x1, y }));
+            let thick = doc.to_snapshot_v2();
+            doc.undo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), prior);
+            doc.redo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), thick);
+            let dimension_before_split = doc.get(slot).unwrap().clone();
+            done(walls_edit::execute(
+                &mut ExecutionContext::new(&mut doc),
+                serde_json::from_value(
+                    json!({"uids":[host],"operation":{"kind":"split","at":{"x":2,"y":0}}}),
+                )
+                .unwrap(),
+            ));
+            assert_eq!(doc.get(slot).unwrap(), &dimension_before_split);
+            let split = doc.to_snapshot_v2();
+            doc.undo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), thick);
+            doc.redo().unwrap();
+            assert_eq!(doc.to_snapshot_v2(), split);
+        }
+    }
+}
+
+#[test]
+fn opening_start_end_and_center_dimensions_break_if_host_is_removed() {
+    let (mut doc, host) = wall(false, false);
+    let made = done(openings_create::execute(
+        &mut ExecutionContext::new(&mut doc),
+        req(&host, json!({"at":4,"width":2,"form":"window"})),
+    ));
+    let uid = made["uids"][0].as_str().unwrap();
+    let input = opening_measure(uid, json!({"kind":"start"}), json!({"kind":"end"}));
+    let result = done(dimensions_create::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input.clone(),
+    ));
+    let slot = doc
+        .slot_of(result["created"][0].as_str().unwrap().parse().unwrap())
+        .unwrap();
+    let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+        panic!()
+    };
+    assert_eq!((d.a, d.b), (Vec2 { x: 3., y: 0. }, Vec2 { x: 5., y: 0. }));
+    let centered = opening_measure(uid, json!({"kind":"start"}), json!({"kind":"center"}));
+    let plan = done(dimensions_create::plan_in(&doc, &centered));
+    assert_eq!(plan["entities"][0]["b"], json!({"x":4.,"y":0.}));
+    let before = doc.to_snapshot_v2();
+    let host_slot = doc.slot_of(host.parse().unwrap()).unwrap();
+    assert_eq!(doc.remove(&[host_slot]), 1);
+    let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+        panic!()
+    };
+    assert_eq!((d.a, d.b), (Vec2 { x: 3., y: 0. }, Vec2 { x: 5., y: 0. }));
+    for (_, r) in d.refs.as_ref().unwrap().each() {
+        assert_eq!(r.broken.as_deref(), Some("no_such_place"));
+    }
+    assert_eq!(opening(&doc, uid).broken, Some(OpeningBreak::HostGone));
+    let broken = doc.to_snapshot_v2();
+    let CommandResult::Failed { error } =
+        dimensions_create::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
+        panic!()
+    };
+    assert_eq!(error.code, "no_such_place");
+    assert_eq!(doc.to_snapshot_v2(), broken);
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), before);
+    doc.redo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), broken);
+}
 #[test]
 fn chosen_wall_end_and_distance_reference_place_the_jamb_centre_or_hinge_exactly() {
     for reverse in [false, true] {
@@ -278,4 +441,63 @@ fn overlap_corner_crossing_nonfinite_and_endpoint_overflow_refuse_the_entire_bat
     };
     assert_eq!(error.code, "opening_off_wall");
     assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn a_curved_opening_measures_the_real_chord_then_keeps_its_roles_after_rehost() {
+    use std::f64::consts::PI;
+    let (mut doc, host) = wall(false, true);
+    let made = done(openings_create::execute(
+        &mut ExecutionContext::new(&mut doc),
+        req(&host, json!({"at":5.*PI/2.,"width":PI,"form":"window"})),
+    ));
+    let uid = made["uids"][0].as_str().unwrap();
+    let made = done(dimensions_create::execute(
+        &mut ExecutionContext::new(&mut doc),
+        opening_measure(
+            uid,
+            json!({"kind":"vertex","part":0,"ring":0,"index":0}),
+            json!({"kind":"vertex","part":0,"ring":0,"index":2}),
+        ),
+    ));
+    let slot = doc
+        .slot_of(made["created"][0].as_str().unwrap().parse().unwrap())
+        .unwrap();
+    let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+        panic!()
+    };
+    // A radius-5 semicircle; the left face radius is 4.9, half-angle pi/10.
+    let dx = 4.9 * (PI / 10.).sin();
+    let y = -4.9 * (PI / 10.).cos();
+    for (a, b) in [(d.a.x, 5. - dx), (d.a.y, y), (d.b.x, 5. + dx), (d.b.y, y)] {
+        assert!((a - b).abs() < 1e-9, "{a} != {b}");
+    }
+    assert!(((d.b.x - d.a.x) - 2. * dx).abs() < 1e-9);
+    assert!(
+        (2. * dx - PI).abs() > 0.1,
+        "chord is not the nominal path width"
+    );
+    let target=done(walls_create::execute(&mut ExecutionContext::new(&mut doc),serde_json::from_value(json!({"layerId":"duvar","walls":[{"pts":[{"x":0,"y":20},{"x":10,"y":20}],"width":0.4,"closed":false}]})).unwrap()));
+    let prior = doc.to_snapshot_v2();
+    done(openings_edit::execute(&mut ExecutionContext::new(&mut doc),serde_json::from_value(json!({"uids":[uid],"operation":{"kind":"rehost","to":target["uids"][0],"point":{"x":4,"y":20}}})).unwrap()));
+    let Entity::Dimension(d) = doc.get(slot).unwrap() else {
+        panic!()
+    };
+    for (a, b) in [
+        (d.a.x, 4. - PI / 2.),
+        (d.a.y, 20.2),
+        (d.b.x, 4. + PI / 2.),
+        (d.b.y, 20.2),
+    ] {
+        assert!((a - b).abs() < 1e-9, "{a} != {b}");
+    }
+    for (_, r) in d.refs.as_ref().unwrap().each() {
+        assert_eq!(r.uid.to_string(), uid);
+        assert!(r.live());
+    }
+    let after = doc.to_snapshot_v2();
+    doc.undo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), prior);
+    doc.redo().unwrap();
+    assert_eq!(doc.to_snapshot_v2(), after);
 }

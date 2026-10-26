@@ -1,0 +1,9 @@
+{
+  "parentCommit": "ea7d1baeeb2e949062eb3aec6d900d4b697c7983",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Opening Dimensions Before QA.app",
+  "sha256": "3a2d0c72e2b0654ff2cc113c01ede31509ef4ba611f6ff6268c537b519ee2adf",
+  "sourceFiles": {
+    "crates/shared/geometry-core/src/ops/subref.rs": "bbc90832f2c8df4be44239bfadf0e396b93318c1ff088e3bc25eb7ad40efe478",
+    "crates/native/application/src/blocks.rs": "f5cf1de00513f636703383f7bdf2566b316fee883698a8db6e992ba2b258e8be"
+  }
+}

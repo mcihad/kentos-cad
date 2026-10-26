@@ -1,0 +1,44 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+   Compiling kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+   Compiling kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+   Compiling kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+   Compiling kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+   Compiling kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+   Compiling kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 08s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 6 tests
+test opening_placement::overlap_corner_crossing_nonfinite_and_endpoint_overflow_refuse_the_entire_batch ... ok
+test opening_placement::opening_start_end_and_center_dimensions_break_if_host_is_removed ... ok
+test opening_placement::two_jamb_points_use_host_arc_length_and_reject_ambiguous_or_zero_width_requests_atomically ... ok
+test opening_placement::chosen_wall_end_and_distance_reference_place_the_jamb_centre_or_hinge_exactly ... ok
+test opening_placement::newly_placed_openings_keep_their_host_through_width_flip_thickness_split_rehost_and_undo ... ok
+test opening_placement::opening_dimensions_bind_real_jambs_and_one_undo_through_width_move_and_flip ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 239 filtered out; finished in 0.05s
+

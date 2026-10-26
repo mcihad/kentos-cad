@@ -1,0 +1,18 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 29.58s
+     Running tests/all/main.rs (target/debug/deps/all-37322b5c6674c8d7)
+
+running 10 tests
+test subref::slanted_opening_places_keep_large_coordinates_without_render_coordinates ... ok
+test subref::opening_places_follow_width_but_break_on_invalid_jambs_and_changed_kind ... ok
+test subref::a_wall_face_place_follows_a_new_width ... ok
+test subref::opening_places_are_jamb_roles_not_symbol_pieces ... ok
+test subref::a_range_has_the_length_the_reference_gives_and_follows_both_ends ... ok
+test subref::a_snap_names_the_place_the_reference_names ... ok
+test subref::every_place_is_where_the_reference_puts_it ... ok
+test subref::a_click_falls_on_the_sub_object_the_reference_names ... ok
+test subref::every_place_follows_its_object_as_the_reference_says ... ok
+test subref::a_piece_inside_a_block_is_where_the_reference_puts_it_and_follows_its_insert ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 279 filtered out; finished in 0.01s
+

@@ -1,0 +1,20 @@
+{
+  "initialWholeModelCheckFailure": [
+    "broken/entities/0/id",
+    2,
+    1
+  ],
+  "cause": "The first expected deleted model kept runtime slot ids; KCAD column files deliberately reconstruct ids1..n, preserving UUIDs. Expected deleted ids are now explicitly1,2,3, not ignored or taken from output.",
+  "reference": "crates/shared/kcad/src/columns.rs:1990",
+  "productionChangesForThisCorrection": false,
+  "evidenceHelperFailure": {
+    "files": [
+      "reopened",
+      "cancelled",
+      "compact-final"
+    ],
+    "cause": "CUA helper captured prior cell path despite rebinding dimRun; all three copied the prior interrupted file. Independent full model comparison rejected them. Raw files retained as diagnostic-wrong-path-*.kcad; real GUI file has four entities and created bytes. Repetition uses a new helper with explicit literal path.",
+    "productionChanges": false
+  },
+  "appearanceMetadataCorrection": "29/30 were13px because numeric entry was not committed; names retained, notes corrected. Ready En b\u00fcy\u00fck is16px, not18. Raw34 and saved isolated settings confirm16;35/36 repeat large layout. No product code changed."
+}

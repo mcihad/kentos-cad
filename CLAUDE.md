@@ -15,6 +15,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Açıklığın gerçek noktalarına bağlı ölçü (26 Ekim 2026; [ADR0665](docs/adr/0665-opening-dimension-places.md)).**
+  Mevcut ölçü kapı/pencere/boşluğun dört jamb köşesi ve açık başlangıç/
+  bitiş/merkez başvurusunu okur; kanat/kasa parçasını kaynak saymaz.
+  GUI'de bulunan kesilmiş duvar ucu sahipliği ortak snap'te düzeltildi;
+  genişlik/konum/host kalınlığı/bölme/rehost aynı UID ile izlenir, kopuk
+  açıklığın son görüntü köşesi geçerli bağ olmaz. Yayda doğrusal değer kiriştir.
+  [Kabul](docs/baseline/2026-10-26-architecture-opening-dimensions/README.md):
+  342 Python/76 MCP/809 commands; son524+269 core,63+709 interaction,
+  52+224 application ve domain takımları; build/clippy/WASM/SDK geçti.
+  Gerçek eski/yeni kenet, tek Enter/undo/redo/silme/Esc/yeni süreçte açma;
+  36 ham ekran (iki tanısal),21 tam model ve dört ayrı tanısal kopya,
+  eski1828 KCAD aynı. Açık13/koyu13-16 geniş/dar; tam matris açık.
+  Yeni TS/şema/komut/birim/ölçek/render yok; ARCH-DIM-01 [~], otomatik
+  ölçü sırası/üyelik ve çoklu görünüş/pafta kabulü ayrı açık iştir.
+
 - **Görünür etiket içerikleri (26 Ekim 2026; [ADR0664](docs/adr/0664-visible-tag-content-examples.md)).**
   Etiket/Hepsini etiketle'de sekiz Hazır içerik, ayrı serbest Şablon ve
   kısa Özel değeri; Tür/Koru mevcut yenileme semantiğini korur. Seçimler

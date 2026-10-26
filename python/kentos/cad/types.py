@@ -70417,7 +70417,7 @@ class NodeSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class StartSubPlace(SubPlace):
-    """A line's, arc's or elliptical arc's start."""
+    """A line's, arc's or elliptical arc's start; an opening's start jamb midpoint."""
     TAG_VALUE: ClassVar[str] = "start"
 
     def to_json(self) -> dict[str, Any]:
@@ -70431,7 +70431,7 @@ class StartSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class EndSubPlace(SubPlace):
-    """Its end."""
+    """Its end; an opening's end jamb midpoint."""
     TAG_VALUE: ClassVar[str] = "end"
 
     def to_json(self) -> dict[str, Any]:
@@ -70445,7 +70445,7 @@ class EndSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class CenterSubPlace(SubPlace):
-    """A circle's, arc's or ellipse's centre."""
+    """A circle's, arc's or ellipse's centre; an opening's jamb midpoints' midpoint."""
     TAG_VALUE: ClassVar[str] = "center"
 
     def to_json(self) -> dict[str, Any]:
@@ -70460,7 +70460,8 @@ class CenterSubPlace(SubPlace):
 @dataclass(kw_only=True, slots=True)
 class VertexSubPlace(SubPlace):
     """A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
-    `h`th hole; the vertex's index in the ring.
+    `h`th hole; the vertex's index in the ring. On an opening, part/ring 0 and index 0..3 name
+    start-left, start-right, end-left, end-right jamb corners (host direction); no symbol pieces.
     Attributes:
         part: Unit: index.
         ring: Unit: index.

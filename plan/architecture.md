@@ -686,13 +686,44 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   mimari kat kapsamıdır. `all.layers` kaynak CAD katmanını süzer.
   `{area}` seçilmiş alan yöntemidir; ayrı `{netArea}` yukarıda doğrulandı.
 
-### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [ ]
+### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [~]
 
+- [x] İlk altyapı: açıklığın gerçek jamb köşeleri/başlangıç/merkez/bitiş
+  noktalarına mevcut ilişkili ölçüyü bağla; kapı eni/konumu/host değişimi,
+  kopuk bağ ve tek undo/redo. [ADR0665](../docs/adr/0665-opening-dimension-places.md)
+  kabul edildi: gerçek kesilmiş duvar jambı kenedi açıklığa bağlanır,
+  genişlik/konum/kalınlık/bölme/rehost/kopuk bağ aynı kaynağı izler.
+  342 Python/76 MCP/809 commands, son native takımlar/build/clippy/WASM;
+  36 ham ekran/21 tam bağımsız model ve dört ayrı tanısal kopya,
+  önceki1828 KCAD aynı. [Kanıt ve sınırlar](../docs/baseline/2026-10-26-architecture-opening-dimensions/README.md).
+  Otomatik ölçü dizileri ve kaynak üyeliği tamamlanmış değildir.
 - Cephe/duvar grubu/mahal seç; açıklık, ara duvar, yapı ve toplam boy için
   seçilebilir sıralar. İç yüz, dış yüz, çekirdek ve açıklık merkezi/uçları açık.
 - Ölçüler mevcut ilişkili ölçü modelinden üretilsin; Zincir/Baz/Hızlı ölçü
   davranışı değişmesin. Yeni araç görünüş çizgilerine ölçü bağlamasın.
 - Metin sığmama ve sıra aralığı önizlensin; üst üste yazıları gizleyerek çözme.
+- [ ] Otomatik sıranın kalıcı kaynak tarifi: seçilmiş duvar/mahal UUID'leri,
+  mimari kat ve hangi yüz/merkez/uç politikasının kullanıldığı saklanmalı.
+  Sadece tek sefer çok sayıda serbest ölçü eklemek otomatik sıra kabulü değildir.
+- [ ] Kaynaklar değişince sıranın üyeliği de güncellensin: sonradan kapı ekleme,
+  açıklık kaldırma, duvar bölme/rehost ve ters yön; aynı kaynak çiftinin ölçü
+  kimliği ve kullanıcının taşıdığı sıra yeri korunmalı. Belirsiz topoloji
+  değişimi sessiz yanlış ölçüye dönüşmemeli, görünür inceleme gerektirmeli.
+- [ ] Her sıranın önizlemesi kaynak, ölçülen yüz ve sayıyı açıklamalı. Kağıt mm
+  cinsinden sıra aralığı mevcut çizim ölçeğiyle dönüştürülmeli; kaynak model
+  veya proje birimi sırf ölçü yerleştirmek için değiştirilmemeli. Yazı sığma
+  denetimi mevcut belge yazı tipi/ölçü stiliyle yapılmalı.
+- [ ] İlk otomatik üretimin desteklediği geometri açıkça daraltılmalı:
+  doğrusal kaynak/yaylı kaynak ve kiriş/host boyunca mesafe aynı şey değildir.
+  Desteklenmeyen yüz/kat/karma kaynağa tek işlemden önce açıklamalı ret verilmeli;
+  kısmen yazılmış ölçü dizisi kalmamalı.
+- [ ] Mevcut oluştur/yeniden bağlama ve yeni sıra yaşam döngüsünün Python/MCP
+  karşılığı, salt okunur planı, tek undo'su, kaydet-aç ve yeni sürüm uyumu
+  birlikte doğrulanmalı. Native kenet/ölçü altyapısı tek başına bu kapıyı kapatmaz.
+  Güncel iş akışı karşılaştırması:
+  [Archicad29 dış ölçü](https://help.graphisoft.com/AC/29/INT/_AC29_Help/070_Documentation/070_Documentation-49.htm)
+  (seçilmiş duvar, yön, yer, toplam/dış geometri/yapı/açıklık, merkez-uç, yüz ve
+  sıra aralığı); yerel uygulama testi yapılmış sayılmaz.
 - Kabul: kapı eni ve konumu değişir, duvar uzar/bölünür/silinir; ölçü güncellenir
   veya kopuk bağ açık gösterilir. Toplam ile parçaların yuvarlama kuralı belirli.
 
@@ -927,3 +958,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-02 / ADR0661 | Projeyle sıralı ad/kullanım listeleri ve açık kat öneki; serbest metin/kimlik/tek mahal undo korunur. Opt-in KCAD107, eski 1170 dosya aynı; DXF kaybı önceden ve raporda uyarılır. GUI açıklama yerini düzeltti; 385 ortak durum/329 Python/dört MCP/iki desktop, 42 ham ekran/23 tam bağımsız kayıt, yoğun belge kontrolü. | [~] Liste/önek dilimi doğrulandı; Koru/Yenile, çoklu pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-room-choices/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR0662 | Toplu etiket Koru/Yenile, elle yer/kimlik korunumu ve karma yeni+yenile tek undo; Python/MCP. Gerçek GUI açıklama yerleşimini ve klavye hedef katmanı açığını yakaladı; son ikiliyle tekrar, 35 ham ekran/24 tam model +bir tanısal disk, 31 yeni bağımsız durum/ilgili264, 335 Python. Eski107 durum ve1756 KCAD baytı aynı; clippy/build/WASM/SDK geçti. | [~] Koru/Yenile alt maddesi doğrulandı; çoklu kat/görünüş/pafta ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-refresh/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR0663 | Toplu etikette açık kaynak katı, host mirası/bilinmeyen ayrımı; Koru/Yenile/önizleme ve tek undo. 26 yeni bağımsız durum/ilgili290, 340 Python/75 MCP; gerçek iki dolu kat ve atanmamış, tek Enter/sağ tuş Onayla/ret/Escape/undo/redo/yeni süreçte açma. GUI seçili değer kesilmesini düzeltti; 43 ham ekran (tanısallar dahil)/27 tam bağımsız model, eski1781 KCAD aynı. | [~] Kaynak katı alt maddesi doğrulandı; çoklu görünüş/pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-levels/README.md) |
+| 2026-10-26 | ARCH-DIM-01 ilk altyapı / ADR0665 | Açıklığın gerçek jamb/başlangıç/bitiş/merkez başvuruları; GUI'de bulunan kesilmiş duvar ucu sahipliği düzeltildi. Gerçek tek onay/undo/redo/genişlik/konum/kalınlık/kopuk bağ/Esc/yeni süreçte açma; 36 ham ekran/21 tam model+dört tanısal kopya, önceki1828 KCAD aynı. 342 Python/76 MCP/809 commands, native takımlar/build/clippy/WASM/SDK geçti. | [~] Nokta/izleme alt maddesi doğrulandı; otomatik sıra üretimi/üyelik/çoklu pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-opening-dimensions/README.md) |

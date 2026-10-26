@@ -1,0 +1,29 @@
+[
+  {
+    "file": "diagnostic-interrupted.kcad",
+    "accepted": false,
+    "note": "CUA external app change warning; unexpected 7-object drawing, original test source file preserved separately.",
+    "sha256": "0805b036ef3aa1dd1d1a0c101fcf9ab0bd7b4ee769539fb3e8f55e5a7b5c2334"
+  },
+  {
+    "file": "diagnostic-wrong-path-reopened.kcad",
+    "note": "Evidence helper retained the prior cell path; copied the already preserved interrupted file, not the clean GUI file. Rejected and retained; repeat uses explicit literal path.",
+    "sha256": "0805b036ef3aa1dd1d1a0c101fcf9ab0bd7b4ee769539fb3e8f55e5a7b5c2334",
+    "originalNote": "New process with clean data, Save returns exact final/created bytes.",
+    "accepted": false
+  },
+  {
+    "file": "diagnostic-wrong-path-cancelled.kcad",
+    "note": "Evidence helper retained the prior cell path; copied the already preserved interrupted file, not the clean GUI file. Rejected and retained; repeat uses explicit literal path.",
+    "sha256": "0805b036ef3aa1dd1d1a0c101fcf9ab0bd7b4ee769539fb3e8f55e5a7b5c2334",
+    "originalNote": "Clean Escape cancels a pending measure; model remains created/reopened byte identical.",
+    "accepted": false
+  },
+  {
+    "file": "diagnostic-wrong-path-compact-final.kcad",
+    "note": "Evidence helper retained the prior cell path; copied the already preserved interrupted file, not the clean GUI file. Rejected and retained; repeat uses explicit literal path.",
+    "sha256": "0805b036ef3aa1dd1d1a0c101fcf9ab0bd7b4ee769539fb3e8f55e5a7b5c2334",
+    "originalNote": "Ayr\u0131 s\u00fcre\u00e7te yeniden a\u00e7ma, Esc iptal, g\u00f6r\u00fcn\u00fcm ve pencere boyutu sonras\u0131nda tam model ayn\u0131.",
+    "accepted": false
+  }
+]

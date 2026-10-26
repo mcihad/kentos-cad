@@ -122,6 +122,13 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
             ),
         ));
     }
+    // Keep the semantic break when point references read an opening's cached
+    // jambs. It affects reference validity, never the rendered symbol (ADR0665).
+    if let Entity::Opening(o) = e
+        && let Some(broken) = o.opening.broken
+    {
+        rest.push(("broken".to_owned(), Json::Str(broken.name().to_owned())));
+    }
     CoreEntity {
         shape: shape(e),
         rest,

@@ -1,0 +1,252 @@
+[
+  {
+    "name": "core-focused",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "--test",
+      "all",
+      "subref"
+    ],
+    "startedAt": 1793032358.798767,
+    "finishedAt": 1793032388.4394891,
+    "exitCode": 0,
+    "log": "testlogs/core-focused.log",
+    "sha256": "f0ec8bd0ec5c7de7698157ae1e6580352d559d174b868c70db66e8f13e7a4ddb",
+    "testResultLines": [
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 279 filtered out; finished in 0.01s"
+    ]
+  },
+  {
+    "name": "application-focused",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "opening_placement"
+    ],
+    "startedAt": 1793032469.740436,
+    "finishedAt": 1793032598.353805,
+    "exitCode": 0,
+    "log": "testlogs/application-focused.log",
+    "sha256": "6fc31e3233230ff83c9300d7ec4f835e20a04dff1e5436c8f304ab5e0c3734b9",
+    "testResultLines": [
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 239 filtered out; finished in 0.05s"
+    ]
+  },
+  {
+    "name": "catalog-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-commands"
+    ],
+    "startedAt": 1793032670.3108459,
+    "finishedAt": 1793032801.6694899,
+    "exitCode": 0,
+    "log": "testlogs/catalog-full.log",
+    "sha256": "25b3c86dc3ebf3ff358b2eedb89e8c62e9eec7456c83f100dad49349bfbf9d98",
+    "testResultLines": [
+      "test result: ok. 809 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.58s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "native-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction"
+    ],
+    "startedAt": 1793032855.520396,
+    "finishedAt": 1793033634.402557,
+    "exitCode": 0,
+    "log": "testlogs/native-full.log",
+    "sha256": "727ae388fc3635e56b0ed6591abd3be6926edad63080d0726486a36810f07295",
+    "testResultLines": [
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 68 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+      "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+      "test result: ok. 524 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 3.57s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 268 passed; 0 failed; 21 ignored; 0 measured; 0 filtered out; finished in 10.36s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.29s",
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s",
+      "test result: ok. 708 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.37s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s",
+      "test result: ok. 223 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 41.62s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "native-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "--lib",
+      "--tests"
+    ],
+    "startedAt": 1793033666.140401,
+    "finishedAt": 1793034202.182508,
+    "exitCode": 0,
+    "log": "testlogs/native-final.log",
+    "sha256": "68f8bad88caa7faff805cdd0e5278584d5a81a333ac8d24af07811a16a9a3765",
+    "testResultLines": [
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 68 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+      "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+      "test result: ok. 524 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 3.48s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 269 passed; 0 failed; 21 ignored; 0 measured; 0 filtered out; finished in 9.65s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.28s",
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s",
+      "test result: ok. 709 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.39s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "test result: ok. 224 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 39.64s"
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedAt": 1793034211.633167,
+    "finishedAt": 1793035055.58025,
+    "exitCode": 0,
+    "log": "testlogs/build.log",
+    "sha256": "4fbd37b26d209482ced308201b4a456cb6a6209da0a288f48b6f0369e0bcc91c",
+    "testResultLines": []
+  },
+  {
+    "name": "mcp",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-mcp",
+      "--lib",
+      "--tests"
+    ],
+    "startedAt": 1793035056.6190112,
+    "finishedAt": 1793035937.680098,
+    "exitCode": 0,
+    "log": "testlogs/mcp.log",
+    "sha256": "1a9089c1ac776ff7ceec4d562eba8c739765bb283aa8167bc745de2c1603765b",
+    "testResultLines": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.91s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.03s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.27s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.14s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.30s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.72s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.71s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.61s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.65s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.73s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.08s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.30s"
+    ]
+  },
+  {
+    "name": "python",
+    "command": [
+      "sh",
+      "scripts/python/test.sh"
+    ],
+    "startedAt": 1793035937.7185001,
+    "finishedAt": 1793037633.433646,
+    "exitCode": 0,
+    "log": "testlogs/python.log",
+    "sha256": "df9073eccba2a762171666e9710920931bc64e9015d93c04610f5756177e4f14",
+    "testResultLines": []
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-mcp",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1793037633.467016,
+    "finishedAt": 1793038488.653216,
+    "exitCode": 0,
+    "log": "testlogs/clippy.log",
+    "sha256": "e1504d524824eb97e32a9c203aafb41fc530827942050a819afea35f1bf4a79f",
+    "testResultLines": []
+  },
+  {
+    "name": "wasm",
+    "command": [
+      "cargo",
+      "check",
+      "-p",
+      "kentos-geometry-wasm",
+      "--target",
+      "wasm32-unknown-unknown"
+    ],
+    "startedAt": 1793038488.684576,
+    "finishedAt": 1793038628.8355808,
+    "exitCode": 0,
+    "log": "testlogs/wasm.log",
+    "sha256": "6b0cd55a4d1fc1fd0738306935a43a80f7889f21bc33534a88b9e1f73fea4f91",
+    "testResultLines": []
+  }
+]

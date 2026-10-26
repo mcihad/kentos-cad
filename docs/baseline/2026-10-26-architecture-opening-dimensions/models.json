@@ -1,0 +1,110 @@
+[
+  {
+    "file": "baseline-created.kcad",
+    "note": "Pre-change binary native endpoint measure; source preserved, refs independently examined.",
+    "sha256": "9fd9d72484ec7aeec58ff966b83e47705bbc2482123e7fe0243bfd2f6cabb160"
+  },
+  {
+    "file": "preview.kcad",
+    "note": "Two mouse-snapped jambs, Save before placement, no model write.",
+    "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244"
+  },
+  {
+    "file": "created.kcad",
+    "note": "Native two physical jambs and one Return; complete model expected.",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "undo.kcad",
+    "note": "Single create undo, three source objects and settings exact.",
+    "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244"
+  },
+  {
+    "file": "redo.kcad",
+    "note": "Single redo, full created bytes restored.",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "wide.kcad",
+    "note": "Native inspector width=2, source host/line/settings unchanged, bound measure becomes 2 m.",
+    "sha256": "7afca9523a7bbbe5ae64a15dacba795a2df1146bdd8a64f2eece7327707689cf"
+  },
+  {
+    "file": "width-undo.kcad",
+    "note": "One width undo returns exact created model.",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "width-redo.kcad",
+    "note": "One width redo, wide model byte identical.",
+    "sha256": "7afca9523a7bbbe5ae64a15dacba795a2df1146bdd8a64f2eece7327707689cf"
+  },
+  {
+    "file": "moved.kcad",
+    "note": "Konum=6 m with width2, source UID and measure refs unchanged.",
+    "sha256": "544ad4ef3737d8f9862c962ec2a3b33be44c2619e5b94e5cbf687d0ad2656d52"
+  },
+  {
+    "file": "move-undo.kcad",
+    "note": "Single move undo.",
+    "sha256": "7afca9523a7bbbe5ae64a15dacba795a2df1146bdd8a64f2eece7327707689cf"
+  },
+  {
+    "file": "move-redo.kcad",
+    "note": "Single move redo.",
+    "sha256": "544ad4ef3737d8f9862c962ec2a3b33be44c2619e5b94e5cbf687d0ad2656d52"
+  },
+  {
+    "file": "thick.kcad",
+    "note": "Wall width0.4; opening at6 width2; bound points y0.2.",
+    "sha256": "6684717ab526dc034b41463303182803a39d44407a09bc49c4cb5e31c93e3fb4"
+  },
+  {
+    "file": "thickness-undo.kcad",
+    "note": "Single thickness undo, exact moved model.",
+    "sha256": "544ad4ef3737d8f9862c962ec2a3b33be44c2619e5b94e5cbf687d0ad2656d52"
+  },
+  {
+    "file": "thickness-redo.kcad",
+    "note": "Single thickness redo, exact thick model.",
+    "sha256": "6684717ab526dc034b41463303182803a39d44407a09bc49c4cb5e31c93e3fb4"
+  },
+  {
+    "file": "broken.kcad",
+    "note": "Deleted wall: opening hostGone, two dimension refs no_such_place, unrelated line unchanged.",
+    "sha256": "85f4507d70bb279bcc738e8209d5622f06292cbf92ce254fb67aab989c5e41f5"
+  },
+  {
+    "file": "delete-undo.kcad",
+    "note": "Single deletion undo returns thick model.",
+    "sha256": "6684717ab526dc034b41463303182803a39d44407a09bc49c4cb5e31c93e3fb4"
+  },
+  {
+    "file": "delete-redo.kcad",
+    "note": "Single deletion redo returns identical broken model.",
+    "sha256": "85f4507d70bb279bcc738e8209d5622f06292cbf92ce254fb67aab989c5e41f5"
+  },
+  {
+    "file": "final.kcad",
+    "note": "Restored created model after full history sequence.",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Repeated new-process open/save; literal source path, independent full expected model check.",
+    "sourcePath": "/Users/cihad/Projects/kentos-cad/.run/opening-dimensions/isolated/gui.kcad",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "cancelled.kcad",
+    "note": "Repeated actual two-jamb preview/Escape/save; literal source path.",
+    "sourcePath": "/Users/cihad/Projects/kentos-cad/.run/opening-dimensions/isolated/gui.kcad",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  },
+  {
+    "file": "compact-final.kcad",
+    "note": "After 16 px dark compact GUI Save, literal clean source path; whole model unchanged.",
+    "sourcePath": "/Users/cihad/Projects/kentos-cad/.run/opening-dimensions/isolated/gui.kcad",
+    "sha256": "919abc30258728908fb4d93752732ff44028aac175bc4c3a80d3400dfb606fa4"
+  }
+]

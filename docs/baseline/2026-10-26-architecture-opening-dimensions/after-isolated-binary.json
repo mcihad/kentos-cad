@@ -1,0 +1,11 @@
+{
+  "parentCommit": "ea7d1baeeb2e949062eb3aec6d900d4b697c7983",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Jamb Validation.app",
+  "sha256": "ceb373abcaf6796fdb0e656bf6fff1e2abc8619048edcaf400ee514c43f76f12",
+  "sourceFiles": {
+    "crates/shared/geometry-core/src/ops/subref.rs": "5f394a7ca60dc168ad91f24354e7db7ea3f4388ae3b6a102fe263758ef88b3cd",
+    "crates/shared/geometry-core/src/store/snap.rs": "1571c8ef3dfaac04072c7355b4b8d679bb796100fd64fe67a2e2f362876454c6",
+    "crates/native/application/src/blocks.rs": "72bd64d33ac3b48f4f8e6d51495726e1f1def365d0b17259dbbdb08e95090926"
+  },
+  "note": "Identical frozen final binary, separate app/config/data; clean final file copied after diagnostic interference preserved."
+}
