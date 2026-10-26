@@ -75,6 +75,26 @@ pub(crate) fn pressed(event: &Event) -> Option<(Named, Modifiers)> {
     }
 }
 
+/// A character shortcut belongs to the host, except field editing and AltGr text.
+pub(crate) fn host_character_chord(event: &Event) -> bool {
+    let Event::Keyboard(keyboard::Event::KeyPressed {
+        key: key @ keyboard::Key::Character(_), physical_key, modifiers, text, ..
+    }) = event else { return false; };
+    let altgr = modifiers.control() && modifiers.alt() && !modifiers.logo()
+        && text.as_deref().is_some_and(|s| {
+            let mut chars = s.chars();
+            chars.next().is_some_and(|c| !c.is_alphanumeric() && !c.is_control())
+                && chars.next().is_none()
+        });
+    let editing = modifiers.command() && match key.to_latin(*physical_key) {
+        Some('a' | 'c' | 'x') => true,
+        Some('v') => !modifiers.alt(),
+        _ => false,
+    };
+    (modifiers.control() || modifiers.logo()) && !altgr && !editing
+}
+
+
 /// Ok tuşunun adımı: sol ve yukarı −1, sağ ve aşağı +1.
 pub(crate) fn arrow_step(named: Named) -> Option<i32> {
     match named {

@@ -1,0 +1,107 @@
+[
+  {
+    "file": "01-before-tab-save-types-s.jpg",
+    "note": "After editing first number and Tab, Cmd-S is captured as printable s by the command line; no toolbar Save pressed. Before widget fix.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T00:50:43.791Z",
+    "sha256": "19347cc84a9350d2553c35831650b46fa271129f7e3f91ae0f067637eb6dcb8b"
+  },
+  {
+    "file": "02-after-initial.jpg",
+    "note": "First CommandLine-only guard binary opened a separate copy of the accepted four-room model; light 18 px.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T01:00:57.529Z",
+    "sha256": "7c5ba60c95385097cdc9bc566a19f8ab874808de40d6029e23b5348a9276e0f8"
+  },
+  {
+    "file": "03-unsaved-room-change.jpg",
+    "note": "One Enter commits U-099 in memory. No Save has occurred; the initial V-099 must still be on disk.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T01:01:28.197Z",
+    "sha256": "d7a2ae15d066abc02345b4193754db1f3b6428e712e018d90bdcd7f3b38ceb28"
+  },
+  {
+    "file": "04-tab-cmd-save-keeps-preview.jpg",
+    "note": "Tab from visible first-number field then Cmd-S: no s is inserted, unsaved U-099 is saved, P-101 stays a preview and tool remains active. No toolbar Save used.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T01:01:58.723Z",
+    "sha256": "601e28a2eee60442cf21096ac686c2fe0158047e14dd1a0c106479168b2dc8c5"
+  },
+  {
+    "file": "05-property-field-command-s-failed.jpg",
+    "note": "Diagnostic: compact frame Tab left the property cell editing; Cmd-S appended s to its P-102 buffer. CommandLine-only fix does not protect EditCell.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T01:03:30.789Z",
+    "sha256": "9a82481214a725b8a4afad953f221a9878625702206877f3b96de9f3921c137a"
+  },
+  {
+    "file": "06-invalid-field-restored-save.jpg",
+    "note": "Diagnostic: Enter rejects P-102s and restores valid P-101; tool stays active. A following Cmd-S saves prior U-099, not P-102. This is not a single-confirm acceptance.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T01:03:31.578Z",
+    "sha256": "11fc2279379dec5507b84290b828ab63bcf421c83faa8eb56e10be622ed9a88a"
+  },
+  {
+    "file": "07-final-initial.jpg",
+    "note": "Final binary protects CommandLine and EditCell; isolated model reset to V-099/V-100/D-009/Z-002, light18.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:14:22.648Z",
+    "sha256": "7c5ba60c95385097cdc9bc566a19f8ab874808de40d6029e23b5348a9276e0f8"
+  },
+  {
+    "file": "08-final-unsaved-U099.jpg",
+    "note": "Final package: U-099 committed in memory with one tool confirmation, still unsaved; disk remains V-099.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:14:50.032Z",
+    "sha256": "814bcb53aa752630075b4dba63167dbbd1efbc7d33001649556d61d9ef068948"
+  },
+  {
+    "file": "09-final-focused-cell-save.jpg",
+    "note": "Direct Cmd-S while EditCell is editing P-101: buffer contains no s, prior U-099 is saved, Z-001 remains the uncommitted tool setting. No Tab, Enter or toolbar Save.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:15:24.325Z",
+    "sha256": "f540251fa142e99927edd608521608f814a49a0ab2772d392355a11adce83251"
+  },
+  {
+    "file": "10-final-compact-cell-and-tab-save.jpg",
+    "note": "Compact light18: direct Cmd-S and Tab→Cmd-S preserve P-102 text without s; Tab commits the setting, so P-102 is visibly previewed while the room/table stay U-099. One subsequent tool Enter applies it; disk snapshots are recorded separately.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:16:40.969Z",
+    "sha256": "4aff8fa28902a1bf6dec18b324d641be263e22c834cd0f90261b36daf7eb2bae"
+  },
+  {
+    "file": "11-final-enter-then-cmd-save.jpg",
+    "note": "After Tab committed the setting, a single tool Enter applied P-102 and closed it; Cmd-S now saves the changed model. No toolbar Save.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:17:22.739Z",
+    "sha256": "f970022e4ceda8f9bd54840b68b17b861fe9c3d3f60ba1c97e4ab19bdbc8ec58"
+  },
+  {
+    "file": "12-final-undo-cmd-save.jpg",
+    "note": "A single Cmd-Z restores U-099 from P-102; Cmd-S saves it. Geometry, labels and schedule stay linked.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:17:57.100Z",
+    "sha256": "2997ca334999d0ff511ba65233aaedf6dd484adcc87b6a8b0bbcf53219d904c3"
+  },
+  {
+    "file": "13-final-dark-focused-cell-save.jpg",
+    "note": "Final both-guard binary, dark theme 13 px. First number draft Q-099 remains focused after direct Cmd-S without Tab or Enter: no s inserted; applied tool preview remains Z-001 and model stays U-099. Actual disk snapshot checked separately.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:22:23.104Z",
+    "sha256": "960b747050569bd44d8589abc6218492e99684d31a7c80e575013b7df628e7aa"
+  },
+  {
+    "file": "14-final-dark-command-line-save.jpg",
+    "note": "Final both-guard binary, dark 13 px. Enter commits only First number Q-099, then explicit command-line focus and Cmd-S keep the Q-099 preview running and leave the room/table at U-099; no s appears.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:22:37.156Z",
+    "sha256": "a0f18076bc2c6e4bfca4905a6f2a1ea053f42fd03f9975ea7ebb6623a13f3a82"
+  },
+  {
+    "file": "15-final-dark-cancel-save.jpg",
+    "note": "Final both-guard binary, dark 13 px. One Escape from command-line focus cancels Q-099 preview; Cmd-S saves unchanged U-099 room/table. Tool strip and blue preview are closed, no s typed.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T01:22:44.714Z",
+    "sha256": "241a1cd07f29b37dccc442b21caff5aa4b35d6d2bc543be64866771be442f451"
+  }
+]

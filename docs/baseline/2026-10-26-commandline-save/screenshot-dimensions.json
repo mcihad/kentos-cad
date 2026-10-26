@@ -1,0 +1,152 @@
+[
+  {
+    "file": "01-before-tab-save-types-s.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "02-after-initial.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "03-unsaved-room-change.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "04-tab-cmd-save-keeps-preview.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "05-property-field-command-s-failed.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "06-invalid-field-restored-save.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "07-final-initial.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "08-final-unsaved-U099.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "09-final-focused-cell-save.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "10-final-compact-cell-and-tab-save.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "11-final-enter-then-cmd-save.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "12-final-undo-cmd-save.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "13-final-dark-focused-cell-save.jpg",
+    "pixelWidth": 3024,
+    "pixelHeight": 1744,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "14-final-dark-command-line-save.jpg",
+    "pixelWidth": 3024,
+    "pixelHeight": 1744,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "15-final-dark-cancel-save.jpg",
+    "pixelWidth": 3024,
+    "pixelHeight": 1744,
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  }
+]

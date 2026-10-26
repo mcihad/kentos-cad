@@ -15,6 +15,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Odaklı komut/özellik alanında Kaydet (26 Ekim 2026; [ADR 0654](docs/adr/0654-command-line-chords.md)).**
+  CommandLine ve EditCell, Cmd/Ctrl karakter kısayollarını iç metin girişinden
+  önce host'a bırakır; A/C/X/V, AltGr ve taslak korunur. Kaydet tamponu
+  onaylamaz; mevcut Enter/odak kaybı değişmez. [Kabul](docs/baseline/2026-10-26-commandline-save/README.md):
+  gerçek eski/yeni hatası, 38 ilgili test, clippy/build; 15 ham görüntü ve
+  dokuz bağımsız disk kopyası. Diğer giriş bileşenleri ve tam mimari matris
+  açık; komut/model/Python/MCP/TS değişikliği yoktur.
+
 - **Açık mahal numaralandırma (26 Ekim 2026; [ADR 0653](docs/adr/0653-explicit-room-numbering.md)).**
   Tıklama/yön izdüşümü, tam ilk numara ve sıfır dolgusu; UUID/etiket/çizelge
   tek undo'da korunur. Seçim dışı aynı tam numara atomik reddir; plan/Python/MCP

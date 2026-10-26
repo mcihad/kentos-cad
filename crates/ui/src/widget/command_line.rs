@@ -1924,6 +1924,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
             return;
         };
 
+        // Iced 0.14 accepts printable `text` even on Cmd-S. Do not let the
+        // focused input consume host chords; keep its A/C/X/V editing keys.
+        if super::key_focus::host_character_chord(event) {
+            self.probe(tree, input_layout, renderer);
+            self.report_focus(tree.state.downcast_mut::<State>(), shell);
+            return;
+        }
+
         // Öneri listesi ve geçmiş tuşları yazı kutusundan önce ele alınır.
         if let Event::Keyboard(keyboard::Event::KeyPressed {
             key: keyboard::Key::Named(named),
@@ -2481,6 +2489,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Suggestions<
     }
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2708,3 +2717,7 @@ mod tests {
         assert_eq!(recall(&history), ["12", "X", "OLCU"]);
     }
 }
+
+#[cfg(all(test, feature = "snapshot"))]
+#[path = "command_line_keys.rs"]
+mod keyboard_tests;

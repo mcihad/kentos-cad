@@ -187,11 +187,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [doğrulandı](../docs/baseline/2026-10-25-architecture-element-units/README.md).
   Merdiven/rampa tasarım iş akışları ve genel GUI matrisi açık kalır.
 
-- [ ] Mac etkin araçta Cmd-S yönlendirmesi: ADR0653 gerçek denemesinde
-  kısayol Kaydet yerine komut satırına `s` gönderdi. Üst Kaydet çalışıyor;
-  önizlemede ve ret sonrası disk korunumu onunla doğrulandı (20/42).
-  Bütün araçlar/alan odağı için regresyonla ele alınmalı; kusurun hangi
-  değişiklikte başladığı bu kayıttan çıkarılmaz.
+- [x] Mac etkin araçta CommandLine/EditCell Cmd-S yönlendirmesi: ADR0653'te
+  görülen `s` ekleme gerçek eski/yeni widget ve Mac GUI ile düzeltildi.
+  Alan taslağı, çalışan önizleme ve mevcut Enter/odak kaybı korunur; Kaydet
+  taslağı onaylamaz. 38 test, clippy/build, 15 ham görüntü ve dokuz bağımsız
+  disk kopyası; doğrudan hücre/Tab/komut satırı, tek onay/undo/Escape.
+  [ADR 0654](../docs/adr/0654-command-line-chords.md),
+  [kanıt](../docs/baseline/2026-10-26-commandline-save/README.md).
+- [ ] Diğer giriş bileşenlerinin bütün araç/alan odağı klavye matrisi ve
+  §10'daki tam boyut/font/tema kabulü. Tab sırası bu dilimde yeniden
+  tasarlanmadı; kusurun ilk hangi commit'te başladığı araştırılmadı.
 
 ### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 
@@ -811,3 +816,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-01 / ARCH-PERF-01 / ADR 0651 | Aynı immutable metraj sorgusunda kaynak/ağ paylaşımı, 100 tam eski/yeni cevap eşit; 300 Python, 268 application/103 domain/6 MCP. 400 mahal/21.000 nesnede sıcak debug ortanca 8646,943→83,765 ms, ilk yeni sorgu 815,623 ms. Gerçek Metraj genişlik/sağ-alt kenar düzeltmesi, 22 ham görüntü ve bağımsız CSV/KCAD. | [~] Bu sorgu/yerleşim dilimi doğrulandı; release/bellek/UI/GPU ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-quantity-cache/README.md) |
 | 2026-10-26 | ARCH-DOC-02 / ADR 0652 | CSV seçili sekmeyi yazar; 200/400/0 satır, XLSX/ODS üç sayfa/600. Gerçek iptal/geçmiş/kayıt-aç, bağımsız CSV/XML/KCAD, 17 ham görüntü; üç desktop testi, clippy/build. Eski ham metraj değerlerinin uzun sayı koruma notu kaydedildi. | [~] Bu çıktı dilimi doğrulandı; gruplama/evre/tip, sayı biçimi ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-quantity-export/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0653 | Kimliği koruyan tıkla/yönle numaralandırma, görünür önizleme, tek onay/undo, etiket/çizelge ve Python/MCP/kayıt-tekrar; 68 bağımsız durum, 300 Python. Gerçek iç seçim kusuru ve uzun önizleme yazısı düzeltildi; 52 ham ekran, 20 disk anlık görüntüsü bağımsız KCAD kontrolünde. | [~] Numaralandırma dilimi doğrulandı; numara/ad listeleri, daha zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-space-number/README.md) |
+| 2026-10-26 | ARCH-BASE-01 / ADR 0654 | CommandLine ve EditCell odaktayken Cmd-S harf eklemeden mevcut Kaydet yoluna ulaşır; onaylanmamış tampon/araç önizlemesi korunur. Gerçek GUI ikinci giriş yolunu yakaladı; 38 test, clippy/build, 15 ham görüntü, dokuz bağımsız disk kopyası geçti. | [~] İki bileşenli düzeltme doğrulandı; diğer girişler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-commandline-save/README.md) |

@@ -700,6 +700,41 @@ mod tests {
     }
 
     #[test]
+    fn a_command_save_left_by_the_focused_line_keeps_the_running_preview() {
+        use iced::{Event, event, keyboard::{self, Key, Modifiers, key::{Code, Physical}}};
+        let dir = scratch("command-line-save");
+        for modifiers in [Modifiers::CTRL, Modifiers::LOGO] {
+            let path = dir.join(if modifiers.logo() { "command.kcad" } else { "control.kcad" });
+            let mut app = app_with_drawing();
+            app.picker = Picker::File(path.clone());
+            let layer = app.document.as_ref().expect("drawing").layers()[0].id.clone();
+            let _ = app.update(Message::LayerLocked(layer));
+            let _ = app.run("tool.line");
+            app.with_tool(|s, cx| { s.accept_point(kentos_interaction::Vec2::new(3., 5.), cx); });
+            let before = app.document.as_ref().expect("drawing").model.to_snapshot_v2();
+            app.command_input = "42".into();
+            let _ = app.update(Message::CommandFocus(true));
+            let message = crate::keys::key_event(Event::Keyboard(keyboard::Event::KeyPressed {
+                key: Key::Character("s".into()), modified_key: Key::Character("s".into()),
+                physical_key: Physical::Code(Code::KeyS), location: keyboard::Location::Standard,
+                modifiers, text: Some("s".into()), repeat: false,
+            }), event::Status::Ignored, iced::window::Id::unique()).expect("host key");
+            let task = app.update(message);
+            drive(&mut app, task);
+            assert_eq!(app.command_input, "42", "save is not a typed value");
+            assert_eq!(app.session.tool_id(), "line");
+            assert_eq!(app.session.point_count(), 1, "save must not commit or cancel the draft");
+            let doc = app.document.as_ref().expect("drawing");
+            assert!(!doc.dirty(), "{}", last_said(&app));
+            assert_eq!(doc.model.to_snapshot_v2(), before);
+            assert_eq!(crate::document::Document::read(&path).expect("saved drawing")
+                .model.to_snapshot_v2(), before);
+            assert!(last_said(&app).starts_with("Kaydedildi:"));
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn a_stopped_save_says_so_and_the_drawing_stays_unsaved() {
         let dir = scratch("app-stop");
         let path = dir.join("pafta.kcad");

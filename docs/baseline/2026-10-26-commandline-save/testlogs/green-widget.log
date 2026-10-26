@@ -1,0 +1,13 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.42s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 3 tests
+test widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text ... ok
+test widget::command_line::keyboard_tests::plain_shift_option_and_altgr_input_remain_text ... ok
+test widget::command_line::keyboard_tests::platform_select_all_copy_cut_and_paste_still_belong_to_the_field ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 281 filtered out; finished in 54.39s
+

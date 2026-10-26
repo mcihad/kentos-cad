@@ -1,0 +1,91 @@
+[
+  {
+    "file": "before-cmd-save.kcad",
+    "numbers": null,
+    "note": "After visible U-099 edit without saving, disk is still exactly the initial V-099 model.",
+    "sha256": "36238b9cae3fa61a3c162ec0196ac0dc49bae3b33230be7bd890610a2ffae573"
+  },
+  {
+    "file": "cmd-save-preview.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "First-number field P-101, Tab then Cmd-S saves prior committed U-099, retains preview, inserts no s. No toolbar used.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "final-before-cmd-save.kcad",
+    "numbers": null,
+    "note": "Final package: U-099 committed only in memory; disk is independently confirmed V-099 before using keyboard Save.",
+    "sha256": "36238b9cae3fa61a3c162ec0196ac0dc49bae3b33230be7bd890610a2ffae573"
+  },
+  {
+    "file": "final-cell-cmd-save.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Direct Cmd-S from focused EditCell saved committed U-099; P-101 text stayed uncommitted and unchanged.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "final-compact-preview.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Compact Cmd-S in editing cell and after Tab kept disk U-099; subsequent tool Enter changed only memory to P-102, still not saved at capture.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "final-enter-cmd-save.kcad",
+    "numbers": [
+      "P-102",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "One Enter from preview closes tool; Cmd-S saves P-102 and its followers without any toolbar Save.",
+    "sha256": "d1603fd08313f89b84bfe3cf0a9f78a0cbf86b11478e82691e71f3c677fc3919"
+  },
+  {
+    "file": "final-undo-cmd-save.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "One Cmd-Z plus Cmd-S restores the exact previous committed U-099 model.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "final-dark-cell-save.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Dark 13px, focused draft Q-099 then Cmd-S; disk retains U-099, uncommitted property draft and tool preview not applied.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "final-dark-cancel-save.kcad",
+    "numbers": [
+      "U-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Dark 13px, after focused command-line Cmd-S, one Escape cancelled Q-099 preview. Another Cmd-S saved unchanged U-099 model.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  }
+]

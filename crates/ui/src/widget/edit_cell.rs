@@ -246,6 +246,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
             return;
         }
 
+        // A host save chord must neither type a letter nor commit this edit buffer.
+        if super::key_focus::host_character_chord(event) {
+            return;
+        }
+
         let mut edits = Vec::new();
         let mut local = Shell::new(&mut edits);
         self.parts[0].as_widget_mut().update(
