@@ -1,0 +1,196 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+   Compiling kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+   Compiling kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+   Compiling kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9m 23s
+     Running unittests src/lib.rs (target/debug/deps/kentos_mcp-dfa17b2aba32135c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/kentos_mcp-faa2619825a7ea18)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/acceptance.rs (target/debug/deps/acceptance-607e13c940f640c3)
+
+running 22 tests
+test an_agent_exports_a_real_ink_profile_with_the_common_pen_fields ... ok
+test an_agent_edits_drawing_set_fields_and_queries_the_persisted_standard_identity ... ok
+test an_agent_creates_the_calibration_template_and_measures_real_pdf_marks ... ok
+test an_agent_exports_searchable_unicode_and_analytic_paper_curves ... ok
+test an_agent_saves_applies_and_exports_a_named_page_setup ... ok
+test an_agent_configures_a_fractional_viewport_and_the_view_lock_is_enforced ... ok
+test an_agent_creates_a_six_page_architectural_set_and_exports_each_shared_master_at_its_page_size ... ok
+test an_agent_plans_and_publishes_a_pinned_sheet_delivery ... ok
+test an_agent_keeps_twenty_native_plot_profiles_before_any_sheet_exists ... ok
+test import_scale_agent_uses_the_same_physical_reference_and_undo_in_a_project_with_crs ... ok
+test model_and_paper_changeset_is_undoable_and_later_paper_has_a_typed_conflict ... ok
+test live_named_view_is_resolved_by_mcp_without_rewriting_its_capture ... ok
+test sheet_create_fit_and_detailed_read_work_as_one_atomic_agent_changeset ... ok
+test sheet_preflight_agent_reads_native_source_errors_without_an_output_path ... ok
+test sheet_snapshot_agent_plan_guard_and_pdf_source_are_the_same_revision ... ok
+test sheet_package_agent_delivers_real_fonts_and_refuses_a_changed_recorded_delivery ... ok
+test the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_says ... ok
+test the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says ... ok
+test sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer ... ok
+test twenty_agent_viewport_queries_return_source_uids_and_ignore_clipped_snap_points ... ok
+test twenty_viewport_annotation_and_layer_operations_use_the_catalog_and_undo ... ok
+test explicitly_scoped_viewport_model_commands_and_navigation_replay_independent_cases ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.77s
+
+     Running tests/jobs.rs (target/debug/deps/jobs-5e8691719cc315cc)
+
+running 2 tests
+test a_failed_job_is_an_error_the_model_reads_with_its_code ... ok
+test an_import_is_staged_asked_for_waited_on_and_its_result_taken ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.96s
+
+     Running tests/mcp.rs (target/debug/deps/mcp-ec33387c331ec4f9)
+
+running 31 tests
+test a_desktop_handle_sends_the_tools_to_the_drawing_on_the_screen ... ok
+test a_layer_is_labelled_by_rules_and_a_label_pinned ... ok
+test a_model_writes_by_the_protocol_with_requests_stamps_jobs_and_a_journal ... ok
+test a_layer_takes_a_heat_map_and_gives_it_back ... ok
+test a_millimetre_cad_project_takes_metres_and_says_its_unit ... ok
+test a_rectangular_architectural_room_uses_the_same_semantic_command ... ok
+test a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_reads_back ... ok
+test a_layers_time_and_a_scenario_go_through_their_tools ... ok
+test a_layers_filter_goes_through_its_tool_and_leaves_the_objects ... ok
+test an_agent_keeps_and_renames_a_named_view ... ok
+test a_legacy_client_shakes_hands_and_is_served_without_meta ... ok
+test an_agent_makes_publishes_and_uses_a_form ... ok
+test an_agent_imports_a_dxf_in_its_unit ... ok
+test an_agent_changes_the_unit_and_measures_in_a_batch ... ok
+test an_agent_must_explicitly_accept_a_reported_polyline_loss ... ok
+test an_agent_imports_a_dwg_through_the_pinned_codec ... ok
+test an_agent_prepares_a_stac_item_and_a_bad_search_is_a_refusal ... ok
+test an_offset_by_its_meaning_gives_the_tools_copy ... ok
+test an_agent_sets_a_ucs_and_turns_its_points_explicitly ... ok
+test architectural_template_review_preserves_settings_and_undoes_as_one_package ... ok
+test external_cad_opens_through_mcp_without_creating_a_project_first ... ok
+test refusals_a_model_can_act_on_are_results_and_malformed_requests_are_errors ... ok
+test measured_partition_is_discoverable_and_plannable_without_client_geometry ... ok
+test layers_styles_and_settings_go_through_their_tools ... ok
+test new_cad_defaults_follow_the_wizard_for_every_unit ... ok
+test selection_and_donut_use_the_same_native_commands_as_python ... ok
+test spatial_sources_keep_xyz_through_the_agent_import_and_history_tools ... ok
+test the_process_speaks_json_lines_on_stdio ... ok
+test the_servers_tools_need_the_account_the_environment_names ... ok
+test the_catalog_and_the_open_drawings_are_resources ... ok
+test the_read_only_hint_follows_the_catalogs_effect ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.89s
+
+     Running tests/opening_array.rs (target/debug/deps/opening_array-bed67e1e216fc661)
+
+running 1 test
+test array_schema_plan_write_undo_and_number_conflict_use_the_real_host ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s
+
+     Running tests/opening_placement.rs (target/debug/deps/opening_placement-c4d069fb1df656b9)
+
+running 1 test
+test precision_placement_is_discoverable_and_an_agent_gets_the_same_geometry_and_atomic_refusal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s
+
+     Running tests/room_choices.rs (target/debug/deps/room_choices-3eb23ce921b8c0ff)
+
+running 1 test
+test project_lists_remain_advisory_and_survive_room_undo_and_real_reopen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.66s
+
+     Running tests/source_relations.rs (target/debug/deps/source_relations-9ad58c8881d229e4)
+
+running 1 test
+test the_parcels_owners_are_mapped_written_together_and_paged_through_the_tools ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.09s
+
+     Running tests/space_levels.rs (target/debug/deps/space_levels-2ffa4e3368990a86)
+
+running 1 test
+test room_levels_isolate_overlapping_rooms_plan_and_persist_one_history_step ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.62s
+
+     Running tests/space_number_check.rs (target/debug/deps/space_number_check-77502cd0ca70a8af)
+
+running 1 test
+test room_number_review_is_read_only_and_repair_keeps_the_existing_single_undo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.59s
+
+     Running tests/spaces_discover.rs (target/debug/deps/spaces_discover-c295afb1d052a1b7)
+
+running 6 tests
+test discover_is_available_through_real_mcp_with_preview_atomic_write_repeat_and_history ... ok
+test persistent_column_policy_reaches_real_mcp_plan_quantities_edit_and_one_undo ... ok
+test last_valid_separator_boundary_is_marked_in_mcp_quantities_without_opt_in_flags ... ok
+test virtual_separator_uses_real_mcp_plan_write_following_clear_and_atomic_history ... ok
+test unassigned_source_scope_is_persistent_through_real_mcp_and_edit_undo ... ok
+test persistent_explicit_sources_use_the_same_mcp_plan_write_delete_undo_contract ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s
+
+     Running tests/spaces_number.rs (target/debug/deps/spaces_number-c9d246e31fa3d4e9)
+
+running 1 test
+test numbering_plan_keeps_ids_and_moved_tag_then_one_undo_restores_everything ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.65s
+
+     Running tests/tag_net_area.rs (target/debug/deps/tag_net_area-3773d16bc8ab2122)
+
+running 1 test
+test net_tag_plan_matches_write_and_wall_change_is_one_undo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.64s
+
+     Running tests/tag_refresh.rs (target/debug/deps/tag_refresh-7efb04615d8a5835)
+
+running 2 tests
+test planned_refresh_keeps_manual_place_and_single_undo_with_new_tag_and_reopen ... ok
+test source_floor_scopes_plan_write_and_refresh_through_real_ai_host ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.02s
+
+     Running tests/wall_contours.rs (target/debug/deps/wall_contours-bff554ff02678f20)
+
+running 4 tests
+test explicit_conversion_levels_share_the_native_schema_validation_and_duplicate_scope ... ok
+test shared_axes_use_the_same_headless_plan_and_one_undo ... ok
+test contour_schema_plan_holes_one_undo_and_duplicate_refusal_use_the_real_host ... ok
+test measured_mixed_sources_use_the_same_plan_and_atomic_history_through_mcp ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s
+

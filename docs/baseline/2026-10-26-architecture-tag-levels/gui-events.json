@@ -1,0 +1,217 @@
+[
+  {
+    "file": "01-before-all.jpg",
+    "note": "Önceki sürüm: kaynak mimari kat seçimi yok.",
+    "sha256": "166898a39235f637633297514d00b7960a2e4cd0d5ea487234bb4fcc3f9a6764"
+  },
+  {
+    "file": "02-before-visible.jpg",
+    "note": "Eski sürüm; iki mimari kattaki kaynaklar görünür, kat kapsamı seçilemiyor.",
+    "sha256": "245ce3ebb64168e30202467c80c871115fe0656134d75c2b225272d7590c8340"
+  },
+  {
+    "file": "03-after-all.jpg",
+    "note": "Yeni sürüm varsayılanı Tüm katlar; eski Koru sonucu bir yeni etiket.",
+    "sha256": "e5988b30260aaa2450b039f556423136ec87b730a328e8a678fd70eed9714d3d"
+  },
+  {
+    "file": "04-floor-menu.jpg",
+    "note": "Kaynak mimari katları hedef CAD katmanından ayrı; tümü, atanmamış, Zemin, 1. kat.",
+    "sha256": "85fc5f3736088ff8096c235e4c4ce39954aa5892b192b00bceb5de3070db6df5"
+  },
+  {
+    "file": "05-unassigned-keep.jpg",
+    "note": "Kat atanmamış kaynak zaten etiketli: Koru önizlemesi yazmıyor, seçim tam okunur.",
+    "sha256": "b211fe4842bdba6b899d922c7a9d6d54d4a0ba0bd38ec8332d607a5c11981d5c"
+  },
+  {
+    "file": "06-upper-keep-preview.jpg",
+    "note": "1. kat kaynakları zaten etiketli: Koru planı boş, başka kata yeni etiket koymuyor.",
+    "sha256": "3bd6e426376e74f4d402d77a701b50ab19742950c7afb355cb1fc35e03517d93"
+  },
+  {
+    "file": "07-upper-rejected.jpg",
+    "note": "Boş Koru kapsamına tek Enter; araç açık kalır ve alt katta etiket yaratılmaz.",
+    "sha256": "746a4d1b27c64512d11b40a5be8687ef4b4ca77a97f840a0262506c665b5e560"
+  },
+  {
+    "file": "08-ground-keep-preview.jpg",
+    "note": "Zemin kat Koru: bir yeni etiket, {number} şablonu; diğer katlar ve mevcutlar korunur.",
+    "sha256": "399648c4969e58f4de8b0262c8da25a5560a7128e40ef446e940c66612e04b70"
+  },
+  {
+    "file": "09-keep-context-menu.jpg",
+    "note": "Zemin kat Koru önizlemesi; sağ tuş Onayla / bitir bir kez uygulanacak.",
+    "sha256": "21a9fcbc5058869a0ac7e17da2c8e3d1d452110d5295fea34ae7c1df7638da52"
+  },
+  {
+    "file": "10-keep-one-confirm.jpg",
+    "note": "Sağ tuşta Onayla / bitir tek tık: bir yeni etiket; araç bitti, toplam 12 nesne.",
+    "sha256": "7d2ac6733913ed52a9d33222f458994c0e29c1c552baecb2a5d3b71b9e92acd4"
+  },
+  {
+    "file": "11-keep-undo.jpg",
+    "note": "Bir geri alma yeni etiketi kaldırır; önceki beş etiket ve altı kaynak aynı.",
+    "sha256": "ba0d60f56a76ac2199733078a110cd157ab22c0865eb9215a95d45fdaa4f5c31"
+  },
+  {
+    "file": "12-keep-redo.jpg",
+    "note": "Bir yineleme aynı UUID ve konumla etiketi döndürür.",
+    "sha256": "363e839f89eadbbe48a852271e2e545e92e676b31169800b7bea8abad6f7e6a5"
+  },
+  {
+    "file": "13-ground-refresh-preview.jpg",
+    "note": "Zemin kat: bir yeni, üç yenilenecek; üst kat ve atanmamış etiketleri önizlemeye girmez.",
+    "sha256": "79f993b1d33c95dbcd5c32afe4fa1fa794944c5a4a6dc78df3c38246ea30ee55"
+  },
+  {
+    "file": "14-ground-refresh-confirm.jpg",
+    "note": "Tek Enter: yalnız zemin katında bir yeni + üç yenilenen etiket. Üst kat ve atanmamış etiketi aynı.",
+    "sha256": "9ca88562fc88071b25d7b3834608be062471f044436f667e161198a7b7190603"
+  },
+  {
+    "file": "15-refresh-undo.jpg",
+    "note": "Karma yeni+yenile tek undo ile tüm önceki etiketlere ve 11 nesneye döner.",
+    "sha256": "ca14adfa4eeda9539b9383f8fbc8fd282482042311363770ee95cf56b8a2182c"
+  },
+  {
+    "file": "16-refresh-redo.jpg",
+    "note": "Karma tek redo aynı kimlikler ve elle konumlarla geri gelir.",
+    "sha256": "9bf301658b281d964210fb4f76b9ec751d19332f4f3240c597208b6446917d76"
+  },
+  {
+    "file": "17-upper-refresh-preview.jpg",
+    "note": "Yalnız 1. kat: bir mevcut etiket yenilenecek; dört zemin etiketi ve atanmamış dahil değil.",
+    "sha256": "1d973fcae9797c4b4b0e7193c80e26c82af48989bf97c4b8827554cc193d780a"
+  },
+  {
+    "file": "18-upper-confirm.jpg",
+    "note": "Tek Enter yalnız Depo etiketi; zemin/atanmamış ve tüm kaynaklar aynı.",
+    "sha256": "109c38ff2460bf8d2c7abb94e68509fdbc5c3f50e7e2084595ce7cf1c6f58c7c"
+  },
+  {
+    "file": "19-upper-undo.jpg",
+    "note": "Üst kat yenilemesi tek undo; diğer katlar aynı.",
+    "sha256": "6a52a67abc5f7a81183e4b8cdba19959e70c8de4f6a2a931c85c3abe8de7246f"
+  },
+  {
+    "file": "20-unassigned-refresh-preview.jpg",
+    "note": "İlk derleme: yalnız atanmamış mahalde bir yenileme; iki dolu katın etiketleri dışında. Başlık kesilmesi ayrı düzeltmede.",
+    "sha256": "1e53dba24c2fa29354c32fe84e9b30c6fac178a9dd83837a017d4a473da05523"
+  },
+  {
+    "file": "21-unassigned-confirm.jpg",
+    "note": "Tek Enter yalnız Mutfak etiketi; iki dolu katın etiketleri aynı.",
+    "sha256": "0e3ffee30127f90c51063a94e2d3be9c951605229fbc2af4cf6c93053fce4de2"
+  },
+  {
+    "file": "22-unassigned-undo.jpg",
+    "note": "Atanmamış yenilemesi tek undo; zemin işlemi korunur.",
+    "sha256": "6a63915616af905e45f7cd8cd52dfa747eccffe15ad56e5c418a12edde59b681"
+  },
+  {
+    "file": "23-unassigned-redo.jpg",
+    "note": "Atanmamış yenileme aynı kimlikle geri gelir, kaynaklar değişmez.",
+    "sha256": "cf1b09650c77378177bb1bc60729f56e253903d970a6b2d3b2c984951e434b5d"
+  },
+  {
+    "file": "24-final-reopened.jpg",
+    "note": "Son derleme: kaydedilen iki dolu kat ve atanmamış mahal etiketleri yeni süreçte aynı.",
+    "sha256": "0ec17dce4f3f3c4270aa3aabf8422202121f2b554b723b301b85e57aa83d06f0"
+  },
+  {
+    "file": "25-final-unassigned-readable.jpg",
+    "note": "Son derleme: seçili değer Atanmamış tam okunur; menü açıklaması Yalnız atanmamış olarak korunur.",
+    "sha256": "eed37776949e064e78ee9dc3776a48706491e730e1ba6baa04629d0e3a43259b"
+  },
+  {
+    "file": "26-final-floor-menu.jpg",
+    "note": "Son derlemede tam kat menüsü: tümü, yalnız atanmamış, iki proje katı ve düzenle.",
+    "sha256": "4398c68b54800e16fc6ba129269f76a3d3a0c50cc6c9c900aba00fd8683a2692"
+  },
+  {
+    "file": "27-final-upper-preview.jpg",
+    "note": "Son derlemede yalnız 1. kat, Yenile ve {name}: tek yenileme; önizleme modele yazmaz.",
+    "sha256": "1df34334419df451cc6e905c27831114a1273f28ec6c7ce3846e786eb341e96f"
+  },
+  {
+    "file": "28-final-upper-confirm.jpg",
+    "note": "Son derlemede tek Enter, bir üst kat etiketi; araç bitti ve dosya kaydedildi.",
+    "sha256": "c5bf9b47c4b4319521cb31d5d3b256e177220bb3c8a84c2541a1ef93cfae2aef"
+  },
+  {
+    "file": "29-final-upper-undo.jpg",
+    "note": "Son derlemede tek undo üst kat etiketini geri aldı; zemin ve atanmamış etiketler korundu.",
+    "sha256": "7fea6a87fe888c2299ea6b03279455d2dce872ee60eb4c81961d6d63be71c0dc"
+  },
+  {
+    "file": "30-final-upper-redo.jpg",
+    "note": "Son derleme: aynı üst kat etiketi tek redo ile yenilendi; kimlik ve konum korunur.",
+    "sha256": "614b2c25951129544c66995d627573ec46b80af45ccd025eb966c7f519fe543d"
+  },
+  {
+    "file": "31-dark18-compact-source.jpg",
+    "note": "Son derleme, koyu tema 18 px ve dar pencere: Kaynak katı Atanmamış tam görünür; hedef etiket katmanı ayrıdır.",
+    "sha256": "adb9afeeb87c4ee858efe5b04bb78ab9ac23dbf499749afa22451b7e25c3bf90"
+  },
+  {
+    "file": "32-dark18-compact-menu.jpg",
+    "note": "Koyu18 dar pencerede kat menüsü yukarı açılır; tam açıklamalar ve iki kat ekrandadır.",
+    "sha256": "f771c5693ce6109567bc9e666000ffe782848df0ae362e8a8aab54ea01ba6ce6"
+  },
+  {
+    "file": "33-dark18-compact-lower.jpg",
+    "note": "Koyu18 dar pencerede alt ayarlar ve uygulanmıyor açıklaması kaydırmayla erişilir.",
+    "sha256": "6dda927b4c4beff897a9dd4cb237d185ae930e70d13130934c37733b5dd2de18"
+  },
+  {
+    "file": "34-dark18-compact-bottom.jpg",
+    "note": "Koyu18 dar pencerede en alt Kapsam ve Boş ayarlar açıklamaları kaydırmayla tam okunur.",
+    "sha256": "7046ff30b3e5406289f56be5080b384e7b808559739aac7c495af33dd37c701d"
+  },
+  {
+    "file": "35-light13-wide-keyboard.jpg",
+    "note": "Tanısal: ilk F yapıştırma denemesinde kapsam Tüm katlar kaldı; klavye seçimi kabulü değildir. Ayrı gerçek tuş girişiyle tekrarlandı.",
+    "sha256": "5ed0e861b12e50b7551a8eead99d6dcdb1678b862b7f8c2bc02976cfebf57dd2"
+  },
+  {
+    "file": "36-light13-compact-keyboard.jpg",
+    "note": "Açık13 dar pencerede gerçek f tuşu ile Kaynak katı Zemin kat; alan ve hedef ayrı okunur.",
+    "sha256": "9ff950aedfed57969dd5913ccf85b9a3d82095954d1404af3d0eeeceb17c3621"
+  },
+  {
+    "file": "37-light13-compact-keyboard-upper.jpg",
+    "note": "Tanısal: f henüz komut tamponunda; seçenek henüz onaylanmadı, kat değişimi kabulü değildir.",
+    "sha256": "5af3cf26f531ddb4bbb57db3868717fa8972671cab4168c4032ac0f385c8da95"
+  },
+  {
+    "file": "38-light13-compact-menu.jpg",
+    "note": "Açık13 dar pencerede kat menüsünün tüm açıklamaları ve iki kat görünür.",
+    "sha256": "608181abf61f93d6a8ef9992c6b4a14b8a41d57aaea1b923878132e36513ae69"
+  },
+  {
+    "file": "39-light13-keyboard-submitted.jpg",
+    "note": "Gerçek f + Enter sonrasında Kaynak katı 1. kat olur; araç açık ve dosya değişmemiştir.",
+    "sha256": "07fb6d3e894c7ca37a8dabd09be01771fbebf285984480fd60f73e5be28bfcb5"
+  },
+  {
+    "file": "40-light13-compact-unassigned.jpg",
+    "note": "Açık13 dar pencerede menüden Atanmamış seçilir; kaynak katı ve etiket katmanı tam okunur.",
+    "sha256": "8f56db516c284ddb23b7901ee09bc3b900d9edfce2c1211f43d9352a8637e7dc"
+  },
+  {
+    "file": "41-light13-cancel-preview.jpg",
+    "note": "Açık13 dar pencerede yalnız Atanmamış, Yenile, Mahal {name}: bir yenileme; onaysız taslak.",
+    "sha256": "3347a1a83ed1ab3298435b5b8aac204bf62a08b958dde328c1a702adf81c3581"
+  },
+  {
+    "file": "42-final-cancel-saved.jpg",
+    "note": "Escape aracı bitirdi; yalnız Atanmamış önizlemesi yazılmadan dosya kaydedildi.",
+    "sha256": "c36f52d03de1df7d3406de3229ce0ca5aad05540b3a2bdffc7f3e6cdfb950e38"
+  },
+  {
+    "file": "43-final-fresh-process.jpg",
+    "note": "Son derleme yeni süreçte açıldı; altı kaynak mahal ve altı etiket, iptal edilen metin yazılmadı.",
+    "sha256": "e1b1626a2791fe14f79e36e875bc7b29a619a9974e57acc12c84a3a0b88b1074"
+  }
+]

@@ -1,0 +1,61 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 30s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+test fixtures::every_command_case_matches_the_desktop_handlers ... FAILED
+
+failures:
+
+---- fixtures::every_command_case_matches_the_desktop_handlers stdout ----
+
+thread 'fixtures::every_command_case_matches_the_desktop_handlers' (4933752) panicked at crates/native/application/tests/all/fixtures.rs:4775:5:
+24 of 290 cases failed:
+cad.tags.create.json › Kat kapsamı None, yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı [], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı [None], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin'], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['kat-1'], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin', None], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin', 'zemin', None], yenile=False: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı None, yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı [], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı [None], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin'], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['kat-1'], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin', None], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat kapsamı ['zemin', 'zemin', None], yenile=True: miras/önizleme/tek undo › 4 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Yanlış kat açık tags ile de atomik ret ['missing'] › 3 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Yanlış kat açık tags ile de atomik ret [None, 'missing'] › 3 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Yanlış kat açık tags ile de atomik ret ['zemin', 'missing'] › 3 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Yanlış kat açık tags ile de atomik ret [''] › 3 validate: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat diğer kaynak süzgeçleriyle kesişir {'layers': ['kapi']} › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat diğer kaynak süzgeçleriyle kesişir {'layers': ['mahal']} › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat diğer kaynak süzgeçleriyle kesişir {'phases': ['new']} › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Kat diğer kaynak süzgeçleriyle kesişir {'phases': ['demolish']} › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Açık tags kat süzgecinden bağımsız [] › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+cad.tags.create.json › Açık tags kat süzgecinden bağımsız ['kat-1'] › 3 plan: girdi okunamadı: unknown field `levels`, expected one of `kinds`, `refresh`, `layers`, `content`, `shape`, `size`, `phases`
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixtures::every_command_case_matches_the_desktop_handlers
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 242 filtered out; finished in 0.41s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

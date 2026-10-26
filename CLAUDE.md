@@ -15,6 +15,18 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Toplu etikette kaynak katı (26 Ekim 2026; [ADR0663](docs/adr/0663-bulk-tag-levels.md)).**
+  Mevcut `cad.tags.create/all.levels`: yok/null tüm katlar, açık kimlikler/
+  atanmamış/birleşim; host duvarından açıklık katı, bilinmeyene kat uydurma
+  yok. Koru/Yenile yalnız uygun kaynakları işler; görünür Kaynak katı ve
+  hedef Etiket katmanı ayrıdır. [Kabul](docs/baseline/2026-10-26-architecture-tag-levels/README.md):
+  26 yeni bağımsız durum/ilgili290, 340 Python/75 MCP, 809 commands,
+  52+221 application/63+704 interaction; clippy/build/WASM/SDK geçti.
+  Gerçek tek onay/ret/iptal/undo/redo/yeni süreçte açma, açık13/koyu18 geniş/
+  dar; 43 ham ekran (tanısallar dahil)/27 tam model. Eski1781 KCAD aynı.
+  Bir mevcut TS tipi güncel; yeni TS/TSX/kalıcı alan/birim/ölçek/render yok.
+  ARCH-SPACE-02 [~]; çoklu görünüş/pafta bağlamı ve tam matris açık.
+
 - **Toplu etikette Koru/Yenile (26 Ekim 2026; [ADR0662](docs/adr/0662-bulk-tag-refresh.md)).**
   Mevcut `cad.tags.create` isteğe bağlı `all.refresh`; yalnız hedef etiket
   katmanında açık alanları yeniler, kimlik/elle yer/kol/diğer katmanlar ve

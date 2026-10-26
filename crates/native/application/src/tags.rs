@@ -6,7 +6,7 @@
 //! `cad.tags.create`'s checks, in order (the first that fails answers): 1. at least one tag (`no_objects`), at most
 //! `MAX_TAGS` (`invalid_tag`); 2. each tag in the input's order: its object's id (`invalid_uid`), its place
 //! (`not_finite`), its object (`entity_not_found`, `not_taggable`), its fields (`invalid_tag`); 3. `all`: its kinds,
-//! layers (`layer_not_found`) and fields (`invalid_tag`), and at least one object it takes when no tag is given
+//! layers (`layer_not_found`), architectural levels (`level_not_found`) and fields (`invalid_tag`), and at least one object it takes when no tag is given
 //! (`no_objects`); 4. the line weight; 5. the expected revision; 6. the layer.
 //!
 //! A tag's words and the point it ties to are written as the document writes them; its place, when not given, is its
@@ -88,6 +88,29 @@ fn tag_of(
 
 fn invalid(words: String, path: &str) -> Stop {
     fail(codes::INVALID_TAG, words, path)
+}
+
+/// Outer None means unknown (for example, an orphan opening), inner None means
+/// explicitly unassigned. Never infer a floor from CAD layers or coordinates.
+fn source_level<'a>(
+    entity: &'a Entity,
+    by_uid: impl Fn(&str) -> Option<&'a Entity>,
+) -> Option<Option<&'a str>> {
+    let arch = match entity {
+        Entity::Wall(e) => &e.wall.arch,
+        Entity::Space(e) => &e.space.arch,
+        Entity::Column(e) => &e.column.arch,
+        Entity::Grid(e) => &e.grid.arch,
+        Entity::Stair(e) => &e.stair.arch,
+        Entity::Ramp(e) => &e.ramp.arch,
+        Entity::Opening(e) => match by_uid(&e.opening.host)? {
+            Entity::Wall(w) => &w.wall.arch,
+            _ => return None,
+        },
+        Entity::Insert(_) => return Some(None),
+        _ => return None,
+    };
+    Some(arch.level.as_deref())
 }
 
 fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
@@ -185,6 +208,20 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
                 ));
             }
         }
+        let levels = doc
+            .settings()
+            .arch
+            .as_ref()
+            .map_or(&[][..], |a| a.levels.as_slice());
+        for (index, level) in all.levels.iter().flatten().enumerate() {
+            if let Some(problem) = kentos_commands::level_problem(level.as_deref(), levels) {
+                return Err(fail(
+                    codes::LEVEL_NOT_FOUND,
+                    problem,
+                    &format!("all.levels[{index}]"),
+                ));
+            }
+        }
         let probe = TagFields {
             of: "-".into(),
             at: Vec2 { x: 0.0, y: 0.0 },
@@ -226,11 +263,18 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
                 .and_then(|u| doc.slot_of(u))
                 .and_then(|s| doc.get(s))
         };
+        let source_levels = all
+            .levels
+            .as_ref()
+            .map(|ls| ls.iter().map(|l| l.as_deref()).collect::<BTreeSet<_>>());
         for e in doc.entities() {
             let layer = &e.base().layer_id;
             if !kinds.contains(&e.kind())
                 || !doc.layers().is_visible(layer)
                 || all.layers.as_ref().is_some_and(|ls| !ls.contains(layer))
+                || source_levels.as_ref().is_some_and(|ls| {
+                    !source_level(e, by_uid).is_some_and(|level| ls.contains(&level))
+                })
                 || all
                     .phases
                     .as_ref()
@@ -751,4 +795,75 @@ pub mod check_tags {
 /// The frame a new tag of `kind` takes when the tool names none.
 pub fn shape_for(kind: &str) -> TagShape {
     kentos_commands::default_shape(kind)
+}
+
+#[cfg(test)]
+mod level_scope_tests {
+    use super::source_level;
+    use kentos_commands::Entity;
+    use serde_json::{Value, json};
+
+    fn entity(kind: &str, fields: Value) -> Entity {
+        let mut e = json!({"kind":kind,"id":1,"layerId":"drawing","attrs":{}});
+        e.as_object_mut()
+            .unwrap()
+            .extend(fields.as_object().unwrap().clone());
+        serde_json::from_value(e).unwrap()
+    }
+
+    #[test]
+    fn all_eight_source_kinds_use_explicit_architectural_floor_only() {
+        let fixtures = [
+            (
+                "wall",
+                json!({"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"width":0.2}),
+            ),
+            ("space", json!({"parts":[]})),
+            ("column", json!({"at":{"x":0.,"y":0.},"width":0.4})),
+            (
+                "grid",
+                json!({"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"name":"A"}),
+            ),
+            (
+                "stair",
+                json!({"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"width":1.,"risers":16,"riserHeight":0.175,"tread":0.3}),
+            ),
+            (
+                "ramp",
+                json!({"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"width":1.,"rise":0.5}),
+            ),
+        ];
+        for (kind, fields) in fixtures {
+            let unassigned = entity(kind, fields.clone());
+            assert_eq!(source_level(&unassigned, |_| None), Some(None), "{kind}");
+            let mut assigned = fields;
+            assigned["arch"] = json!({"level":"ground"});
+            let assigned = entity(kind, assigned);
+            assert_eq!(
+                source_level(&assigned, |_| None),
+                Some(Some("ground")),
+                "{kind}"
+            );
+        }
+        let wall = entity(
+            "wall",
+            json!({"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}],"width":0.2,"arch":{"level":"ground"}}),
+        );
+        let opening = entity(
+            "opening",
+            json!({"host":"wall-uid","at":2.,"width":1.,"place":[{"x":1.,"y":0.1},{"x":1.,"y":-0.1},{"x":2.,"y":0.1},{"x":2.,"y":-0.1}]}),
+        );
+        assert_eq!(
+            source_level(&opening, |u| (u == "wall-uid").then_some(&wall)),
+            Some(Some("ground"))
+        );
+        assert_eq!(source_level(&opening, |_| None), None);
+        let wrong = entity("space", json!({"parts":[],"arch":{"level":"ground"}}));
+        assert_eq!(source_level(&opening, |_| Some(&wrong)), None);
+        let block = entity(
+            "insert",
+            json!({"block":"00000000-0000-4000-8000-000000000001","p":{"x":0.,"y":0.},"scale":1.,"rotation":0.}),
+        );
+        assert_eq!(source_level(&block, |_| None), Some(None));
+    }
 }

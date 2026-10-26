@@ -15,7 +15,13 @@ refresh?: boolean,
 /**
  * Their layers' ids; absent: every layer shown.
  */
-layers?: Array<string>, content?: string, shape?: TagShape, size?: number,
+layers?: Array<string>,
+/**
+ * Source architectural floor ids; absent/null: every floor. A null item selects
+ * unassigned sources; [] selects none. Openings inherit their host wall's floor;
+ * an unresolved host is unknown, not unassigned. Does not filter explicit `tags`.
+ */
+levels?: Array<string | null>, content?: string, shape?: TagShape, size?: number,
 /**
  * Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
  */

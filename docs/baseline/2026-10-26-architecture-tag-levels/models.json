@@ -1,0 +1,137 @@
+[
+  {
+    "file": "target.kcad",
+    "note": "Hedef etiket CAD katmanı; kaynakların tamamı aynı.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "preview-all.kcad",
+    "note": "Varsayılan Tüm katlar önizlemesi dosyaya etiket yazmadı.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "preview-unassigned.kcad",
+    "note": "İlk GUI derlemesi: doğru salt okunur kapsam, seçili uzun başlık kesiliyor.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "cancelled.kcad",
+    "note": "İlk derleme salt okunur önizlemeden Escape; kaynak ve etiketler aynı.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "preview-upper.kcad",
+    "note": "1. kat Koru boş kapsam; belge aynı.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "rejected-upper.kcad",
+    "note": "Boş üst kat Koru onayı atomik ret; alt kata yazmadı.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "preview-ground.kcad",
+    "note": "Zemin kat ve {number} önizlemesi belgeye yazmaz.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "keep.kcad",
+    "note": "İlk derleme: Zemin kat Koru, sağ tuş tek onay bir yeni etiket.",
+    "sha256": "fa600a94a59c402e0b8d5357da3f4d3c210161b22b344f488956d071404e0974"
+  },
+  {
+    "file": "keep-undo.kcad",
+    "note": "Zemin kat yeni etiket tek undo; 11 nesne.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "keep-redo.kcad",
+    "note": "Bir redo aynı yeni etiket; tam model ve bayt karşılaştırılacak.",
+    "sha256": "fa600a94a59c402e0b8d5357da3f4d3c210161b22b344f488956d071404e0974"
+  },
+  {
+    "file": "refresh-preview.kcad",
+    "note": "Zemin kat Yenile: üç mevcut + bir yeni; önizleme diski değiştirmez.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "refresh.kcad",
+    "note": "Zemin kat: bir yeni + üç mevcut, tek Enter.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "refresh-undo.kcad",
+    "note": "Karma etiket yazımı tek undo başlangıca döndürür.",
+    "sha256": "6d818533eae5346959a9767348f7d8cb664e3d473de0a39043fb4b47d2f0029e"
+  },
+  {
+    "file": "refresh-redo.kcad",
+    "note": "Karma yazım tek redo: aynı UUIDler ve konumlar.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "upper-preview.kcad",
+    "note": "Üst kat Yenile yalnız bir etiket, salt okunur.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "upper.kcad",
+    "note": "Üst kat etiketinin tek scoped yenilemesi.",
+    "sha256": "6aab8d86ed8d8722501b53fa2fbfadc0dfa238a6f4c298dd8495ed70ac989cfd"
+  },
+  {
+    "file": "upper-undo.kcad",
+    "note": "Üst kat yenilemesi tek undo; önceki ground modeli.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "upper-redo.kcad",
+    "note": "Üst kat yenilemesi redo aynı tam model.",
+    "sha256": "6aab8d86ed8d8722501b53fa2fbfadc0dfa238a6f4c298dd8495ed70ac989cfd"
+  },
+  {
+    "file": "unassigned-preview.kcad",
+    "note": "Kat atanmamış kaynakta tek yenileme önizlemesi; kaynaklara yazılmaz.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "unassigned.kcad",
+    "note": "Yalnız Mutfak etiketi yenilendi; tüm kaynaklar ve diğer etiketler aynı.",
+    "sha256": "f72481e3f67dbaf66b18541a1da39c6a730e2ef50e3af317b7f6a7da07b4193f"
+  },
+  {
+    "file": "unassigned-undo.kcad",
+    "note": "Atanmamış yenileme geri alma: zemin yenilemesi kalır.",
+    "sha256": "fd1f58915e83573d070ad158bb75d56e2cb099fc15b4b6c372b8f3bd043f1c69"
+  },
+  {
+    "file": "unassigned-redo.kcad",
+    "note": "Atanmamış scoped redo aynı kimlik ve model.",
+    "sha256": "f72481e3f67dbaf66b18541a1da39c6a730e2ef50e3af317b7f6a7da07b4193f"
+  },
+  {
+    "file": "final-upper.kcad",
+    "note": "Son derleme: tek Enter yalnız üst kat etiketini adla yeniledi.",
+    "sha256": "ed559d048384ddb0272d72a6bca1fcb6be14a332bb1d5dd5c15a451ad88c6ba7"
+  },
+  {
+    "file": "final-upper-undo.kcad",
+    "note": "Son derlemede tek undo; diğer katlar ve atanmamış korunur.",
+    "sha256": "f72481e3f67dbaf66b18541a1da39c6a730e2ef50e3af317b7f6a7da07b4193f"
+  },
+  {
+    "file": "final-upper-redo.kcad",
+    "note": "Son derlemede tek redo; üst kat etiketi aynı kimlikle geri geldi.",
+    "sha256": "ed559d048384ddb0272d72a6bca1fcb6be14a332bb1d5dd5c15a451ad88c6ba7"
+  },
+  {
+    "file": "final-cancel.kcad",
+    "note": "Son derlemede Atanmamış yenileme önizlemesi Escape ile iptal; tüm model aynı.",
+    "sha256": "f72481e3f67dbaf66b18541a1da39c6a730e2ef50e3af317b7f6a7da07b4193f"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Son derleme yeni süreçte dosyayı açtı ve yeniden kaydetti; tam model aynı.",
+    "sha256": "f72481e3f67dbaf66b18541a1da39c6a730e2ef50e3af317b7f6a7da07b4193f"
+  }
+]

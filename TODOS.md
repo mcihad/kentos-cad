@@ -51,6 +51,17 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR0663: mevcut `cad.tags.create/all.levels` kaynak mimari
+  kat süzgeci; yok/null tümü, `[null]` atanmamış, kimlik listesi birleşim,
+  boş dizi hiçbir kaynak. Geçersiz kimlik atomik `level_not_found`;
+  açıklık yalnız host duvarının katını alır, kayıp host bilinmez.
+  Web dönüşünde görünür Kaynak katı, hedef CAD etiket katmanından ayrı
+  gösterilip Koru/Yenile/önizleme/tek onay/undo/iptal aynı komuta bağlanmalı.
+  Bir mevcut TS tipi ve katalog güncel; web uygulaması eklenmedi.
+  Masaüstü43 ham ekran (tanısallar dahil)/27 tam model, ilgili290 ortak
+  durum/340 Python/75 MCP ile doğrulandı. Çoklu görünüş/pafta ve web GUI
+  kabulü açıktır; kat süzgeci görünüş modelinin yerine geçmez.
+
 - ARCH-SPACE-02 / ADR0662: mevcut `cad.tags.create` için `all.refresh`
   yok/null/false eski Koru, true yalnız hedef etiket katmanındaki uygun
   etiketlerin açık content/shape/size alanlarını yeniler. Konum/UUID/kol

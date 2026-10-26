@@ -1,0 +1,89 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 09s
+     Running unittests src/lib.rs (target/debug/deps/kentos_native_application-8a44710ac7822de0)
+
+running 52 tests
+test delete::tests::ids_are_lowercase_uuid_text_with_hyphens ... ok
+test changeset::tests::references_are_whole_texts_naming_a_step ... ok
+test field_policy::tests::a_share_keeps_its_total_and_gives_the_rest_to_the_largest_remainders ... ok
+test file_digest::tests::a_file_written_moments_ago_is_not_kept ... ok
+test cad_open::tests::cancellation_and_corruption_never_create_a_drawing ... ok
+test file_digest::tests::a_quiet_file_is_read_once_and_a_changed_one_again ... ok
+test gpkg_tiles::tests::a_canvas_halves_by_2_by_2_means_with_zero_past_its_edge ... ok
+test gpkg_tiles::tests::a_window_is_whole_pixels_cut_to_the_grid ... ok
+test gpkg_tiles::tests::table_names_are_plain_identifiers ... ok
+test gpkg_tiles::tests::a_pyramid_halves_until_one_tile ... ok
+test images_edit::tests::sizes_come_from_the_headers ... ok
+test import_apply::tests::a_block_with_a_number_that_is_not_finite_is_found ... ok
+test hatches_edit::tests::a_whole_ellipse_loop_is_written_back_as_an_ellipse ... ok
+test geometry::tests::a_multi_part_area_goes_to_the_core_and_back_with_its_elevations ... ok
+test cad_paper::tests::affine_circle_is_an_exact_ellipse_and_wide_nonsimilar_path_is_reported ... ok
+test geometry::tests::every_kind_is_written_as_the_core_gives_it ... ok
+test geometry::tests::every_kind_goes_to_the_core_and_back_unchanged ... ok
+test import_apply::tests::an_object_with_a_number_that_is_not_finite_is_found ... ok
+test import_apply::tests::a_locked_or_missing_target_changes_nothing ... ok
+test import_apply::tests::names_fold_as_on_the_web ... ok
+test import_apply::tests::an_insert_of_a_block_the_file_did_not_bring_is_refused ... ok
+test import_apply::tests::blocks_go_in_with_the_objects_under_free_names ... ok
+test import_apply::tests::a_large_import_adds_its_blocks_first_and_durdur_takes_them_back ... ok
+test inserts_clip::tests::crossing_rings_are_found ... ok
+test import_apply::tests::new_layers_go_into_the_named_group_and_unchosen_layers_stay_out ... ok
+test jobs::sheet_package_progress_phases_share_cancellation_and_count_without_jumping_back ... ok
+test import_apply::tests::a_files_styles_join_the_project_or_name_its_own ... ok
+test meshes::tests::a_query_that_reads_more_values_than_one_call_does_is_refused ... ok
+test opened_scale::tests::a_drawing_without_texts_takes_its_units_scale ... ok
+test cad_paper::tests::independent_paper_curves_keep_source_and_roundtrip_analytic_entities ... ok
+test provider::tests::addresses_keep_no_password ... ok
+test opened_scale::tests::the_texts_middle_height_says_the_scale ... ok
+test python_call::tests::paths_follow_the_sdk_s_generator ... ok
+test python_call::tests::the_call_leaves_the_expected_revision_out ... ok
+test python_call::redaction_tests::a_hidden_name_s_texts_are_written_hidden_however_deep ... ok
+test python_call::tests::a_relaxed_call_goes_under_relaxed_and_the_echo_is_one_call ... ok
+test rasters_mosaic::tests::tiff_dates_are_read_as_iso ... ok
+test rasters_mosaic::tests::files_under_the_vrts_folder_are_named_from_it ... ok
+test python_call::tests::literals_are_python_s ... ok
+test processing_batch::tests::without_tools_the_batch_is_refused ... ok
+test processing_run::tests::without_tools_both_commands_are_refused ... ok
+test region::budget_tests::the_lines_a_pattern_draws_are_counted_family_by_family ... ok
+test stac_search::tests::a_host_without_a_network_says_so ... ok
+test stac_search::tests::a_refused_request_never_reaches_the_network ... ok
+test source_places::tests::paths_are_written_from_the_projects_folder ... ok
+test walls_rectangle::tests::exact_size_boundary_and_one_ulp_of_clearance_are_distinct_even_after_rotation_at_large_coordinates ... ok
+test tags::level_scope_tests::all_eight_source_kinds_use_explicit_architectural_floor_only ... FAILED
+test region::budget_tests::a_hatch_job_asked_to_stop_writes_nothing ... ok
+test import_apply::tests::every_object_is_one_undo_step_and_layers_merge_by_name ... ok
+test constraint_jobs_tests::a_staged_solve_waits_for_the_drawing_it_saw ... ok
+test constraint_jobs_tests::a_stopped_solve_writes_nothing ... ok
+test cad_open::tests::independent_full_size_unit_and_block_cases ... ok
+
+failures:
+
+---- tags::level_scope_tests::all_eight_source_kinds_use_explicit_architectural_floor_only stdout ----
+
+thread 'tags::level_scope_tests::all_eight_source_kinds_use_explicit_architectural_floor_only' (4951723) panicked at crates/native/application/src/tags.rs:811:35:
+called `Result::unwrap()` on an `Err` value: Error("“symbol” küçük harfli, tireli bir UUID değil (8-4-4-4-12 onaltılık hane)", line: 0, column: 0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tags::level_scope_tests::all_eight_source_kinds_use_explicit_architectural_floor_only
+
+test result: FAILED. 51 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p kentos-native-application --lib`

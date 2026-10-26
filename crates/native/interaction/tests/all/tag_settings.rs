@@ -358,3 +358,97 @@ fn bulk_target_changed_without_pointer_movement_requires_review_before_writing()
     b.doc.redo().unwrap();
     assert_eq!(b.doc.to_snapshot_v2(), after);
 }
+
+fn floors() -> Bench {
+    let mut b = drawing();
+    let mut snapshot = b.doc.to_snapshot_v2();
+    snapshot.settings.arch = Some(
+        serde_json::from_value(json!({"levels":[
+        {"id":"ground","name":"Zemin kat","elevation":0.},
+        {"id":"upper","name":"Üst kat","elevation":3.}]}))
+        .unwrap(),
+    );
+    for (i, level) in [Some("ground"), Some("upper"), None]
+        .into_iter()
+        .enumerate()
+    {
+        let mut e = snapshot.entities[0].clone();
+        e.base_mut().id = (i + 1) as u32;
+        let Entity::Space(s) = &mut e else { panic!() };
+        s.space.arch.level = level.map(str::to_owned);
+        s.space.number = Some(format!("R-{i}"));
+        if i == 0 {
+            snapshot.entities[0] = e;
+        } else {
+            snapshot.entities.push(e);
+            snapshot
+                .uids
+                .push(kentos_commands::EntityId((100 + i as u128).to_be_bytes()));
+        }
+    }
+    b.doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+    b.start("tagAll");
+    b
+}
+
+#[test]
+fn bulk_visible_source_floor_and_cycle_only_preview_until_one_confirmation() {
+    for (value, name, source) in [
+        ("id:ground", "Zemin kat", 0),
+        ("id:upper", "Üst kat", 1),
+        ("unassigned", "Atanmamış", 2),
+    ] {
+        let mut b = floors();
+        let before = b.doc.to_snapshot_v2();
+        assert_eq!(shown(&b, "F"), "Tüm katlar");
+        assert!(shown(&b, "N").starts_with("3 yeni"));
+        assert!(b.run(|s, cx| s.choose_option("F", value, cx)));
+        assert_eq!(shown(&b, "F"), name);
+        assert!(shown(&b, "N").starts_with("1 yeni"));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.confirm();
+        assert_eq!(b.session.prompt().tool, None);
+        let after = b.doc.to_snapshot_v2();
+        assert_eq!(after.entities[..3], before.entities[..]);
+        let Entity::Tag(tag) = &after.entities[3] else {
+            panic!()
+        };
+        assert_eq!(tag.tag.of, before.uids[source].to_string());
+        b.doc.undo().unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.doc.redo().unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), after);
+    }
+    let mut b = floors();
+    let before = b.doc.to_snapshot_v2();
+    for label in ["Zemin kat", "Üst kat", "Atanmamış", "Tüm katlar"] {
+        assert!(b.type_text("F"));
+        assert_eq!(shown(&b, "F"), label);
+    }
+    assert!(!set(&mut b, "F", "id:unknown"));
+    b.run(|s, cx| s.cancel(cx));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn removed_source_floor_is_never_silently_replaced_by_all_or_unassigned() {
+    let mut b = floors();
+    assert!(set(&mut b, "F", "id:ground"));
+    let mut settings = b.doc.settings().clone();
+    settings.arch.as_mut().unwrap().levels.remove(0);
+    b.doc.set_settings(settings);
+    let before = b.doc.to_snapshot_v2();
+    b.confirm();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert_eq!(b.session.prompt().tool, Some("Hepsini etiketle"));
+    assert!(shown(&b, "F").contains("Bulunamadı: ground"));
+    assert!(shown(&b, "!").contains("kimlikli kat yok"));
+    assert!(set(&mut b, "F", "unassigned"));
+    assert!(shown(&b, "N").starts_with("1 yeni"));
+    b.confirm();
+    let after = b.doc.to_snapshot_v2();
+    let Entity::Tag(t) = after.entities.last().unwrap() else {
+        panic!()
+    };
+    assert_eq!(t.tag.of, before.uids[2].to_string());
+}

@@ -127,3 +127,100 @@ fn planned_refresh_keeps_manual_place_and_single_undo_with_new_tag_and_reopen() 
     std::fs::remove_file(path).unwrap();
     std::fs::remove_file(saved).unwrap();
 }
+
+#[test]
+fn source_floor_scopes_plan_write_and_refresh_through_real_ai_host() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.tags.create.json"
+    ))
+    .unwrap();
+    let path = std::env::temp_dir().join(format!("kentos-tag-levels-{}.json", std::process::id()));
+    let saved = path.with_extension("kcad");
+    let mut setup = fixture["setup"].clone();
+    setup["entities"][3]["arch"]["level"] = json!("kat-1");
+    std::fs::write(&path, setup.to_string()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let entities = |s: &mut Server| {
+        model(
+            call(s, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"]
+                .clone(),
+        )
+    };
+    let before = entities(&mut server);
+    let room = before[2]["uid"].clone();
+    let mut args = json!({"drawing":drawing,"layerId":"etiket","all":{"kinds":["space"],"levels":["zemin"],"content":"Kat testi"},"op":"plan"});
+    let planned = call(&mut server, "cad.tags.create", args.clone());
+    assert_eq!(planned["isError"], false, "{planned}");
+    assert_eq!(
+        planned["structuredContent"]["output"]["tags"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        planned["structuredContent"]["output"]["tags"][0]["of"],
+        room
+    );
+    assert_eq!(entities(&mut server), before);
+    let mut bad = args.clone();
+    bad["op"] = json!("execute");
+    bad["all"]["levels"] = json!([null, "missing"]);
+    let error = call(&mut server, "cad.tags.create", bad);
+    assert_eq!(error["isError"], true);
+    assert_eq!(
+        error["structuredContent"]["error"]["code"],
+        "level_not_found"
+    );
+    assert_eq!(entities(&mut server), before);
+    args["op"] = json!("execute");
+    args["expectedRevision"] = planned["structuredContent"]["output"]["revision"].clone();
+    let out = call(&mut server, "cad.tags.create", args.clone());
+    assert_eq!(out["isError"], false, "{out}");
+    let uid = out["structuredContent"]["output"]["uids"][0].clone();
+    let id = out["structuredContent"]["output"]["ids"][0].clone();
+    let after = entities(&mut server);
+    let mut expected = before.clone();
+    expected.as_array_mut().unwrap().push(json!({"uid":uid,"entity":{"kind":"tag","id":id,"layerId":"etiket","attrs":{},"of":room,"at":{"x":22.,"y":1.5},"anchor":{"x":22.,"y":1.5},"content":"Kat testi","text":"Kat testi","shape":"rectangle"}}));
+    assert_eq!(after, expected);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(entities(&mut server), before);
+    call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    assert_eq!(entities(&mut server), after);
+    args.as_object_mut().unwrap().remove("expectedRevision");
+    args["all"]["levels"] = json!(["kat-1"]);
+    args["all"]["refresh"] = json!(true);
+    args["all"]["content"] = json!("Üst kat");
+    let out = call(&mut server, "cad.tags.create", args);
+    assert_eq!(out["isError"], false, "{out}");
+    assert!(
+        out["structuredContent"]["output"]
+            .get("refreshed")
+            .is_none()
+    );
+    let next = entities(&mut server);
+    assert_eq!(
+        next.as_array().unwrap()[..after.as_array().unwrap().len()],
+        after.as_array().unwrap()[..]
+    );
+    assert_eq!(
+        next.as_array().unwrap().last().unwrap()["entity"]["of"],
+        before[3]["uid"]
+    );
+    assert_eq!(
+        call(
+            &mut server,
+            "drawing.save",
+            json!({"drawing":drawing,"path":saved})
+        )["isError"],
+        false
+    );
+    let opened = call(&mut server, "drawing.open", json!({"path":saved}));
+    let d = opened["structuredContent"]["drawing"].clone();
+    assert_eq!(model(call(&mut server,"drawing.entities",json!({"drawing":d}))["structuredContent"]["items"].clone()),next);
+    std::fs::remove_file(path).unwrap();
+    std::fs::remove_file(saved).unwrap();
+}

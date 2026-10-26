@@ -503,6 +503,9 @@ def tags_create(d, inp, conflict=False):
         for k, ly in enumerate(al.get("layers") or []):
             if ly not in LAYERS:
                 return refusal("layer_not_found", f"“{ly}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", f"all.layers[{k}]"), None
+        for index, level in enumerate(al.get("levels") or []):
+            if level is not None and not any(row["id"] == level for row in d.levels):
+                return refusal("level_not_found", f"Projede “{level}” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.", f"all.levels[{index}]"), None
         r = tag_problem(al, "all")
         if r:
             return r, None
@@ -513,6 +516,13 @@ def tags_create(d, inp, conflict=False):
             # Only the objects of these phases (docs/adr/0346 §2): an opening's its wall's.
             if al.get("phases") is not None and phase_of(d, i) not in al["phases"]:
                 continue
+            if al.get("levels") is not None:
+                source = d.get(f["host"]) if k == "opening" else (i, (k, ly, f, {}))
+                # A missing/non-wall host is unknown, not an unassigned floor.
+                if source is None or (k == "opening" and source[1][0] != "wall"):
+                    continue
+                if source[1][2].get("arch", {}).get("level") not in al["levels"]:
+                    continue
             if uid_of(i) in done:
                 if al.get("refresh") and uid_of(i) not in explicit:
                     for tid, (tk, tl, tf, _) in sorted(d.objs.items()):
@@ -779,6 +789,36 @@ def refresh_tag_cases():
     d=Drawing();pre=seed(d)
     c.add("Yenile eski revision tüm değişikliği reddeder",[{"op":"captureRevision","as":"old"},pre,
         create_step(d,"execute",{"layerId":"etiket","expectedRevision":"$old","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}},conflict=True)])
+    return c.cases
+
+
+def level_tag_cases():
+    """Independent source-floor matrix; legacy all-floor cases remain byte-for-byte."""
+    c = Cases()
+    for refresh in [False, True]:
+        for levels in [MISSING, None, [], [None], ["zemin"], ["kat-1"], ["zemin", None], ["zemin", "zemin", None]]:
+            d = Drawing()
+            pre = create_step(d, "execute", {"layerId":"etiket", "tags":[
+                {"of":uid_of(3), "at":P(-4,8), "content":"{name}", "size":4, "leader":True}]})
+            before = {str(i):d.entity(i) for i in d.ids()}; ids = d.ids()
+            al = {"kinds":list(TEMPLATES), "refresh":refresh, "content":"{level}"}
+            if levels is not MISSING: al["levels"] = levels
+            inp = {"layerId":"etiket", "all":al}
+            steps = [pre, create_step(d,"validate",inp), create_step(d,"plan",inp), create_step(d,"execute",inp)]
+            if len(d.ids()) != len(ids) or before != {str(i):d.entity(i) for i in d.ids()}:
+                after = {str(i):d.entity(i) for i in d.ids()}; after_ids = d.ids()
+                steps += [{"op":"undo","returns":"Etiket","expect":{"ids":ids,"entities":before,"revision":"changed","canRedo":True}},
+                          {"op":"redo","returns":"Etiket","expect":{"ids":after_ids,"entities":after,"revision":"changed","canRedo":False}}]
+            c.add(f"Kat kapsamı {levels}, yenile={refresh}: miras/önizleme/tek undo",steps)
+    for levels in [["missing"], [None,"missing"], ["zemin","missing"], [""]]:
+        d=Drawing();inp={"layerId":"etiket","tags":[{"of":uid_of(4)}],"all":{"kinds":["space"],"levels":levels}}
+        c.add(f"Yanlış kat açık tags ile de atomik ret {levels}",[create_step(d,op,inp) for op in ["validate","plan","execute"]])
+    for extra in [{"layers":["kapi"]},{"layers":["mahal"]},{"phases":["new"]},{"phases":["demolish"]}]:
+        d=Drawing();inp={"layerId":"etiket","all":{"kinds":list(TEMPLATES),"levels":["zemin"],**extra}}
+        c.add(f"Kat diğer kaynak süzgeçleriyle kesişir {extra}",[create_step(d,"plan",inp),create_step(d,"execute",inp)])
+    for levels in [[],["kat-1"]]:
+        d=Drawing();inp={"layerId":"etiket","tags":[{"of":uid_of(4)}],"all":{"kinds":["space"],"levels":levels}}
+        c.add(f"Açık tags kat süzgecinden bağımsız {levels}",[create_step(d,"plan",inp),create_step(d,"execute",inp)])
     return c.cases
 
 
@@ -1714,7 +1754,7 @@ def document(command, title, cases):
 
 def files():
     return {
-        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + refresh_tag_cases() + elevation_tag_cases() + net_area_tag_cases()),
+        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + refresh_tag_cases() + level_tag_cases() + elevation_tag_cases() + net_area_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
         "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()+missing_space_number_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),

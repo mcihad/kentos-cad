@@ -1,0 +1,7 @@
+{
+  "source": "before.kcad",
+  "result": "before-visible.kcad",
+  "onlyChange": "layers[id=gizli].visible = true",
+  "independentlyCompared": true,
+  "sha256": "babf871e1abed222c5c7915a0e1d7ac86957f02d0d68c93ddcaf4caca4adfbb9"
+}

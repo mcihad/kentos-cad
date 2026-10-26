@@ -1861,6 +1861,7 @@ const ENTRIES: &[Entry] = &[
                 "entity_not_found",
                 "not_taggable",
                 "invalid_tag",
+                "level_not_found",
                 "invalid_line_weight",
             ],
             LAYER,

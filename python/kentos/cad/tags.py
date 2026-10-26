@@ -180,15 +180,20 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen
     all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik,
     elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve
-    orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak
-    katmanlarını, all.phases kaynak evrelerini süzer; mimari kat veya görünüş süzgeci
-    değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan
-    tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni
-    etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz;
-    yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası
-    belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
-    taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
-    verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak CAD
+    katmanlarını, all.phases kaynak evrelerini, all.levels mimari kat kimliklerini
+    süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik listesi
+    verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu kimlik
+    projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını
+    duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez.
+    Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags
+    girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed
+    değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı
+    refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000
+    ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir: nesne
+    değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne
+    silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli
+    katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.tags.create"
@@ -236,14 +241,19 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur.
         Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına
         dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers
-        kaynak katmanlarını, all.phases kaynak evrelerini süzer; mimari kat veya görünüş
-        süzgeci değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez.
-        Plan tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni
-        etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz;
-        yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası
-        belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
-        taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
-        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        kaynak CAD katmanlarını, all.phases kaynak evrelerini, all.levels mimari kat
+        kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik
+        listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu
+        kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık
+        katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına
+        girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir.
+        Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni,
+        refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe
+        bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en
+        çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir:
+        nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır,
+        nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir;
+        kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

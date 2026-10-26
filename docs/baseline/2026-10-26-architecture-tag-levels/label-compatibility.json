@@ -1,0 +1,10 @@
+{
+  "displayOnlyPatch": "label-fix.patch",
+  "previousSourceReconstructedExactly": true,
+  "unchangedBackendSources": [
+    "crates/native/application/src/tags.rs",
+    "crates/shared/commands/src/cad_tags.rs",
+    "crates/shared/commands/src/catalog.rs",
+    "crates/shared/commands/src/capabilities.rs"
+  ]
+}

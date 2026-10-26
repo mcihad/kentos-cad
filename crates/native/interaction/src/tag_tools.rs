@@ -347,6 +347,7 @@ impl Tool for TagTool {
 pub struct TagAllTool {
     kinds: Vec<TaggedKind>,
     refresh: bool,
+    source: crate::space_level::Choice,
     content: Option<String>,
     shape: Option<TagShape>,
     size: Option<f64>,
@@ -363,6 +364,7 @@ impl Default for TagAllTool {
         Self {
             kinds: vec![TaggedKind::Opening, TaggedKind::Space],
             refresh: false,
+            source: Default::default(),
             content: None,
             shape: None,
             size: None,
@@ -388,6 +390,11 @@ impl TagAllTool {
                 kinds: self.kinds.clone(),
                 refresh: self.refresh.then_some(true),
                 layers: None,
+                levels: if self.source.scope() == kentos_commands::SpaceScope::Unassigned {
+                    Some(vec![None])
+                } else {
+                    self.source.id().map(|id| vec![Some(id)])
+                },
                 content: self.content.clone(),
                 shape: self.shape,
                 size: self.size,
@@ -399,6 +406,7 @@ impl TagAllTool {
         }
     }
     fn see(&mut self, cx: &Context<'_>) {
+        self.source.see(cx.doc.settings());
         self.revision = Some(cx.doc.revision());
         self.layer = cx.doc.layers().active().to_owned();
         self.layer_label = cx
@@ -446,6 +454,7 @@ impl TagAllTool {
             );
         }
         match key {
+            "F" => self.source.setting().choices,
             "E" => choices(
                 &[("keep", "Koru"), ("refresh", "Yenile")],
                 if self.refresh { "refresh" } else { "keep" },
@@ -468,6 +477,12 @@ impl TagAllTool {
             }
         } else {
             match key {
+                "F" => {
+                    self.source.see(cx.doc.settings());
+                    if !self.source.choose(value) {
+                        return false;
+                    }
+                }
                 "E" if matches!(value, "keep" | "refresh") => self.refresh = value == "refresh",
                 "B" => {
                     self.shape = if value == "default" {
@@ -570,6 +585,7 @@ impl Tool for TagAllTool {
             "E",
             if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
+        p = p.option_with("Kaynak katı", "F", self.source.label());
         for (key, k) in ALL_KEYS {
             p = p.option_with(
                 k.label(),
@@ -590,6 +606,10 @@ impl Tool for TagAllTool {
             self.flip(*k);
             self.see(cx);
             true
+        } else if key == "F" {
+            self.source.next();
+            self.see(cx);
+            true
         } else if key == "E" {
             self.refresh = !self.refresh;
             self.see(cx);
@@ -599,8 +619,12 @@ impl Tool for TagAllTool {
         }
     }
     fn settings(&self, _: &Format) -> Vec<Setting> {
+        let mut source = self.source.setting();
+        source.key = "F";
+        source.label = "Kaynak katı";
         let mut out = vec![
             Setting::choice("E", "Mevcut etiket", self.choices("E")),
+            source,
             Setting::notice("N", "Önizleme", &self.summary),
             Setting::text("L", "Etiket katmanı", &self.layer_label).read_only(),
             Setting::text(
@@ -626,7 +650,7 @@ impl Tool for TagAllTool {
                 .iter()
                 .map(|(key, k)| Setting::choice(key, k.label(), self.choices(key))),
         );
-        out.push(Setting::notice("H", "Kapsam", "Görünür kaynak katmanlarındaki tüm mimari katlar. Yenile yalnız etkin etiket katmanını değiştirir; başka katmanlardaki etiketler korunur. Elle verilmiş konumlar korunur."));
+        out.push(Setting::notice("H", "Kapsam", "Kaynak katı görünür kaynakları süzer; kapı/pencere duvarının katını kullanır. Duvarı kayıp açıklığın katı bilinmez. Yenile yalnız etkin etiket katmanını değiştirir; başka katlar/etiket katmanları ve elle konumlar korunur."));
         out.push(Setting::notice("V", "Boş ayarlar", "Yenile'de boş şablon/boy mevcut değeri korur; yeni etikette tür varsayılanı kullanılır. \\n yeni satırdır. Kaynak numaraları değişmez."));
         out
     }

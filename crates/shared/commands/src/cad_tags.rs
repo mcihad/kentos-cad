@@ -139,6 +139,12 @@ pub struct TagAll {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
+    /// Source architectural floor ids; absent/null: every floor. A null item selects
+    /// unassigned sources; [] selects none. Openings inherit their host wall's floor;
+    /// an unresolved host is unknown, not unassigned. Does not filter explicit `tags`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub levels: Option<Vec<Option<String>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub content: Option<String>,
@@ -158,7 +164,7 @@ pub struct TagAll {
 /// Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
 ///
 /// Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
-/// `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+/// `invalid_tag`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

@@ -663,9 +663,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   klavye hedef değişimi/ret/Escape/tek onay/undo/redo/kaydet-aç doğrulandı.
   [ADR0662](../docs/adr/0662-bulk-tag-refresh.md),
   [kabul ve kapsam](../docs/baseline/2026-10-26-architecture-tag-refresh/README.md).
+- [x] Toplu etikette açık kaynak mimari kat kapsamı: Tüm katlar / Yalnız
+  atanmamış / proje katı. API çoklu kat birleşimi; açıklık katı duvardan
+  gelir, kayıp host atanmamış sayılmaz. Koru/Yenile ve açık tags aynı
+  komutta korunur. 26 yeni bağımsız durum/ilgili290, 340 Python/75 MCP,
+  809 commands, 52+221 application/63+704 interaction; clippy/build/WASM/
+  SDK geçti. Gerçek tek Enter/sağ tuş Onayla/ret/Escape/undo/redo/kaydet-aç;
+  43 ham görüntü (tanısallar dahil), 27 tam bağımsız kayıt ve önceki1781
+  KCAD bayt korunumu. [ADR0663](../docs/adr/0663-bulk-tag-levels.md),
+  [kabul ve sınırlar](../docs/baseline/2026-10-26-architecture-tag-levels/README.md).
 - [ ] Çoklu mimari kat/görünüş/pafta oranı bağlamı ve tam mimari matris.
-  Mevcut toplu aracın kaynak kapsamı görünür katmanlardaki tüm mimari
-  katlardır; `all.layers` kaynak katmanıdır, mimari kat süzgeci değildir.
+  Toplu araçta varsayılan tüm katlar korunur; `all.levels` açık kaynak
+  mimari kat kapsamıdır. `all.layers` kaynak CAD katmanını süzer.
   `{area}` seçilmiş alan yöntemidir; ayrı `{netArea}` yukarıda doğrulandı.
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [ ]
@@ -908,3 +917,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0660 | Mevcut etiket denetiminde görünür numarasız mahal seçeneği; ad/kat/UUID, tam metin yinelenen gruplar, eski API varsayılanı ve salt okunurluk korunur. 233 ortak durum/323 Python/üç MCP; gerçek tek Enter/boşalt/undo/redo/Escape/kaydet-aç, 18 ham ekran/12 tam bağımsız dosya; 30.000 nesneli debug sorgu ölçümü. | [~] Numara denetimi doğrulandı; kat öneki/ad/kullanım listeleri, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-space-identity/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR0661 | Projeyle sıralı ad/kullanım listeleri ve açık kat öneki; serbest metin/kimlik/tek mahal undo korunur. Opt-in KCAD107, eski 1170 dosya aynı; DXF kaybı önceden ve raporda uyarılır. GUI açıklama yerini düzeltti; 385 ortak durum/329 Python/dört MCP/iki desktop, 42 ham ekran/23 tam bağımsız kayıt, yoğun belge kontrolü. | [~] Liste/önek dilimi doğrulandı; Koru/Yenile, çoklu pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-room-choices/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR0662 | Toplu etiket Koru/Yenile, elle yer/kimlik korunumu ve karma yeni+yenile tek undo; Python/MCP. Gerçek GUI açıklama yerleşimini ve klavye hedef katmanı açığını yakaladı; son ikiliyle tekrar, 35 ham ekran/24 tam model +bir tanısal disk, 31 yeni bağımsız durum/ilgili264, 335 Python. Eski107 durum ve1756 KCAD baytı aynı; clippy/build/WASM/SDK geçti. | [~] Koru/Yenile alt maddesi doğrulandı; çoklu kat/görünüş/pafta ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-refresh/README.md) |
+| 2026-10-26 | ARCH-SPACE-02 / ADR0663 | Toplu etikette açık kaynak katı, host mirası/bilinmeyen ayrımı; Koru/Yenile/önizleme ve tek undo. 26 yeni bağımsız durum/ilgili290, 340 Python/75 MCP; gerçek iki dolu kat ve atanmamış, tek Enter/sağ tuş Onayla/ret/Escape/undo/redo/yeni süreçte açma. GUI seçili değer kesilmesini düzeltti; 43 ham ekran (tanısallar dahil)/27 tam bağımsız model, eski1781 KCAD aynı. | [~] Kaynak katı alt maddesi doğrulandı; çoklu görünüş/pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-levels/README.md) |

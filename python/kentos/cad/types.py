@@ -52313,6 +52313,9 @@ class TagAll(_Model):
     """Tags on every shown object of the kinds given that has none, each at its object's point as a `NewTag` without `at`.
     Attributes:
         layers: Their layers' ids; absent: every layer shown.
+        levels: Source architectural floor ids; absent/null: every floor. A null item selects
+            unassigned sources; [] selects none. Openings inherit their host wall's floor;
+            an unresolved host is unknown, not unassigned. Does not filter explicit `tags`.
         phases: Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
         refresh: Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
             Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
@@ -52321,6 +52324,7 @@ class TagAll(_Model):
     kinds: list[TaggedKind | TaggedKindName]
     content: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    levels: list[str | None] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
     refresh: bool | None | Unset = UNSET
     shape: TagShape | TagShapeName | None | Unset = UNSET
@@ -52333,6 +52337,8 @@ class TagAll(_Model):
             out["content"] = self.content
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
         if self.phases is not UNSET:
             out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
         if self.refresh is not UNSET:
@@ -52349,6 +52355,7 @@ class TagAll(_Model):
             kinds=[_enum_in(TaggedKind, e0) for e0 in data["kinds"]],
             content=data.get("content", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
             refresh=data.get("refresh", UNSET),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
@@ -52621,7 +52628,7 @@ class TagsCreate(_Model):
     """Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
 
     Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
-    `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `invalid_tag`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
     `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
         line_weight: Unit: paper-mm.
