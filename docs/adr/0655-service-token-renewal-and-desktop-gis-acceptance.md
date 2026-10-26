@@ -9,8 +9,7 @@
 - **`.kcad`:** değişmez.
 - **Bağımlılık:** yeni kitaplık yok.
 - **Ertelenenler (sahibin kararıyla, maddeler kapalı):**
-  - CBS-43: servis üstünde canlı sorgu ve düzenleme (`cad.sources.query`'nin bir OGC API Features sağlayıcısı), CQL2 JSON ve
-    queryables, servisten alınan verinin expires/ETag ile yenilenmesi, QGIS'in FeatureServer'ıyla performans kıyası, yayın (P2);
+  - CBS-43: servis üstünde canlı sorgu ve düzenleme (`cad.sources.query`'nin bir OGC API Features sağlayıcısı), CQL2 JSON, servisten alınan verinin expires/ETag ile yenilenmesi, QGIS'in FeatureServer'ıyla performans kıyası, yayın (P2);
   - CBS-44: PostGIS'in, yetkinin ve geri yüklemenin kabul senaryosuna bağlanması, performans kabulü.
 
 ## Bağlam
@@ -55,3 +54,12 @@ kayıtta komutun satırıdır. Böylece senaryo Python'da, MCP'de ve masaüstün
 - `cargo test -p kentos-desktop --bin kentos-cad acceptance`: odanın ve parsellerin kabul senaryoları masaüstünde.
 - `cargo clippy -p kentos-services -p kentos-desktop --all-targets -- -D warnings`.
 - Gerçek bir ArcGIS ya da OAuth 2 servisinde bir saatlik oturum denenmedi (hesap yok). Kural birim testinde, akış kodda.
+
+## Ek (26 Ekim): queryables
+
+3. OGC API Features'tan veri alınınca koleksiyonun queryables'ı (Part 3'ün JSON Schema'sı) okunur
+   (`kentos_services::queryables`). `integer`, `number`, `boolean`, `date` ve `date-time` biçimli dizgi ve metin, yeni katmanın
+   alanlarına türleriyle ve başlıkları (`title`) adlarıyla geçer. Geometri ve bilinmeyen türler atlanır. Bir alan şemanın
+   türünü yalnız alınan her değer ona uyarsa alır (`typed`); uymayan ya da şemada olmayan alan değerlerden tahmin edilen
+   türde kalır. Queryables okunamazsa alma yine başarılı olur. Alma işinin kendi iş parçacığında sorulur. Birim testleri:
+   `cargo test -p kentos-services --lib queryables`. Gerçek bir servisle denenmedi.

@@ -97,6 +97,8 @@ pub struct Taken {
     pub ending: Ending,
     /// What the pages' readers left out, summed.
     pub skipped: Vec<kentos_commands::ReportItem>,
+    /// An OGC API collection's queryables as fields (docs/adr/0655 §3); none when it has none or they could not be read.
+    pub queryables: Vec<kentos_commands::LayerField>,
 }
 
 #[derive(Clone, Debug)]
@@ -637,9 +639,13 @@ impl App {
                                 .collect()
                         })
                         .collect();
-                    let fields = kentos_commands::fields::infer_fields(
+                    let fields = kentos_services::queryables::typed(
+                        kentos_commands::fields::infer_fields(
+                            rows.iter().map(Vec::as_slice),
+                            kentos_geometry_core::text::natural::natural_cmp,
+                        ),
+                        &t.queryables,
                         rows.iter().map(Vec::as_slice),
-                        kentos_geometry_core::text::natural::natural_cmp,
                     );
                     let input = LayersService {
                         operation: LayerServiceOperation::AddFeed,
@@ -1108,6 +1114,16 @@ pub(crate) fn take_all(
         progress(entities.len() as u64);
         next = more;
     }
+    // The service's own types and titles for the new layer's fields; a take does not fail without them.
+    let queryables = if feed.kind == kentos_commands::FeedKind::OgcFeatures {
+        let req =
+            kentos_services::request::Request::get(kentos_services::queryables::url(&feed.url));
+        super::net::send_text(req, conn.map(|(c, s)| (c, s.as_ref())), &feed.url, 4)
+            .map(|body| kentos_services::queryables::fields(&body))
+            .unwrap_or_default()
+    } else {
+        Vec::new()
+    };
     Ok(Taken {
         feed: feed.clone(),
         entities,
@@ -1115,5 +1131,6 @@ pub(crate) fn take_all(
         matched: taking.matched,
         ending: taking.ending().unwrap_or(Ending::Complete),
         skipped: taking.skipped.clone(),
+        queryables,
     })
 }
