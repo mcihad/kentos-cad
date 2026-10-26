@@ -12,7 +12,7 @@
 //! A tag's words and the point it ties to are written as the document writes them; its place, when not given, is its
 //! object's point for a space, else 4 times its words' height above it.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, NewTag, TagEntity, TagFields, TagFinding,
@@ -499,6 +499,9 @@ fn findings(doc: &Document, input: &TagsCheck) -> Result<Vec<TagFinding>, Stop> 
     };
     let tags = tagged(doc);
     let mut duplicates: Vec<(String, Vec<&Entity>)> = Vec::new();
+    // Keep the original first-appearance order without a quadratic group lookup.
+    let mut groups = BTreeMap::new();
+    let mut missing_numbers = Vec::new();
     let (mut no_type, mut off, mut gone, mut untagged) =
         (Vec::new(), Vec::new(), Vec::new(), Vec::new());
     for e in doc.entities() {
@@ -512,10 +515,17 @@ fn findings(doc: &Document, input: &TagsCheck) -> Result<Vec<TagFinding>, Stop> 
         };
         if let Some((kind, n)) = number.filter(|(_, n)| !n.is_empty()) {
             let key = format!("{kind}\u{0}{n}");
-            match duplicates.iter_mut().find(|(k, _)| *k == key) {
-                Some((_, list)) => list.push(e),
-                None => duplicates.push((key, vec![e])),
-            }
+            let index = *groups.entry(key.clone()).or_insert_with(|| {
+                let index = duplicates.len();
+                duplicates.push((key, Vec::new()));
+                index
+            });
+            duplicates[index].1.push(e);
+        }
+        if input.missing_space_numbers == Some(true)
+            && matches!(e, Entity::Space(s) if s.space.number.as_deref().is_none_or(|n| n.trim().is_empty()))
+        {
+            missing_numbers.push(e);
         }
         match e {
             Entity::Opening(o) => {
@@ -556,6 +566,21 @@ fn findings(doc: &Document, input: &TagsCheck) -> Result<Vec<TagFinding>, Stop> 
                 list,
             );
         }
+    }
+    for e in missing_numbers {
+        let Entity::Space(s) = e else { continue };
+        let name = s.space.name.as_deref().unwrap_or("Adsız");
+        let level = s.space.arch.level.as_ref().map_or("Kat atanmamış", |id| {
+            doc.settings()
+                .arch.as_ref()
+                .and_then(|a| a.levels.iter().find(|l| l.id == *id))
+                .map_or(id.as_str(), |l| l.name.as_str())
+        });
+        push(
+            codes::TAG_MISSING_SPACE_NUMBER,
+            format!("“{name}” mahalının numarası yok ({level})."),
+            vec![e],
+        );
     }
     for e in no_type {
         let n = match e {

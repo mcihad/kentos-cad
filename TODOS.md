@@ -51,6 +51,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR 0660: mevcut `cad.tags.check` isteğe bağlı
+  `missingSpaceNumbers` ile etiketli numarasız mahalleri de raporlar;
+  yok/null/false eski bulguları korur. Web dönüşünde görünür seçenek,
+  ad/kat/UUID ile bulgu listesi ve kaynak gösterme/yenileme bağlanmalı.
+  Ortak sekiz yeni vaka, 323 Python ve üç MCP testi geçti; masaüstünde 18
+  ham ekran/12 tam bağımsız kayıtla denetim/onarım/iptal/geçmiş/kaydet-aç
+  doğrulandı. İki mevcut üretilmiş TS tipi ve katalog günceldir; yeni TS
+  dosyası yok. Kat öneki/ad/kullanım listeleri ayrı açık iştir.
+
 - ARCH-SPACE-02 / ADR 0659: `{netArea}` mahal etiketi; Net/eksen/brüt
   yöntemlerinden ayrı iç yüzler hesabı, kaynak/kolon/kapsam ve bilinmeyen
   sınır davranışı. Görünür şablon yardımını, immutable kaynak sorgusunu ve

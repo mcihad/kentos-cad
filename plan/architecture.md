@@ -593,7 +593,21 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   görüntüsü (tanısal mevcut-disk kopyaları ayrıca açıklanır).
   Gerçek GUI'de bulunan boş iç seçim kusuru yalnız bu araçta düzeltildi;
   büyük yazıda eski numara tekrarı kaldırılarak uzak önizleme sadeleştirildi.
-- [ ] Kat öneki/ad/kullanım listesi; yinelenen ve boş numara denetim listesi.
+- [ ] Projeyle saklanan kat öneki ve düzenlenebilir ad/kullanım listeleri;
+  seçim kolaylığı sağlarken mevcut serbest metin ad/kullanım ve açık numara
+  korunmalı. Liste değişimi mevcut mahalleri kendiliğinden yeniden adlandırmamalı.
+- [x] Yinelenen ve numarasız mahal denetimi mevcut Etiketleri denetle'de
+  görünür seçenekle çalışır. Ad/kat/UUID ve Göster; gizli/kilitli ve başka
+  katlar dahil. API'nin yok/null/false tercihi eski sonuç/sırayı korur;
+  tam metin numara ayrımı ve sorgunun salt okunurluğu değişmez.
+  233 ortak durum (önceki 21 check aynen), 323 Python, 68 domain/697
+  interaction/219 application/üç MCP/iki desktop; clippy/build/WASM/1170
+  KCAD ve bağımlılık yönü geçti. Gerçek tek Enter/boşalt/undo/redo/Escape/
+  yeniden açma; 18 ham ekran ve 12 tam dosya bağımsız okuyucuda doğrulandı.
+  [ADR 0660](../docs/adr/0660-room-number-review.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-space-identity/README.md).
+  10.000 mahal+20.000 çizgide debug sorgu ortancası 241,663 ms; 9.998 eksik
+  numarada 452,363 ms. Genel ekran/performance veya tam matris kabulü değildir.
 - [ ] Etiket şablonu: ad, numara, net alan, döşeme/tavan kotu; sürüklenebilir yer,
   manuel metin kopyasına dönüşmeden kaynak güncellemesi.
 - [x] Gerçek etiket tutamacıyla sürükleme sonrası 40 cm duvar değişikliği;
@@ -871,3 +885,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-UX-01 takip / ADR 0657 | Yeni ayarlı araç başlarken Özellikler başlangıcı gösterilir; aynı araçta düzenleme/önizleme kaydırmayı korur. Eski 508 px hata, 62 ilgili test, clippy/build; 19 ham ekran/beş bağımsız tam dosya. | [x] Kaydırma takip işi doğrulandı; genel docking/matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-settings-scroll/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0658 | Bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan şablonu; eksik veri boş, mevcut birim/elle konum korunur. Gerçek GUI sayısal yükseklik taşması düzeltildi; 195 ortak durum, 309 Python, 697 interaction/219 application/67 domain/bir MCP, clippy/build/WASM; 19 ham ekran/on bağımsız tam kayıt. | [~] Kot dilimi doğrulandı; ayrı net alan, listeler, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-elevations/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0659 | Seçilmiş yöntemden ayrı net alan; aynı kaynak/kat/kolon tercihi, kaynak değişimi ve güncel ayarda metin takibi; elle yer korunur. 225 ortak durum/30 yeni, 318 Python, 68 domain/697 interaction/219 application/iki MCP, clippy/build/WASM/1170 KCAD; 21 ham ekran/15 bağımsız tam kayıt. | [~] Net etiket dilimi doğrulandı; listeler, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-net-area/README.md) |
+| 2026-10-26 | ARCH-SPACE-02 / ADR 0660 | Mevcut etiket denetiminde görünür numarasız mahal seçeneği; ad/kat/UUID, tam metin yinelenen gruplar, eski API varsayılanı ve salt okunurluk korunur. 233 ortak durum/323 Python/üç MCP; gerçek tek Enter/boşalt/undo/redo/Escape/kaydet-aç, 18 ham ekran/12 tam bağımsız dosya; 30.000 nesneli debug sorgu ölçümü. | [~] Numara denetimi doğrulandı; kat öneki/ad/kullanım listeleri, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-space-identity/README.md) |

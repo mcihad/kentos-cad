@@ -1,0 +1,1 @@
+PASS: 12 complete native saves are byte-identical to independent expectations; only the explicit source number and linked tag text change. 18 raw images, binary/source/log hashes and actual appearance profiles verified.

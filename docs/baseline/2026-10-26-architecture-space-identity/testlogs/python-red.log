@@ -1,0 +1,105 @@
+EEEEEEEEE
+======================================================================
+ERROR: test_blank_text_stays_invalid_but_clearing_the_number_is_reported (test_space_number_check.SpaceNumberCheck.test_blank_text_stays_invalid_but_clearing_the_number_is_reported)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 82, in test_blank_text_stays_invalid_but_clearing_the_number_is_reported
+    rows=self.findings(doc,missing_space_numbers=True)
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter (test_space_number_check.SpaceNumberCheck.test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter) (layers=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 40, in test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter
+    rows=self.findings(doc,layers=layers,missing_space_numbers=True)
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter (test_space_number_check.SpaceNumberCheck.test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter) (layers=['mahal'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 40, in test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter
+    rows=self.findings(doc,layers=layers,missing_space_numbers=True)
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter (test_space_number_check.SpaceNumberCheck.test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter) (layers=['gizli'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 40, in test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter
+    rows=self.findings(doc,layers=layers,missing_space_numbers=True)
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter (test_space_number_check.SpaceNumberCheck.test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter) (layers=['kilitli'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 40, in test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter
+    rows=self.findings(doc,layers=layers,missing_space_numbers=True)
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter (test_space_number_check.SpaceNumberCheck.test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 44, in test_explicit_layers_apply_to_missing_and_duplicate_findings_without_implicit_visibility_filter
+    with self.assertRaises(cad.CommandFailed)as failed:operation(doc,layers=['yok'],missing_space_numbers=True)
+                                                       ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_opt_in_reports_tagged_rooms_and_preserves_the_old_exact_number_groups (test_space_number_check.SpaceNumberCheck.test_opt_in_reports_tagged_rooms_and_preserves_the_old_exact_number_groups)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 27, in test_opt_in_reports_tagged_rooms_and_preserves_the_old_exact_number_groups
+    for option in [None,False]:self.assertEqual(self.findings(doc,missing_space_numbers=option),old)
+                                                ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_queries_add_no_history_and_repair_undo_redo_follow_existing_identity_fields (test_space_number_check.SpaceNumberCheck.test_queries_add_no_history_and_repair_undo_redo_follow_existing_identity_fields)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 51, in test_queries_add_no_history_and_repair_undo_redo_follow_existing_identity_fields
+    for _ in range(3):self.findings(doc,missing_space_numbers=True)
+                      ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+======================================================================
+ERROR: test_real_kcad_roundtrip_and_units_do_not_normalize_room_numbers (test_space_number_check.SpaceNumberCheck.test_real_kcad_roundtrip_and_units_do_not_normalize_room_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 66, in test_real_kcad_roundtrip_and_units_do_not_normalize_room_numbers
+    doc,ids,_=self.drawing();expected=self.findings(doc,missing_space_numbers=True)
+                                      ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_space_number_check.py", line 20, in findings
+    def findings(self,doc,**args):return [f.to_json()for f in cad.tags.check(doc,**args).findings]
+                                                              ~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: _TagsCheck.__call__() got an unexpected keyword argument 'missing_space_numbers'
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.027s
+
+FAILED (errors=9)

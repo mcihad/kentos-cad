@@ -1669,6 +1669,8 @@ codes! {
     INVALID_CELL_VALUE = "invalid_cell_value", Failed, false, "Değer bu alana yazılmaz: uzunluk sıfırdan büyük bir sayı, metin tek satırdır.";
     /// Two openings or spaces with one number (Etiketleri denetle).
     TAG_DUPLICATE_NUMBER = "tag_duplicate_number", Warning, false, "Aynı numara birden çok açıklıkta ya da mahalde.";
+    /// A room without a number, including an already tagged room (opt-in check).
+    TAG_MISSING_SPACE_NUMBER = "tag_missing_space_number", Warning, false, "Mahalın numarası yok.";
     /// An opening without a type (Etiketleri denetle).
     TAG_MISSING_TYPE = "tag_missing_type", Warning, false, "Açıklığın türü yok.";
     /// An opening off its wall (Etiketleri denetle).

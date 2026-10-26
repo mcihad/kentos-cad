@@ -804,7 +804,7 @@ def Drawing_after(step):
 # ── Etiketleri denetle (ADR 0344 §2) ───────────────────────────────────────────────────────────────────────────
 
 
-def findings(d, layers=None):
+def findings(d, layers=None, missing_space_numbers=False):
     takes = lambda ly: layers is None or ly in layers
     tags = d.tagged()
     dup, order = {}, []
@@ -839,6 +839,11 @@ def findings(d, layers=None):
         ids = dup[key]
         if len(ids) > 1:
             push("tag_duplicate_number", f"“{key[1]}” numarası {len(ids)} {'açıklıkta' if key[0] == 'opening' else 'mahalde'}.", ids)
+    if missing_space_numbers:
+        for i,(kind,ly,f,_) in sorted(d.objs.items()):
+            if kind != 'space' or not takes(ly) or (f.get('number')or'').strip():continue
+            level=next((v['name'] for v in d.levels if v['id']==f.get('arch',{}).get('level')),f.get('arch',{}).get('level','Kat atanmamış'))
+            push('tag_missing_space_number',f"“{f.get('name','Adsız')}” mahalının numarası yok ({level}).",[i])
     for i in no_type:
         n = d.objs[i][2].get("number")
         push("tag_missing_type", f"“{n}” açıklığının türü yok." if n else "Numarasız açıklığın türü yok.", [i])
@@ -864,7 +869,7 @@ def check_step(d, op, inp):
     if op == "validate":
         s["result"] = {"status": "completed", "output": None, "warnings": []}
     else:
-        s["result"] = {"status": "completed", "output": {"findings": findings(d, inp.get("layers")), "revision": "$current"}, "warnings": []}
+        s["result"] = {"status": "completed", "output": {"findings": findings(d, inp.get("layers"),inp.get('missingSpaceNumbers') is True), "revision": "$current"}, "warnings": []}
     return unchanged(s, d)
 
 
@@ -920,6 +925,33 @@ def check_cases():
     return c.cases
 
 # ── Etiketi düzenle ────────────────────────────────────────────────────────────────────────────────────────────
+
+
+def missing_space_number_cases():
+    """An explicit opt-in extends the old report without changing its default output."""
+    cases=[]
+    for layers in [None,[],['mahal'],['gizli'],['kilitli'],['mahal','gizli','kilitli'],['etiket'],['yok']]:
+        d=Drawing();d.objs={};d.next=10;setup=copy.deepcopy(SETUP)
+        rows=[(None,'mahal','zemin','Ana giriş'),(None,'mahal',None,'Çalışma'),
+              (None,'gizli','kat-1','Depo'),('Z-001','mahal','zemin','Yatak'),
+              ('Z-001','kilitli','kat-1','Arşiv'),('Z-1','mahal','zemin','Mutfak'),
+              ('Z-001 ','mahal','zemin','Balkon'),('z-001','mahal','zemin','Teras'),
+              ('000000000000000000000000000001','mahal','zemin','Uzun numara')]
+        for i,(number,ly,level,name) in enumerate(rows,1):
+            f=dict(parts=rect(5*i,0,5*i+4,3),name=name)
+            if number is not None:f['number']=number
+            if level is not None:f['arch']=dict(level=level)
+            d.objs[i]=('space',ly,f,{})
+        setup['entities']=[d.entity(i)for i in d.ids()]
+        made=create_step(d,'execute',dict(layerId='etiket',tags=[dict(of=uid_of(i))for i in range(1,10)]))
+        base={}if layers is None else dict(layers=layers)
+        steps=[made]
+        for enabled in ['absent',None,False,True]:
+            inp=dict(base)
+            if enabled!='absent':inp['missingSpaceNumbers']=enabled
+            steps.extend(check_step(d,op,inp)for op in ['validate','plan','execute'])
+        cases.append(dict(name=f'Numarasız mahal opt-in, etiketli/gizli/kilitli/tam metin; layers={layers}',setup=setup,steps=steps))
+    return cases
 
 
 def tedit(d, inp, conflict=False):
@@ -1620,7 +1652,7 @@ def files():
     return {
         "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + elevation_tag_cases() + net_area_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
-        "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()),
+        "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()+missing_space_number_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),
         "cad.schedules.edit.json": document(SEDIT, "Çizelgeyi düzenle: hücre nesneye yazılır, hesaplanan hücre, grup, set; retler", sedit_cases()),
     }

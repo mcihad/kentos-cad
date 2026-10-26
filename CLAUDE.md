@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Numarasız mahal denetimi (26 Ekim 2026; [ADR 0660](docs/adr/0660-room-number-review.md)).**
+  Mevcut etiket denetiminde görünür seçenek; ad/kat/UUID ve kaynak Göster.
+  API yok/null/false eski sonuçları, tam metin gruplarını ve sırayı korur;
+  sorgu modele/geçmişe yazmaz. [Kabul](docs/baseline/2026-10-26-architecture-space-identity/README.md):
+  233 ortak durum/323 Python/üç MCP/iki desktop, native takımlar ve
+  clippy/build/WASM/1170 KCAD; 18 ham ekran/12 tam bağımsız dosya.
+  10.000 mahal+20.000 çizgide debug sorgu 241,663 ms, 9.998 eksikte 452,363 ms
+  ortanca; genel ekran garantisi değildir. ARCH-SPACE-02 [~]; kat öneki/
+  ad/kullanım listeleri, Koru/Yenile ve tam matris açık. Yeni TS/TSX dosyası,
+  KCAD alanı/birim/ölçek/renderer değişikliği yoktur.
+
 - **Ayrı net mahal etiketi (26 Ekim 2026; [ADR 0659](docs/adr/0659-room-tag-net-area.md)).**
   `{area}` seçilmiş sınırda kalır; `{netArea}` aynı kaynak/kat/kapsam/kolon
   tercihinin iç yüzlerini okur. Kopuk/çizilmiş non-net bilinmiyorsa boş;

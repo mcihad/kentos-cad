@@ -18,16 +18,19 @@ pub const TITLE: &str = "Etiketleri denetle";
 const CLOSE: &str = "Kapat";
 const REFRESH: &str = "Yeniden denetle";
 const SHOW: &str = "Göster";
+const MISSING: &str = "Numarasız mahalleri de denetle";
 
 #[derive(Clone, Debug, Default)]
 pub struct Window {
     pub findings: Vec<TagFinding>,
+    pub missing_space_numbers: bool,
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Show(usize),
     Refresh,
+    Missing(bool),
     Close,
 }
 
@@ -45,11 +48,16 @@ fn icon_of(code: &str) -> &'static str {
 }
 
 impl App {
-    fn tags_check_read(&self) -> Option<Window> {
+    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window> {
         let doc = self.document.as_ref()?;
-        match kentos_native_application::tags_check::plan_in(&doc.model, &TagsCheck::default()) {
+        let input = TagsCheck {
+            missing_space_numbers: Some(missing_space_numbers),
+            ..Default::default()
+        };
+        match kentos_native_application::tags_check::plan_in(&doc.model, &input) {
             CommandResult::Completed { output, .. } => Some(Window {
                 findings: output.findings,
+                missing_space_numbers,
             }),
             _ => None,
         }
@@ -61,7 +69,7 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.tags_check = self.tags_check_read();
+        self.tags_check = self.tags_check_read(true);
         self.dialog = Some(Dialog::TagsCheck);
     }
 
@@ -88,7 +96,16 @@ impl App {
                     .collect();
                 self.zoom_to_objects(&ids);
             }
-            Event::Refresh => self.tags_check = self.tags_check_read(),
+            Event::Refresh => {
+                if let Some(w) = &self.tags_check {
+                    self.tags_check = self.tags_check_read(w.missing_space_numbers);
+                }
+            }
+            Event::Missing(on) => {
+                if self.tags_check.is_some() {
+                    self.tags_check = self.tags_check_read(on);
+                }
+            }
             Event::Close => {
                 self.tags_check = None;
                 self.dialog = None;
@@ -104,12 +121,13 @@ impl App {
         let summary = if w.findings.is_empty() {
             words::summary(vec![words::text_line(
                 Kind::Ok,
-                "Etiketler ve numaralar tutarlı: bulgu yok.".to_owned(),
+                "Seçili denetimlerde bulgu yok.".to_owned(),
             )])
         } else {
             let count = |code: &str| w.findings.iter().filter(|f| f.code == code).count();
             let parts: Vec<String> = [
                 ("tag_duplicate_number", "yinelenen numara"),
+                ("tag_missing_space_number", "numarasız mahal"),
                 ("tag_missing_type", "türsüz açıklık"),
                 ("tag_host_broken", "duvarı kopuk açıklık"),
                 ("tag_target_gone", "nesnesiz etiket"),
@@ -156,11 +174,22 @@ impl App {
                 .width(Fill),
             );
         }
-        let body = Column::new().spacing(12).push(summary).push(
-            iced::widget::scrollable(list)
-                .height(iced::Length::Shrink)
-                .height(360.0),
-        );
+        let body = Column::new()
+            .spacing(12)
+            .push(words::check(
+                w.missing_space_numbers,
+                MISSING,
+                Some(msg(Event::Missing(!w.missing_space_numbers))),
+            ))
+            .push(label::caption(
+                "Numara denetimi gizli ve kilitli katmanları da içerir. Çizim değiştirilmez.",
+            ))
+            .push(summary)
+            .push(
+                iced::widget::scrollable(list)
+                    .height(iced::Length::Shrink)
+                    .height(360.0),
+            );
         overlay::modal(
             Frame::new(TITLE)
                 .push(body)
@@ -182,8 +211,92 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(REFRESH) => Some(msg(Event::Refresh)),
+            Control::Press(MISSING) => Some(msg(Event::Missing(
+                !self.tags_check.as_ref().unwrap().missing_space_numbers,
+            ))),
             Control::Press(SHOW) => Some(msg(Event::Show(0))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::files_testing::app_with_drawing;
+
+    fn app() -> App {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/commands/v1/cad.tags.check.json"
+        ))
+        .unwrap();
+        let setup = &fixture["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| {
+                c["name"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("Numarasız mahal opt-in")
+            })
+            .unwrap()["setup"];
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).unwrap();
+        let mut app = app_with_drawing();
+        let drawing = crate::document::Document::new(snapshot, None).unwrap();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing)))));
+        app
+    }
+    fn missing(app: &App) -> usize {
+        app.tags_check
+            .as_ref()
+            .unwrap()
+            .findings
+            .iter()
+            .filter(|f| f.code == "tag_missing_space_number")
+            .count()
+    }
+
+    #[test]
+    fn visible_check_includes_unnumbered_rooms_and_toggling_refreshing_closing_write_nothing() {
+        let mut app = app();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.open_tags_check();
+        assert_eq!(missing(&app), 3);
+        assert_eq!(app.dialog, Some(Dialog::TagsCheck));
+        let _ = app.tags_check_event(Event::Missing(false));
+        assert_eq!(missing(&app), 0);
+        let _ = app.tags_check_event(Event::Refresh);
+        assert!(!app.tags_check.as_ref().unwrap().missing_space_numbers);
+        let _ = app.tags_check_event(Event::Missing(true));
+        assert_eq!(missing(&app), 3);
+        let _ = app.tags_check_event(Event::Close);
+        let _ = app.tags_check_event(Event::Missing(true));
+        let _ = app.tags_check_event(Event::Refresh);
+        assert!(app.tags_check.is_none() && app.dialog.is_none());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+    }
+
+    #[test]
+    fn refresh_reads_the_current_room_fields_without_renumbering_other_rooms() {
+        let mut app = app();
+        app.open_tags_check();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut entity = doc.get(kentos_domain::Slot(1)).unwrap().clone();
+        let kentos_commands::Entity::Space(room) = &mut entity else {
+            panic!("room")
+        };
+        room.space.number = Some("N-001".into());
+        doc.update(kentos_domain::Slot(1), entity);
+        let before = doc.to_snapshot_v2();
+        let _ = app.tags_check_event(Event::Refresh);
+        assert_eq!(missing(&app), 2);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
     }
 }

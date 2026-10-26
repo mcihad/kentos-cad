@@ -552459,7 +552459,7 @@
       "id": "cad.tags.check",
       "version": 1,
       "title": "Etiketleri denetle",
-      "summary": "Açıklıkları, mahalleri ve etiketleri denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). Her bulgu nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar.",
+      "summary": "Açıklıkları, mahalleri ve etiketleri denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). missingSpaceNumbers=true ayrıca etiketi olsa da numarası olmayan her mahalı tag_missing_space_number ile yinelenen numaralardan sonra raporlar; adı ve katı mesajda, UUID ve noktası bulgudadır. Yok/null/false eski bulguları ve sırasını korur. Boş numara alanın yokluğudur; boş/yalnız boşluk metin mevcut mahal sözleşmesinde reddedilir. Tam numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı, açıklık/mahal ayrı gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers açıkça verilirse o katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla, her grup çizimdeki sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya undo üretmez.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -552485,6 +552485,13 @@
               "array",
               "null"
             ]
+          },
+          "missingSpaceNumbers": {
+            "description": "Also report every room without a number, even when it already has a tag.\nAbsent/null/false preserves the original check's findings and order.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "title": "TagsCheck",
@@ -552501,7 +552508,7 @@
                 "x-unit": "length"
               },
               "code": {
-                "description": "`tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.",
+                "description": "`tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,\n`tag_host_broken`, `tag_target_gone` or `tag_untagged`.",
                 "type": "string"
               },
               "message": {
@@ -552575,7 +552582,7 @@
                 "x-unit": "length"
               },
               "code": {
-                "description": "`tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.",
+                "description": "`tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,\n`tag_host_broken`, `tag_target_gone` or `tag_untagged`.",
                 "type": "string"
               },
               "message": {
@@ -1321316,6 +1321323,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aynı numara birden çok açıklıkta ya da mahalde."
+    },
+    {
+      "code": "tag_missing_space_number",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın numarası yok."
     },
     {
       "code": "tag_missing_type",

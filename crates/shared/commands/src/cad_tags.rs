@@ -285,6 +285,11 @@ pub struct TagsCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
+    /// Also report every room without a number, even when it already has a tag.
+    /// Absent/null/false preserves the original check's findings and order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub missing_space_numbers: Option<bool>,
 }
 
 /// One thing `cad.tags.check` found.
@@ -294,7 +299,8 @@ pub struct TagsCheck {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagFinding {
-    /// `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+    /// `tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,
+    /// `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
     pub code: String,
     pub message: String,
     /// The objects, in the drawing's order.

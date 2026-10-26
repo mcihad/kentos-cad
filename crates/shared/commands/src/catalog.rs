@@ -2509,7 +2509,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_TAGS_CHECK_VERSION,
             title: "Etiketleri denetle".into(),
             summary: "Açıklıkları, mahalleri ve etiketleri denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). \
-                      Her bulgu nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar."
+                      missingSpaceNumbers=true ayrıca etiketi olsa da numarası olmayan her mahalı tag_missing_space_number ile yinelenen numaralardan sonra raporlar; adı ve katı mesajda, UUID ve noktası bulgudadır. Yok/null/false eski bulguları ve sırasını korur. Boş numara alanın yokluğudur; boş/yalnız boşluk metin mevcut mahal sözleşmesinde reddedilir. Tam numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı, açıklık/mahal ayrı gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers açıkça verilirse o katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla, her grup çizimdeki sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya undo üretmez."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,

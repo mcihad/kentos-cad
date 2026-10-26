@@ -32,9 +32,16 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
     denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok
     açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken
     (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone
-    (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). Her bulgu
-    nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra
-    çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar.
+    (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal).
+    missingSpaceNumbers=true ayrıca etiketi olsa da numarası olmayan her mahalı
+    tag_missing_space_number ile yinelenen numaralardan sonra raporlar; adı ve katı
+    mesajda, UUID ve noktası bulgudadır. Yok/null/false eski bulguları ve sırasını
+    korur. Boş numara alanın yokluğudur; boş/yalnız boşluk metin mevcut mahal
+    sözleşmesinde reddedilir. Tam numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı,
+    açıklık/mahal ayrı gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers
+    açıkça verilirse o katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla,
+    her grup çizimdeki sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya
+    undo üretmez.
     """
     __slots__ = ()
     id = "cad.tags.check"
@@ -51,6 +58,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TagsChecked:
@@ -58,13 +66,21 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da
         mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan,
         duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan
-        etiket), tag_untagged (etiketsiz açıklık ya da mahal). Her bulgu nesnelerin
-        kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki
-        sırayla. layers verilen katmanlardaki nesnelerle sınırlar.
+        etiket), tag_untagged (etiketsiz açıklık ya da mahal). missingSpaceNumbers=true
+        ayrıca etiketi olsa da numarası olmayan her mahalı tag_missing_space_number ile
+        yinelenen numaralardan sonra raporlar; adı ve katı mesajda, UUID ve noktası
+        bulgudadır. Yok/null/false eski bulguları ve sırasını korur. Boş numara alanın
+        yokluğudur; boş/yalnız boşluk metin mevcut mahal sözleşmesinde reddedilir. Tam
+        numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı, açıklık/mahal ayrı
+        gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers açıkça verilirse o
+        katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla, her grup çizimdeki
+        sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya undo üretmez.
 
         Args:
             doc: The drawing it works on.
             layers:
+            missing_space_numbers: Also report every room without a number, even when it already has a tag.
+                Absent/null/false preserves the original check's findings and order.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -79,6 +95,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         """
         return self.execute_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -87,12 +104,14 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
     ) -> TagsChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ))
 
     def validate(
@@ -101,12 +120,14 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ))
 
     def answer(
@@ -115,6 +136,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -126,6 +148,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         """
         return self.answer_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ), op=op, request_id=request_id, expected=expected)
 
 

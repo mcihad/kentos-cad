@@ -52512,7 +52512,8 @@ class TagEntity(Entity):
 class TagFinding(_Model):
     """One thing `cad.tags.check` found.
     Attributes:
-        code: `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+        code: `tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,
+            `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
         uids: The objects, in the drawing's order.
         at: Where to look: the first object's point. Unit: length.
     """
@@ -52545,19 +52546,26 @@ class TagsCheck(_Model):
     every layer) and every tag checked.
 
     Refusals: `layer_not_found`.
+    Attributes:
+        missing_space_numbers: Also report every room without a number, even when it already has a tag.
+            Absent/null/false preserves the original check's findings and order.
     """
     layers: list[str] | None | Unset = UNSET
+    missing_space_numbers: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.missing_space_numbers is not UNSET:
+            out["missingSpaceNumbers"] = self.missing_space_numbers
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> TagsCheck:
         return cls(
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            missing_space_numbers=data.get("missingSpaceNumbers", UNSET),
         )
 
 
