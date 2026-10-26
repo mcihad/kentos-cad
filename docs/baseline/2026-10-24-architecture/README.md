@@ -5,7 +5,7 @@ Başlangıç kaynak: `bb1f3ffd0`; plan önce ayrı `aec97afa7` commit'inde kayde
 Bu klasör aynı dalın ilk `ARCH-DRAW-01` uygulamasının kanıtıdır. Tüm mimari yol
 haritasının, tüm DWG dosyalarının veya render performansının kabulü değildir.
 
-[Plan](../../../plan/architecture.md) ve [ADR 0627](../../adr/0627-rectangular-architectural-walls.md)
+[Plan](../../../plan/architecture.md) ve [ADR 0656](../../adr/0656-rectangular-architectural-walls.md)
 kapsamı, veri sözleşmesini ve açık işleri tanımlar. Ticari örnekler üretici
 belgelerinden incelendi; bu bilgisayarda çalıştırılmadı.
 

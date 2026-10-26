@@ -1,8 +1,8 @@
-# Yeni araçta görünür ayarlar — ADR 0657
+# Yeni araçta görünür ayarlar — ADR 0686
 
 26 Ekim 2026. **Bu dar düzeltme kabul edildi.**
 
-ADR0656 denemesinde önceki nesne özelliklerinde aşağı kaydırılmış panelin yeni
+ADR0685 denemesinde önceki nesne özelliklerinde aşağı kaydırılmış panelin yeni
 mimari araçta aynı yerde kalabildiği görüldü. 02 ham görüntüde eski değişmez
 pakette gerçek Mimari > Mahal tıklaması sonrası yöntem/kat ve ayar başlığı
 üstte gizlidir; alt numara/ad/kullanım görünür. 01 tanısaldır: Etiket etkinken

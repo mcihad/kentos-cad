@@ -1,6 +1,6 @@
 # Açıklık dağıtımı — işlevsel kabul dilimi
 
-25 Ekim 2026 · ARCH-OPEN-02 / ADR 0636 · Dal `codex/architecture-2d-workflows`.
+25 Ekim 2026 · ARCH-OPEN-02 / ADR 0665 · Dal `codex/architecture-2d-workflows`.
 Taban `f7ee4c73a`. Ana madde [~]: §10'un tam gerçek boyut/font/tema ve
 birleşik zoom/pan/özellik düzenleme matrisi henüz tamamlanmadı.
 Açık temada 13 px ile mevcut 1440×828 iç alanda birleşik düzenleme ve gezinme

@@ -1,4 +1,4 @@
-# Görünür etiket içerik örnekleri — ADR0664
+# Görünür etiket içerik örnekleri — ADR0693
 
 Taban `2d396fcbf`, aynı mimari dal. Etiket/Hepsini etiketle mevcut
 `cad.tags.create` şablon alanını doldurur; yeni API alanı, preset kimliği,
@@ -33,7 +33,7 @@ ayarların korunumu ve katlı toplu tek onay/undo/redo içerir.
   uyarıları ve block0.1.6 gelecek uyumu bildirimi ham günlüklerde korunur.
 - Cargo koşumları sırayla ve `TS_RS_EXPORT_DIR` çalışma dizinine yöneltilerek
   yapıldı. Yeni TS/TSX üretilmedi. Python/MCP ve WASM bu dilimde tekrar
-  koşulmadı; mevcut komut/SDK/model değişmedi. ADR0663'ün önceki koşumları
+  koşulmadı; mevcut komut/SDK/model değişmedi. ADR0692'ün önceki koşumları
   bu dilimin yeni koşumları olarak sayılmaz.
 - `python3 docs/baseline/2026-10-26-architecture-tag-contents/verify.py`:
   15 kabul KCAD'ını bütün alanlarıyla sabit bağımsız beklentiye karşı okur.
@@ -53,7 +53,7 @@ sürekli derleme yapıp eski kanıtın ikilisini değiştirme yapılmadı. İlk 
 ve Isolated QA aynı yeni ikiliyi çalıştırır. Kullanıcının normal ayarları
 yerine `.run/tag-contents` altında ayrı XDG config/data kullanıldı.
 
-1. `01` önceki0663 sürümündeki ayarları gösterir. `02–04` yeni seçimlerin
+1. `01` önceki0692 sürümündeki ayarları gösterir. `02–04` yeni seçimlerin
    ve beş satırlı şablonun önizlemesidir; `preview.kcad` dört kaynaklı
    başlangıca bayt düzeyinde eşittir. `06–07` ilk temiz tek etiket örneğidir;
    sonradan karışan geçmiş kabulü için kullanılmaz.

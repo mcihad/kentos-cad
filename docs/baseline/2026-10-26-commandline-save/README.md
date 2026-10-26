@@ -1,4 +1,4 @@
-# Tab sonrası komut satırında Cmd-S — ADR 0654
+# Tab sonrası komut satırında Cmd-S — ADR 0683
 
 26 Ekim 2026. **CommandLine/EditCell dilimi doğrulandı.** Genel mimari ve
 bütün giriş bileşenlerinin klavye matrisi açık kalır.

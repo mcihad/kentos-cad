@@ -1,10 +1,10 @@
-# Görünür etiket ayarları — ADR 0656
+# Görünür etiket ayarları — ADR 0685
 
 26 Ekim 2026. **Bu dar dilim kabul edildi.**
 
 01 ham görüntüde Etiket etkin olmasına karşın Öznitelikler yalnız seçimi/
 belgeyi gösterir. Şablon/Biçim/Kol alttaki komut seçeneklerindedir.
-`before-binary.json`, ADR0655'in değişmez paketidir; yeni derleme sayılmaz.
+`before-binary.json`, ADR0684'in değişmez paketidir; yeni derleme sayılmaz.
 
 Yeni etkin araç paneli şablon, çerçeve, kol ve kağıt yazı boyunu mevcut
 native alanlarla sunar. Seçim özelliklerinden ayrı başlıktadır. Mevcut
@@ -31,7 +31,7 @@ Komutlar/çıkış kodları/zaman/SHA256 `test-runs.json` içindedir.
   GUI kabulüyle birlikte okunur.
 - `tag-reference`: 165 bağımsız ortak durum aynı; `sdk-check` geçti.
 - `python-tags`: mevcut kamuya açık yerleşim/izleme testleri **üç başarılı**.
-  Komut/FFI/SDK değişmedi; ADR0655'teki tam 303 Python testi bu panel
+  Komut/FFI/SDK değişmedi; ADR0684'teki tam 303 Python testi bu panel
   diliminde yeniden çalıştırılmış gibi sunulmaz.
 
 ## Gerçek GUI'nin yakaladığı takip kusurları

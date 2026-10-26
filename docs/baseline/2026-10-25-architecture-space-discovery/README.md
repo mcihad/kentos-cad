@@ -1,6 +1,6 @@
 # Toplu mahal bul — kabul kaydı
 
-25 Ekim 2026, `codex/architecture-2d-workflows`; [ADR 0642](../../adr/0642-bulk-room-discovery.md).
+25 Ekim 2026, `codex/architecture-2d-workflows`; [ADR 0671](../../adr/0671-bulk-room-discovery.md).
 ARCH-SPACE-01 [~] sürer. Kolon, kalıcı sanal ayırıcı/kaynak alt kümesi,
 açık sınırı kaynak uçlarıyla tanıma ve tam GUI matrisi bu dilime dahil değildir.
 

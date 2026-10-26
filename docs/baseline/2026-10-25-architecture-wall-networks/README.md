@@ -1,6 +1,6 @@
 # Büyük ve karışık mimari duvar ağları — kabul kaydı
 
-25 Ekim 2026, `codex/architecture-2d-workflows`, [ADR 0640](../../adr/0640-large-architectural-wall-networks.md).
+25 Ekim 2026, `codex/architecture-2d-workflows`, [ADR 0669](../../adr/0669-large-architectural-wall-networks.md).
 ARCH-DRAW-03 [~] kalır; genel mimari yol haritası açık.
 
 ## Ürün değişikliği

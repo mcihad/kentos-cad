@@ -2,7 +2,7 @@
 
 24 Ekim 2026 · dal `codex/architecture-2d-workflows` · önceki taban `10ab270c9`.
 [Plan](../../../plan/architecture.md) ARCH-UX-01 ve ARCH-DRAW-02'nin düz dilimi;
-[ADR 0628](../../adr/0628-visible-architecture-settings-and-measured-partitions.md).
+[ADR 0657](../../adr/0657-visible-architecture-settings-and-measured-partitions.md).
 
 ## Gerçek masaüstü denemesi
 

@@ -2,7 +2,7 @@
   "status": "passed_implemented_slice",
   "branch": "codex/architecture-2d-workflows",
   "parentCommit": "9ee5bbaf208745d097ca1efb1be0f10b31d66452",
-  "scope": "ADR 0639 wall conversion target levels and wall join isolation; whole architecture roadmap remains open",
+  "scope": "ADR 0668 wall conversion target levels and wall join isolation; whole architecture roadmap remains open",
   "checks": {
     "contracts": {
       "status": "passed",

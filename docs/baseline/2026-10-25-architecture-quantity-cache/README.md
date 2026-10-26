@@ -1,4 +1,4 @@
-# Sorgu ömründe ortak mahal metrajı — ADR0651
+# Sorgu ömründe ortak mahal metrajı — ADR0680
 
 25–26 Ekim 2026. `codex/architecture-2d-workflows`; önceki kabul commit'i
 `cbc6b9b2a`. Bu sorgu/yerleşim dilimi doğrulandı;
@@ -30,7 +30,7 @@ karşılaştırması olarak kullanılmadı; dondurulmuş kabul V2/KCAD'dir.
 cevaptır; geometri için bağımsız oracle diye sunulmaz. Native uygulama testi
 100 cevabı, plan/execute salt okunurluğunu ve tersten/tekrarlı yöntemlerle
 paylaşılan aramanın tek çağrılık aramaya eşitliğini kontrol eder. Bağımsız
-fiziksel beklentiler ADR0650'nin 105 ortak komut durumunda ayrıca sınanır.
+fiziksel beklentiler ADR0679'nin 105 ortak komut durumunda ayrıca sınanır.
 `frozen-before-sha256.json` eski giriş/cevap/iş yükü/ölçüm baytlarını korur;
 `before` modu var olan kayıtları yeniden üretmez.
 
@@ -108,5 +108,5 @@ hash'ler, gerçek KCAD kayıtları ve gerçek CSV'yi bağımsız kontrol eder.
   sayılmaz; `test-runs.json` tam komut, süre, çıkış ve log SHA'larını taşır.
 
 Web/ortak geometri/katalog/SDK/şema bu optimizasyonda değişmez. Önceki WASM
-kontrolü ADR0650'de kayıtlıdır; bu oturumda tekrar çalıştırılmış sayılmaz.
+kontrolü ADR0679'de kayıtlıdır; bu oturumda tekrar çalıştırılmış sayılmaz.
 Ana ARCH-SPACE-01/ARCH-PERF-01 ve genel mimari plan açık kalır.

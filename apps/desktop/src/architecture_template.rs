@@ -1,4 +1,4 @@
-//! A template is reviewed before it changes an existing drawing (ADR 0630).
+//! A template is reviewed before it changes an existing drawing (ADR 0659).
 use crate::app::{App, Dialog, Message};
 use iced::Element;
 use iced::widget::{Column, button};

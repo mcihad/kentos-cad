@@ -1,8 +1,8 @@
 # Kalıcı kolon düşümü — işlevsel dilim kabulü
 
 25 Ekim 2026; dal `codex/architecture-2d-workflows`, başlangıç `fcd4b4f0c`.
-ADR 0643 kolon düşümü dilimi gerçek GUI ve bağımsız dosya hesabıyla doğrulandı;
-aynı gerçek GUI denemesinde bulunan GPU konum kusuru ADR 0644'te izlenir.
+ADR 0672 kolon düşümü dilimi gerçek GUI ve bağımsız dosya hesabıyla doğrulandı;
+aynı gerçek GUI denemesinde bulunan GPU konum kusuru ADR 0673'te izlenir.
 
 Kaynak çizim önceki SDK ile hazırlanan altı gerçek nesnedir; elle çizildiği
 iddia edilmez. Kaynak duvar 10 × 8 m eksen, 0,2 m kalınlık; Zemin kat S1

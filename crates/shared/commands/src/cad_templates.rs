@@ -61,7 +61,7 @@ pub fn builtin_template(name: &str) -> Option<WorkTemplate> {
 }
 
 /// Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package
-/// undo and preservation (ADR 0630); absent retains legacy automation behaviour (ADR 0346).
+/// undo and preservation (ADR 0659); absent retains legacy automation behaviour (ADR 0346).
 /// Name, policy/unit conflict and expected revision are checked before package preflight.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -78,7 +78,7 @@ pub struct TemplatesApply {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
-    /// Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;
+    /// Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;
     /// `template` applies the shown package settings without rescaling geometry.
     /// Both preserve existing definitions and make the whole package one undo step.
     /// Absent: the original ADR 0346 v1 behaviour, for existing automation.

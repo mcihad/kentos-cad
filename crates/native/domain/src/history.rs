@@ -220,7 +220,7 @@ pub(crate) enum Op {
         before: Arc<AssocArray>,
         after: Arc<AssocArray>,
     },
-    /// Only the metadata installed by an explicit architectural package (ADR 0630).
+    /// Only the metadata installed by an explicit architectural package (ADR 0659).
     TemplateSettings {
         before: Box<crate::template_settings::TemplateSettings>,
         after: Box<crate::template_settings::TemplateSettings>,
@@ -899,7 +899,7 @@ impl Document {
         let openings = self.follow_openings(ops);
         ops.extend(openings);
         // Settle grid-driven columns before a space reads their physical
-        // footprints (ADR 0643); tags and schedules see both in the same step.
+        // footprints (ADR 0672); tags and schedules see both in the same step.
         let columns = self.follow_columns(ops);
         ops.extend(columns);
         let spaces = self.follow_spaces(ops);

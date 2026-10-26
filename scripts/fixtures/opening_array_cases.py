@@ -1,4 +1,4 @@
-"""Independent straight-host specification for ARCH-OPEN-02 (ADR 0636).
+"""Independent straight-host specification for ARCH-OPEN-02 (ADR 0665).
 
 No KentOS module is imported. Copies are placed by jamb intervals on a measured
 line; numbering is checked against the drawing's exact marks of the same form.

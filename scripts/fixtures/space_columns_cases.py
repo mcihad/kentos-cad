@@ -1,4 +1,4 @@
-"""ADR 0643 independent rectangular column union cases; no KentOS imports.
+"""ADR 0672 independent rectangular column union cases; no KentOS imports.
 
 Two 2×2 squares at (3,4)/(4,4) overlap by 1×2: union 3×2 = 6 m²,
 perimeter 10 m. A separate upper-level square contributes 4 m² / 8 m only

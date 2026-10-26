@@ -382,7 +382,7 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 102**, şema 101'in kendisi, katmanın türü ve projenin otomatik seçimidir (ADR 0622 §5): katman düğümünün `geometry`'si (`point`, `line`, `area` ya da `annotation`: katmanın taşıdığı nesnelerin türü; yoksa her tür) ve ayarların `autoSelect`'i (Otomatik seçim; yoksa CBS projesinde kapalı, öbürlerinde açık). Yazıcı `102`'yi **yalnız türü olan katman ya da otomatik seçimi seçilmiş proje varken** yazar. Başka her çizim şema 2–101'dir ve eskisiyle bayt bayt aynıdır. Şema 2–101 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/layer-geometry-in-schema-101.kcad`); grubun türü ve bilinmeyen tür `bad_value`'dur (`broken/layer-geometry-on-group.kcad`, `broken/layer-geometry-unknown.kcad`), mantıksal olmayan `autoSelect` `wrong_type`'tır (`broken/auto-select-not-boolean.kcad`). Dosya biçimi katmandaki nesnelerin türe uyduğunu denetlemez; uymayan yazmayı belge reddeder (`layer_geometry_mismatch`). Örnek dosya `layer-geometry.kcad`.
 
 **Şema 106**, yalnız çoklu çizgide isteğe bağlı `spaceSeparator: ArchInfo`
-rolünü ekler (ADR 0650). Alanın yokluğu sıradan çoklu çizgiyi korur; boş nesne
+rolünü ekler (ADR 0679). Alanın yokluğu sıradan çoklu çizgiyi korur; boş nesne
 `{}` açıkça atanmamış kat/evreli ayırıcıdır. Kat, evre, yapım durumu ve disiplin
 mevcut `ArchInfo` sözleşmesidir; bilinmeyen alan `unknown_field`, tip ve kanonik
 biçim hatası `bad_value` olur. Rol yalnız tek parçalı, düzlemsel, genişliksiz,
@@ -397,7 +397,7 @@ uygunsuz geometri ve bilinmeyen rol örnekleri `broken/space-separator-*.kcad`.
 Mahalın seçilmiş kaynak listesi açık ayırıcı UUID'sini de adlandırabilir; eksik
 veya rolü kaldırılmış kaynak son geçerli sınırı `sourceUnavailable` ile korur.
 
-**Şema 107** (ADR 0661), `settings.arch` JSON bölümüne isteğe bağlı
+**Şema 107** (ADR 0690), `settings.arch` JSON bölümüne isteğe bağlı
 `spaceNames`, `spaceUsages` ve `spaceNumberPrefixes` ekler. İlk ikisi proje
 sırasındaki 1–256 metindir; her metin 1–256 karakter, baş/son boşluksuz ve
 Unicode kontrol karakteri (`Cc`) içermez. Aynı tam metin iki kez yazılmaz;
@@ -411,7 +411,7 @@ Yazıcı107'yi yalnız tercihlerden biri doluyken seçer; diğer dosyaların
 `space-choice-limits.kcad`; eski şema ve geçersiz değerler
 `broken/space-choice-*.kcad` / `broken/space-choices-in-schema-106.kcad`.
 
-**Şema 105**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0649).
+**Şema 105**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0678).
 `space.sources` varsa boş olmayan, sıralı, tekrarsız, en çok 10000 standart UUID
 metnidir; ilişkili `seed` gerekir. Eksik alan eski kapsam/kat aramasını korur.
 `sourceUnavailable` yeni kopukluk nedeni, silinen/türü veya katı değişen kaynağın
@@ -419,7 +419,7 @@ son geçerli sınırını koruduğunu söyler. Bunlar önceki şemalarda reddedi
 özelliği kullanmayan çizim aynı eski şemada/baytlarda kalır. Bağımsız örnek
 `space-sources.kcad`, önceki şema reddi `space-sources-in-schema-104.kcad`.
 
-**Şema 104**, şema 103 ve mahalın kalıcı kaynak kapsamıdır (ADR 0645): `space.scope`
+**Şema 104**, şema 103 ve mahalın kalıcı kaynak kapsamıdır (ADR 0674): `space.scope`
 yalnız `unassigned` ise yazılır; `project` varsayılandır ve yazılmaz. `seed`
 gerekir, `arch.level` bulunmamalıdır. Duvar ve fiziksel kolon kaynaklarının
 yalnız atanmamış olanları kullanılır. Şema 103 ve öncesinde `scope` alanı
@@ -427,7 +427,7 @@ yalnız atanmamış olanları kullanılır. Şema 103 ve öncesinde `scope` alan
 veya katla çelişen kapsam `bad_value` olur. Örnek `space-scope.kcad`;
 eski dosyalar önceki en eski şema/baytlarda kalır.
 
-**Şema 103**, şema 102'nin kendisi ve ilişkili mahalın kolon düşümüdür (ADR 0643): `space.columns` yalnız `net` ya da `all` iken yazılır; `ignore` varsayılandır ve yazılmaz. `seed` gerekir. `space.broken` yeni `noFreeArea` ve `invalidBoundarySource` nedenlerini de alır. Yazıcı 103'ü yalnız bu alan veya yeni neden varsa seçer; başka her çizim önceki en eski şemada, aynı baytlarda kalır. Şema 102 ve öncesinde `columns` bilinmeyen alandır (`unknown_field`); yeni kopukluk nedeni `bad_value`'dur. Bilinmeyen kolon tercihi, açıkça yazılmış `ignore`, metin olmayan tercih ve `seed`'siz etkin tercih `bad_value`'dur. Bağımsız örnek `space-columns.kcad`, önceki şemada ret `broken/space-columns-in-schema-102.kcad`'dir.
+**Şema 103**, şema 102'nin kendisi ve ilişkili mahalın kolon düşümüdür (ADR 0672): `space.columns` yalnız `net` ya da `all` iken yazılır; `ignore` varsayılandır ve yazılmaz. `seed` gerekir. `space.broken` yeni `noFreeArea` ve `invalidBoundarySource` nedenlerini de alır. Yazıcı 103'ü yalnız bu alan veya yeni neden varsa seçer; başka her çizim önceki en eski şemada, aynı baytlarda kalır. Şema 102 ve öncesinde `columns` bilinmeyen alandır (`unknown_field`); yeni kopukluk nedeni `bad_value`'dur. Bilinmeyen kolon tercihi, açıkça yazılmış `ignore`, metin olmayan tercih ve `seed`'siz etkin tercih `bad_value`'dur. Bağımsız örnek `space-columns.kcad`, önceki şemada ret `broken/space-columns-in-schema-102.kcad`'dir.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

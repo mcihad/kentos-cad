@@ -1,6 +1,6 @@
 # Numarasız mahal denetimi — 26 Ekim 2026
 
-Bu denetim diliminin kabulü tamamlandı; [ADR 0660](../../adr/0660-room-number-review.md).
+Bu denetim diliminin kabulü tamamlandı; [ADR 0689](../../adr/0689-room-number-review.md).
 ARCH-SPACE-02'nin denetim dilimi; kat öneki/ad/kullanım listesi bu teslimle
 tamamlanmış sayılmaz. Yeni komut veya KCAD alanı yoktur; mevcut
 `cad.tags.check` isteğe bağlı eksik numara kontrolü alır.

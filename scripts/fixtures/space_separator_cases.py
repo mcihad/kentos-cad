@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0650 independent virtual partitions: Decimal rectangles, no KentOS code.
+"""ADR 0679 independent virtual partitions: Decimal rectangles, no KentOS code.
 A 10x8 metre wall-axis rectangle of .2 m thickness and a 2x2 m column.
 A zero-thickness separator at x=5 removes no material. For offset d, the
 left width is 5+d/2, the height 8+d; the column removes exactly 4 m².

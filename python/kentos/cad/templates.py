@@ -83,7 +83,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
             doc: The drawing it works on.
             name: The template's name: `mimari`.
             expected_revision:
-            settings_mode: Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;
+            settings_mode: Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;
                 `template` applies the shown package settings without rescaling geometry.
                 Both preserve existing definitions and make the whole package one undo step.
                 Absent: the original ADR 0346 v1 behaviour, for existing automation.

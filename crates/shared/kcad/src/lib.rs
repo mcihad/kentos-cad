@@ -580,16 +580,16 @@ pub const SCHEMA_WITH_LINEAGE: u32 = 101;
 /// Schema 102 (docs/adr/0622 §5): a layer's `geometry` (what it holds: `point`, `line`, `area`, `annotation`) and the
 /// settings' `autoSelect` (Otomatik seçim), written only when a layer has a type or the project chose.
 pub const SCHEMA_WITH_LAYER_GEOMETRY: u32 = 102;
-/// Schema 103 (ADR 0643): a space's persistent column deduction and its new
+/// Schema 103 (ADR 0672): a space's persistent column deduction and its new
 /// source/empty-area break reasons. Only drawings using them need this schema.
 pub const SCHEMA_WITH_SPACE_COLUMNS: u32 = 103;
-/// Schema 104 (ADR 0645): persistent unassigned architectural source scope.
+/// Schema 104 (ADR 0674): persistent unassigned architectural source scope.
 pub const SCHEMA_WITH_SPACE_SCOPE: u32 = 104;
-/// Schema 105 (ADR 0649): persistent explicit room source UUIDs.
+/// Schema 105 (ADR 0678): persistent explicit room source UUIDs.
 pub const SCHEMA_WITH_SPACE_SOURCES: u32 = 105;
-/// Schema 106 (ADR 0650): an explicit virtual room separator role on a polyline.
+/// Schema 106 (ADR 0679): an explicit virtual room separator role on a polyline.
 pub const SCHEMA_WITH_SPACE_SEPARATORS: u32 = 106;
-/// Schema 107 (ADR 0661): optional project room names, usages and level prefixes.
+/// Schema 107 (ADR 0690): optional project room names, usages and level prefixes.
 pub const SCHEMA_WITH_SPACE_CHOICES: u32 = 107;
 
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.

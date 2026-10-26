@@ -12,6 +12,6 @@
     "crates/ui/src/widget/key_focus.rs": "b3e40680046e7554ac0325fa201abdd6c2c3fd6aa2b4900de17bd428f02f6c36",
     "crates/ui/src/widget/command_line_keys.rs": "1faf06fb7062a088fa328c5d3d9c56d2716c5de2c0ae19a87c948226dbb888ca"
   },
-  "note": "Unchanged final ADR0654 native binary reused for real tag movement/follower acceptance. Source hashes still match; no rebuild claimed.",
+  "note": "Unchanged final ADR0683 native binary reused for real tag movement/follower acceptance. Source hashes still match; no rebuild claimed.",
   "acceptedSourceCommit": "fc1674adc2ef2af2e76887f6b54e3cbc8c146172"
 }

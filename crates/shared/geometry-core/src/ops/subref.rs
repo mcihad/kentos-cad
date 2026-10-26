@@ -202,7 +202,7 @@ fn wall_line(shape: &Shape, part: usize) -> Option<(crate::geom::wall::Line, boo
 }
 
 // Broken openings retain their last jambs for display. Those cached coordinates
-// must not become live measurement references (ADR0665).
+// must not become live measurement references (ADR0694).
 fn opening_ready(e: &Entity) -> bool {
     match &e.shape {
         Shape::Opening { place, .. } => {

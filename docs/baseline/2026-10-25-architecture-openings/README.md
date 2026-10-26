@@ -1,6 +1,6 @@
 # Hassas kapı/pencere yerleştirme — gerçek pencere kaydı
 
-25 Ekim 2026 · ADR 0633 · `codex/architecture-2d-workflows`.
+25 Ekim 2026 · ADR 0662 · `codex/architecture-2d-workflows`.
 
 Bu kayıt yerleştirme diliminin kanıtıdır. ARCH-OPEN-01'in tüm kabulü değildir.
 Uygulama yerel derlemedir; ayrılmış test ayar/veri dizinleri ve sentetik çizim

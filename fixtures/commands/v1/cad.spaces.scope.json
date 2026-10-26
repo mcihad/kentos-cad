@@ -4,7 +4,7 @@
   "command": "cad.spaces.create",
   "commandVersion": 1,
   "title": "Kalıcı kaynak kapsamı: atanmamış / bütün çizim, üç yöntem, beş birim, iki koordinat",
-  "note": "ADR 0645: independent rectangular source-scope cases, Decimal arithmetic.\n\nAn unassigned 10×8 m wall centre rectangle (width .2), a level-bound\npartition at x=5, an unassigned 2×2 column at (3,4) and a foreign-level\n2×2 column at (8,4). A left-side seed finds the whole unassigned room or\nonly the left mixed-source room. Equal elevations never equate identities.\nNo KentOS/native/SDK geometry is imported.",
+  "note": "ADR 0674: independent rectangular source-scope cases, Decimal arithmetic.\n\nAn unassigned 10×8 m wall centre rectangle (width .2), a level-bound\npartition at x=5, an unassigned 2×2 column at (3,4) and a foreign-level\n2×2 column at (8,4). A left-side seed finds the whole unassigned room or\nonly the left mixed-source room. Equal elevations never equate identities.\nNo KentOS/native/SDK geometry is imported.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

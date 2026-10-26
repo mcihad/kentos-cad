@@ -6,5 +6,5 @@
   "executable": "Contents/MacOS/kentos-cad-bin",
   "sha256": "3d8225ef1271d5823ba65aa92f11047b1b64d891a07acccceaf16f16d19f2a90",
   "sourceFiles": {},
-  "note": "Committed ADR0658 binary; synthetic gross room with net-only column policy."
+  "note": "Committed ADR0687 binary; synthetic gross room with net-only column policy."
 }

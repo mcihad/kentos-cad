@@ -347,12 +347,12 @@ SCHEMA_WITH_GEOREF_CRS = 100
 SCHEMA_WITH_LINEAGE = 101
 # Schema 102 (docs/adr/0622 §5): a layer's `geometry` (what it holds) and the settings' `autoSelect` (Otomatik seçim).
 SCHEMA_WITH_LAYER_GEOMETRY = 102
-# Schema 103 (ADR 0643): persistent column deductions on associative spaces.
+# Schema 103 (ADR 0672): persistent column deductions on associative spaces.
 SCHEMA_WITH_SPACE_COLUMNS = 103
 SCHEMA_WITH_SPACE_SCOPE = 104
-# Schema 105 (ADR 0649): persistent explicit architectural source UUIDs.
+# Schema 105 (ADR 0678): persistent explicit architectural source UUIDs.
 SCHEMA_WITH_SPACE_SOURCES = 105
-# Schema 106 (ADR 0650): explicit virtual room separators.
+# Schema 106 (ADR 0679): explicit virtual room separators.
 SCHEMA_WITH_SPACE_SEPARATORS = 106
 SCHEMA_WITH_SPACE_CHOICES = 107
 MAX_GEOREF_CRS = 16 * 1024

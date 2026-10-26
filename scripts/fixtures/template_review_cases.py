@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0630's explicit template policies, independently from KentOS code.
+"""ADR 0659's explicit template policies, independently from KentOS code.
 The old ADR 0346 cases remain unchanged. This reference only reads package data.
 """
 import argparse
@@ -130,7 +130,7 @@ def main():
     assert len(rows) >= 20
     value = {'format': 'kentos.command-cases', 'version': 1, 'command': 'cad.templates.apply', 'commandVersion': 1,
              'title': 'Güvenli mimari şablonu', 'setup': T.setup(), 'cases': rows,
-             'note': 'ADR 0630, bağımsız paket-verisi referansı; eski ADR 0346 fixture değiştirilmedi.'}
+             'note': 'ADR 0659, bağımsız paket-verisi referansı; eski ADR 0346 fixture değiştirilmedi.'}
     text = json.dumps(value, ensure_ascii=False, indent=2) + '\n'
     if args.check:
         assert OUT.read_text() == text, f'{OUT} güncel değil'

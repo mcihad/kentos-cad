@@ -4,7 +4,7 @@
   "command": "cad.spaces.create",
   "commandVersion": 1,
   "title": "Kolon alanı: örtüşen iz, açık kat, üç yöntem, beş birim, legacy ve tek undo",
-  "note": "ADR 0643 independent rectangular column union cases; no KentOS imports.\n\nTwo 2×2 squares at (3,4)/(4,4) overlap by 1×2: union 3×2 = 6 m²,\nperimeter 10 m. A separate upper-level square contributes 4 m² / 8 m only\nwhen no level is selected. Wall centre rectangle 10×8, width 0.2; its\nNet/Gross offsets are ±0.1. All expected sizes use Decimal arithmetic.",
+  "note": "ADR 0672 independent rectangular column union cases; no KentOS imports.\n\nTwo 2×2 squares at (3,4)/(4,4) overlap by 1×2: union 3×2 = 6 m²,\nperimeter 10 m. A separate upper-level square contributes 4 m² / 8 m only\nwhen no level is selected. Wall centre rectangle 10×8, width 0.2; its\nNet/Gross offsets are ±0.1. All expected sizes use Decimal arithmetic.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

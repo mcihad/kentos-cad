@@ -1,4 +1,4 @@
-# Mahalın kalıcı kaynak seçimi — ADR0649
+# Mahalın kalıcı kaynak seçimi — ADR0678
 
 25 Ekim 2026, `codex/architecture-2d-workflows`, üst commit `f4e52d4c2`.
 ARCH-SPACE-01'in seçilmiş duvar/kolon alt kümesi. Ana madde açık kalır;

@@ -1,6 +1,6 @@
 # Tek uzunluk alanında gösterilen birimle düzenleme
 
-25 Ekim 2026 · ARCH-UX-01 takip bulgusu · [ADR 0632](../../adr/0632-formatted-single-length-fields.md).
+25 Ekim 2026 · ARCH-UX-01 takip bulgusu · [ADR 0661](../../adr/0661-formatted-single-length-fields.md).
 
 ## Uygulanan sınır
 

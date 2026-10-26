@@ -1,6 +1,6 @@
 # Mahal proje listeleri ve açık kat öneki — 26 Ekim 2026
 
-[ADR0661](../../adr/0661-project-room-choices.md); ARCH-SPACE-02'nin liste/önek
+[ADR0690](../../adr/0690-project-room-choices.md); ARCH-SPACE-02'nin liste/önek
 dilimi. Bu liste/önek diliminin kabulü tamamlandı; genel mimari matris kapanmış değildir.
 
 ## Davranış ve uyumluluk
@@ -64,7 +64,7 @@ Başarısız denemeler saklanır ve olumlu kabul sayılmaz:
 
 ## Gerçek arayüz ve bağımsız dosyalar
 
-before.kcad önceki ADR0660 numaralı GUI kaydının bayt özdeş kopyasıdır:
+before.kcad önceki ADR0689 numaralı GUI kaydının bayt özdeş kopyasıdır:
 beş 4×3 m mahal/beş etiket, iki kat, atanmamış ve gizli kaynak. Kullanıcı
 çizimleri/asıl profil kullanılmaz. Ham JPEG'ler kırpılmadı, ölçeklenmedi,
 yeniden boyanmadı. gui-events.json zaman/hash/değişmez QA ikilisini eşler;

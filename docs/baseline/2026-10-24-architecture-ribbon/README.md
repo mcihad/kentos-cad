@@ -1,7 +1,7 @@
 # Mimari şerit — ARCH-UX-02 kabul kaydı
 
 24 Ekim 2026, `codex/architecture-2d-workflows`; taban `af800a8f0`.
-Karar: [ADR 0629](../../adr/0629-architectural-ribbon-and-narrow-cad-status.md).
+Karar: [ADR 0658](../../adr/0658-architectural-ribbon-and-narrow-cad-status.md).
 Durum: ARCH-UX-02 sunum dilimi kabul edildi; genel mimari plan açık.
 
 ## Gerçek uygulamada gözlenenler

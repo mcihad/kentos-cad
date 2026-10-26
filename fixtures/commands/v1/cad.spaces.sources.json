@@ -4,7 +4,7 @@
   "command": "cad.spaces.create",
   "commandVersion": 1,
   "title": "Kalıcı kaynak UUID alt kümesi: üç yöntem, beş birim, iki başlangıç, bütün/sol oda, kısmi kopya uyarısı",
-  "note": "ADR 0649: explicit persistent UUID subsets, independently measured rectangles.\n\nNo KentOS, SDK or geometry result is imported. Four fixed source UUIDs name\nan outer 10 by 8 metre wall, a partition, and two columns. Decimal arithmetic\nmeasures the chosen whole/left room and its sole chosen 2 by 2 metre hole.\nThe other independent source-scope generator supplies setup metadata only.",
+  "note": "ADR 0678: explicit persistent UUID subsets, independently measured rectangles.\n\nNo KentOS, SDK or geometry result is imported. Four fixed source UUIDs name\nan outer 10 by 8 metre wall, a partition, and two columns. Decimal arithmetic\nmeasures the chosen whole/left room and its sole chosen 2 by 2 metre hole.\nThe other independent source-scope generator supplies setup metadata only.",
   "setup": {
     "format": "kentos.document",
     "version": 2,

@@ -1,7 +1,7 @@
 # Atanmamış mahal kaynakları ve görünür iç nokta — kabul kaydı
 
 25 Ekim 2026; dal `codex/architecture-2d-workflows`, başlangıç `8a6cf0b3a`.
-[ADR 0645](../../adr/0645-unassigned-space-sources.md) kapsamındaki bu dilim
+[ADR 0674](../../adr/0674-unassigned-space-sources.md) kapsamındaki bu dilim
 uygulandı ve aşağıdaki sınırlar içinde doğrulandı. ARCH-SPACE-01 bütünü [~]
 kalır: seçilmiş kalıcı kaynak listesi, sanal ayırıcı ve genel performans/tam
 iş akışı matrisi bu kabulün parçası değildir.

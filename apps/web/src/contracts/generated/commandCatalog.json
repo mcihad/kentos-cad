@@ -605163,7 +605163,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package\nundo and preservation (ADR 0630); absent retains legacy automation behaviour (ADR 0346).\nName, policy/unit conflict and expected revision are checked before package preflight.",
+        "description": "Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package\nundo and preservation (ADR 0659); absent retains legacy automation behaviour (ADR 0346).\nName, policy/unit conflict and expected revision are checked before package preflight.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -605185,7 +605185,7 @@
                 "type": "null"
               }
             ],
-            "description": "Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;\n`template` applies the shown package settings without rescaling geometry.\nBoth preserve existing definitions and make the whole package one undo step.\nAbsent: the original ADR 0346 v1 behaviour, for existing automation."
+            "description": "Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;\n`template` applies the shown package settings without rescaling geometry.\nBoth preserve existing definitions and make the whole package one undo step.\nAbsent: the original ADR 0346 v1 behaviour, for existing automation."
           },
           "unit": {
             "anyOf": [

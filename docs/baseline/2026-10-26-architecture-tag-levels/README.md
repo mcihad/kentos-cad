@@ -1,4 +1,4 @@
-# Mimari toplu etikette kaynak kat kapsamı — ADR0663
+# Mimari toplu etikette kaynak kat kapsamı — ADR0692
 
 Taban `5d217ca4d`, aynı `codex/architecture-2d-workflows` dalı.
 Bu kayıt yalnız kaynak kat süzgecinindir; tüm mimari araçlar veya
@@ -82,7 +82,7 @@ kalır. Renderer, zoom, çizim birimi/ölçeği ve kalıcı KCAD şeması aynı.
 
 ### Gerçek GUI adımları ve derleme ayrımı
 
-- 01/02 önceki ADR0662 ikilisidir: gizli ve yalnız görünürlük açılmış
+- 01/02 önceki ADR0691 ikilisidir: gizli ve yalnız görünürlük açılmış
   başlangıç. Yeni kat alanı bu sürümde yoktur.
 - 03–23 ilk özellik ikilisidir (`after-binary.json`). Varsayılan tümü,
   tam kat menüsü, atanmamış/üst/zemin seçimi; üst katta Koru boş planı

@@ -1,6 +1,6 @@
 # Ortak oda konturundan tek duvar ağı — kabul kaydı
 
-25 Ekim 2026 · `codex/architecture-2d-workflows` · [ADR 0638](../../adr/0638-shared-room-wall-boundaries.md)
+25 Ekim 2026 · `codex/architecture-2d-workflows` · [ADR 0667](../../adr/0667-shared-room-wall-boundaries.md)
 
 Mevcut `cad.walls.convert(mode=contours)` aynı hedef katmanda Eksen referansı
 ile bitişik odaların tam/kısmi düz veya analitik yaylı ortak sınırını bir kez

@@ -1703,7 +1703,7 @@
       "via": [
         "cad.walls.convert"
       ],
-      "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0637/0638). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0639)."
+      "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0666/0667). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668)."
     },
     "arch.wallStyles": {
       "level": "semantic",
@@ -1822,7 +1822,7 @@
       "via": [
         "cad.spaces.edit"
       ],
-      "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0645)."
+      "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0674)."
     },
     "tool.spaceSplit": {
       "level": "semantic",
@@ -2245,7 +2245,7 @@
       "via": [
         "cad.openings.edit"
       ],
-      "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0636)."
+      "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0665)."
     },
     "tool.spaceDiscover": {
       "level": "semantic",
@@ -2259,21 +2259,21 @@
       "via": [
         "cad.spaces.edit"
       ],
-      "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0649)."
+      "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0678)."
     },
     "tool.spaceSeparator": {
       "level": "semantic",
       "via": [
         "cad.spaces.separators"
       ],
-      "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0650)."
+      "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0679)."
     },
     "tool.spaceNumber": {
       "level": "semantic",
       "via": [
         "cad.spaces.number"
       ],
-      "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0653)."
+      "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0682)."
     }
   },
   "tools": {

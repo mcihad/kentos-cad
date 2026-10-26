@@ -636,7 +636,7 @@ def create_cases():
     made = create_step(d, "execute", {"layerId": "kapi", "openings": [{"host": uid_of(1), "at": 5.0}]})
     stale = create_step(d, "execute", {"layerId": "kapi", "openings": [{"host": uid_of(1), "at": 2.0}], "expectedRevision": "$prepared"}, conflict=True)
     c.add("hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict", [{"op": "captureRevision", "as": "prepared"}, made, stale])
-    # ADR 0633: 24 independent straight/reversed end/reference/hand combinations.
+    # ADR 0662: 24 independent straight/reversed end/reference/hand combinations.
     # Both plan and execute consume each case; no Rust/native output is read here.
     for host, y in [(1, 0), (8, 2)]:
         for frm in ("start", "end"):

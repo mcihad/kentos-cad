@@ -1,6 +1,6 @@
 # Katlı duvar dönüşümü — kabul kaydı
 
-25 Ekim 2026, `codex/architecture-2d-workflows`, [ADR 0639](../../adr/0639-architectural-wall-level-isolation.md).
+25 Ekim 2026, `codex/architecture-2d-workflows`, [ADR 0668](../../adr/0668-architectural-wall-level-isolation.md).
 Bu uygulama diliminin kod, otomasyon ve gerçek arayüz kabulü geçti; genel mimari yol haritası açıktır.
 
 ## Davranış

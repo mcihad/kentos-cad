@@ -1,6 +1,6 @@
 # Toplu etikette Koru / Yenile — 26 Ekim 2026
 
-[ADR0662](../../adr/0662-bulk-tag-refresh.md), ARCH-SPACE-02.
+[ADR0691](../../adr/0691-bulk-tag-refresh.md), ARCH-SPACE-02.
 Durum: Koru/Yenile işlev dilimi kabul edildi; genel mimari kabulü değildir.
 
 ## Davranış
@@ -85,7 +85,7 @@ serde uyarıları günlükte tutulur. Yeni bir performans ölçümü yapılmadı
 
 ## Gerçek native arayüz ve tam kayıtlar
 
-`before.kcad`, ADR0661'in final dosyasının bayt özdeş kopyasıdır: altı
+`before.kcad`, ADR0690'in final dosyasının bayt özdeş kopyasıdır: altı
 mahal/beş etiket, iki mimari kat ve gizli kaynak. Kullanıcı çizimleri ve
 asıl uygulama profili kullanılmaz. QA uygulamaları değişmez ayrı ikililerdir;
 manifestler executable ve kaynak hash'lerini, `gui-events.json` ham JPEG

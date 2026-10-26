@@ -17,6 +17,6 @@
     "python/kentos/cad/tags.py": "20b5617eb5c2e648c35e4ce99331641508f3a293fe8612a2c7112e8720b0bcbf",
     "scripts/fixtures/tag_command_cases.py": "ea0b6b8f5773e1a18f807c3867385a66f2b30c549c8a240187272011a3e8c138"
   },
-  "note": "Immutable ADR0660 package, before project room choices. The source list reflects its original package manifest.",
+  "note": "Immutable ADR0689 package, before project room choices. The source list reflects its original package manifest.",
   "commit": "ac5c5bf7d6c948600ec8025c3549a55392e3353a"
 }

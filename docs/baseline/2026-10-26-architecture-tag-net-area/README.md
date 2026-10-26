@@ -1,6 +1,6 @@
 # Ayrı net mahal etiketi — 26 Ekim 2026
 
-ARCH-SPACE-02'nin `{netArea}` dilimi; [ADR 0659](../../adr/0659-room-tag-net-area.md).
+ARCH-SPACE-02'nin `{netArea}` dilimi; [ADR 0688](../../adr/0688-room-tag-net-area.md).
 Bu dilimin aşağıdaki otomatik ve gerçek GUI kabulü tamamlandı.
 Genel mimari yol haritası ve tam görünüm matrisi açık kalır.
 

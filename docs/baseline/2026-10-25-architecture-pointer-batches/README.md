@@ -1,6 +1,6 @@
 # Native fare olay grubu — kabul kaydı
 
-25 Ekim 2026 · ADR 0635 · Bu düzeltmenin belirtilen kabulü tamamlandı.
+25 Ekim 2026 · ADR 0664 · Bu düzeltmenin belirtilen kabulü tamamlandı.
 Dal: `codex/architecture-2d-workflows`; taban `269f1a82a`.
 Yeni GUI SHA-256: `9d839a3e98e72303d634e338137f5ada4164fe4966cb5227d915df1002344181`.
 Gerçek pencere 2880×1720 fiziksel / 1440×828 iç alan, açık tema, 13 px.
@@ -43,7 +43,7 @@ nesne ayrıntılarını ve dosya hash'lerini tutar.
 - Tam desktop **1279 geçti, 221 atlandı**; atlananlar başarıya sayılmaz.
 - Desktop clippy bütün hedeflerde `-D warnings` ile geçti; GUI derlendi.
 - Sekiz boyut/font/tema durumundaki mevcut GPU matrisi ayrıca son kaynakta çalıştırıldı;
-  **1 geçti**, 18 görüntünün 11’i ADR 0634 kaydıyla bayt bayt aynı, farklı 7 görüntü
+  **1 geçti**, 18 görüntünün 11’i ADR 0663 kaydıyla bayt bayt aynı, farklı 7 görüntü
   yeniden incelendi ve `gpu/` altına eklendi. Günlük sonucu `test-results.json` içindedir.
   Bu offscreen test gerçek pencere matrisi değildir.
 

@@ -1,10 +1,10 @@
 # Açıklık merkez tutamacı — kabul kaydı
 
-25 Ekim 2026 · ADR 0634 · Bu dilimin merkez tutamacı kabulü tamamlandı; ana planın açık kapıları aşağıdadır.
+25 Ekim 2026 · ADR 0663 · Bu dilimin merkez tutamacı kabulü tamamlandı; ana planın açık kapıları aşağıdadır.
 
 ## Gerçek pencere
 
-Önceki derleme: ADR 0633'ün kayıtlı SHA'sı. Yeni derleme SHA-256:
+Önceki derleme: ADR 0662'ün kayıtlı SHA'sı. Yeni derleme SHA-256:
 `b656b6e488873a668c11014ee31e6ca234546e4e9012b9039c2c0f45fc85b365`.
 İki derleme aynı sentetik dosyada, ayrılmış test ayar/veri dizinlerinde çalıştırıldı.
 
@@ -46,7 +46,7 @@ birebir aynıdır. `saved-file-check.json` bu karşılaştırmayı ve son dosya 
 
 Günlük sonuçları ve hash'leri `test-results.json` içindedir. Python/MCP için yeni
 uç nokta veya tür eklenmedi; kullanılan mevcut `cad.openings.edit` Rehost/Copy
-komutları ADR 0633'ün aynı oturumdaki native/Python/MCP kabulündedir.
+komutları ADR 0662'ün aynı oturumdaki native/Python/MCP kabulündedir.
 
 ## Ek GPU matrisi
 

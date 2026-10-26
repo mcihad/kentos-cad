@@ -1,13 +1,13 @@
 # Duvar ve açıklık özellikleri — gerçek GUI kabulü
 
-25 Ekim 2026; ADR0647, `codex/architecture-2d-workflows`, üst commit
+25 Ekim 2026; ADR0676, `codex/architecture-2d-workflows`, üst commit
 `e24fb6e4c`. Bu kayıt yalnız duvar/açıklık fiziksel uzunluk hücrelerinin CAD
 birim eklerini kapsar. Genel mimari kabul değildir.
 
 ## Çalıştırılan uygulama ve gözlem
 
-Eski çalışan ADR0646 test uygulaması [before-binary.json](before-binary.json)
-ile tanımlıdır. Bu eski manifest ilk ADR0646 yüklemesini tarif eder;
+Eski çalışan ADR0675 test uygulaması [before-binary.json](before-binary.json)
+ile tanımlıdır. Bu eski manifest ilk ADR0675 yüklemesini tarif eder;
 bu oturumun başlangıcı `before.kcad`, kapı oluşturulunca `before-door-created.kcad`
 oldu. Yeni [after-binary.json](after-binary.json) güncel iki Rust kaynağını ve
 derlenmiş uygulamanın özetini kaydeder; izole kopya kapı oluşturulmuş kaydı açtı.

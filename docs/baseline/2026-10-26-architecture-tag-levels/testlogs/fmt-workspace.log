@@ -15690,7 +15690,7 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/src/assets_ch
 Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/src/blocks.rs:16:
  
  /// Room separators are root drawing boundaries. A loaded definition can retain their data,
- /// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0650).
+ /// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0679).
 -pub(crate) fn contains_space_separator(doc: &kentos_domain::Document, id: kentos_commands::BlockId) -> bool {
 +pub(crate) fn contains_space_separator(
 +    doc: &kentos_domain::Document,
@@ -21635,7 +21635,7 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/src/spaces_fi
          output: SpacesFinished {
              hatches,
 Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/src/spaces_separators.rs:1:
- //! One semantic plan/execute path for explicit room separator roles (ADR 0650).
+ //! One semantic plan/execute path for explicit room separator roles (ADR 0679).
 -use crate::{ExecutionContext,checks,codes,polyline,spaces};
  use crate::checks::Stop;
 +use crate::{ExecutionContext, checks, codes, polyline, spaces};
@@ -23687,10 +23687,10 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/tests/all/cap
  
  /// The listed codes no shared case reaches, and why.
  const UNREACHED: &[(&str, &str, &str)] = &[
--    ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0650)."),
--    ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0650)."),
--    ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0650)."),
--    ("cad.spaces.discover", "space_not_enclosed", "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0642)."),
+-    ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679)."),
+-    ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679)."),
+-    ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679)."),
+-    ("cad.spaces.discover", "space_not_enclosed", "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0671)."),
 -    ("cad.walls.partition", "attribute_required", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
 -    ("cad.walls.partition", "invalid_attribute", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
 -    ("cad.walls.partition", "coincident_points", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
@@ -23703,22 +23703,22 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/tests/all/cap
 -        "cad.walls.rectangle", "coincident_points",
 +        "cad.spaces.separators",
 +        "invalid_attribute",
-+        "Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0650).",
++        "Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679).",
 +    ),
 +    (
 +        "cad.spaces.separators",
 +        "attribute_required",
-+        "Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0650).",
++        "Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679).",
 +    ),
 +    (
 +        "cad.spaces.separators",
 +        "slots_exhausted",
-+        "Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0650).",
++        "Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679).",
 +    ),
 +    (
 +        "cad.spaces.discover",
 +        "space_not_enclosed",
-+        "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0642).",
++        "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0671).",
 +    ),
 +    (
 +        "cad.walls.partition",
@@ -23884,7 +23884,7 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/tests/all/cap
 -        "cad.templates.apply", "*",
 +        "cad.templates.apply",
 +        "*",
-         "Paket yalnız sabit doğrulanmış A3 ekleme işlemleri üretir; alttaki sheets_edit çekirdeğinin savunma retleri mirastır (çekirdek testleri ve sheets.edit başvuruları). Okunamayan mevcut kitap ve stale revision, templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals testinde validate/plan/execute ile yazmasız doğrulanır (ADR 0630).",
+         "Paket yalnız sabit doğrulanmış A3 ekleme işlemleri üretir; alttaki sheets_edit çekirdeğinin savunma retleri mirastır (çekirdek testleri ve sheets.edit başvuruları). Okunamayan mevcut kitap ve stale revision, templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals testinde validate/plan/execute ile yazmasız doğrulanır (ADR 0659).",
      ),
      (
 Diff in /Users/cihad/Projects/kentos-cad/crates/native/application/tests/all/capabilities.rs:748:
@@ -40536,7 +40536,7 @@ Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/cad_snap.rs:
      #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
      pub at: Vec2,
 Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/cad_space_separators.rs:1:
- //! Explicit, zero-thickness architectural room boundaries (ADR 0650).
+ //! Explicit, zero-thickness architectural room boundaries (ADR 0679).
 -use serde::{Deserialize,Serialize};
 +use crate::{ArchInfo, Entity, Vec2};
 +use serde::{Deserialize, Serialize};

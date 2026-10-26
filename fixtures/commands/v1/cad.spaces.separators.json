@@ -4,7 +4,7 @@
   "command": "cad.spaces.separators",
   "commandVersion": 1,
   "title": "Sıfır kalınlıklı mahal ayırıcı: alan korunumu, üç yöntem/beş birim/iki başlangıç/ters yön, rol/undo",
-  "note": "ADR 0650 independent virtual partitions: Decimal rectangles, no KentOS code.\nA 10x8 metre wall-axis rectangle of .2 m thickness and a 2x2 m column.\nA zero-thickness separator at x=5 removes no material. For offset d, the\nleft width is 5+d/2, the height 8+d; the column removes exactly 4 m².\nOnly setup metadata is borrowed from the other independent reference.",
+  "note": "ADR 0679 independent virtual partitions: Decimal rectangles, no KentOS code.\nA 10x8 metre wall-axis rectangle of .2 m thickness and a 2x2 m column.\nA zero-thickness separator at x=5 removes no material. For offset d, the\nleft width is 5+d/2, the height 8+d; the column removes exactly 4 m².\nOnly setup metadata is borrowed from the other independent reference.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

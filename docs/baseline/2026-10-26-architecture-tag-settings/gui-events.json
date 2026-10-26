@@ -1,7 +1,7 @@
 [
   {
     "file": "01-before-no-settings.jpg",
-    "note": "Existing Etiket tool has command prompt options but no visible tool settings in the properties pane. Light18 profile inherited from verified ADR0655.",
+    "note": "Existing Etiket tool has command prompt options but no visible tool settings in the properties pane. Light18 profile inherited from verified ADR0684.",
     "build": "before-binary.json",
     "recordedAt": "2026-10-26T02:18:25.809Z",
     "sha256": "aed899420f8effb88ddc185a38ae01b8d7f0bbfa63ac9fa71f4c20478ad5c80f"

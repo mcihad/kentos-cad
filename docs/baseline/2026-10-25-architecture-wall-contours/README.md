@@ -1,6 +1,6 @@
 # Kapalı konturdan duvar — ilk uygulama ve kabul
 
-25 Ekim 2026 · ARCH-DRAW-03 [~] · ADR 0637 · `codex/architecture-2d-workflows`.
+25 Ekim 2026 · ARCH-DRAW-03 [~] · ADR 0666 · `codex/architecture-2d-workflows`.
 Taban `24f93bb5e`. Bu kayıt yalnız aşağıda gerçekten
 çalıştırılmış kapsamı kanıtlar. Ortak duvar çözümü, farklı kat semantiği ve
 §10'un tam gerçek pencere/font/tema matrisi açık kalır.

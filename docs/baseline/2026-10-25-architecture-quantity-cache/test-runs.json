@@ -211,5 +211,5 @@
       "note": "Test formatting =* looked like compound assignment; corrected whitespace only. Application/domain successful runs retained; current clippy4 passed."
     }
   ],
-  "note": "Application1 full suite ran before the later whitespace-only test correction; production query sources unchanged. Final width/gutter UI fix passed all-target clippy4 and desktop-build4; 19-22 prove real GUI. clippy/build2 and3 are prior candidates and do not add unique test counts. No new schema/catalog/SDK/shared geometry sources; earlier ADR0650 WASM not repeated here. 300 Python functional tests plus entire script final clippy passed. Zero-test doc-test and repeated cases are not new unique successes."
+  "note": "Application1 full suite ran before the later whitespace-only test correction; production query sources unchanged. Final width/gutter UI fix passed all-target clippy4 and desktop-build4; 19-22 prove real GUI. clippy/build2 and3 are prior candidates and do not add unique test counts. No new schema/catalog/SDK/shared geometry sources; earlier ADR0679 WASM not repeated here. 300 Python functional tests plus entire script final clippy passed. Zero-test doc-test and repeated cases are not new unique successes."
 }

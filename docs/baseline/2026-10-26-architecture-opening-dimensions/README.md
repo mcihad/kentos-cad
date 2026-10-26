@@ -2,7 +2,7 @@
 
 Durum: mevcut açıklık noktaları ve ilişkili ölçü dilimi kabul edildi.
 ARCH-DIM-01 ve mimarinin tamamı bitmiş sayılmaz. Taban `ea7d1baeeb2e949062eb3aec6d900d4b697c7983`, aynı
-`codex/architecture-2d-workflows` dalı; karar [ADR0665](../../adr/0665-opening-dimension-places.md).
+`codex/architecture-2d-workflows` dalı; karar [ADR0694](../../adr/0694-opening-dimension-places.md).
 
 ## Düzeltmenin sınırı
 

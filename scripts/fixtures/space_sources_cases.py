@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0649: explicit persistent UUID subsets, independently measured rectangles.
+"""ADR 0678: explicit persistent UUID subsets, independently measured rectangles.
 
 No KentOS, SDK or geometry result is imported. Four fixed source UUIDs name
 an outer 10 by 8 metre wall, a partition, and two columns. Decimal arithmetic

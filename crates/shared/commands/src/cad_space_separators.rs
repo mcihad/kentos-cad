@@ -1,4 +1,4 @@
-//! Explicit, zero-thickness architectural room boundaries (ADR 0650).
+//! Explicit, zero-thickness architectural room boundaries (ADR 0679).
 use serde::{Deserialize,Serialize};
 use std::collections::BTreeMap;
 #[cfg(feature="ts")]

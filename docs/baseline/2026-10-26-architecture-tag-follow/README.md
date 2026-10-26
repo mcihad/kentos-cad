@@ -1,11 +1,11 @@
-# Etiket tutamacı ve kaynak izleme — ADR 0655
+# Etiket tutamacı ve kaynak izleme — ADR 0684
 
 26 Ekim 2026. **Etiket konumu ve kaynak izleme dilimi doğrulandı.**
 ARCH-SPACE-02 bütünü ve tam mimari ekran matrisi açık kalır.
 
 ## Kusur ve dar düzeltme
 
-`gui-binary.json`, ADR0654'ün değişmeden tekrar kullanılan test paketidir;
+`gui-binary.json`, ADR0683'ün değişmeden tekrar kullanılan test paketidir;
 derleme kaydı yeniymiş gibi sunulmaz. 01'de mahalın dışarıdaki etiketi fareyle
 seçildi; 02'de ortasından yukarı sürüklendi ve bırakıldı. Konum değişmedi,
 “Yapılacak değişiklik verilmedi” uyarısı çıktı. `failed-drag.kcad`, bağımsız
@@ -96,7 +96,7 @@ sürükleme dosyası tanısaldır. Gerçek ölçülen pencere boyları koyu/13 p
 1440×900/1100×650 × iki tema × 13/18 px × bütün iş akışlarının tam matrisi
 hâlâ açıktır; tek birleşik senaryo bütün mimari kabulü sayılmaz.
 
-Önceki ADR0654 açık tema görüntülerinin 18 px etiketi yanlıştı: kaynak
+Önceki ADR0683 açık tema görüntülerinin 18 px etiketi yanlıştı: kaynak
 profil 15 px idi. O kabulün notları 15 px olarak düzeltildi, profil saklandı,
 ham JPEG'ler değişmedi. Bu kayıttaki 18 px ayrıca girilip doğrulanmıştır.
 

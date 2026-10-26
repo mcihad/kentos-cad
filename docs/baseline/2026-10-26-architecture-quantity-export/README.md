@@ -1,4 +1,4 @@
-# Metraj seçili CSV ve doğru kayıt sayısı — ADR0652
+# Metraj seçili CSV ve doğru kayıt sayısı — ADR0681
 
 26 Ekim 2026. `codex/architecture-2d-workflows`, başlangıç `2cefc14df`.
 **Seçili CSV ve kayıt sayısı dilimi doğrulandı. Ana ARCH-DOC-02 açık.**

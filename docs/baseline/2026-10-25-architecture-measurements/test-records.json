@@ -193,5 +193,5 @@
       ]
     }
   ],
-  "skipped": "UI first run has 61 ignored integration examples and 11 ignored doc examples; properties final 4 ignored. Ignored tests are not passed tests. Native/Python/FFI checks from ADR0645 are not rerun or counted here."
+  "skipped": "UI first run has 61 ignored integration examples and 11 ignored doc examples; properties final 4 ignored. Ignored tests are not passed tests. Native/Python/FFI checks from ADR0674 are not rerun or counted here."
 }

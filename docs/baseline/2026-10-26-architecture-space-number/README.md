@@ -1,4 +1,4 @@
-# Mahal numaralandırma — ARCH-SPACE-02 / ADR 0653
+# Mahal numaralandırma — ARCH-SPACE-02 / ADR 0682
 
 26 Ekim 2026. **İlk numaralandırma dilimi doğrulandı; ana madde kısmen açık.**
 

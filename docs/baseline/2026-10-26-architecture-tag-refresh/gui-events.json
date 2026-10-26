@@ -1,7 +1,7 @@
 [
   {
     "file": "01-before-tool.jpg",
-    "note": "ADR0661 native binary: tagAll has no visible settings or plan preview. No confirm.",
+    "note": "ADR0690 native binary: tagAll has no visible settings or plan preview. No confirm.",
     "recordedAt": "2026-10-26T11:10:40.007Z",
     "sha256": "c78d2edfcb5a45d8d9c35c1492e726283fb4bf98360577903424dc3cdc2264b2"
   },

@@ -15,7 +15,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
-- **Açıklığın gerçek noktalarına bağlı ölçü (26 Ekim 2026; [ADR0665](docs/adr/0665-opening-dimension-places.md)).**
+- **Açıklığın gerçek noktalarına bağlı ölçü (26 Ekim 2026; [ADR0694](docs/adr/0694-opening-dimension-places.md)).**
   Mevcut ölçü kapı/pencere/boşluğun dört jamb köşesi ve açık başlangıç/
   bitiş/merkez başvurusunu okur; kanat/kasa parçasını kaynak saymaz.
   GUI'de bulunan kesilmiş duvar ucu sahipliği ortak snap'te düzeltildi;
@@ -30,7 +30,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Yeni TS/şema/komut/birim/ölçek/render yok; ARCH-DIM-01 [~], otomatik
   ölçü sırası/üyelik ve çoklu görünüş/pafta kabulü ayrı açık iştir.
 
-- **Görünür etiket içerikleri (26 Ekim 2026; [ADR0664](docs/adr/0664-visible-tag-content-examples.md)).**
+- **Görünür etiket içerikleri (26 Ekim 2026; [ADR0693](docs/adr/0693-visible-tag-content-examples.md)).**
   Etiket/Hepsini etiketle'de sekiz Hazır içerik, ayrı serbest Şablon ve
   kısa Özel değeri; Tür/Koru mevcut yenileme semantiğini korur. Seçimler
   yalnız taslaktır, mevcut cad.tags.create içerik metnine dönüşür.
@@ -41,7 +41,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Açık13 geniş/koyu18 geniş-dar; tam matris ve ARCH-SPACE-02 [~] sürer.
   Yeni TS/şema/API/birim/ölçek/render yok; Python/MCP bu dilimde tekrar koşulmadı.
 
-- **Toplu etikette kaynak katı (26 Ekim 2026; [ADR0663](docs/adr/0663-bulk-tag-levels.md)).**
+- **Toplu etikette kaynak katı (26 Ekim 2026; [ADR0692](docs/adr/0692-bulk-tag-levels.md)).**
   Mevcut `cad.tags.create/all.levels`: yok/null tüm katlar, açık kimlikler/
   atanmamış/birleşim; host duvarından açıklık katı, bilinmeyene kat uydurma
   yok. Koru/Yenile yalnız uygun kaynakları işler; görünür Kaynak katı ve
@@ -53,7 +53,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Bir mevcut TS tipi güncel; yeni TS/TSX/kalıcı alan/birim/ölçek/render yok.
   ARCH-SPACE-02 [~]; çoklu görünüş/pafta bağlamı ve tam matris açık.
 
-- **Toplu etikette Koru/Yenile (26 Ekim 2026; [ADR0662](docs/adr/0662-bulk-tag-refresh.md)).**
+- **Toplu etikette Koru/Yenile (26 Ekim 2026; [ADR0691](docs/adr/0691-bulk-tag-refresh.md)).**
   Mevcut `cad.tags.create` isteğe bağlı `all.refresh`; yalnız hedef etiket
   katmanında açık alanları yeniler, kimlik/elle yer/kol/diğer katmanlar ve
   eski yok/null/false korunur. Görünür ayarlar ve sayılı plan, karma yazım
@@ -64,7 +64,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Üç mevcut TS tipi güncel, yeni TS/TSX/kalıcı şema/birim/ölçek/renderer yok.
   ARCH-SPACE-02 [~]; mimari kat/görünüş/pafta kapsamı ve tam matris açık.
 
-- **Mahal proje listeleri ve açık kat öneki (26 Ekim 2026; [ADR0661](docs/adr/0661-project-room-choices.md)).**
+- **Mahal proje listeleri ve açık kat öneki (26 Ekim 2026; [ADR0690](docs/adr/0690-project-room-choices.md)).**
   Projeyle sıralı ad/kullanım listeleri ve kata bağlı önek; ayrı öneri
   alanları serbest metni korur, kat değişimi taslak numarayı değiştirmez.
   Liste kaydı kaynakları yeniden adlandırmaz/numaralandırmaz; mevcut ayar
@@ -75,9 +75,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   clippy/build/WASM/1203 KCAD. Gerçek GUI açıklama yerini düzeltti;
   42 ham ekran/23 tam bağımsız kayıt. 30.000 nesnede debug tercih yazımı
   ortancası 15,183 ms; genel FPS garantisi değildir. İki mevcut TS tipi
-  yenilendi, yeni TS/TSX dosyası yok. Koru/Yenile ADR0662’de; çoklu pafta/tam matris ve ARCH-SPACE-02 [~].
+  yenilendi, yeni TS/TSX dosyası yok. Koru/Yenile ADR0691’de; çoklu pafta/tam matris ve ARCH-SPACE-02 [~].
 
-- **Numarasız mahal denetimi (26 Ekim 2026; [ADR 0660](docs/adr/0660-room-number-review.md)).**
+- **Numarasız mahal denetimi (26 Ekim 2026; [ADR 0689](docs/adr/0689-room-number-review.md)).**
   Mevcut etiket denetiminde görünür seçenek; ad/kat/UUID ve kaynak Göster.
   API yok/null/false eski sonuçları, tam metin gruplarını ve sırayı korur;
   sorgu modele/geçmişe yazmaz. [Kabul](docs/baseline/2026-10-26-architecture-space-identity/README.md):
@@ -88,7 +88,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ad/kullanım listeleri, Koru/Yenile ve tam matris açık. Yeni TS/TSX dosyası,
   KCAD alanı/birim/ölçek/renderer değişikliği yoktur.
 
-- **Ayrı net mahal etiketi (26 Ekim 2026; [ADR 0659](docs/adr/0659-room-tag-net-area.md)).**
+- **Ayrı net mahal etiketi (26 Ekim 2026; [ADR 0688](docs/adr/0688-room-tag-net-area.md)).**
   `{area}` seçilmiş sınırda kalır; `{netArea}` aynı kaynak/kat/kapsam/kolon
   tercihinin iç yüzlerini okur. Kopuk/çizilmiş non-net bilinmiyorsa boş;
   kaynak/ayar/geçmiş/dış güncellemede metin izler, elle yer korunur.
@@ -100,7 +100,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ARCH-SPACE-02 [~]; listeler/KoruYenile/tam matris açık. Yeni TS/şema/birim/
   ölçek/renderer yoktur.
 
-- **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0658](docs/adr/0658-room-tag-elevations.md)).**
+- **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0687](docs/adr/0687-room-tag-elevations.md)).**
   Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan;
   bilinmeyen boş, katlar arası yükseklik tavan sayılmaz. Ayar/geçmiş/dış
   değişiklikte yazı yenilenir, elle konum korunur. Gerçek GUI sayısal
@@ -110,7 +110,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ARCH-SPACE-02 [~]; ayrı net alan, listeler, Koru/Yenile ve tam matris açık.
   Yeni TS/şema/birim/ölçek/renderer yoktur.
 
-- **Yeni araçta ayar başlangıcı (26 Ekim 2026; [ADR 0657](docs/adr/0657-reveal-new-tool-settings.md)).**
+- **Yeni araçta ayar başlangıcı (26 Ekim 2026; [ADR 0686](docs/adr/0686-reveal-new-tool-settings.md)).**
   Masaüstü Öznitelikler gövdesi tek scroll'unu adresler; ayarlı yeni araç
   başlatma üstü gösterir, aynı araçta düzenleme/önizleme kaydırmayı korur.
   [Kabul](docs/baseline/2026-10-26-architecture-settings-scroll/README.md):
@@ -118,17 +118,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dar geçiş, özellik/undo/panel kapat-aç/iptal; 19 ham ekran/beş tam dosya.
   Genel docking/matris açık; model/ölçek/render/komut/SDK/TS değişmedi.
 
-- **Görünür etiket ayarları (26 Ekim 2026; [ADR 0656](docs/adr/0656-visible-tag-settings.md)).**
+- **Görünür etiket ayarları (26 Ekim 2026; [ADR 0685](docs/adr/0685-visible-tag-settings.md)).**
   Mevcut `cad.tags.create` ile şablon/çerçeve/kol/kağıt mm boyu; panelde yeni
   ayar/seçim ayrıdır. Gerçek GUI'nin yakaladığı ilk yapıştırma modifier
   önbelleği CommandLine/EditCell'de düzeltildi, uzun komut seçeneği özetlendi.
   [Kabul](docs/baseline/2026-10-26-architecture-tag-settings/README.md):
   697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python, clippy/build;
   26 ham ekran/11 bağımsız tam dosya, ret/tek onay/undo/redo/izleme/kaydet-aç.
-  Önceki panel kaydırmasını yeni araca taşımama ADR0657 ile düzeltildi;
+  Önceki panel kaydırmasını yeni araca taşımama ADR0686 ile düzeltildi;
   zengin etiketler açık, ARCH-SPACE-02 [~]. Yeni komut/şema/SDK/TS/birim/render yoktur.
 
-- **Mahal etiketi konum tutamacı (26 Ekim 2026; [ADR 0655](docs/adr/0655-tag-grip-placement.md)).**
+- **Mahal etiketi konum tutamacı (26 Ekim 2026; [ADR 0684](docs/adr/0684-tag-grip-placement.md)).**
   Tag'ın genel geometriye çevrilemeyen yazımı mevcut anlamsal Move'a yönlenir;
   yalnız sıcak UUID'ler, kaynak/şablon/ankraj korunur. Karışık sıcak tür ve
   sonradan kilitlenen katman atomik rettir. [Kabul](docs/baseline/2026-10-26-architecture-tag-follow/README.md):
@@ -137,7 +137,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   219 application/303 Python/bir mevcut MCP testi; clippy/build. ARCH-SPACE-02
   [~]; Koru/Yenile, kot şablonları ve tam matris açık. Yeni TS/şema/render yoktur.
 
-- **Odaklı komut/özellik alanında Kaydet (26 Ekim 2026; [ADR 0654](docs/adr/0654-command-line-chords.md)).**
+- **Odaklı komut/özellik alanında Kaydet (26 Ekim 2026; [ADR 0683](docs/adr/0683-command-line-chords.md)).**
   CommandLine ve EditCell, Cmd/Ctrl karakter kısayollarını iç metin girişinden
   önce host'a bırakır; A/C/X/V, AltGr ve taslak korunur. Kaydet tamponu
   onaylamaz; mevcut Enter/odak kaybı değişmez. [Kabul](docs/baseline/2026-10-26-commandline-save/README.md):
@@ -145,7 +145,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dokuz bağımsız disk kopyası. Diğer giriş bileşenleri ve tam mimari matris
   açık; komut/model/Python/MCP/TS değişikliği yoktur.
 
-- **Açık mahal numaralandırma (26 Ekim 2026; [ADR 0653](docs/adr/0653-explicit-room-numbering.md)).**
+- **Açık mahal numaralandırma (26 Ekim 2026; [ADR 0682](docs/adr/0682-explicit-room-numbering.md)).**
   Tıklama/yön izdüşümü, tam ilk numara ve sıfır dolgusu; UUID/etiket/çizelge
   tek undo'da korunur. Seçim dışı aynı tam numara atomik reddir; plan/Python/MCP
   aynı hesabı kullanır. [Kabul](docs/baseline/2026-10-26-architecture-space-number/README.md):
@@ -154,7 +154,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   undo/redo/kaydet-aç. GUI'de bulunan boş iç seçim ve uzun önizleme düzeltildi.
   ARCH-SPACE-02 [~]; listeler/etiket şablonları/tam matris açık. Yeni TS yoktur.
 
-- **Metraj CSV ve kayıt sayısı (26 Ekim 2026; [ADR 0652](docs/adr/0652-selected-quantity-csv.md)).**
+- **Metraj CSV ve kayıt sayısı (26 Ekim 2026; [ADR 0681](docs/adr/0681-selected-quantity-csv.md)).**
   CSV açık sekmeyi, XLSX/ODS aynı süzgeçte üç tabloyu yazar; bu ayrım görünürdür.
   Ortak desktop dosya bildirimi CSV'nin gerçekten yazılan ilk sayfasını sayar.
   [Kabul](docs/baseline/2026-10-26-architecture-quantity-export/README.md): gerçek
@@ -162,7 +162,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   17 ham görüntü ve üç desktop testi/clippy/build. Uzun sayı→metin hassasiyet
   politikası aynıdır. ARCH-DOC-02 [~]; şema/Python/MCP/TS değişikliği yoktur.
 
-- **Sorgu ömründe ortak metraj araması (26 Ekim 2026; [ADR 0651](docs/adr/0651-query-scoped-room-quantity-search.md)).**
+- **Sorgu ömründe ortak metraj araması (26 Ekim 2026; [ADR 0680](docs/adr/0680-query-scoped-room-quantity-search.md)).**
   Kaynak UUID/kat/kapsam ve belge sırası korunarak aynı raporun sınır ağları
   paylaşılır; immutable sorgu dışında cache yaşamaz, legacy rota aynı kalır.
   100 eski/yeni tam cevap eşit; 300 Python, 268 application/103 domain/6 MCP.
@@ -173,7 +173,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   [kabul](docs/baseline/2026-10-25-architecture-quantity-cache/README.md).
   ARCH-SPACE-01/PERF-01 [~]; genel araçlar ve tam matris açık. Yeni TS yoktur.
 
-- **Kalıcı mahal ayırıcı ve güvenilir metraj uyarısı (25 Ekim 2026; [ADR 0650](docs/adr/0650-virtual-room-separators.md)).**
+- **Kalıcı mahal ayırıcı ve güvenilir metraj uyarısı (25 Ekim 2026; [ADR 0679](docs/adr/0679-virtual-room-separators.md)).**
   Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat/evre/kaynak
   UUID'si, mahal→etiket→çizelge tek undo'da korunur. Genel destekli edit/kopya
   rolü taşır, desteklenmeyen temsil ve blok içine alma atomik reddir.
@@ -181,10 +181,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Her kopuk mahal Metraj/API/CSV'de son sınır uyarısı taşır; geçerli raporun
   eski sütunları korunur. [Kabul](docs/baseline/2026-10-25-architecture-space-separators/README.md):
   105 bağımsız durum, 300 Python, 35 GUI kaydı ve 76 ham görüntü.
-  ARCH-SPACE-01 [~]: metraj sorgu optimizasyonu ADR 0651'dedir; genel araç denetimi ve bütün
+  ARCH-SPACE-01 [~]: metraj sorgu optimizasyonu ADR 0680'dedir; genel araç denetimi ve bütün
   iş akışlarının tam matrisi açık. Yeni TS/TSX uygulama kaynağı yoktur.
 
-- **Mahalın kalıcı kaynak seçimi (25 Ekim 2026; [ADR 0649](docs/adr/0649-persistent-room-source-selection.md)).**
+- **Mahalın kalıcı kaynak seçimi (25 Ekim 2026; [ADR 0678](docs/adr/0678-persistent-room-source-selection.md)).**
   Açık duvar/kolon UUID alt kümesi kat/kapsamla birlikte saklanır; kaynak
   kaybı son sınırı/uyarıyı korur. Görünür tek/toplu kaynak tercihi ve mevcut
   mahal listesi önizleme/tek onay/undo yolunu kullanır. Tam kopya grupları
@@ -194,14 +194,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   63 bağımsız ortak durum, 30 GUI kaydı, 53 ham görüntü; yeni TS/TSX kaynağı yok.
   ARCH-SPACE-01 [~]: sanal ayırıcı, uçtan uca performans ve tam matris açık.
 
-- **Kolon/merdiven/rampa özellik birimleri (25 Ekim 2026; [ADR 0648](docs/adr/0648-architectural-element-property-units.md)).**
+- **Kolon/merdiven/rampa özellik birimleri (25 Ekim 2026; [ADR 0677](docs/adr/0677-architectural-element-property-units.md)).**
   CAD fiziksel en/boy/rıht/basamak/sahanlık/yükseklik/kot açık uzunluk ekini
   korur; açı/adet/yüzde/kağıt mm/CBS legacy anlamı aynı. Gerçek kolon `40 cm`
   kusuru ve bağlı mahal, tek onay/ret/Escape/undo/redo/imperial boy doğrulandı;
   10 bağımsız kayıt, 41 özellik başarılı/4 atlanan. Genel merdiven/rampa
   tasarımcısı ve tam GUI matrisi kabulü değildir; yeni TS/şema yoktur.
 
-- **Duvar/açıklık özellik birimleri (25 Ekim 2026; [ADR 0647](docs/adr/0647-architectural-property-length-units.md)).**
+- **Duvar/açıklık özellik birimleri (25 Ekim 2026; [ADR 0676](docs/adr/0676-architectural-property-length-units.md)).**
   Yalnız CAD fiziksel uzunluk hücreleri ortak okuyucuyla açık mm/cm/m/in/ft
   ekini korur; birimsiz giriş çizim birimindedir. Gerçek `25 cm` duvar ve
   `120 cm` kapı kusuru yeniden üretilip düzeltildi. 29 ham görüntü/26 bağımsız
@@ -209,7 +209,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Model komutları, açı, CBS legacy yolu, ölçek ve şema korunur. Diğer mimari
   nesne uzunluk alanları ve tüm GUI matrisi açık; ARCH-BASE-01 [~].
 
-- **Eksiksiz CAD ölçü okuma ve mahal yüksekliği (25 Ekim 2026; [ADR 0646](docs/adr/0646-readable-cad-measurements.md)).**
+- **Eksiksiz CAD ölçü okuma ve mahal yüksekliği (25 Ekim 2026; [ADR 0675](docs/adr/0675-readable-cad-measurements.md)).**
   Salt okunur birimli sayılar hücreye sığmazsa tam genişlikte büyür, sığarsa
   eski iki sütuna döner; basamak/birim/ölçek değişmez. Gerçek GUI testinde
   bulunan mahal yüksekliğinin `3 m` ekini atma kusuru yalnız CAD'de ortak
@@ -218,7 +218,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   tek Enter/Escape/undo/redo doğrulandı. Diğer özelliklerin eski okuyucusu,
   uzun adları ve tüm mimari GUI matrisi açık; ARCH-BASE-01 [~].
 
-- **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0645](docs/adr/0645-unassigned-space-sources.md)).**
+- **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0674](docs/adr/0674-unassigned-space-sources.md)).**
   Yeni açık `unassigned` kapsamı yalnız kat atanmamış duvar/kolonları kullanır;
   eski boş Kat/Tüm katlar davranışı aynıdır. Tek/toplu araç, Öznitelikler,
   follower, Python/MCP ve opt-in KCAD 104 aynı kapsamı korur. Yeni İç nokta seç
@@ -229,7 +229,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   iki tema/yazı. ARCH-SPACE-01 [~]: seçilmiş kaynak listesi/sanal ayırıcı,
   performans ve tüm iş akışlarının tam matrisi açık. Yeni TS/TSX kaynağı yok.
 
-- **Kalıcı mahal kolon düşümü (25 Ekim 2026; [ADR 0643](docs/adr/0643-space-column-deductions.md)).**
+- **Kalıcı mahal kolon düşümü (25 Ekim 2026; [ADR 0672](docs/adr/0672-space-column-deductions.md)).**
   Düşme/Yalnız net/Her yöntemde açık tercihi analitik kolon birleşimini yalnız
   ilgili katın duvar yüzünden düşer. Eski mahal/API varsayılanı korunur; yeni
   GUI varsayılanı Yalnız net. Aks→kolon→mahal→etiket/çizelge aynı komut/undo;
@@ -240,14 +240,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ARCH-SPACE-01 [~]: sanal sınır, kaynak alt kümesi, uçtan uca performans ve
   bütün iş akışlarının tam matrisi açık. Yeni TS/TSX kaynak dosyası yoktur.
 
-- **CAD GPU konum değişmezliği ([ADR 0644](docs/adr/0644-invariant-cad-gpu-positions.md)).**
+- **CAD GPU konum değişmezliği ([ADR 0673](docs/adr/0673-invariant-cad-gpu-positions.md)).**
   Ortak CAD WGSL konum çıktıları `@invariant` taşır. Apple M5/Metal’de eski
   gerçek GPU testi başarısızken aynı toleransla yakın/sıfır/uzak origin ve iki
   eksen geçer; gerçek önizleme/zoom/pan hizası doğrulandı. Birim, ölçek, kamera
   ve buffer biçimi değişmedi. Diğer donanımlar ve performans için evrensel
   kabul değildir.
 
-- **Önizlemeli toplu mahal (25 Ekim 2026; [ADR 0642](docs/adr/0642-bulk-room-discovery.md)).**
+- **Önizlemeli toplu mahal (25 Ekim 2026; [ADR 0671](docs/adr/0671-bulk-room-discovery.md)).**
   `cad.spaces.discover` açık kat/Tüm katlar ağından analitik kapalı boşlukları
   bulur; duvar malzemesini oda saymaz. Bölge yalnız temsil noktasıyla oda seçer.
   Mevcut mahal UUID'leri korunur; elle çizilmiş kısmi çakışma bütün yazmayı
@@ -257,17 +257,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   sınır/kaynak alt kümesi ve tam GUI/uçtan uca performans kapıları açıktır.
   KCAD şeması/birim/render değişmez; yeni TS/TSX kaynağı yoktur.
 
-- **Mahal sınırında açık kat (25 Ekim 2026; [ADR 0641](docs/adr/0641-level-bound-architectural-spaces.md)).**
+- **Mahal sınırında açık kat (25 Ekim 2026; [ADR 0670](docs/adr/0670-level-bound-architectural-spaces.md)).**
   `space_found`, açık `arch.level` için yakın ve tam aramada yalnız aynı kimliğin
   duvarlarını alır; kot eşitliği yeterli değildir. Katı olmayan legacy mahal ve
   çağrıların bütün çizim davranışı korunur, araçta **Tüm katlar** yazılır.
   Mahalın görünür Kat (L) seçimi mevcut komut alanını kullanır; kat değişimi
   plan/follower/tek undo'da sınırı yeniden bulur, kapanmazsa lostEnclosure korunur.
-  ARCH-SPACE-01 [~]; sonraki toplu bulma dilimi ADR 0642'dedir; kolon/sanal
+  ARCH-SPACE-01 [~]; sonraki toplu bulma dilimi ADR 0671'dedir; kolon/sanal
   sınır ve tam GUI matrisi açıktır.
   Yeni sözleşme/TS türü/KCAD şeması yoktur.
 
-- **Büyük mimari kontur ağı (25 Ekim 2026; [ADR 0640](docs/adr/0640-large-architectural-wall-networks.md)).**
+- **Büyük mimari kontur ağı (25 Ekim 2026; [ADR 0669](docs/adr/0669-large-architectural-wall-networks.md)).**
   Duvar ağı aynı arrangement noding hesabında seyrek kaynak sahipliği kullanır;
   mevcut overlay yoğun yolu ve toleransı korunur. Açık kaynak/parça/hücre
   kotaları sayım sınırıdır, kesin RAM garantisi değildir. Kontur önizlemesi
@@ -277,7 +277,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   performans ve diğer kat iş akışları açık. Yeni sözleşme/TS/KCAD şeması yoktur.
   Kabul: `docs/baseline/2026-10-25-architecture-wall-networks/`.
 
-- **Duvar dönüşümünde açık kat (25 Ekim 2026; [ADR 0639](docs/adr/0639-architectural-wall-level-isolation.md)).**
+- **Duvar dönüşümünde açık kat (25 Ekim 2026; [ADR 0668](docs/adr/0668-architectural-wall-level-isolation.md)).**
   Mevcut `cad.walls.convert.arch`, Each/Pairs/Contours çıktılarının mimari bilgisidir;
   bilinmeyen kat atomik ret. Görünür Kat (L) seçimi yeni araç oturumunda katsız başlar;
   kaynak özniteliğinden tahmin edilmez. Ortak ağ/tekrar aynı katman ve katta;
@@ -286,7 +286,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   geniş karışık kaynak/tam GUI matrisi ve diğer kat iş akışları açık.
   Kabul: `docs/baseline/2026-10-25-architecture-wall-levels/`.
 
-- **Ortak oda sınırından tek duvar ağı (25 Ekim 2026; [ADR 0638](docs/adr/0638-shared-room-wall-boundaries.md)).**
+- **Ortak oda sınırından tek duvar ağı (25 Ekim 2026; [ADR 0667](docs/adr/0667-shared-room-wall-boundaries.md)).**
   Mevcut `cad.walls.convert(mode=contours)`, aynı hedef katmanda Eksen ile
   tam/kısmi düz ve analitik yaylı sınırı tekilleştirir. Mevcut arrangement
   toleransı **1e-6 m**; uyarı toleransı, paylaşım uzunluğunu ve ilk kaynak
@@ -294,13 +294,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çelişkisi atomik ret. Mevcut duvar/host, birleşim, undo, Python ve MCP yolu;
   yeni dosya şeması yok. ARCH-DRAW-03 [~]: kat semantiği, büyük ağ ve tam GUI
   matrisi açık. Kabul: `docs/baseline/2026-10-25-architecture-shared-wall-contours/`.
-- **Kapalı konturdan duvar (25 Ekim 2026; [ADR 0637](docs/adr/0637-closed-contour-walls.md)).**
+- **Kapalı konturdan duvar (25 Ekim 2026; [ADR 0666](docs/adr/0666-closed-contour-walls.md)).**
   Mevcut `cad.walls.convert(mode=contours)` dış/delik halkalarını yönlendirir; İç net/Dış ölçü/Eksen ve Koru/Sil
   görünür ayarlardadır. Önizleme aynı native plandır; yazma tek undo, hatalı kaynak kümesi atomik ret.
   Eski Each/Pairs korunur. Değen ortak sınırları birleştirme ve farklı kat entegrasyonu açık;
   ARCH-DRAW-03 [~], tam gerçek pencere matrisi bitmiş sayılmaz. SI/ölçek/import/render değişmez.
 
-- **Açıklık dağıtımı (25 Ekim 2026; [ADR 0636](docs/adr/0636-hosted-opening-arrays.md)).**
+- **Açıklık dağıtımı (25 Ekim 2026; [ADR 0665](docs/adr/0665-hosted-opening-arrays.md)).**
   Mevcut `cad.openings.edit.array`, kaynağı koruyarak aynı hostun analitik yolunda
   yeni kopyaları adet/aralık veya uç paylarıyla dağıtır; isteğe bağlı benzersiz numaralar.
   Mimari/Açıklık şeridindeki ayrı araç aynı planı gösterir; ret kısmi yazmaz, tek onay/undo.
@@ -308,52 +308,52 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ARCH-OPEN-02'nin tam gerçek boyut/font/tema ve birleşik gezinme matrisi açıktır.
 
 
-- **Native fare olay grubu (25 Ekim 2026; [ADR 0635](docs/adr/0635-native-pointer-event-batches.md)).**
+- **Native fare olay grubu (25 Ekim 2026; [ADR 0664](docs/adr/0664-native-pointer-event-batches.md)).**
   Viewport basış/bırakış/teker konumunu aynı Iced teslimindeki hareket sırasından alır;
   grubun son cursor konumuyla basış başlamaz. Menü/erişilemeyen cursor kapısı korunur,
   kare/çıkış/bounds kaydı temizler. Kamera matematiği/model/ölçek değişmez.
   Tek tek olay veren Snapshot::input bu hatayı sınamaz; toplu update regresyonu vardır.
 
-- **Açıklık merkez tutamacı (25 Ekim 2026; [ADR 0634](docs/adr/0634-hosted-opening-centre-grip.md)).**
+- **Açıklık merkez tutamacı (25 Ekim 2026; [ADR 0663](docs/adr/0663-hosted-opening-centre-grip.md)).**
   Tek açıklığın Esnet tutamacı mevcut `cad.openings.edit` Rehost/Copy yolunu kullanır;
   genel geometriye çevrilemeyip sessizce atlanmaz. Karışık sıcak tutamaç seçimi açık ret verir,
   kısmi yazmaz. Yeni TS/SDK/model yoktur. Birleşik native ve gerçek kaydet/aç kabulü geçti;
   tam gerçek pencere matrisi ve Kaydır kabulü açık kalır.
 
-- **Hassas mimari açıklık yerleştirme (25 Ekim 2026; [ADR 0633](docs/adr/0633-precise-opening-placement.md)).**
+- **Hassas mimari açıklık yerleştirme (25 Ekim 2026; [ADR 0662](docs/adr/0662-precise-opening-placement.md)).**
   Aynı `cad.openings.create` komutuna isteğe bağlı mesafe referansı ve iki pervaz girdisi eklendi;
   eski v1 davranışı korunur. GUI tür/en örnekleme ve analitik host boyunca net pay gösterir.
-  KCAD nesne modeli/ölçek/render değişmez. Tutamaç/host/bölme kabulü ADR 0634’te takip edildi; tam gerçek ekran matrisi
+  KCAD nesne modeli/ölçek/render değişmez. Tutamaç/host/bölme kabulü ADR 0663’te takip edildi; tam gerçek ekran matrisi
   ve kaydırma kabulü açıktır. Gerçek özet/durum çubuğu/kayıt ölçeği 1:100'dür.
 
-- **Tek uzunluk alanında birimli giriş (25 Ekim 2026; [ADR 0632](docs/adr/0632-formatted-single-length-fields.md)).**
+- **Tek uzunluk alanında birimli giriş (25 Ekim 2026; [ADR 0661](docs/adr/0661-formatted-single-length-fields.md)).**
   Gösterilen `0.300 m`, boşluklu metrik ve ondalık `in`/`ft` ortak `parse_length` ile okunur.
   Nokta/koordinat ve iki uzunluk söz dizimi korunur; SI model/ölçek/import/render değişmez.
   Gerçek Enter/blur/iptal/ret ve kaydetme, bağımsız eski nesne korunumu ile doğrulandı.
 
-- **Mimari duvar aday dizini (24 Ekim 2026; [ADR 0631](docs/adr/0631-architectural-preview-candidates.md)).**
+- **Mimari duvar aday dizini (24 Ekim 2026; [ADR 0660](docs/adr/0660-architectural-preview-candidates.md)).**
   Native komşuluk araması geçici FP64 PackedTree kutularıyla daralır; belge sırası ve güncel birleşim hesabı korunur.
   Duvar yazma/silme ve undo/redo/iptal/dış edit geçersiz kılar; okuma kopyaları bağımsız yenilenir. KCAD/schema değişmez.
   Soğuk kurulum maliyeti ve sıcak kazanç ayrı ölçülür. ARCH-PERF-01'in gerçek pencere/GPU kabulü hâlâ açıktır.
 
-- **Güvenli mimari şablonu (24 Ekim 2026; [ADR 0630](docs/adr/0630-safe-architectural-template-preview.md)).**
+- **Güvenli mimari şablonu (24 Ekim 2026; [ADR 0659](docs/adr/0659-safe-architectural-template-preview.md)).**
   GUI önce fark gösterir, birim/çizim ölçeğini koruyarak açılır. Açık `settingsMode=keep/template` mevcut
   tanım/font/katman durumlarını korur; bütün paket ayar ve paftalarla tek undo/redo adımıdır.
   Sistemli CAD metreyle kalır; GUI ofis seçeneği bu projede m/1:50 gönderir. Eski alanı göndermeyen v1
   otomasyonunun davranışı korunur. Plan/revision/oturum kontrolü aynı native komutta Python/MCP'ye açıktır.
 
 
-- **Mimari şerit ve dar CAD durumu (24 Ekim 2026; [ADR 0629](docs/adr/0629-architectural-ribbon-and-narrow-cad-status.md)).**
+- **Mimari şerit ve dar CAD durumu (24 Ekim 2026; [ADR 0658](docs/adr/0658-architectural-ribbon-and-narrow-cad-status.md)).**
   Mimari araçlar Çiz/Yerleştir/Düzenle/Belgele/Proje gruplarındadır. Mimari bağlamlar adları koruyarak daralır;
   kapalı Öznitelikler paneli `view.properties` ile seçim/taslak bozulmadan gösterilir. Dar başlık etkin sekmeyi
   açığa çıkarır; Yardımcılar menüsü çizim taslağını korur. Diğer sekmeler/CBS opt-in olmayan yerleşimi korur.
 
-- **Görünür mimari ayarlar ve ölçülü düz bölme (24 Ekim 2026; [ADR 0628](docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)).**
+- **Görünür mimari ayarlar ve ölçülü düz bölme (24 Ekim 2026; [ADR 0657](docs/adr/0657-visible-architecture-settings-and-measured-partitions.md)).**
   Etkin aracın yeni nesne ayarları seçim özelliklerinden ayrıdır; Enter/blur mevcut parser ile uygular, taslak belgeye yazılmaz.
   `cad.walls.partition` açık kaynak/sınır kenarlarıyla net veya eksen mesafesinde tek normal duvar üretir; GUI/Python/MCP/headless ortaktır.
   Düz kaynak ilk dilimdir; kalıcı uzaklık kısıtı oluşturmaz. ADR 0626'nın ölçek/yazı/render kararları korunur.
 
-- **Dikdörtgen mimari duvar (24 Ekim 2026; [ADR 0627](docs/adr/0627-rectangular-architectural-walls.md), `ARCH-DRAW-01`).**
+- **Dikdörtgen mimari duvar (24 Ekim 2026; [ADR 0656](docs/adr/0656-rectangular-architectural-walls.md), `ARCH-DRAW-01`).**
   Ayrı `tool.wallRectangle` / `cad.walls.rectangle`, İç net / Dış ölçü / Eksen referansıyla tek kapalı mevcut duvar üretir.
   Yeni komutun yolu ilk köşesi korunarak CCW düzenlenir; önizleme ve yazma mevcut şekil/duvar uygulayıcılarını kullanır.
   Serbest Duvar, normal Dikdörtgen, render ve ADR 0626'nın metre/1:100, tek çizim ölçeği ve gerçek boy yazı kararları korunur.

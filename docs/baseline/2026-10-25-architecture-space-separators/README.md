@@ -1,4 +1,4 @@
-# Kalıcı sanal mahal ayırıcı — ADR0650
+# Kalıcı sanal mahal ayırıcı — ADR0679
 
 25 Ekim 2026, `codex/architecture-2d-workflows`, üst commit `c5049997b`.
 **Bu işlev dilimi doğrulandı; bütün mimari plan ve genel performans kabulü tamamlanmadı.**

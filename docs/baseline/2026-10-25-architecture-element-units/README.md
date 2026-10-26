@@ -1,4 +1,4 @@
-# Mimari nesne özelliklerinde uzunluk — ADR0648
+# Mimari nesne özelliklerinde uzunluk — ADR0677
 
 25 Ekim 2026, `codex/architecture-2d-workflows`, üst commit `92a3f4eee`.
 Yalnız masaüstü CAD kolon/merdiven/rampa fiziksel uzunluk okuyucusu değişti.

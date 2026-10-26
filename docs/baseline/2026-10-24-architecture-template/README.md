@@ -1,6 +1,6 @@
 # Mimari şablonunu farkını görerek uygulama — kabul
 
-24 Ekim 2026 · `codex/architecture-2d-workflows` · ARCH-UX-03 / ADR 0630.
+24 Ekim 2026 · `codex/architecture-2d-workflows` · ARCH-UX-03 / ADR 0659.
 Bu kayıt şablon diliminindir; mimari yol haritasının diğer açık kabullerini kapatmaz.
 
 ## Sonuç ve regresyon sınırı

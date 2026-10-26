@@ -1,4 +1,4 @@
-//! One semantic plan/execute path for explicit room separator roles (ADR 0650).
+//! One semantic plan/execute path for explicit room separator roles (ADR 0679).
 use crate::{ExecutionContext,checks,codes,polyline,spaces};
 use crate::checks::Stop;
 use kentos_commands::*;

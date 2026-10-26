@@ -15,7 +15,7 @@ use kentos_geometry_core::store::Expanded;
 use crate::geometry::{edit_geometry, entity_of, shape};
 
 /// Room separators are root drawing boundaries. A loaded definition can retain their data,
-/// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0650).
+/// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0679).
 pub(crate) fn contains_space_separator(doc: &kentos_domain::Document, id: kentos_commands::BlockId) -> bool {
     let mut pending = vec![id];
     let mut seen = std::collections::HashSet::new();
@@ -123,7 +123,7 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
         ));
     }
     // Keep the semantic break when point references read an opening's cached
-    // jambs. It affects reference validity, never the rendered symbol (ADR0665).
+    // jambs. It affects reference validity, never the rendered symbol (ADR0694).
     if let Entity::Opening(o) = e
         && let Some(broken) = o.opening.broken
     {

@@ -1,4 +1,4 @@
-//! Architectural package installation. ADR 0630's explicit keep/template modes preserve
+//! Architectural package installation. ADR 0659's explicit keep/template modes preserve
 //! existing definitions, preview differences and group metadata with model/sheets undo.
 //! Absent settingsMode retains ADR 0346 v1 behaviour for existing automation; its settings
 //! remain outside undo and its legacy fixture/output contract is unchanged.

@@ -1,6 +1,6 @@
 # Mahalın katına bağlı sınır — kabul kaydı
 
-25 Ekim 2026, `codex/architecture-2d-workflows`; [ADR 0641](../../adr/0641-level-bound-architectural-spaces.md).
+25 Ekim 2026, `codex/architecture-2d-workflows`; [ADR 0670](../../adr/0670-level-bound-architectural-spaces.md).
 ARCH-SPACE-01 sürüyor; bu kayıt toplu mahal bulmanın tamamlandığı anlamına gelmez.
 
 ## Somut hata ve kural

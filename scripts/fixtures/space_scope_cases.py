@@ -1,4 +1,4 @@
-"""ADR 0645: independent rectangular source-scope cases, Decimal arithmetic.
+"""ADR 0674: independent rectangular source-scope cases, Decimal arithmetic.
 
 An unassigned 10×8 m wall centre rectangle (width .2), a level-bound
 partition at x=5, an unassigned 2×2 column at (3,4) and a foreign-level

@@ -1,4 +1,4 @@
-//! Safe package settings, undo/redo, file preservation and refusals (ADR 0630).
+//! Safe package settings, undo/redo, file preservation and refusals (ADR 0659).
 use kentos_commands::*;
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, templates_apply};

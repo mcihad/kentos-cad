@@ -1,4 +1,4 @@
-//! Stable room identities with an explicit sequential numbering order (ADR 0653).
+//! Stable room identities with an explicit sequential numbering order (ADR 0682).
 use crate::Vec2;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};

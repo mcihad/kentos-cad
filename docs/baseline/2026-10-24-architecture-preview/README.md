@@ -1,6 +1,6 @@
 # Büyük belgede mimari önizleme — aday araması
 
-24–25 Ekim 2026 · `codex/architecture-2d-workflows` · ARCH-PERF-01 / ADR 0631.
+24–25 Ekim 2026 · `codex/architecture-2d-workflows` · ARCH-PERF-01 / ADR 0660.
 Aday araması diliminin kaydıdır; ARCH-PERF-01 kapsamındaki gerçek pencere
 gecikmesi, GPU timestamp ve tüm stil/evre ölçüm matrisi açık kalır.
 

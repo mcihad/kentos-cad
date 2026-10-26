@@ -1,7 +1,7 @@
 # CAD ölçü okunurluğu ve mahal yüksekliği — kabul
 
 25 Ekim 2026; başlangıç `08fb20708`, dal `codex/architecture-2d-workflows`.
-[ADR 0646](../../adr/0646-readable-cad-measurements.md). Bu dar dilim doğrulandı;
+[ADR 0675](../../adr/0675-readable-cad-measurements.md). Bu dar dilim doğrulandı;
 tüm mimari planın veya bütün Öznitelikler panelinin kabulü değildir.
 
 ## Değişiklik ve bağımsız veri
@@ -92,6 +92,6 @@ kalıcı çıktılarını tutar. Bütün Cargo koşuları tek sıra ve `TS_RS_EX
   boşaltma, geçersiz ek/sıfır/negatif ret ve tam model undo sınanır.
 - Son masaüstü derleme ve UI+desktop tüm hedefler clippy `-D warnings`: başarılı.
 
-Atlananlar başarılı sayılmaz. Native/Python/FFI/codec değişmedi; önceki ADR0645
+Atlananlar başarılı sayılmaz. Native/Python/FFI/codec değişmedi; önceki ADR0674
 kontrolleri burada yeniden koşulmuş gibi sayılmaz. Yeni TS/TSX kaynak yoktur.
 Diğer mimari uzunluk alanlarının birim eki denetimi ve tam araç matrisi açıktır.

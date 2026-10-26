@@ -4812,7 +4812,7 @@ def build():
     out["broken/space-scope-with-level.kcad"]=scope_broken(lambda e:e["arch"].update(level="zemin"))
     assert scope_payload.count(text("scope")+text("unassigned"))==1
     out["broken/space-scope-default.kcad"]=container(scope_payload.replace(text("scope")+text("unassigned"),text("scope")+text("project")))
-    # Schema 103 (ADR 0643): persistent column deduction. The writer and
+    # Schema 103 (ADR 0672): persistent column deduction. The writer and
     # expected sizes below are independent of the Rust/native implementation.
     out["space-columns.kcad"] = container(document(load("space-columns.json")))
     column_payload = document(load("space-columns.json"))

@@ -1,6 +1,6 @@
 # Mahal kotu etiketleri — 26 Ekim 2026
 
-ARCH-SPACE-02'nin sınırlı dilimi; [ADR 0658](../../adr/0658-room-tag-elevations.md).
+ARCH-SPACE-02'nin sınırlı dilimi; [ADR 0687](../../adr/0687-room-tag-elevations.md).
 Yeni komut, TS/TSX dosyası, KCAD alanı, birim/ölçek veya renderer değişikliği yok.
 Mevcut anlamsal etiket komutu, Python ve MCP aynı hesabı kullanır.
 
