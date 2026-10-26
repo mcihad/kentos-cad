@@ -9,8 +9,8 @@
 - **`.kcad`:** değişmez.
 - **Bağımlılık:** yeni kitaplık yok.
 - **Ertelenenler (sahibin kararıyla, maddeler kapalı):**
-  - CBS-43: servis üstünde canlı sorgu ve düzenleme (`cad.sources.query`'nin bir OGC API Features sağlayıcısı), CQL2 JSON, servisten alınan verinin expires/ETag ile yenilenmesi, QGIS'in FeatureServer'ıyla performans kıyası, yayın (P2);
-  - CBS-44: PostGIS'in, yetkinin ve geri yüklemenin kabul senaryosuna bağlanması, performans kabulü.
+  - CBS-43: servis üstünde canlı sorgu ve düzenleme (`cad.sources.query`'nin bir OGC API Features sağlayıcısı), servisten alınan verinin expires/ETag ile yenilenmesi, QGIS'in FeatureServer'ıyla performans kıyası, yayın (P2);
+  - CBS-44: yetkinin ve geri yüklemenin kabul senaryosuna bağlanması, performans kabulü.
 
 ## Bağlam
 
@@ -63,3 +63,24 @@ kayıtta komutun satırıdır. Böylece senaryo Python'da, MCP'de ve masaüstün
    türünü yalnız alınan her değer ona uyarsa alır (`typed`); uymayan ya da şemada olmayan alan değerlerden tahmin edilen
    türde kalır. Queryables okunamazsa alma yine başarılı olur. Alma işinin kendi iş parçacığında sorulur. Birim testleri:
    `cargo test -p kentos-services --lib queryables`. Gerçek bir servisle denenmedi.
+
+## Ek (26 Ekim): CQL2 JSON ve kabul projesi PostGIS'te
+
+4. **CQL2 JSON.** Uygunluk sayfasında CQL2 metni yok ama JSON'u varsa süzgeç gönderilir
+   (`FeedProfile::filters`). Kullanıcının yazdığı Basic CQL2 metni JSON'a çevrilir (`kentos_services::cql2::to_json`):
+   - `and`, `or`, `not`;
+   - karşılaştırmalar, `IS [NOT] NULL`, `[NOT] LIKE`, `[NOT] IN`, `[NOT] BETWEEN`;
+   - sayılar, metin, `TRUE`/`FALSE`, `DATE(…)`, `TIMESTAMP(…)`;
+   - tırnaklı ve tırnaksız alan adları.
+
+   Çevrilemeyen (mekânsal ve öbür işlevler, bozuk metin) gönderilmez, nedeni söylenir. İstek `filter-lang=cql2-json` ile
+   gider. Bağımsız başvuru `feed_paging_cases.py`'nin profil kuralı da JSON'u kabul eder. Birim testleri:
+   `cargo test -p kentos-services --lib cql2`. Gerçek bir servisle denenmedi.
+5. **Kabul projesi PostGIS'te.** `fixtures/acceptance/v1/parcels.json` başsız oturumda dışa aktarmaya kadar oynatılır. Çizim
+   `file.export.gis` ile PostGIS'in `kabul` şemasına yazılır. Parseller ve binalar `cad.sources.query` ile geri okunur:
+   - satır sayısı;
+   - anahtara göre her alanın değeri (sayılar sayı olarak);
+   - her köşe, senaryonun GeoPackage'ındakiyle.
+
+   Test: `/usr/bin/python3 scripts/fixtures/postgis_cases.py --only the_parcels_scenario_goes_to_postgis` (geçici docker
+   veritabanı, 5432'ye dokunmaz).

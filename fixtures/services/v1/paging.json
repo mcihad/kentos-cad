@@ -81,7 +81,7 @@
     "temporal": false,
     "write": false,
     "read": true,
-    "filters": false
+    "filters": true
    }
   },
   {

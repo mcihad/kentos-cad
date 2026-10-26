@@ -554,11 +554,20 @@ impl FeedConnecting {
         let srid = self.asked_srid(&item.id, choice.srid, project);
         let some = |t: &Option<String>| t.clone().filter(|v| !v.trim().is_empty());
         // A filter goes only to a service that says it reads one (docs/adr/0513): another would give every object.
-        if self.kind == FeedKind::OgcFeatures && some(&choice.filter).is_some() {
+        // A service that reads CQL2 JSON and not its text gets the filter as JSON (docs/adr/0655 §4).
+        let mut filter = some(&choice.filter);
+        if self.kind == FeedKind::OgcFeatures && filter.is_some() {
             let unread = FeedProfile::default();
             let profile = offer.profile.as_ref().unwrap_or(&unread);
             if let Some(p) = profile.filter_problem() {
                 return Err(p);
+            }
+            if !profile.cql2_text
+                && let Some(text) = &filter
+            {
+                filter = Some(crate::cql2::to_json(text).map_err(|why| {
+                    format!("Servis süzgeci yalnız CQL2 JSON olarak okuyor ve süzgeç ona çevrilemedi: {why}.")
+                })?);
             }
         }
         let (url, name, version) = match self.kind {
@@ -599,7 +608,7 @@ impl FeedConnecting {
             url,
             name,
             srid,
-            filter: some(&choice.filter),
+            filter,
             bbox: choice.bbox,
             limit: choice.limit.filter(|l| *l > 0),
             version,

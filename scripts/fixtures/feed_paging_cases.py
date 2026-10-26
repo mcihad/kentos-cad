@@ -4,8 +4,8 @@
 Writes fixtures/services/v1/paging.json:
 
 - ``profiles``: conformance pages read into the parts KentOS asks of a service, by the class URI's family (after
-  ``/spec/``) and class (after ``/conf/``), whatever the version; a CQL2 text filter is sent only to a service that
-  declares Part 3's ``features-filter`` and CQL2's ``cql2-text``. The lists are written here as the OGC documents name
+  ``/spec/``) and class (after ``/conf/``), whatever the version; a filter is sent only to a service that declares
+  Part 3's ``features-filter`` and CQL2's ``cql2-text`` or ``cql2-json`` (as JSON when it reads no text; docs/adr/0655 §4). The lists are written here as the OGC documents name
   the classes (OGC API - Features Parts 1–4, CQL2), in the shapes servers write them: final 1.0 URIs, draft versions,
   a page without Part 3, an unreadable page.
 - ``takes``: a simulated service (its kind, WFS version, how many objects it has, the most it gives in one page,
@@ -81,7 +81,7 @@ def profile(page):
         part = PARTS.get((family, cls))
         if part:
             out[part] = True
-    out["filters"] = out["featuresFilter"] and out["cql2Text"]
+    out["filters"] = out["featuresFilter"] and (out["cql2Text"] or out["cql2Json"])
     return out
 
 

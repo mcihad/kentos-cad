@@ -306,7 +306,13 @@ pub mod features {
         }
         if let Some(f) = filter {
             p.push(("filter".into(), f.into()));
-            p.push(("filter-lang".into(), "cql2-text".into()));
+            // A filter made JSON for a service that reads only that (docs/adr/0655 §4).
+            let lang = if f.trim_start().starts_with('{') {
+                "cql2-json"
+            } else {
+                "cql2-text"
+            };
+            p.push(("filter-lang".into(), lang.into()));
         }
         let pairs: Vec<(&str, &str)> = p.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
         with_params(items_url, &pairs)

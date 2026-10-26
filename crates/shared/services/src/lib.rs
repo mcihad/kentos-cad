@@ -29,6 +29,7 @@ pub mod auth;
 pub mod cache;
 pub mod caps;
 pub mod connect;
+pub mod cql2;
 pub mod crs;
 pub mod features;
 pub mod feed;

@@ -116,9 +116,10 @@ impl FeedProfile {
         }
     }
 
-    /// Whether a filter in CQL2 text may be sent: Part 3's features filter and CQL2's text encoding.
+    /// Whether a filter may be sent: Part 3's features filter and CQL2's text encoding, or its JSON one (the filter is
+    /// then sent as JSON, docs/adr/0655 §4).
     pub fn filters(&self) -> bool {
-        self.read && self.features_filter && self.cql2_text
+        self.read && self.features_filter && (self.cql2_text || self.cql2_json)
     }
 
     /// Why a filter may not be sent, in the windows' words; none when it may.
@@ -135,8 +136,8 @@ impl FeedProfile {
             if !self.features_filter {
                 missing.push("OGC API Features Bölüm 3'ün nesne süzgeci");
             }
-            if !self.cql2_text {
-                missing.push("CQL2 metni");
+            if !self.cql2_text && !self.cql2_json {
+                missing.push("CQL2 metni ya da JSON'u");
             }
             format!(
                 "Servis süzgeci desteklediğini bildirmiyor (eksik: {}). Süzgeç desteklenmezse servis onu yok sayıp bütün \

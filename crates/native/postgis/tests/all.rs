@@ -2238,3 +2238,101 @@ fn a_postgis_part_has_its_band() {
     ));
     assert_eq!(report(&mut d)["neighbours"], 7);
 }
+
+/// The GIS acceptance project in a database (plan/gis.md CBS-44, docs/adr/0655 §5): the shared scenario
+/// (fixtures/acceptance/v1/parcels.json) replayed up to its exports, the drawing written to PostGIS (`file.export.gis`,
+/// schema `kabul`), and its parcels and buildings read back with `cad.sources.query`: every row by its key with the
+/// values and the area the scenario's GeoPackage has.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let scenario: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/acceptance/v1/parcels.json"
+    ))
+    .expect("the scenario");
+    let choices = kentos_headless::new_drawing(&scenario["project"]).expect("the choices");
+    let mut s = kentos_headless::Session::new(&choices).expect("a new project");
+    let mut names: std::collections::HashMap<String, String> = Default::default();
+    fn bind(v: &Value, names: &std::collections::HashMap<String, String>) -> Value {
+        match v {
+            Value::String(t) if t.starts_with('$') && !t.starts_with("$out:") => json!(names[&t[1..]]),
+            Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect()),
+            Value::Array(a) => Value::Array(a.iter().map(|v| bind(v, names)).collect()),
+            other => other.clone(),
+        }
+    }
+    for step in scenario["steps"].as_array().expect("steps") {
+        let Some(command) = step["command"].as_str() else {
+            if step["undo"].is_string() {
+                s.undo();
+            }
+            continue;
+        };
+        if command.starts_with("file.") {
+            break;
+        }
+        let answer = s
+            .call(json!({ "command": command, "input": bind(&step["input"], &names) }))
+            .expect("answers");
+        assert_eq!(answer["status"], "completed", "{}: {answer}", step["name"]);
+        if let Some(key) = step["as"].as_str() {
+            names.insert(key.into(), answer["output"]["uid"].as_str().expect("uid").into());
+        }
+        for (key, field) in step["bind"].as_object().into_iter().flatten() {
+            let value = answer["output"][field.as_str().expect("a field")].as_str().expect("bound");
+            names.insert(key.clone(), value.into());
+        }
+    }
+    let made = s
+        .call(json!({ "command": "file.export.gis",
+                      "input": { "path": url, "format": "postgis", "schema": "kabul" } }))
+        .expect("answers");
+    assert_eq!(made["status"], "completed", "{made}");
+    let mut d = doc();
+    for (layer, spec) in scenario["files"]["gpkg"]["layers"].as_object().expect("layers") {
+        let key = spec["key"].as_str().expect("a key");
+        let want = spec["rows"].as_object().expect("rows");
+        let answer = run(
+            &mut d,
+            "cad.sources.query",
+            CallOp::Execute,
+            json!({ "path": url, "table": format!("kabul.{layer}"), "limit": 100, "geometry": true }),
+        );
+        let rows = ok(&answer)["rows"].as_array().expect("rows").clone();
+        assert_eq!(rows.len(), want.len(), "{layer}");
+        for r in &rows {
+            let k = r["attrs"][key].as_str().unwrap_or_default().to_owned();
+            let w = &want[&k];
+            for (field, value) in w["attrs"].as_object().expect("attrs") {
+                let have = r["attrs"][field.as_str()].as_str().unwrap_or_default();
+                let same = have == value.as_str().unwrap_or_default()
+                    || have.parse::<f64>().ok().zip(value.as_str().and_then(|v| v.parse::<f64>().ok()))
+                        .is_some_and(|(a, b)| a == b);
+                assert!(same, "{layer}/{k}.{field}: {have:?}, beklenen {value}");
+            }
+            let ring: Vec<(f64, f64)> = w["ring"]
+                .as_array()
+                .expect("ring")
+                .iter()
+                .map(|p| (p[0].as_f64().expect("x"), p[1].as_f64().expect("y")))
+                .collect();
+            let wkt = r["wkt"].as_str().expect("wkt");
+            let numbers: Vec<f64> = wkt
+                .split(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-'))
+                .filter_map(|t| t.parse().ok())
+                .collect();
+            for (x, y) in &ring {
+                let found = numbers
+                    .windows(2)
+                    .any(|p| (p[0] - x).abs() < 1e-6 && (p[1] - y).abs() < 1e-6);
+                assert!(found, "{layer}/{k}: {wkt} köşe {x} {y}");
+            }
+        }
+        eprintln!("{layer}: {} satır PostGIS'ten geri okundu", rows.len());
+    }
+}
