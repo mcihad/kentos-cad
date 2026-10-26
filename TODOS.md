@@ -2428,6 +2428,8 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   [ADR 0573](docs/adr/0573-headless-mosaic-and-jpeg-rasters.md).**
 - [ ] `CBS-41` her aracın ortak durumu ve komutla çalışması (dilim): nokta bulutunun dokuz aracı `fixtures/processing/v1/pointcloud.json`'da (26 durum, `pointcloud_processing_cases.py`, yazılan dosyalar okunup denetlenir), bellekteki ev sahibi bulut okur ve COPC yazar, COG olarak kaydet `raster-ops.json`'da, eşdeğerlik pointcloud ve multidim'i de oynatır; durumsuz araç 10 → 0, komutsuz araç 13 → 0, denenen seçenek 453 → 501. Kalan: açık seçenek hücreleri, modellerin ve uzun işin kalanı, doğal dil başarısının ayrı ölçümü. — **26 Ekim,
   [ADR 0652](docs/adr/0652-every-processing-tool-through-the-command.md).**
+- [ ] `CBS-41` doğal dil başarısının ayrı ölçümü (dilim): `kentos.gis_eval` (valid, scope, outcome, untrusted, hidden; `report` oranları; `python -m kentos.gis_eval`), `fixtures/gis-eval/v1` (üç görev, 15 elle yazılmış cevap), `test_gis_eval.py`. Kalan: gerçek bir modelin cevaplarının düzenli koşturulması, daha çok görev, açık seçenek hücreleri, modellerin ve uzun işin kalanı. — **26 Ekim,
+  [ADR 0653](docs/adr/0653-gis-agent-eval.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,
