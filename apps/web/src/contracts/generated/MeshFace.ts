@@ -23,4 +23,8 @@ nodes: Array<number>,
 /**
  * The face's area.
  */
-area: number, };
+area: number, 
+/**
+ * The faces sharing one of its edges (their places in the file's face order, ascending).
+ */
+neighbours?: Array<number>, };

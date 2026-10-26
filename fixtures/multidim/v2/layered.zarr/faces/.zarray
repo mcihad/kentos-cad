@@ -1,0 +1,20 @@
+{
+  "shape": [
+    2,
+    4
+  ],
+  "chunks": [
+    1,
+    2
+  ],
+  "dtype": "<i4",
+  "fill_value": null,
+  "order": "C",
+  "filters": null,
+  "dimension_separator": ".",
+  "compressor": {
+    "id": "zlib",
+    "level": 6
+  },
+  "zarr_format": 2
+}

@@ -1,0 +1,8 @@
+{
+  "cf_role": "mesh_topology",
+  "topology_dimension": 2,
+  "node_coordinates": "node_x node_y",
+  "face_node_connectivity": "faces",
+  "grid_mapping": "crs",
+  "_ARRAY_DIMENSIONS": []
+}

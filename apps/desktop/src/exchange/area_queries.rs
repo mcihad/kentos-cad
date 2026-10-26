@@ -1,5 +1,7 @@
 //! Nokta bulutu alan istatistiği, Nokta bulutu profili and Mesh sor (docs/adr/0552, plan/gis.md CBS-32): three windows
-//! over the read-only commands `cad.pointclouds.region`, `cad.pointclouds.profile` and `cad.meshes.query`. The shape
+//! over the read-only commands `cad.pointclouds.region`, `cad.pointclouds.profile` and `cad.meshes.query`; Mesh sor
+//! asks at a place (Yer), in an area (Alan: `cad.meshes.region`) or along a path (Hat: `cad.meshes.profile`;
+//! docs/adr/0645 §7). The shape
 //! is the selection's (an area, a line or a polyline, a point; Seçimden al reads it again), the other values are typed;
 //! Çalıştır reads the files off the window's thread at the source's full resolution and shows what the command answers:
 //! counts, heights and classes of the area, the stations of the corridor, the face and the values at the place. Panoya
@@ -10,12 +12,14 @@ use std::fmt::Write as _;
 use iced::widget::{Column, text_input};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, MeshesQueried, MeshesQuery, PointCloudsProfile,
-    PointCloudsProfiled, PointCloudsRegion, PointCloudsRegioned, Vec2,
+    CommandResult, CommandWarning, Entity, MeshZonal, MeshesProfile, MeshesProfiled, MeshesQueried,
+    MeshesQuery, MeshesRegion, MeshesRegioned, PointCloudsProfile, PointCloudsProfiled,
+    PointCloudsRegion, PointCloudsRegioned, Vec2,
 };
-use kentos_native_application::{ExecutionContext, meshes, pointcloud_areas};
-use kentos_ui::widget::{Dialog, focus_ring, overlay};
+use kentos_native_application::{ExecutionContext, mesh_areas, meshes, pointcloud_areas};
 use kentos_ui::style;
+use kentos_ui::widget::segmented::Segmented;
+use kentos_ui::widget::{Dialog, focus_ring, overlay};
 
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
@@ -30,6 +34,26 @@ pub enum Outcome {
     Region(Result<(PointCloudsRegioned, Vec<CommandWarning>), String>),
     Profile(Result<(PointCloudsProfiled, Vec<CommandWarning>), String>),
     Mesh(Result<(MeshesQueried, Vec<CommandWarning>), String>),
+    MeshRegion(Result<(MeshesRegioned, Vec<CommandWarning>), String>),
+    MeshProfile(Result<(MeshesProfiled, Vec<CommandWarning>), String>),
+}
+
+/// What Mesh sor asks: at a place, in an area or along a path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MeshMode {
+    Place,
+    Area,
+    Path,
+}
+
+impl std::fmt::Display for MeshMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            MeshMode::Place => "Yer",
+            MeshMode::Area => "Alan",
+            MeshMode::Path => "Hat",
+        })
+    }
 }
 
 /// An area taken from the selection: its ring and holes in plan, what it is said to be.
@@ -60,8 +84,15 @@ pub struct ProfileState {
 
 #[derive(Debug)]
 pub struct MeshState {
+    pub mode: MeshMode,
     pub x: String,
     pub y: String,
+    /// The area (Alan) and the path (Hat) taken from the selection.
+    pub shape: Result<Shape, String>,
+    pub path: Result<(Vec<Vec2>, String), String>,
+    pub step: String,
+    /// Alan: list the faces too.
+    pub faces: bool,
     /// A moment as the windows write it (`2024-05-01 06:30`); empty: the steps the raster shows.
     pub time: String,
     pub series: bool,
@@ -78,8 +109,10 @@ pub enum Event {
     X(String),
     Y(String),
     Time(String),
-    /// Noktaları da listele, Her adımı göster.
+    /// Noktaları da listele, Her adımı göster, Yüzleri listele.
     Toggle,
+    /// Mesh sor's Yer, Alan or Hat.
+    Mode(MeshMode),
     Run,
     Done(Box<Outcome>),
     Copy,
@@ -92,7 +125,11 @@ fn event(e: Event) -> Message {
 fn fixed(v: f64) -> String {
     let t = format!("{v:.3}");
     let t = t.trim_end_matches('0').trim_end_matches('.');
-    if t.is_empty() || t == "-" { "0".to_owned() } else { t.to_owned() }
+    if t.is_empty() || t == "-" {
+        "0".to_owned()
+    } else {
+        t.to_owned()
+    }
 }
 
 /// The area the selection holds: its first area (or closed line), its holes; why not.
@@ -101,14 +138,19 @@ fn shape_of(app: &App) -> Result<Shape, String> {
         return Err("Açık çizim yok.".into());
     };
     for slot in app.selection.ids() {
-        let Some(e) = doc.model.get(*slot) else { continue };
+        let Some(e) = doc.model.get(*slot) else {
+            continue;
+        };
         let path = match e {
             Entity::Polygon(p) => Some(p),
             Entity::Polyline(p) if p.closed => Some(p),
             _ => None,
         };
         let Some(p) = path else { continue };
-        let curved = p.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0));
+        let curved = p
+            .bulges
+            .as_ref()
+            .is_some_and(|b| b.iter().any(|v| *v != 0.0));
         let mut said = format!("{} köşeli alan", p.pts.len());
         if let Some(h) = &p.holes
             && !h.is_empty()
@@ -123,12 +165,7 @@ fn shape_of(app: &App) -> Result<Shape, String> {
         }
         return Ok(Shape {
             ring: p.pts.clone(),
-            holes: p
-                .holes
-                .iter()
-                .flatten()
-                .map(|h| h.pts.clone())
-                .collect(),
+            holes: p.holes.iter().flatten().map(|h| h.pts.clone()).collect(),
             said,
         });
     }
@@ -155,10 +192,13 @@ fn path_of(app: &App) -> Result<(Vec<Vec2>, String), String> {
 /// The first selected point, its place as typed text.
 fn place_of(app: &App) -> Option<(String, String)> {
     let doc = app.document.as_ref()?;
-    app.selection.ids().iter().find_map(|s| match doc.model.get(*s) {
-        Some(Entity::Point(p)) => Some((fixed(p.p.x), fixed(p.p.y))),
-        _ => None,
-    })
+    app.selection
+        .ids()
+        .iter()
+        .find_map(|s| match doc.model.get(*s) {
+            Some(Entity::Point(p)) => Some((fixed(p.p.x), fixed(p.p.y))),
+            _ => None,
+        })
 }
 
 fn answered<T>(r: CommandResult<T>, nothing: &str) -> Result<(T, Vec<CommandWarning>), String> {
@@ -197,9 +237,23 @@ impl App {
 
     pub(super) fn mesh_query_open(&mut self) -> Task<Message> {
         let (x, y) = place_of(self).unwrap_or_default();
+        let (shape, path) = (shape_of(self), path_of(self));
+        // The selection says what is asked: an area, a line, else a place.
+        let mode = if shape.is_ok() {
+            MeshMode::Area
+        } else if path.is_ok() {
+            MeshMode::Path
+        } else {
+            MeshMode::Place
+        };
         self.open_window(Window::MeshQuery(MeshState {
+            mode,
             x,
             y,
+            shape,
+            path,
+            step: "10".into(),
+            faces: false,
             time: String::new(),
             series: false,
             result: None,
@@ -227,10 +281,18 @@ impl App {
                         }
                     }
                     Some(Window::MeshQuery(_)) => {
-                        let at = place_of(self);
-                        if let (Some(Window::MeshQuery(s)), Some((x, y))) = (&mut self.exchange, at) {
-                            s.x = x;
-                            s.y = y;
+                        let (at, shape, path) = (place_of(self), shape_of(self), path_of(self));
+                        if let Some(Window::MeshQuery(s)) = &mut self.exchange {
+                            match s.mode {
+                                MeshMode::Place => {
+                                    if let Some((x, y)) = at {
+                                        s.x = x;
+                                        s.y = y;
+                                    }
+                                }
+                                MeshMode::Area => s.shape = shape,
+                                MeshMode::Path => s.path = path,
+                            }
                             s.result = None;
                         }
                     }
@@ -245,8 +307,19 @@ impl App {
                 Task::none()
             }
             Event::Step(t) => {
-                if let Some(Window::CloudProfile(s)) = &mut self.exchange {
-                    s.step = t;
+                match &mut self.exchange {
+                    Some(Window::CloudProfile(s)) => s.step = t,
+                    Some(Window::MeshQuery(s)) => s.step = t,
+                    _ => {}
+                }
+                Task::none()
+            }
+            Event::Mode(m) => {
+                if let Some(Window::MeshQuery(s)) = &mut self.exchange
+                    && s.mode != m
+                {
+                    s.mode = m;
+                    s.result = None;
                 }
                 Task::none()
             }
@@ -271,6 +344,7 @@ impl App {
             Event::Toggle => {
                 match &mut self.exchange {
                     Some(Window::CloudProfile(s)) => s.points = !s.points,
+                    Some(Window::MeshQuery(s)) if s.mode == MeshMode::Area => s.faces = !s.faces,
                     Some(Window::MeshQuery(s)) => s.series = !s.series,
                     _ => {}
                 }
@@ -287,7 +361,10 @@ impl App {
                         s.result = Some(o);
                         s.running = false;
                     }
-                    (Some(Window::MeshQuery(s)), o @ Outcome::Mesh(_)) => {
+                    (
+                        Some(Window::MeshQuery(s)),
+                        o @ (Outcome::Mesh(_) | Outcome::MeshRegion(_) | Outcome::MeshProfile(_)),
+                    ) => {
                         s.result = Some(o);
                         s.running = false;
                     }
@@ -312,7 +389,11 @@ impl App {
             return Task::none();
         };
         let model = doc.model.clone();
-        let drawing = doc.path.as_deref().and_then(|p| p.to_str()).map(str::to_owned);
+        let drawing = doc
+            .path
+            .as_deref()
+            .and_then(|p| p.to_str())
+            .map(str::to_owned);
         let done = |o: Outcome| Exchange::Area(Event::Done(Box::new(o)));
         match &mut self.exchange {
             Some(Window::CloudRegion(s)) => {
@@ -330,7 +411,10 @@ impl App {
                     move || {
                         let mut model = model;
                         Outcome::Region(answered(
-                            pointcloud_areas::region::plan(&ExecutionContext::new(&mut model), &input),
+                            pointcloud_areas::region::plan(
+                                &ExecutionContext::new(&mut model),
+                                &input,
+                            ),
                             "Alan okunamadı.",
                         ))
                     },
@@ -361,7 +445,10 @@ impl App {
                     move || {
                         let mut model = model;
                         Outcome::Profile(answered(
-                            pointcloud_areas::profile::plan(&ExecutionContext::new(&mut model), &input),
+                            pointcloud_areas::profile::plan(
+                                &ExecutionContext::new(&mut model),
+                                &input,
+                            ),
                             "Profil okunamadı.",
                         ))
                     },
@@ -369,11 +456,6 @@ impl App {
                 )
             }
             Some(Window::MeshQuery(s)) => {
-                let (x, y) = (parse(&s.x), parse(&s.y));
-                let (Some(x), Some(y)) = (x, y) else {
-                    s.result = Some(Outcome::Mesh(Err("Yerin X ve Y'si sayı olmalı.".into())));
-                    return Task::none();
-                };
                 let time = if s.time.trim().is_empty() {
                     None
                 } else {
@@ -386,6 +468,75 @@ impl App {
                             return Task::none();
                         }
                     }
+                };
+                match s.mode {
+                    MeshMode::Area => {
+                        let Ok(shape) = &s.shape else {
+                            return Task::none();
+                        };
+                        let input = MeshesRegion {
+                            ring: shape.ring.clone(),
+                            holes: shape.holes.clone(),
+                            uids: Vec::new(),
+                            time,
+                            variables: Vec::new(),
+                            faces: s.faces,
+                            drawing,
+                        };
+                        s.running = true;
+                        return off_thread(
+                            move || {
+                                let mut model = model;
+                                Outcome::MeshRegion(answered(
+                                    mesh_areas::region::plan(
+                                        &ExecutionContext::new(&mut model),
+                                        &input,
+                                    ),
+                                    "Mesh okunamadı.",
+                                ))
+                            },
+                            done,
+                        );
+                    }
+                    MeshMode::Path => {
+                        let Ok((path, _)) = &s.path else {
+                            return Task::none();
+                        };
+                        let Some(step) = parse(&s.step) else {
+                            s.result = Some(Outcome::MeshProfile(Err(
+                                "Adım sayı olmalı (örneğin 10).".into(),
+                            )));
+                            return Task::none();
+                        };
+                        let input = MeshesProfile {
+                            path: path.clone(),
+                            step,
+                            uids: Vec::new(),
+                            time,
+                            variables: Vec::new(),
+                            drawing,
+                        };
+                        s.running = true;
+                        return off_thread(
+                            move || {
+                                let mut model = model;
+                                Outcome::MeshProfile(answered(
+                                    mesh_areas::profile::plan(
+                                        &ExecutionContext::new(&mut model),
+                                        &input,
+                                    ),
+                                    "Mesh okunamadı.",
+                                ))
+                            },
+                            done,
+                        );
+                    }
+                    MeshMode::Place => {}
+                }
+                let (x, y) = (parse(&s.x), parse(&s.y));
+                let (Some(x), Some(y)) = (x, y) else {
+                    s.result = Some(Outcome::Mesh(Err("Yerin X ve Y'si sayı olmalı.".into())));
+                    return Task::none();
                 };
                 let input = MeshesQuery {
                     at: Vec2 { x, y },
@@ -466,27 +617,91 @@ impl App {
 
     pub(super) fn mesh_view<'a>(&'a self, s: &'a MeshState) -> Element<'a, Message> {
         let mut body = Column::new().spacing(12);
-        body = body.push(words::field("X (doğu)", input("500012", &s.x, Event::X), None));
-        body = body.push(words::field("Y (kuzey)", input("4420010", &s.y, Event::Y), None));
-        body = body.push(words::ghost("Seçili noktadan al", Some(event(Event::Use))));
+        body = body.push(words::field(
+            "Sorulan",
+            Segmented::new(
+                [MeshMode::Place, MeshMode::Area, MeshMode::Path],
+                s.mode,
+                |m| event(Event::Mode(m)),
+            ),
+            Some(match s.mode {
+                MeshMode::Place => "Bir yerin yüzü ve değerleri.".to_owned(),
+                MeshMode::Area => "Merkezi alanın içindeki yüzler ve veri setlerinin istatistiği (yüz alanlarıyla ağırlıklı ortalama, değer × alan toplamı).".to_owned(),
+                MeshMode::Path => "Yol boyunca adım adım istasyonların yüzü ve değerleri.".to_owned(),
+            }),
+        ));
+        let ready = match s.mode {
+            MeshMode::Place => {
+                body = body.push(words::field(
+                    "X (doğu)",
+                    input("500012", &s.x, Event::X),
+                    None,
+                ));
+                body = body.push(words::field(
+                    "Y (kuzey)",
+                    input("4420010", &s.y, Event::Y),
+                    None,
+                ));
+                body = body.push(words::ghost("Seçili noktadan al", Some(event(Event::Use))));
+                parse(&s.x).is_some() && parse(&s.y).is_some()
+            }
+            MeshMode::Area => {
+                let (ok, said) = match &s.shape {
+                    Ok(shape) => (true, words::text_line(Line::Info, shape.said.clone())),
+                    Err(why) => (false, words::text_line(Line::Warn, why.clone())),
+                };
+                body = body.push(words::field("Alan", said, None));
+                body = body.push(words::ghost("Seçimden al", Some(event(Event::Use))));
+                ok
+            }
+            MeshMode::Path => {
+                let (ok, said) = match &s.path {
+                    Ok((_, said)) => (true, words::text_line(Line::Info, said.clone())),
+                    Err(why) => (false, words::text_line(Line::Warn, why.clone())),
+                };
+                body = body.push(words::field("Yol", said, None));
+                body = body.push(words::ghost("Seçimden al", Some(event(Event::Use))));
+                body = body.push(words::field(
+                    "İstasyon adımı (yol boyunca)",
+                    input("10", &s.step, Event::Step),
+                    None,
+                ));
+                ok
+            }
+        };
         body = body.push(words::field(
             "An (isteğe bağlı)",
             input("2024-05-01 06:30", &s.time, Event::Time),
             Some("Boşsa rasterin gösterdiği adımlar; verilirse her veri setinin o andan önceki son adımı.".into()),
         ));
-        body = body.push(words::check(
-            s.series,
-            "Zaman boyutlu veri setlerinin her adımını göster",
-            Some(event(Event::Toggle)),
-        ));
+        match s.mode {
+            MeshMode::Place => {
+                body = body.push(words::check(
+                    s.series,
+                    "Zaman boyutlu veri setlerinin her adımını göster",
+                    Some(event(Event::Toggle)),
+                ));
+            }
+            MeshMode::Area => {
+                body = body.push(words::check(
+                    s.faces,
+                    "Yüzlerin sırasını da listele",
+                    Some(event(Event::Toggle)),
+                ));
+            }
+            MeshMode::Path => {}
+        }
         body = body.push(result_view(s.result.as_ref(), s.running));
-        let ready = !s.running && parse(&s.x).is_some() && parse(&s.y).is_some();
-        window("Mesh sor", body, ready, s.result.is_some())
+        window("Mesh sor", body, ready && !s.running, s.result.is_some())
     }
 }
 
 fn parse(t: &str) -> Option<f64> {
-    t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+    t.trim()
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
 }
 
 fn input<'a>(hint: &str, value: &str, on: fn(String) -> Event) -> Element<'a, Message> {
@@ -501,7 +716,12 @@ fn input<'a>(hint: &str, value: &str, on: fn(String) -> Event) -> Element<'a, Me
     .into()
 }
 
-fn window<'a>(title: &'a str, body: Column<'a, Message>, ready: bool, copyable: bool) -> Element<'a, Message> {
+fn window<'a>(
+    title: &'a str,
+    body: Column<'a, Message>,
+    ready: bool,
+    copyable: bool,
+) -> Element<'a, Message> {
     overlay::blocking(
         Dialog::new(title)
             .scroll(body)
@@ -530,8 +750,20 @@ fn result_view(r: Option<&Outcome>, running: bool) -> Element<'_, Message> {
         }
     };
     match r {
-        Outcome::Region(Err(why)) | Outcome::Profile(Err(why)) | Outcome::Mesh(Err(why)) => {
+        Outcome::Region(Err(why))
+        | Outcome::Profile(Err(why))
+        | Outcome::Mesh(Err(why))
+        | Outcome::MeshRegion(Err(why))
+        | Outcome::MeshProfile(Err(why)) => {
             lines.push(words::text_line(Line::Error, why.clone()));
+        }
+        Outcome::MeshRegion(Ok((o, warnings))) => {
+            lines.extend(texts_lines(mesh_region_texts(o)));
+            warn(warnings, &mut lines);
+        }
+        Outcome::MeshProfile(Ok((o, warnings))) => {
+            lines.extend(texts_lines(mesh_profile_texts(o)));
+            warn(warnings, &mut lines);
         }
         Outcome::Region(Ok((o, warnings))) => {
             lines.extend(region_lines(o));
@@ -601,7 +833,11 @@ fn region_texts(o: &PointCloudsRegioned) -> Vec<String> {
 
 fn region_lines(o: &PointCloudsRegioned) -> Vec<Element<'_, Message>> {
     let texts = region_texts(o);
-    let kind = if o.total.count == 0 { Line::Warn } else { Line::Ok };
+    let kind = if o.total.count == 0 {
+        Line::Warn
+    } else {
+        Line::Ok
+    };
     texts
         .into_iter()
         .enumerate()
@@ -652,7 +888,10 @@ fn profile_lines(o: &PointCloudsProfiled) -> Vec<Element<'_, Message>> {
     if !o.points.is_empty() {
         lines.push(words::text_line(
             Line::Info,
-            format!("{} nokta listelendi (Panoya kopyala satır satır alır).", o.points.len()),
+            format!(
+                "{} nokta listelendi (Panoya kopyala satır satır alır).",
+                o.points.len()
+            ),
         ));
     }
     lines
@@ -671,18 +910,27 @@ fn mesh_texts(o: &MeshesQueried) -> Vec<String> {
         fixed(f.area),
         o.read
     )];
+    if !f.neighbours.is_empty() {
+        let n: Vec<String> = f.neighbours.iter().map(|k| (k + 1).to_string()).collect();
+        out.push(format!("Komşu yüzler: {}", n.join(", ")));
+    }
     for v in &o.values {
         let name = match &v.vector {
             Some(y) => format!("{} / {y}", v.variable),
             None => v.variable.clone(),
         };
-        let unit = v.units.as_deref().map_or_else(String::new, |u| format!(" {u}"));
+        let unit = v
+            .units
+            .as_deref()
+            .map_or_else(String::new, |u| format!(" {u}"));
         let at = v
             .time
             .map(|t| {
                 format!(
                     " ({})",
-                    kentos_formats::multidim::cube::dim_labels(&[t], true, None).pop().unwrap_or_default()
+                    kentos_formats::multidim::cube::dim_labels(&[t], true, None)
+                        .pop()
+                        .unwrap_or_default()
                 )
             })
             .unwrap_or_default();
@@ -700,6 +948,117 @@ fn mesh_texts(o: &MeshesQueried) -> Vec<String> {
     out
 }
 
+fn named(z: &MeshZonal) -> String {
+    match &z.vector {
+        Some(y) => format!("{} / {y}", z.variable),
+        None => z.variable.clone(),
+    }
+}
+
+fn moment_of(z: &MeshZonal) -> String {
+    z.time
+        .map(|t| {
+            format!(
+                " ({})",
+                kentos_formats::multidim::cube::dim_labels(&[t], true, None)
+                    .pop()
+                    .unwrap_or_default()
+            )
+        })
+        .unwrap_or_default()
+}
+
+fn mesh_region_texts(o: &MeshesRegioned) -> Vec<String> {
+    let mut out = vec![format!("Alan {}; {} değer okundu.", fixed(o.area), o.read)];
+    if o.meshes.is_empty() {
+        out.push("Alanda mesh yok.".to_owned());
+    }
+    for m in &o.meshes {
+        out.push(format!(
+            "“{}” ağı: {} yüz, alanları toplamı {}",
+            m.topology,
+            m.count,
+            fixed(m.area)
+        ));
+        for z in &m.datasets {
+            let unit = z
+                .units
+                .as_deref()
+                .map_or_else(String::new, |u| format!(" {u}"));
+            out.push(match (z.min, z.max, z.mean) {
+                (Some(lo), Some(hi), Some(mean)) => format!(
+                    "    {} [{}]{}: {} yüzde en az {}, en çok {}, ortalama {}{unit}; toplam (değer × alan) {}",
+                    named(z),
+                    z.location,
+                    moment_of(z),
+                    z.count,
+                    fixed(lo),
+                    fixed(hi),
+                    fixed(mean),
+                    z.integral.map_or_else(String::new, fixed)
+                ),
+                _ => format!("    {} [{}]{}: değer yok", named(z), z.location, moment_of(z)),
+            });
+        }
+        if !m.faces.is_empty() {
+            let ids: Vec<String> = m.faces.iter().map(|f| (f + 1).to_string()).collect();
+            out.push(format!("    Yüzler: {}", ids.join(", ")));
+        }
+    }
+    out
+}
+
+fn mesh_profile_texts(o: &MeshesProfiled) -> Vec<String> {
+    let mut out = vec![format!("Yol {}; {} değer okundu.", fixed(o.length), o.read)];
+    for m in &o.meshes {
+        let heads: Vec<String> = m
+            .datasets
+            .iter()
+            .map(|z| format!("{}{}", named(z), moment_of(z)))
+            .collect();
+        out.push(format!(
+            "“{}” ağı: {} istasyon; {}",
+            m.topology,
+            m.stations.len(),
+            heads.join(", ")
+        ));
+        for st in &m.stations {
+            let values: Vec<String> = st
+                .values
+                .iter()
+                .map(|v| v.map_or_else(|| "—".to_owned(), fixed))
+                .collect();
+            out.push(match st.face {
+                Some(f) => format!(
+                    "    {}: yüz {}; {}",
+                    fixed(st.station),
+                    f + 1,
+                    values.join(" · ")
+                ),
+                None => format!("    {}: meshin dışında", fixed(st.station)),
+            });
+        }
+    }
+    out
+}
+
+fn texts_lines<'a>(texts: Vec<String>) -> Vec<Element<'a, Message>> {
+    let more = texts.len().saturating_sub(SHOWN + 1);
+    let mut lines: Vec<Element<'a, Message>> = texts
+        .into_iter()
+        .take(SHOWN + 1)
+        .enumerate()
+        .map(|(i, t)| words::text_line(if i == 0 { Line::Ok } else { Line::Info }, t))
+        .collect();
+    if more > 0 {
+        lines.push(words::text_line(
+            Line::Info,
+            format!("… {more} satır daha (Panoya kopyala hepsini alır)."),
+        ));
+    }
+    lines
+}
+
 fn mesh_lines(o: &MeshesQueried) -> Vec<Element<'_, Message>> {
     mesh_texts(o)
         .into_iter()
@@ -708,7 +1067,11 @@ fn mesh_lines(o: &MeshesQueried) -> Vec<Element<'_, Message>> {
         .map(|(i, t)| {
             words::text_line(
                 if i == 0 {
-                    if o.face.is_some() { Line::Ok } else { Line::Warn }
+                    if o.face.is_some() {
+                        Line::Ok
+                    } else {
+                        Line::Warn
+                    }
                 } else {
                     Line::Info
                 },
@@ -742,6 +1105,12 @@ fn copy_text(r: &Outcome) -> String {
             t
         }
         Outcome::Mesh(Ok((o, _))) => mesh_texts(o).join("\n"),
-        Outcome::Region(Err(why)) | Outcome::Profile(Err(why)) | Outcome::Mesh(Err(why)) => why.clone(),
+        Outcome::MeshRegion(Ok((o, _))) => mesh_region_texts(o).join("\n"),
+        Outcome::MeshProfile(Ok((o, _))) => mesh_profile_texts(o).join("\n"),
+        Outcome::Region(Err(why))
+        | Outcome::Profile(Err(why))
+        | Outcome::Mesh(Err(why))
+        | Outcome::MeshRegion(Err(why))
+        | Outcome::MeshProfile(Err(why)) => why.clone(),
     }
 }

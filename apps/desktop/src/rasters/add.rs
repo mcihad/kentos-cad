@@ -111,6 +111,8 @@ pub enum Event {
     ReadAddress,
     /// Boxed: what the header said is the largest event.
     Read(u64, Box<Result<Read, String>>),
+    /// The address is a NetCDF, NetCDF-4, GRIB or Zarr data set: its own window (docs/adr/0645 §5).
+    Multidim(String),
     Confirm,
     Keep(Keep),
     Layer(String),
@@ -208,22 +210,31 @@ fn world_beside(path: &Path) -> Option<(String, String)> {
     None
 }
 
-/// Whether a file is a NetCDF (classic or NetCDF-4), by its first bytes.
+/// Whether a file is a multidimensional data set (classic NetCDF, NetCDF-4 or HDF5, GRIB, a Zarr store's metadata), by
+/// its first bytes (docs/adr/0645 §5).
 fn is_netcdf(path: &Path) -> bool {
+    if kentos_native_application::multidim_source::zarr_root(path).is_some() {
+        return true;
+    }
     use std::io::Read as _;
     let mut head = [0u8; 8];
     let n = std::fs::File::open(path)
         .and_then(|mut f| f.read(&mut head))
         .unwrap_or(0);
     use kentos_formats::multidim::netcdf::{Sniff, sniff};
-    match sniff(&head[..n]) {
-        Sniff::Classic(_) => true,
-        // A NetCDF-4 by its name: the window says why it is not read.
-        Sniff::Hdf5 => path
-            .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("nc")),
-        Sniff::Grib | Sniff::Other => false,
+    !matches!(sniff(&head[..n]), Sniff::Other)
+}
+
+/// Whether an address is a multidimensional data set (a Zarr store, or a NetCDF, NetCDF-4 or GRIB file by its first
+/// bytes); read off the interface's thread.
+fn is_netcdf_at(url: &str) -> bool {
+    if kentos_native_application::multidim_source::is_zarr_url(url) {
+        return true;
     }
+    use kentos_formats::multidim::netcdf::{Sniff, sniff};
+    crate::pointclouds::bytes::Remote::open(url)
+        .and_then(|r| r.read(0, r.size.min(8)))
+        .is_ok_and(|h| !matches!(sniff(&h), Sniff::Other))
 }
 
 /// The header read: what the window shows, its look, the world file that placed it.
@@ -371,8 +382,15 @@ impl App {
                 rfd::AsyncFileDialog::new()
                     .set_title(TITLE)
                     .add_filter(
-                        "Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF, VRT)",
-                        &["tif", "tiff", "png", "jpg", "jpeg", "nc", "vrt"],
+                        "Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF, GRIB, VRT)",
+                        &[
+                            "tif", "tiff", "png", "jpg", "jpeg", "nc", "nc4", "h5", "hdf5", "grib",
+                            "grb", "grib2", "grb2", "vrt",
+                        ],
+                    )
+                    .add_filter(
+                        "Zarr deposu (.zmetadata, zarr.json, .zgroup)",
+                        &["zmetadata", "json", "zgroup"],
                     )
                     .pick_file()
                     .await
@@ -433,9 +451,14 @@ impl App {
                     return Task::none();
                 }
                 let id = self.raster_add_open(From::Address, PathBuf::new(), address.clone());
-                let origin = super::tiles::Origin::Url(address);
+                let origin = super::tiles::Origin::Url(address.clone());
+                // A NetCDF, NetCDF-4, GRIB or Zarr data set at the address: its own window (docs/adr/0645 §5).
                 return super::off_thread(move || {
-                    msg(Event::Read(id, Box::new(inspect_origin(&origin))))
+                    if is_netcdf_at(&address) {
+                        msg(Event::Multidim(address))
+                    } else {
+                        msg(Event::Read(id, Box::new(inspect_origin(&origin))))
+                    }
                 });
             }
             Event::Read(id, read) => {
@@ -450,6 +473,16 @@ impl App {
                         s.keep = Keep::Linked;
                     }
                     s.read = Some(read);
+                }
+            }
+            Event::Multidim(url) => {
+                if self
+                    .rasters
+                    .add
+                    .as_ref()
+                    .is_some_and(|s| s.address.trim() == url)
+                {
+                    return self.multidim_from_address(url);
                 }
             }
             Event::Confirm => {

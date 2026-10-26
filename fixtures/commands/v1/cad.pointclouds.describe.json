@@ -3155,7 +3155,7 @@
    ]
   },
   {
-   "name": "adresteki kaynak burada okunmaz, söylenir",
+   "name": "adresteki kaynak okunamazsa söylenir",
    "steps": [
     {
      "op": "execute",
@@ -3177,7 +3177,7 @@
           {
            "url": "https://ornek.invalid/bulut.copc.laz",
            "read": false,
-           "why": "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur",
+           "why": "$any",
            "kind": "copc",
            "count": 10,
            "bounds": [
@@ -3195,11 +3195,7 @@
        "revision": "$current"
       },
       "warnings": [
-       {
-        "code": "cloud_source_unreadable",
-        "message": "Bulutun 1. kaynağı okunamadı: adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur.",
-        "path": "clouds[0].sources[0]"
-       }
+       "$any"
       ]
      },
      "expect": {

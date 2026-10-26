@@ -131,6 +131,9 @@ pub struct MeshInfo {
 #[serde(rename_all = "camelCase")]
 pub struct CubeInfo {
     pub version: u8,
+    /// The data set's own format when it was read as classic NetCDF (“NetCDF-4 (HDF5)”, “GRIB2”, “Zarr v3”;
+    /// docs/adr/0645 §1).
+    pub format: Option<String>,
     pub grids: Vec<GridInfo>,
     pub meshes: Vec<MeshInfo>,
     /// Variables not read, and why.
@@ -708,6 +711,10 @@ impl Cube {
         }
         Ok(CubeInfo {
             version: h.version,
+            format: h
+                .attr(super::chunked::FORMAT_ATTR)
+                .and_then(super::netcdf::Attr::text)
+                .map(str::to_owned),
             grids,
             meshes,
             notes,

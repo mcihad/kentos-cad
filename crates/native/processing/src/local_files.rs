@@ -3,8 +3,9 @@
 //! (a COG laid out again). Python's `cad.processing.run` and MCP run the raster tools through these, as the desktop
 //! runs them through its own; the point clouds' files (LAS, LAZ, COPC, text; a COPC index built from a result) and a
 //! NetCDF file's cube for the multidimensional tools too (docs/adr/0572, `cloud_files`), a virtual mosaic (VRT) and a PNG
-//! or JPEG picture or JPEG-compressed TIFF (docs/adr/0573, `raster_files`). An address (HTTP ranges) stays the
-//! desktop's: such a run is refused, saying why.
+//! or JPEG picture or JPEG-compressed TIFF (docs/adr/0573, `raster_files`). A NetCDF-4 (HDF5), GRIB or Zarr data set is
+//! read as classic NetCDF, and an address by HTTP ranges through the host's network (docs/adr/0645 §5); a host with
+//! none refuses an address, saying why.
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -16,6 +17,8 @@ use kentos_commands::{CloudFormat, CloudSource, RasterFields};
 use kentos_domain::Document;
 use kentos_formats::raster::source::Reader;
 use kentos_formats::raster::{ByteStore, Step, tiff, vrt};
+use kentos_native_application::multidim_source::{self as chunked, Virtual};
+use kentos_native_application::remote_host::{self, RangeRead};
 
 use crate::cloud_files::{ReadAt, cloud_read, copc_file, netcdf_reader, netcdf_slice, text_plan};
 use crate::files::{
@@ -32,10 +35,25 @@ const HEADER_MOST: u64 = 256 << 20;
 /// At most this big a PNG or JPEG is read whole.
 const IMAGE_MOST: u64 = 512 << 20;
 
-/// A raster's bytes: a file read by ranges, or an embedded file's bytes.
+/// A raster's bytes: a file read by ranges, an embedded file's bytes, or an address's file or a chunked data set seen
+/// as classic NetCDF.
 enum Bytes {
     File(Mutex<File>, u64),
     Memory(Arc<Vec<u8>>),
+    Shared(Arc<dyn RangeRead>),
+}
+
+/// A host's own bytes shared with a chunked reader.
+struct Owned(Bytes);
+
+impl RangeRead for Owned {
+    fn size(&self) -> u64 {
+        self.0.size()
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        self.0.read(offset, len)
+    }
 }
 
 impl ReadAt for Bytes {
@@ -76,6 +94,7 @@ impl Bytes {
         match self {
             Bytes::File(_, n) => *n,
             Bytes::Memory(b) => b.len() as u64,
+            Bytes::Shared(r) => r.size(),
         }
     }
 
@@ -84,6 +103,7 @@ impl Bytes {
         let len = len.min(size.saturating_sub(offset));
         match self {
             Bytes::Memory(b) => Ok(b[offset as usize..(offset + len) as usize].to_vec()),
+            Bytes::Shared(r) => r.read(offset, len),
             Bytes::File(f, _) => {
                 let mut f = f.lock().unwrap_or_else(PoisonError::into_inner);
                 let mut out = vec![0u8; len as usize];
@@ -157,14 +177,12 @@ impl LocalFiles {
         self.bytes_from(
             raster.asset.as_deref(),
             raster.file.as_deref(),
-            raster.url.is_some(),
+            raster.url.as_deref(),
             Of::Raster,
         )
         .map(|(b, _)| b)
     }
 
-    /// A file's bytes and its key (`asset:<id>`, `file:<path>`): an embedded one's from the library, a linked one
-    /// found as the desktop finds it; an address refused.
     /// Where a linked file is, as the desktop finds it: its path, its relative path from the drawing's folder, the
     /// search paths (docs/adr/0548 §3); a drawing with no file reads a relative path as it is given.
     fn linked_path(&self, f: &str, whose: &str) -> Result<PathBuf, String> {
@@ -188,15 +206,18 @@ impl LocalFiles {
         })
     }
 
+    /// A file's bytes and its key (`asset:<id>`, `file:<path>`, `url:<address>`): an embedded one's from the library, a
+    /// linked one found as the desktop finds it, an address's through the host's network; a raster's NetCDF-4 (HDF5),
+    /// GRIB or Zarr data set seen as classic NetCDF (docs/adr/0645 §5).
     fn bytes_from(
         &self,
         asset: Option<&str>,
         file: Option<&str>,
-        url: bool,
+        url: Option<&str>,
         of: Of,
     ) -> Result<(Bytes, String), String> {
         let (noun, whose) = (of.noun(), of.whose());
-        match (asset, file, url) {
+        let (bytes, key) = match (asset, file, url) {
             (Some(id), _, _) => {
                 let url = self
                     .assets
@@ -206,17 +227,49 @@ impl LocalFiles {
                     .split_once(";base64,")
                     .and_then(|(_, d)| kentos_commands::encoding::base64_decode(d))
                     .ok_or_else(|| format!("“{id}” kimlikli gömülü {noun} okunamadı."))?;
-                Ok((Bytes::Memory(Arc::new(data)), format!("asset:{id}")))
+                (Bytes::Memory(Arc::new(data)), format!("asset:{id}"))
             }
             (None, Some(f), _) => {
+                // A Zarr store is a folder (or its metadata file), found where it is given.
+                let given = self.resolve(f);
+                if matches!(of, Of::Raster) && chunked::zarr_root(&given).is_some() {
+                    let v = chunked::zarr_folder(&given)?;
+                    return Ok((
+                        Bytes::Shared(Arc::new(Virtual(v))),
+                        format!("file:{}", given.display()),
+                    ));
+                }
                 let path = self.linked_path(f, whose)?;
                 let bytes = Self::file_bytes(&path, whose)?;
-                Ok((bytes, format!("file:{}", path.display())))
+                (bytes, format!("file:{}", path.display()))
             }
-            (None, None, true) => Err(format!(
-                "Adresteki {noun} yalnız masaüstünde okunur; dosyayı indirip ekleyin."
-            )),
-            (None, None, false) => Err(format!("{whose} dosyası yok.")),
+            (None, None, Some(u)) => {
+                if matches!(of, Of::Raster) && chunked::is_zarr_url(u) {
+                    let v = chunked::zarr_address(u)?;
+                    return Ok((Bytes::Shared(Arc::new(Virtual(v))), format!("url:{u}")));
+                }
+                let remote = remote_host::remote().ok_or(remote_host::NO_NETWORK)?;
+                let r = remote
+                    .open(u)
+                    .map_err(|e| format!("Adresteki {noun} okunamadı: {e}"))?;
+                (Bytes::Shared(Arc::from(r)), format!("url:{u}"))
+            }
+            (None, None, None) => return Err(format!("{whose} dosyası yok.")),
+        };
+        if !matches!(of, Of::Raster) {
+            return Ok((bytes, key));
+        }
+        let shared: Arc<dyn RangeRead> = match bytes {
+            Bytes::Shared(r) => r,
+            other => Arc::new(Owned(other)),
+        };
+        let name = match key.strip_prefix("file:") {
+            Some(p) => chunked::file_name(Path::new(p)),
+            None => key.clone(),
+        };
+        match chunked::chunked_view(&name, shared.clone())? {
+            Some(v) => Ok((Bytes::Shared(Arc::new(Virtual(v))), key)),
+            None => Ok((Bytes::Shared(shared), key)),
         }
     }
 }
@@ -226,7 +279,7 @@ impl Files for LocalFiles {
         let (bytes, key) = self.bytes_from(
             source.asset.as_deref(),
             source.file.as_deref(),
-            source.url.is_some(),
+            source.url.as_deref(),
             Of::Cloud,
         )?;
         // A text cloud is scanned once a run; the run's next passes take its plan.
@@ -333,7 +386,7 @@ impl Files for LocalFiles {
         let (source, key) = self.bytes_from(
             raster.asset.as_deref(),
             raster.file.as_deref(),
-            raster.url.is_some(),
+            raster.url.as_deref(),
             Of::Raster,
         )?;
         if let Some(part) = kentos_formats::multidim::cube::Part::of(raster) {

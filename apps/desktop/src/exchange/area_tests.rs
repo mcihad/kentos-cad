@@ -7,12 +7,12 @@
 use std::path::PathBuf;
 
 use kentos_commands::{
-    Entity, MeshesQuery, PointCloudsProfile, PointCloudsRegion, Vec2,
+    Entity, MeshesProfile, MeshesQuery, MeshesRegion, PointCloudsProfile, PointCloudsRegion, Vec2,
 };
-use kentos_native_application::{ExecutionContext, meshes, pointcloud_areas};
+use kentos_native_application::{ExecutionContext, mesh_areas, meshes, pointcloud_areas};
 use serde_json::{Value, json};
 
-use super::area_queries::{Event as A, Outcome};
+use super::area_queries::{Event as A, MeshMode, Outcome};
 use super::tests::{run, send};
 use super::{Event, Window};
 use crate::app::{App, Message};
@@ -24,7 +24,8 @@ fn fixtures() -> PathBuf {
 
 /// A shared case file's drawing with `extra` entities added, opened in the app.
 fn opened(app: &mut App, file: &str, extra: Vec<Value>) {
-    let text = std::fs::read_to_string(fixtures().join("commands/v1").join(file)).expect("the cases");
+    let text =
+        std::fs::read_to_string(fixtures().join("commands/v1").join(file)).expect("the cases");
     let cases: Value = serde_json::from_str(&text).expect("JSON");
     let mut setup = cases["setup"].clone();
     for e in extra {
@@ -33,7 +34,8 @@ fn opened(app: &mut App, file: &str, extra: Vec<Value>) {
     let whole = setup
         .to_string()
         .replace("$fixture:", &format!("{}/", fixtures().display()));
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&whole).expect("the drawing reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&whole).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
 }
@@ -102,7 +104,12 @@ fn without_an_area_in_the_selection_the_window_says_so() {
     let Some(Window::CloudRegion(s)) = &app.exchange else {
         panic!("the area window");
     };
-    assert!(s.shape.as_ref().err().is_some_and(|w| w.starts_with("Seçimde alan yok")));
+    assert!(
+        s.shape
+            .as_ref()
+            .err()
+            .is_some_and(|w| w.starts_with("Seçimde alan yok"))
+    );
     send(&mut app, Event::Area(A::Run));
     let Some(Window::CloudRegion(s)) = &app.exchange else {
         panic!("the area window");
@@ -163,7 +170,9 @@ fn a_width_that_is_not_a_number_is_said() {
     let Some(Window::CloudProfile(s)) = &app.exchange else {
         panic!("the profile window");
     };
-    assert!(matches!(&s.result, Some(Outcome::Profile(Err(w))) if w.starts_with("Genişlik ve adım")));
+    assert!(
+        matches!(&s.result, Some(Outcome::Profile(Err(w))) if w.starts_with("Genişlik ve adım"))
+    );
 }
 
 #[test]
@@ -183,10 +192,17 @@ fn the_mesh_window_finds_the_face_and_the_values_at_a_moment() {
     };
     let face = got.face.as_ref().expect("a face");
     assert_eq!(face.face, 0);
-    let depth = got.values.iter().find(|v| v.variable == "depth").expect("depth");
+    let depth = got
+        .values
+        .iter()
+        .find(|v| v.variable == "depth")
+        .expect("depth");
     assert_eq!(depth.step, Some(1));
     let input = MeshesQuery {
-        at: Vec2 { x: 500010.0, y: 4420010.0 },
+        at: Vec2 {
+            x: 500010.0,
+            y: 4420010.0,
+        },
         uids: Vec::new(),
         time: Some(1_714_545_000_000.0),
         variables: Vec::new(),
@@ -219,14 +235,138 @@ fn a_moment_that_is_not_read_is_said_and_a_point_is_taken_from_the_selection() {
         panic!("the mesh window");
     };
     assert!(matches!(&s.result, Some(Outcome::Mesh(Err(w))) if w.starts_with("An okunamadı")));
-    assert!(app.document.as_ref().expect("open").model.entities_with_uids().any(|(_, e)| matches!(e, Entity::Point(_))));
+    assert!(
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .entities_with_uids()
+            .any(|(_, e)| matches!(e, Entity::Point(_)))
+    );
+}
+
+/// An area and a path over layered.nc's two faces (docs/adr/0645 §7), ids 200 and 201.
+fn mesh_shapes() -> Vec<Value> {
+    vec![
+        json!({ "kind": "polygon", "id": 200, "layerId": "mesh", "attrs": {},
+                "pts": pts(&[(499999.0, 4419999.0), (500021.0, 4419999.0), (500021.0, 4420011.0), (499999.0, 4420011.0)]) }),
+        json!({ "kind": "polyline", "id": 201, "layerId": "mesh", "attrs": {},
+                "pts": pts(&[(499995.0, 4420005.0), (500025.0, 4420005.0)]) }),
+    ]
+}
+
+#[test]
+fn the_mesh_window_answers_an_area_and_a_path_as_the_commands_do() {
+    let mut app = app_with_drawing();
+    opened(&mut app, "cad.meshes.query.json", mesh_shapes());
+    let uids: Vec<String> = {
+        let doc = app.document.as_ref().expect("open");
+        doc.model
+            .entities_with_uids()
+            .filter(|(_, e)| matches!(u64::from(e.base().id), 5 | 17 | 18))
+            .map(|(u, _)| u.to_string())
+            .collect()
+    };
+    assert_eq!(uids.len(), 3);
+    select(&mut app, 200);
+    run(&mut app, "mesh.query");
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    assert_eq!(s.mode, MeshMode::Area);
+    send(&mut app, Event::Area(A::Run));
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    let Some(Outcome::MeshRegion(Ok((got, _)))) = &s.result else {
+        panic!("answered: {:?}", s.result);
+    };
+    let ring = vec![
+        Vec2 {
+            x: 499999.0,
+            y: 4419999.0,
+        },
+        Vec2 {
+            x: 500021.0,
+            y: 4419999.0,
+        },
+        Vec2 {
+            x: 500021.0,
+            y: 4420011.0,
+        },
+        Vec2 {
+            x: 499999.0,
+            y: 4420011.0,
+        },
+    ];
+    let mut model = app.document.as_ref().expect("open").model.clone();
+    let direct = mesh_areas::region::plan(
+        &ExecutionContext::new(&mut model),
+        &MeshesRegion {
+            ring,
+            ..MeshesRegion::default()
+        },
+    );
+    let kentos_commands::CommandResult::Completed { output, .. } = direct else {
+        panic!("the command answers");
+    };
+    assert_eq!(*got, output);
+    // The classic file and its NetCDF-4 and Zarr copies say the same.
+    let of = |u: &str| {
+        got.meshes
+            .iter()
+            .find(|m| m.mesh == u)
+            .cloned()
+            .expect("the mesh")
+    };
+    let (a, b, c) = (of(&uids[0]), of(&uids[1]), of(&uids[2]));
+    assert_eq!((a.count, a.datasets.clone()), (b.count, b.datasets.clone()));
+    assert_eq!((a.count, a.datasets), (c.count, c.datasets));
+    select(&mut app, 201);
+    send(&mut app, Event::Area(A::Mode(MeshMode::Path)));
+    send(&mut app, Event::Area(A::Use));
+    send(&mut app, Event::Area(A::Step("5".into())));
+    send(&mut app, Event::Area(A::Run));
+    let Some(Window::MeshQuery(s)) = &app.exchange else {
+        panic!("the mesh window");
+    };
+    let Some(Outcome::MeshProfile(Ok((got, _)))) = &s.result else {
+        panic!("answered: {:?}", s.result);
+    };
+    let direct = mesh_areas::profile::plan(
+        &ExecutionContext::new(&mut model),
+        &MeshesProfile {
+            path: vec![
+                Vec2 {
+                    x: 499995.0,
+                    y: 4420005.0,
+                },
+                Vec2 {
+                    x: 500025.0,
+                    y: 4420005.0,
+                },
+            ],
+            step: 5.0,
+            ..MeshesProfile::default()
+        },
+    );
+    let kentos_commands::CommandResult::Completed { output, .. } = direct else {
+        panic!("the command answers");
+    };
+    assert_eq!(*got, output);
+    assert!(got.meshes.iter().all(|m| m.stations.len() == 7));
 }
 
 /// The layers folded and Genel folded: the selected object's own rows in view.
 fn rows_in_view(app: &mut App) {
-    let upper = kentos_ui::widget::docking::Slot::Docked(kentos_ui::widget::docking::Side::Right, 0);
-    let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Collapsed(upper, true)));
-    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("general")));
+    let upper =
+        kentos_ui::widget::docking::Slot::Docked(kentos_ui::widget::docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Collapsed(
+        upper, true,
+    )));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
 }
 
 #[test]
@@ -259,7 +399,15 @@ fn screens() {
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
-                opened(&mut app, file, shapes(if file.contains("meshes") { "mesh" } else { "bulut" }));
+                opened(
+                    &mut app,
+                    file,
+                    shapes(if file.contains("meshes") {
+                        "mesh"
+                    } else {
+                        "bulut"
+                    }),
+                );
                 app
             };
             let mut app = fresh("cad.pointclouds.region.json");
@@ -291,6 +439,41 @@ fn screens() {
             send(&mut app, Event::Area(A::Toggle));
             send(&mut app, Event::Area(A::Run));
             picture(&mut app, &format!("mesh-sor-{mode}-1-seri"));
+            // Mesh sor's Alan and Hat over layered.nc and its NetCDF-4 and Zarr copies (docs/adr/0645 §7).
+            let mesh_fresh = || {
+                let mut app = app_with_drawing();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                opened(&mut app, "cad.meshes.query.json", mesh_shapes());
+                app
+            };
+            let mut app = mesh_fresh();
+            select(&mut app, 200);
+            run(&mut app, "mesh.query");
+            send(&mut app, Event::Area(A::Toggle));
+            send(&mut app, Event::Area(A::Run));
+            picture(&mut app, &format!("mesh-sor-{mode}-2-alan"));
+            let mut app = mesh_fresh();
+            select(&mut app, 201);
+            run(&mut app, "mesh.query");
+            send(&mut app, Event::Area(A::Step("5".into())));
+            send(&mut app, Event::Area(A::Run));
+            picture(&mut app, &format!("mesh-sor-{mode}-3-hat"));
+            // Mesh ekle and Raster ekle with a NetCDF-4, a Zarr store and a GRIB file (docs/adr/0645 §5).
+            for (name, file, command) in [
+                ("1-netcdf4", "layered-nc4.nc", "mesh.add"),
+                ("2-zarr", "layered.zarr", "mesh.add"),
+                ("3-grib", "gfs.grib2", "raster.add"),
+                ("4-netcdf4-izgara", "nc4-cf.nc", "raster.add"),
+            ] {
+                let mut app = mesh_fresh();
+                app.picker = crate::app::Picker::File(fixtures().join("multidim/v2").join(file));
+                let task = app.run(command);
+                crate::files_testing::drive(&mut app, task);
+                picture(&mut app, &format!("cok-boyutlu-{mode}-{name}"));
+            }
         }
     }
 }

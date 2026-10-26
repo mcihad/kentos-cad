@@ -297,18 +297,66 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "export_losses",
         "kayıplar cad.processing.run'ın yazıcısının sözü (sink_answer); toplu iş aynı yazıcıdan geçer (ADR 0593 §1)",
     ),
-    ("file.import.dwg", "polyline_geometry_loss", "DWG codec bridge ve plan/execute değişmezliği headless::dwg::polyline_integrity testinde gerçek binary ile sınanır; ortak bağımsız ASCII korpusu file.import.polyline-policy.json içindedir."),
-    ("file.import.dxf", "cad_file_too_large", "256 MiB sınırı; bu boyutta veri ortak korpusa alınmaz, preflight sınırlar (CAD-IO-09/19)"),
-    ("file.import.dxf", "unsupported_cad_format", "yanlış DWG seçimi preflight'ın biçim testinde sınanır"),
-    ("file.import.dxf", "unsupported_cad_version", "bütün ilan edilmiş ASCII sürümleri ve gelecekteki bilinmeyen sürüm preflight testinde sınanır"),
-    ("file.import.dxf", "unsupported_cad_encoding", "binary, UTF-16 ve desteklenmeyen kod sayfası preflight testinde sınanır"),
-    ("file.import.dwg", "cad_file_too_large", "256 MiB sınırı adaptörde; bu boyutta dosya ortak korpusa alınmaz (ADR 0586)"),
-    ("file.import.dwg", "block_units_differ", "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0586)"),
-    ("file.import.dwg", "unit_assumed", "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0586)"),
-    ("file.import.dwg", "import_losses", "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0586)"),
-    ("cad.sources.edit", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
-    ("file.import.csv", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
-    ("file.import.fgb", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
+    (
+        "file.import.dwg",
+        "polyline_geometry_loss",
+        "DWG codec bridge ve plan/execute değişmezliği headless::dwg::polyline_integrity testinde gerçek binary ile sınanır; ortak bağımsız ASCII korpusu file.import.polyline-policy.json içindedir.",
+    ),
+    (
+        "file.import.dxf",
+        "cad_file_too_large",
+        "256 MiB sınırı; bu boyutta veri ortak korpusa alınmaz, preflight sınırlar (CAD-IO-09/19)",
+    ),
+    (
+        "file.import.dxf",
+        "unsupported_cad_format",
+        "yanlış DWG seçimi preflight'ın biçim testinde sınanır",
+    ),
+    (
+        "file.import.dxf",
+        "unsupported_cad_version",
+        "bütün ilan edilmiş ASCII sürümleri ve gelecekteki bilinmeyen sürüm preflight testinde sınanır",
+    ),
+    (
+        "file.import.dxf",
+        "unsupported_cad_encoding",
+        "binary, UTF-16 ve desteklenmeyen kod sayfası preflight testinde sınanır",
+    ),
+    (
+        "file.import.dwg",
+        "cad_file_too_large",
+        "256 MiB sınırı adaptörde; bu boyutta dosya ortak korpusa alınmaz (ADR 0586)",
+    ),
+    (
+        "file.import.dwg",
+        "block_units_differ",
+        "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0586)",
+    ),
+    (
+        "file.import.dwg",
+        "unit_assumed",
+        "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0586)",
+    ),
+    (
+        "file.import.dwg",
+        "import_losses",
+        "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0586)",
+    ),
+    (
+        "cad.sources.edit",
+        "import_losses",
+        "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır",
+    ),
+    (
+        "file.import.csv",
+        "import_losses",
+        "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır",
+    ),
+    (
+        "file.import.fgb",
+        "import_losses",
+        "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır",
+    ),
     (
         "cad.sheets.set",
         "book_unreadable",
@@ -538,6 +586,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.entities.select",
         "too_many_points",
         "100 001 noktalı ya da kimlikli durum dosyayı megabaytlarca büyütür; bu dosyanın selections_beyond_the_limit testinde",
+    ),
+    (
+        "cad.meshes.region",
+        "too_many_mesh_values",
+        "2 milyon değer ya da 100 000'i aşan yüz listesi yüz binlerce yüzlü bir mesh dosyası ister (megabaytlarca); değer sınırının aynı denetimi cad.meshes.profile'ın üç meshli durumunda (ADR 0645 §7)",
     ),
     (
         "cad.meshes.query",
@@ -800,11 +853,13 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
     ),
     (
-        "cad.sheets.create", "*",
+        "cad.sheets.create",
+        "*",
         "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
     ),
     (
-        "cad.sheets.fit", "book_unreadable",
+        "cad.sheets.fit",
+        "book_unreadable",
         "Ortak kurulum geçersiz kitap vermez; kitap okuma aynı sheets_edit/sheets_set yolunda korunur (ADR 0592).",
     ),
     (

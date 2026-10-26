@@ -18,6 +18,7 @@
 
 mod address;
 mod network;
+mod remote;
 mod services;
 mod temporal;
 
@@ -363,6 +364,9 @@ mod native {
     // kentos.network (docs/adr/0209 §11).
     #[pymodule_export]
     use super::network::PyNetwork;
+    // Addressed files read with Python's own HTTP (docs/adr/0645 §5).
+    #[pymodule_export]
+    use super::remote::set_remote;
     // kentos.services (docs/adr/0208 §15).
     #[pymodule_export]
     use super::services::{

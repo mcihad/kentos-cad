@@ -487,29 +487,73 @@ fn cube_name(identity: Option<&str>, source: &Bytes, size: u64) -> Result<String
     })
 }
 
+/// A NetCDF file's bytes and the name it is kept by (docs/adr/0645 §5): a Zarr store (a folder, or an address ending
+/// in `.zarr`), a NetCDF-4 (HDF5) or GRIB file seen as classic NetCDF; a classic file as it is.
+pub(crate) fn netcdf_source(origin: &Origin) -> Result<(Bytes, Option<String>), String> {
+    use kentos_native_application::multidim_source as chunked;
+    let (source, identity) = match origin {
+        Origin::Table(..) => return Err(TABLE_NO_NETCDF.into()),
+        Origin::File(path) if chunked::zarr_root(path).is_some() => {
+            let v = chunked::zarr_folder(path)?;
+            let id = format!("zarr|{}", chunked::file_name(path));
+            return Ok((Bytes::Virtual(v), Some(id)));
+        }
+        Origin::Url(u) if chunked::is_zarr_url(u) => {
+            let v = chunked::zarr_address(u.trim())?;
+            return Ok((Bytes::Virtual(v), Some(format!("zarr-url|{}", u.trim()))));
+        }
+        Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
+        Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
+        Origin::Url(u) => {
+            let r = Remote::open(u.trim())?;
+            let id = format!(
+                "url|{}|{}|{}",
+                r.url,
+                r.size,
+                r.version.clone().unwrap_or_default()
+            );
+            (Bytes::Remote(r), Some(id))
+        }
+    };
+    chunked_or_plain(source, identity)
+}
+
+/// A file's bytes seen as classic NetCDF when they are a NetCDF-4 (HDF5) or GRIB file (kept by `identity`, else by
+/// their content).
+fn chunked_or_plain(
+    source: Bytes,
+    identity: Option<String>,
+) -> Result<(Bytes, Option<String>), String> {
+    let size = source.size();
+    let head = source.read(0, size.min(8))?;
+    if !matches!(
+        netcdf::sniff(&head),
+        netcdf::Sniff::Hdf5 | netcdf::Sniff::Grib
+    ) {
+        return Ok((source, identity));
+    }
+    let name = cube_name(identity.as_deref(), &source, size)?;
+    let shared: Arc<dyn kentos_native_application::remote_host::RangeRead> =
+        Arc::new(crate::pointclouds::bytes::Shared(source));
+    match kentos_native_application::multidim_source::chunked_view(&name, shared)? {
+        Some(v) => Ok((Bytes::Virtual(v), Some(format!("chunked|{name}")))),
+        None => Err("Dosya tanınmadı.".into()),
+    }
+}
+
 /// A NetCDF file's cube of its own (not the tiles' kept one: a tool steps
 /// it alone) with what `part` needs read, and the file to read more of it.
 pub(crate) fn fresh_cube(origin: &Origin, part: &Part) -> Result<(Cube, Bytes), String> {
-    let source = match origin {
-        Origin::File(path) => Bytes::file(path)?,
-        Origin::Bytes(b) => Bytes::Memory(b.clone()),
-        Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
-        Origin::Table(..) => return Err(TABLE_NO_NETCDF.into()),
-    };
+    let (source, _) = netcdf_source(origin)?;
     let cube = kentos_processing::cloud_files::netcdf_slice(&source, part)?;
     Ok((cube, source))
 }
 
 /// What a NetCDF file holds (Raster ekle, Mesh ekle; docs/adr/0243 §11) and its size; why not.
 pub(crate) fn cube_info(origin: &Origin) -> Result<(CubeInfo, u64), String> {
-    let (source, identity) = match origin {
-        Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
-        Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
-        Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
-        Origin::Table(..) => return Err(TABLE_NO_NETCDF.into()),
-    };
+    let (source, identity) = netcdf_source(origin)?;
     let size = source.size();
-    // The header's parser says why a NetCDF-4, GRIB or other file is not read.
+    // The header's parser says why another file is not read.
     let name = cube_name(identity.as_deref(), &source, size)?;
     let cube = cube_of(&name, &source, size)?;
     let mut c = cube.lock().unwrap_or_else(PoisonError::into_inner);
@@ -563,6 +607,15 @@ pub(crate) fn open_reader_part(
 ) -> Result<ReaderOpen, String> {
     let (source, identity) = match origin {
         Origin::Table(path, open) => return open_table_part(path, open, budget),
+        // A Zarr store is a NetCDF data set only (docs/adr/0645 §5).
+        Origin::File(path)
+            if kentos_native_application::multidim_source::zarr_root(path).is_some() =>
+        {
+            netcdf_source(origin)?
+        }
+        Origin::Url(u) if kentos_native_application::multidim_source::is_zarr_url(u) => {
+            netcdf_source(origin)?
+        }
         Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
         Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
         Origin::Url(u) => {
@@ -576,35 +629,40 @@ pub(crate) fn open_reader_part(
             (Bytes::Remote(r), Some(id))
         }
     };
+    // A NetCDF-4 (HDF5) or GRIB file read as classic NetCDF.
+    let head = source.read(0, source.size().min(64))?;
+    let (source, identity, head) = match netcdf::sniff(&head) {
+        netcdf::Sniff::Hdf5 | netcdf::Sniff::Grib => {
+            let (s, i) = chunked_or_plain(source, identity)?;
+            let h = s.read(0, s.size().min(64))?;
+            (s, i, h)
+        }
+        _ => (source, identity, head),
+    };
     let size = source.size();
-    let head = source.read(0, size.min(64))?;
     if kentos_formats::raster::vrt::sniff(&head) {
         let Origin::File(path) = origin else {
             return Err("Mozaik (VRT) yalnız dosyadan açılır; dosyaları yanında olmalı.".into());
         };
         return open_mosaic(path, &source, size, budget);
     }
-    match netcdf::sniff(&head) {
-        netcdf::Sniff::Classic(_) => {
-            let Some(part) = part else {
-                return Err("NetCDF dosyası bir veri seti seçilmeden gösterilmez; rasteri Raster ekle ya da Mesh ekle ile ekleyin.".into());
-            };
-            let name = cube_name(identity.as_deref(), &source, size)?;
-            let cube = cube_of(&name, &source, size)?;
-            let reader = cube_reader(&cube, &source, part, budget)?;
-            // A slice's pyramid file is its own.
-            let identity = identity.map(|id| format!("{id}|{}|{:?}", part.variable, part.slice));
-            return Ok(ReaderOpen {
-                reader,
-                source: Some(source),
-                size,
-                identity,
-                members: Vec::new(),
-                table: None,
-            });
-        }
-        netcdf::Sniff::Hdf5 => return Err(netcdf::HDF5_REFUSED.into()),
-        _ => {}
+    if let netcdf::Sniff::Classic(_) = netcdf::sniff(&head) {
+        let Some(part) = part else {
+            return Err("NetCDF dosyası bir veri seti seçilmeden gösterilmez; rasteri Raster ekle ya da Mesh ekle ile ekleyin.".into());
+        };
+        let name = cube_name(identity.as_deref(), &source, size)?;
+        let cube = cube_of(&name, &source, size)?;
+        let reader = cube_reader(&cube, &source, part, budget)?;
+        // A slice's pyramid file is its own.
+        let identity = identity.map(|id| format!("{id}|{}|{:?}", part.variable, part.slice));
+        return Ok(ReaderOpen {
+            reader,
+            source: Some(source),
+            size,
+            identity,
+            members: Vec::new(),
+            table: None,
+        });
     }
     let remote = matches!(origin, Origin::Url(_));
     if remote && !tiff::sniff(&head) {

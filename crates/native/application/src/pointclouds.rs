@@ -1,14 +1,16 @@
 //! A point cloud's source metadata and its points by a lasting id (docs/adr/0536): `cad.pointclouds.describe` reads
 //! each source's header (and, with `classes`, every record), `cad.pointclouds.query` the point nearest a place in plan
 //! at the source's full resolution. Both read the files themselves with the point cloud core (a file where the cloud
-//! names it, looked for as the project's other links are; a library asset); an address is not reached here.
+//! names it, looked for as the project's other links are; a library asset; an address through the host's network). A
+//! text cloud (XYZ, PTS, TXT, CSV) is read in two passes, its points numbered in its records' order (docs/adr/0645 §6).
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
     CloudDescribed, CloudExtra, CloudFormat, CloudMismatch, CloudPoint, CloudSource,
-    CloudSourceDescribed, CloudSummary, CommandResult, CommandWarning, Entity, POINTCLOUD_MOST_COUNTED, PointCloudEntity,
-    PointCloudsDescribe, PointCloudsDescribed, PointCloudsQueried, PointCloudsQuery,
+    CloudSourceDescribed, CloudSummary, CommandResult, CommandWarning, Entity,
+    POINTCLOUD_MOST_COUNTED, PointCloudEntity, PointCloudsDescribe, PointCloudsDescribed,
+    PointCloudsQueried, PointCloudsQuery,
 };
 use kentos_domain::Document;
 use kentos_pointcloud::Step;
@@ -21,6 +23,71 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
 use crate::source_bytes::{Bytes, bytes_for};
+
+/// A text cloud's points read piece by piece (docs/adr/0645 §6): the first pass finds its columns, scale and offset
+/// (every coordinate its decimal text exactly), the second writes records of format 6 or 7, a point's index its
+/// record's place among the cloud's records.
+pub(crate) struct TextPoints<'b> {
+    bytes: &'b Bytes,
+    parse: kentos_pointcloud::text::Parse,
+    at: u64,
+    next: u64,
+    done: bool,
+    pub layout: kentos_pointcloud::record::Layout,
+    pub scale: [f64; 3],
+    pub offset: [f64; 3],
+}
+
+/// A text cloud is read in pieces of this size.
+const TEXT_PIECE: u64 = 4 << 20;
+
+impl<'b> TextPoints<'b> {
+    pub(crate) fn open(bytes: &'b Bytes) -> Result<TextPoints<'b>, String> {
+        let mut scan = kentos_pointcloud::text::Scan::new();
+        let size = bytes.size();
+        let mut at = 0;
+        while at < size {
+            let n = TEXT_PIECE.min(size - at);
+            scan.feed(&bytes.read(at, n)?).map_err(|e| e.0)?;
+            at += n;
+        }
+        let plan = scan.finish().map_err(|e| e.0)?;
+        let (scale, offset, format) = (plan.scale, plan.offset, plan.columns.format());
+        let parse = kentos_pointcloud::text::Parse::new(plan);
+        let layout = kentos_pointcloud::record::Layout::new(format, parse.record_len());
+        Ok(TextPoints {
+            bytes,
+            parse,
+            at: 0,
+            next: 0,
+            done: false,
+            layout,
+            scale,
+            offset,
+        })
+    }
+
+    /// The next piece's records into `out` and the first one's index; none at the end.
+    pub(crate) fn next(&mut self, out: &mut Vec<u8>) -> Result<Option<u64>, String> {
+        out.clear();
+        if self.done {
+            return Ok(None);
+        }
+        let size = self.bytes.size();
+        if self.at < size {
+            let n = TEXT_PIECE.min(size - self.at);
+            let piece = self.bytes.read(self.at, n)?;
+            self.at += n;
+            self.parse.feed(&piece, out).map_err(|e| e.0)?;
+        } else {
+            self.parse.finish(out).map_err(|e| e.0)?;
+            self.done = true;
+        }
+        let first = self.next;
+        self.next += (out.len() / self.layout.len) as u64;
+        Ok(Some(first))
+    }
+}
 
 /// A source's bytes: its library asset, or its file found as the project's links are; why not.
 pub(crate) fn bytes_of(
@@ -37,7 +104,7 @@ pub(crate) fn bytes_of(
         s.asset.as_deref(),
         s.file.as_deref(),
         s.url.as_deref(),
-        "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur",
+        "bu ortam ağa çıkmıyor; adresteki bulut okunmaz, dosyayı indirip bağlı dosya olarak ekleyin",
     )
 }
 
@@ -53,7 +120,12 @@ pub(crate) fn open(bytes: &Bytes) -> Result<Cloud, String> {
 }
 
 /// A run's records.
-pub(crate) fn records(cloud: &Cloud, bytes: &Bytes, run: &Run, out: &mut Vec<u8>) -> Result<(), String> {
+pub(crate) fn records(
+    cloud: &Cloud,
+    bytes: &Bytes,
+    run: &Run,
+    out: &mut Vec<u8>,
+) -> Result<(), String> {
     let raw = bytes.read(run.need.offset, run.need.len)?;
     out.clear();
     cloud.records(run, &raw, out).map_err(|e| e.0)
@@ -198,7 +270,8 @@ fn created(h: &Header) -> Option<String> {
     if h.year == 0 || h.day == 0 {
         return None;
     }
-    let leap = (h.year.is_multiple_of(4) && !h.year.is_multiple_of(100)) || h.year.is_multiple_of(400);
+    let leap =
+        (h.year.is_multiple_of(4) && !h.year.is_multiple_of(100)) || h.year.is_multiple_of(400);
     let months = [
         31,
         if leap { 29 } else { 28 },
@@ -530,9 +603,9 @@ fn summary_of(recorded: &[CloudSource], sources: &[CloudSourceDescribed]) -> Opt
             headed
                 .iter()
                 .map(|&i| {
-                    sources[i].scale.map_or_else(none, |s| {
-                        format!("{} {} {}", s[0], s[1], s[2])
-                    })
+                    sources[i]
+                        .scale
+                        .map_or_else(none, |s| format!("{} {} {}", s[0], s[1], s[2]))
                 })
                 .collect(),
         );
@@ -542,7 +615,8 @@ fn summary_of(recorded: &[CloudSource], sources: &[CloudSourceDescribed]) -> Opt
             headed
                 .iter()
                 .map(|&i| {
-                    let names: Vec<&str> = sources[i].extra.iter().map(|e| e.name.as_str()).collect();
+                    let names: Vec<&str> =
+                        sources[i].extra.iter().map(|e| e.name.as_str()).collect();
                     if names.is_empty() {
                         none()
                     } else {
@@ -581,10 +655,17 @@ fn summary_of(recorded: &[CloudSource], sources: &[CloudSourceDescribed]) -> Opt
     let bounds_off: Vec<usize> = headed
         .iter()
         .copied()
-        .filter(|&i| recorded.get(i).is_some_and(|r| r.bounds != sources[i].bounds))
+        .filter(|&i| {
+            recorded
+                .get(i)
+                .is_some_and(|r| r.bounds != sources[i].bounds)
+        })
         .collect();
     if !bounds_off.is_empty() {
-        let said: Vec<String> = bounds_off.iter().map(|i| format!("{}. kaynak", i + 1)).collect();
+        let said: Vec<String> = bounds_off
+            .iter()
+            .map(|i| format!("{}. kaynak", i + 1))
+            .collect();
         mismatches.push(CloudMismatch {
             kind: "bounds".into(),
             sources: bounds_off.iter().map(|&i| i as u32).collect(),
@@ -667,14 +748,34 @@ pub(crate) fn query_in(
                 continue;
             }
             if s.format == CloudFormat::Xyz {
-                warnings.push(CommandWarning {
-                    code: codes::CLOUD_SOURCE_UNREADABLE.into(),
-                    message: format!(
-                        "Bulutun {}. kaynağı metin bulutu; noktası burada aranmaz.",
-                        si + 1
-                    ),
-                    path: Some(format!("clouds[{k}].sources[{si}]")),
-                });
+                let read_text = (|| -> Result<(), String> {
+                    let bytes = bytes_of(doc, drawing, s)?;
+                    let mut text = TextPoints::open(&bytes)?;
+                    let (layout, scale, offset) = (text.layout, text.scale, text.offset);
+                    while let Some(first) = text.next(&mut recs)? {
+                        for (i, r) in recs.chunks_exact(layout.len).enumerate() {
+                            read += 1;
+                            let dx = f64::from(layout.x(r)) * scale[0] + offset[0] - at[0];
+                            let dy = f64::from(layout.y(r)) * scale[1] + offset[1] - at[1];
+                            let d = dx * dx + dy * dy;
+                            if d > r2 || best.as_ref().is_some_and(|(bd, _)| d >= *bd) {
+                                continue;
+                            }
+                            best = Some((
+                                d,
+                                point_of(uid, si, first + i as u64, &layout, r, scale, offset, d),
+                            ));
+                        }
+                    }
+                    Ok(())
+                })();
+                if let Err(why) = read_text {
+                    warnings.push(CommandWarning {
+                        code: codes::CLOUD_SOURCE_UNREADABLE.into(),
+                        message: format!("Bulutun {}. kaynağı okunamadı: {why}.", si + 1),
+                        path: Some(format!("clouds[{k}].sources[{si}]")),
+                    });
+                }
                 continue;
             }
             let opened = (|| -> Result<(Cloud, Bytes), String> {
@@ -719,25 +820,9 @@ pub(crate) fn query_in(
                     if d > r2 || best.as_ref().is_some_and(|(bd, _)| d >= *bd) {
                         continue;
                     }
-                    let f = Facts::of(&layout, r, scale, offset);
                     best = Some((
                         d,
-                        CloudPoint {
-                            cloud: uid.clone(),
-                            source: si as u32,
-                            index: run.first + i as u64,
-                            x: f.xyz[0],
-                            y: f.xyz[1],
-                            z: f.xyz[2],
-                            distance: d.sqrt(),
-                            class: f.class,
-                            intensity: f.intensity,
-                            return_number: f.returns.0,
-                            number_of_returns: f.returns.1,
-                            point_source_id: f.source_id,
-                            gps_time: f.gps_time,
-                            rgb: f.rgb,
-                        },
+                        point_of(uid, si, run.first + i as u64, &layout, r, scale, offset, d),
                     ));
                 }
             }
@@ -751,6 +836,37 @@ pub(crate) fn query_in(
         },
         warnings,
     ))
+}
+
+/// A point found, its facts from its record.
+#[allow(clippy::too_many_arguments)]
+fn point_of(
+    uid: &str,
+    source: usize,
+    index: u64,
+    layout: &kentos_pointcloud::record::Layout,
+    r: &[u8],
+    scale: [f64; 3],
+    offset: [f64; 3],
+    d: f64,
+) -> CloudPoint {
+    let f = Facts::of(layout, r, scale, offset);
+    CloudPoint {
+        cloud: uid.to_owned(),
+        source: source as u32,
+        index,
+        x: f.xyz[0],
+        y: f.xyz[1],
+        z: f.xyz[2],
+        distance: d.sqrt(),
+        class: f.class,
+        intensity: f.intensity,
+        return_number: f.returns.0,
+        number_of_returns: f.returns.1,
+        point_source_id: f.source_id,
+        gps_time: f.gps_time,
+        rgb: f.rgb,
+    }
 }
 
 /// Whether a COPC node's cube meets the square of `reach` round `at`, in plan.

@@ -577392,7 +577392,7 @@
       "id": "cad.meshes.describe",
       "version": 1,
       "title": "Meshin bilgisi",
-      "summary": "Çizimin mesh rasterlerinin (uids; yoksa hepsi, çizimin sırasıyla) dosyasının başlığını ve ağını okur ve söyler; çizimi değiştirmez. Mesh: düğüm, yüz, kenar ve üçgen sayısı, kutusu, yüzlerinin toplam alanı, kenarlarının ortalama uzunluğu, koordinat sistemi (EPSG, coğrafi mi) ve veri setleri: değişkeni (vektörün x bileşeni; y bileşeni), adı ve birimi, düğümde mi yüzde mi, boyutları (zaman boyutu ayrıca: adım sayısı, ilk ve son an ve nasıl yazıldıkları); rasterin gösterdiği veri seti ve adımları. Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. NetCDF-4, HDF5, GRIB ve Zarr okunmaz (neden iletide).",
+      "summary": "Çizimin mesh rasterlerinin (uids; yoksa hepsi, çizimin sırasıyla) dosyasının başlığını ve ağını okur ve söyler; çizimi değiştirmez. Mesh: düğüm, yüz, kenar ve üçgen sayısı, kutusu, yüzlerinin toplam alanı, kenarlarının ortalama uzunluğu, koordinat sistemi (EPSG, coğrafi mi) ve veri setleri: değişkeni (vektörün x bileşeni; y bileşeni), adı ve birimi, düğümde mi yüzde mi, boyutları (zaman boyutu ayrıca: adım sayısı, ilk ve son an ve nasıl yazıldıkları); rasterin gösterdiği veri seti ve adımları. Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. Klasik NetCDF'in yanında NetCDF-4 (HDF5), GRIB ve Zarr da okunur; adresteki dosya ev sahibinin ağıyla.",
       "aliases": [
         "meshbilgi",
         "agbilgisi"
@@ -578236,6 +578236,16 @@
                 "description": "The mesh raster's persistent id.",
                 "type": "string"
               },
+              "neighbours": {
+                "description": "The faces sharing one of its edges (their places in the file's face order, ascending).",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
               "nodes": {
                 "description": "The face's nodes in the file's order (each from 0, in the file's node order).",
                 "items": {
@@ -578419,6 +578429,16 @@
               "mesh": {
                 "description": "The mesh raster's persistent id.",
                 "type": "string"
+              },
+              "neighbours": {
+                "description": "The faces sharing one of its edges (their places in the file's face order, ascending).",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "nodes": {
                 "description": "The face's nodes in the file's order (each from 0, in the file's node order).",
@@ -578610,6 +578630,1055 @@
               "x": 500012.0,
               "y": 4420010.0
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.meshes.region",
+      "version": 1,
+      "title": "Mesh alan istatistiği",
+      "summary": "Bir alanın (ring, holes) içindeki mesh yüzlerini ve veri setlerinin o yüzlerdeki istatistiğini söyler; çizimi değiştirmez. Yüz alandadır: merkezi (alanının ağırlık merkezi; içbükey yüzün merkezi yüzün dışına düşerse ilk üçgeninin ağırlık merkezi) halkanın kapalı alanında ve hiçbir deliğin kesin içinde değilse. Bir yüzün değeri o merkezde Mesh sor'un verdiği değerdir (düğümdeki veri setinde üçgende doğrusal ara değer, yüzdeki veri setinde yüzün değeri, vektörde büyüklüğü). Her mesh için yüz sayısı (count), alanları toplamı (area), faces ile yüzlerin sırası (en çok 100 000) ve her veri seti için değeri olan yüz sayısı, en küçük, en büyük, yüz alanlarıyla ağırlıklı ortalama (mean) ve değer × alan toplamı (integral). time ve variables Mesh sor'unki gibidir. Meshler uids sırasıyla (yoksa görünenler); okunamayan dosya uyarıyla atlanır (mesh_source_unreadable). Klasik NetCDF'in yanında NetCDF-4 (HDF5), GRIB ve Zarr da okunur; adresteki dosya ev sahibinin ağıyla. Bir çağrıda en çok 2 milyon değer (too_many_mesh_values).",
+      "aliases": [
+        "meshalan",
+        "agalan"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.meshes.region` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`, `invalid_mesh_area`,\n`mesh_variable_not_found`, `too_many_mesh_values`.",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "faces": {
+            "description": "Also list the faces' places (at most 100 000 a mesh).",
+            "type": "boolean"
+          },
+          "holes": {
+            "description": "Holes in the area.",
+            "items": {
+              "items": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "ring": {
+            "description": "The area's outer ring (at least three vertices, a repeated last vertex dropped), in the meshes' system.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "time": {
+            "description": "The moment of the values (milliseconds since 1970), as `cad.meshes.query`'s; none: the steps the raster shows.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "uids": {
+            "description": "The meshes, in this order; none: every visible mesh of the drawing.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "variables": {
+            "description": "The datasets asked; none: every dataset of the mesh.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ring"
+        ],
+        "title": "MeshesRegion",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MeshRegion": {
+            "description": "One mesh's faces in an area.",
+            "properties": {
+              "area": {
+                "description": "Their areas, together.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "count": {
+                "description": "The faces in the area.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "datasets": {
+                "items": {
+                  "$ref": "#/$defs/MeshZonal"
+                },
+                "type": "array"
+              },
+              "faces": {
+                "description": "With `faces`: their places in the file's face order, ascending.",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "mesh": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "topology": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "count",
+              "area"
+            ],
+            "type": "object"
+          },
+          "MeshZonal": {
+            "description": "A dataset over the faces of an area, or along a path.",
+            "properties": {
+              "count": {
+                "description": "The faces with a value (region only).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "integral": {
+                "description": "The sum of value × the face's area.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "mean": {
+                "description": "The mean weighted by the faces' areas.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "step": {
+                "description": "The time step the values are of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.region` v1.",
+        "properties": {
+          "area": {
+            "description": "The area's own (the outer ring's less the holes').",
+            "format": "double",
+            "type": "number",
+            "x-unit": "system"
+          },
+          "meshes": {
+            "description": "Each mesh read, in the asked order (a mesh whose file is not read is said by a warning).",
+            "items": {
+              "$ref": "#/$defs/MeshRegion"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The values read from the files.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area",
+          "read",
+          "revision"
+        ],
+        "title": "MeshesRegioned",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MeshRegion": {
+            "description": "One mesh's faces in an area.",
+            "properties": {
+              "area": {
+                "description": "Their areas, together.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "count": {
+                "description": "The faces in the area.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "datasets": {
+                "items": {
+                  "$ref": "#/$defs/MeshZonal"
+                },
+                "type": "array"
+              },
+              "faces": {
+                "description": "With `faces`: their places in the file's face order, ascending.",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "mesh": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "topology": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "count",
+              "area"
+            ],
+            "type": "object"
+          },
+          "MeshZonal": {
+            "description": "A dataset over the faces of an area, or along a path.",
+            "properties": {
+              "count": {
+                "description": "The faces with a value (region only).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "integral": {
+                "description": "The sum of value × the face's area.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "mean": {
+                "description": "The mean weighted by the faces' areas.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "step": {
+                "description": "The time step the values are of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.region` v1.",
+        "properties": {
+          "area": {
+            "description": "The area's own (the outer ring's less the holes').",
+            "format": "double",
+            "type": "number",
+            "x-unit": "system"
+          },
+          "meshes": {
+            "description": "Each mesh read, in the asked order (a mesh whose file is not read is said by a warning).",
+            "items": {
+              "$ref": "#/$defs/MeshRegion"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The values read from the files.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area",
+          "read",
+          "revision"
+        ],
+        "title": "MeshesRegioned",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "raster"
+            ],
+            "refusedWith": "not_a_mesh"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_mesh",
+          "invalid_mesh_area",
+          "mesh_variable_not_found",
+          "too_many_mesh_values"
+        ],
+        "warnings": [
+          "mesh_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir alandaki yüzlerin istatistiği",
+          "input": {
+            "ring": [
+              {
+                "x": 500000.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 500020.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 500020.0,
+                "y": 4420010.0
+              },
+              {
+                "x": 500000.0,
+                "y": 4420010.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.meshes.profile",
+      "version": 1,
+      "title": "Mesh profili",
+      "summary": "Bir yol boyunca (path) mesh veri setlerinin değerlerini istasyon istasyon söyler; çizimi değiştirmez. İstasyonlar yolun başından step aralıkla (0, step, 2·step …) ve yolun sonudur; her istasyonun yeri, yattığı yüz (meshin dışında yok) ve her veri setinin oradaki değeri Mesh sor'un verdiği gibidir (değer yoksa null). time ve variables Mesh sor'unki gibidir. Meshler uids sırasıyla (yoksa görünenler); okunamayan dosya uyarıyla atlanır (mesh_source_unreadable). Bir çağrıda en çok 100 000 istasyon (too_many_stations) ve 2 milyon değer (too_many_mesh_values).",
+      "aliases": [
+        "meshprofil",
+        "agprofil"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.meshes.profile` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`, `invalid_mesh_path`,\n`too_many_stations`, `mesh_variable_not_found`, `too_many_mesh_values`.",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The path (at least two vertices, no part of no length), in the meshes' system.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "step": {
+            "description": "The stations' spacing along the path.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "time": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "step"
+        ],
+        "title": "MeshesProfile",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MeshProfile": {
+            "description": "One mesh's stations.",
+            "properties": {
+              "datasets": {
+                "description": "The datasets the stations' values are of (count, min, max, mean and integral left out).",
+                "items": {
+                  "$ref": "#/$defs/MeshZonal"
+                },
+                "type": "array"
+              },
+              "mesh": {
+                "type": "string"
+              },
+              "stations": {
+                "items": {
+                  "$ref": "#/$defs/MeshStation"
+                },
+                "type": "array"
+              },
+              "topology": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "stations"
+            ],
+            "type": "object"
+          },
+          "MeshStation": {
+            "description": "A station of a path on a mesh.",
+            "properties": {
+              "face": {
+                "description": "The face it lies in; none off the mesh.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "station": {
+                "description": "Its distance along the path.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "values": {
+                "description": "Each dataset's value there, in the datasets' order (null: no value).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": "array",
+                "x-unit": "value"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "station",
+              "x",
+              "y",
+              "values"
+            ],
+            "type": "object"
+          },
+          "MeshZonal": {
+            "description": "A dataset over the faces of an area, or along a path.",
+            "properties": {
+              "count": {
+                "description": "The faces with a value (region only).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "integral": {
+                "description": "The sum of value × the face's area.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "mean": {
+                "description": "The mean weighted by the faces' areas.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "step": {
+                "description": "The time step the values are of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.profile` v1.",
+        "properties": {
+          "length": {
+            "description": "The path's length.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/MeshProfile"
+            },
+            "type": "array"
+          },
+          "read": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "length",
+          "read",
+          "revision"
+        ],
+        "title": "MeshesProfiled",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MeshProfile": {
+            "description": "One mesh's stations.",
+            "properties": {
+              "datasets": {
+                "description": "The datasets the stations' values are of (count, min, max, mean and integral left out).",
+                "items": {
+                  "$ref": "#/$defs/MeshZonal"
+                },
+                "type": "array"
+              },
+              "mesh": {
+                "type": "string"
+              },
+              "stations": {
+                "items": {
+                  "$ref": "#/$defs/MeshStation"
+                },
+                "type": "array"
+              },
+              "topology": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "stations"
+            ],
+            "type": "object"
+          },
+          "MeshStation": {
+            "description": "A station of a path on a mesh.",
+            "properties": {
+              "face": {
+                "description": "The face it lies in; none off the mesh.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "station": {
+                "description": "Its distance along the path.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "values": {
+                "description": "Each dataset's value there, in the datasets' order (null: no value).",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": "array",
+                "x-unit": "value"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "station",
+              "x",
+              "y",
+              "values"
+            ],
+            "type": "object"
+          },
+          "MeshZonal": {
+            "description": "A dataset over the faces of an area, or along a path.",
+            "properties": {
+              "count": {
+                "description": "The faces with a value (region only).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "integral": {
+                "description": "The sum of value × the face's area.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "mean": {
+                "description": "The mean weighted by the faces' areas.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "step": {
+                "description": "The time step the values are of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.profile` v1.",
+        "properties": {
+          "length": {
+            "description": "The path's length.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/MeshProfile"
+            },
+            "type": "array"
+          },
+          "read": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "length",
+          "read",
+          "revision"
+        ],
+        "title": "MeshesProfiled",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "raster"
+            ],
+            "refusedWith": "not_a_mesh"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_mesh",
+          "invalid_mesh_path",
+          "too_many_stations",
+          "mesh_variable_not_found",
+          "too_many_mesh_values"
+        ],
+        "warnings": [
+          "mesh_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir yol boyunca değerler",
+          "input": {
+            "path": [
+              {
+                "x": 500000.0,
+                "y": 4420005.0
+              },
+              {
+                "x": 500020.0,
+                "y": 4420005.0
+              }
+            ],
+            "step": 5.0
           }
         }
       ]
@@ -581207,9 +582276,7 @@
           "invalid_file_path",
           "file_not_found",
           "import_unreadable",
-          "crs_unknown",
           "crs_unreached",
-          "file_exists",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -581220,7 +582287,6 @@
           "stac_item_incomplete",
           "stac_qa_grid_differs",
           "stac_requester_pays",
-          "crs_overridden",
           "crs_unofficial"
         ]
       },
@@ -1285039,6 +1286105,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Sorgu bir çağrının okuyabileceğinden çok değer okurdu."
+    },
+    {
+      "code": "invalid_mesh_area",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Meshte sorulan alan en az üç köşeli, alanı sıfırdan büyük bir halka olmalı."
+    },
+    {
+      "code": "invalid_mesh_path",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mesh profilinin yolu en az iki köşeli, adımı sıfırdan büyük olmalı."
     },
     {
       "code": "invalid_cloud_area",

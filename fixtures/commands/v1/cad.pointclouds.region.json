@@ -3698,7 +3698,7 @@
    ]
   },
   {
-   "name": "metin bulutu aranmaz, söylenir",
+   "name": "metin bulutu: noktaları satırlarından, ikinci geçişte okunur",
    "steps": [
     {
      "op": "execute",
@@ -3729,30 +3729,184 @@
       "status": "completed",
       "output": {
        "area": 8100.0,
-       "read": 0,
+       "read": 50,
        "total": {
-        "count": 0,
-        "classes": {}
+        "count": 35,
+        "classes": {
+         "0": 35
+        },
+        "bounds": [
+         500002.868,
+         4400001.457,
+         100.391,
+         500086.833,
+         4400089.131,
+         149.25
+        ],
+        "z": {
+         "min": 100.391,
+         "max": 149.25,
+         "mean": 122.04257142857142
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 0.0,
+         "mean": 0.0
+        }
        },
        "clouds": [
         {
          "uid": "$uidOf:14",
-         "read": 0,
+         "read": 50,
          "stats": {
-          "count": 0,
-          "classes": {}
+          "count": 35,
+          "classes": {
+           "0": 35
+          },
+          "bounds": [
+           500002.868,
+           4400001.457,
+           100.391,
+           500086.833,
+           4400089.131,
+           149.25
+          ],
+          "z": {
+           "min": 100.391,
+           "max": 149.25,
+           "mean": 122.04257142857142
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 0.0,
+           "mean": 0.0
+          }
          }
         }
        ],
-       "revision": "$current"
+       "revision": "$current",
+       "density": 0.004320987654320987
       },
-      "warnings": [
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "metin bulutu: delikli alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
        {
-        "code": "cloud_source_unreadable",
-        "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
-        "path": "clouds[0].sources[0]"
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400100.0
        }
+      ],
+      "holes": [
+       [
+        {
+         "x": 500030.0,
+         "y": 4400030.0
+        },
+        {
+         "x": 500070.0,
+         "y": 4400030.0
+        },
+        {
+         "x": 500070.0,
+         "y": 4400070.0
+        },
+        {
+         "x": 500030.0,
+         "y": 4400070.0
+        }
+       ]
+      ],
+      "uids": [
+       "$uidOf:14"
       ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 8400.0,
+       "read": 50,
+       "total": {
+        "count": 43,
+        "classes": {
+         "0": 43
+        },
+        "bounds": [
+         500002.868,
+         4400000.401,
+         100.391,
+         500099.454,
+         4400099.643,
+         146.638
+        ],
+        "z": {
+         "min": 100.391,
+         "max": 146.638,
+         "mean": 120.73025581395349
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 0.0,
+         "mean": 0.0
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:14",
+         "read": 50,
+         "stats": {
+          "count": 43,
+          "classes": {
+           "0": 43
+          },
+          "bounds": [
+           500002.868,
+           4400000.401,
+           100.391,
+           500099.454,
+           4400099.643,
+           146.638
+          ],
+          "z": {
+           "min": 100.391,
+           "max": 146.638,
+           "mean": 120.73025581395349
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 0.0,
+           "mean": 0.0
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.005119047619047619
+      },
+      "warnings": []
      },
      "expect": {
       "revision": "same"
@@ -3828,7 +3982,23 @@
        ],
        "revision": "$current"
       },
-      "warnings": "$any"
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[0].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[1].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[2].sources[0]"
+       }
+      ]
      },
      "expect": {
       "revision": "same"
@@ -3866,7 +4036,7 @@
       "status": "completed",
       "output": {
        "area": 900.0,
-       "read": 4780,
+       "read": 4880,
        "total": {
         "count": 119,
         "classes": {
@@ -4155,7 +4325,7 @@
         },
         {
          "uid": "$uidOf:14",
-         "read": 0,
+         "read": 50,
          "stats": {
           "count": 0,
           "classes": {}
@@ -4382,7 +4552,7 @@
         },
         {
          "uid": "$uidOf:28",
-         "read": 0,
+         "read": 50,
          "stats": {
           "count": 0,
           "classes": {}
@@ -4448,7 +4618,28 @@
        "revision": "$current",
        "density": 0.1322222222222222
       },
-      "warnings": "$any"
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[14].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[15].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[16].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[23].sources[1]"
+       }
+      ]
      },
      "expect": {
       "revision": "same"

@@ -4,7 +4,7 @@
  "command": "cad.meshes.query",
  "commandVersion": 1,
  "title": "Mesh sor",
- "note": "ADR 0552. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
+ "note": "ADR 0552, 0645. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -690,6 +690,110 @@
      ]
     },
     "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 17,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered-nc4.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 18,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered.zarr"
    }
   ],
   "styles": {
@@ -734,7 +838,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -798,7 +906,10 @@
          2,
          5
         ],
-        "area": 200.0
+        "area": 200.0,
+        "neighbours": [
+         2
+        ]
        },
        "values": [
         {
@@ -861,7 +972,12 @@
          5,
          4
         ],
-        "area": 200.0
+        "area": 200.0,
+        "neighbours": [
+         0,
+         1,
+         4
+        ]
        },
        "values": [
         {
@@ -926,7 +1042,11 @@
          7,
          6
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         0,
+         5
+        ]
        },
        "values": [
         {
@@ -989,7 +1109,10 @@
          7,
          9
         ],
-        "area": 200.0
+        "area": 200.0,
+        "neighbours": [
+         3
+        ]
        },
        "values": [
         {
@@ -1057,7 +1180,10 @@
          9,
          8
         ],
-        "area": 120.0
+        "area": 120.0,
+        "neighbours": [
+         2
+        ]
        },
        "values": [
         {
@@ -1107,7 +1233,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1171,7 +1301,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1268,7 +1402,11 @@
          7,
          6
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         0,
+         5
+        ]
        },
        "values": [
         {
@@ -1320,7 +1458,10 @@
          2,
          5
         ],
-        "area": 200.0
+        "area": 200.0,
+        "neighbours": [
+         2
+        ]
        },
        "values": [
         {
@@ -1379,7 +1520,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1435,7 +1580,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1491,7 +1640,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1553,7 +1706,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1615,7 +1772,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1677,7 +1838,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1739,7 +1904,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1842,7 +2011,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1912,7 +2085,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -1962,7 +2139,11 @@
          4,
          3
         ],
-        "area": 0.010000000000000285
+        "area": 0.010000000000000285,
+        "neighbours": [
+         1,
+         2
+        ]
        },
        "values": [
         {
@@ -2015,7 +2196,10 @@
          4,
          6
         ],
-        "area": 0.005000000000000142
+        "area": 0.005000000000000142,
+        "neighbours": [
+         0
+        ]
        },
        "values": [
         {
@@ -2070,7 +2254,10 @@
          5,
          4
         ],
-        "area": 0.010000000000000285
+        "area": 0.010000000000000285,
+        "neighbours": [
+         0
+        ]
        },
        "values": [
         {
@@ -2125,7 +2312,10 @@
          5,
          4
         ],
-        "area": 0.010000000000000285
+        "area": 0.010000000000000285,
+        "neighbours": [
+         0
+        ]
        },
        "values": [
         {
@@ -2179,7 +2369,10 @@
          2,
          3
         ],
-        "area": 100.0
+        "area": 100.0,
+        "neighbours": [
+         1
+        ]
        },
        "values": [
         {
@@ -2241,7 +2434,10 @@
          5,
          2
         ],
-        "area": 100.0
+        "area": 100.0,
+        "neighbours": [
+         0
+        ]
        },
        "values": [
         {
@@ -2291,7 +2487,10 @@
          2,
          3
         ],
-        "area": 100.0
+        "area": 100.0,
+        "neighbours": [
+         1
+        ]
        },
        "values": [
         {
@@ -2354,7 +2553,10 @@
          2,
          3
         ],
-        "area": 100.0
+        "area": 100.0,
+        "neighbours": [
+         1
+        ]
        },
        "values": [
         {
@@ -2410,7 +2612,10 @@
          5,
          2
         ],
-        "area": 100.0
+        "area": 100.0,
+        "neighbours": [
+         0
+        ]
        },
        "values": [
         {
@@ -2495,7 +2700,10 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2
+        ]
        },
        "values": [
         {
@@ -2558,7 +2766,10 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2
+        ]
        },
        "values": [
         {
@@ -2622,7 +2833,11 @@
          4,
          3
         ],
-        "area": 0.010000000000000285
+        "area": 0.010000000000000285,
+        "neighbours": [
+         1,
+         2
+        ]
        },
        "values": [
         {
@@ -2673,7 +2888,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -2742,7 +2961,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {
@@ -2798,7 +3021,11 @@
          4,
          3
         ],
-        "area": 400.0
+        "area": 400.0,
+        "neighbours": [
+         2,
+         3
+        ]
        },
        "values": [
         {

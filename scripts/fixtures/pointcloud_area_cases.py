@@ -19,6 +19,10 @@ raw heights and classes), and from the rules of the ADR:
   (floor, the last bin holding the path's end).
 - the points read: a source whose box meets one of the area's boxes (a corridor's: each segment's box widened by half
   the width) is read whole; a COPC reads only the nodes whose cube meets one.
+- a text cloud (docs/adr/0207 §2, 0645 §6) is read whole: lines before the first data line that are not numbers are a
+  header, the first data line's count gives the columns (3 X Y Z, 4 or 5 with intensity, 6 with colours, 7 or more
+  with intensity and colours), a later line with fewer columns or a coordinate that is no number is skipped; a point's index is its place
+  among the kept lines, its class 0, its intensity the column's (0 without one).
 """
 import json
 import math
@@ -38,7 +42,6 @@ ROOT = pd.ROOT
 OUT = pd.OUT
 ANY = pd.ANY
 WITHIN = 1e-9
-TEXT_WARN = "Bulutun {}. kaynağı metin bulutu; noktası burada aranmaz."
 MOST = 200_000_000
 
 
@@ -56,7 +59,7 @@ def kind_of(src):
         return "file", "las12-f0.las"
     name = src["file"].rsplit("/", 1)[-1]
     if src["format"] == "xyz":
-        return "text", None
+        return "text", name
     if name in ("yok.las", "not-las.las"):
         return "unreadable", None
     return "file", name
@@ -85,10 +88,19 @@ def plan_of(clouds, boxes):
 
 
 def warnings_of(plan):
-    if any(p[3] == "unreadable" for p in plan):
-        return ANY
-    return [{"code": "cloud_source_unreadable", "message": TEXT_WARN.format(si + 1),
-             "path": f"clouds[{k}].sources[{si}]"} for k, cid, si, kind, name, src in plan if kind == "text"]
+    """A source not read (an address where no network is, a missing or a broken file) is said; its words name places of
+    this machine."""
+    return [{"code": "cloud_source_unreadable", "message": ANY, "path": f"clouds[{k}].sources[{si}]"}
+            for k, cid, si, kind, name, src in plan if kind == "unreadable"]
+
+
+def source_points(kind, name, boxes):
+    """(points, their indices, the read mask, the points read) of a source that is read."""
+    if kind == "text":
+        p = pd.TextPoints(name)
+        n = len(p.x)
+        return p, np.arange(n), np.ones(n, dtype=bool), n
+    return touched(name, boxes)
 
 
 def touched(name, boxes):
@@ -203,9 +215,9 @@ def region_answer(clouds, ring, holes=()):
     accs = [Acc() for _ in clouds]
     reads = [0] * len(clouds)
     for k, cid, si, kind, name, src in plan:
-        if kind != "file":
+        if kind == "unreadable":
             continue
-        p, order, keep, nread = touched(name, [box])
+        p, order, keep, nread = source_points(kind, name, [box])
         reads[k] += nread
         px, py = np.asarray(p.x), np.asarray(p.y)
         accs[k].add(p, keep & region_mask(px, py, ring, holes))
@@ -297,7 +309,9 @@ def region_cases():
     out.append(case("alan dosyanın kutusuna değip noktaya değmez: dosya okunur, sıfır nokta", region_step(
         [cid("las12-f0.las")], empty_rect("las12-f0.las", 12.0))))
     text_ring = rect(500000.0, 4400000.0, 500090.0, 4400090.0)
-    out.append(case("metin bulutu aranmaz, söylenir", region_step([14], text_ring)))
+    out.append(case("metin bulutu: noktaları satırlarından, ikinci geçişte okunur", region_step([14], text_ring)))
+    out.append(case("metin bulutu: delikli alan", region_step(
+        [14], rect(500000.0, 4400000.0, 500100.0, 4400100.0), holes=[rect(500030.0, 4400030.0, 500070.0, 4400070.0)])))
     out.append(case("dosyası olmayan, bozuk ve adresteki kaynaklar uyarıyla atlanır", region_step([15, 16, 17], text_ring)))
     visible = visible_clouds()
     out.append(case("uids verilmezse görünen bulutlar, gizli katmandaki bakılmaz", region_step(
@@ -396,9 +410,9 @@ def profile_answer(clouds, path, width, step, points=False):
     reads = [0] * len(clouds)
     count = 0
     for k, cid, si, kind, name, src in plan:
-        if kind != "file":
+        if kind == "unreadable":
             continue
-        p, order, keep, nread = touched(name, boxes)
+        p, order, keep, nread = source_points(kind, name, boxes)
         reads[k] += nread
         px, py = np.asarray(p.x), np.asarray(p.y)
         pz, pc = np.asarray(p.z), np.asarray(p.classification)
@@ -511,8 +525,10 @@ def profile_cases():
     visible = visible_clouds()
     out.append(case("uids verilmezse görünen bulutlar, gizli katmandaki bakılmaz", profile_step(
         visible, [(500100.0, 4400100.0), (500130.0, 4400130.0)], 6.0, 20.0, uids=False)))
-    out.append(case("metin bulutu aranmaz, söylenir", profile_step(
-        [14], [(500000.0, 4400050.0), (500090.0, 4400050.0)], 10.0, 30.0)))
+    out.append(case("metin bulutu: koridorun noktaları istasyonlarıyla", profile_step(
+        [14], [(500000.0, 4400050.0), (500090.0, 4400050.0)], 10.0, 30.0, points=True)))
+    out.append(case("metin bulutu: eğik yol", profile_step(
+        [14], [(500000.0, 4400000.0), (500100.0, 4400100.0)], 20.0, 25.0)))
     out.append(case("plan aynı cevabı yazmadan verir", profile_step(
         [cid("las12-f0.las")], [(500000.0, 4400150.0), (500400.0, 4400150.0)], 40.0, 100.0, op="plan")))
     out.append(case("validate yalnız denetler", pd.step(

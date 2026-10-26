@@ -124,12 +124,37 @@ impl Remote {
     }
 }
 
-/// A file of a cloud opened for reading.
-#[derive(Debug)]
+/// A file of a cloud opened for reading; a NetCDF-4 (HDF5), GRIB or Zarr data set seen as classic NetCDF
+/// (docs/adr/0645 §5).
 pub enum Bytes {
     File(File, u64),
     Remote(Remote),
     Memory(Arc<Vec<u8>>),
+    Virtual(Arc<kentos_formats::multidim::chunked::VirtualFile>),
+}
+
+impl std::fmt::Debug for Bytes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Bytes::File(_, n) => write!(f, "File({n})"),
+            Bytes::Remote(r) => write!(f, "Remote({})", r.url),
+            Bytes::Memory(b) => write!(f, "Memory({})", b.len()),
+            Bytes::Virtual(v) => write!(f, "Virtual({})", v.size()),
+        }
+    }
+}
+
+/// A file's bytes shared with a chunked reader (docs/adr/0645 §5).
+pub struct Shared(pub Bytes);
+
+impl kentos_native_application::remote_host::RangeRead for Shared {
+    fn size(&self) -> u64 {
+        self.0.size()
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        self.0.read(offset, len)
+    }
 }
 
 impl kentos_processing::cloud_files::ReadAt for Bytes {
@@ -148,6 +173,7 @@ impl Bytes {
             Bytes::File(_, n) => *n,
             Bytes::Remote(r) => r.size,
             Bytes::Memory(b) => b.len() as u64,
+            Bytes::Virtual(v) => v.size(),
         }
     }
 
@@ -161,6 +187,7 @@ impl Bytes {
                 crate::rasters::tiles::read_at(f, offset, len)
             }
             Bytes::Remote(r) => r.read(offset, len),
+            Bytes::Virtual(v) => v.read(offset, len),
             Bytes::Memory(b) => {
                 let a = usize::try_from(offset).map_err(|_| "Bayt dosyanın dışında.".to_owned())?;
                 let e = a.saturating_add(len as usize);

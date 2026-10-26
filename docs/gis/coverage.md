@@ -5,9 +5,9 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 270 komut; masaüstü 249, başsız 270, Python 270, MCP 249, sunucu 21.
-- Seçenekler: 4608 hücre, 1491 tanesi bir durumda deneniyor (3117 açık).
-- Veri türleri (hedef türler): 184 hücre, 126 tanesi bir durumda deneniyor (58 açık).
+- 272 komut; masaüstü 251, başsız 272, Python 272, MCP 251, sunucu 21.
+- Seçenekler: 4609 hücre, 1492 tanesi bir durumda deneniyor (3117 açık).
+- Veri türleri (hedef türler): 186 hücre, 128 tanesi bir durumda deneniyor (58 açık).
 - Ortak komut durumu olmayan: 39; 21 sunucu komutu (sunucunun veritabanı testlerinde), 18 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dwg, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.maplibre, file.export.parquet, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package, file.preflight.sheets).
 
 ### Açık hücreler

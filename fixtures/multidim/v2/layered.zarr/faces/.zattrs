@@ -1,0 +1,8 @@
+{
+  "cf_role": "face_node_connectivity",
+  "start_index": 1,
+  "_ARRAY_DIMENSIONS": [
+    "face",
+    "nmax"
+  ]
+}

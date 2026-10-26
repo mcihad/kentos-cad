@@ -1,0 +1,3400 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.meshes.profile",
+ "commandVersion": 1,
+ "title": "Mesh profili",
+ "note": "ADR 0552, 0645. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Meshlerin bilgisi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "mesh",
+    "name": "Mesh",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "mesh",
+  "entities": [
+   {
+    "kind": "raster",
+    "id": 1,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 2,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "ucx",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 2,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ],
+     "vector": "ucy"
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 3,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 4326,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "elev",
+     "mesh": "mesh",
+     "dims": []
+    },
+    "file": "$fixture:meshes/v1/files/quad-static.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 4,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 4326,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "zone",
+     "mesh": "mesh",
+     "dims": []
+    },
+    "file": "$fixture:meshes/v1/files/quad-static.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 5,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:meshes/v1/files/layered.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 6,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "wind",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:meshes/v1/files/layered.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 7,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "taban_kotu",
+     "mesh": "Mesh2d",
+     "dims": []
+    },
+    "file": "$fixture:multidim/v1/files/sms-start.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 8,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "level",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "asset": "mesh-0552055205520552"
+   },
+   {
+    "kind": "raster",
+    "id": 9,
+    "layerId": "gizli",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 10,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/yok.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 11,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-header.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 12,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-hdf5.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 13,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-grib.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 14,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420030.0,
+     0.0,
+     -10.0
+    ],
+    "width": 4,
+    "height": 3,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "file": "$fixture:multidim/v1/files/grid-cdf2.nc",
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "dem",
+     "dims": []
+    }
+   },
+   {
+    "kind": "line",
+    "id": 15,
+    "layerId": "mesh",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 16,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "yok",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 17,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered-nc4.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 18,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered.zarr"
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "mesh-0552055205520552",
+     "name": "ugrid.nc",
+     "data": "data:application/octet-stream;base64,Q0RGAgAAAAAAAAAKAAAABAAAAARub2RlAAAACgAAAARmYWNlAAAABgAAAARubWF4AAAABAAAAAR0aW1lAAAAAwAAAAwAAAABAAAAC0NvbnZlbnRpb25zAAAAAAIAAAAQQ0YtMS44IFVHUklELTEuMAAAAAsAAAALAAAABG1lc2gAAAAAAAAADAAAAAUAAAAHY2Zfcm9sZQAAAAACAAAADW1lc2hfdG9wb2xvZ3kAAAAAAAASdG9wb2xvZ3lfZGltZW5zaW9uAAAAAAAEAAAAAQAAAAIAAAAQbm9kZV9jb29yZGluYXRlcwAAAAIAAAANbm9kZV94IG5vZGVfeQAAAAAAABZmYWNlX25vZGVfY29ubmVjdGl2aXR5AAAAAAACAAAABWZhY2VzAAAAAAAADGdyaWRfbWFwcGluZwAAAAIAAAADY3JzAAAAAAQAAAAEAAAAAAAABXwAAAADY3JzAAAAAAAAAAAMAAAAAQAAAAllcHNnX2NvZGUAAAAAAAACAAAACUVQU0c6NTI1NAAAAAAAAAQAAAAEAAAAAAAABYAAAAAGbm9kZV94AAAAAAABAAAAAAAAAAwAAAABAAAADXN0YW5kYXJkX25hbWUAAAAAAAACAAAAF3Byb2plY3Rpb25feF9jb29yZGluYXRlAAAAAAYAAABQAAAAAAAABYQAAAAGbm9kZV95AAAAAAABAAAAAAAAAAwAAAABAAAADXN0YW5kYXJkX25hbWUAAAAAAAACAAAAF3Byb2plY3Rpb25feV9jb29yZGluYXRlAAAAAAYAAABQAAAAAAAABdQAAAAFZmFjZXMAAAAAAAACAAAAAQAAAAIAAAAMAAAAAwAAAAdjZl9yb2xlAAAAAAIAAAAWZmFjZV9ub2RlX2Nvbm5lY3Rpdml0eQAAAAAAC3N0YXJ0X2luZGV4AAAAAAQAAAABAAAAAQAAAApfRmlsbFZhbHVlAAAAAAAEAAAAAf////8AAAAEAAAAYAAAAAAAAAYkAAAABHRpbWUAAAABAAAAAwAAAAwAAAABAAAABXVuaXRzAAAAAAAAAgAAACFzZWNvbmRzIHNpbmNlIDIwMjQtMDUtMDEgMDY6MDA6MDAAAAAAAAAGAAAAGAAAAAAAAAaEAAAABWRlcHRoAAAAAAAAAgAAAAMAAAAAAAAADAAAAAUAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEbm9kZQAAAAlsb25nX25hbWUAAAAAAAACAAAADVN1IGRlcmlubGnEn2kAAAAAAAAKX0ZpbGxWYWx1ZQAAAAAABQAAAAF88AAAAAAAC2tlbnRvc19tYXNrAAAAAAIAAAAGYWN0aXZlAAAAAAAFAAAAeAAAAAAAAAacAAAABmFjdGl2ZQAAAAAAAgAAAAMAAAABAAAADAAAAAIAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEZmFjZQAAAAEAAAAUAAAAAAAABxQAAAAFbGV2ZWwAAAAAAAACAAAAAwAAAAEAAAAMAAAAAgAAAARtZXNoAAAAAgAAAARtZXNoAAAACGxvY2F0aW9uAAAAAgAAAARmYWNlAAAABQAAAEgAAAAAAAAHKAAAAAN1Y3gAAAAAAgAAAAMAAAAAAAAADAAAAAIAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEbm9kZQAAAAUAAAB4AAAAAAAAB3AAAAADdWN5AAAAAAIAAAADAAAAAAAAAAwAAAACAAAABG1lc2gAAAACAAAABG1lc2gAAAAIbG9jYXRpb24AAAACAAAABG5vZGUAAAAFAAAAeAAAAAAAAAfoAAAAAAAAAABBHoSAAAAAAEEehNAAAAAAQR6FIAAAAABBHoSAAAAAAEEehNAAAAAAQR6FIAAAAABBHoSAAAAAAEEehNAAAAAAQR6FCAAAAABBHoUgAAAAAEFQ3GgAAAAAQVDcaAAAAABBUNxoAAAAAEFQ3G0AAAAAQVDcbQAAAABBUNxtAAAAAEFQ3HIAAAAAQVDccgAAAABBUNxugAAAAEFQ3HIAAAAAAAAAAQAAAAIAAAAFAAAABAAAAAIAAAADAAAABv////8AAAACAAAABgAAAAX/////AAAABAAAAAUAAAAIAAAABwAAAAUAAAAGAAAACgAAAAkAAAAFAAAACAAAAAr/////AAAAAAAAAABAnCAAAAAAAECsIAAAAAAAAAAAAD6AAAA/AAAAP0AAAD+AAAA/oAAAP8AAAD/gAABAAAAAQBAAAD+AAAA/oAAAP8AAAHzwAABAAAAAQBAAAEAgAABAMAAAQEAAAEBQAABAAAAAQBAAAEAgAABAMAAAQEAAAEBQAABAYAAAQHAAAECAAABAiAAAAQEBAQEBAQABAQEBAQEBAAEBAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAAAAAAAAP4AAAEAAAAAAAAAAP4AAAEAAAAAAAAAAAAAAAD+AAABAAAAAAAAAAD+AAABAAAAAAAAAAD+AAABAAAAAAAAAAAAAAAA/gAAAQAAAAAAAAAA/gAAAQAAAAAAAAAA/gAAAQAAAAAAAAADAAAAAAAAAAEAAAAC/gAAAP4AAAMAAAAAAAAAAQAAAAL+AAAA/gAAAwAAAAAAAAABAAAAAv4AAAD+AAADAAAAAAAAAAEAAAAC/gAAAP4AAAMAAAAAAAAAAQAAAAL+AAAA/gAAAwAAAAAAAAABAAAAAv4AAAD+AAAA="
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "layered.nc: yatay yol, mesh dışında başlayıp biten",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: istasyon yüzlerin ortak kenarında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500000.0,
+        "y": 4420002.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4420002.0
+       }
+      ],
+      "step": 10.0,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 20.0,
+       "read": 12,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 500000.0,
+           "y": 4420002.0,
+           "values": [
+            13.15,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500010.0,
+           "y": 4420002.0,
+           "values": [
+            13.3,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500020.0,
+           "y": 4420002.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: son istasyon yolun sonu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500001.0,
+        "y": 4420001.0
+       },
+       {
+        "x": 500019.0,
+        "y": 4420009.0
+       }
+      ],
+      "step": 4.0,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 19.697715603592208,
+       "read": 24,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 500001.0,
+           "y": 4420001.0,
+           "values": [
+            13.05,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 4.0,
+           "x": 500004.65524619445,
+           "y": 4420002.624553864,
+           "values": [
+            13.181995001458564,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 8.0,
+           "x": 500008.31049238896,
+           "y": 4420004.249107729,
+           "values": [
+            13.313990002941864,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 12.0,
+           "x": 500011.9657385834,
+           "y": 4420005.873661593,
+           "values": [
+            13.544271933571144,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 16.0,
+           "x": 500015.6209847779,
+           "y": 4420007.4982154565,
+           "values": [
+            13.859029244756675,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 19.697715603592208,
+           "x": 500019.0,
+           "y": 4420009.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: köşeli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500002.0,
+        "y": 4420002.0
+       },
+       {
+        "x": 500018.0,
+        "y": 4420002.0
+       },
+       {
+        "x": 500018.0,
+        "y": 4420008.0
+       }
+      ],
+      "step": 3.0,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 22.0,
+       "read": 36,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 500002.0,
+           "y": 4420002.0,
+           "values": [
+            13.1,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 3.0,
+           "x": 500005.0,
+           "y": 4420002.0,
+           "values": [
+            13.175,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 6.0,
+           "x": 500008.0,
+           "y": 4420002.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 9.0,
+           "x": 500011.0,
+           "y": 4420002.0,
+           "values": [
+            13.375,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 12.0,
+           "x": 500014.0,
+           "y": 4420002.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 15.0,
+           "x": 500017.0,
+           "y": 4420002.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 18.0,
+           "x": 500018.0,
+           "y": 4420004.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 21.0,
+           "x": 500018.0,
+           "y": 4420007.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 22.0,
+           "x": 500018.0,
+           "y": 4420008.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: an ilk adımda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:5"
+      ],
+      "time": 1735693200000.0,
+      "variables": [
+       "temp"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 21,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            3.375
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            3.25
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            3.375
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            3.75
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            4.125
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 0,
+           "time": 1735689600000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: an ilk adımdan önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 10.0,
+      "uids": [
+       "$uidOf:5"
+      ],
+      "time": 1735689599999.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 0,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: yüz veri seti",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:6"
+      ],
+      "variables": [
+       "wind"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 7,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:6",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            2.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            2.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            2.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            2.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            2.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 0,
+           "time": 1735689600000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "NetCDF-4 kopyası aynı profili verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:17"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:17",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Zarr kopyası aynı profili verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:18",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "üç biçim birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 7.5,
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:17",
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 60,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 7.5,
+           "x": 500002.5,
+           "y": 4420005.0,
+           "values": [
+            13.3125,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 22.5,
+           "x": 500017.5,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        },
+        {
+         "mesh": "$uidOf:17",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 7.5,
+           "x": 500002.5,
+           "y": 4420005.0,
+           "values": [
+            13.3125,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 22.5,
+           "x": 500017.5,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        },
+        {
+         "mesh": "$uidOf:18",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 7.5,
+           "x": 500002.5,
+           "y": 4420005.0,
+           "values": [
+            13.3125,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 22.5,
+           "x": 500017.5,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ugrid.nc: düzey boyunca",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 500055.0,
+        "y": 4420010.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:1"
+      ],
+      "variables": [
+       "level"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 60.0,
+       "read": 13,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:1",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420010.0,
+           "values": [
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420010.0,
+           "values": [
+            0.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420010.0,
+           "values": [
+            0.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420010.0,
+           "values": [
+            0.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420010.0,
+           "values": [
+            0.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420010.0,
+           "values": [
+            0.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420010.0,
+           "values": [
+            2.0
+           ],
+           "face": 2
+          },
+          {
+           "station": 35.0,
+           "x": 500030.0,
+           "y": 4420010.0,
+           "values": [
+            1.0
+           ],
+           "face": 1
+          },
+          {
+           "station": 40.0,
+           "x": 500035.0,
+           "y": 4420010.0,
+           "values": [
+            1.0
+           ],
+           "face": 1
+          },
+          {
+           "station": 45.0,
+           "x": 500040.0,
+           "y": 4420010.0,
+           "values": [
+            1.0
+           ],
+           "face": 1
+          },
+          {
+           "station": 50.0,
+           "x": 500045.0,
+           "y": 4420010.0,
+           "values": [
+            null
+           ]
+          },
+          {
+           "station": 55.0,
+           "x": 500050.0,
+           "y": 4420010.0,
+           "values": [
+            null
+           ]
+          },
+          {
+           "station": 60.0,
+           "x": 500055.0,
+           "y": 4420010.0,
+           "values": [
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "level",
+           "location": "face",
+           "step": 1,
+           "time": 1714545000000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ugrid.nc: derinlik ve vektör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500002.0,
+        "y": 4420002.0
+       },
+       {
+        "x": 500018.0,
+        "y": 4420018.0
+       }
+      ],
+      "step": 4.0,
+      "uids": [
+       "$uidOf:2"
+      ],
+      "variables": [
+       "depth",
+       "ucx"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 22.627416997969522,
+       "read": 70,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:2",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 500002.0,
+           "y": 4420002.0,
+           "values": [
+            2.1,
+            1.7029386365926402
+           ],
+           "face": 0
+          },
+          {
+           "station": 4.0,
+           "x": 500004.82842712477,
+           "y": 4420004.828427125,
+           "values": [
+            2.241421356238425,
+            1.2983783876893926
+           ],
+           "face": 0
+          },
+          {
+           "station": 8.0,
+           "x": 500007.6568542495,
+           "y": 4420007.65685425,
+           "values": [
+            2.382842712476122,
+            0.9335806742064696
+           ],
+           "face": 0
+          },
+          {
+           "station": 12.0,
+           "x": 500010.48528137425,
+           "y": 4420010.485281374,
+           "values": [
+            2.5242640687145466,
+            0.6762834560135037
+           ],
+           "face": 0
+          },
+          {
+           "station": 16.0,
+           "x": 500013.31370849896,
+           "y": 4420013.313708499,
+           "values": [
+            2.665685424952244,
+            0.6656919336343196
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500016.1421356237,
+           "y": 4420016.142135624,
+           "values": [
+            2.8071067811906687,
+            0.9104571314116976
+           ],
+           "face": 0
+          },
+          {
+           "station": 22.627416997969522,
+           "x": 500018.0,
+           "y": 4420018.0,
+           "values": [
+            2.9,
+            1.140175425099138
+           ],
+           "face": 0
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "step": 2,
+           "time": 1714546800000.0,
+           "count": 0
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "step": 2,
+           "time": 1714546800000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "quad-static.nc: coğrafi mesh",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 32.01,
+        "y": 36.05
+       },
+       {
+        "x": 32.19,
+        "y": 36.05
+       }
+      ],
+      "step": 0.03,
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 0.17999999999999972,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:3",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 32.01,
+           "y": 36.05,
+           "values": [
+            116.79999999999866,
+            1.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 0.03,
+           "x": 32.04,
+           "y": 36.05,
+           "values": [
+            119.94999999999874,
+            1.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 0.06,
+           "x": 32.07,
+           "y": 36.05,
+           "values": [
+            123.0999999999988,
+            1.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 0.09,
+           "x": 32.1,
+           "y": 36.05,
+           "values": [
+            126.24999999999888,
+            1.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 0.12,
+           "x": 32.129999999999995,
+           "y": 36.05,
+           "values": [
+            129.39999999999822,
+            2.0
+           ],
+           "face": 1
+          },
+          {
+           "station": 0.15,
+           "x": 32.16,
+           "y": 36.05,
+           "values": [
+            132.54999999999828,
+            2.0
+           ],
+           "face": 1
+          },
+          {
+           "station": 0.17999999999999972,
+           "x": 32.19,
+           "y": 36.05,
+           "values": [
+            135.69999999999837,
+            2.0
+           ],
+           "face": 1
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "units": "m",
+           "count": 0
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "2DM'den dönüşen mesh",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 1.0,
+        "y": 5.0
+       },
+       {
+        "x": 35.0,
+        "y": 5.0
+       }
+      ],
+      "step": 4.0,
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 34.0,
+       "read": 130,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:7",
+         "topology": "Mesh2d",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 1.0,
+           "y": 5.0,
+           "values": [
+            9.775,
+            0.4,
+            0.6010407640085654
+           ],
+           "face": 0
+          },
+          {
+           "station": 4.0,
+           "x": 5.0,
+           "y": 5.0,
+           "values": [
+            9.875,
+            0.5,
+            0.8838834764831844
+           ],
+           "face": 0
+          },
+          {
+           "station": 8.0,
+           "x": 9.0,
+           "y": 5.0,
+           "values": [
+            10.175,
+            0.6,
+            0.8551315688243535
+           ],
+           "face": 0
+          },
+          {
+           "station": 12.0,
+           "x": 13.0,
+           "y": 5.0,
+           "values": [
+            10.475,
+            0.7,
+            1.039831717154271
+           ],
+           "face": 0
+          },
+          {
+           "station": 16.0,
+           "x": 17.0,
+           "y": 5.0,
+           "values": [
+            10.775,
+            0.8,
+            1.3532368602724358
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 21.0,
+           "y": 5.0,
+           "values": [
+            10.9375,
+            0.9,
+            1.5132745950421556
+           ],
+           "face": 2
+          },
+          {
+           "station": 24.0,
+           "x": 25.0,
+           "y": 5.0,
+           "values": [
+            10.6875,
+            1.0,
+            1.118033988749895
+           ],
+           "face": 1
+          },
+          {
+           "station": 28.0,
+           "x": 29.0,
+           "y": 5.0,
+           "values": [
+            10.7875,
+            1.1,
+            1.7804493814764855
+           ],
+           "face": 1
+          },
+          {
+           "station": 32.0,
+           "x": 33.0,
+           "y": 5.0,
+           "values": [
+            10.8875,
+            1.2,
+            2.4758836806279896
+           ],
+           "face": 1
+          },
+          {
+           "station": 34.0,
+           "x": 35.0,
+           "y": 5.0,
+           "values": [
+            10.9375,
+            1.25,
+            2.8284271247461903
+           ],
+           "face": 1
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "taban_kotu",
+           "location": "node",
+           "count": 0
+          },
+          {
+           "variable": "Su_derinligi",
+           "location": "node",
+           "step": 0,
+           "time": 1714532400000.0,
+           "count": 0
+          },
+          {
+           "variable": "Hiz_x",
+           "location": "node",
+           "vector": "Hiz_y",
+           "step": 0,
+           "time": 1714532400000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "okunamayan mesh uyarıyla atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:11",
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı yazmadan verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "read": 28,
+       "revision": "$current",
+       "meshes": [
+        {
+         "mesh": "$uidOf:5",
+         "topology": "mesh",
+         "stations": [
+          {
+           "station": 0.0,
+           "x": 499995.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          },
+          {
+           "station": 5.0,
+           "x": 500000.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 10.0,
+           "x": 500005.0,
+           "y": 4420005.0,
+           "values": [
+            13.25,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 15.0,
+           "x": 500010.0,
+           "y": 4420005.0,
+           "values": [
+            13.375,
+            3.0
+           ],
+           "face": 0
+          },
+          {
+           "station": 20.0,
+           "x": 500015.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 25.0,
+           "x": 500020.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            3.5
+           ],
+           "face": 1
+          },
+          {
+           "station": 30.0,
+           "x": 500025.0,
+           "y": 4420005.0,
+           "values": [
+            null,
+            null
+           ]
+          }
+         ],
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "units": "degC",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "step": 1,
+           "time": 1735711200000.0,
+           "count": 0
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yol tek köşeli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       }
+      ],
+      "step": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_mesh_path",
+       "message": "Profilin yolu en az iki köşeli olmalı; yolun köşelerini sırayla verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yolun art arda iki köşesi aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 0.0
+       }
+      ],
+      "step": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_mesh_path",
+       "message": "Yolun 3. köşesi öncekiyle aynı; uzunluğu olmayan parça olmaz.",
+       "path": "path[2]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "adım sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_mesh_path",
+       "message": "Adım sıfırdan büyük olmalı; istasyonların yol boyunca aralığını verin.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çok istasyon",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 1000.0,
+        "y": 0.0
+       }
+      ],
+      "step": 0.001
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_many_stations",
+       "message": "Yol 1000001 istasyon verirdi; bir çağrı en çok 100000 istasyon cevaplar. Adımı büyütün.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "üç meshte 90 911 istasyon: çağrının değer sınırı aşılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500000.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4420010.0
+       }
+      ],
+      "step": 0.0011,
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_many_mesh_values",
+       "message": "Sorgu 2000042 değer okurdu; bir çağrı en çok 2000000 değer okur. Adımı büyütün ya da veri setlerini ayrı ayrı sorun.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen veri seti",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:5"
+      ],
+      "variables": [
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mesh_variable_not_found",
+       "message": "“yok” veri seti meshte yok; var olanlar: temp, wind.",
+       "path": "variables[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "mesh"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“mesh” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "mesh olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 499995.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420005.0
+       }
+      ],
+      "step": 5.0,
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_mesh",
+       "message": "Verilen nesne bir mesh rasteri değil; bir meshin (UGRID veri setini gösteren rasterin) kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  }
+ ]
+}

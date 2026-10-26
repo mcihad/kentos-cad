@@ -846,7 +846,7 @@
       "level": "query",
       "python": "kentos.cad.meshes.query",
       "mcp": "cad.meshes.query",
-      "note": "Pencere yeri ve anı komuta verir; yüzü kalıcı kimliğiyle ve veri setlerinin değerlerini gösterir (ADR 0552)."
+      "note": "Pencere yeri ve anı komuta verir; yüzü kalıcı kimliğiyle, komşularını ve veri setlerinin değerlerini gösterir (ADR 0552). Alan kipi seçili alanı kentos.cad.meshes.region'a, Hat kipi seçili çizgiyi ve adımı kentos.cad.meshes.profile'a verir (ADR 0645 §7)."
     },
     "pointcloud.vpcSave": {
       "level": "none"

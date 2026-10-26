@@ -1,0 +1,9 @@
+{
+  "mesh": "mesh",
+  "location": "face",
+  "units": "m/s",
+  "_ARRAY_DIMENSIONS": [
+    "time",
+    "face"
+  ]
+}

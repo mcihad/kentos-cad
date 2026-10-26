@@ -12,10 +12,14 @@ matrices, traces and Denetle. ``kentos.temporal`` reads the temporal layers
 (docs/adr/0210): their objects' times, what a moment or a period shows, the
 time slider's positions, and makes and applies scenarios. ``kentos.address``
 searches the project's address data (docs/adr/0229): an address's parts, its
-candidates and a place's address.
+candidates and a place's address. A file at an address is read by HTTP ranges
+with Python's own ``urllib`` (docs/adr/0645).
 """
 
-from . import address, cad, network, services, temporal
-from ._native import __version__
+from . import _remote, address, cad, network, services, temporal
+from ._native import __version__, set_remote
+
+# Addressed files (a cloud, a raster, a NetCDF, GRIB or Zarr data set) are read with Python's own HTTP (docs/adr/0645).
+set_remote(_remote.Http())
 
 __all__ = ["__version__", "address", "cad", "network", "services", "temporal"]

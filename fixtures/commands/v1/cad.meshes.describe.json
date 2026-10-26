@@ -4,7 +4,7 @@
  "command": "cad.meshes.describe",
  "commandVersion": 1,
  "title": "Meshin bilgisi",
- "note": "ADR 0552. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
+ "note": "ADR 0552, 0645. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -690,6 +690,110 @@
      ]
     },
     "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 17,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered-nc4.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 18,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v2/layered.zarr"
    }
   ],
   "styles": {
@@ -1458,6 +1562,222 @@
    ]
   },
   {
+   "name": "layered.nc'nin NetCDF-4 (HDF5) kopyası klasik dosyanın bilgisini verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:17"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:17",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v2/layered-nc4.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc'nin Zarr kopyası (klasör) klasik dosyanın bilgisini verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:18",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v2/layered.zarr",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
    "name": "gizli katmandaki mesh adıyla sorulunca okunur",
    "steps": [
     {
@@ -1761,7 +2081,7 @@
    ]
   },
   {
-   "name": "NetCDF-4 (HDF5) dosyası okunmaz: neden söylenir, öbürleri okunur",
+   "name": "bozuk NetCDF-4 (HDF5) dosyası: neden söylenir, öbürleri okunur",
    "steps": [
     {
      "op": "execute",
@@ -1900,7 +2220,7 @@
    ]
   },
   {
-   "name": "GRIB dosyası okunmaz: neden söylenir, öbürleri okunur",
+   "name": "bozuk GRIB dosyası: neden söylenir, öbürleri okunur",
    "steps": [
     {
      "op": "execute",
@@ -3066,6 +3386,170 @@
           ]
          },
          "file": "$fixture:multidim/v1/files/ugrid.nc"
+        },
+        {
+         "uid": "$uidOf:17",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v2/layered-nc4.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:18",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v2/layered.zarr",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
         }
        ],
        "revision": "$current"

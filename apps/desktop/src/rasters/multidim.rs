@@ -73,8 +73,10 @@ enum Item {
 #[derive(Debug, Clone)]
 pub struct State {
     pub mode: Mode,
-    /// The NetCDF or the 2DM.
+    /// The NetCDF (a NetCDF-4, GRIB file or a Zarr store's folder too) or the 2DM.
     pub path: PathBuf,
+    /// The NetCDF or Zarr store's address when it is read from one (docs/adr/0645 §5).
+    pub address: Option<String>,
     /// A 2DM's DATs.
     pub dats: Vec<PathBuf>,
     pub name: String,
@@ -121,9 +123,9 @@ fn msg(e: Event) -> Message {
     Message::Rasters(Rasters::Multidim(e))
 }
 
-/// A NetCDF file's contents.
-fn read_netcdf(path: &Path) -> Result<Read, String> {
-    let (info, bytes) = super::tiles::cube_info(&super::tiles::Origin::File(path.to_path_buf()))?;
+/// A NetCDF file's contents (a NetCDF-4, GRIB file or Zarr store read as one; a file or an address).
+fn read_netcdf(origin: &super::tiles::Origin) -> Result<Read, String> {
+    let (info, bytes) = super::tiles::cube_info(origin)?;
     Ok(Read {
         info,
         bytes,
@@ -266,6 +268,28 @@ impl App {
         self.multidim_event(Event::Picked(Mode::Grid, Some(vec![path])))
     }
 
+    /// Raster ekle's NetCDF or Zarr store at an address: this window, reading it from there (docs/adr/0645 §5).
+    pub(crate) fn multidim_from_address(&mut self, url: String) -> Task<Message> {
+        self.rasters.add = None;
+        let name = url
+            .trim_end_matches('/')
+            .rsplit('/')
+            .next()
+            .unwrap_or(&url)
+            .split(['?', '#'])
+            .next()
+            .unwrap_or("")
+            .to_owned();
+        let name = if name.is_empty() { url.clone() } else { name };
+        let id = self.multidim_open(Mode::Grid, PathBuf::from(&name), Vec::new());
+        let Some(s) = self.rasters.multidim.as_mut() else {
+            return Task::none();
+        };
+        s.address = Some(url);
+        let s = s.clone();
+        self.multidim_read(id, &s)
+    }
+
     fn multidim_open(&mut self, mode: Mode, path: PathBuf, dats: Vec<PathBuf>) -> u64 {
         let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
         let name = if path.as_os_str().is_empty() {
@@ -289,6 +313,7 @@ impl App {
         self.rasters.multidim = Some(State {
             mode,
             path,
+            address: None,
             dats,
             name,
             reading: id,
@@ -317,11 +342,22 @@ impl App {
                     Mode::Grid => GRID_TITLE,
                 });
                 let dialog = match mode {
-                    Mode::Mesh => {
-                        dialog.add_filter("Mesh (2DM ve DAT, UGRID NetCDF)", &["2dm", "dat", "nc"])
-                    }
-                    Mode::Grid => dialog.add_filter("NetCDF", &["nc"]),
+                    Mode::Mesh => dialog.add_filter(
+                        "Mesh (2DM ve DAT, UGRID NetCDF)",
+                        &["2dm", "dat", "nc", "nc4", "h5", "hdf5"],
+                    ),
+                    Mode::Grid => dialog.add_filter(
+                        "NetCDF, NetCDF-4, GRIB",
+                        &[
+                            "nc", "nc4", "h5", "hdf5", "he5", "grib", "grb", "grib2", "grb2",
+                        ],
+                    ),
                 };
+                // A Zarr store is chosen by its metadata file.
+                let dialog = dialog.add_filter(
+                    "Zarr deposu (.zmetadata, zarr.json, .zgroup)",
+                    &["zmetadata", "json", "zgroup", "zarray"],
+                );
                 dialog
                     .pick_files()
                     .await
@@ -347,7 +383,11 @@ impl App {
                 ))
             });
         }
-        super::off_thread(move || msg(Event::Read(id, Box::new(read_netcdf(&path)))))
+        let origin = match &s.address {
+            Some(u) => super::tiles::Origin::Url(u.clone()),
+            None => super::tiles::Origin::File(path),
+        };
+        super::off_thread(move || msg(Event::Read(id, Box::new(read_netcdf(&origin)))))
     }
 
     pub(crate) fn multidim_event(&mut self, e: Event) -> Task<Message> {
@@ -363,6 +403,9 @@ impl App {
                 let Some(main) = main else {
                     return Task::none();
                 };
+                // A Zarr store chosen by its metadata file is its folder.
+                let main =
+                    kentos_native_application::multidim_source::zarr_root(&main).unwrap_or(main);
                 let dats: Vec<PathBuf> = if is_2dm(&main) {
                     paths
                         .iter()
@@ -399,7 +442,10 @@ impl App {
                         if let Some(m) = r.info.meshes.first() {
                             s.cell = crate::crs::js_number(m.cell);
                         }
-                        if r.bytes > super::MOST_EMBEDDED as u64 {
+                        if r.bytes > super::MOST_EMBEDDED as u64
+                            || s.address.is_some()
+                            || s.path.is_dir()
+                        {
                             s.keep = Keep::Linked;
                         }
                     }
@@ -626,7 +672,7 @@ impl App {
                 ));
             }
             file = Some(out.to_string_lossy().into_owned());
-        } else {
+        } else if s.address.is_none() {
             file = Some(s.path.to_string_lossy().into_owned());
         }
         let (variable, vector, mesh, dims) = match &item {
@@ -666,7 +712,7 @@ impl App {
             sample: info.sample,
             asset,
             file,
-            url: None,
+            url: s.address.clone(),
             srid,
             style,
             opacity: None,
@@ -776,7 +822,11 @@ impl App {
             Some(Err(_)) => "okunamadı".to_owned(),
             Some(Ok(r)) => match &r.converted {
                 Some(_) => format!("2DM, {} DAT", s.dats.len()),
-                None => format!("NetCDF {}", r.info.version),
+                None => r
+                    .info
+                    .format
+                    .clone()
+                    .unwrap_or_else(|| format!("NetCDF {}", r.info.version)),
             },
         };
         if let Some(Ok(r)) = &s.read
@@ -1075,13 +1125,19 @@ impl App {
 
     fn multidim_options<'a>(&self, s: &'a State, r: &'a Read) -> Element<'a, Message> {
         let large = r.bytes > super::MOST_EMBEDDED as u64;
+        // An address and a Zarr store (a folder of files) are only linked.
+        let linked_only = s.address.is_some() || s.path.is_dir();
         let keep = Segmented::new_with(
             [Keep::Linked, Keep::Embedded],
             s.keep,
             |k| msg(Event::Keep(k)),
-            move |k| k == Keep::Linked || !large,
+            move |k| k == Keep::Linked || !(large || linked_only),
         );
-        let hint = if large {
+        let hint = if s.address.is_some() {
+            "Çizim adresi tutar; veri her açılışta adresten parça parça okunur.".to_owned()
+        } else if s.path.is_dir() {
+            "Zarr deposu bir klasördür; çizim klasörün yolunu tutar.".to_owned()
+        } else if large {
             format!(
                 "Dosya {} MB; gömülü raster en çok {} MB olabilir, bağlı kalır.",
                 r.bytes >> 20,

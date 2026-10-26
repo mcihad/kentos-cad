@@ -109,6 +109,25 @@ pub fn file_layout(
     gattrs: &[(String, Attr)],
     vars: &[VarOut],
 ) -> Result<FileLayout, String> {
+    file_layout_as(dims, gattrs, vars, None)
+}
+
+/// [`file_layout`] of the given version (2 or 5).
+pub fn file_layout_version(
+    dims: &[(String, u64)],
+    gattrs: &[(String, Attr)],
+    vars: &[VarOut],
+    version: u8,
+) -> Result<FileLayout, String> {
+    file_layout_as(dims, gattrs, vars, Some(version))
+}
+
+fn file_layout_as(
+    dims: &[(String, u64)],
+    gattrs: &[(String, Attr)],
+    vars: &[VarOut],
+    forced: Option<u8>,
+) -> Result<FileLayout, String> {
     let sizes: Vec<u64> = vars
         .iter()
         .map(|v| {
@@ -120,11 +139,11 @@ pub fn file_layout(
                 .ok_or_else(|| format!("“{}” değişkeni yazılamayacak kadar büyük.", v.name))
         })
         .collect::<Result<_, _>>()?;
-    let version = if sizes.iter().any(|&s| pad(s) > 0xFFFF_FFFC) {
+    let version = forced.unwrap_or(if sizes.iter().any(|&s| pad(s) > 0xFFFF_FFFC) {
         5
     } else {
         2
-    };
+    });
     let five = version == 5;
     let build = |begins: &[u64]| {
         let mut out = vec![b'C', b'D', b'F', version];

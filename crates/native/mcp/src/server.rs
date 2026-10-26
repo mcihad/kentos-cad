@@ -73,6 +73,7 @@ impl Server {
         kentos_postgis::register();
         // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
         kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
+        kentos_native_application::remote_host::register(Box::new(kentos_cloud::range::HttpRemote));
         let catalog = kentos_headless::catalog();
         let tools = tools::list(&catalog);
         Self {

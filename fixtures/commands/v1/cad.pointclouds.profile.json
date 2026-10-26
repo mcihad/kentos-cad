@@ -20729,7 +20729,7 @@
       "output": {
        "length": 42.42640687119285,
        "count": 37,
-       "read": 4780,
+       "read": 4880,
        "bins": [
         {
          "from": 0.0,
@@ -20759,7 +20759,28 @@
        ],
        "revision": "$current"
       },
-      "warnings": "$any"
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[14].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[15].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[16].sources[0]"
+       },
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[23].sources[1]"
+       }
+      ]
      },
      "expect": {
       "revision": "same"
@@ -20769,7 +20790,7 @@
    ]
   },
   {
-   "name": "metin bulutu aranmaz, söylenir",
+   "name": "metin bulutu: koridorun noktaları istasyonlarıyla",
    "steps": [
     {
      "op": "execute",
@@ -20786,6 +20807,7 @@
       ],
       "width": 10.0,
       "step": 30.0,
+      "points": true,
       "uids": [
        "$uidOf:14"
       ]
@@ -20794,8 +20816,8 @@
       "status": "completed",
       "output": {
        "length": 90.0,
-       "count": 0,
-       "read": 0,
+       "count": 2,
+       "read": 50,
        "bins": [
         {
          "from": 0.0,
@@ -20810,18 +20832,142 @@
         {
          "from": 60.0,
          "to": 90.0,
-         "count": 0
+         "count": 2,
+         "z": {
+          "min": 129.394,
+          "max": 144.787,
+          "mean": 137.09050000000002
+         }
+        }
+       ],
+       "revision": "$current",
+       "points": [
+        {
+         "cloud": "$uidOf:14",
+         "source": 0,
+         "index": 37,
+         "station": 81.67300000000978,
+         "offset": -3.110000000335276,
+         "x": 500081.673,
+         "y": 4400046.89,
+         "z": 144.787,
+         "class": 0
+        },
+        {
+         "cloud": "$uidOf:14",
+         "source": 0,
+         "index": 11,
+         "station": 90.0,
+         "offset": -3.2929999995976686,
+         "x": 500092.821,
+         "y": 4400046.707,
+         "z": 129.394,
+         "class": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "metin bulutu: eğik yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       }
+      ],
+      "width": 20.0,
+      "step": 25.0,
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 141.4213562373095,
+       "count": 11,
+       "read": 50,
+       "bins": [
+        {
+         "from": 0.0,
+         "to": 25.0,
+         "count": 2,
+         "z": {
+          "min": 115.868,
+          "max": 142.294,
+          "mean": 129.08100000000002
+         }
+        },
+        {
+         "from": 25.0,
+         "to": 50.0,
+         "count": 3,
+         "z": {
+          "min": 109.508,
+          "max": 146.161,
+          "mean": 130.87699999999998
+         }
+        },
+        {
+         "from": 50.0,
+         "to": 75.0,
+         "count": 1,
+         "z": {
+          "min": 107.063,
+          "max": 107.063,
+          "mean": 107.063
+         }
+        },
+        {
+         "from": 75.0,
+         "to": 100.0,
+         "count": 2,
+         "z": {
+          "min": 101.007,
+          "max": 142.83,
+          "mean": 121.91850000000001
+         }
+        },
+        {
+         "from": 100.0,
+         "to": 125.0,
+         "count": 1,
+         "z": {
+          "min": 140.982,
+          "max": 140.982,
+          "mean": 140.982
+         }
+        },
+        {
+         "from": 125.0,
+         "to": 141.4213562373095,
+         "count": 2,
+         "z": {
+          "min": 104.461,
+          "max": 132.246,
+          "mean": 118.3535
+         }
         }
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "cloud_source_unreadable",
-        "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
-        "path": "clouds[0].sources[0]"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "revision": "same"

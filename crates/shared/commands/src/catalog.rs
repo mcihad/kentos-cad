@@ -3222,7 +3222,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Meshin bilgisi".into(),
             summary: "Çizimin mesh rasterlerinin (uids; yoksa hepsi, çizimin sırasıyla) dosyasının başlığını ve ağını okur ve söyler; çizimi değiştirmez. \
                       Mesh: düğüm, yüz, kenar ve üçgen sayısı, kutusu, yüzlerinin toplam alanı, kenarlarının ortalama uzunluğu, koordinat sistemi (EPSG, coğrafi mi) ve veri setleri: değişkeni (vektörün x bileşeni; y bileşeni), adı ve birimi, düğümde mi yüzde mi, boyutları (zaman boyutu ayrıca: adım sayısı, ilk ve son an ve nasıl yazıldıkları); rasterin gösterdiği veri seti ve adımları. \
-                      Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. NetCDF-4, HDF5, GRIB ve Zarr okunmaz (neden iletide)."
+                      Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. Klasik NetCDF'in yanında NetCDF-4 (HDF5), GRIB ve Zarr da okunur; adresteki dosya ev sahibinin ağıyla."
                 .into(),
             aliases: vec!["meshbilgi".into(), "agbilgisi".into()],
             effect: CommandEffect::Query,
@@ -3265,6 +3265,60 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Bir yerin yüzü ve değerleri".into(),
                 input: json!({ "at": { "x": 500012.0, "y": 4420010.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_MESHES_REGION.into(),
+            version: crate::CAD_MESHES_REGION_VERSION,
+            title: "Mesh alan istatistiği".into(),
+            summary: "Bir alanın (ring, holes) içindeki mesh yüzlerini ve veri setlerinin o yüzlerdeki istatistiğini söyler; çizimi değiştirmez. \
+                      Yüz alandadır: merkezi (alanının ağırlık merkezi; içbükey yüzün merkezi yüzün dışına düşerse ilk üçgeninin ağırlık merkezi) halkanın kapalı alanında ve hiçbir deliğin kesin içinde değilse. Bir yüzün değeri o merkezde Mesh sor'un verdiği değerdir (düğümdeki veri setinde üçgende doğrusal ara değer, yüzdeki veri setinde yüzün değeri, vektörde büyüklüğü). \
+                      Her mesh için yüz sayısı (count), alanları toplamı (area), faces ile yüzlerin sırası (en çok 100 000) ve her veri seti için değeri olan yüz sayısı, en küçük, en büyük, yüz alanlarıyla ağırlıklı ortalama (mean) ve değer × alan toplamı (integral). time ve variables Mesh sor'unki gibidir. Meshler uids sırasıyla (yoksa görünenler); okunamayan dosya uyarıyla atlanır (mesh_source_unreadable). Klasik NetCDF'in yanında NetCDF-4 (HDF5), GRIB ve Zarr da okunur; adresteki dosya ev sahibinin ağıyla. Bir çağrıda en çok 2 milyon değer (too_many_mesh_values)."
+                .into(),
+            aliases: vec!["meshalan".into(), "agalan".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::MeshesRegion>(),
+            output: schema::<crate::MeshesRegioned>(),
+            plan: Some(schema::<crate::MeshesRegioned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir alandaki yüzlerin istatistiği".into(),
+                input: json!({ "ring": [
+                    { "x": 500000.0, "y": 4420000.0 }, { "x": 500020.0, "y": 4420000.0 },
+                    { "x": 500020.0, "y": 4420010.0 }, { "x": 500000.0, "y": 4420010.0 }
+                ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_MESHES_PROFILE.into(),
+            version: crate::CAD_MESHES_PROFILE_VERSION,
+            title: "Mesh profili".into(),
+            summary: "Bir yol boyunca (path) mesh veri setlerinin değerlerini istasyon istasyon söyler; çizimi değiştirmez. \
+                      İstasyonlar yolun başından step aralıkla (0, step, 2·step …) ve yolun sonudur; her istasyonun yeri, yattığı yüz (meshin dışında yok) ve her veri setinin oradaki değeri Mesh sor'un verdiği gibidir (değer yoksa null). time ve variables Mesh sor'unki gibidir. Meshler uids sırasıyla (yoksa görünenler); okunamayan dosya uyarıyla atlanır (mesh_source_unreadable). Bir çağrıda en çok 100 000 istasyon (too_many_stations) ve 2 milyon değer (too_many_mesh_values)."
+                .into(),
+            aliases: vec!["meshprofil".into(), "agprofil".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::MeshesProfile>(),
+            output: schema::<crate::MeshesProfiled>(),
+            plan: Some(schema::<crate::MeshesProfiled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir yol boyunca değerler".into(),
+                input: json!({ "path": [ { "x": 500000.0, "y": 4420005.0 }, { "x": 500020.0, "y": 4420005.0 } ], "step": 5.0 }),
                 output: None,
             }],
         },
@@ -10246,6 +10300,12 @@ mod tests {
                     crate::CAD_MESHES_QUERY => {
                         serde_json::from_value::<crate::MeshesQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_MESHES_REGION => {
+                        serde_json::from_value::<crate::MeshesRegion>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_MESHES_PROFILE => {
+                        serde_json::from_value::<crate::MeshesProfile>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone())
                             .map(|_| ())
@@ -10735,14 +10795,19 @@ mod tests {
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
                     }
-                    crate::FILE_PREFLIGHT_SHEETS => serde_json::from_value::<crate::PreflightSheets>(e.input.clone()).map(|_| ()),
+                    crate::FILE_PREFLIGHT_SHEETS => {
+                        serde_json::from_value::<crate::PreflightSheets>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::FILE_PUBLISH_SHEETS => {
                         serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
                     }
-                    crate::CAD_DONUT_CREATE => serde_json::from_value::<crate::DonutCreate>(e.input.clone()).map(|_| ()),
+                    crate::CAD_DONUT_CREATE => {
+                        serde_json::from_value::<crate::DonutCreate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_RECTANGLE_CREATE => {
                         serde_json::from_value::<crate::RectangleCreate>(e.input.clone())
                             .map(|_| ())
@@ -10776,7 +10841,8 @@ mod tests {
                         serde_json::from_value::<crate::SurveyAdjust>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ANNOTATIONS_WRITE => {
-                        serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_AREAS_EDIT => {
                         serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())
@@ -11014,10 +11080,10 @@ mod tests {
                             serde_json::from_value::<crate::TopologyChecked>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_TOPOLOGY_EXCEPTIONS => {
-                            serde_json::from_value::<crate::TopologyExceptionsEdited>(output.clone())
-                                .map(|_| ())
-                        }
+                        crate::CAD_TOPOLOGY_EXCEPTIONS => serde_json::from_value::<
+                            crate::TopologyExceptionsEdited,
+                        >(output.clone())
+                        .map(|_| ()),
                         crate::CAD_LAYERS_TIME => {
                             serde_json::from_value::<crate::LayersTimed>(output.clone()).map(|_| ())
                         }
@@ -11238,7 +11304,9 @@ mod tests {
                             serde_json::from_value::<crate::RecordsDuplicated>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_SHEETS_EDIT | crate::CAD_SHEETS_CREATE | crate::CAD_SHEETS_FIT => {
+                        crate::CAD_SHEETS_EDIT
+                        | crate::CAD_SHEETS_CREATE
+                        | crate::CAD_SHEETS_FIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
                                 .map(|_| ())
                         }

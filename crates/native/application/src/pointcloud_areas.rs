@@ -1,13 +1,14 @@
 //! A point cloud's statistics in an area and its profile along a line, at the source's full resolution
 //! (docs/adr/0552): `cad.pointclouds.region` and `cad.pointclouds.profile`. Both read the files themselves with the
 //! point cloud core, like `cad.pointclouds.query` (docs/adr/0536): a COPC reads only the nodes whose cube meets the
-//! area (or a segment of the corridor), a LAS or LAZ the whole file whose box does; the answer says the points read.
+//! area (or a segment of the corridor), a LAS or LAZ the whole file whose box does, a text cloud (XYZ, PTS, TXT, CSV)
+//! too, in two passes (docs/adr/0645 §6); the answer says the points read.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CloudRange, CloudRegionPart, CloudStats, CommandResult, CommandWarning, CloudFormat,
-    PROFILE_MOST_LISTED, PROFILE_MOST_STATIONS, POINTCLOUD_MOST_COUNTED, PointCloudEntity,
+    CloudFormat, CloudRange, CloudRegionPart, CloudStats, CommandResult, CommandWarning,
+    POINTCLOUD_MOST_COUNTED, PROFILE_MOST_LISTED, PROFILE_MOST_STATIONS, PointCloudEntity,
     PointCloudsProfile, PointCloudsProfiled, PointCloudsRegion, PointCloudsRegioned, ProfileBin,
     ProfilePoint, Vec2,
 };
@@ -20,19 +21,19 @@ use kentos_pointcloud::source::Cloud;
 
 use crate::checks::{self, Stop};
 use crate::codes;
-use crate::pointclouds::{answer, bytes_of, clouds, open, records, uids_checked};
+use crate::pointclouds::{TextPoints, answer, bytes_of, clouds, open, records, uids_checked};
 use crate::source_bytes::Bytes;
 
 /// A sum kept as two floats: `hi + lo` is the exact sum to about 106 bits, so the mean loses nothing before its one
 /// rounding (Knuth's two-sum).
 #[derive(Clone, Copy, Default)]
-struct Sum {
+pub(crate) struct Sum {
     hi: f64,
     lo: f64,
 }
 
 impl Sum {
-    fn add(&mut self, x: f64) {
+    pub(crate) fn add(&mut self, x: f64) {
         let s = self.hi + x;
         let bb = s - self.hi;
         let e = (self.hi - (s - bb)) + (x - bb);
@@ -40,7 +41,7 @@ impl Sum {
         self.lo += e;
     }
 
-    fn value(self) -> f64 {
+    pub(crate) fn value(self) -> f64 {
         self.hi + self.lo
     }
 }
@@ -159,9 +160,9 @@ struct Seen<'r> {
 /// Whether a COPC node's cube meets any of `boxes` (each `[x₁, y₁, x₂, y₂]`).
 fn node_meets(key: Key, info: &Info, boxes: &[[f64; 4]]) -> bool {
     let (low, side) = key.cube(info);
-    boxes.iter().any(|b| {
-        !(b[2] < low[0] || b[0] > low[0] + side || b[3] < low[1] || b[1] > low[1] + side)
-    })
+    boxes
+        .iter()
+        .any(|b| !(b[2] < low[0] || b[0] > low[0] + side || b[3] < low[1] || b[1] > low[1] + side))
 }
 
 fn box_meets(a: [f64; 4], b: [f64; 4]) -> bool {
@@ -222,7 +223,6 @@ fn scan(
         .flat_map(|(_, c)| c.cloud.sources.iter())
         .filter(|s| {
             s.format != CloudFormat::Copc
-                && s.format != CloudFormat::Xyz
                 && boxes
                     .iter()
                     .any(|b| box_meets(*b, [s.bounds[0], s.bounds[1], s.bounds[3], s.bounds[4]]))
@@ -246,10 +246,55 @@ fn scan(
                 path: Some(format!("clouds[{k}].sources[{si}]")),
             };
             if s.format == CloudFormat::Xyz {
-                warnings.push(at(format!(
-                    "Bulutun {}. kaynağı metin bulutu; noktası burada aranmaz.",
-                    si + 1
-                )));
+                let bytes = match bytes_of(doc, drawing, s) {
+                    Ok(b) => b,
+                    Err(why) => {
+                        warnings.push(at(format!("Bulutun {}. kaynağı okunamadı: {why}.", si + 1)));
+                        continue;
+                    }
+                };
+                let mut text = match TextPoints::open(&bytes) {
+                    Ok(t) => t,
+                    Err(why) => {
+                        warnings.push(at(format!("Bulutun {}. kaynağı okunamadı: {why}.", si + 1)));
+                        continue;
+                    }
+                };
+                let (layout, scale, offset) = (text.layout, text.scale, text.offset);
+                loop {
+                    let first = match text.next(&mut recs) {
+                        Ok(Some(f)) => f,
+                        Ok(None) => break,
+                        Err(why) => {
+                            warnings.push(at(format!(
+                                "Bulutun {}. kaynağının noktaları okunamadı: {why}.",
+                                si + 1
+                            )));
+                            break;
+                        }
+                    };
+                    let n = (recs.len() / layout.len) as u64;
+                    total += n;
+                    if total > POINTCLOUD_MOST_COUNTED {
+                        return Err(too_many(what, path));
+                    }
+                    read[k] += n;
+                    for (i, r) in recs.chunks_exact(layout.len).enumerate() {
+                        let xyz = [
+                            f64::from(layout.x(r)) * scale[0] + offset[0],
+                            f64::from(layout.y(r)) * scale[1] + offset[1],
+                            f64::from(layout.z(r)) * scale[2] + offset[2],
+                        ];
+                        see(&Seen {
+                            cloud: k,
+                            source: si as u32,
+                            index: first + i as u64,
+                            xyz,
+                            layout: &layout,
+                            record: r,
+                        });
+                    }
+                }
                 continue;
             }
             let opened = (|| -> Result<(Cloud, Bytes), String> {
@@ -259,10 +304,7 @@ fn scan(
             let (cloud, bytes) = match opened {
                 Ok(x) => x,
                 Err(why) => {
-                    warnings.push(at(format!(
-                        "Bulutun {}. kaynağı okunamadı: {why}.",
-                        si + 1
-                    )));
+                    warnings.push(at(format!("Bulutun {}. kaynağı okunamadı: {why}.", si + 1)));
                     continue;
                 }
             };
@@ -324,14 +366,13 @@ fn chosen<'a>(
 
 /// A ring's vertices, a repeated last vertex dropped; why not when it has fewer than three or one that is not a
 /// number.
-fn ring_of(r: &[Vec2], what: &str, path: &str) -> Result<Vec<P>, Stop> {
-    let bad = |why: String| {
-        Stop::failed(checks::error(
-            codes::INVALID_CLOUD_AREA,
-            why,
-            Some(path.to_owned()),
-        ))
-    };
+pub(crate) fn ring_of(r: &[Vec2], what: &str, path: &str) -> Result<Vec<P>, Stop> {
+    ring_coded(r, what, path, codes::INVALID_CLOUD_AREA)
+}
+
+/// [`ring_of`] refused with `code`.
+pub(crate) fn ring_coded(r: &[Vec2], what: &str, path: &str, code: &str) -> Result<Vec<P>, Stop> {
+    let bad = |why: String| Stop::failed(checks::error(code, why, Some(path.to_owned())));
     let mut pts: Vec<P> = Vec::with_capacity(r.len());
     for (i, p) in r.iter().enumerate() {
         if !(p.x.is_finite() && p.y.is_finite()) {
@@ -355,7 +396,7 @@ fn ring_of(r: &[Vec2], what: &str, path: &str) -> Result<Vec<P>, Stop> {
 
 /// Twice a ring's signed area (the shoelace sum, taken from the first vertex so that coordinates in the millions lose
 /// nothing).
-fn twice_area(r: &[P]) -> f64 {
+pub(crate) fn twice_area(r: &[P]) -> f64 {
     let mut s = Sum::default();
     let o = r[0];
     for i in 0..r.len() {
@@ -366,7 +407,7 @@ fn twice_area(r: &[P]) -> f64 {
 }
 
 #[derive(PartialEq)]
-enum Place {
+pub(crate) enum Place {
     Outside,
     Boundary,
     Inside,
@@ -374,7 +415,7 @@ enum Place {
 
 /// Where a point lies against a ring: on an edge (exactly), inside (an odd number of edges cross the ray to its
 /// east), or outside.
-fn place_in(ring: &[P], p: P) -> Place {
+pub(crate) fn place_in(ring: &[P], p: P) -> Place {
     let mut inside = false;
     for i in 0..ring.len() {
         let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
@@ -393,11 +434,20 @@ fn place_in(ring: &[P], p: P) -> Place {
             inside = !inside;
         }
     }
-    if inside { Place::Inside } else { Place::Outside }
+    if inside {
+        Place::Inside
+    } else {
+        Place::Outside
+    }
 }
 
-fn ring_box(r: &[P]) -> [f64; 4] {
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+pub(crate) fn ring_box(r: &[P]) -> [f64; 4] {
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for p in r {
         b[0] = b[0].min(p.x);
         b[1] = b[1].min(p.y);
@@ -443,37 +493,33 @@ pub(crate) fn region_in(
         what: "Bu alan",
         path: "ring",
     }
-    .run(
-        &mut warnings,
-        &mut read,
-        &mut |s| {
-            let p = P {
-                x: s.xyz[0],
-                y: s.xyz[1],
-            };
-            if p.x < bbox[0] || p.x > bbox[2] || p.y < bbox[1] || p.y > bbox[3] {
+    .run(&mut warnings, &mut read, &mut |s| {
+        let p = P {
+            x: s.xyz[0],
+            y: s.xyz[1],
+        };
+        if p.x < bbox[0] || p.x > bbox[2] || p.y < bbox[1] || p.y > bbox[3] {
+            return;
+        }
+        if place_in(&outer, p) == Place::Outside {
+            return;
+        }
+        for (h, hb) in holes.iter().zip(&hole_boxes) {
+            if p.x >= hb[0]
+                && p.x <= hb[2]
+                && p.y >= hb[1]
+                && p.y <= hb[3]
+                && place_in(h, p) == Place::Inside
+            {
                 return;
             }
-            if place_in(&outer, p) == Place::Outside {
-                return;
-            }
-            for (h, hb) in holes.iter().zip(&hole_boxes) {
-                if p.x >= hb[0]
-                    && p.x <= hb[2]
-                    && p.y >= hb[1]
-                    && p.y <= hb[3]
-                    && place_in(h, p) == Place::Inside
-                {
-                    return;
-                }
-            }
-            stats[s.cloud].add(
-                s.xyz,
-                s.layout.intensity(s.record),
-                s.layout.class(s.record),
-            );
-        },
-    )?;
+        }
+        stats[s.cloud].add(
+            s.xyz,
+            s.layout.intensity(s.record),
+            s.layout.class(s.record),
+        );
+    })?;
     let mut total = Stats::new();
     let mut parts = Vec::new();
     for (k, (uid, _)) in chosen.iter().enumerate() {
@@ -650,41 +696,37 @@ pub(crate) fn profile_in(
         what: "Bu profil",
         path: "path",
     }
-    .run(
-        &mut warnings,
-        &mut read,
-        &mut |s| {
-            let Some((station, offset)) = corridor.place(s.xyz[0], s.xyz[1]) else {
+    .run(&mut warnings, &mut read, &mut |s| {
+        let Some((station, offset)) = corridor.place(s.xyz[0], s.xyz[1]) else {
+            return;
+        };
+        count += 1;
+        let k = ((station / input.step).floor().max(0.0) as usize).min(n - 1);
+        bins[k].add(s.xyz[2]);
+        if input.points {
+            if listed.len() as u64 >= PROFILE_MOST_LISTED {
+                too_long = true;
                 return;
-            };
-            count += 1;
-            let k = ((station / input.step).floor().max(0.0) as usize).min(n - 1);
-            bins[k].add(s.xyz[2]);
-            if input.points {
-                if listed.len() as u64 >= PROFILE_MOST_LISTED {
-                    too_long = true;
-                    return;
-                }
-                listed.push((
-                    station,
-                    s.cloud,
-                    s.source,
-                    s.index,
-                    ProfilePoint {
-                        cloud: chosen[s.cloud].0.clone(),
-                        source: s.source,
-                        index: s.index,
-                        station,
-                        offset,
-                        x: s.xyz[0],
-                        y: s.xyz[1],
-                        z: s.xyz[2],
-                        class: s.layout.class(s.record),
-                    },
-                ));
             }
-        },
-    )?;
+            listed.push((
+                station,
+                s.cloud,
+                s.source,
+                s.index,
+                ProfilePoint {
+                    cloud: chosen[s.cloud].0.clone(),
+                    source: s.source,
+                    index: s.index,
+                    station,
+                    offset,
+                    x: s.xyz[0],
+                    y: s.xyz[1],
+                    z: s.xyz[2],
+                    class: s.layout.class(s.record),
+                },
+            ));
+        }
+    })?;
     if too_long {
         return Err(Stop::failed(checks::error(
             codes::TOO_MANY_LISTED_POINTS,
@@ -728,15 +770,14 @@ pub mod region {
     use crate::ExecutionContext;
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &PointCloudsRegion) -> CommandResult<()> {
-        let checked = ring_of(&input.ring, "Halka", "ring")
-            .and_then(|_| {
-                input
-                    .holes
-                    .iter()
-                    .enumerate()
-                    .try_for_each(|(h, r)| ring_of(r, "Delik", &format!("holes[{h}]")).map(|_| ()))
-            })
-            .and_then(|()| chosen(cx.doc, &input.uids).map(|_| ()));
+        let checked =
+            ring_of(&input.ring, "Halka", "ring")
+                .and_then(|_| {
+                    input.holes.iter().enumerate().try_for_each(|(h, r)| {
+                        ring_of(r, "Delik", &format!("holes[{h}]")).map(|_| ())
+                    })
+                })
+                .and_then(|()| chosen(cx.doc, &input.uids).map(|_| ()));
         match checked {
             Ok(()) => CommandResult::Completed {
                 output: (),

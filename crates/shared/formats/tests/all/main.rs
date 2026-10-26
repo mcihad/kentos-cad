@@ -6,6 +6,7 @@ mod coords;
 mod compress;
 mod dxf;
 mod cad_io;
+mod chunked;
 mod cad_spatial;
 mod cad_sheet;
 mod dxf_units;

@@ -1,0 +1,11 @@
+{
+  "mesh": "mesh",
+  "location": "node",
+  "long_name": "S\u0131cakl\u0131k",
+  "units": "degC",
+  "_ARRAY_DIMENSIONS": [
+    "time",
+    "layer",
+    "node"
+  ]
+}

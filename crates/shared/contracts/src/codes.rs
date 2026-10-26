@@ -1337,6 +1337,10 @@ codes! {
     MESH_VARIABLE_NOT_FOUND = "mesh_variable_not_found", Failed, false, "Meshte böyle bir veri seti yok.";
     /// A mesh query that would read more values than one call does (docs/adr/0552).
     TOO_MANY_MESH_VALUES = "too_many_mesh_values", Failed, false, "Sorgu bir çağrının okuyabileceğinden çok değer okurdu.";
+    /// A mesh area that is not a ring of three finite vertices with an area (docs/adr/0645 §7).
+    INVALID_MESH_AREA = "invalid_mesh_area", Failed, false, "Meshte sorulan alan en az üç köşeli, alanı sıfırdan büyük bir halka olmalı.";
+    /// A mesh profile's path or step that cannot be read (docs/adr/0645 §7).
+    INVALID_MESH_PATH = "invalid_mesh_path", Failed, false, "Mesh profilinin yolu en az iki köşeli, adımı sıfırdan büyük olmalı.";
     /// An area of interest that is not a ring of three finite vertices with an area (docs/adr/0552).
     INVALID_CLOUD_AREA = "invalid_cloud_area", Failed, false, "Alan en az üç köşeli, alanı sıfırdan büyük bir halka olmalı.";
     /// A profile's path, width or step that cannot be read (docs/adr/0552).

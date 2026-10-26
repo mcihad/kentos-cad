@@ -5,14 +5,19 @@
 //! reader, nothing here does input or output: a reader says which bytes it
 //! needs and the host reads them.
 
+pub mod blosc;
 pub mod cf;
+pub mod chunked;
 pub mod cube;
+pub mod grib;
+pub mod hdf5;
 pub mod mesh;
 pub mod netcdf;
 pub mod series;
 pub mod sms;
 pub mod ugrid;
 pub mod write;
+pub mod zarr;
 
 use kentos_contracts::RasterSample;
 

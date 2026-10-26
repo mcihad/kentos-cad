@@ -12,7 +12,15 @@
 //! is inactive. The values are of the step at a moment (`time`: the last step at or before it) or of the slice the
 //! raster shows; with `series`, of every step.
 //!
-//! Both read the file themselves, only the values they need. Neither writes anything.
+//! `cad.meshes.region` answers the faces of an area (docs/adr/0645 §7): a face is in it when its centre (its area's
+//! centroid; a non-convex face whose centroid falls outside it, its first triangle's centroid) lies in the closed
+//! outer ring and not strictly inside a hole; each dataset's value of a face is its value at the centre as
+//! `cad.meshes.query` answers it there, and the statistics are the faces' count, smallest, largest, mean weighted by
+//! the faces' areas and the sum of value × area. `cad.meshes.profile` answers the stations of a path (0, `step`,
+//! 2·`step` … and the path's end): each station's face and the datasets' values there, as the query does. The face
+//! the query finds also says its neighbours (the faces sharing one of its edges).
+//!
+//! All read the file themselves, only the values they need. None writes anything.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -26,6 +34,15 @@ pub const CAD_MESHES_DESCRIBE: &str = "cad.meshes.describe";
 pub const CAD_MESHES_DESCRIBE_VERSION: u32 = 1;
 pub const CAD_MESHES_QUERY: &str = "cad.meshes.query";
 pub const CAD_MESHES_QUERY_VERSION: u32 = 1;
+pub const CAD_MESHES_REGION: &str = "cad.meshes.region";
+pub const CAD_MESHES_REGION_VERSION: u32 = 1;
+pub const CAD_MESHES_PROFILE: &str = "cad.meshes.profile";
+pub const CAD_MESHES_PROFILE_VERSION: u32 = 1;
+
+/// The most stations one `cad.meshes.profile` answers.
+pub const MESH_MOST_STATIONS: u64 = 100_000;
+/// The most face ids one `cad.meshes.region` lists (`faces`).
+pub const MESH_MOST_LISTED: u64 = 100_000;
 
 /// The most values (steps × the places a value reads) one `cad.meshes.query` reads.
 pub const MESH_MOST_VALUES: u64 = 2_000_000;
@@ -281,6 +298,11 @@ pub struct MeshFace {
     /// The face's area.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub area: f64,
+    /// The faces sharing one of its edges (their places in the file's face order, ascending).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub neighbours: Vec<u64>,
 }
 
 /// One step of a series.
@@ -354,6 +376,231 @@ pub struct MeshesQueried {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MeshValue>>", optional))]
     pub values: Vec<MeshValue>,
     /// The values read from the file.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub read: u64,
+    #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.meshes.region` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`, `invalid_mesh_area`,
+/// `mesh_variable_not_found`, `too_many_mesh_values`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshesRegion {
+    /// The area's outer ring (at least three vertices, a repeated last vertex dropped), in the meshes' system.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub ring: Vec<Vec2>,
+    /// Holes in the area.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<Vec2>>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub holes: Vec<Vec<Vec2>>,
+    /// The meshes, in this order; none: every visible mesh of the drawing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    /// The moment of the values (milliseconds since 1970), as `cad.meshes.query`'s; none: the steps the raster shows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub time: Option<f64>,
+    /// The datasets asked; none: every dataset of the mesh.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub variables: Vec<String>,
+    /// Also list the faces' places (at most 100 000 a mesh).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub faces: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
+}
+
+/// A dataset over the faces of an area, or along a path.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshZonal {
+    pub variable: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vector: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<String>,
+    /// `node` or `face`.
+    pub location: String,
+    /// The time step the values are of, when the dataset has a time dimension.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub step: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub time: Option<f64>,
+    /// The faces with a value (region only).
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub max: Option<f64>,
+    /// The mean weighted by the faces' areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub mean: Option<f64>,
+    /// The sum of value × the face's area.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub integral: Option<f64>,
+}
+
+/// One mesh's faces in an area.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshRegion {
+    /// The mesh raster's persistent id.
+    pub mesh: String,
+    pub topology: String,
+    /// The faces in the area.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u64,
+    /// Their areas, together.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub area: f64,
+    /// With `faces`: their places in the file's face order, ascending.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub faces: Vec<u64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MeshZonal>>", optional))]
+    pub datasets: Vec<MeshZonal>,
+}
+
+/// Output of `cad.meshes.region` v1.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshesRegioned {
+    /// The area's own (the outer ring's less the holes').
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub area: f64,
+    /// Each mesh read, in the asked order (a mesh whose file is not read is said by a warning).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MeshRegion>>", optional))]
+    pub meshes: Vec<MeshRegion>,
+    /// The values read from the files.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub read: u64,
+    #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.meshes.profile` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`, `invalid_mesh_path`,
+/// `too_many_stations`, `mesh_variable_not_found`, `too_many_mesh_values`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshesProfile {
+    /// The path (at least two vertices, no part of no length), in the meshes' system.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub path: Vec<Vec2>,
+    /// The stations' spacing along the path.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub step: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub time: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub variables: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
+}
+
+/// A station of a path on a mesh.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshStation {
+    /// Its distance along the path.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    /// The face it lies in; none off the mesh.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(type = "number", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub face: Option<u64>,
+    /// Each dataset's value there, in the datasets' order (null: no value).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub values: Vec<Option<f64>>,
+}
+
+/// One mesh's stations.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshProfile {
+    pub mesh: String,
+    pub topology: String,
+    /// The datasets the stations' values are of (count, min, max, mean and integral left out).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MeshZonal>>", optional))]
+    pub datasets: Vec<MeshZonal>,
+    pub stations: Vec<MeshStation>,
+}
+
+/// Output of `cad.meshes.profile` v1.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeshesProfiled {
+    /// The path's length.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MeshProfile>>", optional))]
+    pub meshes: Vec<MeshProfile>,
     #[cfg_attr(feature = "ts", ts(type = "number"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub read: u64,

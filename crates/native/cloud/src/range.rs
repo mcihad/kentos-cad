@@ -277,3 +277,88 @@ async fn fetch_to(
         .map_err(|e| format!("“{}” yazılamadı: {e}.", part.display()))?;
     Ok(written)
 }
+
+/// The most bytes an object of a store (a Zarr chunk, its metadata) may take.
+const OBJECT_MOST: usize = 1 << 30;
+
+async fn get_object(url: String) -> Result<Option<Vec<u8>>, ApiFailure> {
+    let c = client().map_err(ApiFailure::local)?;
+    let res = send(c, &url, None, false)
+        .await
+        .map_err(|e| ApiFailure::local(e).with_retryable(true))?;
+    let status = res.status();
+    // An object never written: 404, or an S3 bucket's 403 for a key it does not hold (a bucket that does not let its
+    // keys be listed answers so; a refused store's metadata is then missing and says so).
+    if status == StatusCode::NOT_FOUND
+        || (status == StatusCode::FORBIDDEN && crate::access::s3_refusal(&url, status).is_some())
+    {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        return Err(
+            ApiFailure::local(format!("“{url}” okunamadı: sunucu {status} dedi."))
+                .with_retryable(status.is_server_error()),
+        );
+    }
+    if res.content_length().is_some_and(|n| n > OBJECT_MOST as u64) {
+        return Err(ApiFailure::local(format!(
+            "“{url}” 1 GB'tan büyük; okunmuyor."
+        )));
+    }
+    let bytes = res.bytes().await.map_err(|e| {
+        ApiFailure::local(format!("“{url}” okunurken kesildi: {e}.")).with_retryable(true)
+    })?;
+    Ok(Some(bytes.to_vec()))
+}
+
+/// An object at `url` whole; none when the server has none there.
+pub fn object(url: &str) -> Result<Option<Vec<u8>>, String> {
+    let mut wait = Duration::from_millis(250);
+    let mut last = String::new();
+    for _ in 0..3 {
+        match crate::runtime::wait(get_object(url.to_owned())) {
+            Ok(v) => return Ok(v),
+            Err(f) if f.retryable => {
+                last = f.message.clone();
+                std::thread::sleep(wait);
+                wait *= 4;
+            }
+            Err(f) => return Err(f.message.clone()),
+        }
+    }
+    Err(last)
+}
+
+/// The cloud client as a host's network (docs/adr/0645 §5): the desktop and the MCP server register it.
+pub struct HttpRemote;
+
+/// An address opened: its size and the version it was opened at.
+struct Opened {
+    url: String,
+    probe: Probe,
+}
+
+impl kentos_services::remote::RangeRead for Opened {
+    fn size(&self) -> u64 {
+        self.probe.size
+    }
+
+    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+        let len = len.min(self.probe.size.saturating_sub(offset));
+        read(&self.url, offset, len, self.probe.version.as_deref())
+    }
+}
+
+impl kentos_services::remote::Remote for HttpRemote {
+    fn open(&self, url: &str) -> Result<Box<dyn kentos_services::remote::RangeRead>, String> {
+        let probe = probe(url)?;
+        Ok(Box::new(Opened {
+            url: url.to_owned(),
+            probe,
+        }))
+    }
+
+    fn object(&self, url: &str) -> Result<Option<Vec<u8>>, String> {
+        object(url)
+    }
+}

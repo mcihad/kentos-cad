@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The shared cases of cad.meshes.describe and cad.meshes.query (docs/adr/0552; plan/gis.md CBS-32).
+"""The shared cases of cad.meshes.describe, .query, .region and .profile (docs/adr/0552, 0645; plan/gis.md CBS-32).
 
     uv run --no-project --with mpmath --with numpy python3 scripts/fixtures/mesh_cases.py --files   # writes fixtures/meshes/v1/files
     uv run --no-project --with mpmath --with numpy python3 scripts/fixtures/mesh_cases.py           # writes the cases
@@ -15,6 +15,14 @@ and labels) follows the ADR (§4) and ADR 0552; the face a place lies in and the
 (the faces as triangles, the lowest whose closed area holds the place, found exactly with fractions; node values
 interpolated exactly, a vector's magnitude at 50 digits). The face's area is exact (fractions), the edges are the faces'
 edges each once, the mean edge the hypotenuse of each at 50 digits.
+
+ADR 0645 §7 adds: the face's neighbours (the faces sharing one of its edges); an area's faces (a face is in it when its
+centre, its area's centroid found exactly with fractions, lies in the closed outer ring and not strictly inside a hole,
+decided exactly by the crossing number) with each dataset's value at the centre as the query answers it there, their
+count, smallest, largest, area-weighted mean and sum of value × area; a path's stations (0, step, 2·step … and the end,
+placed on their segment by the ADR's float rule) with their face and values. The same mesh is also read from its
+NetCDF-4 and Zarr copies (fixtures/multidim/v2, written by chunked_formats_cases.py --mesh-files with netCDF4-python and
+zarr-python): the answers are the classic file's.
 """
 import base64
 import json
@@ -35,6 +43,7 @@ mpmath.mp.dps = 50
 ROOT = Path(__file__).resolve().parents[2]
 MD_FILES = ROOT / "fixtures/multidim/v1/files"
 FILES = ROOT / "fixtures/meshes/v1/files"
+V2 = ROOT / "fixtures/multidim/v2"
 OUT = ROOT / "fixtures/commands/v1"
 ANY = "$any"
 WITHIN = 1e-9
@@ -262,6 +271,28 @@ class Ref:
         ti = md.locate(self.nodes, self.tris, x, y)
         return None if ti is None else self.tris[ti][1]
 
+    def neighbours(self, f):
+        """The faces sharing one of face f's edges, ascending."""
+        def edges(face):
+            return {(min(face[i], face[(i + 1) % len(face)]), max(face[i], face[(i + 1) % len(face)]))
+                    for i in range(len(face))}
+        mine = edges(self.faces[f])
+        return [g for g in range(len(self.faces)) if g != f and edges(self.faces[g]) & mine]
+
+    def centre(self, f):
+        """The face's area centroid, exactly."""
+        p = [tuple(Fraction(c) for c in self.nodes[k]) for k in self.faces[f]]
+        a = cx = cy = Fraction(0)
+        for i in range(len(p)):
+            (x1, y1), (x2, y2) = p[i], p[(i + 1) % len(p)]
+            c = x1 * y2 - x2 * y1
+            a += c
+            cx += (x1 + x2) * c
+            cy += (y1 + y2) * c
+        if a == 0:
+            return (sum(q[0] for q in p) / len(p), sum(q[1] for q in p) / len(p))
+        return (cx / (3 * a), cy / (3 * a))
+
     def face_area(self, f):
         p = [tuple(Fraction(c) for c in self.nodes[k]) for k in self.faces[f]]
         twice = sum(md.orient(p[0], p[i], p[i + 1]) for i in range(1, len(p) - 1))
@@ -365,7 +396,7 @@ def drawing():
     """Ids: 1 ugrid.nc depth (slice 1), 2 ugrid.nc vector ucx/ucy (slice 2), 3 quad-static elev, 4 quad-static zone,
     5 layered temp (time 1, layer 1), 6 layered wind (time 0), 7 sms-start.nc (2DM and DAT), 8 embedded ugrid.nc level
     (slice 0), 9 hidden ugrid.nc, 10 file not found, 11 broken, 12 NetCDF-4, 13 GRIB, 14 a grid raster (no mesh),
-    15 a line, 16 a topology the file does not have."""
+    15 a line, 16 a topology the file does not have, 17 layered temp from its NetCDF-4 copy, 18 from its Zarr copy."""
     r = refs()
     u, s, q, l, m = r["ugrid"], r["sms"], r["static"], r["layered"], r["sms"]
     ents = [
@@ -387,6 +418,8 @@ def drawing():
          "style": STYLE, "dataset": {"variable": "dem", "dims": []}},
         {"kind": "line", "id": 15, "layerId": "mesh", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1, "y": 1}},
         raster(16, "mesh", u, fx(MD_FILES / "ugrid.nc"), "depth", [0], mesh="yok"),
+        raster(17, "mesh", l, fx(V2 / "layered-nc4.nc"), "temp", [1, 1]),
+        raster(18, "mesh", l, fx(V2 / "layered.zarr"), "temp", [1, 1]),
     ]
     data = base64.b64encode((MD_FILES / "ugrid.nc").read_bytes()).decode()
 
@@ -510,6 +543,8 @@ def describe_cases():
              6: ("layered", "layered.nc: yüzdeki veri seti, yalnız zaman boyutu"),
              7: ("sms", "2DM ve DAT'tan dönüşen UGRID: Taban kotu ve DAT veri setleri"),
              8: ("ugrid", "gömülü mesh kitaplıktan okunur")}
+    names[17] = ("layered", "layered.nc'nin NetCDF-4 (HDF5) kopyası klasik dosyanın bilgisini verir")
+    names[18] = ("layered", "layered.nc'nin Zarr kopyası (klasör) klasik dosyanın bilgisini verir")
     for id_, (key, title) in names.items():
         out.append(case(title, step({"uids": [f"$uidOf:{id_}"]}, done(answer([described(id_, r[key])])))))
     out.append(case("gizli katmandaki mesh adıyla sorulunca okunur", step(
@@ -517,7 +552,7 @@ def describe_cases():
     out.append(case("dosyası olmayan mesh okunmaz, söylenir", step(
         {"uids": ["$uidOf:10"]}, done(answer([unread(10, ANY)]), [{"code": "mesh_source_unreadable", "message": ANY,
                                                                    "path": "meshes[0]"}]))))
-    for id_, what in ((11, "bozuk dosya"), (12, "NetCDF-4 (HDF5) dosyası okunmaz"), (13, "GRIB dosyası okunmaz")):
+    for id_, what in ((11, "bozuk dosya"), (12, "bozuk NetCDF-4 (HDF5) dosyası"), (13, "bozuk GRIB dosyası")):
         out.append(case(f"{what}: neden söylenir, öbürleri okunur", step(
             {"uids": [f"$uidOf:{id_}", "$uidOf:1"]},
             done(answer([unread(id_, ANY), described(1, r["ugrid"])]),
@@ -533,8 +568,9 @@ def describe_cases():
         {"uids": ["$uidOf:3", "$uidOf:3"]}, done(answer([described(3, r["static"])])))))
     everything = []
     warns = []
-    keys = {1: "ugrid", 2: "ugrid", 3: "static", 4: "static", 5: "layered", 6: "layered", 7: "sms", 8: "ugrid", 9: "ugrid"}
-    for id_ in range(1, 17):
+    keys = {1: "ugrid", 2: "ugrid", 3: "static", 4: "static", 5: "layered", 6: "layered", 7: "sms", 8: "ugrid", 9: "ugrid",
+            17: "layered", 18: "layered"}
+    for id_ in range(1, 19):
         e = entity(id_)
         if e["kind"] != "raster" or "mesh" not in e["dataset"] and e["dataset"].get("mesh") is None:
             continue
@@ -567,6 +603,344 @@ def describe_cases():
         case("mesh olmayan raster (CF ızgarası)", step({"uids": ["$uidOf:14"]}, failed("not_a_mesh", not_mesh, "uids[0]"))),
         case("raster olmayan nesne", step({"uids": ["$uidOf:15"]}, failed("not_a_mesh", not_mesh, "uids[0]"))),
         case("ikinci kimlik mesh değil", step({"uids": ["$uidOf:1", "$uidOf:15"]}, failed("not_a_mesh", not_mesh, "uids[1]"))),
+    ]
+    return out
+
+
+# ── Region and profile ─────────────────────────────────────────────────
+
+def ring_place(ring, q):
+    """0 outside, 1 on the boundary, 2 strictly inside: the crossing number to the east, decided exactly."""
+    qx, qy = q
+    parity = False
+    for i in range(len(ring)):
+        a = tuple(Fraction(c) for c in ring[i])
+        b = tuple(Fraction(c) for c in ring[(i + 1) % len(ring)])
+        o = md.orient(a, b, (qx, qy))
+        if o == 0 and min(a[0], b[0]) <= qx <= max(a[0], b[0]) and min(a[1], b[1]) <= qy <= max(a[1], b[1]):
+            return 1
+        up = a[1] <= qy < b[1]
+        down = b[1] <= qy < a[1]
+        if (up and o > 0) or (down and o < 0):
+            parity = not parity
+    return 2 if parity else 0
+
+
+def heading(ref, d, step_index, times):
+    h = {"variable": d["variable"], "location": d["location"], "count": 0}
+    if d["vector"]:
+        h["vector"] = d["vector"]
+    if ref.units(d["variable"]):
+        h["units"] = ref.units(d["variable"])
+    if step_index is not None:
+        h["step"] = step_index
+        h["time"] = times[step_index]
+    return h
+
+
+def dataset_values(ref, e, d, places, time):
+    """A dataset's heading, its values at `places` (None: no value) and the values read, as the query reads them."""
+    dims = ref.slice_dims(d)
+    tk = next((i for i, x in enumerate(dims) if x["time"]), None)
+    shown = {x["name"]: x["index"] for x in e["dataset"]["dims"]} if d["variable"] == e["dataset"]["variable"] else {}
+    idx = [shown.get(x["name"], 0) for x in dims]
+    per = (3 if d["location"] == "node" else 1) * (2 if d["vector"] else 1) + (1 if d["mask"] else 0)
+    if tk is None:
+        return heading(ref, d, None, []), [ref.value(d, idx, *pl)[0] for pl in places], per * len(places)
+    times = dims[tk]["values"]
+    m = time
+    if m is None:
+        for x in e["dataset"]["dims"]:
+            if x.get("time"):
+                m = x["values"][x["index"]]
+    st = 0 if m is None else sum(1 for t in times if t <= m) - 1
+    if st < 0:
+        return heading(ref, d, None, times), [None] * len(places), 0
+    idx[tk] = st
+    return heading(ref, d, st, times), [ref.value(d, idx, *pl)[0] for pl in places], per * len(places)
+
+
+def chosen_sets(ref, variables):
+    if not variables:
+        return ref.datasets
+    return [next(d for d in ref.datasets if d["variable"] == v) for v in variables]
+
+
+def regioned(ids, keys, ring, holes=(), time=None, variables=None, faces=False):
+    refs_ = refs()
+    total = Fraction(0)
+    for r_ in [ring] + list(holes):
+        twice = sum(Fraction(r_[i][0]) * Fraction(r_[(i + 1) % len(r_)][1]) - Fraction(r_[(i + 1) % len(r_)][0]) * Fraction(r_[i][1])
+                    for i in range(len(r_)))
+        total += abs(twice) / 2 if r_ is ring else -abs(twice) / 2
+    out, read = [], 0
+    for id_, key in zip(ids, keys):
+        ref, e = refs_[key], entity(id_)
+        inside = []
+        for f in range(len(ref.faces)):
+            c = ref.centre(f)
+            assert ref.face_of(float(c[0]), float(c[1])) == f, "a centre outside its face"
+            if ring_place(ring, c) and not any(ring_place(h, c) == 2 for h in holes):
+                inside.append(f)
+        places = [tuple(float(v) for v in ref.centre(f)) for f in inside]
+        areas = [Fraction(ref.face_area(f)) for f in inside]
+        sets = []
+        for d in chosen_sets(ref, variables):
+            h, vals, n = dataset_values(ref, e, d, places, time)
+            if places:
+                read += n
+            have = [(v, a) for v, a in zip(vals, areas) if v is not None]
+            h["count"] = len(have)
+            if have:
+                h["min"] = min(v for v, _ in have)
+                h["max"] = max(v for v, _ in have)
+                integral = sum(Fraction(v) * a for v, a in have)
+                h["integral"] = float(integral)
+                w = sum(a for _, a in have)
+                if w > 0:
+                    h["mean"] = float(integral / w)
+            sets.append(h)
+        m = {"mesh": f"$uidOf:{id_}", "topology": ref.name, "count": len(inside), "area": float(sum(areas, Fraction(0)))}
+        if faces and inside:
+            m["faces"] = inside
+        if sets:
+            m["datasets"] = sets
+        out.append(m)
+    res = {"area": float(total), "read": read, "revision": "$current"}
+    if out:
+        res["meshes"] = out
+    return res
+
+
+def region_step(ids, keys, ring, holes=(), time=None, variables=None, faces=False, uids=True, op="execute", warnings=()):
+    inp = {"ring": [{"x": x, "y": y} for x, y in ring]}
+    if holes:
+        inp["holes"] = [[{"x": x, "y": y} for x, y in h] for h in holes]
+    if uids:
+        inp["uids"] = [f"$uidOf:{i}" for i in ids]
+    if time is not None:
+        inp["time"] = time
+    if variables:
+        inp["variables"] = variables
+    if faces:
+        inp["faces"] = True
+    return step(inp, done(regioned(ids, keys, ring, holes, time, variables, faces), warnings), op=op)
+
+
+def stations(path, step_):
+    lens = [math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])) for a, b in zip(path, path[1:])]
+    starts, at = [], 0.0
+    for ln in lens:
+        starts.append(at)
+        at += ln
+    length = at
+    whole = math.floor(length / step_)
+
+    def place(st):
+        j = min(max(sum(1 for v in starts if v <= st) - 1, 0), len(lens) - 1)
+        a, b = path[j], path[j + 1]
+        t = min(max((st - starts[j]) / lens[j], 0.0), 1.0)
+        return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+
+    out = [(k * step_, place(k * step_)) for k in range(whole + 1)]
+    if whole * step_ < length:
+        out.append((length, tuple(path[-1])))
+    return length, out
+
+
+def profiled(ids, keys, path, step_, time=None, variables=None):
+    length, sts = stations(path, step_)
+    places = [p for _, p in sts]
+    out, read = [], 0
+    for id_, key in zip(ids, keys):
+        ref, e = refs()[key], entity(id_)
+        heads, columns = [], []
+        for d in chosen_sets(ref, variables):
+            h, vals, n = dataset_values(ref, e, d, places, time)
+            read += n
+            del h["count"]
+            h["count"] = 0
+            heads.append(h)
+            columns.append(vals)
+        rows = []
+        for i, (st, (x, y)) in enumerate(sts):
+            row = {"station": st, "x": x, "y": y, "values": [c[i] for c in columns]}
+            f = ref.face_of(x, y)
+            if f is not None:
+                row["face"] = f
+            rows.append(row)
+        m = {"mesh": f"$uidOf:{id_}", "topology": ref.name, "stations": rows}
+        if heads:
+            m["datasets"] = heads
+        out.append(m)
+    res = {"length": length, "read": read, "revision": "$current"}
+    if out:
+        res["meshes"] = out
+    return res
+
+
+def profile_step(ids, keys, path, step_, time=None, variables=None, uids=True, op="execute", warnings=()):
+    inp = {"path": [{"x": x, "y": y} for x, y in path], "step": step_}
+    if uids:
+        inp["uids"] = [f"$uidOf:{i}" for i in ids]
+    if time is not None:
+        inp["time"] = time
+    if variables:
+        inp["variables"] = variables
+    return step(inp, done(profiled(ids, keys, path, step_, time, variables), warnings), op=op)
+
+
+def too_many(ids, keys, points):
+    """The refusal of a call whose values pass 2 million: the budget when it first does (datasets in order, those with
+    no step at the moment not counted)."""
+    budget = 0
+    for id_, key in zip(ids, keys):
+        ref = refs()[key]
+        for d in ref.datasets:
+            per = (3 if d["location"] == "node" else 1) * (2 if d["vector"] else 1) + (1 if d["mask"] else 0)
+            budget += per * points
+            if budget > 2_000_000:
+                return (f"Sorgu {budget} değer okurdu; bir çağrı en çok 2000000 değer okur. "
+                        "Adımı büyütün ya da veri setlerini ayrı ayrı sorun.")
+    raise ValueError("within the budget")
+
+
+def rect(x1, y1, x2, y2):
+    return [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
+
+
+UID_TEXT = ("geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir "
+            "(01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.")
+GONE = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+NOT_MESH = "Verilen nesne bir mesh rasteri değil; bir meshin (UGRID veri setini gösteren rasterin) kimliğini verin."
+
+
+def region_cases():
+    out = []
+    lay = rect(499999.0, 4419999.0, 500021.0, 4420011.0)
+    l = refs()["layered"]
+    t0 = moment(l, l.datasets[0], 0)
+    out.append(case("layered.nc: iki yüz, gösterilen adım ve katman", region_step([5], ["layered"], lay)))
+    out.append(case("layered.nc: yalnız sol yüz", region_step([5], ["layered"], rect(499999.0, 4419999.0, 500009.0, 4420011.0))))
+    out.append(case("layered.nc: merkez halkanın kenarında: yüz alandadır", region_step(
+        [5], ["layered"], rect(500005.0, 4419999.0, 500015.0, 4420011.0))))
+    out.append(case("layered.nc: merkez deliğin kenarında: yüz alandadır", region_step(
+        [5], ["layered"], lay, holes=[rect(500005.0, 4420001.0, 500012.0, 4420009.0)])))
+    out.append(case("layered.nc: merkez deliğin içinde: yüz alanda değil", region_step(
+        [5], ["layered"], lay, holes=[rect(500001.0, 4420001.0, 500009.0, 4420009.0)])))
+    out.append(case("layered.nc: an ilk adımda", region_step([5], ["layered"], lay, time=t0 + HOUR, variables=["temp"])))
+    out.append(case("layered.nc: an ilk adımdan önce: değer yok, okunmaz", region_step(
+        [5], ["layered"], lay, time=t0 - 1.0, variables=["temp", "wind"])))
+    out.append(case("layered.nc: yüzdeki veri seti, yüzlerin sırası", region_step([6], ["layered"], lay, faces=True)))
+    out.append(case("layered.nc: alanda yüz yok", region_step([5], ["layered"], rect(400000.0, 4400000.0, 400010.0, 4400010.0))))
+    out.append(case("layered.nc'nin NetCDF-4 kopyası aynı istatistiği verir", region_step([17], ["layered"], lay)))
+    out.append(case("layered.nc'nin Zarr kopyası aynı istatistiği verir", region_step([18], ["layered"], lay, faces=True)))
+    out.append(case("üç biçim birlikte: kimliklerin sırasıyla", region_step([18, 5, 17], ["layered"] * 3, lay)))
+    u = refs()["ugrid"]
+    big = rect(499990.0, 4419990.0, 500060.0, 4420060.0)
+    out.append(case("ugrid.nc: bütün yüzlerin düzeyi", region_step([1], ["ugrid"], big, variables=["level"], faces=True)))
+    out.append(case("ugrid.nc: L biçimli alanın düzeyi", region_step(
+        [1], ["ugrid"], [(499990.0, 4419990.0), (500050.0, 4419990.0), (500050.0, 4420015.0), (500015.0, 4420015.0),
+                          (500015.0, 4420060.0), (499990.0, 4420060.0)], variables=["level"], faces=True)))
+    out.append(case("ugrid.nc: kapalı yüz derinlikte sayılmaz", region_step(
+        [1], ["ugrid"], rect(499990.0, 4419990.0, 500060.0, 4420015.0), variables=["depth", "level"])))
+    out.append(case("ugrid.nc: vektörün büyüklüğü", region_step([2], ["ugrid"], rect(499990.0, 4419990.0, 500060.0, 4420015.0),
+                                                              variables=["ucx"])))
+    out.append(case("quad-static.nc: coğrafi mesh, zamansız", region_step([3], ["static"], rect(31.9, 35.9, 32.3, 36.3))))
+    out.append(case("2DM'den dönüşen mesh", region_step([7], ["sms"], rect(-1.0, -1.0, 100.0, 100.0))))
+    out.append(case("gömülü mesh kitaplıktan okunur", region_step([8], ["ugrid"], big, variables=["level"])))
+    vis = [i for i in range(1, 19) if i in (1, 2, 3, 4, 5, 6, 7, 8, 17, 18)]
+    out.append(case("okunamayan mesh uyarıyla atlanır", step(
+        {"ring": [{"x": x, "y": y} for x, y in lay], "uids": ["$uidOf:10", "$uidOf:5"]},
+        done(regioned([5], ["layered"], lay), [{"code": "mesh_source_unreadable", "message": ANY, "path": "meshes[0]"}]))))
+    out.append(case("plan aynı cevabı yazmadan verir", region_step([5], ["layered"], lay, op="plan")))
+    out.append(case("validate yalnız denetler", step(
+        {"ring": [{"x": x, "y": y} for x, y in lay]}, {"status": "completed", "output": None, "warnings": []}, op="validate")))
+    bad_ring = "Halka en az üç köşeli olmalı; alanın köşelerini sırayla verin."
+    out += [
+        case("halka iki köşeli", step({"ring": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}]},
+                                      failed("invalid_mesh_area", bad_ring, "ring"))),
+        case("halkanın alanı sıfır", step({"ring": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 2.0, "y": 2.0}]}, failed(
+            "invalid_mesh_area",
+            "Alanın büyüklüğü sıfırdan büyük olmalı (halka eksi delikler); köşeler bir doğru üzerinde ya da delikler halkayı kaplıyor.",
+            "ring"))),
+        case("delik iki köşeli", step({"ring": [{"x": x, "y": y} for x, y in lay],
+                                       "holes": [[{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}]]},
+                                      failed("invalid_mesh_area", "Delik en az üç köşeli olmalı; alanın köşelerini sırayla verin.",
+                                             "holes[0]"))),
+        case("bilinmeyen veri seti", step({"ring": [{"x": x, "y": y} for x, y in lay], "uids": ["$uidOf:5"],
+                                           "variables": ["temp", "yok"]}, failed(
+            "mesh_variable_not_found", "“yok” veri seti meshte yok; var olanlar: temp, wind.", "variables[1]"))),
+        case("geçersiz kimlik", step({"ring": [{"x": x, "y": y} for x, y in lay], "uids": ["mesh"]},
+                                     failed("invalid_uid", f"“mesh” {UID_TEXT}", "uids[0]"))),
+        case("çizimde olmayan nesne", step({"ring": [{"x": x, "y": y} for x, y in lay], "uids": [GONE]}, failed(
+            "entity_not_found",
+            f"“{GONE}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+            "uids[0]"))),
+        case("mesh olmayan nesne", step({"ring": [{"x": x, "y": y} for x, y in lay], "uids": ["$uidOf:15"]},
+                                        failed("not_a_mesh", NOT_MESH, "uids[0]"))),
+    ]
+    del vis
+    return out
+
+
+def profile_cases():
+    out = []
+    l = refs()["layered"]
+    t0 = moment(l, l.datasets[0], 0)
+    mid = [(499995.0, 4420005.0), (500025.0, 4420005.0)]
+    out.append(case("layered.nc: yatay yol, mesh dışında başlayıp biten", profile_step([5], ["layered"], mid, 5.0)))
+    out.append(case("layered.nc: istasyon yüzlerin ortak kenarında", profile_step([5], ["layered"], [(500000.0, 4420002.0), (500020.0, 4420002.0)], 10.0)))
+    out.append(case("layered.nc: son istasyon yolun sonu", profile_step([5], ["layered"], [(500001.0, 4420001.0), (500019.0, 4420009.0)], 4.0)))
+    out.append(case("layered.nc: köşeli yol", profile_step(
+        [5], ["layered"], [(500002.0, 4420002.0), (500018.0, 4420002.0), (500018.0, 4420008.0)], 3.0)))
+    out.append(case("layered.nc: an ilk adımda", profile_step([5], ["layered"], mid, 5.0, time=t0 + HOUR, variables=["temp"])))
+    out.append(case("layered.nc: an ilk adımdan önce", profile_step([5], ["layered"], mid, 10.0, time=t0 - 1.0)))
+    out.append(case("layered.nc: yüz veri seti", profile_step([6], ["layered"], mid, 5.0, variables=["wind"])))
+    out.append(case("NetCDF-4 kopyası aynı profili verir", profile_step([17], ["layered"], mid, 5.0)))
+    out.append(case("Zarr kopyası aynı profili verir", profile_step([18], ["layered"], mid, 5.0)))
+    out.append(case("üç biçim birlikte", profile_step([5, 17, 18], ["layered"] * 3, mid, 7.5)))
+    out.append(case("ugrid.nc: düzey boyunca", profile_step(
+        [1], ["ugrid"], [(499995.0, 4420010.0), (500055.0, 4420010.0)], 5.0, variables=["level"])))
+    out.append(case("ugrid.nc: derinlik ve vektör", profile_step(
+        [2], ["ugrid"], [(500002.0, 4420002.0), (500018.0, 4420018.0)], 4.0, variables=["depth", "ucx"])))
+    out.append(case("quad-static.nc: coğrafi mesh", profile_step([3], ["static"], [(32.01, 36.05), (32.19, 36.05)], 0.03)))
+    out.append(case("2DM'den dönüşen mesh", profile_step([7], ["sms"], [(1.0, 5.0), (35.0, 5.0)], 4.0)))
+    out.append(case("okunamayan mesh uyarıyla atlanır", step(
+        {"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0, "uids": ["$uidOf:11", "$uidOf:5"]},
+        done(profiled([5], ["layered"], mid, 5.0), [{"code": "mesh_source_unreadable", "message": ANY, "path": "meshes[0]"}]))))
+    out.append(case("plan aynı cevabı yazmadan verir", profile_step([5], ["layered"], mid, 5.0, op="plan")))
+    out.append(case("validate yalnız denetler", step(
+        {"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0}, {"status": "completed", "output": None, "warnings": []},
+        op="validate")))
+    out += [
+        case("yol tek köşeli", step({"path": [{"x": 0.0, "y": 0.0}], "step": 5.0}, failed(
+            "invalid_mesh_path", "Profilin yolu en az iki köşeli olmalı; yolun köşelerini sırayla verin.", "path"))),
+        case("yolun art arda iki köşesi aynı", step({"path": [{"x": 0.0, "y": 0.0}, {"x": 5.0, "y": 0.0}, {"x": 5.0, "y": 0.0}],
+                                                    "step": 5.0}, failed(
+            "invalid_mesh_path", "Yolun 3. köşesi öncekiyle aynı; uzunluğu olmayan parça olmaz.", "path[2]"))),
+        case("adım sıfır", step({"path": [{"x": x, "y": y} for x, y in mid], "step": 0.0}, failed(
+            "invalid_mesh_path", "Adım sıfırdan büyük olmalı; istasyonların yol boyunca aralığını verin.", "step"))),
+        case("çok istasyon", step({"path": [{"x": 0.0, "y": 0.0}, {"x": 1000.0, "y": 0.0}], "step": 0.001}, failed(
+            "too_many_stations",
+            "Yol 1000001 istasyon verirdi; bir çağrı en çok 100000 istasyon cevaplar. Adımı büyütün.", "step"))),
+        case("üç meshte 90 911 istasyon: çağrının değer sınırı aşılır", step(
+            {"path": [{"x": 500000.0, "y": 4420010.0}, {"x": 500100.0, "y": 4420010.0}], "step": 0.0011,
+             "uids": ["$uidOf:1", "$uidOf:2", "$uidOf:8"]}, failed(
+                "too_many_mesh_values",
+                too_many([1, 2, 8], ["ugrid"] * 3, len(stations([(500000.0, 4420010.0), (500100.0, 4420010.0)], 0.0011)[1])),
+                "step"))),
+        case("bilinmeyen veri seti", step({"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0, "uids": ["$uidOf:5"],
+                                           "variables": ["yok"]}, failed(
+            "mesh_variable_not_found", "“yok” veri seti meshte yok; var olanlar: temp, wind.", "variables[0]"))),
+        case("geçersiz kimlik", step({"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0, "uids": ["mesh"]},
+                                     failed("invalid_uid", f"“mesh” {UID_TEXT}", "uids[0]"))),
+        case("çizimde olmayan nesne", step({"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0, "uids": [GONE]}, failed(
+            "entity_not_found",
+            f"“{GONE}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+            "uids[0]"))),
+        case("mesh olmayan nesne", step({"path": [{"x": x, "y": y} for x, y in mid], "step": 5.0, "uids": ["$uidOf:14"]},
+                                        failed("not_a_mesh", NOT_MESH, "uids[0]"))),
     ]
     return out
 
@@ -637,6 +1011,9 @@ def queried(id_, key, at, time=None, series=False, variables=None, op="execute")
     if face is not None:
         out["face"] = {"mesh": f"$uidOf:{id_}", "topology": ref.name, "face": face, "nodes": ref.faces[face],
                        "area": ref.face_area(face)}
+        nb = ref.neighbours(face)
+        if nb:
+            out["face"]["neighbours"] = nb
         shown = {s["name"]: s["index"] for s in e["dataset"]["dims"]}
         sm = None
         for s in e["dataset"]["dims"]:
@@ -748,7 +1125,7 @@ def queried_visible(at):
     return queried_in(1, "ugrid", at)
 
 
-NOTE = ("ADR 0552. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik "
+NOTE = ("ADR 0552, 0645. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik "
         "NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; "
         "KentOS kodu yok.")
 
@@ -772,6 +1149,8 @@ def main():
     files = {
         "cad.meshes.describe": ("Meshin bilgisi", describe_cases),
         "cad.meshes.query": ("Mesh sor", query_cases),
+        "cad.meshes.region": ("Mesh alan istatistiği", region_cases),
+        "cad.meshes.profile": ("Mesh profili", profile_cases),
     }
     bad = 0
     for command, (title, make) in files.items():

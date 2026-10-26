@@ -13297,9 +13297,32 @@
     "mcp": true,
     "server": false
    },
-   "cases": 24,
+   "cases": 26,
    "files": [
     "fixtures/commands/v1/cad.meshes.describe.json"
+   ],
+   "options": [],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.meshes.profile",
+   "title": "Mesh profili",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 26,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.profile.json"
    ],
    "options": [],
    "kinds": [
@@ -13327,6 +13350,35 @@
    "options": [
     {
      "key": "series",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.meshes.region",
+   "title": "Mesh alan istatistiği",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 29,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.region.json"
+   ],
+   "options": [
+    {
+     "key": "faces",
      "value": true,
      "covered": true
     }
@@ -13958,7 +14010,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 40,
+   "cases": 41,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.profile.json"
    ],
@@ -13987,7 +14039,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 25,
+   "cases": 28,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.query.json"
    ],
@@ -14010,7 +14062,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 40,
+   "cases": 41,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.region.json"
    ],

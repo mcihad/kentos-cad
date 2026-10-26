@@ -2325,7 +2325,86 @@
    ]
   },
   {
-   "name": "metin bulutu aranmaz, söylenir",
+   "name": "metin bulutu: satırlarından okunur, en yakın noktası satırının sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500013.383,
+       "y": 4400092.83
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:14",
+        "source": 0,
+        "index": 0,
+        "x": 500013.38,
+        "y": 4400092.832,
+        "z": 104.491,
+        "distance": 0.0036055514305745966,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyası olmayan kaynak söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500068.15300000005,
+       "y": 4400198.257999999
+      },
+      "radius": 1.0,
+      "uids": [
+       "$uidOf:15"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "read": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "$any",
+        "path": "clouds[0].sources[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin bulutu: erimde nokta yok, bütün dosya okunur",
    "steps": [
     {
      "op": "execute",
@@ -2342,16 +2421,55 @@
      "result": {
       "status": "completed",
       "output": {
-       "read": 0,
+       "read": 50,
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "cloud_source_unreadable",
-        "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
-        "path": "clouds[0].sources[0]"
-       }
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin kaynağı ve döşeme: ikisinde de aranır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500013.383,
+       "y": 4400092.83
+      },
+      "radius": 2.0,
+      "uids": [
+       "$uidOf:28",
+       "$uidOf:28"
       ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:28",
+        "source": 0,
+        "index": 0,
+        "x": 500013.38,
+        "y": 4400092.832,
+        "z": 104.491,
+        "distance": 0.0036055514305745966,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
      },
      "expect": {
       "revision": "same"

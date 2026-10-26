@@ -19,6 +19,7 @@ the points read are those of the sources (and COPC nodes) whose box meets the se
 """
 import base64
 import json
+import math
 import struct
 import sys
 import uuid
@@ -555,9 +556,10 @@ def describe_cases():
     out.append(case("dosyası olmayan kaynak okunmaz, söylenir", step(
         {"uids": ["$uidOf:15"]}, done(answer([described(15, [missing])]), [ANY]))))
     rec = drawing()["entities"][15]["sources"][0]
-    why = "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur"
-    out.append(case("adresteki kaynak burada okunmaz, söylenir", step(
-        {"uids": ["$uidOf:16"]}, done(answer([described(16, [unread(rec, why)])]), [warn(why)]))))
+    # The address is .invalid: a host with no network says so, one with a network that the name is not found
+    # (docs/adr/0645 §5); either way the source is not read and said.
+    out.append(case("adresteki kaynak okunamazsa söylenir", step(
+        {"uids": ["$uidOf:16"]}, done(answer([described(16, [unread(rec, ANY)])]), [ANY]))))
     rec = drawing()["entities"][16]["sources"][0]
     out.append(case("bozuk dosya okunmaz, söylenir", step(
         {"uids": ["$uidOf:17"]}, done(answer([described(17, [unread(rec, ANY)])]), [ANY]))))
@@ -658,18 +660,67 @@ def points_of(name):
     return p, order
 
 
+class TextPoints:
+    """A text cloud's points as laspy's arrays (x, y, z, intensity, classification), in its records' order."""
+
+    def __init__(self, name):
+        def number(t):
+            try:
+                v = float(t)
+            except ValueError:
+                return None
+            return v if math.isfinite(v) else None
+
+        rows, columns = [], None
+        for line in (FILES / name).read_text("utf-8").splitlines():
+            fields = [f for f in line.replace(",", " ").replace(";", " ").split() if f]
+            values = [number(f) for f in fields]
+            if columns is None:
+                if len(values) < 3 or any(v is None for v in values[:3]):
+                    continue  # a header line
+                n = len(values)
+                columns = "xyz" if n == 3 else "xyzi" if n in (4, 5) else "xyzrgb" if n == 6 else "xyzirgb"
+            need = {"xyz": 3, "xyzi": 4, "xyzrgb": 6, "xyzirgb": 7}[columns]
+            if len(values) < need or any(v is None for v in values[:3]):
+                continue
+            i = 0
+            if columns in ("xyzi", "xyzirgb") and len(values) > 3 and values[3] is not None:
+                i = int(values[3])
+            rows.append((values[0], values[1], values[2], i))
+        a = np.array(rows, dtype=float).reshape(-1, 4)
+        self.x, self.y, self.z = a[:, 0], a[:, 1], a[:, 2]
+        self.intensity = a[:, 3].astype(int)
+        n = len(rows)
+        # Records of format 6: return 1 of 1, class 0, no source id, no GPS time.
+        self.classification = np.zeros(n, dtype=int)
+        self.return_number = np.ones(n, dtype=int)
+        self.number_of_returns = np.ones(n, dtype=int)
+        self.point_source_id = np.zeros(n, dtype=int)
+        self.gps_time = np.zeros(n)
+        self.point_format = type("Format", (), {"id": 6 if columns in ("xyz", "xyzi") else 7})()
+
+
 def nearest(clouds, at, reach):
     """The nearest point over (cloud id, source index, name) in their order, each source's points in its order;
     the points read: the sources whose box meets the square (a COPC's nodes that meet it)."""
     best, read = None, 0
     for cid, si, name in clouds:
-        rec = source_record(name)
-        b = rec["bounds"]
+        text = name.endswith(".xyz")
+        b = TEXT_BOUNDS if text else source_record(name)["bounds"]
         if at[0] + reach < b[0] or at[0] - reach > b[3] or at[1] + reach < b[1] or at[1] - reach > b[4]:
             continue
-        p, order = points_of(name)
-        vl = vlrs_of(FILES / name)
-        if any(u == "copc" for u, _, _ in vl):
+        if text:
+            # A text cloud is read whole, its points in its records' order (docs/adr/0645 §6).
+            p = TextPoints(name)
+            order = np.arange(len(p.x))
+            read += len(p.x)
+            keep = np.ones(len(p.x), dtype=bool)
+        else:
+            p, order = points_of(name)
+        vl = [] if text else vlrs_of(FILES / name)
+        if text:
+            pass
+        elif any(u == "copc" for u, _, _ in vl):
             (cx, cy, cz, half), nodes = copc_nodes(FILES / name)
             low = (cx - half, cy - half)
             meets = set()
@@ -765,26 +816,31 @@ def query_cases():
         [(22, 0, "meta-wkt.las"), (22, 1, "meta-geokeys.las")], at, 0.3)))
     at = near_point("meta-wkt.las", 11)
     # Without uids every visible cloud is looked at: 12 and 22 hold meta-wkt.las, 21 (hidden) is not looked at.
-    visible = [(c + 1, 0, n) for c, n in enumerate(CLOUD_FILES)] + [
+    visible = [(c + 1, 0, n) for c, n in enumerate(CLOUD_FILES)] + [(14, 0, "bulut.xyz")] + [
         (18, 0, "las12-f0.las"), (20, 0, "las12-f0.las"), (22, 0, "meta-wkt.las"), (22, 1, "meta-geokeys.las")]
-    # The clouds of several files (23–33): every source that is a file that is there and is not text.
+    # The clouds of several files (23–33): every source that is a file that is there (a text one too).
     for e in drawing()["entities"][22:]:
         for si, src in enumerate(e["sources"]):
             name = src["file"].rsplit("/", 1)[-1]
-            if src["format"] != "xyz" and name != "yok.las":
+            if name != "yok.las":
                 visible.append((e["id"], si, name))
-    text_warn = {"code": "cloud_source_unreadable", "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
-                 "path": "clouds[13].sources[0]"}
     out.append(case("uids verilmezse görünen bulutlar: gizli katmandaki bakılmaz, eşit uzaklıkta ilk bulut", queried(
         visible, at, 0.3, inp={"at": {"x": at[0], "y": at[1]}, "radius": 0.3}, warnings=[ANY] * 0)))
     out[-1]["steps"][0]["result"]["warnings"] = ANY
     out.append(case("gizli katmandaki bulut adıyla sorulunca bakılır", queried([(21, 0, "meta-wkt.las")], at, 0.3)))
     out.append(case("plan aynı cevabı verir", queried([(12, 0, "meta-wkt.las")], at, 0.3, op="plan")))
     out += [
-        case("metin bulutu aranmaz, söylenir", step(
-            {"at": {"x": 500050.0, "y": 4400050.0}, "radius": 1.0, "uids": ["$uidOf:14"]},
+        case("metin bulutu: satırlarından okunur, en yakın noktası satırının sırasıyla", queried(
+            [(14, 0, "bulut.xyz")], [500013.383, 4400092.830], 0.5)),
+        case("dosyası olmayan kaynak söylenir", step(
+            {"at": {"x": near_point("las12-f0.las", 17)[0], "y": near_point("las12-f0.las", 17)[1]}, "radius": 1.0,
+             "uids": ["$uidOf:15"]},
             done({"read": 0, "revision": "$current"},
-                 [{**text_warn, "path": "clouds[0].sources[0]"}]))),
+                 [{"code": "cloud_source_unreadable", "message": ANY, "path": "clouds[0].sources[0]"}]))),
+        case("metin bulutu: erimde nokta yok, bütün dosya okunur", queried(
+            [(14, 0, "bulut.xyz")], [500050.0, 4400050.0], 1.0)),
+        case("metin kaynağı ve döşeme: ikisinde de aranır", queried(
+            [(28, 0, "bulut.xyz"), (28, 1, "tile-a.las")], [500013.383, 4400092.830], 2.0)),
         case("erim sıfır", step({"at": {"x": 500050.0, "y": 4400050.0}, "radius": 0.0}, failed(
             "invalid_reach", "Aramanın erimi sıfırdan büyük olmalı; noktanın en çok ne kadar uzakta aranacağını verin.",
             "radius"))),

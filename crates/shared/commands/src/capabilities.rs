@@ -92,9 +92,14 @@ const OBJECTS: &[&str] = &[
 
 /// Forwarded sheet validation codes: the convenience create command uses the same core.
 const SHEET_CORE: &[&str] = &[
-    "bad_drawing_info", "duplicate_sheet_number", "bad_drawing_index",
-    "not_fixed_map", "ambiguous_source", "invalid_extent",
-    "bad_curve", "curve_too_complex",
+    "bad_drawing_info",
+    "duplicate_sheet_number",
+    "bad_drawing_index",
+    "not_fixed_map",
+    "ambiguous_source",
+    "invalid_extent",
+    "bad_curve",
+    "curve_too_complex",
     "asset_in_use",
     "asset_too_large",
     "bad_asset",
@@ -228,7 +233,13 @@ const ENTRIES: &[Entry] = &[
             // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
             &["rule_broken", "not_unique"],
         ],
-        warnings: &["layer_hidden", "layer_locked", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "layer_locked",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -246,7 +257,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -263,7 +279,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -281,7 +302,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["parcel_number_taken", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "parcel_number_taken",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -319,7 +345,12 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.survey.adjust",
         refusals: &[
-            &["not_finite", "point_not_found", "survey_refused", "no_layer"],
+            &[
+                "not_finite",
+                "point_not_found",
+                "survey_refused",
+                "no_layer",
+            ],
             LAYER,
             REVISION,
         ],
@@ -509,7 +540,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -530,7 +566,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -547,7 +588,12 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             ATTRS,
         ],
-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
+        warnings: &[
+            "layer_hidden",
+            "area_clipped",
+            "corners_joined",
+            "neighbours_locked",
+        ],
         targets: none,
     },
     Entry {
@@ -662,8 +708,14 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.donut.create",
-        refusals: &[&["not_finite", "invalid_distance", "invalid_line_weight"], LAYER, REVISION, ATTRS],
-        warnings: &["layer_hidden"], targets: none,
+        refusals: &[
+            &["not_finite", "invalid_distance", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
     },
     Entry {
         id: "cad.circle.create",
@@ -1965,8 +2017,18 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.rasters.reproject",
         refusals: &[
-            &["invalid_file_path", "invalid_input", "file_not_found", "import_unreadable"],
-            &["crs_unknown", "crs_mismatch", "crs_unreached", "file_exists"],
+            &[
+                "invalid_file_path",
+                "invalid_input",
+                "file_not_found",
+                "import_unreadable",
+            ],
+            &[
+                "crs_unknown",
+                "crs_mismatch",
+                "crs_unreached",
+                "file_exists",
+            ],
             LAYER,
             REVISION,
         ],
@@ -2143,6 +2205,34 @@ const ENTRIES: &[Entry] = &[
             "invalid_uid",
             "entity_not_found",
             "not_a_mesh",
+            "mesh_variable_not_found",
+            "too_many_mesh_values",
+        ]],
+        warnings: &["mesh_source_unreadable"],
+        targets: || vec![target(None, &["raster"], &[], Some("not_a_mesh"), None)],
+    },
+    // Meshin alanı ve hattı (docs/adr/0645 §7).
+    Entry {
+        id: "cad.meshes.region",
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_mesh",
+            "invalid_mesh_area",
+            "mesh_variable_not_found",
+            "too_many_mesh_values",
+        ]],
+        warnings: &["mesh_source_unreadable"],
+        targets: || vec![target(None, &["raster"], &[], Some("not_a_mesh"), None)],
+    },
+    Entry {
+        id: "cad.meshes.profile",
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_mesh",
+            "invalid_mesh_path",
+            "too_many_stations",
             "mesh_variable_not_found",
             "too_many_mesh_values",
         ]],
@@ -3729,18 +3819,48 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.sheets.create",
-        refusals: &[SHEET_CORE, REVISION, &["unknown_template", "unknown_variable", "invalid_options", "bad_json", "book_unreadable"]],
-        warnings: &[], targets: none,
+        refusals: &[
+            SHEET_CORE,
+            REVISION,
+            &[
+                "unknown_template",
+                "unknown_variable",
+                "invalid_options",
+                "bad_json",
+                "book_unreadable",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.sheets.fit",
-        refusals: &[REVISION, &["ambiguous_source", "no_entities", "invalid_extent", "not_fixed_map", "entity_not_found", "out_of_range", "item_locked", "unknown_item", "book_unreadable"]],
-        warnings: &[], targets: none,
+        refusals: &[
+            REVISION,
+            &[
+                "ambiguous_source",
+                "no_entities",
+                "invalid_extent",
+                "not_fixed_map",
+                "entity_not_found",
+                "out_of_range",
+                "item_locked",
+                "unknown_item",
+                "book_unreadable",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.sheets.edit",
-        refusals: &[SHEET_CORE, REVISION, &["no_operations", "invalid_operation", "book_unreadable"]],
-        warnings: &[], targets: none,
+        refusals: &[
+            SHEET_CORE,
+            REVISION,
+            &["no_operations", "invalid_operation", "book_unreadable"],
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.changeset.apply",
@@ -4068,10 +4188,22 @@ const ENTRIES: &[Entry] = &[
                 "table_not_found",
             ],
             LAYER,
-            &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_not_found",
+                "duplicate_key",
+                "entity_exists",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &[
-            "vertical_crs", "crs_undeclared", "import_losses", "derived_import", "rows_rejected"],
+            "vertical_crs",
+            "crs_undeclared",
+            "import_losses",
+            "derived_import",
+            "rows_rejected",
+        ],
         targets: none,
     },
     Entry {
@@ -4099,15 +4231,19 @@ const ENTRIES: &[Entry] = &[
             &["invalid_scale"],
             &["invalid_file_path"],
             REVISION,
-            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_format", "unsupported_cad_version", "unsupported_cad_encoding", "cad_file_too_large"],
+            &[
+                "file_not_found",
+                "import_unreadable",
+                "polyline_geometry_loss",
+                "unsupported_cad_format",
+                "unsupported_cad_version",
+                "unsupported_cad_encoding",
+                "cad_file_too_large",
+            ],
             LAYER,
             &["nothing_to_import"],
         ],
-        warnings: &[
-            "unit_assumed",
-            "block_units_differ",
-            "import_losses",
-        ],
+        warnings: &["unit_assumed", "block_units_differ", "import_losses"],
         targets: none,
     },
     Entry {
@@ -4116,15 +4252,17 @@ const ENTRIES: &[Entry] = &[
             &["invalid_scale"],
             &["invalid_file_path"],
             REVISION,
-            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_version", "cad_file_too_large"],
+            &[
+                "file_not_found",
+                "import_unreadable",
+                "polyline_geometry_loss",
+                "unsupported_cad_version",
+                "cad_file_too_large",
+            ],
             LAYER,
             &["nothing_to_import"],
         ],
-        warnings: &[
-            "unit_assumed",
-            "block_units_differ",
-            "import_losses",
-        ],
+        warnings: &["unit_assumed", "block_units_differ", "import_losses"],
         targets: none,
     },
     Entry {
@@ -4497,7 +4635,14 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable"],
             LAYER,
-            &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_not_found",
+                "duplicate_key",
+                "entity_exists",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &["crs_undeclared", "import_losses", "rows_rejected"],
         targets: none,
@@ -4519,7 +4664,14 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable"],
             LAYER,
-            &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_not_found",
+                "duplicate_key",
+                "entity_exists",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &["crs_undeclared", "import_losses", "rows_rejected"],
         targets: none,
@@ -4541,7 +4693,14 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable"],
             LAYER,
-            &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_not_found",
+                "duplicate_key",
+                "entity_exists",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &["crs_undeclared", "import_losses", "rows_rejected"],
         targets: none,
@@ -4558,7 +4717,14 @@ const ENTRIES: &[Entry] = &[
                 "crs_unknown",
             ],
             LAYER,
-            &["crs_mismatch", "merge_key_required", "merge_key_not_found", "duplicate_key", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_required",
+                "merge_key_not_found",
+                "duplicate_key",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &[
             "vertical_crs",
@@ -4577,10 +4743,22 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["file_not_found", "import_unreadable", "crs_unknown"],
             LAYER,
-            &["crs_mismatch", "merge_key_required", "merge_key_not_found", "duplicate_key", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_required",
+                "merge_key_not_found",
+                "duplicate_key",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &[
-            "vertical_crs", "crs_overridden", "crs_unofficial", "import_losses", "rows_rejected"],
+            "vertical_crs",
+            "crs_overridden",
+            "crs_unofficial",
+            "import_losses",
+            "rows_rejected",
+        ],
         targets: none,
     },
     Entry {
@@ -4590,9 +4768,21 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["file_not_found", "import_unreadable"],
             LAYER,
-            &["crs_mismatch", "merge_key_required", "merge_key_not_found", "duplicate_key", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_required",
+                "merge_key_not_found",
+                "duplicate_key",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
-        warnings: &["crs_overridden", "crs_unofficial", "import_losses", "rows_rejected"],
+        warnings: &[
+            "crs_overridden",
+            "crs_unofficial",
+            "import_losses",
+            "rows_rejected",
+        ],
         targets: none,
     },
     Entry {
@@ -4617,7 +4807,14 @@ const ENTRIES: &[Entry] = &[
                 "table_not_found",
             ],
             LAYER,
-            &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
+            &[
+                "crs_mismatch",
+                "merge_key_not_found",
+                "duplicate_key",
+                "entity_exists",
+                "nothing_to_import",
+                "file_unwritable",
+            ],
         ],
         warnings: &["crs_undeclared", "import_losses", "rows_rejected"],
         targets: none,
@@ -4721,9 +4918,19 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "file.export.dwg",
-        refusals: &[&["invalid_file_path", "file_exists", "layer_not_found", "invalid_uid",
-            "entity_not_found", "nothing_to_export", "file_unwritable", "import_unreadable", "polyline_geometry_loss",
-            "unsupported_cad_version", "cad_file_too_large"]],
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "invalid_uid",
+            "entity_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+            "import_unreadable",
+            "polyline_geometry_loss",
+            "unsupported_cad_version",
+            "cad_file_too_large",
+        ]],
         warnings: &["export_losses"],
         targets: none,
     },
@@ -4734,7 +4941,8 @@ const ENTRIES: &[Entry] = &[
             "file_exists",
             "layer_not_found",
             "nothing_to_export",
-            "file_unwritable", "polyline_geometry_loss",
+            "file_unwritable",
+            "polyline_geometry_loss",
         ]],
         warnings: &[],
         targets: none,
@@ -4766,11 +4974,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &["objects_left_out"],
         targets: none,
     },
-    Entry { id:"file.preflight.sheets",refusals:&[&["no_sheets","unknown_sheet","book_unreadable","invalid_input","cancelled"]],warnings:&[],targets:none },
     Entry {
-        id:"file.publish.sheets",
-        refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked","package_incomplete","integrity_failed"]],
-        warnings:&[],targets:none,
+        id: "file.preflight.sheets",
+        refusals: &[&[
+            "no_sheets",
+            "unknown_sheet",
+            "book_unreadable",
+            "invalid_input",
+            "cancelled",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "file.publish.sheets",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "no_sheets",
+            "unknown_sheet",
+            "book_unreadable",
+            "file_unwritable",
+            "pin_mismatch",
+            "publish_blocked",
+            "package_incomplete",
+            "integrity_failed",
+        ]],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "file.export.pdf",
@@ -4835,12 +5066,26 @@ pub fn listed() -> impl Iterator<Item = &'static str> {
 
 /// A codec may decode more than the KentOS model can edit; never advertise both as one boolean.
 fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
-    if !matches!(id, "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg") { return None; }
+    if !matches!(
+        id,
+        "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg"
+    ) {
+        return None;
+    }
     let dwg = id.ends_with("dwg");
     let versions: Vec<String> = if dwg {
-        crate::DwgVersion::ALL.iter().map(|v| v.signature().to_owned()).collect()
+        crate::DwgVersion::ALL
+            .iter()
+            .map(|v| v.signature().to_owned())
+            .collect()
     } else {
-        ["AC1006", "AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"].iter().map(|v| (*v).to_owned()).collect()
+        [
+            "AC1006", "AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024",
+            "AC1027", "AC1032",
+        ]
+        .iter()
+        .map(|v| (*v).to_owned())
+        .collect()
     };
     Some(crate::CadFormatCapabilities {
         format: if dwg { "DWG" } else { "DXF" }.into(),

@@ -18,20 +18,21 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
 use crate::pointclouds::{answer, uids_checked};
-use crate::source_bytes::{Bytes, bytes_for};
+use crate::remote_host;
+use crate::source_bytes::{Bytes, netcdf_bytes_for};
 
 /// The most a NetCDF header may take before the file is taken for broken.
 const HEADER_MOST: u64 = 64 << 20;
 
 /// A raster's NetCDF file opened: its cube, the file to read more of it.
-struct Loaded {
-    cube: Cube,
-    bytes: Bytes,
+pub(crate) struct Loaded {
+    pub(crate) cube: Cube,
+    pub(crate) bytes: Bytes,
 }
 
 /// The raster's NetCDF file with its header read and what `want` reads whole (the coordinates and the mesh's
 /// topology); why not.
-fn load(
+pub(crate) fn load(
     doc: &Document,
     drawing: Option<&str>,
     r: &RasterEntity,
@@ -40,13 +41,13 @@ fn load(
     if r.raster.asset.is_none() && r.raster.file.is_none() && r.raster.url.is_none() {
         return Err("meshin kaynağı yok".into());
     }
-    let bytes = bytes_for(
+    let bytes = netcdf_bytes_for(
         doc,
         drawing,
         r.raster.asset.as_deref(),
         r.raster.file.as_deref(),
         r.raster.url.as_deref(),
-        "adresteki NetCDF burada okunmaz; dosyayı indirip ekleyin",
+        remote_host::NO_NETWORK,
     )?;
     let size = bytes.size();
     let mut store = ByteStore::new();
@@ -68,7 +69,7 @@ fn load(
 }
 
 /// Reads what `want` still needs of `cube` (two passes: the topology's sizes come with the coordinates).
-fn fill(
+pub(crate) fn fill(
     cube: &mut Cube,
     bytes: &Bytes,
     want: &dyn Fn(&Cube) -> Vec<kentos_formats::raster::Need>,
@@ -89,7 +90,7 @@ fn fill(
 }
 
 /// The mesh rasters named (each once, in the input's order), or every one of the drawing in its order.
-fn meshes<'a>(
+pub(crate) fn meshes<'a>(
     doc: &'a Document,
     uids: &'a [String],
 ) -> Result<Vec<(String, &'a RasterEntity)>, Stop> {
@@ -261,9 +262,11 @@ pub(crate) fn describe_in(
 }
 
 /// Twice a face's area, summed exactly (shoelace).
-fn face_area(x: &[f64], y: &[f64], nodes: &[u32]) -> f64 {
+pub(crate) fn face_area(x: &[f64], y: &[f64], nodes: &[u32]) -> f64 {
     let (mut hi, mut lo) = (0.0f64, 0.0f64);
-    let o = nodes.first().map_or((0.0, 0.0), |&k| (x[k as usize], y[k as usize]));
+    let o = nodes
+        .first()
+        .map_or((0.0, 0.0), |&k| (x[k as usize], y[k as usize]));
     for i in 0..nodes.len() {
         let (a, b) = (nodes[i] as usize, nodes[(i + 1) % nodes.len()] as usize);
         let t = (x[a] - o.0) * (y[b] - o.1) - (x[b] - o.0) * (y[a] - o.1);
@@ -275,8 +278,27 @@ fn face_area(x: &[f64], y: &[f64], nodes: &[u32]) -> f64 {
     ((hi + lo) / 2.0).abs()
 }
 
+/// The faces sharing an edge (two consecutive nodes) with face `face`, ascending (docs/adr/0645 §7).
+fn neighbours_of(lists: &[Vec<u32>], face: usize) -> Vec<u64> {
+    let Some(own) = lists.get(face) else {
+        return Vec::new();
+    };
+    let edge = |a: u32, b: u32| if a < b { (a, b) } else { (b, a) };
+    let mine: std::collections::HashSet<(u32, u32)> = (0..own.len())
+        .map(|i| edge(own[i], own[(i + 1) % own.len()]))
+        .collect();
+    lists
+        .iter()
+        .enumerate()
+        .filter(|&(f, n)| {
+            f != face && (0..n.len()).any(|i| mine.contains(&edge(n[i], n[(i + 1) % n.len()])))
+        })
+        .map(|(f, _)| f as u64)
+        .collect()
+}
+
 /// The datasets of the mesh `name` asked for (`variables`, or every one), in the asked order.
-fn datasets_of(
+pub(crate) fn datasets_of(
     cube: &Cube,
     name: &str,
     variables: &[String],
@@ -289,17 +311,24 @@ fn datasets_of(
         .iter()
         .enumerate()
         .map(|(i, v)| {
-            all.iter().find(|d| &d.variable == v).map(|d| (*d).clone()).ok_or_else(|| {
-                let have: Vec<&str> = all.iter().map(|d| d.variable.as_str()).collect();
-                Stop::failed(checks::error(
-                    codes::MESH_VARIABLE_NOT_FOUND,
-                    format!(
-                        "“{v}” veri seti meshte yok; var olanlar: {}.",
-                        if have.is_empty() { "hiçbiri".to_owned() } else { have.join(", ") }
-                    ),
-                    Some(format!("variables[{i}]")),
-                ))
-            })
+            all.iter()
+                .find(|d| &d.variable == v)
+                .map(|d| (*d).clone())
+                .ok_or_else(|| {
+                    let have: Vec<&str> = all.iter().map(|d| d.variable.as_str()).collect();
+                    Stop::failed(checks::error(
+                        codes::MESH_VARIABLE_NOT_FOUND,
+                        format!(
+                            "“{v}” veri seti meshte yok; var olanlar: {}.",
+                            if have.is_empty() {
+                                "hiçbiri".to_owned()
+                            } else {
+                                have.join(", ")
+                            }
+                        ),
+                        Some(format!("variables[{i}]")),
+                    ))
+                })
         })
         .collect()
 }
@@ -377,10 +406,9 @@ pub(crate) fn query_in(
         };
         let face = mesh.tri_face[t as usize] as usize;
         let datasets = datasets_of(&cube, &name, &input.variables)?;
-        let nodes = match cube.face_lists(&name) {
-            Ok(mut f) if face < f.len() => f.swap_remove(face),
-            _ => Vec::new(),
-        };
+        let lists = cube.face_lists(&name).unwrap_or_default();
+        let nodes = lists.get(face).cloned().unwrap_or_default();
+        let neighbours = neighbours_of(&lists, face);
         let shown_moment = shown
             .dims
             .iter()
@@ -532,6 +560,7 @@ pub(crate) fn query_in(
                     face: face as u64,
                     nodes,
                     area,
+                    neighbours,
                 }),
                 values,
                 read,

@@ -280,6 +280,9 @@ pub mod gpkg_tiles;
 pub mod rasters_mosaic;
 pub mod rasters_reproject;
 pub mod stac_host;
+pub mod remote_host;
+pub mod multidim_source;
+pub mod mesh_areas;
 pub mod stac_prepare;
 pub mod stac_search;
 pub mod inserts_clip;
@@ -709,6 +712,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_MESHES_QUERY,
         kentos_commands::CAD_MESHES_QUERY_VERSION,
+    ),
+    // Meshin alanı ve hattı ([`mesh_areas`], docs/adr/0645 §7).
+    (
+        kentos_commands::CAD_MESHES_REGION,
+        kentos_commands::CAD_MESHES_REGION_VERSION,
+    ),
+    (
+        kentos_commands::CAD_MESHES_PROFILE,
+        kentos_commands::CAD_MESHES_PROFILE_VERSION,
     ),
     // Sanal mozaik ([`rasters_mosaic`], docs/adr/0517).
     (
