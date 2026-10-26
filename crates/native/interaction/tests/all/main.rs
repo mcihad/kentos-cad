@@ -34,6 +34,7 @@ mod find_replace;
 mod gnss;
 mod grip_modes;
 mod grips;
+mod tag_grips;
 mod hatch;
 mod join_chain;
 mod junctions;

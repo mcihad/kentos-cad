@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mahal etiketi konum tutamacı (26 Ekim 2026; [ADR 0655](docs/adr/0655-tag-grip-placement.md)).**
+  Tag'ın genel geometriye çevrilemeyen yazımı mevcut anlamsal Move'a yönlenir;
+  yalnız sıcak UUID'ler, kaynak/şablon/ankraj korunur. Karışık sıcak tür ve
+  sonradan kilitlenen katman atomik rettir. [Kabul](docs/baseline/2026-10-26-architecture-tag-follow/README.md):
+  gerçek sürükle→40 cm duvar→20.16 m², kaynak silme, şablon, undo/redo,
+  önizleme/iptal/kaydet-aç; 22 ham görüntü/18 bağımsız dosya, 692 interaction,
+  219 application/303 Python/bir mevcut MCP testi; clippy/build. ARCH-SPACE-02
+  [~]; Koru/Yenile, kot şablonları ve tam matris açık. Yeni TS/şema/render yoktur.
+
 - **Odaklı komut/özellik alanında Kaydet (26 Ekim 2026; [ADR 0654](docs/adr/0654-command-line-chords.md)).**
   CommandLine ve EditCell, Cmd/Ctrl karakter kısayollarını iç metin girişinden
   önce host'a bırakır; A/C/X/V, AltGr ve taslak korunur. Kaydet tamponu

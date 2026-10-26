@@ -48,6 +48,6 @@ onayı/undo/Escape ve gerçek kaydedilmiş dosyalar doğrulandı. Kaydet,
 onaylanmamış alan tamponunu onaylamaz; mevcut Enter/odak kaybı sürer.
 15 ham görüntü ve dokuz disk kopyası bağımsız KCAD/UUID/geometri/etiket/
 çizelge kontrolünden geçti. Gözlenen 1440×870, 1100×682, 1512×872 pt,
-açık/18 ve koyu/13 px kapsamı tam boyut/font/tema matrisi değildir.
+açık/15 ve koyu/13 px kapsamı tam boyut/font/tema matrisi değildir.
 Başarısız ilk EditCell denemeleri ve test düzeneği hatası kabul kaydında
 açıkça ayrıdır; ham kanıtlar korunmuştur.

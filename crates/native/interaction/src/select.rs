@@ -47,6 +47,8 @@ use crate::format::Format;
 use crate::grip_edit::{GripMode, GripModes, HotGrip, Stage, Typed, stretched};
 #[path = "select_opening.rs"]
 mod opening;
+#[path = "select_tag.rs"]
+mod tag;
 use crate::log::Level;
 use crate::neighbours;
 use crate::points;
@@ -572,7 +574,8 @@ impl Select {
         })
         .chain(g.others.iter().copied())
         .collect();
-        if self.commit_opening_grip(&grips, dx, dy, copy, cx) {
+        if self.commit_tag_grip(&grips, dx, dy, copy, cx)
+            || self.commit_opening_grip(&grips, dx, dy, copy, cx) {
             if let Some(mut g) = keep {
                 g.hot = true;
                 g.modes.placed += 1;
@@ -679,6 +682,11 @@ impl Select {
             })
             .chain(g.others.iter().copied())
             .collect();
+            // A mixed edit cannot be represented as one tag placement;
+            // do not preview a partial move which commit will refuse.
+            if tag::mixed(&grips, cx) {
+                return;
+            }
             if let Some(planned) = opening::preview(&grips, dx, dy, g.modes.copy, cx) {
                 self.moved = planned.into_iter().next();
                 return;

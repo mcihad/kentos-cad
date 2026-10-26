@@ -580,10 +580,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [ ] Kat öneki/ad/kullanım listesi; yinelenen ve boş numara denetim listesi.
 - [ ] Etiket şablonu: ad, numara, net alan, döşeme/tavan kotu; sürüklenebilir yer,
   manuel metin kopyasına dönüşmeden kaynak güncellemesi.
-- [ ] Gerçek etiket taşıma sonrası duvar değişikliği, nesne silme ve eski
-  etiket koru/yenile; çoklu kat ve aynı planın farklı pafta oranları. Numaralama
-  kabulünde önceden ayrı konmuş etiketin yeri korunmuştur; gerçek GUI'de
-  sürükleme/duvar değişimi kabulü yerine sayılmaz. Tam mimari matris açıktır.
+- [x] Gerçek etiket tutamacıyla sürükleme sonrası 40 cm duvar değişikliği;
+  mahal/etiket/çizelge birlikte 20.16 m², elle konmuş yer korunur. Mahal/duvar
+  silme ve görünür kopuk bağ uyarısı, şablon değiştirme, tek undo/redo,
+  önizleme/Kaydet/sağ tuş Bırak/Escape ve yeni süreçte kayıt açma doğrulandı.
+  [ADR 0655](../docs/adr/0655-tag-grip-placement.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-tag-follow/README.md):
+  22 ham görüntü, 18 bağımsız disk kopyası; 692 interaction/219 application/
+  303 Python/bir mevcut MCP testi. Sadece sıcak etiket UUID'lerinin mevcut
+  anlamsal taşıma rotası düzeltildi; yeni TS/şema/birim/render değişikliği yok.
+- [ ] Eski etiketi açık Koru/Yenile yönetimi; çoklu kat ve aynı planın farklı
+  pafta oranları. Döşeme/tavan kotu dahil zengin şablon ve tam mimari matris
+  açıktır; bu dilim mevcut şablonun bağ/yer korunumunu doğrular.
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [ ]
 
@@ -817,3 +825,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-DOC-02 / ADR 0652 | CSV seçili sekmeyi yazar; 200/400/0 satır, XLSX/ODS üç sayfa/600. Gerçek iptal/geçmiş/kayıt-aç, bağımsız CSV/XML/KCAD, 17 ham görüntü; üç desktop testi, clippy/build. Eski ham metraj değerlerinin uzun sayı koruma notu kaydedildi. | [~] Bu çıktı dilimi doğrulandı; gruplama/evre/tip, sayı biçimi ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-quantity-export/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0653 | Kimliği koruyan tıkla/yönle numaralandırma, görünür önizleme, tek onay/undo, etiket/çizelge ve Python/MCP/kayıt-tekrar; 68 bağımsız durum, 300 Python. Gerçek iç seçim kusuru ve uzun önizleme yazısı düzeltildi; 52 ham ekran, 20 disk anlık görüntüsü bağımsız KCAD kontrolünde. | [~] Numaralandırma dilimi doğrulandı; numara/ad listeleri, daha zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-space-number/README.md) |
 | 2026-10-26 | ARCH-BASE-01 / ADR 0654 | CommandLine ve EditCell odaktayken Cmd-S harf eklemeden mevcut Kaydet yoluna ulaşır; onaylanmamış tampon/araç önizlemesi korunur. Gerçek GUI ikinci giriş yolunu yakaladı; 38 test, clippy/build, 15 ham görüntü, dokuz bağımsız disk kopyası geçti. | [~] İki bileşenli düzeltme doğrulandı; diğer girişler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-commandline-save/README.md) |
+| 2026-10-26 | ARCH-SPACE-02 / ADR 0655 | Gerçek etiket tutamacının boş geometri yazımı mevcut anlamsal Move'a yönlendirildi; sıcak alt küme ve kaynak bağı korunur. Duvar/mahal silme, 40 cm→20.16 m² zinciri, şablon/undo/redo/iptal/kaydet-aç gerçek fareyle doğrulandı; 692 interaction/219 application/303 Python, 22 ham görüntü ve 18 bağımsız dosya. | [~] Etiket yeri/izleme dilimi doğrulandı; listeler, Koru/Yenile, kot şablonları ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-follow/README.md) |

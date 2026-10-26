@@ -99,7 +99,7 @@ eylemlerdir. Bu kayıt Tab'ın bütün alanlarda aynı odağa ilerlediği iddias
 **15 ham JPEG, dokuz disk anlık görüntüsü** (tanısal mevcut-disk kopyaları
 dahil). `gui-events.json`, `models.json` ve `screenshot-dimensions.json`
 her birini ayırır. Gerçek gözlenen pencere boyları 1440×870, 1100×682 ve
-1512×872 pt; açık/18 px ve koyu/13 px denendi. İstenen 1440×900/1100×650
+1512×872 pt; açık/15 px ve koyu/13 px denendi. İstenen 1440×900/1100×650
 tam matrisinin yerine sayılmaz. 13 px ayarı izole test profilinde kaydedildi;
 kullanıcının normal ayarları değiştirilmedi.
 
@@ -109,3 +109,8 @@ Decimal alan hesabıyla dokuz modelde 13 nesnenin UUID/geometri/belge ayarını,
 karşılaştırdı. Yalnız beklenen numara ve bağlı yazılar/ilk sütun genişliği
 değişebilir. Ham resim, paket ve son kaynak SHA'ları da geçti.
 `independent-final.log` gerçek sonucu içerir; bütün günlük SHA'ları denetlendi.
+
+Yazı boyu kayıt düzeltmesi: ilk nottaki açık/18 px yanlıştı. İlk paket
+profilindeki `appearance.textSize` 15; ikinci paket aynı profili kopyaladı.
+`light-profile.json` saklanan kaynak profilidir. Açık denemeler 15 px olarak
+düzeltildi; ham JPEG baytları değişmedi. 18 px kabulü iddia edilmez.

@@ -8,7 +8,7 @@
   },
   {
     "file": "02-after-initial.jpg",
-    "note": "First CommandLine-only guard binary opened a separate copy of the accepted four-room model; light 18 px.",
+    "note": "First CommandLine-only guard binary opened a separate copy of the accepted four-room model; light 15 px.",
     "build": "after-binary.json",
     "recordedAt": "2026-10-26T01:00:57.529Z",
     "sha256": "7c5ba60c95385097cdc9bc566a19f8ab874808de40d6029e23b5348a9276e0f8"
@@ -43,7 +43,7 @@
   },
   {
     "file": "07-final-initial.jpg",
-    "note": "Final binary protects CommandLine and EditCell; isolated model reset to V-099/V-100/D-009/Z-002, light18.",
+    "note": "Final binary protects CommandLine and EditCell; isolated model reset to V-099/V-100/D-009/Z-002, light15.",
     "build": "after2-binary.json",
     "recordedAt": "2026-10-26T01:14:22.648Z",
     "sha256": "7c5ba60c95385097cdc9bc566a19f8ab874808de40d6029e23b5348a9276e0f8"
@@ -64,7 +64,7 @@
   },
   {
     "file": "10-final-compact-cell-and-tab-save.jpg",
-    "note": "Compact light18: direct Cmd-S and Tab→Cmd-S preserve P-102 text without s; Tab commits the setting, so P-102 is visibly previewed while the room/table stay U-099. One subsequent tool Enter applies it; disk snapshots are recorded separately.",
+    "note": "Compact light15: direct Cmd-S and Tab→Cmd-S preserve P-102 text without s; Tab commits the setting, so P-102 is visibly previewed while the room/table stay U-099. One subsequent tool Enter applies it; disk snapshots are recorded separately.",
     "build": "after2-binary.json",
     "recordedAt": "2026-10-26T01:16:40.969Z",
     "sha256": "4aff8fa28902a1bf6dec18b324d641be263e22c834cd0f90261b36daf7eb2bae"
