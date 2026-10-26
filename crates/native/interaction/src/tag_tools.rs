@@ -342,16 +342,36 @@ impl Tool for TagTool {
 
 // ── Hepsini etiketle ───────────────────────────────────────────────────────────────────────────────────────────
 
-/// Hepsini etiketle.
+/// Hepsini etiketle: a read-only plan until one explicit confirmation.
 #[derive(Clone, Debug)]
 pub struct TagAllTool {
     kinds: Vec<TaggedKind>,
+    refresh: bool,
+    content: Option<String>,
+    shape: Option<TagShape>,
+    size: Option<f64>,
+    drawn: Preview,
+    problem: Option<String>,
+    summary: String,
+    revision: Option<u64>,
+    layer: String,
+    layer_label: String,
 }
 
 impl Default for TagAllTool {
     fn default() -> Self {
         Self {
             kinds: vec![TaggedKind::Opening, TaggedKind::Space],
+            refresh: false,
+            content: None,
+            shape: None,
+            size: None,
+            drawn: Preview::default(),
+            problem: None,
+            summary: String::new(),
+            revision: None,
+            layer: String::new(),
+            layer_label: String::new(),
         }
     }
 }
@@ -360,7 +380,55 @@ impl TagAllTool {
     pub fn new() -> Self {
         Self::default()
     }
-
+    fn made(&self, cx: &Context<'_>) -> TagsCreate {
+        TagsCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            tags: vec![],
+            all: Some(TagAll {
+                kinds: self.kinds.clone(),
+                refresh: self.refresh.then_some(true),
+                layers: None,
+                content: self.content.clone(),
+                shape: self.shape,
+                size: self.size,
+                phases: None,
+            }),
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            expected_revision: None,
+        }
+    }
+    fn see(&mut self, cx: &Context<'_>) {
+        self.revision = Some(cx.doc.revision());
+        self.layer = cx.doc.layers().active().to_owned();
+        self.layer_label = cx
+            .doc
+            .layers()
+            .get(&self.layer)
+            .map_or_else(|| self.layer.clone(), |l| l.name.clone());
+        self.drawn = Preview::default();
+        self.problem = None;
+        match plan_words(tags_create::plan_in(cx.doc, &self.made(cx))) {
+            Ok(plan) => {
+                let count = plan.tags.len() + plan.refreshed.len();
+                self.summary = format!(
+                    "{} yeni · {} yenilenecek",
+                    plan.tags.len(),
+                    plan.refreshed.len()
+                );
+                if count > 200 {
+                    self.summary.push_str(" · çizimde ilk 200 gösteriliyor");
+                }
+                for e in plan.tags.iter().chain(&plan.refreshed).take(200) {
+                    tag_drawn(e, cx.doc.settings().plot_scale, &mut self.drawn);
+                }
+            }
+            Err(why) => {
+                self.summary = "Yazılacak etiket yok".into();
+                self.problem = Some(why);
+            }
+        }
+    }
     fn flip(&mut self, k: TaggedKind) {
         if let Some(i) = self.kinds.iter().position(|x| *x == k) {
             self.kinds.remove(i);
@@ -369,104 +437,241 @@ impl TagAllTool {
             self.kinds.sort();
         }
     }
+    fn choices(&self, key: &str) -> Vec<OptionChoice> {
+        use crate::tool_settings::choices;
+        if let Some((_, k)) = ALL_KEYS.iter().find(|(s, _)| *s == key) {
+            return choices(
+                &[("yes", "Açık"), ("no", "Kapalı")],
+                if self.kinds.contains(k) { "yes" } else { "no" },
+            );
+        }
+        match key {
+            "E" => choices(
+                &[("keep", "Koru"), ("refresh", "Yenile")],
+                if self.refresh { "refresh" } else { "keep" },
+            ),
+            "B" => {
+                let mut items = vec![("default", "Mevcut / Tür")];
+                items.extend(TagShape::ALL.iter().map(|s| (s.name(), s.label())));
+                choices(&items, self.shape.map_or("default", TagShape::name))
+            }
+            _ => vec![],
+        }
+    }
+    fn configure_all(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if let Some((_, k)) = ALL_KEYS.iter().find(|(s, _)| *s == key) {
+            if !matches!(value, "yes" | "no") {
+                return false;
+            }
+            if self.kinds.contains(k) != (value == "yes") {
+                self.flip(*k);
+            }
+        } else {
+            match key {
+                "E" if matches!(value, "keep" | "refresh") => self.refresh = value == "refresh",
+                "B" => {
+                    self.shape = if value == "default" {
+                        None
+                    } else if let Some(s) = TagShape::ALL.iter().find(|s| s.name() == value) {
+                        Some(*s)
+                    } else {
+                        return false;
+                    };
+                }
+                "Ş" => {
+                    let text = value.trim_end_matches(['\r', '\n']).replace("\\n", "\n");
+                    if text.trim().is_empty() {
+                        self.content = None;
+                    } else {
+                        if let Err(why) = kentos_commands::tag_template(&text) {
+                            cx.say(Level::Warn, why);
+                            return false;
+                        }
+                        self.content = Some(text);
+                    }
+                }
+                "Y" => {
+                    if value.trim().is_empty() {
+                        self.size = None;
+                    } else {
+                        let text = value
+                            .trim()
+                            .strip_suffix("mm")
+                            .unwrap_or(value.trim())
+                            .trim();
+                        let Some(size) =
+                            kentos_geometry_core::tools::point_text::parse_number(text)
+                                .filter(|v| v.is_finite() && *v > 0. && *v <= 50.)
+                        else {
+                            cx.say(Level::Warn, "Kağıt üzerinde 0'dan büyük, en çok 50 mm yazı boyu yazın; boş değer mevcudu korur.");
+                            return false;
+                        };
+                        self.size = Some(size);
+                    }
+                }
+                _ => return false,
+            }
+        }
+        self.see(cx);
+        true
+    }
 }
 
-const ALL_KEYS: [(&str, TaggedKind); 5] = [
+const ALL_KEYS: [(&str, TaggedKind); 8] = [
     ("A", TaggedKind::Opening),
     ("M", TaggedKind::Space),
     ("K", TaggedKind::Column),
     ("S", TaggedKind::Grid),
     ("D", TaggedKind::Wall),
+    ("R", TaggedKind::Stair),
+    ("P", TaggedKind::Ramp),
+    ("O", TaggedKind::Insert),
 ];
 
 impl Tool for TagAllTool {
     fn id(&self) -> &'static str {
         TAG_ALL_ID
     }
-
     fn point_count(&self) -> usize {
         0
     }
-
-    fn pointer_move(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
-
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        Flow::Stay
+    }
+    fn pointer_move(&mut self, _p: &Pointer, cx: &mut Context<'_>) {
+        if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
+            self.see(cx);
+        }
+    }
     fn pointer_down(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
-
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
         false
     }
-
     fn preview(&self, _format: &Format) -> Preview {
-        Preview::default()
+        self.drawn.clone()
     }
-
     fn label(&self) -> &'static str {
         "Hepsini etiketle"
     }
-
     fn cursor(&self) -> Cursor {
         Cursor::Pick
     }
-
     fn snaps(&self) -> bool {
         false
     }
-
     fn prompt(&self) -> Prompt {
         let mut p = Prompt::new(
             "Hepsini etiketle",
-            "türleri seçin, Enter ile etiketsiz ve görünenleri etiketleyin",
+            "ayarları ve önizlemeyi kontrol edin; Enter bir kez uygular",
+        );
+        p = p.option_with(
+            "Mevcut",
+            "E",
+            if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
         for (key, k) in ALL_KEYS {
-            let on = self.kinds.contains(&k);
             p = p.option_with(
                 k.label(),
                 key,
-                if on { "Açık" } else { "Kapalı" }.to_owned(),
+                if self.kinds.contains(&k) {
+                    "Açık"
+                } else {
+                    "Kapalı"
+                }
+                .to_owned(),
             );
         }
-        p.option("Etiketle", "Enter")
+        p.option("Uygula", "Enter")
     }
-
-    fn input(&mut self, text: &str, _cx: &mut Context<'_>) -> bool {
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let key = upper_tr(js_trim(text));
-        match ALL_KEYS.iter().find(|(k, _)| *k == key) {
-            Some((_, k)) => {
-                self.flip(*k);
-                true
-            }
-            None => false,
+        if let Some((_, k)) = ALL_KEYS.iter().find(|(s, _)| *s == key) {
+            self.flip(*k);
+            self.see(cx);
+            true
+        } else if key == "E" {
+            self.refresh = !self.refresh;
+            self.see(cx);
+            true
+        } else {
+            false
         }
     }
-
+    fn settings(&self, _: &Format) -> Vec<Setting> {
+        let mut out = vec![
+            Setting::choice("E", "Mevcut etiket", self.choices("E")),
+            Setting::notice("N", "Önizleme", &self.summary),
+            Setting::text("L", "Etiket katmanı", &self.layer_label).read_only(),
+            Setting::text(
+                "Ş",
+                "Şablon",
+                self.content
+                    .as_deref()
+                    .unwrap_or_default()
+                    .replace('\n', "\\n"),
+            ),
+            Setting::choice("B", "Çerçeve", self.choices("B")),
+            Setting::text(
+                "Y",
+                "Yazı (mm)",
+                self.size.map_or_else(String::new, |s| s.to_string()),
+            ),
+        ];
+        if let Some(why) = &self.problem {
+            out.push(Setting::notice("!", "Uygulanamıyor", why));
+        }
+        out.extend(
+            ALL_KEYS
+                .iter()
+                .map(|(key, k)| Setting::choice(key, k.label(), self.choices(key))),
+        );
+        out.push(Setting::notice("H", "Kapsam", "Görünür kaynak katmanlarındaki tüm mimari katlar. Yenile yalnız etkin etiket katmanını değiştirir; başka katmanlardaki etiketler korunur. Elle verilmiş konumlar korunur."));
+        out.push(Setting::notice("V", "Boş ayarlar", "Yenile'de boş şablon/boy mevcut değeri korur; yeni etikette tür varsayılanı kullanılır. \\n yeni satırdır. Kaynak numaraları değişmez."));
+        out
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure_all(key, value, cx)
+    }
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        self.choices(key)
+    }
+    fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure_all(key, value, cx)
+    }
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        if self.kinds.is_empty() {
-            cx.say(Level::Info, "Etiketlenecek tür seçilmedi.");
+        // Keyboard layer changes need not pass through pointer_move, and the
+        // active layer alone does not advance the document revision.
+        if self.layer != cx.doc.layers().active() {
+            self.see(cx);
+            cx.say(
+                Level::Warn,
+                "Hedef katman değişti; yeni önizlemeyi onaylayın.",
+            );
             return Flow::Stay;
         }
-        let input = TagsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
-            tags: Vec::new(),
-            all: Some(TagAll {
-                kinds: self.kinds.clone(),
-                layers: None,
-                content: None,
-                shape: None,
-                size: None,
-                phases: None,
-            }),
-            color: cx.draft.color_text(),
-            line_weight: cx.draft.line_weight,
-            expected_revision: None,
-        };
-        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
-            cx.say(
-                Level::Success,
-                format!("{} etiket yazıldı.", out.uids.len()),
-            );
+        let mut input = self.made(cx);
+        input.expected_revision = self.revision.map(|r| r.to_string());
+        match points::written(
+            tags_create::execute(&mut ExecutionContext::new(cx.doc), input),
+            cx,
+        ) {
+            Some(out) => {
+                cx.say(
+                    Level::Success,
+                    format!(
+                        "{} yeni etiket · {} etiket yenilendi.",
+                        out.uids.len(),
+                        out.refreshed.len()
+                    ),
+                );
+                Flow::Exit
+            }
+            None => {
+                self.see(cx);
+                Flow::Stay
+            }
         }
-        Flow::Exit
     }
 }
 

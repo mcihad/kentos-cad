@@ -235,3 +235,126 @@ fn paper_height_is_independent_of_drawing_unit_for_twenty_unit_scale_pairs() {
         }
     }
 }
+
+#[test]
+fn bulk_keep_refresh_preview_and_one_confirm_preserve_manual_labels_and_one_undo() {
+    use kentos_native_application::{ExecutionContext, tags_create};
+    let mut b = drawing();
+    let uid = b.doc.uid(Slot(1)).unwrap().to_string();
+    let input = serde_json::from_value(json!({"layerId":b.doc.layers().active(),"tags":[
+        {"of":uid,"at":{"x":E-4.,"y":N+8.},"content":"{name}","leader":true,"size":4.},
+        {"of":uid,"at":{"x":E-4.,"y":N+10.},"content":"{area}","shape":"none","size":2.}
+    ]}))
+    .unwrap();
+    assert!(matches!(
+        tags_create::execute(&mut ExecutionContext::new(&mut b.doc), input),
+        kentos_commands::CommandResult::Completed { .. }
+    ));
+    let before = b.doc.to_snapshot_v2();
+    b.start("tagAll");
+    assert_eq!(shown(&b, "E"), "Koru");
+    assert!(set(&mut b, "Ş", "{number} / {name}"));
+    assert!(
+        b.session
+            .preview(&Default::default())
+            .unwrap()
+            .texts
+            .is_empty()
+    );
+    assert!(set(&mut b, "E", "refresh"));
+    assert!(shown(&b, "N").contains("2 yenilenecek"));
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert_eq!(preview.texts.len(), 2);
+    assert!(preview.texts.iter().all(|t| t.text == "A-001 / Salon"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.confirm();
+    let after = b.doc.to_snapshot_v2();
+    assert_eq!(after.uids, before.uids);
+    assert_eq!(after.entities.len(), before.entities.len());
+    assert_eq!(after.entities[0], before.entities[0]);
+    for (a, p) in after.entities[1..].iter().zip(&before.entities[1..]) {
+        let (Entity::Tag(a), Entity::Tag(p)) = (a, p) else {
+            panic!()
+        };
+        assert_eq!(a.base, p.base);
+        assert_eq!(a.tag.at, p.tag.at);
+        assert_eq!(a.tag.leader, p.tag.leader);
+        assert_eq!(a.tag.size, p.tag.size);
+        assert_eq!(a.tag.text, "A-001 / Salon");
+    }
+    assert_eq!(
+        b.doc.journal().last().unwrap().command.as_deref(),
+        Some("cad.tags.create")
+    );
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.doc.redo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), after);
+}
+
+#[test]
+fn bulk_rejection_stays_open_escape_and_all_eight_kind_controls_are_read_only() {
+    let mut b = drawing();
+    b.start("tagAll");
+    let before = b.doc.to_snapshot_v2();
+    for (key, value) in [
+        ("Ş", "{bad}"),
+        ("Y", "0"),
+        ("Y", "51"),
+        ("Y", "NaN"),
+        ("Y", "3 m"),
+        ("E", "maybe"),
+        ("B", "triangle"),
+    ] {
+        assert!(!set(&mut b, key, value));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+    for key in ["A", "M", "K", "S", "D", "R", "P", "O"] {
+        assert!(set(&mut b, key, "no"));
+    }
+    b.confirm();
+    assert_eq!(b.session.prompt().tool, Some("Hepsini etiketle"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(set(&mut b, "M", "yes"));
+    assert!(set(&mut b, "Y", "3,5 mm"));
+    assert_eq!(shown(&b, "Y"), "3.5");
+    assert!(set(&mut b, "Y", ""));
+    assert_eq!(shown(&b, "Y"), "");
+    b.run(|s, cx| s.cancel(cx));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn bulk_target_changed_without_pointer_movement_requires_review_before_writing() {
+    let mut b = drawing();
+    let mut snapshot = b.doc.to_snapshot_v2();
+    let mut layer = snapshot.layers[0].clone();
+    layer.id = "etiket2".into();
+    layer.name = "İkinci etiket".into();
+    snapshot.layers.push(layer);
+    b.doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+    b.start("tagAll");
+    assert_eq!(shown(&b, "L"), "Çizim");
+    let revision = b.doc.revision();
+    assert!(b.doc.set_active_layer("etiket2"));
+    assert_eq!(b.doc.revision(), revision);
+    // A keyboard layer change does not pass through the canvas pointer hook.
+    let before = b.doc.to_snapshot_v2();
+    b.confirm();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert_eq!(b.session.prompt().tool, Some("Hepsini etiketle"));
+    assert_eq!(shown(&b, "L"), "İkinci etiket");
+    assert!(!b.doc.can_undo());
+    b.confirm();
+    let after = b.doc.to_snapshot_v2();
+    assert_eq!(after.entities[0], before.entities[0]);
+    assert_eq!(after.uids[0], before.uids[0]);
+    assert_eq!(after.entities.len(), 2);
+    assert_eq!(after.entities[1].base().layer_id, "etiket2");
+    assert_eq!(b.session.prompt().tool, None);
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(!b.doc.can_undo());
+    b.doc.redo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), after);
+}

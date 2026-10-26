@@ -475,8 +475,9 @@ def is_visible(ly):
 def tags_create(d, inp, conflict=False):
     if not inp.get("tags") and inp.get("all") is None:
         return refusal("no_objects", "Etiketlenecek nesne verilmedi. Etiketler (tags) ya da türler (all) verin.", "tags"), None
-    made = []
+    made, refreshed = [], []
     done = set(d.tagged())
+    explicit = {n["of"] for n in inp.get("tags", [])}
     for i, n in enumerate(inp.get("tags", [])):
         at = f"tags[{i}]"
         if not acc.is_uid(n["of"]):
@@ -513,13 +514,25 @@ def tags_create(d, inp, conflict=False):
             if al.get("phases") is not None and phase_of(d, i) not in al["phases"]:
                 continue
             if uid_of(i) in done:
+                if al.get("refresh") and uid_of(i) not in explicit:
+                    for tid, (tk, tl, tf, _) in sorted(d.objs.items()):
+                        if tk == "tag" and tl == inp["layerId"] and tf["of"] == uid_of(i):
+                            nf = copy.deepcopy(tf)
+                            nf.update({key: al[key] for key in ("content", "shape", "size") if al.get(key) is not None})
+                            nf = settle_tag(d, nf, follow=False)
+                            if nf.get("shape") == "circle": nf.pop("shape")
+                            if nf != tf:
+                                refreshed.append((tid, nf)); found += 1
                 continue
             done.add(uid_of(i))
             made.append(tag_fields(d, uid_of(i), {kk: al[kk] for kk in ("content", "shape", "size") if kk in al}))
             found += 1
         if found == 0 and not inp.get("tags"):
-            return refusal("no_objects", "Verilen türlerde etiketsiz ve görünen nesne yok.", "all.kinds"), None
-    return finish(inp, conflict, made)
+            message = "Verilen kapsamda yeni ya da hedef katmanda değişecek etiket yok." if al.get("refresh") else "Verilen türlerde etiketsiz ve görünen nesne yok."
+            return refusal("no_objects", message, "all.kinds"), None
+    result, made = finish(inp, conflict, made)
+    if made is not None and refreshed: result["refreshed"] = refreshed
+    return result, made
 
 
 def phase_of(d, i):
@@ -579,19 +592,28 @@ def create_step(d, op, inp, non_finite=None, conflict=False):
         s["result"] = {"status": "completed", "output": None, "warnings": result["warnings"]}
         return unchanged(s, d)
     ents = [{"kind": "tag", "id": 0, "layerId": inp["layerId"], "attrs": {}, **extra_of(inp), **f} for f in made]
+    refreshed = result.get("refreshed", [])
+    refresh_entities = [{**{key: value for key, value in d.entity(i).items() if key not in d.objs[i][2]}, **f} for i, f in refreshed]
     if op == "plan":
-        s["result"] = {"status": "completed", "output": {"tags": ents, "revision": "$current"}, "warnings": result["warnings"]}
+        output = {"tags": ents, "revision": "$current"}
+        if refreshed: output["refreshed"] = refresh_entities
+        s["result"] = {"status": "completed", "output": output, "warnings": result["warnings"]}
         s["within"] = 1e-9
         return unchanged(s, d)
     ids = list(range(d.next, d.next + len(made)))
     d.next += len(made)
     for i, f in zip(ids, made):
         d.objs[i] = ("tag", inp["layerId"], f, {})
-    d.follow(own=ids)
-    s["result"] = {"status": "completed", "output": {"uids": ["$any"] * len(made), "ids": ids, "revision": "$current"},
+    for i, f in refreshed:
+        k, ly, _, attrs = d.objs[i]
+        d.objs[i] = (k, ly, f, attrs)
+    d.follow(own=ids + [i for i, _ in refreshed])
+    output = {"uids": ["$any"] * len(made), "ids": ids, "revision": "$current"}
+    if refreshed: output["refreshed"] = [uid_of(i) for i, _ in refreshed]
+    s["result"] = {"status": "completed", "output": output,
                    "warnings": result["warnings"]}
     s["within"] = 1e-9
-    s["expect"] = {"ids": d.ids(), "entities": {str(i): d.entity(i, extra_of(inp)) for i in ids},
+    s["expect"] = {"ids": d.ids(), "entities": {**{str(i): d.entity(i, extra_of(inp)) for i in ids}, **{str(i): d.entity(i) for i, _ in refreshed}},
                    "canUndo": True, "dirty": True, "revision": "changed"}
     return s
 
@@ -716,6 +738,48 @@ def tag_create_cases():
           [made, *gone, {"op": "undo", "returns": "Sil", "expect": {"ids": [*IDS, NEW], "entities": {str(NEW): Drawing_after(made)}, "revision": "changed"}}])
     return c.cases
 
+
+
+def refresh_tag_cases():
+    """Independent keep/refresh matrix, preserving placement and separate tag layers."""
+    c = Cases()
+    def seed(d):
+        # Two deliberately different labels of one room on the target layer,
+        # and a separate label of the other room on another layer.
+        return create_step(d, "execute", {"layerId":"etiket", "tags":[
+            {"of":uid_of(3), "at":P(-4,8), "content":"{name}", "size":4, "leader":True, "shape":"rounded"},
+            {"of":uid_of(3), "at":P(-4,10), "content":"{area}", "size":2, "shape":"none"}]})
+    for policy in [MISSING, None, False, True]:
+        for fields in [{}, {"content":"{number} / {name}"}, {"shape":"hexagon"}, {"size":3.5},
+                       {"content":"{number}\n{usage}", "size":3.5, "shape":"circle"}]:
+            d=Drawing(); pre=seed(d); before={str(i):d.entity(i) for i in d.ids()}; before_ids=d.ids()
+            al={"kinds":["space"], **fields}
+            if policy is not MISSING: al["refresh"]=policy
+            inp={"layerId":"etiket", "all":al}
+            steps=[pre, create_step(d,"validate",inp), create_step(d,"plan",inp),create_step(d,"execute",inp)]
+            after={str(i):d.entity(i) for i in d.ids()}; after_ids=d.ids()
+            steps += [{"op":"undo","returns":"Etiket","expect":{"ids":before_ids,"entities":before,"revision":"changed","canRedo":True}},
+                      {"op":"redo","returns":"Etiket","expect":{"ids":after_ids,"entities":after,"revision":"changed","canRedo":False}},
+                      create_step(d,"execute",inp)]
+            c.add(f"Koru/Yenile {policy}/{fields}: two moved labels, new room, one undo and empty repeat",steps)
+    for extra in [{"layers":[]},{"layers":["kapi"]},{"phases":["new"]},{"phases":["demolish"]}]:
+        d=Drawing(); pre=seed(d)
+        c.add(f"Yenile kaynak kapsamı {extra}",[pre,create_step(d,"plan",{"layerId":"etiket","all":{"kinds":["space"],"refresh":True,"content":"{usage}",**extra}})])
+    d=Drawing(); pre=seed(d)
+    c.add("Yenile yalnız hedef etiket katmanı; başka katmandaki iki etiket korunur",[pre,
+        create_step(d,"plan",{"layerId":"cizim","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}}),
+        create_step(d,"execute",{"layerId":"cizim","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    for fields in [{"content":"{bad}"},{"size":0},{"size":51}]:
+        d=Drawing();pre=seed(d)
+        c.add(f"Yenile alan atomik ret {fields}",[pre,create_step(d,"execute",{"layerId":"etiket","all":{"kinds":["space"],"refresh":True,**fields}})])
+    d=Drawing();pre=seed(d)
+    c.add("Yenile kilitli hedefte yeni etiket de yazmaz",[pre,create_step(d,"execute",{"layerId":"kilitli","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    d=Drawing();pre=seed(d)
+    c.add("Açık tags kaynağı aynı çağrıda yenilenmez",[pre,create_step(d,"execute",{"layerId":"etiket","tags":[{"of":uid_of(3),"content":"{name}"}],"all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    d=Drawing();pre=seed(d)
+    c.add("Yenile eski revision tüm değişikliği reddeder",[{"op":"captureRevision","as":"old"},pre,
+        create_step(d,"execute",{"layerId":"etiket","expectedRevision":"$old","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}},conflict=True)])
+    return c.cases
 
 
 def elevation_tag_cases():
@@ -1650,7 +1714,7 @@ def document(command, title, cases):
 
 def files():
     return {
-        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + elevation_tag_cases() + net_area_tag_cases()),
+        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + refresh_tag_cases() + elevation_tag_cases() + net_area_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
         "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()+missing_space_number_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),

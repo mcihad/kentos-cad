@@ -1,0 +1,40 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 28s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+test fixtures::every_command_case_matches_the_desktop_handlers ... FAILED
+
+failures:
+
+---- fixtures::every_command_case_matches_the_desktop_handlers stdout ----
+
+thread 'fixtures::every_command_case_matches_the_desktop_handlers' (4765898) panicked at crates/native/application/tests/all/fixtures.rs:4775:5:
+1 of 264 cases failed:
+cad.tags.create.json › Koru/Yenile True/{'content': '{number}\n{usage}', 'size': 3.5, 'shape': 'circle'}: two moved labels, new room, one undo and empty repeat › 5 plan: sonuç (±0.000000001): beklenen {"output":{"refreshed":[{"anchor":{"x":22.0,"y":1.5},"at":{"x":-4.0,"y":8.0},"attrs":{},"content":"{number}\n{usage}","id":17,"kind":"tag","layerId":"etiket","leader":true,"of":"ae8abf34-2c14-54c2-9671-d1d42b6fe8f7","shape":"rounded","size":3.5,"text":"101\nOturma"},{"anchor":{"x":22.0,"y":1.5},"at":{"x":-4.0,"y":10.0},"attrs":{},"content":"{number}\n{usage}","id":18,"kind":"tag","layerId":"etiket","of":"ae8abf34-2c14-54c2-9671-d1d42b6fe8f7","shape":"none","size":3.5,"text":"101\nOturma"}],"revision":"3","tags":[{"anchor":{"x":26.5,"y":1.0},"at":{"x":26.5,"y":1.0},"attrs":{},"content":"{number}\n{usage}","id":0,"kind":"tag","layerId":"etiket","of":"d7973113-d118-5572-8c93-925016b0d18e","size":3.5,"text":"102\nIslak"}]},"status":"completed","warnings":[]}, bulunan {"output":{"refreshed":[{"anchor":{"x":22.0,"y":1.5},"at":{"x":-4.0,"y":8.0},"attrs":{},"content":"{number}\n{usage}","id":17,"kind":"tag","layerId":"etiket","leader":true,"of":"ae8abf34-2c14-54c2-9671-d1d42b6fe8f7","size":3.5,"text":"101\nOturma"},{"anchor":{"x":22.0,"y":1.5},"at":{"x":-4.0,"y":10.0},"attrs":{},"content":"{number}\n{usage}","id":18,"kind":"tag","layerId":"etiket","of":"ae8abf34-2c14-54c2-9671-d1d42b6fe8f7","size":3.5,"text":"101\nOturma"}],"revision":"3","tags":[{"anchor":{"x":26.5,"y":1.0},"at":{"x":26.5,"y":1.0},"attrs":{},"content":"{number}\n{usage}","id":0,"kind":"tag","layerId":"etiket","of":"d7973113-d118-5572-8c93-925016b0d18e","size":3.5,"text":"102\nIslak"}]},"status":"completed","warnings":[]}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixtures::every_command_case_matches_the_desktop_handlers
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.40s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

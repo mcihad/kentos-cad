@@ -52314,12 +52314,15 @@ class TagAll(_Model):
     Attributes:
         layers: Their layers' ids; absent: every layer shown.
         phases: Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
+        refresh: Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
+            Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
         size: Unit: paper-mm.
     """
     kinds: list[TaggedKind | TaggedKindName]
     content: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
+    refresh: bool | None | Unset = UNSET
     shape: TagShape | TagShapeName | None | Unset = UNSET
     size: float | None | Unset = UNSET
 
@@ -52332,6 +52335,8 @@ class TagAll(_Model):
             out["layers"] = None if self.layers is None else list(self.layers)
         if self.phases is not UNSET:
             out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
+        if self.refresh is not UNSET:
+            out["refresh"] = self.refresh
         if self.shape is not UNSET:
             out["shape"] = None if self.shape is None else _enum_out(self.shape)
         if self.size is not UNSET:
@@ -52345,6 +52350,7 @@ class TagAll(_Model):
             content=data.get("content", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
+            refresh=data.get("refresh", UNSET),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
             size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
         )
@@ -52659,16 +52665,20 @@ class TagsCreated(_Model):
     """Output of `cad.tags.create` v1.
     Attributes:
         ids: Unit: id.
+        refreshed: Existing tags changed in place; `uids` and `ids` still name only new tags.
     """
     uids: list[str]
     ids: list[int]
     revision: str
+    refreshed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
         out["ids"] = list(self.ids)
         out["revision"] = self.revision
+        if self.refreshed is not UNSET:
+            out["refreshed"] = list(self.refreshed)
         return out
 
     @classmethod
@@ -52677,6 +52687,7 @@ class TagsCreated(_Model):
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+            refreshed=list(data["refreshed"]) if "refreshed" in data else UNSET,
         )
 
 
@@ -52731,14 +52742,20 @@ class TagsEdited(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TagsPlan(_Model):
-    """What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0."""
+    """What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0.
+    Attributes:
+        refreshed: Changed existing tags, with their original ids; new `tags` retain id 0.
+    """
     tags: list[Entity]
     revision: str
+    refreshed: list[Entity] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["tags"] = [e0.to_json() for e0 in self.tags]
         out["revision"] = self.revision
+        if self.refreshed is not UNSET:
+            out["refreshed"] = [e0.to_json() for e0 in self.refreshed]
         return out
 
     @classmethod
@@ -52746,6 +52763,7 @@ class TagsPlan(_Model):
         return cls(
             tags=[Entity.from_json(e0) for e0 in data["tags"]],
             revision=data["revision"],
+            refreshed=[Entity.from_json(e0) for e0 in data["refreshed"]] if "refreshed" in data else UNSET,
         )
 
 

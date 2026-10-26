@@ -1,0 +1,598 @@
+[
+  {
+    "name": "check",
+    "command": [
+      "cargo",
+      "check",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-desktop"
+    ],
+    "startedAt": 1793013011.0035682,
+    "finishedAt": 1793013175.018684,
+    "exitCode": 101,
+    "log": "testlogs/check.log",
+    "sha256": "74513eda601b38021292ed853bb7c135a1db58af024c6cbe81b7fb3ac9e13b1b",
+    "testResultLines": []
+  },
+  {
+    "name": "python-red",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-p",
+      "test_tag_refresh.py"
+    ],
+    "startedAt": 1793013234.738056,
+    "finishedAt": 1793013235.223813,
+    "exitCode": 1,
+    "log": "testlogs/python-red.log",
+    "sha256": "7a14b3124b644574fc1b074817aa1779ec5a75fcd5014481a7f9d36e1e29bdaa",
+    "testResultLines": []
+  },
+  {
+    "name": "catalog",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-commands",
+      "catalog"
+    ],
+    "startedAt": 1793013268.207659,
+    "finishedAt": 1793013329.622373,
+    "exitCode": 0,
+    "log": "testlogs/catalog.log",
+    "sha256": "893a98a51ed46d48ff23f4867f90813e05d0522f514db0c32ad0558d3278bd76",
+    "testResultLines": [
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 806 filtered out; finished in 1.47s"
+    ]
+  },
+  {
+    "name": "sdk-write",
+    "command": [
+      "python3",
+      "scripts/python/sdk.py"
+    ],
+    "startedAt": 1793013368.876022,
+    "finishedAt": 1793013369.265561,
+    "exitCode": 0,
+    "log": "testlogs/sdk-write.log",
+    "sha256": "b7144db308935e9687b93872d533ffd2636e8dbe08fb1e879cf3aad155c2864b",
+    "testResultLines": []
+  },
+  {
+    "name": "cases",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "every_command_case"
+    ],
+    "startedAt": 1793013369.309799,
+    "finishedAt": 1793013458.628452,
+    "exitCode": 101,
+    "log": "testlogs/cases.log",
+    "sha256": "d8139afb94c931219bac31356795d544bcc6ccc4a38b9c3393c6a4ffb199ac13",
+    "testResultLines": [
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.40s"
+    ]
+  },
+  {
+    "name": "cases-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "every_command_case"
+    ],
+    "startedAt": 1793013506.6464362,
+    "finishedAt": 1793013507.292154,
+    "exitCode": 0,
+    "log": "testlogs/cases-final.log",
+    "sha256": "c7f7645131fa5c63162026a52076d8a541fc877ca464fc306d4c914731926ad1",
+    "testResultLines": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.36s"
+    ]
+  },
+  {
+    "name": "interaction-focused",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction",
+      "--test",
+      "all",
+      "tag_settings"
+    ],
+    "startedAt": 1793013518.87747,
+    "finishedAt": 1793013576.7510521,
+    "exitCode": 0,
+    "log": "testlogs/interaction-focused.log",
+    "sha256": "d0eea9f495e33fa09f86c1d75498789b6a85944904aff0302587c6633148e261",
+    "testResultLines": [
+      "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 695 filtered out; finished in 0.02s"
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedAt": 1793013591.569359,
+    "finishedAt": 1793013883.9397361,
+    "exitCode": 0,
+    "log": "testlogs/build.log",
+    "sha256": "7ffc1e1d663be1b12f2afb9b50303083cce84efd49a9cf377f28ba15ead9b4d8",
+    "testResultLines": []
+  },
+  {
+    "name": "commands",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-commands"
+    ],
+    "startedAt": 1793013921.532542,
+    "finishedAt": 1793013993.1477802,
+    "exitCode": 0,
+    "log": "testlogs/commands.log",
+    "sha256": "bc51286633308648d6b347ce301a4177873392de32320fcb6cb609e5cf4b06b5",
+    "testResultLines": [
+      "test result: ok. 809 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.83s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "mcp",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-mcp",
+      "--tests"
+    ],
+    "startedAt": 1793013993.190957,
+    "finishedAt": 1793014249.004936,
+    "exitCode": 101,
+    "log": "testlogs/mcp.log",
+    "sha256": "c5f48954192bf2ca832f693210a983c24e5f0b7efd5ad4520b16269ce36bb41a",
+    "testResultLines": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.41s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.91s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.20s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.74s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.19s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.76s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.71s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.63s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.73s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.74s",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.77s"
+    ]
+  },
+  {
+    "name": "compatibility-audit",
+    "command": [
+      "python3",
+      "docs/baseline/2026-10-26-architecture-tag-refresh/audit.py"
+    ],
+    "startedAt": 1793014502.234709,
+    "finishedAt": 1793014514.931013,
+    "exitCode": 0,
+    "log": "testlogs/compatibility-audit.log",
+    "sha256": "63d2d6a9d3d9023fbc355ba198dd9f89638e40c4248abb52e12576256cd12451",
+    "testResultLines": []
+  },
+  {
+    "name": "mcp-2",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-mcp",
+      "--tests"
+    ],
+    "startedAt": 1793014581.2089448,
+    "finishedAt": 1793015108.7908869,
+    "exitCode": 101,
+    "log": "testlogs/mcp-2.log",
+    "sha256": "9529ac66739f107b790bd0f0aadf03059bb37110f0eeb5bdf629bfb74f8836f8",
+    "testResultLines": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.56s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.95s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.96s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.66s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.63s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.61s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.36s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.64s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.65s",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.70s"
+    ]
+  },
+  {
+    "name": "mcp-focused-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-mcp",
+      "--test",
+      "tag_refresh"
+    ],
+    "startedAt": 1793015182.5735,
+    "finishedAt": 1793015263.7989278,
+    "exitCode": 0,
+    "log": "testlogs/mcp-focused-final.log",
+    "sha256": "3bf6da1875c02c5af4752f815b7262139bf871739dd241b975842655c96cc7b7",
+    "testResultLines": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.48s"
+    ]
+  },
+  {
+    "name": "mcp-wall",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-mcp",
+      "--test",
+      "wall_contours"
+    ],
+    "startedAt": 1793015293.438299,
+    "finishedAt": 1793015295.8829288,
+    "exitCode": 0,
+    "log": "testlogs/mcp-wall.log",
+    "sha256": "167fee7350e16329d337a452893681e8095401e371cfe8094b311285ad3e8c96",
+    "testResultLines": [
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.02s"
+    ]
+  },
+  {
+    "name": "interaction",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction"
+    ],
+    "startedAt": 1793015295.906612,
+    "finishedAt": 1793015745.327991,
+    "exitCode": 0,
+    "log": "testlogs/interaction.log",
+    "sha256": "8fa14cda2b48e4f9046dc67bfb9a2a91b5aa624dd8fba8813bd04b11bbc7a69a",
+    "testResultLines": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 701 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.34s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "build-final",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedAt": 1793015745.357457,
+    "finishedAt": 1793016116.098214,
+    "exitCode": 0,
+    "log": "testlogs/build-final.log",
+    "sha256": "ca7239f7d4940aaffd77a7f6c277700148a5b8b6dc2c53b1d1533e95ad714c24",
+    "testResultLines": []
+  },
+  {
+    "name": "application",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application"
+    ],
+    "startedAt": 1793016116.136839,
+    "finishedAt": 1793016460.558082,
+    "exitCode": 0,
+    "log": "testlogs/application.log",
+    "sha256": "5b924f163043c03d2336d0c14fc2481f45bbd7315fc66b40ae9bc2fdb8ebb45a",
+    "testResultLines": [
+      "test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "test result: ok. 221 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 40.66s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "python-build",
+    "command": [
+      "sh",
+      "-c",
+      "cd python && VIRTUAL_ENV=/Users/cihad/Projects/kentos-cad/.run/py ../.run/py/bin/maturin develop -q --extras test"
+    ],
+    "startedAt": 1793016460.5955358,
+    "finishedAt": 1793016919.71188,
+    "exitCode": 0,
+    "log": "testlogs/python-build.log",
+    "sha256": "b6faf952d680a6930cdbd0f7151baf15c951376931d0d25e772367bef504d837",
+    "testResultLines": []
+  },
+  {
+    "name": "python-focused",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-p",
+      "test_tag_refresh.py"
+    ],
+    "startedAt": 1793016919.7567859,
+    "finishedAt": 1793016923.110025,
+    "exitCode": 1,
+    "log": "testlogs/python-focused.log",
+    "sha256": "17deb65cf47f5ce97bd07cc4df9768947e19de2e44c43a38a6db7b2c2eeb5d45",
+    "testResultLines": []
+  },
+  {
+    "name": "python-focused-2",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-p",
+      "test_tag_refresh.py"
+    ],
+    "startedAt": 1793017147.2997708,
+    "finishedAt": 1793017150.0224571,
+    "exitCode": 0,
+    "log": "testlogs/python-focused-2.log",
+    "sha256": "f7837354f8f8e40fd68e56068a827ec7a0bec9c5e1d3a38292008a39815aba6a",
+    "testResultLines": []
+  },
+  {
+    "name": "python-all",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests"
+    ],
+    "startedAt": 1793017150.050878,
+    "finishedAt": 1793017394.9681668,
+    "exitCode": 0,
+    "log": "testlogs/python-all.log",
+    "sha256": "0aac1974179173d18e5ed9e2d3f539d1b3e2cfaef80aa54c71366983d86f4bce",
+    "testResultLines": []
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1793017395.001292,
+    "finishedAt": 1793018237.678984,
+    "exitCode": 0,
+    "log": "testlogs/clippy.log",
+    "sha256": "d46f010f6778de27d448fe833ada273669bc8701fb91f5603facfefca65616ca",
+    "testResultLines": []
+  },
+  {
+    "name": "wasm",
+    "command": [
+      "cargo",
+      "check",
+      "-p",
+      "kentos-commands",
+      "--target",
+      "wasm32-unknown-unknown",
+      "--no-default-features"
+    ],
+    "startedAt": 1793018237.7142558,
+    "finishedAt": 1793018274.1412292,
+    "exitCode": 0,
+    "log": "testlogs/wasm.log",
+    "sha256": "132dd67f284fbe1bf0b9745e50af9ab634cff9c531de220745b7010a7483610c",
+    "testResultLines": []
+  },
+  {
+    "name": "sdk",
+    "command": [
+      "python3",
+      "scripts/python/sdk.py",
+      "--check"
+    ],
+    "startedAt": 1793018274.171442,
+    "finishedAt": 1793018274.520257,
+    "exitCode": 0,
+    "log": "testlogs/sdk.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "testResultLines": []
+  },
+  {
+    "name": "reference",
+    "command": [
+      "python3",
+      "scripts/fixtures/tag_command_cases.py",
+      "--check"
+    ],
+    "startedAt": 1793018274.5439968,
+    "finishedAt": 1793018274.643347,
+    "exitCode": 0,
+    "log": "testlogs/reference.log",
+    "sha256": "f26f75eaa05cd9c75ec532d028b8c751f80c26cf5e798b7d02e85969ab7774f4",
+    "testResultLines": []
+  },
+  {
+    "name": "dependencies",
+    "command": [
+      "node",
+      "scripts/arch/deps.mjs"
+    ],
+    "startedAt": 1793018274.6667469,
+    "finishedAt": 1793018281.139622,
+    "exitCode": 0,
+    "log": "testlogs/dependencies.log",
+    "sha256": "2838b852e0d555ee06aa68eafadb407019a074c7c3a426b9c76255a50a71a6d6",
+    "testResultLines": []
+  },
+  {
+    "name": "target-change-red",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction",
+      "--test",
+      "all",
+      "bulk_target_changed_without_pointer_movement"
+    ],
+    "startedAt": 1793018294.405725,
+    "finishedAt": 1793018326.2979672,
+    "exitCode": 101,
+    "log": "testlogs/target-change-red.log",
+    "sha256": "4887836e97777c467551ddabda354955f663cf512698349d00c3522d91b9f3c5",
+    "testResultLines": [
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 702 filtered out; finished in 0.01s"
+    ]
+  },
+  {
+    "name": "interaction-target-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction"
+    ],
+    "startedAt": 1793018383.8487601,
+    "finishedAt": 1793018555.698134,
+    "exitCode": 0,
+    "log": "testlogs/interaction-target-final.log",
+    "sha256": "b1a8bfea281ad20f0cf3b1bd17d7341c756214804d9b9782b9835e253ae38325",
+    "testResultLines": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 702 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.34s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "build-target-guard",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedAt": 1793018555.728349,
+    "finishedAt": 1793018676.760918,
+    "exitCode": 0,
+    "log": "testlogs/build-target-guard.log",
+    "sha256": "0e3b35245f5715d9e7fe748493849674d3010c1005f4a0b78496983cfbe3d80a",
+    "testResultLines": []
+  },
+  {
+    "name": "clippy-target-final",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-desktop",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1793018677.644446,
+    "finishedAt": 1793019226.321295,
+    "exitCode": 0,
+    "log": "testlogs/clippy-target-final.log",
+    "sha256": "ef6f17035500074f7302aaa7d1815970990cdd90422ced8ca3c6b881cc29aae5",
+    "testResultLines": []
+  },
+  {
+    "name": "compatibility-final",
+    "command": [
+      "python3",
+      "docs/baseline/2026-10-26-architecture-tag-refresh/audit.py"
+    ],
+    "startedAt": 1793019534.361724,
+    "finishedAt": 1793019545.235913,
+    "exitCode": 0,
+    "log": "testlogs/compatibility-final.log",
+    "sha256": "63d2d6a9d3d9023fbc355ba198dd9f89638e40c4248abb52e12576256cd12451",
+    "testResultLines": []
+  },
+  {
+    "name": "gui-final",
+    "command": [
+      "python3",
+      "docs/baseline/2026-10-26-architecture-tag-refresh/verify.py"
+    ],
+    "startedAt": 1793019573.147691,
+    "finishedAt": 1793019573.95824,
+    "exitCode": 0,
+    "log": "testlogs/gui-final.log",
+    "sha256": "57eb30345e7ef955652ce6f83c1b73346bc888619ca5c5b473a8da33ab97c9fd",
+    "testResultLines": []
+  }
+]

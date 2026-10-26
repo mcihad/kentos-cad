@@ -1,0 +1,13 @@
+{
+  "parentCommit": "30e8a7dd5d700da8d2c9489df91d778a056573b3",
+  "recordedAt": "2026-10-26T11:25:21.276289+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Refresh QA.app",
+  "sha256": "62a87bd1f86f98ba41564f26d2efed922b632af598bb3f8799d89aa789b1d308",
+  "sourceFiles": {
+    "crates/native/application/src/tags.rs": "470304b418c15db044980100c3454f13bc3d3b039ce36e03aad8528ae7c97fd9",
+    "crates/native/interaction/src/tag_tools.rs": "e9a1a3dce3b7d05d2560e34c1ed4e8ba6a4d4bfd32d6d37a53e125d02d8215ef",
+    "crates/shared/commands/src/cad_tags.rs": "55b2692a242ac5ca7bc2c0f9de1f0f11e4949ad4488a501a266581ce1c860057",
+    "crates/shared/commands/src/catalog.rs": "81ace8f14ced8aeb59e8a3fb5abc1a6d078dc5cb7ce5c33c87cbcda734ee4177"
+  }
+}

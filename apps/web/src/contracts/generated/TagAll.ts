@@ -6,11 +6,16 @@ import type { TaggedKind } from "./TaggedKind";
 /**
  * Tags on every shown object of the kinds given that has none, each at its object's point as a `NewTag` without `at`.
  */
-export type TagAll = { kinds: Array<TaggedKind>, 
+export type TagAll = { kinds: Array<TaggedKind>,
+/**
+ * Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
+ * Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
+ */
+refresh?: boolean,
 /**
  * Their layers' ids; absent: every layer shown.
  */
-layers?: Array<string>, content?: string, shape?: TagShape, size?: number, 
+layers?: Array<string>, content?: string, shape?: TagShape, size?: number,
 /**
  * Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
  */

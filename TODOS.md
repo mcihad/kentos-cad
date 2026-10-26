@@ -51,6 +51,18 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR0662: mevcut `cad.tags.create` için `all.refresh`
+  yok/null/false eski Koru, true yalnız hedef etiket katmanındaki uygun
+  etiketlerin açık content/shape/size alanlarını yeniler. Konum/UUID/kol
+  ve diğer katmanlar korunur; yeni+yenilenen tek undo, birlikte en çok10.000.
+  Plan `tags` yeni/isteğe bağlı `refreshed` mevcut nesneler; execute `uids/ids`
+  yalnız yeni, `refreshed` değişen UUID'lerdir. Boş liste serileştirilmez.
+  Web dönüşünde görünür ayar/sayılı önizleme/ret/iptal, hedef değişiminde
+  yeni plan onayı aynı komuta bağlanmalı. Üç mevcut TS tipi ve katalog
+  güncel; yeni TS/TSX veya web GUI eklenmedi. Masaüstünde35 ham ekran,
+  24 tam model +bir tanısal disk; 335 Python/31 yeni ortak durum doğrulandı.
+  Mimari kat/görünüş/pafta kapsamı ve web GUI kabulü açıktır.
+
 - ARCH-SPACE-02 / ADR 0661: proje ArchSettings içinde isteğe bağlı sıralı
   spaceNames/spaceUsages ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
   Web dönüşünde proje formu, ayrı öneri seçimleri ve açık başlangıç alma

@@ -3,4 +3,8 @@
 /**
  * Output of `cad.tags.create` v1.
  */
-export type TagsCreated = { uids: Array<string>, ids: Array<number>, revision: string, };
+export type TagsCreated = { uids: Array<string>, ids: Array<number>,
+/**
+ * Existing tags changed in place; `uids` and `ids` still name only new tags.
+ */
+refreshed?: Array<string>, revision: string, };

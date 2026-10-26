@@ -1,0 +1,33 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 57.81s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 7 tests
+test tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state ... ok
+test tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection ... ok
+test tag_settings::bulk_rejection_stays_open_escape_and_all_eight_kind_controls_are_read_only ... ok
+test tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults ... ok
+test tag_settings::bulk_keep_refresh_preview_and_one_confirm_preserve_manual_labels_and_one_undo ... ok
+test tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source ... ok
+test tag_settings::paper_height_is_independent_of_drawing_unit_for_twenty_unit_scale_pairs ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 695 filtered out; finished in 0.02s
+

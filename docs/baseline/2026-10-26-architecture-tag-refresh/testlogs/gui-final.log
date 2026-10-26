@@ -1,0 +1,24 @@
+{
+  "fullNativeModelsVerified": 24,
+  "diagnosticDiskCopiesVerified": 1,
+  "totalDiskCopiesChecked": 25,
+  "rawImagesVerified": 35,
+  "imageDimensions": [
+    [
+      2200,
+      1364
+    ],
+    [
+      2880,
+      1720
+    ]
+  ],
+  "sourceGeometryUidsSettingsAndHiddenTag": "unchanged",
+  "manualTagPosition": {
+    "x": -1.0,
+    "y": 2.5
+  },
+  "keepNewTags": 1,
+  "refreshNewTags": 1,
+  "refreshExistingTags": 4
+}

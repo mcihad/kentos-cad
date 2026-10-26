@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Toplu etikette Koru/Yenile (26 Ekim 2026; [ADR0662](docs/adr/0662-bulk-tag-refresh.md)).**
+  Mevcut `cad.tags.create` isteğe bağlı `all.refresh`; yalnız hedef etiket
+  katmanında açık alanları yeniler, kimlik/elle yer/kol/diğer katmanlar ve
+  eski yok/null/false korunur. Görünür ayarlar ve sayılı plan, karma yazım
+  tek undo; klavye hedef değişimi önce yeniden önizler. [Kabul](docs/baseline/2026-10-26-architecture-tag-refresh/README.md):
+  ilgili264 ortak durum/31 yeni, 335 Python, 809 commands, son63+702
+  interaction/51+221 application, gerçek MCP, clippy/build/WASM/SDK.
+  35 ham ekran/24 tam model +bir tanısal disk; eski1756 KCAD baytı aynı.
+  Üç mevcut TS tipi güncel, yeni TS/TSX/kalıcı şema/birim/ölçek/renderer yok.
+  ARCH-SPACE-02 [~]; mimari kat/görünüş/pafta kapsamı ve tam matris açık.
+
 - **Mahal proje listeleri ve açık kat öneki (26 Ekim 2026; [ADR0661](docs/adr/0661-project-room-choices.md)).**
   Projeyle sıralı ad/kullanım listeleri ve kata bağlı önek; ayrı öneri
   alanları serbest metni korur, kat değişimi taslak numarayı değiştirmez.
@@ -26,7 +37,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   clippy/build/WASM/1203 KCAD. Gerçek GUI açıklama yerini düzeltti;
   42 ham ekran/23 tam bağımsız kayıt. 30.000 nesnede debug tercih yazımı
   ortancası 15,183 ms; genel FPS garantisi değildir. İki mevcut TS tipi
-  yenilendi, yeni TS/TSX dosyası yok. Koru/Yenile/tam matris ve ARCH-SPACE-02 [~].
+  yenilendi, yeni TS/TSX dosyası yok. Koru/Yenile ADR0662’de; çoklu pafta/tam matris ve ARCH-SPACE-02 [~].
 
 - **Numarasız mahal denetimi (26 Ekim 2026; [ADR 0660](docs/adr/0660-room-number-review.md)).**
   Mevcut etiket denetiminde görünür seçenek; ad/kat/UUID ve kaynak Göster.

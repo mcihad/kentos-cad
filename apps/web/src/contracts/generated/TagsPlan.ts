@@ -4,4 +4,8 @@ import type { Entity } from "./Entity";
 /**
  * What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0.
  */
-export type TagsPlan = { tags: Array<Entity>, revision: string, };
+export type TagsPlan = { tags: Array<Entity>,
+/**
+ * Changed existing tags, with their original ids; new `tags` retain id 0.
+ */
+refreshed?: Array<Entity>, revision: string, };

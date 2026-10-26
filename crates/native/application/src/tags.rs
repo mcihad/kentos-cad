@@ -32,7 +32,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
 
-type Checked = (Vec<CommandWarning>, Vec<Entity>);
+struct Checked {
+    warnings: Vec<CommandWarning>,
+    tags: Vec<Entity>,
+    refreshed: Vec<(Slot, Entity)>,
+}
 
 /// The objects the drawing's tags tag, by their persistent ids.
 fn tagged(doc: &Document) -> BTreeSet<String> {
@@ -50,7 +54,13 @@ fn words_height(doc: &Document, size: Option<f64>) -> f64 {
 }
 
 /// A tag of `target` from what was given, its words and point written as the document writes them.
-fn tag_of(doc: &Document, read: &kentos_domain::tag_read::TagRead<'_>, of: &str, target: &Entity, n: &NewTag) -> Option<TagFields> {
+fn tag_of(
+    doc: &Document,
+    read: &kentos_domain::tag_read::TagRead<'_>,
+    of: &str,
+    target: &Entity,
+    n: &NewTag,
+) -> Option<TagFields> {
     let anchor = doc.tag_anchor(target);
     let at = match (n.at, anchor) {
         (Some(at), _) => at,
@@ -101,6 +111,8 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
     let read = kentos_domain::tag_read::TagRead::new(doc);
     let mut made: Vec<TagFields> = Vec::new();
     let mut done: BTreeSet<String> = tagged(doc);
+    let mut explicit = BTreeSet::new();
+    let mut refreshed = Vec::new();
     for (i, n) in input.tags.iter().enumerate() {
         let at = format!("tags[{i}]");
         if !checks::is_uid_text(&n.of) {
@@ -151,6 +163,7 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             return Err(invalid(words, &format!("{at}.{field}")));
         }
         done.insert(n.of.clone());
+        explicit.insert(n.of.clone());
         made.push(t);
     }
     if let Some(all) = &input.all {
@@ -196,6 +209,17 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             leader: None,
         };
         let mut found = 0usize;
+        // One pass indexes the target layer. Do not scan every tag per source.
+        let mut existing: BTreeMap<&str, Vec<&TagEntity>> = BTreeMap::new();
+        if all.refresh == Some(true) {
+            for e in doc.entities() {
+                if let Entity::Tag(t) = e
+                    && t.base.layer_id == input.layer_id
+                {
+                    existing.entry(&t.tag.of).or_default().push(t);
+                }
+            }
+        }
         let by_uid = |u: &str| {
             kentos_domain::Uuid::parse_str(u)
                 .ok()
@@ -218,28 +242,62 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
                 continue;
             };
             if done.contains(&uid) {
+                if !explicit.contains(&uid)
+                    && let Some(tags) = existing.get(uid.as_str())
+                {
+                    for tag in tags {
+                        let mut next = (*tag).clone();
+                        if let Some(content) = &all.content {
+                            next.tag.content = Some(content.clone());
+                        }
+                        if let Some(shape) = all.shape {
+                            next.tag.shape = shape;
+                        }
+                        if let Some(size) = all.size {
+                            next.tag.size = Some(size);
+                        }
+                        next.tag = read.settled(&next.tag, false);
+                        if next != **tag {
+                            refreshed.push((Slot(next.base.id), Entity::Tag(next)));
+                            found += 1;
+                            if made.len() + refreshed.len() > kentos_commands::MAX_TAGS {
+                                return Err(invalid(
+                                    format!(
+                                        "Bir çağrıda en çok {} etiket yazılır.",
+                                        kentos_commands::MAX_TAGS
+                                    ),
+                                    "all",
+                                ));
+                            }
+                        }
+                    }
+                }
                 continue;
             }
             if let Some(t) = tag_of(doc, &read, &uid, e, &n) {
                 done.insert(uid);
                 made.push(t);
                 found += 1;
+                if made.len() + refreshed.len() > kentos_commands::MAX_TAGS {
+                    return Err(invalid(
+                        format!(
+                            "Bir çağrıda en çok {} etiket yazılır.",
+                            kentos_commands::MAX_TAGS
+                        ),
+                        "all",
+                    ));
+                }
             }
         }
         if found == 0 && input.tags.is_empty() {
             return Err(fail(
                 codes::NO_OBJECTS,
-                "Verilen türlerde etiketsiz ve görünen nesne yok.".into(),
+                if all.refresh == Some(true) {
+                    "Verilen kapsamda yeni ya da hedef katmanda değişecek etiket yok.".into()
+                } else {
+                    "Verilen türlerde etiketsiz ve görünen nesne yok.".into()
+                },
                 "all.kinds",
-            ));
-        }
-        if made.len() > kentos_commands::MAX_TAGS {
-            return Err(invalid(
-                format!(
-                    "Bir çağrıda en çok {} etiket yazılır.",
-                    kentos_commands::MAX_TAGS
-                ),
-                "all",
             ));
         }
     }
@@ -266,7 +324,11 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             })
         })
         .collect();
-    Ok((warnings, entities))
+    Ok(Checked {
+        warnings,
+        tags: entities,
+        refreshed,
+    })
 }
 
 pub mod create {
@@ -274,7 +336,7 @@ pub mod create {
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &TagsCreate) -> CommandResult<()> {
         match check(cx.doc, input) {
-            Ok((warnings, _)) => CommandResult::Completed {
+            Ok(Checked { warnings, .. }) => CommandResult::Completed {
                 output: (),
                 warnings,
             },
@@ -289,9 +351,14 @@ pub mod create {
     /// [`plan`] on a document: what the Etiket tool draws as its preview.
     pub fn plan_in(doc: &Document, input: &TagsCreate) -> CommandResult<TagsPlan> {
         match check(doc, input) {
-            Ok((warnings, tags)) => CommandResult::Completed {
+            Ok(Checked {
+                warnings,
+                tags,
+                refreshed,
+            }) => CommandResult::Completed {
                 output: TagsPlan {
                     tags,
+                    refreshed: refreshed.into_iter().map(|(_, e)| e).collect(),
                     revision: doc.revision().to_string(),
                 },
                 warnings,
@@ -314,11 +381,26 @@ pub mod create {
         cx: &mut ExecutionContext<'_>,
         input: TagsCreate,
     ) -> CommandResult<TagsCreated> {
-        let (warnings, entities) = match check(cx.doc, &input) {
+        let Checked {
+            warnings,
+            tags,
+            refreshed,
+        } = match check(cx.doc, &input) {
             Ok(checked) => checked,
             Err(stop) => return stop.into(),
         };
-        let slots = match cx.doc.add_many(entities, STEP) {
+        let refreshed_uids = refreshed
+            .iter()
+            .filter_map(|(s, _)| cx.doc.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
+        let slots = match cx
+            .doc
+            .transact(STEP, |doc| -> Result<_, kentos_domain::SlotsExhausted> {
+                let slots = doc.add_many(tags, STEP)?;
+                doc.update_many(refreshed, STEP);
+                Ok(slots)
+            }) {
             Ok(slots) => slots,
             Err(full) => {
                 return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();
@@ -332,6 +414,7 @@ pub mod create {
                     .map(|u| u.to_string())
                     .collect(),
                 ids: slots.iter().map(|s| s.0).collect(),
+                refreshed: refreshed_uids,
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -572,7 +655,8 @@ fn findings(doc: &Document, input: &TagsCheck) -> Result<Vec<TagFinding>, Stop> 
         let name = s.space.name.as_deref().unwrap_or("Adsız");
         let level = s.space.arch.level.as_ref().map_or("Kat atanmamış", |id| {
             doc.settings()
-                .arch.as_ref()
+                .arch
+                .as_ref()
                 .and_then(|a| a.levels.iter().find(|l| l.id == *id))
                 .map_or(id.as_str(), |l| l.name.as_str())
         });

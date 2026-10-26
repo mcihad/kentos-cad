@@ -176,10 +176,19 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader
     çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası,
     ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen
-    nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası belgenindir: nesne
-    değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne
-    silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli
-    katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    nesnelerine etiket koyar. all.refresh yok/null/false mevcut etiketleri korur. true
+    yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen
+    all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik,
+    elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve
+    orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak
+    katmanlarını, all.phases kaynak evrelerini süzer; mimari kat veya görünüş süzgeci
+    değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan
+    tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni
+    etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz;
+    yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası
+    belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
+    taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
+    verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.tags.create"
@@ -222,7 +231,16 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği
         (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse
         mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin
-        etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası
+        etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut
+        etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça
+        verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur.
+        Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına
+        dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers
+        kaynak katmanlarını, all.phases kaynak evrelerini süzer; mimari kat veya görünüş
+        süzgeci değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez.
+        Plan tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni
+        etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz;
+        yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası
         belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
         taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
         verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.

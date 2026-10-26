@@ -130,6 +130,11 @@ pub struct NewTag {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagAll {
     pub kinds: Vec<TaggedKind>,
+    /// Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
+    /// Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refresh: Option<bool>,
     /// Their layers' ids; absent: every layer shown.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -192,6 +197,10 @@ pub struct TagsCreated {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
+    /// Existing tags changed in place; `uids` and `ids` still name only new tags.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub refreshed: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -204,6 +213,10 @@ pub struct TagsCreated {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagsPlan {
     pub tags: Vec<Entity>,
+    /// Changed existing tags, with their original ids; new `tags` retain id 0.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub refreshed: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

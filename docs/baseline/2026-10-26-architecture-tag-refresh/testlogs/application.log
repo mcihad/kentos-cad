@@ -1,0 +1,330 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 28s
+     Running unittests src/lib.rs (target/debug/deps/kentos_native_application-8a44710ac7822de0)
+
+running 51 tests
+test delete::tests::ids_are_lowercase_uuid_text_with_hyphens ... ok
+test changeset::tests::references_are_whole_texts_naming_a_step ... ok
+test field_policy::tests::a_share_keeps_its_total_and_gives_the_rest_to_the_largest_remainders ... ok
+test file_digest::tests::a_file_written_moments_ago_is_not_kept ... ok
+test cad_open::tests::cancellation_and_corruption_never_create_a_drawing ... ok
+test file_digest::tests::a_quiet_file_is_read_once_and_a_changed_one_again ... ok
+test gpkg_tiles::tests::a_canvas_halves_by_2_by_2_means_with_zero_past_its_edge ... ok
+test gpkg_tiles::tests::a_window_is_whole_pixels_cut_to_the_grid ... ok
+test gpkg_tiles::tests::table_names_are_plain_identifiers ... ok
+test gpkg_tiles::tests::a_pyramid_halves_until_one_tile ... ok
+test images_edit::tests::sizes_come_from_the_headers ... ok
+test import_apply::tests::a_block_with_a_number_that_is_not_finite_is_found ... ok
+test hatches_edit::tests::a_whole_ellipse_loop_is_written_back_as_an_ellipse ... ok
+test geometry::tests::a_multi_part_area_goes_to_the_core_and_back_with_its_elevations ... ok
+test cad_paper::tests::affine_circle_is_an_exact_ellipse_and_wide_nonsimilar_path_is_reported ... ok
+test geometry::tests::every_kind_is_written_as_the_core_gives_it ... ok
+test import_apply::tests::an_object_with_a_number_that_is_not_finite_is_found ... ok
+test import_apply::tests::a_locked_or_missing_target_changes_nothing ... ok
+test geometry::tests::every_kind_goes_to_the_core_and_back_unchanged ... ok
+test import_apply::tests::names_fold_as_on_the_web ... ok
+test import_apply::tests::an_insert_of_a_block_the_file_did_not_bring_is_refused ... ok
+test inserts_clip::tests::crossing_rings_are_found ... ok
+test import_apply::tests::a_large_import_adds_its_blocks_first_and_durdur_takes_them_back ... ok
+test import_apply::tests::blocks_go_in_with_the_objects_under_free_names ... ok
+test jobs::sheet_package_progress_phases_share_cancellation_and_count_without_jumping_back ... ok
+test import_apply::tests::a_files_styles_join_the_project_or_name_its_own ... ok
+test import_apply::tests::new_layers_go_into_the_named_group_and_unchosen_layers_stay_out ... ok
+test opened_scale::tests::a_drawing_without_texts_takes_its_units_scale ... ok
+test meshes::tests::a_query_that_reads_more_values_than_one_call_does_is_refused ... ok
+test provider::tests::addresses_keep_no_password ... ok
+test cad_paper::tests::independent_paper_curves_keep_source_and_roundtrip_analytic_entities ... ok
+test opened_scale::tests::the_texts_middle_height_says_the_scale ... ok
+test python_call::tests::paths_follow_the_sdk_s_generator ... ok
+test python_call::redaction_tests::a_hidden_name_s_texts_are_written_hidden_however_deep ... ok
+test python_call::tests::a_relaxed_call_goes_under_relaxed_and_the_echo_is_one_call ... ok
+test python_call::tests::the_call_leaves_the_expected_revision_out ... ok
+test rasters_mosaic::tests::files_under_the_vrts_folder_are_named_from_it ... ok
+test python_call::tests::literals_are_python_s ... ok
+test processing_run::tests::without_tools_both_commands_are_refused ... ok
+test processing_batch::tests::without_tools_the_batch_is_refused ... ok
+test source_places::tests::paths_are_written_from_the_projects_folder ... ok
+test region::budget_tests::the_lines_a_pattern_draws_are_counted_family_by_family ... ok
+test rasters_mosaic::tests::tiff_dates_are_read_as_iso ... ok
+test stac_search::tests::a_refused_request_never_reaches_the_network ... ok
+test stac_search::tests::a_host_without_a_network_says_so ... ok
+test walls_rectangle::tests::exact_size_boundary_and_one_ulp_of_clearance_are_distinct_even_after_rotation_at_large_coordinates ... ok
+test region::budget_tests::a_hatch_job_asked_to_stop_writes_nothing ... ok
+test import_apply::tests::every_object_is_one_undo_step_and_layers_merge_by_name ... ok
+test constraint_jobs_tests::a_stopped_solve_writes_nothing ... ok
+test constraint_jobs_tests::a_staged_solve_waits_for_the_drawing_it_saw ... ok
+test cad_open::tests::independent_full_size_unit_and_block_cases ... ok
+
+test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 243 tests
+test array_assoc::edit_timing ... ignored, a timing, run on purpose
+test array_assoc::explode_timing ... ignored, a timing, run on purpose
+test array_assoc::timing ... ignored, a timing, run on purpose
+test audit_cmd::timing ... ignored, a timing, run on purpose
+test break_join_ties::a_hatch_lets_go_of_a_broken_boundary ... ok
+test break_join_ties::a_joined_member_takes_its_linked_text_the_kept_one_keeps_its_own ... ok
+test cleanup_cmd::timing ... ignored, a timing, run on purpose
+test clipboard_cmd::timing ... ignored, a timing, run on purpose
+test break_join_ties::a_linked_text_follows_the_first_piece_of_a_break ... ok
+test break_join_ties::a_reversed_object_keeps_its_linked_text_and_its_hatch ... ok
+test cad_sheet::thin_paper_frames_preserve_all_twenty_independent_paths ... ok
+test create::inside_a_transaction_the_writes_join_it ... ok
+test create::the_undo_step_is_ekle_or_the_tools_name ... ok
+test create::objects_in_a_document_out_of_slots_write_nothing_and_say_so ... ok
+test curves_edit::timing ... ignored, a timing, run on purpose
+test delete::inside_a_transaction_the_delete_joins_it ... ok
+test create::the_geometry_is_written_as_given ... ok
+test divide::timing ... ignored, a timing, run on purpose
+test cog::what_the_headless_files_cannot_read_is_said ... ok
+test change_effects::every_row_of_the_change_effects_table_is_what_its_command_does ... ok
+test edit::a_core_shape_goes_to_the_command_and_back ... ok
+test edit::inside_a_transaction_the_edits_join_it ... ok
+test divide::an_elliptical_arcs_parts_are_equal_along_its_true_length ... ok
+test edit::the_undo_step_is_the_tools_name ... ok
+test edit::the_geometry_is_written_as_given ... ok
+test edit::pieces_in_a_document_out_of_slots_write_nothing_and_say_so ... ok
+test fixtures::the_desktops_own_cases_match_its_handlers ... ok
+test forms_timing::forms_timing ... ignored, a timing, run on purpose
+test entries::every_way_in_refuses_a_record_with_the_same_code ... ok
+test gml::the_axes_go_in_the_order_of_the_system ... ok
+test gml::the_envelope_holds_an_arcs_bulge ... ok
+test gml::the_schema_location_is_a_uri_reference ... ok
+test gml::values_are_typed_by_the_schema_then_the_values ... ok
+test gml::what_is_no_gml_is_refused ... ok
+test gml::xml_names_are_made_of_any_text ... ok
+test gml_timing::gml_timing ... ignored, timing, run by hand in release (docs/adr/0545)
+test gml::every_geometry_reads_back_as_it_was_written ... ok
+test import_robust::a_block_defined_after_the_one_placing_it_comes_in ... ok
+test import_robust::a_viewport_under_a_millimetre_is_left_out_and_said ... ok
+test info_templates::timing ... ignored, timing; run with --ignored --nocapture in release
+test curves_edit::a_polyline_made_a_curve_and_back_is_one_undo_step_each ... ok
+test drawing_set::independent_drawing_set_cases_use_the_native_protocol_and_preserve_model ... ok
+test layer_types::a_layers_type_is_set_only_when_its_objects_fit ... ok
+test layer_types::a_typed_layer_takes_only_its_kind ... ok
+test layers_find_cmd::timing ... ignored, a timing, run on purpose
+test capabilities::a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code ... ok
+test lengthen::timing ... ignored, a timing, run on purpose
+test library_files::a_blocks_export_reads_back_into_a_drawing_without_them ... ok
+test library_files::a_library_export_is_canonical_and_reads_back_with_what_it_draws ... ok
+test library_files::timing ... ignored, a timing, run on purpose
+test match_props::every_parcel_takes_the_source_s_layer_and_look_in_one_step ... ok
+test match_props::timing ... ignored, a timing, run on purpose
+test mosaic_files::mosaic_files ... ok
+test object_policy::a_data_entry_changes_attributes_alone ... ok
+test opening_array::array_non_finite_distances_are_refused_before_writing ... ok
+test lengthen::a_lengthened_line_runs_its_elevation_on_and_one_undo_takes_it_back ... ok
+test opening_array::array_refusals_and_number_conflicts_never_leave_partial_writes ... ok
+test opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance ... ok
+test opening_array::existing_layer_locks_and_readonly_object_policy_guard_the_whole_array ... ok
+test opening_array::fit_count_and_jamb_margins_have_closed_form_centres ... ok
+test opening_placement::chosen_wall_end_and_distance_reference_place_the_jamb_centre_or_hinge_exactly ... ok
+test opening_array::arrays_keep_source_and_anchors_and_follow_analytic_arc_length_with_one_undo ... ok
+test opening_placement::overlap_corner_crossing_nonfinite_and_endpoint_overflow_refuse_the_entire_batch ... ok
+test opening_placement::two_jamb_points_use_host_arc_length_and_reject_ambiguous_or_zero_width_requests_atomically ... ok
+test order_cmd::timing ... ignored, a timing, run on purpose
+test polygon::a_document_out_of_slots_takes_nothing_and_says_so ... ok
+test polygon::inside_a_transaction_the_write_joins_it ... ok
+test opening_placement::newly_placed_openings_keep_their_host_through_width_flip_thickness_split_rehost_and_undo ... ok
+test layer_digest::small_and_empty_layers_keep_their_digests ... ok
+test capabilities::selections_beyond_the_limit_are_refused ... ok
+test processing_sink::a_file_whose_system_of_that_id_is_another_one_takes_no_table ... ok
+test processing_sink::a_file_that_cannot_take_tables_is_refused_and_left_alone ... ok
+test processing_sink::a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it ... ok
+test processing_sink::an_input_read_from_its_source_goes_to_a_file ... ok
+test processing_sink::rows_go_in_batches_and_the_batches_are_counted ... ok
+test processing_sink::tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched ... ok
+test profile_files::a_folder_that_cannot_be_made_leaves_the_file_that_was_there ... ok
+test profile_files::a_mapping_is_written_beside_the_profiles ... ok
+test profile_files::a_profile_with_releases_keeps_its_migrations ... ok
+test profile_files::a_replaced_file_is_replaced_whole ... ok
+test profile_files::an_imported_profile_reads_back_as_the_one_given ... ok
+test profile_files::migrate_timing ... ignored, a timing, run on its own in release
+test processing_sink::a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name ... ok
+test protocol::a_job_computes_on_a_copy_and_its_write_comes_in_whole ... ok
+test protocol::a_journal_replays_on_another_drawing_with_its_new_ids_mapped ... ok
+test protocol::a_paper_only_changeset_reports_an_undoable_book_and_actual_revision ... ok
+test protocol::a_plan_says_what_the_write_will_be_and_the_write_must_equal_it ... ok
+test protocol::a_request_sent_again_is_answered_as_before_and_applied_once ... ok
+test processing_sink::g1_results_go_to_geopackages_and_the_drawing_stays ... ok
+test protocol::a_write_answers_with_what_it_touched_and_the_stamps_before_and_after ... ok
+test protocol::an_error_names_its_objects_and_whether_to_call_again ... ok
+test protocol::the_journal_says_what_was_written_in_order ... ok
+test protocol::what_changes_with_an_object_is_its_dependent ... ok
+test protocol::new_objects_plan_and_write_alike_though_their_ids_are_new ... ok
+test protocol::what_no_longer_holds_writes_nothing ... ok
+test protocol::a_stop_in_each_phase_does_what_the_phase_says ... ok
+test protocol_cases::a_request_s_fingerprint_is_the_reference_s ... ok
+test protocol_cases::expectations_hold_or_nothing_is_written ... ok
+test protocol_cases::faulty_envelopes_are_refused_with_their_path ... ok
+test protocol_cases::floats_are_written_as_the_reference_writes_them ... ok
+test protocol_cases::the_canonical_text_and_its_digests_are_the_reference_s ... ok
+test protocol_cases::a_plan_has_the_reference_s_id_and_summary_and_is_written_as_planned ... ok
+test provider_timing::provider_timing ... ignored, a measurement, run by hand
+test protocol_cases::the_drawing_has_the_reference_stamps ... ok
+test protocol_cases::requests_plans_and_undo_answer_as_the_reference_says ... ok
+test python_calls::nested_and_tagged_inputs_are_python_literals ... ok
+test rasters_georef::the_hosts_own_resampling_is_taken_when_it_is_the_plans_grid ... ok
+test reassociate::a_bound_dimension_follows_breaks_and_is_bound_again ... ok
+test reassociate::a_copy_of_a_bound_dimension_is_free ... ok
+test reassociate::an_edit_without_references_keeps_them_and_a_moved_point_goes_free ... ok
+test reconcile::a_base_without_field_records_conflicts_as_a_whole_and_says_so ... ok
+test reconcile::a_file_that_cannot_be_written_takes_nothing_into_the_layer ... ok
+test cog::rasters_go_out_as_cogs_through_the_headless_files ... ok
+test rasters_georef::a_resampling_is_gdalwarps_leaves_its_source_and_is_made_again_the_same ... ok
+test reconcile::a_reconcile_writes_both_sides_and_takes_the_base_again ... ok
+test processing_sink::a_run_stopped_at_any_point_leaves_the_file_and_the_drawing_as_they_were ... ok
+test sheet_tools::a_long_valid_sheet_id_does_not_overflow_derived_item_ids ... ok
+test sheet_tools::full_sheet_read_returns_the_book_templates_and_opt_in_bytes_without_editing ... ok
+test sheet_tools::viewport_cases_use_the_real_command_and_report_exact_denominators_and_bounds ... ok
+test reconcile::two_layers_with_groups_are_reconciled_in_one_transaction ... ok
+test source_relations::a_parent_and_its_children_are_written_in_one_transaction_or_not_at_all ... ok
+test source_relations::a_refused_layer_stops_the_whole_write ... ok
+test source_relations::a_refused_commit_writes_nothing_neither_in_the_drawing_nor_in_the_file ... ok
+test source_relations::page_timing ... ignored, timing, run by hand
+test source_relations::a_plan_through_the_protocol_writes_no_file_but_its_execute_does ... ok
+test source_relations::a_submission_with_commit_writes_the_record_and_its_children_to_the_file_in_one_step ... ok
+test sources::a_file_moved_is_bound_again_and_another_file_is_not ... ok
+test sources::a_project_keeps_at_most_a_thousand_bound_layers ... ok
+test catalog::the_desktop_runs_exactly_the_catalog_commands_marked_desktop ... ok
+test source_relations::a_text_reference_is_mapped_written_with_its_layers_and_read_back ... ok
+test sources::a_part_writes_its_neighbours_outside_the_area ... ok
+test sources::a_table_in_another_system_is_written_back_in_its_own ... ok
+test sources::a_table_that_repeats_the_key_is_said ... ok
+test sources::pins_are_not_given_to_one_of_two_equal_rows ... ok
+test sources::pins_follow_the_nearest_feature_within_the_tolerance_without_a_key ... ok
+test sources::pins_follow_the_same_geometry_of_a_rewritten_table_without_a_key ... ok
+test sources::pins_follow_their_key_when_the_table_is_written_again ... ok
+test sources::a_layer_is_written_to_its_table_and_read_again ... ok
+test sources::without_a_provider_a_database_is_not_reached ... ok
+test sources::wide_values_keep_their_meaning_through_a_bound_layer ... ok
+test sources::pins_of_rows_a_rewritten_table_lacks_are_said_without_a_key ... ok
+test sources_query::a_source_input_stops_at_its_cap ... ok
+test sources::a_split_parcel_writes_its_parent_beside_its_rows ... ok
+test space_columns::analytic_column_hole_remains_measurable_through_the_public_dimension_command ... ok
+test sources::pins_of_an_object_that_left_the_part_are_parked_and_given_back ... ok
+test space_columns::column_edits_additions_deletions_and_levels_refresh_only_opting_in_rooms ... ok
+test space_columns::bulk_column_deduction_recognises_an_equivalent_drawn_room_and_refuses_partial_overlap ... ok
+test space_columns::column_pruning_and_invalidation_use_curved_room_extrema_not_just_two_endpoints ... ok
+test space_columns::drawn_boundaries_require_explicit_rebinding_and_policy_edit_preview_is_read_only ... ok
+test space_columns::full_coverage_and_bad_sources_retain_last_geometry_then_recover_the_same_room ... ok
+test space_columns::grid_settlement_precedes_room_label_and_schedule_in_one_undo_and_group ... ok
+test space_columns::splitting_and_merging_detach_column_following_without_restoring_deducted_area ... ok
+test space_levels::another_level_cannot_close_a_seed_and_unknown_level_is_an_atomic_refusal ... ok
+test space_levels::explicit_level_edit_preview_follow_history_quantities_and_lost_enclosure_stay_together ... ok
+test space_levels::explicit_room_levels_isolate_overlapping_walls_and_preserve_legacy_unassigned_lookup ... ok
+test space_scope::assigning_and_unassigning_wall_and_column_sources_recomputes_in_the_same_undo_step ... ok
+test space_scope::bulk_and_single_room_share_scope_while_changing_it_is_one_undo ... ok
+test space_scope::contradictory_level_and_drawn_source_scope_are_atomic_explicit_errors ... ok
+test space_scope::split_and_merge_detach_scope_preserve_physical_area_and_undo_restores_the_link ... ok
+test capabilities::every_code_a_case_reaches_is_listed_and_every_listed_one_is_reached_or_explained ... ok
+test space_separators::block_conversions_refuse_separator_role_loss_without_touching_the_drawing ... ok
+test space_separators::complete_copy_relinks_virtual_sources_and_original_move_does_not_change_copy ... ok
+test space_separators::dxf_preserves_separator_roles_and_never_guesses_missing_or_ambiguous_room_sources ... ok
+test space_separators::explicit_subset_excludes_unlisted_separators_and_keeps_missing_source_boundary ... ok
+test space_separators::generic_edit_retains_line_and_arc_roles_and_refuses_loss_or_width_atomically ... ok
+test space_separators::ordinary_linework_is_not_a_boundary_and_role_changes_follow_one_step ... ok
+test space_separators::quantity_query_reuses_sources_without_changing_frozen_answers_or_document_order ... ok
+test space_separators::stale_quantities_warn_without_a_column_scope_or_explicit_source_option ... ok
+test space_sources::array_and_clipboard_relink_each_group_and_preserve_original_room ... ok
+test space_sources::bulk_persists_list_while_explicit_replacement_clear_and_reject_are_atomic ... ok
+test space_sources::copy_with_all_sources_relinks_before_following_but_room_alone_is_independent ... ok
+test space_sources::dxf_import_relinks_present_sources_and_preserves_missing_source_warning ... ok
+test space_sources::excluded_sources_do_not_rebind_and_selected_sources_follow_in_one_step ... ok
+test gpkg_tiles_files::gpkg_tiles_files ... ok
+test spaces_discover::a_simple_plan_without_level_definitions_follows_moving_partition_in_one_undo ... ok
+test spaces_discover::exact_drawn_room_is_preserved_and_partial_overlap_blocks_every_new_room ... ok
+test layer_digest::a_big_layers_digest_is_what_one_thread_would_make ... ok
+test spaces_discover::region_filters_representatives_without_cutting_sources_and_stale_or_locked_is_atomic ... ok
+test space_scope::three_methods_five_units_two_origins_and_real_codec_keep_the_source_scope ... ok
+test spaces_discover::measured_level_network_is_read_only_then_atomic_idempotent_and_persistent ... ok
+test standards_cmd::timing ... ignored, a timing, run on purpose
+test stretch_ties::a_linked_text_in_the_window_follows_its_object_and_the_plan_shows_it ... ok
+test stretch_ties::a_listed_linked_text_or_hatch_follows_its_object_with_a_warning ... ok
+test stretch_ties::an_associative_hatch_follows_its_area_and_stays_tied ... ok
+test stretch_ties::nothing_follows_and_no_copy_is_made_in_a_drawing_without_ties ... ok
+test stretch_ties::the_kept_copy_answers_as_a_fresh_one_and_is_renewed_when_the_drawing_changes ... ok
+test stretch_ties::timing ... ignored, a timing, run on purpose
+test spaces_number::coincident_label_anchors_use_uuid_ties_and_overflowing_direction_is_atomic ... ok
+test tables_cmd::timing ... ignored, a timing, run on purpose
+test spaces_number::moved_tag_schedule_persistence_and_replay_follow_the_same_room_identity ... ok
+test tables_cmd::a_count_changed_works_the_sum_out_again ... ok
+test templates_safe::explicit_template_policy_changes_only_shown_settings_and_undo_restores_them ... ok
+test templates_safe::package_undo_keeps_unrelated_preferences_and_settings_it_did_not_change ... ok
+test tag_refresh::exhausted_slots_refuse_mixed_add_refresh_without_touching_old_tag_or_history ... ok
+test templates_safe::safe_package_preserves_entities_definitions_and_all_parts_undo_and_redo_together ... ok
+test templates_safe::separate_identity_and_name_collisions_are_both_reported_and_preserved ... ok
+test tag_refresh::refresh_without_new_tags_succeeds_at_slot_capacity_and_has_one_undo ... ok
+test templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals ... ok
+test transform::copies_in_a_document_out_of_slots_take_nothing_and_say_so ... ok
+test transform::the_undo_step_is_the_tools_name ... ok
+test units::a_sheet_book_stays_and_the_warning_says_so ... ok
+test units::keeping_the_sizes_is_an_undo_step_too ... ok
+test units::the_unit_and_the_scaled_drawing_are_one_step_and_one_journal_row ... ok
+test transform::inside_a_transaction_the_transforms_join_it ... ok
+test transform::negative_zero_stays_negative_zero ... ok
+test viewport_identity::a_layers_own_snap_switch_is_respected_by_viewport_and_model_queries ... ok
+test viewport_identity::invalid_or_conflicting_explicit_viewport_scopes_fail_before_touching_the_model ... ok
+test viewport_identity::twenty_scoped_queries_use_original_ids_and_choose_visible_snap_before_ranking ... ok
+test wall_contour_mixed::one_invalid_member_or_reference_refuses_the_whole_mixed_selection_before_any_source_is_deleted ... ok
+test space_sources::methods_units_origins_and_codecs_use_only_the_explicit_sources ... ok
+test wall_contours::circles_keep_exact_arcs_and_normalize_reversed_bulges ... ok
+test wall_contours::coincident_room_contours_convert_once_per_explicit_level_with_atomic_history ... ok
+test wall_contours::courtyard_holes_are_separate_hostable_walls_and_one_atomic_undo ... ok
+test wall_contours::explicit_architecture_is_applied_in_legacy_each_and_pairs_modes_too ... ok
+test wall_contours::l_room_dimensions_ignore_winding_units_and_distant_origin_without_writing_preview ... ok
+test wall_contours::adjacent_room_axes_share_one_wall_and_preserve_sources_history_units_and_joints ... ok
+test wall_contour_mixed::courtyard_infill_multipart_l_room_partial_edge_circle_and_arc_preserve_measured_network_and_sources ... ok
+test wall_contours::layer_lock_hidden_type_and_readonly_policy_keep_atomicity_and_elevated_source_is_not_flattened ... ok
+test wall_contours::shared_quarter_arc_remains_analytic_and_open_run_bulges_are_canonical ... ok
+test wall_contours::unknown_conversion_level_refuses_before_writing_or_removing_sources ... ok
+test wall_follow::a_room_hatch_follows_the_wall_getting_thicker ... ok
+test walls_partition::a_three_metre_clear_room_keeps_the_source_door_and_space_follows_a_partition ... ok
+test wall_contours::shared_references_conflict_but_distinct_target_layers_keep_independent_walls ... ok
+test walls_partition::directions_and_invalid_boundaries_are_explicit_and_atomic ... ok
+test wall_contours::repeated_conversion_mixed_open_source_shared_edge_and_collapsing_room_refuse_without_partial_writes ... ok
+test walls_partition::source_height_and_architecture_survive_and_curved_edges_are_explicitly_refused ... ok
+test walls_partition::locked_destination_missing_source_and_stale_revision_refuse_without_a_partial_wall ... ok
+test walls_rectangle::a_source_wall_still_accepts_hosted_openings_and_survives_snapshot_roundtrip ... ok
+test walls_rectangle::a_collapsed_inner_rectangle_is_refused_without_mutating_the_original_line ... ok
+test walls_rectangle::exact_inset_boundary_at_a_rotated_large_origin_reports_no_interior ... ok
+test xrefs::a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper ... ok
+test walls_rectangle::the_new_command_records_one_undo_step_without_a_nested_wall_command ... ok
+test xrefs::a_reload_follows_the_ties_into_the_pieces ... ok
+test xrefs::a_save_writes_the_relative_path ... ok
+test xrefs::a_source_pointing_back_is_a_cycle ... ok
+test walls_rectangle::clear_dimensions_are_physical_in_all_quadrants_units_and_large_coordinates ... ok
+test space_columns::three_policies_and_methods_in_five_units_preserve_legacy_and_persist_exactly ... ok
+test wall_contour_mixed::forty_by_forty_room_grid_plans_past_the_old_dense_budget_and_commits_as_one_step ... ok
+test sources_query::an_order_here_keeps_at_most_two_hundred_thousand_records ... ok
+test python_calls::every_completed_call_is_python_that_parses ... ok
+test sources_query::what_a_source_is_sent_keeps_every_row_the_condition_keeps ... ok
+test fixtures::every_command_case_matches_the_desktop_handlers ... ok
+test sources_query::pages_of_an_order_join_to_the_whole_order_and_the_drawing_orders_the_same_values ... ok
+
+test result: ok. 221 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 40.66s
+
+   Doc-tests kentos_native_application
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
