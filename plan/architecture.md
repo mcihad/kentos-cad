@@ -620,9 +620,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   309 Python, 697 interaction/219 application/67 domain ve bir MCP testi.
   [ADR 0658](../docs/adr/0658-room-tag-elevations.md),
   [kabul](../docs/baseline/2026-10-26-architecture-tag-elevations/README.md).
+- [x] Ayrı `{netArea}` şablonu Net/eksen/brüt seçimini değiştirmeden aynı
+  kat/kapsam/kaynak/kolon politikasının iç yüzlerini hesaplar. Kaynak
+  değişiminde brüt sınır aynı kalsa da metin izler; elle yer/UUID korunur.
+  Kopuk veya kaynakları bilinmeyen çizilmiş brüt/eksen için sayı uydurulmaz.
+  225 ortak durum/30 yeni, 318 Python, 68 domain/697 interaction/219
+  application/iki MCP, clippy/build/WASM/1170 KCAD; gerçek tek Enter,
+  kolon/duvar/ret/undo/redo/kaynak kaybı/iptal/kaydet-aç, 21 ham ekran ve15
+  bağımsız tam dosya. [ADR 0659](../docs/adr/0659-room-tag-net-area.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-tag-net-area/README.md).
+  Yasal net alan profili veya bütün mimari görünüm matrisi kabulü değildir.
 - [ ] Eski etiketi açık Koru/Yenile yönetimi; çoklu kat ve aynı planın farklı
-  pafta oranları. `{area}` seçilmiş alan yöntemidir; her yöntemde ayrı net
-  alan yeri, kat/listeler ve tam mimari matris açık kalır.
+  pafta oranları. `{area}` seçilmiş alan yöntemidir; ayrı `{netArea}` yukarıda
+  doğrulandı. Kat/listeler ve tam mimari matris açık kalır.
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [ ]
 
@@ -860,3 +870,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-UX-01 / ARCH-SPACE-02 / ADR 0656 | Görünür yeni etiket ayarları; GUI’deki ilk yapıştırma ve uzun komut düğmesi kusuru düzeltildi. 697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python; clippy/build, 26 ham ekran/11 bağımsız tam KCAD. | [~] Panel dilimi doğrulandı; eski panel kaydırması için yeni takip, zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md) |
 | 2026-10-26 | ARCH-UX-01 takip / ADR 0657 | Yeni ayarlı araç başlarken Özellikler başlangıcı gösterilir; aynı araçta düzenleme/önizleme kaydırmayı korur. Eski 508 px hata, 62 ilgili test, clippy/build; 19 ham ekran/beş bağımsız tam dosya. | [x] Kaydırma takip işi doğrulandı; genel docking/matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-settings-scroll/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0658 | Bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan şablonu; eksik veri boş, mevcut birim/elle konum korunur. Gerçek GUI sayısal yükseklik taşması düzeltildi; 195 ortak durum, 309 Python, 697 interaction/219 application/67 domain/bir MCP, clippy/build/WASM; 19 ham ekran/on bağımsız tam kayıt. | [~] Kot dilimi doğrulandı; ayrı net alan, listeler, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-elevations/README.md) |
+| 2026-10-26 | ARCH-SPACE-02 / ADR 0659 | Seçilmiş yöntemden ayrı net alan; aynı kaynak/kat/kolon tercihi, kaynak değişimi ve güncel ayarda metin takibi; elle yer korunur. 225 ortak durum/30 yeni, 318 Python, 68 domain/697 interaction/219 application/iki MCP, clippy/build/WASM/1170 KCAD; 21 ham ekran/15 bağımsız tam kayıt. | [~] Net etiket dilimi doğrulandı; listeler, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-net-area/README.md) |

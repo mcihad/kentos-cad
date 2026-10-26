@@ -1,0 +1,26 @@
+{
+  "profile": "debug public Python SDK",
+  "rooms": 200,
+  "tags": 200,
+  "sources": 400,
+  "entities": 800,
+  "columns": "net",
+  "unrelated": 0,
+  "planMs": 35.049625,
+  "createMs": 66.219708,
+  "columnMoveMs": [
+    27.288208,
+    27.045666,
+    26.790084,
+    26.782417,
+    26.760292,
+    26.9185,
+    26.596292,
+    26.734791,
+    27.294375,
+    27.878708
+  ],
+  "medianMs": 26.854292,
+  "maxMs": 27.878708,
+  "note": "Ten source moves, all objects/UUIDs/places compared after each. Native end-to-end command only; not release/p95/GPU/frame/memory acceptance."
+}

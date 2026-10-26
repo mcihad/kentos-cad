@@ -1225,7 +1225,7 @@ impl Document {
             let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
             self.settings = settings;
             self.refresh_viewmarks();
-            self.refresh_elevation_tags();
+            self.refresh_derived_tags();
             self.mark_edited();
             self.after_part(ProjectPart::Settings, framed, true, base);
         }

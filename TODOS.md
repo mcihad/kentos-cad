@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR 0659: `{netArea}` mahal etiketi; Net/eksen/brüt
+  yöntemlerinden ayrı iç yüzler hesabı, kaynak/kolon/kapsam ve bilinmeyen
+  sınır davranışı. Görünür şablon yardımını, immutable kaynak sorgusunu ve
+  geometri değişmeden net etiket yenilemesini web tekrar açıldığında ortak
+  komutla bağlayıp GUI/undo/ayar/kayıt testlerini ekleyin.
+
 - ARCH-SPACE-02 / ADR 0658: etiketin `floorElevation` / `ceilingElevation`
   yerleri, eksik veri kuralı ve güncel ayar altında kaynak/geçmiş yenilemesi
   web dönüşünde desteklenmeli. Katın floor-to-floor yüksekliği açık mahal

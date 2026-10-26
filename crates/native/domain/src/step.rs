@@ -324,7 +324,7 @@ impl Document {
         }
         if reverted > 0 || restored {
             self.refresh_viewmarks();
-            self.refresh_elevation_tags();
+            self.refresh_derived_tags();
             self.mark_changed();
         }
     }

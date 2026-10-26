@@ -1,0 +1,77 @@
+[
+  {
+    "file": "before-rejected.kcad",
+    "note": "Old GUI rejects netArea and saves no model change.",
+    "sha256": "25d29cc28333fda838dd6f44d5296ec3e5657e0b5a2dba4c69afb5785d13c1f0"
+  },
+  {
+    "file": "settings-only.kcad",
+    "note": "Yeni etiket alanları ayarlandı; gerçek Kaydet, hedef henüz yerleştirilmedi.",
+    "sha256": "25d29cc28333fda838dd6f44d5296ec3e5657e0b5a2dba4c69afb5785d13c1f0"
+  },
+  {
+    "file": "created.kcad",
+    "note": "Alt komut alanındaki 9,2 tek Enter ile; ilk hatalı yerleşim daha önce undo ile kaldırıldı.",
+    "sha256": "022e992e690e0b95b359863570ae2f47632d09a5376cbc385840e1642f960f1f"
+  },
+  {
+    "file": "create-undo.kcad",
+    "note": "Yeni etiket tek Cmd-Z sonrası dört eski nesne; gerçek Kaydet.",
+    "sha256": "25d29cc28333fda838dd6f44d5296ec3e5657e0b5a2dba4c69afb5785d13c1f0"
+  },
+  {
+    "file": "create-redo.kcad",
+    "note": "Tek Cmd-Shift-Z oluşturulan etiketi geri getirdi; Kaydet.",
+    "sha256": "022e992e690e0b95b359863570ae2f47632d09a5376cbc385840e1642f960f1f"
+  },
+  {
+    "file": "column.kcad",
+    "note": "Kolon En=100 cm, tek Enter ve Kaydet; net21.04, brüt26.04.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  },
+  {
+    "file": "undo.kcad",
+    "note": "Kolon tek geri alma; net21.79 ve Kaydet.",
+    "sha256": "022e992e690e0b95b359863570ae2f47632d09a5376cbc385840e1642f960f1f"
+  },
+  {
+    "file": "redo.kcad",
+    "note": "Kolon tek yinele; net21.04 ve Kaydet.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  },
+  {
+    "file": "invalid.kcad",
+    "note": "Sıfır kolon eni reddedildi; Escape ve Kaydet, model aynı.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  },
+  {
+    "file": "wall.kcad",
+    "note": "Duvar40cm tek Enter/Kaydet; brüt28.16 net19.16.",
+    "sha256": "18aaae429b7c108146bc7a7eaaa5282a8549d46f917b520c89558e9a3e6d9d9c"
+  },
+  {
+    "file": "lost.kcad",
+    "note": "Kaynak duvar Sil ve Kaydet; uyarılı son sınır, boş net.",
+    "sha256": "35ef81a6537414e51d19b7809a2af2afb31dedef20068f75f7fe470f67a45e7d"
+  },
+  {
+    "file": "recovered.kcad",
+    "note": "Duvar silme tek geri alındı ve Kaydet; net21.04.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  },
+  {
+    "file": "compact.kcad",
+    "note": "Gerçek açık18/dar görünümde kolon75cm tekEnter/Kaydet; net21.48.",
+    "sha256": "faf20713753b79b3640dc445ea7b41566a64636ac815b1294da78bd89033535a"
+  },
+  {
+    "file": "cancel.kcad",
+    "note": "Önizleme ve iki Escape ardından Kaydet; nesne eklenmedi.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Uygulama kapatılıp yeni süreçte açılan gerçek dosya Kaydet.",
+    "sha256": "26c610065be82171fb7293000ac267f7586d32ae2f3d109c4f0da99c03fa61c4"
+  }
+]

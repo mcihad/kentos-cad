@@ -245,7 +245,7 @@ impl Document {
         self.forget_layer_history(&on_layers);
         if changed {
             // These words also depend on settings or sources delivered by another editor.
-            self.refresh_elevation_tags();
+            self.refresh_derived_tags();
             // Not an edit (the revision stays), but what the drawing shows changed.
             self.generation += 1;
         }

@@ -16,7 +16,7 @@
 //! label place, a column's centre, an insert's point, another's middle edge's middle (edge ⌊(n − 1)/2⌋ of its path,
 //! an arc by its arc). `scripts/fixtures/tag_command_cases.py` writes the same without KentOS's code.
 
-use kentos_contracts::{ArchInfo, AreaUnit, Entity, SpacePart, TagPiece, Vec2};
+use kentos_contracts::{ArchInfo, AreaUnit, Entity, SpacePart, Vec2};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
@@ -234,6 +234,7 @@ impl Document {
                     "name" => text(&x.name),
                     "usage" => text(&x.usage),
                     "area" => Some(Area(area)),
+                    "netArea" => crate::space_follow::SpaceSearch::new(self).net_area(x).map(Area),
                     "perimeter" => {
                         Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
                     }
@@ -386,20 +387,7 @@ impl Document {
 
     /// A tag's words of `e`: its template (none: its kind's) filled with `e`'s values.
     pub fn tag_text(&self, e: &Entity, content: Option<&str>) -> String {
-        let template = content
-            .or_else(|| kentos_contracts::default_template(e.kind()))
-            .unwrap_or("");
-        let Ok(pieces) = kentos_contracts::tag_template(template) else {
-            return String::new();
-        };
-        kentos_contracts::tag_fill(&pieces, &|p| {
-            let v = match p {
-                TagPiece::Place(name) => self.arch_value(e, name, None),
-                TagPiece::Attr(a) => self.arch_value(e, "attr", Some(a)),
-                TagPiece::Words(_) => None,
-            }?;
-            Some(self.arch_value_text(&v, true))
-        })
+        crate::tag_read::TagRead::new(self).text(e, content)
     }
 
     fn uid_of_entity(&self, e: &Entity) -> Option<String> {

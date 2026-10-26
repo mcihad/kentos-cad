@@ -15,6 +15,18 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Ayrı net mahal etiketi (26 Ekim 2026; [ADR 0659](docs/adr/0659-room-tag-net-area.md)).**
+  `{area}` seçilmiş sınırda kalır; `{netArea}` aynı kaynak/kat/kapsam/kolon
+  tercihinin iç yüzlerini okur. Kopuk/çizilmiş non-net bilinmiyorsa boş;
+  kaynak/ayar/geçmiş/dış güncellemede metin izler, elle yer korunur.
+  [Kabul](docs/baseline/2026-10-26-architecture-tag-net-area/README.md):
+  225 ortak durum/30 yeni, 318 Python, 68 domain/697 interaction/219
+  application/iki MCP; clippy/build/WASM/1170 KCAD, 21 ham ekran/15 tam
+  bağımsız kayıt. 200 mahal/etikette debug hareket ortancası26,854ms;
+  +20.000 çizgi/legacy kolon Düşme yolunda348,204ms, genel garanti değildir.
+  ARCH-SPACE-02 [~]; listeler/KoruYenile/tam matris açık. Yeni TS/şema/birim/
+  ölçek/renderer yoktur.
+
 - **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0658](docs/adr/0658-room-tag-elevations.md)).**
   Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan;
   bilinmeyen boş, katlar arası yükseklik tavan sayılmaz. Ayar/geçmiş/dış

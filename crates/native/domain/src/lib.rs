@@ -63,6 +63,7 @@ pub mod opening_follow;
 pub mod space_follow;
 pub mod arch_follow;
 pub mod arch_values;
+pub mod tag_read;
 mod tag_follow;
 pub mod viewmark_follow;
 pub mod schedules;

@@ -1,0 +1,31 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 16s
+     Running tests/spaces_number.rs (target/debug/deps/spaces_number-c9d246e31fa3d4e9)
+
+running 1 test
+test numbering_plan_keeps_ids_and_moved_tag_then_one_undo_restores_everything ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.45s
+
+     Running tests/tag_net_area.rs (target/debug/deps/tag_net_area-3773d16bc8ab2122)
+
+running 1 test
+test net_tag_plan_matches_write_and_wall_change_is_one_undo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s
+

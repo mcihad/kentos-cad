@@ -50,7 +50,7 @@ fn words_height(doc: &Document, size: Option<f64>) -> f64 {
 }
 
 /// A tag of `target` from what was given, its words and point written as the document writes them.
-fn tag_of(doc: &Document, of: &str, target: &Entity, n: &NewTag) -> Option<TagFields> {
+fn tag_of(doc: &Document, read: &kentos_domain::tag_read::TagRead<'_>, of: &str, target: &Entity, n: &NewTag) -> Option<TagFields> {
     let anchor = doc.tag_anchor(target);
     let at = match (n.at, anchor) {
         (Some(at), _) => at,
@@ -70,7 +70,7 @@ fn tag_of(doc: &Document, of: &str, target: &Entity, n: &NewTag) -> Option<TagFi
             .unwrap_or_else(|| kentos_commands::default_shape(target.kind())),
         size: n.size,
         leader: n.leader.unwrap_or(false),
-        text: doc.tag_text(target, n.content.as_deref()),
+        text: read.text(target, n.content.as_deref()),
         anchor,
         broken: None,
     })
@@ -98,6 +98,7 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             "tags",
         ));
     }
+    let read = kentos_domain::tag_read::TagRead::new(doc);
     let mut made: Vec<TagFields> = Vec::new();
     let mut done: BTreeSet<String> = tagged(doc);
     for (i, n) in input.tags.iter().enumerate() {
@@ -140,7 +141,7 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
                 &format!("{at}.of"),
             ));
         }
-        let Some(t) = tag_of(doc, &n.of, &target, n) else {
+        let Some(t) = tag_of(doc, &read, &n.of, &target, n) else {
             return Err(invalid(
                 "Nesnenin bağ noktası bulunamadı; etiketin yerini (at) verin.".into(),
                 &format!("{at}.at"),
@@ -219,7 +220,7 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             if done.contains(&uid) {
                 continue;
             }
-            if let Some(t) = tag_of(doc, &uid, e, &n) {
+            if let Some(t) = tag_of(doc, &read, &uid, e, &n) {
                 done.insert(uid);
                 made.push(t);
                 found += 1;
@@ -362,6 +363,7 @@ fn edit_check(doc: &Document, input: &TagsEdit) -> Result<Vec<(Slot, Entity)>, S
     if let Some(Some(s)) = c.size {
         checks::finite(s, "Yazı yüksekliği", "Sonlu bir sayı verin.", "change.size")?;
     }
+    let read = kentos_domain::tag_read::TagRead::new(doc);
     let mut out = Vec::with_capacity(found.len());
     for (at, slot, e, _) in &found {
         let Entity::Tag(t) = e else { continue };
@@ -386,7 +388,7 @@ fn edit_check(doc: &Document, input: &TagsEdit) -> Result<Vec<(Slot, Entity)>, S
             };
             return Err(invalid(words, &path));
         }
-        t.tag = doc.tag_settled(&t.tag, false);
+        t.tag = read.settled(&t.tag, false);
         out.push((*slot, Entity::Tag(t)));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;

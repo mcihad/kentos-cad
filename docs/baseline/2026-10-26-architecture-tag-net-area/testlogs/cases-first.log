@@ -1,0 +1,82 @@
+   Compiling kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+   Compiling kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+   Compiling kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+   Compiling kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+   Compiling kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+   Compiling kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+   Compiling kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 20s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+test fixtures::every_command_case_matches_the_desktop_handlers ... FAILED
+
+failures:
+
+---- fixtures::every_command_case_matches_the_desktop_handlers stdout ----
+
+thread 'fixtures::every_command_case_matches_the_desktop_handlers' (4349137) panicked at crates/native/application/tests/all/fixtures.rs:4775:5:
+30 of 225 cases failed:
+cad.tags.create.json › Net alan net/.1/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.1/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.2/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.2/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.4/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.4/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.8/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan net/.8/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.1/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.1/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.2/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.2/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.4/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.4/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.8/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan centerline/.8/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.1/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.1/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.2/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.2/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.4/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.4/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.8/reverse=False: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan gross/.8/reverse=True: iç yüz, preview, tek undo › 2 execute: 12 yuvasında nesne yok
+cad.tags.create.json › Net alan manual-net: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+cad.tags.create.json › Net alan manual-centerline: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+cad.tags.create.json › Net alan manual-gross: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+cad.tags.create.json › Net alan broken-net: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+cad.tags.create.json › Net alan broken-centerline: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+cad.tags.create.json › Net alan broken-gross: delik, çok parça ve bilinmeyen net ayrımı: kurulum: Çizim dosyası bozuk: missing field `a` at line 1 column 1927
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixtures::every_command_case_matches_the_desktop_handlers
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.34s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

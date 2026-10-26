@@ -139,14 +139,17 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. content
     şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name},
     {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style},
-    {risers}, {slope}, {floorElevation}, {ceilingElevation} ve {attr:Ad}, satırlar \\n
-    ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number},
-    {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende
-    {risers}, rampada {slope}, blokta {attr:NO}). Mahalın floorElevation değeri bilinen
-    katın kotu; ceilingElevation kat kotu + açık mahal yüksekliğidir. Katın döşemeden
-    döşemeye yüksekliği tavan sayılmaz; eksik kat/yükseklik boş yazılır. Kot yazımı
-    diğer uzunluklar gibi çizim birimi ve basamağındadır. shape çerçevedir (circle,
-    hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
+    {risers}, {slope}, {floorElevation}, {ceilingElevation}, {netArea} ve {attr:Ad},
+    satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number},
+    mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda
+    {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalın
+    floorElevation değeri bilinen katın kotu; ceilingElevation kat kotu + açık mahal
+    yüksekliğidir. Katın döşemeden döşemeye yüksekliği tavan sayılmaz; eksik
+    kat/yükseklik boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve
+    basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler
+    alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş
+    brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle, hexagon,
+    rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
     ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader
     çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası,
     ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen
@@ -183,20 +186,23 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         ya da blok; başka nesne not_taggable. content şablondur: {number}, {type}, {form},
         {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level},
         {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope}, {floorElevation},
-        {ceilingElevation} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün
-        şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda
-        {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta
-        {attr:NO}). Mahalın floorElevation değeri bilinen katın kotu; ceilingElevation kat
-        kotu + açık mahal yüksekliğidir. Katın döşemeden döşemeye yüksekliği tavan sayılmaz;
-        eksik kat/yükseklik boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve
-        basamağındadır. shape çerçevedir (circle, hexagon, rectangle, rounded, none;
-        verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının
-        kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına
-        çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü.
-        all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı
-        ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne
-        taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır.
-        Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        {ceilingElevation}, {netArea} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır;
+        verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç
+        satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada
+        {slope}, blokta {attr:NO}). Mahalın floorElevation değeri bilinen katın kotu;
+        ceilingElevation kat kotu + açık mahal yüksekliğidir. Katın döşemeden döşemeye
+        yüksekliği tavan sayılmaz; eksik kat/yükseklik boş yazılır. Kot yazımı diğer
+        uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı
+        kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı
+        olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır.
+        shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta
+        altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği
+        (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse
+        mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin
+        etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası
+        belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
+        taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

@@ -138,6 +138,7 @@ class Drawing:
         self.next = NEW
         self.levels = copy.deepcopy(LEVELS)
         self.drawing_unit = "m"
+        self.net_areas = {}
 
     def ids(self):
         return sorted(self.objs)
@@ -260,6 +261,15 @@ def value(d, i, place, attr=None):
             return ("text", PHASES[ph]) if ph else None
         return None
     if k == "space":
+        if place == "netArea":
+            if f.get("broken"):
+                return None
+            if f.get("method", "net") == "net":
+                # Drawn net rings state their own inner boundary; holes are deducted.
+                area = area_of(f["parts"]) - sum(area_of([dict(outer=h)]) for p in f["parts"] for h in p.get("holes", []))
+                return ("area", area)
+            area = d.net_areas.get(i) if "seed" in f else None
+            return ("area", float(area)) if area is not None else None
         if place in ("floorElevation", "ceilingElevation"):
             # Exact independent decimal sum and unit ratio. Missing room height
             # must not substitute the level's floor-to-floor height.
@@ -272,7 +282,7 @@ def value(d, i, place, attr=None):
             ratio = dict(m=Decimal(1), cm=Decimal(100), mm=Decimal(1000),
                          **{"in": Decimal(1)/Decimal(".0254"), "ft": Decimal(1)/Decimal(".3048")})[d.drawing_unit]
             return ("text", str((metres*ratio).quantize(Decimal(".001"), rounding=ROUND_HALF_UP)))
-        a = area_of(f["parts"])
+        a = area_of(f["parts"]) - sum(area_of([dict(outer=h)]) for p in f["parts"] for h in p.get("holes", []))
         h = f.get("height", level_height(f.get("arch")))
         m = {"number": text(f.get("number")), "name": text(f.get("name")), "usage": text(f.get("usage")),
              "area": ("area", a), "perimeter": ("length", perimeter_of(f["parts"])),
@@ -336,7 +346,7 @@ def number_of(v):
 
 
 PLACES = ["number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
-          "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation"]
+          "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation", "netArea"]
 TEMPLATES = {"opening": "{number}", "space": "{number}\n{name}\n{area}", "column": "{tag}", "grid": "{label}",
              "wall": "{style}", "stair": "{risers}", "ramp": "{slope}", "insert": "{attr:NO}"}
 SHAPES = {"opening": "hexagon", "space": "rectangle"}
@@ -739,6 +749,52 @@ def elevation_tag_cases():
                       {"op": "redo", "returns": "Etiket", "expect": {"ids": [*IDS, NEW], "entities": after, "revision": "changed", "canRedo": False}}]
             cases.append({"name": f"Mahal kotu {unit}/{state}: exact values, preview and one undo", "setup": setup,
                           "steps": copy.deepcopy(PRELUDE) + steps})
+    return cases
+
+
+def net_area_tag_cases():
+    """24 independent closed-rectangle calculations + six drawn/unknown states."""
+    cases = []
+    def record(name, d, setup):
+        inp = {"layerId": "etiket", "tags": [{"of": uid_of(18), "at": P(-5, 8), "leader": True,
+               "content": "{number} {name}\nAlan {area}\nNet {netArea} / {netArea}"}]}
+        ids = d.ids(); before = {str(i):d.entity(i) for i in ids}
+        steps = [create_step(d, "validate", inp), create_step(d, "plan", inp), create_step(d, "execute", inp)]
+        after = {str(i):d.entity(i) for i in d.ids()}
+        steps += [{"op":"undo","returns":"Etiket","within":1e-9,"expect":{"ids":ids,"entities":before,"revision":"changed","canRedo":True}},
+                  {"op":"redo","returns":"Etiket","within":1e-9,"expect":{"ids":d.ids(),"entities":after,"revision":"changed","canRedo":False}}]
+        cases.append({"name":name,"setup":setup,"steps":steps})
+    for method in ["net","centerline","gross"]:
+        for width in [".1",".2",".4",".8"]:
+            for reverse in [False,True]:
+                d=Drawing();setup=copy.deepcopy(SETUP)
+                ox,oy=(Decimal("1000030"),Decimal("2000000")) if reverse else (Decimal(30),Decimal(0))
+                def rectangle(inset):
+                    return rect(float(ox+inset),float(oy+inset),float(ox+6-inset),float(oy+4-inset))
+                points=rectangle(Decimal(0))[0]["outer"]["pts"]
+                if reverse: points.reverse()
+                d.objs[17]=("wall","duvar",dict(pts=points,closed=True,width=float(width),justify="center",arch=dict(level="zemin")),{})
+                inset={"net":Decimal(width)/2,"centerline":Decimal(0),"gross":-Decimal(width)/2}[method]
+                room=dict(parts=rectangle(inset),seed=P(float(ox+3),float(oy+2)),number="N-001",name="Net test",arch=dict(level="zemin"))
+                if method!="net":room["method"]=method
+                d.objs[18]=("space","mahal",room,{})
+                d.net_areas[18]=(6-Decimal(width))*(4-Decimal(width));d.next=19
+                d.objs={i:d.objs[i] for i in [17,18]}
+                setup["entities"] = [d.entity(17),d.entity(18)]
+                record(f"Net alan {method}/{width}/reverse={reverse}: iç yüz, preview, tek undo",d,setup)
+    for state in ["manual-net","manual-centerline","manual-gross","broken-net","broken-centerline","broken-gross"]:
+        d=Drawing();setup=copy.deepcopy(SETUP)
+        method=state.split('-',1)[1]
+        parts=rect(30,0,36,4)+rect(40,0,42,2)
+        parts[1]["holes"]=[rect(40.25,.25,41.25,1.25)[0]["outer"]]
+        room=dict(parts=parts,number="N-001",name="Çizilmiş sınır")
+        if method!="net":room['method']=method
+        if state.startswith('broken'):room['broken']='lostEnclosure'
+        d.objs[17]=("line","cizim",dict(a=P(30,0),b=P(31,0)),{})
+        d.objs[18]=("space","mahal",room,{});d.next=19
+        d.objs={i:d.objs[i] for i in [17,18]}
+        setup["entities"] = [d.entity(17),d.entity(18)]
+        record(f"Net alan {state}: delik, çok parça ve bilinmeyen net ayrımı",d,setup)
     return cases
 
 
@@ -1562,7 +1618,7 @@ def document(command, title, cases):
 
 def files():
     return {
-        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + elevation_tag_cases()),
+        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + elevation_tag_cases() + net_area_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
         "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),

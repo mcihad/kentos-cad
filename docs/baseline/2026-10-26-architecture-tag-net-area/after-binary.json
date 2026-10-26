@@ -1,0 +1,29 @@
+{
+  "parentCommit": "297fd8b60025638eb76aaa720b53357220b700ac",
+  "recordedAt": "2026-10-26T05:38:05.356573+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Net Area QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "e0f0d67de701f7fbe56bd228724bd7948c3caace3302c493cd2b4c68c6ae3e46",
+  "sourceFiles": {
+    "crates/native/domain/src/lib.rs": "467881d2d0ff4a2079c363e2cdeda90877699aa87c14af2e52007ab0f1f3c24b",
+    "crates/native/domain/src/tag_read.rs": "64685973cf75f8bbb8f4118d11b6dce2751be86da2fada95418dc48a249829a4",
+    "crates/native/domain/src/tag_follow.rs": "d36fb06c2cbb2af2c43de3f280bffddcad51bac9d82293afe52da5ae600c584b",
+    "crates/native/domain/src/arch_values.rs": "5c073d25989e5b1013879aee5c7733fcce3808e269e6ec7f58f7bc3c98b0d652",
+    "crates/native/domain/src/edit.rs": "c42b086b539467192a2d8692407b00347b95a1afc30ab0062d1bd3bdb65d48cd",
+    "crates/native/domain/src/external.rs": "e5a47de95016c9a0890622b58c9b6495931592b919ee98011bdc33151c82f5b7",
+    "crates/native/domain/src/history.rs": "26e4b7acd6e8bd0ae693a34ae58de609bbed944acd0dcdc40d7d25167fdad7ab",
+    "crates/native/domain/src/step.rs": "bdacd25517c048730e4e64f73d2431254fcb5fd8bedc99702a69301c7eebfa7c",
+    "crates/native/domain/tests/all/external.rs": "2e3715ae81b538c3b124341cfc829c609edfc34ecae58a8e1a95dfed5c248624",
+    "crates/native/application/src/tags.rs": "a55d27b3b9a0f74f0eb9a81e5b9187c2aaaa7cc4d6441a240a6d9cc1998865f5",
+    "crates/shared/contracts/src/arch_tags.rs": "033779c24e363684d602d54b49aa5620f48ea81642923c756f0a4b2410ce2a26",
+    "crates/shared/commands/src/catalog.rs": "fa0a6f378fadbc65a4ce555671cc6d7e53bbd9a05a32ef38c19c37b972f8f1f5",
+    "crates/native/interaction/src/tag_settings.rs": "be9cf7f44d7f9a776173e648d4ac3900afcc1e1ad1d4d6530fb871e816bb6dc2",
+    "crates/native/mcp/tests/tag_net_area.rs": "1f5a3cbe75dc6da39768778654654716144531a3603d78073cda016fca466e1c",
+    "python/tests/test_tag_net_area.py": "36e0b33eef6ec80295339d4db776d23f6259011aacccbc203ecfa979a37f2218",
+    "scripts/fixtures/tag_command_cases.py": "130251bc64648ec79e0b0fcb2882d925205c0d95bd9fda85dbc06fb98e2d5179",
+    "python/kentos/cad/tags.py": "96fe48af93a726a0767e761afb3fc1522f9f5a3605b61bf569a6025b8c9f4187",
+    "tools/kcad/kcad.py": "967bfda4b50def97482abc61a5f4eab66233dec5974bdeaad239fb8ccfbde6b7"
+  },
+  "note": "Source-linked net area via existing semantic tags; shared immutable source search, no unit/renderer/schema changes."
+}
