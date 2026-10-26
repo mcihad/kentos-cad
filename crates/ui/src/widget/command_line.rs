@@ -2002,16 +2002,19 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
             viewport,
         );
 
-        self.input.as_widget_mut().update(
-            &mut tree.children[1],
-            event,
-            input_layout,
-            cursor,
-            renderer,
-            clipboard,
-            shell,
-            viewport,
-        );
+        let modifiers = super::key_focus::text_modifiers(event);
+        for event in modifiers.iter().chain(std::iter::once(event)) {
+            self.input.as_widget_mut().update(
+                &mut tree.children[1],
+                event,
+                input_layout,
+                cursor,
+                renderer,
+                clipboard,
+                shell,
+                viewport,
+            );
+        }
 
         let mut pressed = Vec::new();
         let mut local = Shell::new(&mut pressed);

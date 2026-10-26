@@ -1,0 +1,40 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 07s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 4 tests
+test tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults ... ok
+test tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection ... ok
+test tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state ... ok
+test tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source ... FAILED
+
+failures:
+
+---- tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source stdout ----
+
+thread 'tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source' (4191319) panicked at crates/native/interaction/tests/all/tag_settings.rs:55:13:
+assertion failed: preview.texts.iter().any(|t| t.text == text)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 693 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p kentos-interaction --test all`

@@ -26,8 +26,13 @@ use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Area, CellGhost, Context, Cursor, Flow, Pointer, Preview, Stroke, Tag, TextGhost, Tone, Tool,
+    Area, CellGhost, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke, Tag, TextGhost, Tone,
+    Tool,
 };
+use crate::tool_settings::Setting;
+
+#[path = "tag_settings.rs"]
+mod settings;
 
 pub const TAG_ID: &str = "tag";
 pub const TAG_ALL_ID: &str = "tagAll";
@@ -94,6 +99,7 @@ pub struct TagTool {
     target: Option<Slot>,
     content: Option<String>,
     shape: Option<TagShape>,
+    size: Option<f64>,
     leader: bool,
     ask: Option<Ask>,
     hover: Option<Vec2>,
@@ -115,7 +121,7 @@ impl TagTool {
                 at: at.map(points::wire),
                 content: self.content.clone(),
                 shape: self.shape,
-                size: None,
+                size: self.size,
                 leader: self.leader.then_some(true),
             }],
             all: None,
@@ -200,7 +206,7 @@ impl Tool for TagTool {
             .option_with(
                 "Şablon",
                 "Ş",
-                self.content.clone().unwrap_or_else(|| "Türün".into()),
+                if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
             )
             .option_with("Biçim", "B", shape.to_owned())
             .option_with(
@@ -235,11 +241,11 @@ impl Tool for TagTool {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let key = upper_tr(js_trim(text));
         if self.ask == Some(Ask::Content) {
-            if key != "G" {
-                let t = text.trim_end_matches(['\r', '\n']);
-                self.content = (!js_trim(t).is_empty()).then(|| t.replace("\\n", "\n"));
+            if key == "G" {
+                self.ask = None;
+            } else {
+                self.configure_tag("Ş", text, cx);
             }
-            self.ask = None;
             self.see(cx);
             return true;
         }
@@ -276,6 +282,22 @@ impl Tool for TagTool {
 
     fn takes_words(&self) -> bool {
         self.ask.is_some()
+    }
+
+    fn settings(&self, _: &Format) -> Vec<Setting> {
+        self.tag_rows()
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure_tag(key, value, cx)
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        self.tag_choices(key)
+    }
+
+    fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure_tag(key, value, cx)
     }
 
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {

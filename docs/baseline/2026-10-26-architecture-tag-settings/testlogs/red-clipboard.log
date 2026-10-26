@@ -1,0 +1,26 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.59s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 1 test
+test widget::command_line::keyboard_tests::clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification ... FAILED
+
+failures:
+
+---- widget::command_line::keyboard_tests::clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification stdout ----
+
+thread 'widget::command_line::keyboard_tests::clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification' (4204616) panicked at crates/ui/src/widget/command_line_keys.rs:131:9:
+assertion `left == right` failed: Copy after fresh focus; property=true
+  left: "copied"
+ right: "room"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    widget::command_line::keyboard_tests::clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 288 filtered out; finished in 50.66s
+
+error: test failed, to rerun pass `-p kentos-ui --lib`

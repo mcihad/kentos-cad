@@ -15,6 +15,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Görünür etiket ayarları (26 Ekim 2026; [ADR 0656](docs/adr/0656-visible-tag-settings.md)).**
+  Mevcut `cad.tags.create` ile şablon/çerçeve/kol/kağıt mm boyu; panelde yeni
+  ayar/seçim ayrıdır. Gerçek GUI'nin yakaladığı ilk yapıştırma modifier
+  önbelleği CommandLine/EditCell'de düzeltildi, uzun komut seçeneği özetlendi.
+  [Kabul](docs/baseline/2026-10-26-architecture-tag-settings/README.md):
+  697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python, clippy/build;
+  26 ham ekran/11 bağımsız tam dosya, ret/tek onay/undo/redo/izleme/kaydet-aç.
+  Önceki panel kaydırmasını yeni araca taşımama takip işi ve zengin etiketler
+  açıktır; ARCH-SPACE-02 [~]. Yeni komut/şema/SDK/TS/birim/render yoktur.
+
 - **Mahal etiketi konum tutamacı (26 Ekim 2026; [ADR 0655](docs/adr/0655-tag-grip-placement.md)).**
   Tag'ın genel geometriye çevrilemeyen yazımı mevcut anlamsal Move'a yönlenir;
   yalnız sıcak UUID'ler, kaynak/şablon/ankraj korunur. Karışık sıcak tür ve

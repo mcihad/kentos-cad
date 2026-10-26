@@ -1,0 +1,15 @@
+{
+  "parentCommit": "7904972cf0ced7150fbc8656bcab66a4e88c03b4",
+  "recordedAt": "2026-10-26T02:26:53.999269+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Settings QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "958a98d7c5d829bfa5ebc94be4a2403a0e74d658762fe39b84f9d410604268e4",
+  "sourceFiles": {
+    "crates/native/interaction/src/tag_tools.rs": "272eb4c0b480647092f0de9237dceb7860d2b3d6a181ed7fe792aeaa740efc07",
+    "crates/native/interaction/src/tag_settings.rs": "c7665ebc80cf2c3647bdd29dd4030cbfb75a70a9b4d262585b5e14d5762f8f6f",
+    "crates/native/interaction/tests/all/main.rs": "135a1a5a09a58004da76c069af4a4b576fcbd310234288c026ead0d322f01417",
+    "crates/native/interaction/tests/all/tag_settings.rs": "5a38dded792365f0b35ecc6c9d1c1f59f97b4d5c5ac5a72360ea4910f64608d6"
+  },
+  "note": "Visible transient tag settings use existing cad.tags.create. No schema, units, renderer or SDK changes."
+}

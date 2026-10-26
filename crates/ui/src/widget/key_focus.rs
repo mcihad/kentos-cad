@@ -28,6 +28,18 @@ use crate::theme::{Tokens, shape};
 /// Odak halesinin kalınlığı (metin kutusunun [`focus_ring`](super::focus_ring)'iyle aynı).
 pub(crate) const HALO: f32 = 3.0;
 
+/// Iced text_input caches ModifiersChanged independently of KeyPressed.
+/// A newly built/focused field may have missed that notification (or its
+/// release); synchronize from this key's actual modifiers before forwarding it.
+pub(crate) fn text_modifiers(event: &Event) -> Option<Event> {
+    match event {
+        Event::Keyboard(keyboard::Event::KeyPressed { modifiers, .. }) => {
+            Some(Event::Keyboard(keyboard::Event::ModifiersChanged(*modifiers)))
+        }
+        _ => None,
+    }
+}
+
 /// Bir öğenin klavye odağı: iced'in odak işlemleri onu bu bayrakla açar ve kapatır.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Flag(pub bool);

@@ -1,0 +1,57 @@
+[
+  {
+    "file": "settings-only.kcad",
+    "note": "Final GUI: custom settings and Cmd-S before placement; full original model expected.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "invalid-template.kcad",
+    "note": "After source pick and invalid template followed by Cmd-S, original model remains; valid tool settings retained.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "invalid-size.kcad",
+    "note": "Zero height rejected on final native GUI; source target and valid settings retained; original full model saved.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "preview-save.kcad",
+    "note": "Actual final custom-tag cursor/wheel preview and Cmd-S; original13-object model expected, no draft tag.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "created.kcad",
+    "note": "Native target pick then coordinate16,2 plus one Enter created one configured tag; Cmd-S.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "create-undo.kcad",
+    "note": "One native undo removed only new tag; original model saved.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "create-redo.kcad",
+    "note": "One native redo restores same configured tag UUID and complete model, saved before source rename.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "source-renamed.kcad",
+    "note": "Room name to Oturma, old and new linked tag plus schedule updated in single edit; saved through native GUI.",
+    "sha256": "6e4346c3fb91d4feb6524194d0a848df4c2c26e27c2c07e655ae16f8938959d6"
+  },
+  {
+    "file": "rename-undo.kcad",
+    "note": "One undo restored Salon and both tags/schedule; exact configured-tag model saved.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "cancelled.kcad",
+    "note": "Compact light18 actual target preview cancelled with two Escape; saved no extra tag.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Fresh final QA process: Home fit, Cmd-S; persisted configured tag and all previous objects.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  }
+]

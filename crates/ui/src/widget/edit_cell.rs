@@ -253,16 +253,19 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
 
         let mut edits = Vec::new();
         let mut local = Shell::new(&mut edits);
-        self.parts[0].as_widget_mut().update(
-            &mut children[0],
-            event,
-            field_layout,
-            cursor,
-            renderer,
-            clipboard,
-            &mut local,
-            viewport,
-        );
+        let modifiers = super::key_focus::text_modifiers(event);
+        for event in modifiers.iter().chain(std::iter::once(event)) {
+            self.parts[0].as_widget_mut().update(
+                &mut children[0],
+                event,
+                field_layout,
+                cursor,
+                renderer,
+                clipboard,
+                &mut local,
+                viewport,
+            );
+        }
         propagate(&local, shell);
         drop(local);
 

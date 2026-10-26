@@ -1,0 +1,33 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+   Compiling kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+   Compiling kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 09s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 5 tests
+test architecture_settings::tests::a_batched_pan_moves_out_and_back_without_editing_the_drawing ... ignored, GPU native event-batch regression; run serially
+test architecture_settings::tests::an_opening_grip_uses_the_visible_host_face_midpoint_when_snapping_is_on ... ok
+test architecture_settings::tests::defaults_are_separate_from_the_selection_and_stale_commits_are_ignored ... ok
+test architecture_settings::tests::precision_opening_gpu_matrix_and_raw_pointer_pan ... ignored, GPU acceptance matrix; run serially and inspect the PNGs
+test architecture_settings::tests::starting_an_architectural_tool_reveals_its_settings_but_regular_line_does_not ... ok
+
+test result: ok. 3 passed; 0 failed; 2 ignored; 0 measured; 1504 filtered out; finished in 44.85s
+

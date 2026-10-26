@@ -230,6 +230,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   korunur. [ADR 0632](../docs/adr/0632-formatted-single-length-fields.md),
   [kabul ve ekranlar](../docs/baseline/2026-10-25-architecture-input/README.md).
 
+- [x] Etiket için görünür şablon/çerçeve/kol/kağıt yazı boyu; yeni nesne
+  ayarları seçim özelliklerinden ayrı. Gerçek GUI'deki ilk yapıştırma ve
+  çok satırlı komut düğmesi kusurları giderildi; tek Enter/ret/undo/redo,
+  kaynak takibi ve yeniden açma, 26 ham ekran/11 bağımsız KCAD ile doğrulandı.
+  [ADR 0656](../docs/adr/0656-visible-tag-settings.md),
+  [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md).
+- [ ] GUI takip bulgusu: önceki nesne özelliklerinde aşağı kaydırılmış
+  panelden yeni mimari araca geçildiğinde etkin ayarların başlangıcını göster.
+  Aynı araçta alan düzenleme/önizleme sırasında kullanıcının kaydırmasını
+  sıfırlama; mevcut seçim özellikleri ve panel yaşam döngüsü korunsun.
+
 ### ARCH-UX-02 — Mimari şerit ve bağlam [x]
 
 - Çiz / Yerleştir / Düzenle / Belgele / Proje sırasını kullan; tek düğmeye yığılmış
@@ -589,6 +600,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   22 ham görüntü, 18 bağımsız disk kopyası; 692 interaction/219 application/
   303 Python/bir mevcut MCP testi. Sadece sıcak etiket UUID'lerinin mevcut
   anlamsal taşıma rotası düzeltildi; yeni TS/şema/birim/render değişikliği yok.
+- [x] Yeni etiketin görünür şablon, çerçeve, kol ve kağıt mm boyu alanları
+  mevcut `cad.tags.create` yolunu kullanır. 20 şablon/çerçeve ve 20 birim/ölçek
+  bileşimi; 697 interaction, 40 UI/host, üç mevcut ayar/üç mevcut Python
+  testi; clippy/build, gerçek açık18/koyu13 geniş/dar girişleri ve 11 tam
+  dosya karşılaştırması. [ADR 0656](../docs/adr/0656-visible-tag-settings.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-tag-settings/README.md).
 - [ ] Eski etiketi açık Koru/Yenile yönetimi; çoklu kat ve aynı planın farklı
   pafta oranları. Döşeme/tavan kotu dahil zengin şablon ve tam mimari matris
   açıktır; bu dilim mevcut şablonun bağ/yer korunumunu doğrular.
@@ -826,3 +843,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0653 | Kimliği koruyan tıkla/yönle numaralandırma, görünür önizleme, tek onay/undo, etiket/çizelge ve Python/MCP/kayıt-tekrar; 68 bağımsız durum, 300 Python. Gerçek iç seçim kusuru ve uzun önizleme yazısı düzeltildi; 52 ham ekran, 20 disk anlık görüntüsü bağımsız KCAD kontrolünde. | [~] Numaralandırma dilimi doğrulandı; numara/ad listeleri, daha zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-space-number/README.md) |
 | 2026-10-26 | ARCH-BASE-01 / ADR 0654 | CommandLine ve EditCell odaktayken Cmd-S harf eklemeden mevcut Kaydet yoluna ulaşır; onaylanmamış tampon/araç önizlemesi korunur. Gerçek GUI ikinci giriş yolunu yakaladı; 38 test, clippy/build, 15 ham görüntü, dokuz bağımsız disk kopyası geçti. | [~] İki bileşenli düzeltme doğrulandı; diğer girişler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-commandline-save/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0655 | Gerçek etiket tutamacının boş geometri yazımı mevcut anlamsal Move'a yönlendirildi; sıcak alt küme ve kaynak bağı korunur. Duvar/mahal silme, 40 cm→20.16 m² zinciri, şablon/undo/redo/iptal/kaydet-aç gerçek fareyle doğrulandı; 692 interaction/219 application/303 Python, 22 ham görüntü ve 18 bağımsız dosya. | [~] Etiket yeri/izleme dilimi doğrulandı; listeler, Koru/Yenile, kot şablonları ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-follow/README.md) |
+| 2026-10-26 | ARCH-UX-01 / ARCH-SPACE-02 / ADR 0656 | Görünür yeni etiket ayarları; GUI’deki ilk yapıştırma ve uzun komut düğmesi kusuru düzeltildi. 697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python; clippy/build, 26 ham ekran/11 bağımsız tam KCAD. | [~] Panel dilimi doğrulandı; eski panel kaydırması için yeni takip, zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md) |

@@ -1,0 +1,314 @@
+[
+  {
+    "file": "01-before-no-settings.jpg",
+    "pixels": [
+      2880,
+      1740
+    ],
+    "points": [
+      1440.0,
+      870.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "02-window-diagnostic.jpg",
+    "pixels": [
+      2880,
+      1744
+    ],
+    "points": [
+      1440.0,
+      872.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "03-helper-diagnostic.jpg",
+    "pixels": [
+      2880,
+      1730
+    ],
+    "points": [
+      1440.0,
+      865.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "04-visible-light18.jpg",
+    "pixels": [
+      2880,
+      1740
+    ],
+    "points": [
+      1440.0,
+      870.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "05-frame-menu-light18.jpg",
+    "pixels": [
+      2880,
+      1740
+    ],
+    "points": [
+      1440.0,
+      870.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "06-custom-settings-prompt-diagnostic.jpg",
+    "pixels": [
+      2880,
+      1740
+    ],
+    "points": [
+      1440.0,
+      870.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "07-final-defaults.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "08-final-first-paste.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "09-final-configured-save.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "10-final-invalid-template.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "11-final-template-refusal.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "12-final-size-refusal.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "13-final-preview-save.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "14-final-created.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "15-final-create-undo.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "16-final-create-redo.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "17-final-source-renamed.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "18-final-source-undo.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "19-final-compact-light18.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "20-final-compact-frame-menu.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "21-final-compact-preview.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "22-final-compact-cancel.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "23-final-compact-dark13-menu.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "24-final-compact-dark13-fields.jpg",
+    "pixels": [
+      2200,
+      1366
+    ],
+    "points": [
+      1100.0,
+      683.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "25-final-wide-dark13.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  },
+  {
+    "file": "26-final-reopened.jpg",
+    "pixels": [
+      2880,
+      1726
+    ],
+    "points": [
+      1440.0,
+      863.0
+    ],
+    "retinaScale": 2
+  }
+]

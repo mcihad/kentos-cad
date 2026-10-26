@@ -108,6 +108,14 @@ impl Harness {
         self.send(Event::Keyboard(keyboard::Event::ModifiersChanged(
             modifiers,
         )));
+        self.key_from_event(c, code, modifiers)
+    }
+    fn key_from_event(
+        &mut self,
+        c: &str,
+        code: Code,
+        modifiers: Modifiers,
+    ) -> (event::Status, Vec<Message>) {
         self.send(Event::Keyboard(keyboard::Event::KeyPressed {
             key: Key::Character(c.into()),
             modified_key: Key::Character(c.into()),
@@ -118,6 +126,51 @@ impl Harness {
             repeat: false,
         }))
     }
+}
+
+#[test]
+fn clipboard_uses_the_key_event_when_focus_missed_the_modifier_notification() {
+    for (mut h, property) in [(Harness::cell(), true), (Harness::new(), false)] {
+        h.key_from_event("a", Code::KeyA, Modifiers::COMMAND);
+        h.key_from_event("c", Code::KeyC, Modifiers::COMMAND);
+        assert_eq!(
+            h.clipboard.0, "room",
+            "Copy after fresh focus; property={property}"
+        );
+        h.clipboard.0 = "pasted".into();
+        let (_, messages) = h.key_from_event("v", Code::KeyV, Modifiers::COMMAND);
+        if property {
+            assert!(
+                messages.is_empty(),
+                "Clipboard must not commit a property draft"
+            );
+            let (_, messages) = h.send(Event::Keyboard(keyboard::Event::KeyPressed {
+                key: Key::Named(keyboard::key::Named::Enter),
+                modified_key: Key::Named(keyboard::key::Named::Enter),
+                physical_key: Physical::Code(Code::Enter),
+                location: keyboard::Location::Standard,
+                modifiers: Modifiers::empty(),
+                text: None,
+                repeat: false,
+            }));
+            assert_eq!(messages, [Message::Input("pasted".into())]);
+        } else {
+            assert!(
+                messages.contains(&Message::Input("pasted".into())),
+                "{messages:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_plain_key_does_not_reuse_a_previous_command_modifier() {
+    let mut h = Harness::new();
+    h.key("a", Code::KeyA, Modifiers::COMMAND);
+    assert_eq!(
+        h.key_from_event("v", Code::KeyV, Modifiers::empty()),
+        (event::Status::Captured, vec![Message::Input("v".into())])
+    );
 }
 
 #[test]
