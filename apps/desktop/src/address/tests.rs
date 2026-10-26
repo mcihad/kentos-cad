@@ -223,6 +223,69 @@ fn adres_verisi_checks_the_definition_and_saves_it_as_a_project_setting() {
     assert!(!doc.can_undo(), "a project setting, not an undo step");
 }
 
+/// docs/adr/0647 §2: Denetle names the streets and the neighbourhoods written in more than one way; Yazılışları düzelt
+/// gives each its most written spelling as one undo step and Denetle runs again.
+#[test]
+fn yazilislari_duzelt_sets_the_names_right_in_one_step() {
+    let mut app = app();
+    {
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let mut e = doc.get(Slot(12)).cloned().expect("door 4");
+        e.base_mut()
+            .attrs
+            .insert("MAHALLE".into(), "KIZILAY".into());
+        doc.update(Slot(12), e);
+    }
+    let steps = |app: &App| {
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .undo_labels()
+    };
+    let before_steps = steps(&app).len();
+    send(&mut app, Message::Run("address.data"));
+    ev(&mut app, Event::Data(Data::Check));
+    let checked = |app: &App| {
+        app.address
+            .data
+            .as_ref()
+            .and_then(|w| w.checked())
+            .expect("Denetle answered")
+            .clone()
+    };
+    let before = checked(&app);
+    assert!(
+        before.spelled > 0,
+        "Atatürk Bulvarı is written in three ways"
+    );
+    assert_eq!(
+        before.neighbourhood_spellings.len(),
+        1,
+        "Kızılay and KIZILAY"
+    );
+    assert_eq!(
+        before.neighbourhood_spellings[0].written[0],
+        ("Kızılay".to_owned(), 10)
+    );
+    ev(&mut app, Event::Data(Data::Normalize));
+    let after = checked(&app);
+    assert_eq!(after.spelled, 0);
+    assert!(after.neighbourhood_spellings.is_empty());
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(
+        doc.get(Slot(12)).expect("door 4").base().attrs["MAHALLE"],
+        "Kızılay"
+    );
+    assert_eq!(
+        doc.get(Slot(13)).expect("door 8").base().attrs["YOL_ADI"],
+        "Atatürk Bulvarı"
+    );
+    let now = steps(&app);
+    assert_eq!(now.len(), before_steps + 1, "one undo step");
+    assert_eq!(now[0], kentos_native_application::addresses_normalize::STEP);
+}
+
 #[test]
 fn the_sources_are_the_projects_data_then_the_devices_providers() {
     let app = app();

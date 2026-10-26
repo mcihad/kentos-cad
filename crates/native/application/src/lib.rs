@@ -39,6 +39,7 @@
 pub mod address_define;
 pub mod addresses;
 pub mod addresses_check;
+pub mod addresses_normalize;
 pub mod annotation_follow;
 pub mod annotations_scales;
 pub mod arc;
@@ -920,6 +921,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ADDRESSES_CHECK,
         kentos_commands::CAD_ADDRESSES_CHECK_VERSION,
+    ),
+    // Adres yazılışlarını düzelt ([`addresses_normalize`], docs/adr/0647 §2).
+    (
+        kentos_commands::CAD_ADDRESSES_NORMALIZE,
+        kentos_commands::CAD_ADDRESSES_NORMALIZE_VERSION,
     ),
     // Adres verisi ([`address_define`], docs/adr/0229 §14).
     (

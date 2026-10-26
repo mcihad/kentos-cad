@@ -13,7 +13,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 21,
+   "cases": 22,
    "files": [
     "fixtures/commands/v1/cad.addresses.check.json"
    ],
@@ -59,6 +59,40 @@
     {
      "key": "operation",
      "value": "set",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.addresses.normalize",
+   "title": "Adres yazılışlarını düzelt",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 27,
+   "files": [
+    "fixtures/commands/v1/cad.addresses.normalize.json"
+   ],
+   "options": [
+    {
+     "key": "what",
+     "value": "district",
+     "covered": true
+    },
+    {
+     "key": "what",
+     "value": "neighbourhood",
+     "covered": true
+    },
+    {
+     "key": "what",
+     "value": "street",
      "covered": true
     }
    ],
@@ -14639,6 +14673,11 @@
     },
     {
      "key": "kind",
+     "value": "renameDomain",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "renameField",
      "covered": false
     },
@@ -14865,6 +14904,11 @@
     {
      "key": "kind",
      "value": "mapValues",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "renameDomain",
      "covered": false
     },
     {
@@ -15098,6 +15142,11 @@
     },
     {
      "key": "kind",
+     "value": "renameDomain",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "renameField",
      "covered": false
     },
@@ -15269,7 +15318,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 60,
+   "cases": 76,
    "files": [
     "fixtures/commands/v1/cad.profiles.migrate.json"
    ],
@@ -15347,6 +15396,11 @@
     {
      "key": "kind",
      "value": "mapValues",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "renameDomain",
      "covered": true
     },
     {

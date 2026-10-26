@@ -70,22 +70,22 @@ use kentos_native_application::standards::{apply as standards_apply, check as st
 use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, adjoin_cmd,
-    annotations_scales, annotations_write, arc, areas, array, blocks_define, blocks_edit, circle,
-    constructions, crs_transform, curves_construct, delete, dimensions_edit, dimensions_query,
-    dimensions_reassociate, edit, entities_chamfer, entities_extend, entities_fillet,
-    entities_order, entities_pick, entities_relate, entities_select, entities_trim,
-    entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit, images_clip,
-    labels_pin, labels_report, layers_compose, layers_contingents, layers_edit, layers_filter,
-    layers_find, layers_info, layers_labels, layers_renderer, layers_rules, layers_service,
-    layers_set, layers_states, layers_subtypes, layers_table, layers_time, layers_translate,
-    leaders_edit, line, linearref_define, network_define, nurbs, objects_derive, offset,
-    openings_create, openings_edit, parcels, point, points_construct, polygon, polygon_regular,
-    polyline, rectangle_create, revcloud_create, roads_edit, scenarios_edit, sector_create, set,
-    settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create,
-    spaces_edit, spaces_quantities, styles_edit, survey_adjust, survey_points, tables_edit,
-    texts_check, texts_edit, time_version, transform, ucs_set, units_change, views_edit,
-    walls_create, walls_edit, walls_from_lines, walls_joins,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_normalize,
+    adjoin_cmd, annotations_scales, annotations_write, arc, areas, array, blocks_define,
+    blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
+    dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
+    entities_fillet, entities_order, entities_pick, entities_relate, entities_select,
+    entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit,
+    images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
+    layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
+    layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, objects_derive,
+    offset, openings_create, openings_edit, parcels, point, points_construct, polygon,
+    polygon_regular, polyline, rectangle_create, revcloud_create, roads_edit, scenarios_edit,
+    sector_create, set, settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit,
+    snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit, survey_adjust,
+    survey_points, tables_edit, texts_check, texts_edit, time_version, transform, ucs_set,
+    units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
 };
 use kentos_native_application::{
     arch_edit, columns_create, grids_create, ramps_create, stairs_create,
@@ -2934,6 +2934,12 @@ impl Input for EntitiesOffset {
     }
 }
 
+impl Input for kentos_commands::AddressesNormalize {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::AddressesCheck {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
@@ -3878,6 +3884,9 @@ fn run_op(
         kentos_commands::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
         kentos_commands::CAD_ADDRESSES_CHECK => {
             run!(addresses_check, kentos_commands::AddressesCheck)
+        }
+        kentos_commands::CAD_ADDRESSES_NORMALIZE => {
+            run!(addresses_normalize, kentos_commands::AddressesNormalize)
         }
         kentos_commands::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_commands::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),

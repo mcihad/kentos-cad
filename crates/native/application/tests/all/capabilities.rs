@@ -88,6 +88,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.addresses.normalize",
+        "layer_hidden",
+        "uyarı kapı katmanının ortak denetiminindir (checks::layer_at), cad.circle.create'in ve cad.arc.create'in durumlarında; adres durumlarının katmanları görünür (ADR 0647 §2)",
+    ),
+    (
         "cad.sensors.ingest",
         "source_unreachable",
         "adres ağ ister, ortak durumların koşucusu ağa çıkmaz; python/tests/test_sensors.py yerel bir SensorThings sunucusuyla sınar (ADR 0646 §4)",

@@ -101,6 +101,10 @@ KURUM_R2 = {**KURUM, "release": 2, "migrations": [M12]}
 KURUM_R1 = {**KURUM, "release": 1, "migrations": []}
 KURUM_MAP = PC.mapping("park-bahce-kurum", "Park ve bahçeler eşlemesi", "park-bahce", [
     {"class": "agac", "fields": PC.renames([("AgacNo", "NO")])}])
+# docs/adr/0647 §4: the institution's own layer, field and code names.
+INST_MAP = PC.mapping("park-bahce-kurum2", "Kurumun ağaçları", "park-bahce", [
+    {"class": "agac", "layer": ["Peyzaj", "Kurum ağaçları"], "fields": PC.renames([("AgacNo", "NO"), ("Tur", "TUR_KOD")]),
+     "codes": [PC.code_map("Tur", [("cinar", "CN"), ("mese", "MS"), ("palmiye", "PL"), ("diger", "DG")])]}])
 BROKEN_MAP = PC.mapping("park-bahce-bozuk", "Bozuk eşleme", "park-bahce", [{"class": "orman", "layer": ["Orman"]}])
 GHOST_MAP = PC.mapping("hayalet-esleme", "Profili olmayan eşleme", "hayalet", [{"class": "x", "layer": ["X"]}])
 
@@ -109,6 +113,7 @@ BASE_FILES = {
     "park-bahce-r2.profil.json": KURUM_R2,
     "park-bahce-r1.profil.json": KURUM_R1,
     "park-bahce-kurum.eslem.json": KURUM_MAP,
+    "park-bahce-kurum2.eslem.json": INST_MAP,
     "park-bahce-bozuk.eslem.json": BROKEN_MAP,
     "hayalet-esleme.eslem.json": GHOST_MAP,
     "profil-surum2.json": {"format": "kentos.data-profile", "version": 2, "name": "peyzaj"},
@@ -599,7 +604,9 @@ def peyzaj_doc(layers=None, entities=None, domains=None, relations=RELATIONS):
 # The engine: the steps run one after another on the drawing as it is then (cad_profile_files.rs `migrate`).
 
 class Refused(Exception):
-    pass
+    def __init__(self, message, code="layer_refused"):
+        super().__init__(message)
+        self.code = code
 
 
 def locked_above(nodes, id_):
@@ -810,6 +817,154 @@ def step_map_values(doc, st, touched):
     return outcome(id_, True, len(writes), f"“{name}” katmanının “{field}” alanında {len(writes)} nesnenin değeri yeniden kodlandı.")
 
 
+def step_rename_domain(doc, st):
+    """docs/adr/0647 §3: the project's list takes the new id; every field linked to it follows."""
+    old, to = st["domain"].strip(), st["to"].strip()
+    domains = doc["settings"].get("domains", [])
+    d = next((x for x in domains if x["id"] == old), None)
+    if d is None:
+        if any(x["id"] == to for x in domains):
+            return skipped(None, f"“{old}” değer listesi zaten “{to}” kimliğiyle duruyor.")
+        return missing(None, f"Projede “{old}” değer listesi yok; adım atlandı.")
+    if any(x["id"] == to for x in domains):
+        raise Refused(f"“{d['name']}” listesinin kimliği “{to}” olamaz: projede bu kimlikte bir liste var.", "domain_exists")
+    d["id"] = to
+    linked = 0
+
+    def walk(nodes):
+        nonlocal linked
+        for n in nodes:
+            if n["type"] == "layer":
+                for f in n.get("fields", []):
+                    if f.get("domain") == old:
+                        f["domain"] = to
+                        linked += 1
+            else:
+                walk(n["children"])
+    walk(doc["layers"])
+    return outcome(None, True, 0, f"“{d['name']}” listesinin kimliği “{to}” oldu; {linked} alan yeni kimliğe bağlandı.")
+
+
+# ── A migration read through an institution's mapping (docs/adr/0647 §4) ─────────────────────────────────────────────
+
+def chain_of(profile, frm, to):
+    out = []
+    for release in range(frm, to):
+        m = next(m for m in profile["migrations"] if m["from"] == release)
+        for index, st in enumerate(m["steps"]):
+            out.append((release, index, st))
+    return out
+
+
+def final_path(chain, k, path):
+    """`path` taken through the chain's later layer renames: its name at the target release."""
+    cur = list(path)
+    for _, _, st in chain[k + 1:]:
+        if st["kind"] == "renameLayer" and st["layer"] == cur:
+            cur = cur[:-1] + [st["to"].strip()]
+    return cur
+
+
+def class_at(profile, chain, k, path):
+    final = final_path(chain, k, path)
+    return next((c for c in profile["classes"] if c["layer"] == final), None)
+
+
+def final_field(profile, chain, k, cls, name):
+    cur = name
+    for j in range(k + 1, len(chain)):
+        st = chain[j][2]
+        if st["kind"] == "renameField" and st["from"] == cur:
+            c = class_at(profile, chain, j, st["layer"])
+            if c is not None and c["id"] == cls["id"]:
+                cur = st["to"]
+    return cur
+
+
+def mapped_class(mapping, cls):
+    return next((c for c in mapping["classes"] if c["class"] == cls["id"]), None) if cls else None
+
+
+def mapped_field(mc, name):
+    return next((f for f in (mc or {}).get("fields", []) if f["profile"] == name), None)
+
+
+def mapped_codes(mc, name):
+    return next((x for x in (mc or {}).get("codes", []) if x["field"] == name), None)
+
+
+def translate(doc, profile, mapping, chain, k):
+    """The step as it runs on the institution's names, or the outcome of a step the mapping makes moot."""
+    st = chain[k][2]
+    kind = st["kind"]
+    if kind in ("retireCode", "renameDomain"):
+        return st, None
+    if kind == "renameLayer":
+        cls = class_at(profile, chain, k, st["layer"][:-1] + [st["to"].strip()])
+        mc = mapped_class(mapping, cls)
+        if mc and mc.get("layer"):
+            place = PC.find(doc["layers"], mc["layer"])
+            layer = place[1] if place[0] == "layer" else None
+            final = final_path(chain, k, st["layer"][:-1] + [st["to"].strip()])
+            return None, skipped(layer, f"Eşleme “{words(final)}” katmanına “{words(mc['layer'])}” adını veriyor; ad değişmez.")
+        return st, None
+    cls = class_at(profile, chain, k, st["layer"])
+    mc = mapped_class(mapping, cls)
+    if mc is None:
+        return st, None
+    layer = list(mc["layer"]) if mc.get("layer") else st["layer"]
+    out = copy.deepcopy(st)
+    out["layer"] = layer
+    if kind == "renameField":
+        final = final_field(profile, chain, k, cls, st["to"])
+        mf = mapped_field(mc, final)
+        if mf:
+            place = PC.find(doc["layers"], layer)
+            lid = place[1] if place[0] == "layer" else None
+            return None, skipped(lid, f"Eşleme “{final}” alanına “{mf['name']}” adını veriyor; ad değişmez.")
+        return out, None
+    if kind == "changeFieldType":
+        f = st["field"]
+        final = final_field(profile, chain, k, cls, f["name"])
+        codes = mapped_codes(mc, final)
+        nf = copy.deepcopy(f)
+        if codes is not None:
+            nf = PC.follow([nf], profile.get("domains", []))[0]
+            nf = copy.deepcopy(nf)
+            nf.pop("domain", None)
+            for v in nf.get("values", []):
+                hit = next((x for x in codes["codes"] if x["profile"] == v["code"]), None)
+                if hit:
+                    v["code"] = hit["name"]
+            if nf.get("default") is not None:
+                hit = next((x for x in codes["codes"] if x["profile"] == nf["default"]), None)
+                if hit:
+                    nf["default"] = hit["name"]
+        mf = mapped_field(mc, final)
+        if mf:
+            nf["id"] = final
+            nf["name"] = mf["name"]
+        out["field"] = nf
+        return out, None
+    # mapValues
+    final = final_field(profile, chain, k, cls, st["field"])
+    mf = mapped_field(mc, final)
+    if mf:
+        out["field"] = mf["name"]
+    codes = mapped_codes(mc, final)
+
+    def code(c):
+        hit = next((x for x in (codes or {}).get("codes", []) if x["profile"] == c), None)
+        return hit["name"] if hit else c
+    for m in out["map"]:
+        m["from"], m["to"] = code(m["from"]), code(m["to"])
+        if "whenField" in m:
+            wf = mapped_field(mc, final_field(profile, chain, k, cls, m["whenField"]))
+            if wf:
+                m["whenField"] = wf["name"]
+    return out, None
+
+
 def step_retire(doc, st, touched):
     domain, code, repl = st["domain"], st["code"], st.get("replaceWith")
     domains = doc["settings"].get("domains", [])
@@ -871,15 +1026,21 @@ def step_retire(doc, st, touched):
     return outcome(None, objects > 0 or not already, objects, note, warning)
 
 
-def migrate(doc, profile, frm, to):
-    """The chain's steps run on `doc` (changed in place); (output, warnings). Raises Refused."""
+def migrate(doc, profile, frm, to, mapping=None):
+    """The chain's steps run on `doc` (changed in place); (output, warnings). Raises Refused. With a mapping each step is
+    read through it first (docs/adr/0647 §4)."""
     steps, losses, warnings, touched = [], [], [], set()
     unfit, samples = 0, []
-    for release in range(frm, to):
-        m = next(m for m in profile["migrations"] if m["from"] == release)
-        for index, st in enumerate(m["steps"]):
-            kind = st["kind"]
-            if kind == "renameLayer":
+    chain = chain_of(profile, frm, to)
+    for k, (release, index, st) in enumerate(chain):
+        kind = st["kind"]
+        moot = None
+        if mapping is not None:
+            st, moot = translate(doc, profile, mapping, chain, k)
+        if True:
+            if moot is not None:
+                out = moot
+            elif kind == "renameLayer":
                 out = step_rename_layer(doc, st)
             elif kind == "renameField":
                 out = step_rename_field(doc, st, touched)
@@ -887,6 +1048,8 @@ def migrate(doc, profile, frm, to):
                 out = step_change_type(doc, profile, st, touched)
             elif kind == "mapValues":
                 out = step_map_values(doc, st, touched)
+            elif kind == "renameDomain":
+                out = step_rename_domain(doc, st)
             else:
                 out = step_retire(doc, st, touched)
             if out["warning"]:
@@ -906,8 +1069,11 @@ def migrate(doc, profile, frm, to):
     if unfit:
         warnings.append({"code": "values_unfit", "path": "losses",
                          "message": f"{unfit} nesnenin değeri yeni kurala uymadı ({', '.join(samples)}); göçün raporunda değer değer yazılı. Formla düzenle ya da Öznitelik tablosuyla düzeltin."})
-    return {"changed": any(s["applied"] for s in steps), "from": frm, "to": to, "steps": steps, "losses": losses,
-            "objects": len(touched), "revision": "$current"}, warnings
+    out = {"changed": any(s["applied"] for s in steps), "from": frm, "to": to, "steps": steps, "losses": losses,
+           "objects": len(touched), "revision": "$current"}
+    if mapping is not None:
+        out["mapping"] = mapping["name"]
+    return out, warnings
 
 
 def state(doc):
@@ -916,10 +1082,10 @@ def state(doc):
     return s
 
 
-def migrate_case(name, doc, inp, profile, frm, to, before=(), undo=True, plan=True):
+def migrate_case(name, doc, inp, profile, frm, to, before=(), undo=True, plan=True, mapping=None):
     start = copy.deepcopy(doc)
     after = copy.deepcopy(doc)
-    out, warnings = migrate(after, profile, frm, to)
+    out, warnings = migrate(after, profile, frm, to, mapping)
     steps = list(before)
     if plan:
         steps.append(step("plan", inp, completed(out, warnings), {"revision": "same", "layers": start["layers"]}))
@@ -1068,6 +1234,70 @@ def migrate_cases():
     nm["migrations"][0]["steps"][0]["map"] = [{"from": "Yok", "to": "x"}]
     c, _, _ = migrate_case("Yeniden kodlanacak değer yoksa adım uygulanmaz (sessiz)", doc, {"profile": nm, "from": 1}, nm, 1, 2)
     cases.append(c)
+    # docs/adr/0647 §3: a list's id changed.
+    rd = copy.deepcopy(retire_only)
+    rd["migrations"][0]["steps"] = [{"kind": "renameDomain", "domain": "agac-tur", "to": "agac-turu"}]
+    rd["domains"] = [{**TUR, "id": "agac-turu"}, SULAMA]
+    rd["classes"][0]["fields"] = [({**f, "domain": "agac-turu"} if f.get("domain") == "agac-tur" else f)
+                                  for f in rd["classes"][0]["fields"]]
+    c, rd_after, _ = migrate_case("Listenin kimliği değişir (renameDomain): bağlı alanlar yeni kimliğe bağlanır, değerler kalır",
+                                  linked_doc, {"profile": rd, "from": 1}, rd, 1, 2)
+    cases.append(c)
+    again = copy.deepcopy(rd_after)
+    out2, w2 = migrate(again, rd, 1, 2)
+    cases.append({"name": "Kimliği zaten değişmiş liste: adım sessiz atlanır", "setup": linked_doc, "steps": [
+        step("execute", {"profile": rd, "from": 1}, completed(*migrate(copy.deepcopy(linked_doc), rd, 1, 2)), state(rd_after)),
+        step("execute", {"profile": rd, "from": 1}, completed(out2, w2), state(again))]})
+    c, _, _ = migrate_case("Projede olmayan listenin kimliği: adım atlanır (migration_step_skipped)", doc,
+                           {"profile": rd, "from": 1}, rd, 1, 2)
+    cases.append(c)
+    both = peyzaj_doc(layers=linked_layers, entities=coded, domains=[TUR, {**TUR, "id": "agac-turu", "name": "Ağaç türü (yeni)"}])
+    cases.append(migrate_refusal("Yeni kimlikte başka liste var: domain_exists, hiçbir şey yazılmaz", both, {"profile": rd, "from": 1},
+                                 "domain_exists", "“Ağaç türü” listesinin kimliği “agac-turu” olamaz: projede bu kimlikte bir liste var.",
+                                 "profile"))
+    bad_rd = copy.deepcopy(rd)
+    bad_rd["migrations"][0]["steps"] = [{"kind": "renameDomain", "domain": "agac-tur", "to": "Ağaç Türü"}]
+    cases.append(migrate_refusal("Listenin yeni kimliği geçersiz: invalid_profile", doc, {"profile": bad_rd, "from": 1}, "invalid_profile",
+                                 "Veri profili geçersiz: 1. göcün 1. adımı: listenin eski kimliği dolu, yeni kimliği küçük harf, rakam ve "
+                                 "“-” olmalı ve eskisinden farklı.", "profile"))
+    # docs/adr/0647 §4: a migration read through the institution's mapping.
+    imap = INST_MAP
+    inst_fields = [{"name": "NO", "kind": "text"}, {"name": "TUR_KOD", "kind": "text"}, {"name": "Yas", "kind": "text"},
+                   {"name": "Sulama", "kind": "text"}, {"name": "Alan", "kind": "text"}]
+    inst_layers = [node("peyzaj", "Peyzaj", "group", [
+        node("agac", "Kurum ağaçları", style={**STYLE, "color": "#30A46C"}, fields=inst_fields),
+        node("yesil", "Yeşil alan", style={**STYLE, "color": "#46A758"}, fields=yesil_fields())])]
+    inst_ents = []
+    for e in peyzaj_entities():
+        e = copy.deepcopy(e)
+        if e["layerId"] == "agac":
+            a = e["attrs"]
+            e["attrs"] = {"NO": a["No"], "TUR_KOD": {"Çınar": "CN", "Palmiye": "PL"}.get(a["Tur"], a["Tur"]), "Yas": a["Yas"],
+                          "Sulama": a["Sulama"]}
+        inst_ents.append(e)
+    inst = peyzaj_doc(layers=inst_layers, entities=inst_ents)
+    c, _, _ = migrate_case("Eşlemeyle: kurumun adlı katmanı ve alanları; eşlenen ad değişmez, kodlar kurumunkiyle",
+                           inst, {"profile": KURUM, "from": 1, "mapping": imap}, KURUM, 1, 3, mapping=imap)
+    cases.append(c)
+    f = folder()
+    c, _, _ = migrate_case("Eşlemenin adıyla (projenin klasöründen)", inst,
+                           {"profile": KURUM, "from": 1, "mappingName": "park-bahce-kurum2", "drawing": tmp(f)}, KURUM, 1, 3, mapping=imap,
+                           before=put(f, **{"park-bahce-kurum2.eslem.json": "park-bahce-kurum2.eslem.json"}))
+    cases.append(c)
+    mvc = copy.deepcopy(KURUM)
+    mvc["migrations"] = [{"from": 1, "to": 2, "title": "Palmiye çınar olur", "steps": [
+        {"kind": "changeFieldType", "layer": AGAC, "field": TUR_FIELD, "onFail": "keep"},
+        {"kind": "mapValues", "layer": AGAC, "field": "Tur", "map": [{"from": "palmiye", "to": "cinar"}]}]}]
+    mvc["release"] = 2
+    c, _, _ = migrate_case("Eşlemeyle değer eşlemesi: profilin kodları kurumun kodlarına çevrilir (PL → CN)", inst,
+                           {"profile": mvc, "from": 1, "mapping": imap}, mvc, 1, 2, mapping=imap)
+    cases.append(c)
+    cases.append(migrate_refusal("Başka profilin eşlemesi: invalid_profile_mapping", inst, {"profile": KURUM, "from": 1, "mapping": GHOST_MAP},
+                                 "invalid_profile_mapping", f"Eşleme geçersiz: {PC.mapping_problem(GHOST_MAP, KURUM)}", "mapping"))
+    f = folder()
+    cases.append(migrate_refusal("Klasörde olmayan eşleme: unknown_mapping", inst,
+                                 {"profile": KURUM, "from": 1, "mappingName": "yok", "drawing": tmp(f)}, "unknown_mapping",
+                                 PC.no_mapping_in_folder(), "mappingName", before=[place_drawing(f)]))
     # The profile's list is added by a step that needs it.
     # (covered by the first case: the project has no lists; the step adds agac-tur and sulama)
     # Validate and plan only.

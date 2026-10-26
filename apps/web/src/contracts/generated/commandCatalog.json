@@ -553350,6 +553350,27 @@
                   "code"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3).",
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameDomain",
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "to"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -554681,6 +554702,27 @@
                   "kind",
                   "domain",
                   "code"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3).",
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameDomain",
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "to"
                 ],
                 "type": "object"
               }
@@ -556373,6 +556415,27 @@
                   "code"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3).",
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameDomain",
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "to"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -557782,6 +557845,94 @@
               }
             ]
           },
+          "MappingClass": {
+            "additionalProperties": false,
+            "description": "A profile class as the institution keeps it: its layer's path, its fields' names, its codes.",
+            "properties": {
+              "class": {
+                "description": "The profile's class id.",
+                "type": "string"
+              },
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCodes"
+                },
+                "type": "array"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/MappingField"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "description": "The institution's layer path; none: the profile's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "class"
+            ],
+            "type": "object"
+          },
+          "MappingCode": {
+            "additionalProperties": false,
+            "description": "A profile's code and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MappingCodes": {
+            "additionalProperties": false,
+            "description": "A profile field's coded values and the institution's codes for them.",
+            "properties": {
+              "codes": {
+                "items": {
+                  "$ref": "#/$defs/MappingCode"
+                },
+                "type": "array"
+              },
+              "field": {
+                "description": "The profile's field name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "codes"
+            ],
+            "type": "object"
+          },
+          "MappingField": {
+            "additionalProperties": false,
+            "description": "A profile's field and what the institution calls it.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "profile",
+              "name"
+            ],
+            "type": "object"
+          },
           "MergePolicy": {
             "description": "A field's value in the object merged from several (docs/adr/0419).",
             "oneOf": [
@@ -557952,6 +558103,27 @@
                   "code"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3).",
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "renameDomain",
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "domain",
+                  "to"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -558091,6 +558263,51 @@
                 "type": "string"
               }
             ]
+          },
+          "ProfileMapping": {
+            "additionalProperties": false,
+            "description": "An institution's mapping file: its own layer, field and code names for a profile's.",
+            "properties": {
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/MappingClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "format": {
+                "description": "`kentos.profile-mapping`.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Small letters, digits and `-`; the file's name.",
+                "type": "string"
+              },
+              "profile": {
+                "description": "The name of the profile it is for.",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "profile",
+              "classes"
+            ],
+            "type": "object"
           },
           "ProfileMigration": {
             "additionalProperties": false,
@@ -558288,6 +558505,24 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileMapping"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The institution's mapping the data is written with (docs/adr/0647 §4): each step is read through it."
+          },
+          "mappingName": {
+            "description": "The mapping by its name, from the project's `profiller` folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "name": {
             "type": [
               "string",
@@ -558468,6 +558703,13 @@
               "$ref": "#/$defs/MigrationLoss"
             },
             "type": "array"
+          },
+          "mapping": {
+            "description": "The mapping the steps were read through.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "objects": {
             "description": "Objects written, once each.",
@@ -558653,6 +558895,13 @@
             },
             "type": "array"
           },
+          "mapping": {
+            "description": "The mapping the steps were read through.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "objects": {
             "description": "Objects written, once each.",
             "format": "uint32",
@@ -558695,7 +558944,10 @@
           "invalid_profile",
           "invalid_migration",
           "migration_gap",
+          "unknown_mapping",
+          "invalid_profile_mapping",
           "layer_refused",
+          "domain_exists",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -575596,10 +575848,7 @@
           "file_not_found",
           "import_unreadable",
           "source_unreachable",
-          "invalid_count",
-          "invalid_asset",
-          "late_observation",
-          "invalid_attribute"
+          "invalid_count"
         ],
         "warnings": [
           "layer_hidden"
@@ -964209,7 +964458,7 @@
       "id": "cad.addresses.check",
       "version": 1,
       "title": "Adres verisini denetle",
-      "summary": "Projenin adres verisini (locator: kimliği; verilmezse projenin ilki) denetler; çizimi değiştirmez. Dizinin tuttuklarını sayar (kapılar, yollar, yol çizgileri, mahalleler, bölgeler), dışarıda kalanları söyler (nokta olmayan kapı, yol adı olmayan kapı, kapı numarası okunmayan kapı, çizgi olmayan yol, adsız çizgi ve bölge) ve üç listeyi verir: aynı yolda aynı kapı numarası (repeats), birden çok kapıdaki adres kodu (codes) ve kapıları yolun adını birden çok biçimde yazan yollar (spellings: her yazılış ve onu yazan kapı sayısı, en çok yazılan önce; adresin normalleştirilmesinin bulgusu). Yollar adın Türkçe katlanmış biçimi, mahalle ve ilçeyle gruplanır (“Atatürk Cad.” ile “ATATÜRK CADDESİ” bir yoldur). Her liste önce sayısını, sonra ilk kapılarına göre ilk limit tanesini (1–100, varsayılan 100) nesnelerin kalıcı kimlikleriyle verir. Retler: invalid_limit, no_address_data, unknown_locator.",
+      "summary": "Projenin adres verisini (locator: kimliği; verilmezse projenin ilki) denetler; çizimi değiştirmez. Dizinin tuttuklarını sayar (kapılar, yollar, yol çizgileri, mahalleler, bölgeler), dışarıda kalanları söyler (nokta olmayan kapı, yol adı olmayan kapı, kapı numarası okunmayan kapı, çizgi olmayan yol, adsız çizgi ve bölge) ve üç listeyi verir: aynı yolda aynı kapı numarası (repeats), birden çok kapıdaki adres kodu (codes) ve kapıları yolun adını birden çok biçimde yazan yollar (spellings: her yazılış ve onu yazan kapı sayısı, en çok yazılan önce; adresin normalleştirilmesinin bulgusu). Mahalle ve ilçe adlarının yazılışları da (neighbourhoodSpellings: mahallenin ve ilçenin anahtarıyla; districtSpellings: ilçenin anahtarıyla; within mahallenin ilçesi); cad.addresses.normalize onları tek yazılışa getirir. Yollar adın Türkçe katlanmış biçimi, mahalle ve ilçeyle gruplanır (“Atatürk Cad.” ile “ATATÜRK CADDESİ” bir yoldur). Her liste önce sayısını, sonra ilk kapılarına göre ilk limit tanesini (1–100, varsayılan 100) nesnelerin kalıcı kimlikleriyle verir. Retler: invalid_limit, no_address_data, unknown_locator.",
       "aliases": [
         "adresdenetle"
       ],
@@ -964268,6 +964517,33 @@
             ],
             "type": "object"
           },
+          "AddressNameSpelling": {
+            "description": "A neighbourhood or a district whose doors write its name in more than one way (docs/adr/0647 §1).",
+            "properties": {
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "within": {
+                "description": "The district its first door writes (a neighbourhood's); empty for a district.",
+                "type": "string"
+              },
+              "written": {
+                "items": {
+                  "$ref": "#/$defs/AddressWritten"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "within",
+              "written",
+              "uids"
+            ],
+            "type": "object"
+          },
           "AddressRepeat": {
             "description": "A door number one street has more than once.",
             "properties": {
@@ -964367,6 +964643,19 @@
             },
             "type": "array"
           },
+          "districtSpellings": {
+            "items": {
+              "$ref": "#/$defs/AddressNameSpelling"
+            },
+            "type": "array"
+          },
+          "districtsSpelled": {
+            "description": "Districts written in more than one way.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "doors": {
             "format": "uint32",
             "minimum": 0,
@@ -964389,7 +964678,20 @@
           "locator": {
             "type": "string"
           },
+          "neighbourhoodSpellings": {
+            "items": {
+              "$ref": "#/$defs/AddressNameSpelling"
+            },
+            "type": "array"
+          },
           "neighbourhoods": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbourhoodsSpelled": {
+            "description": "Neighbourhoods written in more than one way (docs/adr/0647 §1).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -964488,6 +964790,10 @@
           "codes",
           "spelled",
           "spellings",
+          "neighbourhoodsSpelled",
+          "neighbourhoodSpellings",
+          "districtsSpelled",
+          "districtSpellings",
           "revision"
         ],
         "title": "AddressesChecked",
@@ -964514,6 +964820,33 @@
             ],
             "type": "object"
           },
+          "AddressNameSpelling": {
+            "description": "A neighbourhood or a district whose doors write its name in more than one way (docs/adr/0647 §1).",
+            "properties": {
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "within": {
+                "description": "The district its first door writes (a neighbourhood's); empty for a district.",
+                "type": "string"
+              },
+              "written": {
+                "items": {
+                  "$ref": "#/$defs/AddressWritten"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "within",
+              "written",
+              "uids"
+            ],
+            "type": "object"
+          },
           "AddressRepeat": {
             "description": "A door number one street has more than once.",
             "properties": {
@@ -964613,6 +964946,19 @@
             },
             "type": "array"
           },
+          "districtSpellings": {
+            "items": {
+              "$ref": "#/$defs/AddressNameSpelling"
+            },
+            "type": "array"
+          },
+          "districtsSpelled": {
+            "description": "Districts written in more than one way.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "doors": {
             "format": "uint32",
             "minimum": 0,
@@ -964635,7 +964981,20 @@
           "locator": {
             "type": "string"
           },
+          "neighbourhoodSpellings": {
+            "items": {
+              "$ref": "#/$defs/AddressNameSpelling"
+            },
+            "type": "array"
+          },
           "neighbourhoods": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbourhoodsSpelled": {
+            "description": "Neighbourhoods written in more than one way (docs/adr/0647 §1).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -964734,6 +965093,10 @@
           "codes",
           "spelled",
           "spellings",
+          "neighbourhoodsSpelled",
+          "neighbourhoodSpellings",
+          "districtsSpelled",
+          "districtSpellings",
           "revision"
         ],
         "title": "AddressesChecked",
@@ -964756,6 +965119,301 @@
           "input": {
             "limit": 20,
             "locator": "adres-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.addresses.normalize",
+      "version": 1,
+      "title": "Adres yazılışlarını düzelt",
+      "summary": "Projenin adres verisinin (locator; verilmezse ilki) kapılarının yol (what: street), mahalle (neighbourhood) ya da ilçe (district) adını her grupta tek yazılışa getirir; tek geri alma adımıdır (“Adres yazılışlarını düzelt”). Gruplar cad.addresses.check'inkilerdir: yolun kapıları; mahallenin ve ilçenin anahtarıyla gruplanan kapılar; ilçenin anahtarıyla gruplanan kapılar; yalnız adı birden çok biçimde yazılanlar. Her grup, prefer'deki yazılışlardan yazdığı ilkini, yoksa en çok yazılanını (eşitlikte önce yazılan) alır; kırpılmış adı başka olan her kapının kapı katmanındaki alanına o yazılır, alanın kuralından geçerek. Cevap grupları (to, from, doors), yazılan kapı sayısını ve kalıcı kimliklerini verir; yazılacak kapı yoksa adım açılmaz. Retler: invalid_revision, revision_conflict, no_address_data, unknown_locator, invalid_input (kapılarda o alan yok, boş tercih), layer_locked, alanın kuralına uymayan yazılış (invalid_attribute).",
+      "aliases": [
+        "adresduzelt",
+        "yazilisduzelt"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "AddressName": {
+            "description": "Which name of the doors is set right.",
+            "oneOf": [
+              {
+                "const": "street",
+                "description": "The street's name, in each street (its doors grouped by street, neighbourhood and district).",
+                "type": "string"
+              },
+              {
+                "const": "neighbourhood",
+                "description": "The neighbourhood's name, in each neighbourhood of a district.",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "The district's name.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.addresses.normalize` v1. Refusals, in order: `invalid_revision`, `revision_conflict`,\n`no_address_data`, `unknown_locator`, `invalid_input` (the doors have no field of that name, an empty preferred\nspelling), `layer_locked`, a field's rule the spelling does not fit (`invalid_attribute`).",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locator": {
+            "description": "The address data's id; none: the project's first.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prefer": {
+            "description": "Spellings preferred: a group that writes one of them takes the first it writes.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "what": {
+            "$ref": "#/$defs/AddressName",
+            "default": "street"
+          }
+        },
+        "title": "AddressesNormalize",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AddressName": {
+            "description": "Which name of the doors is set right.",
+            "oneOf": [
+              {
+                "const": "street",
+                "description": "The street's name, in each street (its doors grouped by street, neighbourhood and district).",
+                "type": "string"
+              },
+              {
+                "const": "neighbourhood",
+                "description": "The neighbourhood's name, in each neighbourhood of a district.",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "The district's name.",
+                "type": "string"
+              }
+            ]
+          },
+          "AddressNormalized": {
+            "description": "One group set right: the spelling chosen, the ones it took the place of, the doors written.",
+            "properties": {
+              "doors": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "from": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "to",
+              "from",
+              "doors"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.normalize` v1, and its plan.",
+        "properties": {
+          "groups": {
+            "description": "The groups, by their first doors.",
+            "items": {
+              "$ref": "#/$defs/AddressNormalized"
+            },
+            "type": "array"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "description": "Their persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "what": {
+            "$ref": "#/$defs/AddressName"
+          },
+          "written": {
+            "description": "The doors written (or to be written).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "locator",
+          "what",
+          "groups",
+          "written",
+          "uids",
+          "revision"
+        ],
+        "title": "AddressesNormalized",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AddressName": {
+            "description": "Which name of the doors is set right.",
+            "oneOf": [
+              {
+                "const": "street",
+                "description": "The street's name, in each street (its doors grouped by street, neighbourhood and district).",
+                "type": "string"
+              },
+              {
+                "const": "neighbourhood",
+                "description": "The neighbourhood's name, in each neighbourhood of a district.",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "The district's name.",
+                "type": "string"
+              }
+            ]
+          },
+          "AddressNormalized": {
+            "description": "One group set right: the spelling chosen, the ones it took the place of, the doors written.",
+            "properties": {
+              "doors": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "from": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "to",
+              "from",
+              "doors"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.normalize` v1, and its plan.",
+        "properties": {
+          "groups": {
+            "description": "The groups, by their first doors.",
+            "items": {
+              "$ref": "#/$defs/AddressNormalized"
+            },
+            "type": "array"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "description": "Their persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "what": {
+            "$ref": "#/$defs/AddressName"
+          },
+          "written": {
+            "description": "The doors written (or to be written).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "locator",
+          "what",
+          "groups",
+          "written",
+          "uids",
+          "revision"
+        ],
+        "title": "AddressesNormalized",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "no_address_data",
+          "unknown_locator",
+          "invalid_input",
+          "layer_locked",
+          "invalid_attribute"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Yolların adlarını en çok yazılana getir",
+          "input": {}
+        },
+        {
+          "title": "Mahalle adlarında “Kızılay Mahallesi” yazılışını tercih et",
+          "input": {
+            "prefer": [
+              "Kızılay Mahallesi"
+            ],
+            "what": "neighbourhood"
           }
         }
       ]

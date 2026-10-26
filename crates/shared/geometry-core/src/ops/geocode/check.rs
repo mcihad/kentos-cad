@@ -5,7 +5,9 @@
 //! (the first 100, in the order of their first doors); and (docs/adr/0579)
 //! address codes on more than one door, and streets whose doors write their
 //! name in more than one way (the address's normalization: the spellings and
-//! how many doors write each, the most written first).
+//! how many doors write each, the most written first); and (docs/adr/0647 §1)
+//! neighbourhoods and districts whose doors write their names in more than one
+//! way ([`name_groups`], which `cad.addresses.normalize` sets right).
 
 use super::locator::{Counts, Locator};
 
@@ -42,6 +44,104 @@ pub struct Spelling {
     pub orders: Vec<u32>,
 }
 
+/// Which name of the doors a group is of.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Named {
+    /// A street's: its doors (grouped by street, neighbourhood and district).
+    Street,
+    /// A neighbourhood's: doors grouped by the neighbourhood's key and the district's.
+    Neighbourhood,
+    /// A district's: doors grouped by the district's key.
+    District,
+}
+
+/// Doors that write one name in more than one way.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NameGroup {
+    /// The district its first door writes (a neighbourhood's group); empty otherwise.
+    pub within: String,
+    /// The spellings and how many doors write each: the most written first, on a tie the one written first.
+    pub written: Vec<(String, usize)>,
+    /// Its doors' places in the drawing's order and the name each writes.
+    pub doors: Vec<(u32, String)>,
+}
+
+/// The groups of `named` whose doors write the name in more than one way, by their first doors. A door without the
+/// group's key (an empty neighbourhood or district) is in none.
+pub fn name_groups(loc: &Locator, named: Named) -> Vec<NameGroup> {
+    let text_of = |i: usize| -> &str {
+        let t = &loc.doors[i].texts;
+        match named {
+            Named::Street => &t.street,
+            Named::Neighbourhood => &t.neighbourhood,
+            Named::District => &t.district,
+        }
+    };
+    let keyed: Vec<Vec<usize>> = match named {
+        Named::Street => loc.groups.iter().map(|g| g.doors.clone()).collect(),
+        Named::Neighbourhood | Named::District => {
+            let mut by: Vec<((String, String), Vec<usize>)> = Vec::new();
+            let mut at: std::collections::HashMap<(String, String), usize> =
+                std::collections::HashMap::new();
+            let mut doors: Vec<usize> = (0..loc.doors.len()).collect();
+            doors.sort_by_key(|&i| loc.doors[i].order);
+            for i in doors {
+                let g = &loc.groups[loc.doors[i].group];
+                let key = match named {
+                    Named::Neighbourhood if !g.neighbourhood.is_empty() => {
+                        (g.neighbourhood.clone(), g.district.clone())
+                    }
+                    Named::District if !g.district.is_empty() => {
+                        (String::new(), g.district.clone())
+                    }
+                    _ => continue,
+                };
+                let k = *at.entry(key.clone()).or_insert_with(|| {
+                    by.push((key, Vec::new()));
+                    by.len() - 1
+                });
+                by[k].1.push(i);
+            }
+            by.into_iter().map(|(_, d)| d).collect()
+        }
+    };
+    let mut out = Vec::new();
+    for doors in keyed {
+        let mut written: Vec<(String, usize, u32)> = Vec::new();
+        for &i in &doors {
+            let t = text_of(i);
+            match written.iter_mut().find(|(w, _, _)| w == t) {
+                Some((_, n, _)) => *n += 1,
+                None => written.push((t.to_owned(), 1, loc.doors[i].order)),
+            }
+        }
+        if written.len() < 2 {
+            continue;
+        }
+        written.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.2.cmp(&b.2)));
+        let mut listed: Vec<(u32, String)> = doors
+            .iter()
+            .map(|&i| (loc.doors[i].order, text_of(i).to_owned()))
+            .collect();
+        listed.sort_by_key(|d| d.0);
+        let within = match named {
+            Named::Neighbourhood => doors
+                .iter()
+                .min_by_key(|&&i| loc.doors[i].order)
+                .map(|&i| loc.doors[i].texts.district.clone())
+                .unwrap_or_default(),
+            _ => String::new(),
+        };
+        out.push(NameGroup {
+            within,
+            written: written.into_iter().map(|(t, n, _)| (t, n)).collect(),
+            doors: listed,
+        });
+    }
+    out.sort_by_key(|g| g.doors[0].0);
+    out
+}
+
 /// What a check finds.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Summary {
@@ -62,6 +162,10 @@ pub struct Summary {
     /// How many streets are written in more than one way, and the first of them (by their first door).
     pub spelled: usize,
     pub spellings: Vec<Spelling>,
+    /// Neighbourhoods and districts written in more than one way (docs/adr/0647 §1): all of them (the command lists
+    /// the first `limit`).
+    pub neighbourhood_spellings: Vec<NameGroup>,
+    pub district_spellings: Vec<NameGroup>,
 }
 
 pub fn check(loc: &Locator) -> Summary {
@@ -155,5 +259,7 @@ pub fn check(loc: &Locator) -> Summary {
         code_repeats,
         spelled,
         spellings,
+        neighbourhood_spellings: name_groups(loc, Named::Neighbourhood),
+        district_spellings: name_groups(loc, Named::District),
     }
 }

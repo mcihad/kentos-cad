@@ -13,8 +13,8 @@
 use iced::widget::{Column, Space, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    AddressLocator, AddressesDefine, AddressesDefineOperation, address_locators_problem,
-    next_address_locator_id,
+    AddressLocator, AddressName, AddressesDefine, AddressesDefineOperation, AddressesNormalize,
+    address_locators_problem, next_address_locator_id,
 };
 use kentos_geometry_core::ops::geocode::check::Summary;
 use kentos_interaction::address_form::{
@@ -43,6 +43,7 @@ const ADD: &str = "Yeni";
 const REMOVE: &str = "Sil";
 const CHECK: &str = "Denetle";
 const GUESS: &str = "Alanları tanı";
+const NORMALIZE: &str = "Yazılışları düzelt";
 /// A field not chosen.
 const NONE: &str = "—";
 /// Denetle's tickets start here: the tab's never reach them.
@@ -138,6 +139,7 @@ pub enum Event {
     MinScore(String),
     Reach(String),
     Check,
+    Normalize,
     Save,
     Cancel,
 }
@@ -334,6 +336,7 @@ impl App {
             }
             Event::Save => return self.save_address_data(),
             Event::Check => return self.check_address_data(),
+            Event::Normalize => return self.normalize_address_data(),
             Event::Guess => {
                 if let Some(f) = f {
                     guess_all(f, |l| all_names.get(l).cloned().unwrap_or_default());
@@ -521,6 +524,101 @@ impl App {
         )
     }
 
+    /// Whether Yazılışları düzelt is open: Denetle found names written in more than one way in a definition that is
+    /// saved as the window shows it (the command works on the project's).
+    fn address_normalizable(&self, w: &Window) -> bool {
+        let spelled = w
+            .check
+            .as_ref()
+            .and_then(|c| c.value.as_deref())
+            .is_some_and(|s| {
+                s.spelled > 0
+                    || !s.neighbourhood_spellings.is_empty()
+                    || !s.district_spellings.is_empty()
+            });
+        let saved = w
+            .chosen
+            .and_then(|i| w.forms.get(i))
+            .zip(self.data_defs(w).ok())
+            .is_some_and(|(f, now)| {
+                now.iter()
+                    .find(|n| n.id == f.id)
+                    .is_some_and(|n| w.saved.iter().any(|o| o == n))
+            });
+        spelled && saved
+    }
+
+    /// Yazılışları düzelt: the streets', neighbourhoods' and districts' names Denetle found written in more than one way
+    /// each given its most written spelling (`cad.addresses.normalize`, docs/adr/0647 §2), as one undo step; Denetle runs
+    /// again.
+    fn normalize_address_data(&mut self) -> Task<Message> {
+        let Some(w) = &self.address.data else {
+            return Task::none();
+        };
+        let Some(s) = w.check.as_ref().and_then(|c| c.value.as_deref()) else {
+            return Task::none();
+        };
+        let Some(id) = w.chosen.and_then(|i| w.forms.get(i)).map(|f| f.id.clone()) else {
+            return Task::none();
+        };
+        let what: Vec<AddressName> = [
+            (s.spelled > 0, AddressName::Street),
+            (
+                !s.neighbourhood_spellings.is_empty(),
+                AddressName::Neighbourhood,
+            ),
+            (!s.district_spellings.is_empty(), AddressName::District),
+        ]
+        .into_iter()
+        .filter_map(|(on, what)| on.then_some(what))
+        .collect();
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let group = doc
+            .model
+            .begin_group(kentos_native_application::addresses_normalize::STEP);
+        let mut written = 0u32;
+        let mut failed: Option<String> = None;
+        for what in what {
+            let mut cx = kentos_native_application::ExecutionContext::new(&mut doc.model);
+            let input = AddressesNormalize {
+                locator: Some(id.clone()),
+                what,
+                prefer: Vec::new(),
+                expected_revision: None,
+            };
+            match kentos_native_application::addresses_normalize::execute(&mut cx, input) {
+                kentos_commands::CommandResult::Completed { output, .. } => {
+                    written += output.written
+                }
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
+                    failed = Some(error.message);
+                    break;
+                }
+                _ => {
+                    failed = Some("Adres yazılışları düzeltilemedi.".into());
+                    break;
+                }
+            }
+        }
+        if let Some(why) = failed {
+            doc.model.cancel_group(group);
+            if let Some(w) = self.address.data.as_mut() {
+                w.said = Some((Say::Error, why));
+            }
+            return Task::none();
+        }
+        doc.model.end_group(group);
+        self.announce(
+            Level::Info,
+            format!("Adres yazılışları düzeltildi: {written} kapı."),
+        );
+        self.check_address_data()
+    }
+
     pub(crate) fn address_data_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.address.data else {
             return iced::widget::text("").into();
@@ -618,6 +716,10 @@ impl App {
                 .push(words::summary(lines))
                 .aside(words::secondary(GUESS, one.then(|| msg(Event::Guess))))
                 .aside(words::secondary(CHECK, one.then(|| msg(Event::Check))))
+                .aside(words::secondary(
+                    NORMALIZE,
+                    self.address_normalizable(w).then(|| msg(Event::Normalize)),
+                ))
                 .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
                 .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
                 .width(1000.0)
@@ -941,6 +1043,31 @@ impl App {
                     ),
                 ));
             }
+            // docs/adr/0647 §1: a neighbourhood's and a district's name written in more than one way.
+            for (groups, words) in [
+                (&s.neighbourhood_spellings, "Adı farklı yazılan mahalle"),
+                (&s.district_spellings, "Adı farklı yazılan ilçe"),
+            ] {
+                if groups.is_empty() {
+                    continue;
+                }
+                let shown: Vec<String> = groups
+                    .iter()
+                    .take(SHOWN_REPEATS)
+                    .map(|g| {
+                        g.written
+                            .iter()
+                            .map(|(t, n)| format!("“{t}” {n}"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    })
+                    .collect();
+                let tail = more(groups.len(), shown.len());
+                lines.push(words::text_line(
+                    Say::Warn,
+                    format!("{words}: {} ({}{tail}).", groups.len(), shown.join("; ")),
+                ));
+            }
         }
         lines
     }
@@ -962,6 +1089,12 @@ impl App {
             Control::Press(REMOVE) => w.chosen.map(|_| msg(Event::Remove)),
             Control::Press(CHECK) => Some(msg(Event::Check)),
             Control::Press(GUESS) => Some(msg(Event::Guess)),
+            Control::Press(NORMALIZE) => {
+                if !self.address_normalizable(w) {
+                    return Err(format!("“{NORMALIZE}” kapalı"));
+                }
+                Some(msg(Event::Normalize))
+            }
             Control::Fill("Ad", t) => Some(msg(Event::Name(t.to_owned()))),
             Control::Fill("En düşük puan", t) => Some(msg(Event::MinScore(t.to_owned()))),
             Control::Fill("Konumdan adres uzaklığı", t) => Some(msg(Event::Reach(t.to_owned()))),

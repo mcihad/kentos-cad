@@ -684,6 +684,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
         from_: int,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        mapping: ProfileMapping | None | Unset = UNSET,
+        mapping_name: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         profile: DataProfile | None | Unset = UNSET,
         to: int | None | Unset = UNSET,
@@ -722,6 +724,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
             from_: The release the data is at. Unit: count.
             drawing:
             expected_revision:
+            mapping: The institution's mapping the data is written with (docs/adr/0647 §4): each step is read through it.
+            mapping_name: The mapping by its name, from the project's `profiller` folder.
             name:
             profile:
             to: The release it goes to; none: the profile's. Unit: count.
@@ -741,6 +745,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
             from_=from_,
             drawing=drawing,
             expected_revision=expected_revision,
+            mapping=mapping,
+            mapping_name=mapping_name,
             name=name,
             profile=profile,
             to=to,
@@ -754,6 +760,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
         from_: int,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        mapping: ProfileMapping | None | Unset = UNSET,
+        mapping_name: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         profile: DataProfile | None | Unset = UNSET,
         to: int | None | Unset = UNSET,
@@ -765,6 +773,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
             from_=from_,
             drawing=drawing,
             expected_revision=expected_revision,
+            mapping=mapping,
+            mapping_name=mapping_name,
             name=name,
             profile=profile,
             to=to,
@@ -778,6 +788,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
         from_: int,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        mapping: ProfileMapping | None | Unset = UNSET,
+        mapping_name: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         profile: DataProfile | None | Unset = UNSET,
         to: int | None | Unset = UNSET,
@@ -789,6 +801,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
             from_=from_,
             drawing=drawing,
             expected_revision=expected_revision,
+            mapping=mapping,
+            mapping_name=mapping_name,
             name=name,
             profile=profile,
             to=to,
@@ -802,6 +816,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
         from_: int,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        mapping: ProfileMapping | None | Unset = UNSET,
+        mapping_name: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         profile: DataProfile | None | Unset = UNSET,
         to: int | None | Unset = UNSET,
@@ -818,6 +834,8 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
             from_=from_,
             drawing=drawing,
             expected_revision=expected_revision,
+            mapping=mapping,
+            mapping_name=mapping_name,
             name=name,
             profile=profile,
             to=to,

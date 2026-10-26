@@ -1,0 +1,4673 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.addresses.normalize",
+ "commandVersion": 1,
+ "title": "Adres yazılışlarını düzelt",
+ "note": "ADR 0647 §2. Bağımsız başvuru scripts/fixtures/address_normalize_cases.py: gruplar denetimin (address_check_command_cases.py, geocode_cases.py), seçim ve yazma ADR'nin kuralıyla; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Adresler",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "addressLocators": [
+    {
+     "id": "adres-1",
+     "name": "Numarataj",
+     "doors": {
+      "layer": "kapi",
+      "street": "YOL_ADI",
+      "door": "KAPI_NO",
+      "neighbourhood": "MAHALLE",
+      "district": "ILCE",
+      "code": "UAVT"
+     },
+     "streets": {
+      "layer": "yol",
+      "name": "YOL_ADI"
+     },
+     "areas": [
+      {
+       "layer": "mahalle",
+       "level": "neighbourhood",
+       "name": "AD"
+      }
+     ],
+     "minScore": 85,
+     "reach": 100.0
+    },
+    {
+     "id": "adres-2",
+     "name": "Yalnız kapılar",
+     "doors": {
+      "layer": "kapi2",
+      "street": "YOL",
+      "door": "NO"
+     },
+     "minScore": 85,
+     "reach": 100.0
+    }
+   ]
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi2",
+    "name": "Kapı 2",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol orta hattı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mahalle",
+    "name": "Mahalle",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Atatürk Bulvarı",
+     "KAPI_NO": "12",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1001"
+    },
+    "p": {
+     "x": 500010.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "ATATÜRK BULVARI",
+     "KAPI_NO": "14",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1002"
+    },
+    "p": {
+     "x": 500020.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Atatürk Blv.",
+     "KAPI_NO": "16",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1003"
+    },
+    "p": {
+     "x": 500030.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Atatürk Bulvarı",
+     "KAPI_NO": "12",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1004"
+    },
+    "p": {
+     "x": 500040.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+     "KAPI_NO": "3",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1001"
+    },
+    "p": {
+     "x": 500050.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+     "KAPI_NO": "5",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya"
+    },
+    "p": {
+     "x": 500060.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+     "KAPI_NO": "7",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya",
+     "UAVT": "1006"
+    },
+    "p": {
+     "x": 500070.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "",
+     "KAPI_NO": "9",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya"
+    },
+    "p": {
+     "x": 500080.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Tunalı Hilmi Cd.",
+     "KAPI_NO": "",
+     "MAHALLE": "Kızılay",
+     "ILCE": "Çankaya"
+    },
+    "p": {
+     "x": 500090.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "kapi",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "b": {
+     "x": 500005.0,
+     "y": 4400000.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 11,
+    "layerId": "yol",
+    "attrs": {
+     "YOL_ADI": "Atatürk Bulvarı"
+    },
+    "pts": [
+     {
+      "x": 500005.0,
+      "y": 4400005.0
+     },
+     {
+      "x": 500095.0,
+      "y": 4400005.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 12,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500005.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500095.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "yol",
+    "attrs": {
+     "YOL_ADI": "Esat Cd."
+    },
+    "p": {
+     "x": 500050.0,
+     "y": 4400030.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 14,
+    "layerId": "yol",
+    "attrs": {
+     "YOL_ADI": "Esat Caddesi"
+    },
+    "pts": [
+     {
+      "x": 500005.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500095.0,
+      "y": 4400040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 15,
+    "layerId": "mahalle",
+    "attrs": {
+     "AD": "Kızılay Mahallesi"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4400050.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4400050.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "mahalle",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4400050.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4400050.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "mahalle",
+    "attrs": {
+     "AD": "Bahçelievler"
+    },
+    "p": {
+     "x": 500150.0,
+     "y": 4400000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 18,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Esat Cd.",
+     "KAPI_NO": "2",
+     "MAHALLE": "KIZILAY Mah.",
+     "ILCE": "ÇANKAYA"
+    },
+    "p": {
+     "x": 500095.0,
+     "y": 4400010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 19,
+    "layerId": "kapi",
+    "attrs": {
+     "YOL_ADI": "Esat Cd.",
+     "KAPI_NO": "4",
+     "MAHALLE": "Kızılay Mahallesi",
+     "ILCE": " Çankaya "
+    },
+    "p": {
+     "x": 500096.0,
+     "y": 4400010.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Yollar: her grup en çok yazılanına",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Atatürk Bulvarı",
+         "from": [
+          "ATATÜRK BULVARI",
+          "Atatürk Blv."
+         ],
+         "doors": 2
+        },
+        {
+         "to": "Gazi Mustafa Kemal Caddesi",
+         "from": [
+          "Gazi Mustafa Kemal Cd."
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 3,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "16",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1003"
+        },
+        "p": {
+         "x": 500030.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Adres yazılışlarını düzelt",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "ATATÜRK BULVARI",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "16",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1003"
+        },
+        "p": {
+         "x": 500030.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol, adıyla: aynı sonuç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "street"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Atatürk Bulvarı",
+         "from": [
+          "ATATÜRK BULVARI",
+          "Atatürk Blv."
+         ],
+         "doors": 2
+        },
+        {
+         "to": "Gazi Mustafa Kemal Caddesi",
+         "from": [
+          "Gazi Mustafa Kemal Cd."
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 3,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "16",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1003"
+        },
+        "p": {
+         "x": 500030.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tercih edilen yazılış seçilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefer": [
+       "Atatürk Blv.",
+       "Gazi Mustafa Kemal Cd."
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Atatürk Blv.",
+         "from": [
+          "Atatürk Bulvarı",
+          "ATATÜRK BULVARI"
+         ],
+         "doors": 3
+        },
+        {
+         "to": "Gazi Mustafa Kemal Cd.",
+         "from": [
+          "Gazi Mustafa Kemal Caddesi"
+         ],
+         "doors": 2
+        }
+       ],
+       "written": 5,
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500010.0,
+         "y": 4400010.0
+        }
+       },
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1004"
+        },
+        "p": {
+         "x": 500040.0,
+         "y": 4400010.0
+        }
+       },
+       "6": {
+        "kind": "point",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+         "KAPI_NO": "5",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500060.0,
+         "y": 4400010.0
+        }
+       },
+       "7": {
+        "kind": "point",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+         "KAPI_NO": "7",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1006"
+        },
+        "p": {
+         "x": 500070.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grubun yazmadığı tercih yok sayılır, en çok yazılan seçilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefer": [
+       "Gazi Bulvarı"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Atatürk Bulvarı",
+         "from": [
+          "ATATÜRK BULVARI",
+          "Atatürk Blv."
+         ],
+         "doors": 2
+        },
+        {
+         "to": "Gazi Mustafa Kemal Caddesi",
+         "from": [
+          "Gazi Mustafa Kemal Cd."
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 3,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "16",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1003"
+        },
+        "p": {
+         "x": 500030.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tercihin baştaki ve sondaki boşluğu yok sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefer": [
+       "  Atatürk Blv. "
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Atatürk Blv.",
+         "from": [
+          "Atatürk Bulvarı",
+          "ATATÜRK BULVARI"
+         ],
+         "doors": 3
+        },
+        {
+         "to": "Gazi Mustafa Kemal Caddesi",
+         "from": [
+          "Gazi Mustafa Kemal Cd."
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 4,
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500010.0,
+         "y": 4400010.0
+        }
+       },
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1004"
+        },
+        "p": {
+         "x": 500040.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Mahalleler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "neighbourhood"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "neighbourhood",
+       "groups": [
+        {
+         "to": "Kızılay",
+         "from": [
+          "KIZILAY Mah.",
+          "Kızılay Mahallesi"
+         ],
+         "doors": 2
+        }
+       ],
+       "written": 2,
+       "uids": [
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "18": {
+        "kind": "point",
+        "id": 18,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Esat Cd.",
+         "KAPI_NO": "2",
+         "MAHALLE": "Kızılay",
+         "ILCE": "ÇANKAYA"
+        },
+        "p": {
+         "x": 500095.0,
+         "y": 4400010.0
+        }
+       },
+       "19": {
+        "kind": "point",
+        "id": 19,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Esat Cd.",
+         "KAPI_NO": "4",
+         "MAHALLE": "Kızılay",
+         "ILCE": " Çankaya "
+        },
+        "p": {
+         "x": 500096.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Mahalle, tercihle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "neighbourhood",
+      "prefer": [
+       "Kızılay Mahallesi"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "neighbourhood",
+       "groups": [
+        {
+         "to": "Kızılay Mahallesi",
+         "from": [
+          "Kızılay",
+          "KIZILAY Mah."
+         ],
+         "doors": 8
+        }
+       ],
+       "written": 8,
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:18"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500010.0,
+         "y": 4400010.0
+        }
+       },
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "ATATÜRK BULVARI",
+         "KAPI_NO": "14",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1002"
+        },
+        "p": {
+         "x": 500020.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Blv.",
+         "KAPI_NO": "16",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1003"
+        },
+        "p": {
+         "x": 500030.0,
+         "y": 4400010.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Atatürk Bulvarı",
+         "KAPI_NO": "12",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1004"
+        },
+        "p": {
+         "x": 500040.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1001"
+        },
+        "p": {
+         "x": 500050.0,
+         "y": 4400010.0
+        }
+       },
+       "6": {
+        "kind": "point",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "5",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500060.0,
+         "y": 4400010.0
+        }
+       },
+       "7": {
+        "kind": "point",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+         "KAPI_NO": "7",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "Çankaya",
+         "UAVT": "1006"
+        },
+        "p": {
+         "x": 500070.0,
+         "y": 4400010.0
+        }
+       },
+       "18": {
+        "kind": "point",
+        "id": 18,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Esat Cd.",
+         "KAPI_NO": "2",
+         "MAHALLE": "Kızılay Mahallesi",
+         "ILCE": "ÇANKAYA"
+        },
+        "p": {
+         "x": 500095.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlçeler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "district"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "district",
+       "groups": [
+        {
+         "to": "Çankaya",
+         "from": [
+          "ÇANKAYA"
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 1,
+       "uids": [
+        "$uidOf:18"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "18": {
+        "kind": "point",
+        "id": 18,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Esat Cd.",
+         "KAPI_NO": "2",
+         "MAHALLE": "KIZILAY Mah.",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500095.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı cevabı verir, yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "what": "district"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "district",
+       "groups": [
+        {
+         "to": "Çankaya",
+         "from": [
+          "ÇANKAYA"
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 1,
+       "uids": [
+        "$uidOf:18"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşit yazılış: önce yazılan seçilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Okul Sk.",
+         "from": [
+          "Okul Sokak"
+         ],
+         "doors": 2
+        }
+       ],
+       "written": 2,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Okul Sk.",
+         "KAPI_NO": "2",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Okul Sk.",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Okul Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Okul Sokak",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Okul Sokak",
+       "KAPI_NO": "3",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Okul Sk.",
+       "KAPI_NO": "4",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Boşluk farkı yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [
+        {
+         "to": "Lale Sk.",
+         "from": [
+          "LALE SK."
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 1,
+       "uids": [
+        "$uidOf:3"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Lale Sk.",
+         "KAPI_NO": "3",
+         "MAHALLE": "Kızılay",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "  Lale Sk. ",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "LALE SK.",
+       "KAPI_NO": "3",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Temiz veri: hiçbir şey yazılmaz, adım açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [],
+       "written": 0,
+       "uids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "İki mahalledeki aynı ad iki yoldur: yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [],
+       "written": 0,
+       "uids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Okul Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "OKUL SOKAK",
+       "KAPI_NO": "1",
+       "MAHALLE": "Bahçelievler",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "İlçe üç biçimde: hepsi en çok yazılana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "district"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "district",
+       "groups": [
+        {
+         "to": "Çankaya",
+         "from": [
+          "ÇANKAYA",
+          "çankaya"
+         ],
+         "doors": 2
+        }
+       ],
+       "written": 2,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:5"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gül Sk.",
+         "KAPI_NO": "1",
+         "MAHALLE": "YENİMAHALLE Mahallesi",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Lale Sk.",
+         "KAPI_NO": "3",
+         "ILCE": "Çankaya"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Yenimahalle",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gül Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "YENİMAHALLE Mahallesi",
+       "ILCE": "ÇANKAYA"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Yenimahalle",
+       "ILCE": "Keçiören"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gül Sk.",
+       "KAPI_NO": "2",
+       "MAHALLE": "Yeni Mahalle",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "3",
+       "ILCE": "çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Mahalle iki ilçede: yalnız kendi ilçesindekiler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "what": "neighbourhood"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "neighbourhood",
+       "groups": [
+        {
+         "to": "Yenimahalle",
+         "from": [
+          "YENİMAHALLE Mahallesi"
+         ],
+         "doors": 1
+        }
+       ],
+       "written": 1,
+       "uids": [
+        "$uidOf:2"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi",
+        "attrs": {
+         "YOL_ADI": "Gül Sk.",
+         "KAPI_NO": "1",
+         "MAHALLE": "Yenimahalle",
+         "ILCE": "ÇANKAYA"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Yenimahalle",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gül Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "YENİMAHALLE Mahallesi",
+       "ILCE": "ÇANKAYA"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Yenimahalle",
+       "ILCE": "Keçiören"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gül Sk.",
+       "KAPI_NO": "2",
+       "MAHALLE": "Yeni Mahalle",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Lale Sk.",
+       "KAPI_NO": "3",
+       "ILCE": "çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "İkinci adres verisi: başka alan adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "locator": "adres-2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-2",
+       "what": "street",
+       "groups": [
+        {
+         "to": "İnönü Sk.",
+         "from": [
+          "İNÖNÜ SOKAK",
+          "İnönü Sokağı",
+          "inönü sk"
+         ],
+         "doors": 3
+        }
+       ],
+       "written": 3,
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "kapi2",
+        "attrs": {
+         "YOL": "İnönü Sk.",
+         "NO": "1"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "kapi2",
+        "attrs": {
+         "YOL": "İnönü Sk.",
+         "NO": "2"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "kapi2",
+        "attrs": {
+         "YOL": "İnönü Sk.",
+         "NO": "3"
+        },
+        "p": {
+         "x": 500000.0,
+         "y": 4400010.0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi2",
+      "attrs": {
+       "YOL": "İnönü Sk.",
+       "NO": "1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi2",
+      "attrs": {
+       "YOL": "İNÖNÜ SOKAK",
+       "NO": "1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi2",
+      "attrs": {
+       "YOL": "İnönü Sokağı",
+       "NO": "2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi2",
+      "attrs": {
+       "YOL": "inönü sk",
+       "NO": "3"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Altı yol: hepsi düzelir (sınır yok)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "locator": "adres-1",
+       "what": "street",
+       "groups": [],
+       "written": 0,
+       "uids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 1",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 1",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.5,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 2",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500001.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 2",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500001.5,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 3",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500002.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 3",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500002.5,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 4",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500003.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 4",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500003.5,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 5",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500004.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 5",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500004.5,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Sokak 6",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500005.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "SOKAK 6",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500005.5,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Mahalle alanı olmayan adres verisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "locator": "adres-2",
+      "what": "neighbourhood"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Yalnız kapılar” adres verisinin kapılarında mahalle alanı yok; önce Adres verisi penceresinde onu seçin.",
+       "path": "what"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlçe alanı olmayan adres verisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "locator": "adres-2",
+      "what": "district"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Yalnız kapılar” adres verisinin kapılarında ilçe alanı yok; önce Adres verisi penceresinde onu seçin.",
+       "path": "what"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş tercih",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefer": [
+       "Atatürk Bulvarı",
+       "  "
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Tercih edilen yazılış boş olamaz.",
+       "path": "prefer[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapı katmanı kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kapı” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "locator"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "12",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1001"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "ATATÜRK BULVARI",
+       "KAPI_NO": "14",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1002"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Blv.",
+       "KAPI_NO": "16",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1003"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "12",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1004"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+       "KAPI_NO": "3",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1001"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+       "KAPI_NO": "5",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+       "KAPI_NO": "7",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1006"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "",
+       "KAPI_NO": "9",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Tunalı Hilmi Cd.",
+       "KAPI_NO": "",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "kapi",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "b": {
+       "x": 500005.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 11,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı"
+      },
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400005.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400005.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 12,
+      "layerId": "yol",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400020.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Esat Cd."
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400030.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 14,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Esat Caddesi"
+      },
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 15,
+      "layerId": "mahalle",
+      "attrs": {
+       "AD": "Kızılay Mahallesi"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400050.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 16,
+      "layerId": "mahalle",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400050.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "mahalle",
+      "attrs": {
+       "AD": "Bahçelievler"
+      },
+      "p": {
+       "x": 500150.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Esat Cd.",
+       "KAPI_NO": "2",
+       "MAHALLE": "KIZILAY Mah.",
+       "ILCE": "ÇANKAYA"
+      },
+      "p": {
+       "x": 500095.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Esat Cd.",
+       "KAPI_NO": "4",
+       "MAHALLE": "Kızılay Mahallesi",
+       "ILCE": " Çankaya "
+      },
+      "p": {
+       "x": 500096.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Olmayan adres verisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "locator": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_locator",
+       "message": "Projede “yok” kimlikli adres verisi yok.",
+       "path": "locator"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adres verisi olmayan proje",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_address_data",
+       "message": "Projede adres verisi yok; önce Adres verisi penceresinde ya da cad.addresses.define ile tanımlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": []
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "12",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1001"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "ATATÜRK BULVARI",
+       "KAPI_NO": "14",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1002"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Blv.",
+       "KAPI_NO": "16",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1003"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı",
+       "KAPI_NO": "12",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1004"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Cd.",
+       "KAPI_NO": "3",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1001"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+       "KAPI_NO": "5",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Gazi Mustafa Kemal Caddesi",
+       "KAPI_NO": "7",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya",
+       "UAVT": "1006"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "",
+       "KAPI_NO": "9",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Tunalı Hilmi Cd.",
+       "KAPI_NO": "",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "kapi",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "b": {
+       "x": 500005.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 11,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Atatürk Bulvarı"
+      },
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400005.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400005.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 12,
+      "layerId": "yol",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400020.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Esat Cd."
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400030.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 14,
+      "layerId": "yol",
+      "attrs": {
+       "YOL_ADI": "Esat Caddesi"
+      },
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4400040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 15,
+      "layerId": "mahalle",
+      "attrs": {
+       "AD": "Kızılay Mahallesi"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400050.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 16,
+      "layerId": "mahalle",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400050.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "mahalle",
+      "attrs": {
+       "AD": "Bahçelievler"
+      },
+      "p": {
+       "x": 500150.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Esat Cd.",
+       "KAPI_NO": "2",
+       "MAHALLE": "KIZILAY Mah.",
+       "ILCE": "ÇANKAYA"
+      },
+      "p": {
+       "x": 500095.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Esat Cd.",
+       "KAPI_NO": "4",
+       "MAHALLE": "Kızılay Mahallesi",
+       "ILCE": " Çankaya "
+      },
+      "p": {
+       "x": 500096.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "expectedRevision": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizim değişmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alanın kuralına uymayan yazılış: hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "prefer": [
+       "KISA SOKAĞI"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Yol adı” alanı en çok 9 karakter alır; 11 karakter verildi.",
+       "path": "what.YOL_ADI"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "addressLocators": [
+      {
+       "id": "adres-1",
+       "name": "Numarataj",
+       "doors": {
+        "layer": "kapi",
+        "street": "YOL_ADI",
+        "door": "KAPI_NO",
+        "neighbourhood": "MAHALLE",
+        "district": "ILCE",
+        "code": "UAVT"
+       },
+       "streets": {
+        "layer": "yol",
+        "name": "YOL_ADI"
+       },
+       "areas": [
+        {
+         "layer": "mahalle",
+         "level": "neighbourhood",
+         "name": "AD"
+        }
+       ],
+       "minScore": 85,
+       "reach": 100.0
+      },
+      {
+       "id": "adres-2",
+       "name": "Yalnız kapılar",
+       "doors": {
+        "layer": "kapi2",
+        "street": "YOL",
+        "door": "NO"
+       },
+       "minScore": 85,
+       "reach": 100.0
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "YOL_ADI",
+        "alias": "Yol adı",
+        "kind": "text",
+        "length": 9
+       }
+      ]
+     },
+     {
+      "id": "kapi2",
+      "name": "Kapı 2",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Kısa Sk.",
+       "KAPI_NO": "1",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "Kısa Sk.",
+       "KAPI_NO": "2",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {
+       "YOL_ADI": "KISA SOKAĞI",
+       "KAPI_NO": "3",
+       "MAHALLE": "Kızılay",
+       "ILCE": "Çankaya"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  }
+ ]
+}

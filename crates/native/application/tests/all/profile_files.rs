@@ -173,17 +173,33 @@ fn a_mapping_is_written_beside_the_profiles() {
 
 /// The park project with `n` trees at release 1 (the migration case's layers, their values spread over the codes).
 fn park(n: usize) -> Document {
+    park_named(n, false)
+}
+
+/// [`park`]; `institution`: the layer and the fields under the names of fixtures/profiles/v1/files/park-bahce-kurum2,
+/// the kinds coded as it codes them (docs/adr/0647 §4).
+fn park_named(n: usize, institution: bool) -> Document {
     let turs = ["Çınar", "Meşe", "Palmiye", "Akasya"];
     let sulamas = ["Damla", "Yağmurlama", "Yok"];
     let trees: Vec<Value> = (0..n)
         .map(|i| {
             let yas = if i % 50 == 0 { "on beş".to_owned() } else { (i % 200).to_string() };
+            let attrs = if institution {
+                let tur = ["CN", "MS", "PL", "Akasya"][i % 4];
+                json!({ "NO": format!("A-{i}"), "TUR_KOD": tur, "Yas": yas, "Sulama": sulamas[i % 3] })
+            } else {
+                json!({ "No": format!("A-{i}"), "Tur": turs[i % 4], "Yas": yas, "Sulama": sulamas[i % 3] })
+            };
             json!({
-                "kind": "point", "id": i + 1, "layerId": "agac",
-                "attrs": { "No": format!("A-{i}"), "Tur": turs[i % 4], "Yas": yas, "Sulama": sulamas[i % 3] },
+                "kind": "point", "id": i + 1, "layerId": "agac", "attrs": attrs,
                 "p": { "x": (i % 1000) as f64, "y": (i / 1000) as f64 } })
         })
         .collect();
+    let (layer, no, tur) = if institution {
+        ("Kurum ağaçları", "NO", "TUR_KOD")
+    } else {
+        ("Ağaçlar", "No", "Tur")
+    };
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "Park",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
@@ -191,10 +207,10 @@ fn park(n: usize) -> Document {
         "origin": { "x": 0.0, "y": 0.0 },
         "layers": [{ "id": "peyzaj", "name": "Peyzaj", "type": "group", "visible": true, "locked": false,
                      "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
-                     "children": [{ "id": "agac", "name": "Ağaçlar", "type": "layer", "visible": true, "locked": false,
+                     "children": [{ "id": "agac", "name": layer, "type": "layer", "visible": true, "locked": false,
                          "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
                          "children": [], "fields": [
-                             { "name": "No", "kind": "text" }, { "name": "Tur", "kind": "text" },
+                             { "name": no, "kind": "text" }, { "name": tur, "kind": "text" },
                              { "name": "Yas", "kind": "text" }, { "name": "Sulama", "kind": "text" },
                              { "name": "Alan", "kind": "text" }] }] }],
         "activeLayer": "agac",
@@ -224,6 +240,8 @@ fn migrate_timing() {
         to: None,
         drawing: None,
         expected_revision: None,
+        mapping: None,
+        mapping_name: None,
     };
     let mut d = park(n);
     let t = std::time::Instant::now();
@@ -244,5 +262,50 @@ fn migrate_timing() {
         output.objects,
         output.losses.len()
     );
+    assert!(planned.as_millis() < 8000 && written.as_millis() < 8000);
+}
+
+/// `cargo test --release -p kentos-native-application --test all profile_files::mapped_migrate_timing -- --ignored --nocapture`
+/// (docs/adr/0647 Ölçümler): the whole chain read through the institution's mapping on 100 000 trees.
+#[test]
+#[ignore = "a timing, run on its own in release"]
+fn mapped_migrate_timing() {
+    use kentos_native_application::profile_files::migrate;
+    let n: usize = std::env::var("KENTOS_PERF_OBJECTS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(100_000);
+    let kurum = profile("park-bahce.profil.json");
+    let mapping: kentos_commands::ProfileMapping =
+        serde_json::from_value(fixture("park-bahce-kurum2.eslem.json")).unwrap();
+    let input = || kentos_commands::ProfilesMigrate {
+        name: None,
+        profile: Some(kurum.clone()),
+        from: 1,
+        to: None,
+        drawing: None,
+        expected_revision: None,
+        mapping: Some(mapping.clone()),
+        mapping_name: None,
+    };
+    let mut d = park_named(n, true);
+    let t = std::time::Instant::now();
+    let CommandResult::Completed { output, .. } = migrate::plan_in(&d, &input()) else {
+        panic!("not planned");
+    };
+    let planned = t.elapsed();
+    assert!(output.changed);
+    let t = std::time::Instant::now();
+    let CommandResult::Completed { output, .. } =
+        migrate::execute(&mut ExecutionContext::new(&mut d), input())
+    else {
+        panic!("not migrated");
+    };
+    let written = t.elapsed();
+    println!(
+        "{n} nesne, eşlemeyle: plan {planned:?}, yazma {written:?}; {} nesneye yazıldı",
+        output.objects
+    );
+    assert_eq!(output.mapping.as_deref(), Some("park-bahce-kurum2"));
     assert!(planned.as_millis() < 8000 && written.as_millis() < 8000);
 }

@@ -639,6 +639,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.time.version"
             // A duplicate's last policy ends or changes the observation there (docs/adr/0646 §4).
             | "cad.sensors.ingest"
+            // It writes over the doors' names (docs/adr/0647 §2).
+            | "cad.addresses.normalize"
             // The adjustment moves the drawing's points of its new points' names (docs/adr/0622 §9).
             | "cad.survey.adjust"
             | "cad.entities.break"

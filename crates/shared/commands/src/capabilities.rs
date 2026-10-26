@@ -2505,8 +2505,10 @@ const ENTRIES: &[Entry] = &[
                 "invalid_profile",
                 "invalid_migration",
                 "migration_gap",
+                "unknown_mapping",
+                "invalid_profile_mapping",
             ],
-            &["layer_refused"],
+            &["layer_refused", "domain_exists"],
             REVISION,
         ],
         warnings: &[
@@ -3111,6 +3113,21 @@ const ENTRIES: &[Entry] = &[
         id: "cad.addresses.check",
         refusals: &[&["invalid_limit", "no_address_data", "unknown_locator"]],
         warnings: &[],
+        targets: none,
+    },
+    // Adres yazılışlarını düzelt (docs/adr/0647 §2).
+    Entry {
+        id: "cad.addresses.normalize",
+        refusals: &[&[
+            "invalid_revision",
+            "revision_conflict",
+            "no_address_data",
+            "unknown_locator",
+            "invalid_input",
+            "layer_locked",
+            "invalid_attribute",
+        ]],
+        warnings: &["layer_hidden"],
         targets: none,
     },
     Entry {

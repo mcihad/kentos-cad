@@ -17,4 +17,8 @@ losses: Array<MigrationLoss>,
 /**
  * Objects written, once each.
  */
-objects: number, revision: string, };
+objects: number, 
+/**
+ * The mapping the steps were read through.
+ */
+mapping?: string, revision: string, };

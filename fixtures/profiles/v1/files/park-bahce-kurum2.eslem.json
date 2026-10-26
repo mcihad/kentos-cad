@@ -1,0 +1,49 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "park-bahce-kurum2",
+  "title": "Kurumun ağaçları",
+  "profile": "park-bahce",
+  "classes": [
+    {
+      "class": "agac",
+      "layer": [
+        "Peyzaj",
+        "Kurum ağaçları"
+      ],
+      "fields": [
+        {
+          "profile": "AgacNo",
+          "name": "NO"
+        },
+        {
+          "profile": "Tur",
+          "name": "TUR_KOD"
+        }
+      ],
+      "codes": [
+        {
+          "field": "Tur",
+          "codes": [
+            {
+              "profile": "cinar",
+              "name": "CN"
+            },
+            {
+              "profile": "mese",
+              "name": "MS"
+            },
+            {
+              "profile": "palmiye",
+              "name": "PL"
+            },
+            {
+              "profile": "diger",
+              "name": "DG"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

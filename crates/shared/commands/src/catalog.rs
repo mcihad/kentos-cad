@@ -5486,6 +5486,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Projenin adres verisini (locator: kimliği; verilmezse projenin ilki) denetler; çizimi değiştirmez. \
                       Dizinin tuttuklarını sayar (kapılar, yollar, yol çizgileri, mahalleler, bölgeler), dışarıda kalanları söyler (nokta olmayan kapı, yol adı olmayan kapı, kapı numarası okunmayan kapı, çizgi olmayan yol, adsız çizgi ve bölge) \
                       ve üç listeyi verir: aynı yolda aynı kapı numarası (repeats), birden çok kapıdaki adres kodu (codes) ve kapıları yolun adını birden çok biçimde yazan yollar (spellings: her yazılış ve onu yazan kapı sayısı, en çok yazılan önce; adresin normalleştirilmesinin bulgusu). \
+                      Mahalle ve ilçe adlarının yazılışları da (neighbourhoodSpellings: mahallenin ve ilçenin anahtarıyla; districtSpellings: ilçenin anahtarıyla; within mahallenin ilçesi); cad.addresses.normalize onları tek yazılışa getirir. \
                       Yollar adın Türkçe katlanmış biçimi, mahalle ve ilçeyle gruplanır (“Atatürk Cad.” ile “ATATÜRK CADDESİ” bir yoldur). \
                       Her liste önce sayısını, sonra ilk kapılarına göre ilk limit tanesini (1–100, varsayılan 100) nesnelerin kalıcı kimlikleriyle verir. \
                       Retler: invalid_limit, no_address_data, unknown_locator."
@@ -5511,6 +5512,42 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Numarataj'ı denetle, her listeden ilk 20".into(),
                     input: json!({ "locator": "adres-1", "limit": 20 }),
+                    output: None,
+                },
+            ],
+        },
+        // Adres yazılışlarını düzelt (docs/adr/0647 §2), held together by fixtures/commands/v1/cad.addresses.normalize.json.
+        CommandDescriptor {
+            id: crate::CAD_ADDRESSES_NORMALIZE.into(),
+            version: crate::CAD_ADDRESSES_NORMALIZE_VERSION,
+            title: "Adres yazılışlarını düzelt".into(),
+            summary: "Projenin adres verisinin (locator; verilmezse ilki) kapılarının yol (what: street), mahalle (neighbourhood) ya da ilçe (district) adını her grupta tek yazılışa getirir; tek geri alma adımıdır (“Adres yazılışlarını düzelt”). \
+                      Gruplar cad.addresses.check'inkilerdir: yolun kapıları; mahallenin ve ilçenin anahtarıyla gruplanan kapılar; ilçenin anahtarıyla gruplanan kapılar; yalnız adı birden çok biçimde yazılanlar. \
+                      Her grup, prefer'deki yazılışlardan yazdığı ilkini, yoksa en çok yazılanını (eşitlikte önce yazılan) alır; kırpılmış adı başka olan her kapının kapı katmanındaki alanına o yazılır, alanın kuralından geçerek. \
+                      Cevap grupları (to, from, doors), yazılan kapı sayısını ve kalıcı kimliklerini verir; yazılacak kapı yoksa adım açılmaz. \
+                      Retler: invalid_revision, revision_conflict, no_address_data, unknown_locator, invalid_input (kapılarda o alan yok, boş tercih), layer_locked, alanın kuralına uymayan yazılış (invalid_attribute)."
+                .into(),
+            aliases: vec!["adresduzelt".into(), "yazilisduzelt".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::AddressesNormalize>(),
+            output: schema::<crate::AddressesNormalized>(),
+            plan: Some(schema::<crate::AddressesNormalized>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Yolların adlarını en çok yazılana getir".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Mahalle adlarında “Kızılay Mahallesi” yazılışını tercih et".into(),
+                    input: json!({ "what": "neighbourhood", "prefer": ["Kızılay Mahallesi"] }),
                     output: None,
                 },
             ],
@@ -10571,6 +10608,10 @@ mod tests {
                     }
                     crate::CAD_ADDRESSES_CHECK => {
                         serde_json::from_value::<crate::AddressesCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ADDRESSES_NORMALIZE => {
+                        serde_json::from_value::<crate::AddressesNormalize>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_TOPOLOGY_CHECK => {
                         serde_json::from_value::<crate::TopologyCheck>(e.input.clone()).map(|_| ())

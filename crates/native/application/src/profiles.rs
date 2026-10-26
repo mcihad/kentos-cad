@@ -99,6 +99,33 @@ pub(crate) fn resolve(
     drawing: Option<&str>,
 ) -> Result<Resolved, Stop> {
     let profile = profile_only(name, given, drawing)?;
+    let Some(m) = mapping_for(&profile, mapping, mapping_name, drawing)? else {
+        return Ok(Resolved {
+            profile,
+            mapping: None,
+        });
+    };
+    let through = through(&profile, &m);
+    if let Some(why) = profile_problem(&through) {
+        return Err(fail(
+            codes::INVALID_PROFILE_MAPPING,
+            format!("Eşleme geçersiz: profil eşlemeyle okununca tutmuyor: {why}"),
+            "mapping",
+        ));
+    }
+    Ok(Resolved {
+        profile: through,
+        mapping: Some(m.name),
+    })
+}
+
+/// The mapping of a command's input (`mapping`, else the project's `mapping_name`), held for `profile`; none without.
+pub(crate) fn mapping_for(
+    profile: &DataProfile,
+    mapping: Option<&ProfileMapping>,
+    mapping_name: Option<&str>,
+    drawing: Option<&str>,
+) -> Result<Option<ProfileMapping>, Stop> {
     let found: Option<ProfileMapping> = match (mapping, mapping_name) {
         (Some(m), _) => Some(m.clone()),
         (None, Some(n)) => match crate::profile_files::load_mapping(drawing, n) {
@@ -129,31 +156,16 @@ pub(crate) fn resolve(
         },
         (None, None) => None,
     };
-    let Some(m) = found else {
-        return Ok(Resolved {
-            profile,
-            mapping: None,
-        });
-    };
-    if let Some(why) = mapping_problem(&m, &profile) {
+    if let Some(m) = &found
+        && let Some(why) = mapping_problem(m, profile)
+    {
         return Err(fail(
             codes::INVALID_PROFILE_MAPPING,
             format!("Eşleme geçersiz: {why}"),
             "mapping",
         ));
     }
-    let through = through(&profile, &m);
-    if let Some(why) = profile_problem(&through) {
-        return Err(fail(
-            codes::INVALID_PROFILE_MAPPING,
-            format!("Eşleme geçersiz: profil eşlemeyle okununca tutmuyor: {why}"),
-            "mapping",
-        ));
-    }
-    Ok(Resolved {
-        profile: through,
-        mapping: Some(m.name),
-    })
+    Ok(found)
 }
 
 /// Where a class's layer path leads in the tree.

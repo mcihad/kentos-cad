@@ -6,4 +6,4 @@ import type { ValueMap } from "./ValueMap";
 /**
  * A step of a migration.
  */
-export type MigrationStep = { "kind": "renameLayer", layer: Array<string>, to: string, } | { "kind": "renameField", layer: Array<string>, from: string, to: string, } | { "kind": "changeFieldType", layer: Array<string>, field: LayerField, onFail: ConvertFail, } | { "kind": "mapValues", layer: Array<string>, field: string, map: Array<ValueMap>, } | { "kind": "retireCode", domain: string, code: string, replaceWith?: string | null, };
+export type MigrationStep = { "kind": "renameLayer", layer: Array<string>, to: string, } | { "kind": "renameField", layer: Array<string>, from: string, to: string, } | { "kind": "changeFieldType", layer: Array<string>, field: LayerField, onFail: ConvertFail, } | { "kind": "mapValues", layer: Array<string>, field: string, map: Array<ValueMap>, } | { "kind": "retireCode", domain: string, code: string, replaceWith?: string | null, } | { "kind": "renameDomain", domain: string, to: string, };

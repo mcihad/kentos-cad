@@ -9,6 +9,9 @@ their expectations built here, without KentOS code: the locator is built by the 
 - codes: an address code on more than one door;
 - spellings: a street whose doors write its name in more than one way: each way and how many doors write it, the most
   written first, on a tie the one written first;
+- (docs/adr/0647 §1) neighbourhood and district spellings: doors grouped by the neighbourhood's key (its words without
+  the MAHALLE and KÖY tags) and the district's, or by the district's key alone; a group whose doors write the name in
+  more than one way, by the same rule, `within` the district its first door writes (none for a district);
 - each list's count, then its first `limit` by their first door; the doors by their objects' persistent ids.
 
 The desktop (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.
@@ -93,6 +96,9 @@ ENTITIES = [
     {"kind": "polygon", "id": 15, "layerId": "mahalle", "attrs": {"AD": "Kızılay Mahallesi"}, "pts": square(0, 0, 100, 50)},
     {"kind": "polygon", "id": 16, "layerId": "mahalle", "attrs": {}, "pts": square(200, 0, 300, 50)},
     {"kind": "point", "id": 17, "layerId": "mahalle", "attrs": {"AD": "Bahçelievler"}, "p": {"x": X0 + 150, "y": Y0}},
+    # docs/adr/0647 §1: the neighbourhood and the district written otherwise.
+    door(18, "kapi", "Esat Cd.", "2", hood="KIZILAY Mah.", district="ÇANKAYA", x=95),
+    door(19, "kapi", "Esat Cd.", "4", hood="Kızılay Mahallesi", district=" Çankaya ", x=96),
 ]
 
 SETUP = {
@@ -161,6 +167,35 @@ def uid(setup, order):
     return f"$uidOf:{entities_of(setup)[order]['id']}"
 
 
+def name_spellings(loc, key_of, field, within_of):
+    """ADR 0647 §1: doors grouped by `key_of` (none: left out), each group whose doors write `field` in more than one
+    way; the groups by their first doors."""
+    groups = {}
+    for d in loc["doors"]:
+        k = key_of(d)
+        if k is None:
+            continue
+        groups.setdefault(k, []).append(d)
+    out = []
+    for doors in groups.values():
+        written = []
+        for d in doors:
+            t = d["texts"][field]
+            for w in written:
+                if w[0] == t:
+                    w[1] += 1
+                    break
+            else:
+                written.append([t, 1, d["order"]])
+        if len(written) < 2:
+            continue
+        written.sort(key=lambda w: (-w[1], w[2]))
+        out.append({"within": within_of(doors[0]), "written": [{"text": t, "doors": n} for t, n, _ in written],
+                    "orders": sorted(d["order"] for d in doors)})
+    out.sort(key=lambda g: g["orders"][0])
+    return out
+
+
 def check(setup, locator, limit):
     sc = scene(setup, locator)
     loc = ref.build(sc)
@@ -205,6 +240,9 @@ def check(setup, locator, limit):
                           "written": [{"text": t, "doors": n} for t, n, _ in written],
                           "orders": sorted(loc["doors"][i]["order"] for i in g["doors"])})
     spellings.sort(key=lambda s: s["orders"][0])
+    hoods = name_spellings(loc, lambda d: (d["group"][1], d["group"][2]) if d["group"][1] else None, "neighbourhood",
+                           lambda d: d["texts"]["district"])
+    districts = name_spellings(loc, lambda d: d["group"][2] or None, "district", lambda d: "")
 
     def uids(orders):
         return [uid(setup, o) for o in orders]
@@ -231,6 +269,12 @@ def check(setup, locator, limit):
         "spelled": len(spellings),
         "spellings": [{"neighbourhood": s["neighbourhood"], "district": s["district"], "written": s["written"],
                        "uids": uids(s["orders"])} for s in spellings[:limit]],
+        "neighbourhoodsSpelled": len(hoods),
+        "neighbourhoodSpellings": [{"within": h["within"], "written": h["written"], "uids": uids(h["orders"])}
+                                   for h in hoods[:limit]],
+        "districtsSpelled": len(districts),
+        "districtSpellings": [{"within": h["within"], "written": h["written"], "uids": uids(h["orders"])}
+                              for h in districts[:limit]],
         "revision": "$current",
     }
 
@@ -331,6 +375,14 @@ def cases():
     left = [door(1, "kapi", "", "1", code="5"), door(2, "kapi", "Lale Sk.", "", code="5"),
             door(3, "kapi", "Lale Sk.", "1", code="5")]
     out.append(ok("Dışarıda kalan kapı listelere girmez", {}, setup=with_entities(left)))
+    # docs/adr/0647 §1: the same neighbourhood in two districts is two; a district written three ways.
+    names = [door(1, "kapi", "Lale Sk.", "1", hood="Yenimahalle", district="Çankaya"),
+             door(2, "kapi", "Gül Sk.", "1", hood="YENİMAHALLE Mahallesi", district="ÇANKAYA"),
+             door(3, "kapi", "Lale Sk.", "1", hood="Yenimahalle", district="Keçiören"),
+             door(4, "kapi", "Gül Sk.", "2", hood="Yeni Mahalle", district="Çankaya"),
+             door(5, "kapi", "Lale Sk.", "3", hood="", district="çankaya")]
+    out.append(ok("Mahalle ve ilçe yazılışları: iki ilçede aynı mahalle iki, ilçe üç biçimde", {},
+                  setup=with_entities(names)))
     # An empty drawing.
     out.append(ok("Boş çizim: sıfırlar", {}, setup=with_entities([])))
     # Many repeats cut at the limit, counted whole.

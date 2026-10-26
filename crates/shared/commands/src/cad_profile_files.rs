@@ -127,6 +127,9 @@ pub enum MigrationStep {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         replace_with: Option<String>,
     },
+    /// A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3).
+    #[serde(rename_all = "camelCase")]
+    RenameDomain { domain: String, to: String },
 }
 
 impl MigrationStep {
@@ -138,6 +141,7 @@ impl MigrationStep {
             Self::ChangeFieldType { .. } => "changeFieldType",
             Self::MapValues { .. } => "mapValues",
             Self::RetireCode { .. } => "retireCode",
+            Self::RenameDomain { .. } => "renameDomain",
         }
     }
 }
@@ -283,6 +287,15 @@ fn step_problem(s: &MigrationStep) -> Option<String> {
             }
             if replace_with.as_deref() == Some(code.as_str()) {
                 return Some("kod kendisiyle değiştirilemez.".into());
+            }
+            None
+        }
+        MigrationStep::RenameDomain { domain, to } => {
+            if blank(domain) || !plain_name(to) || domain.trim() == to {
+                return Some(
+                    "listenin eski kimliği dolu, yeni kimliği küçük harf, rakam ve “-” olmalı ve eskisinden farklı."
+                        .into(),
+                );
             }
             None
         }
@@ -834,6 +847,14 @@ pub struct ProfilesMigrate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    /// The institution's mapping the data is written with (docs/adr/0647 §4): each step is read through it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping: Option<ProfileMapping>,
+    /// The mapping by its name, from the project's `profiller` folder.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -921,6 +942,10 @@ pub struct ProfilesMigrated {
     /// Objects written, once each.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
+    /// The mapping the steps were read through.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mapping: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

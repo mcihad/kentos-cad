@@ -234,7 +234,7 @@ impl App {
         let migration = if release > 1 {
             match profile_files::migrate::plan_in(
                 &doc.model,
-                &migrate_input(&w.profile, w.from, drawing),
+                &migrate_input(&w.profile, w.mapping.clone(), w.from, drawing),
             ) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -385,7 +385,12 @@ impl App {
         let Some(w) = self.data_profile.as_ref() else {
             return false;
         };
-        let input = migrate_input(&w.profile, w.from, self.profile_drawing());
+        let input = migrate_input(
+            &w.profile,
+            w.mapping.clone(),
+            w.from,
+            self.profile_drawing(),
+        );
         if let Some(locked) = self.tree_locked() {
             self.warn(locked);
             return false;
@@ -771,7 +776,12 @@ fn apply_input(name: &str, mapping: Option<String>, drawing: Option<String>) -> 
     }
 }
 
-fn migrate_input(name: &str, from: u32, drawing: Option<String>) -> ProfilesMigrate {
+fn migrate_input(
+    name: &str,
+    mapping: Option<String>,
+    from: u32,
+    drawing: Option<String>,
+) -> ProfilesMigrate {
     ProfilesMigrate {
         name: Some(name.to_owned()),
         profile: None,
@@ -779,6 +789,8 @@ fn migrate_input(name: &str, from: u32, drawing: Option<String>) -> ProfilesMigr
         to: None,
         drawing,
         expected_revision: None,
+        mapping: None,
+        mapping_name: mapping,
     }
 }
 

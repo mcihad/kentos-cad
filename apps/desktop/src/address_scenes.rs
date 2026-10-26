@@ -8,7 +8,7 @@
 //! takes them in the dark and the light theme at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=adres-serit,adres-serit-cad,adres-ara,adres-belirsiz,adres-kaynak,adres-konumdan,adres-verisi,adres-saglayicilar,adres-islem,adres-eslendi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=adres-serit,adres-serit-cad,adres-ara,adres-belirsiz,adres-kaynak,adres-konumdan,adres-verisi,adres-yazilislar,adres-yazilislar-duzeltildi,adres-saglayicilar,adres-islem,adres-eslendi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -32,6 +32,17 @@ pub(crate) const ADDRESSES: &str = include_str!("../../../fixtures/interaction/v
 /// The scene's origin.
 const E: f64 = 500_000.0;
 const N: f64 = 4_400_000.0;
+
+/// Door 4 writes its neighbourhood “KIZILAY”, the others “Kızılay”.
+fn misspell_a_neighbourhood(app: &mut App) {
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let slot = kentos_domain::Slot(12);
+    let mut e = doc.get(slot).cloned().expect("door 4");
+    e.base_mut()
+        .attrs
+        .insert("MAHALLE".into(), "KIZILAY".into());
+    doc.update(slot, e);
+}
 
 /// The address scene open in `app`, the view on the three neighbourhoods.
 pub(crate) fn open_addresses(app: &mut App) {
@@ -170,6 +181,30 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 open_addresses(app);
                 send(app, Message::Run("address.data"));
                 ev(app, Event::Data(crate::address::data::Event::Check));
+            },
+            nothing,
+        ),
+        // docs/adr/0647: one door writes its neighbourhood KIZILAY; Denetle names the street and the neighbourhood
+        // written in more than one way, Yazılışları düzelt is open.
+        (
+            "adres-yazilislar",
+            |app| {
+                open_addresses(app);
+                misspell_a_neighbourhood(app);
+                send(app, Message::Run("address.data"));
+                ev(app, Event::Data(crate::address::data::Event::Check));
+            },
+            nothing,
+        ),
+        // Its press: the names set right in one undo step, Denetle again says nothing written in more than one way.
+        (
+            "adres-yazilislar-duzeltildi",
+            |app| {
+                open_addresses(app);
+                misspell_a_neighbourhood(app);
+                send(app, Message::Run("address.data"));
+                ev(app, Event::Data(crate::address::data::Event::Check));
+                ev(app, Event::Data(crate::address::data::Event::Normalize));
             },
             nothing,
         ),

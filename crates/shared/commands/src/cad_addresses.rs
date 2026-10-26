@@ -153,6 +153,19 @@ pub struct AddressSpelling {
     pub uids: Vec<String>,
 }
 
+/// A neighbourhood or a district whose doors write its name in more than one way (docs/adr/0647 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AddressNameSpelling {
+    /// The district its first door writes (a neighbourhood's); empty for a district.
+    pub within: String,
+    pub written: Vec<AddressWritten>,
+    pub uids: Vec<String>,
+}
+
 /// Output of `cad.addresses.check` v1, and its plan: what the address data holds, what it left out, and what in it
 /// repeats or is written in more than one way (each list's count, then its first `limit`, by their first door).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -198,6 +211,14 @@ pub struct AddressesChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub spelled: u32,
     pub spellings: Vec<AddressSpelling>,
+    /// Neighbourhoods written in more than one way (docs/adr/0647 §1).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub neighbourhoods_spelled: u32,
+    pub neighbourhood_spellings: Vec<AddressNameSpelling>,
+    /// Districts written in more than one way.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub districts_spelled: u32,
+    pub district_spellings: Vec<AddressNameSpelling>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

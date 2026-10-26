@@ -48,6 +48,7 @@ use kentos_commands::{
 use serde_json::Value;
 
 use crate::addresses_check;
+use crate::addresses_normalize;
 use crate::blocks_insert;
 use crate::donut_create;
 use crate::drawing_compare;
@@ -110,6 +111,7 @@ use crate::{stac_prepare, stac_search};
 use crate::{subnetworks, subnetworks_update};
 use crate::{topology_check, topology_exceptions};
 use kentos_commands::AddressesCheck;
+use kentos_commands::AddressesNormalize;
 use kentos_commands::DrawingCompare;
 use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
 use kentos_commands::{
@@ -356,6 +358,9 @@ macro_rules! by_command {
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
             kentos_commands::CAD_ADDRESSES_CHECK => $then!(addresses_check, AddressesCheck),
+            kentos_commands::CAD_ADDRESSES_NORMALIZE => {
+                $then!(addresses_normalize, AddressesNormalize)
+            }
             kentos_commands::CAD_TOPOLOGY_CHECK => $then!(topology_check, TopologyCheck),
             kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => {
                 $then!(topology_exceptions, TopologyExceptions)

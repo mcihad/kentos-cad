@@ -13,11 +13,11 @@ use std::path::{Path, PathBuf};
 use kentos_commands::{
     BUILTIN_PROFILES, CommandResult, CommandWarning, ConvertFail, DataProfile, Entity, FieldDomain,
     LayerField, LossKind, MAPPING_FORMAT, MAPPING_SUFFIX, MAX_LOSS_UIDS, MAX_MAPPING_ITEMS,
-    MULTIPLE_JOIN, MigratedStep, MigrationLoss, MigrationStep, PROFILE_FOLDER, PROFILE_FORMAT,
-    PROFILE_SUFFIX, ProfileFileKind, ProfileImported, ProfileListed, ProfileMapping, ProfileSource,
-    ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate, ProfilesMigrated,
-    builtin_profile, check_value, fold_name, follow_domains, js_trim, mapping_problem,
-    profile_file_name_ok, profile_problem,
+    MULTIPLE_JOIN, MappingClass, MigratedStep, MigrationLoss, MigrationStep, PROFILE_FOLDER,
+    PROFILE_FORMAT, PROFILE_SUFFIX, ProfileClass, ProfileFileKind, ProfileImported, ProfileListed,
+    ProfileMapping, ProfileSource, ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate,
+    ProfilesMigrated, builtin_profile, check_value, fold_name, follow_domains, js_trim,
+    mapping_problem, profile_file_name_ok, profile_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -742,6 +742,8 @@ pub mod migrate {
         from: u32,
         to: u32,
         steps: Vec<(u32, u32, MigrationStep)>,
+        /// The institution's mapping the steps are read through (docs/adr/0647 §4).
+        mapping: Option<ProfileMapping>,
     }
 
     fn chain(input: &ProfilesMigrate) -> Result<Chain, Stop> {
@@ -779,11 +781,18 @@ pub mod migrate {
                 steps.push((release, i as u32, s.clone()));
             }
         }
+        let mapping = profiles::mapping_for(
+            &profile,
+            input.mapping.as_ref(),
+            input.mapping_name.as_deref(),
+            input.drawing.as_deref(),
+        )?;
         Ok(Chain {
             profile,
             from,
             to,
             steps,
+            mapping,
         })
     }
 
@@ -887,6 +896,294 @@ pub mod migrate {
                 code,
                 replace_with,
             } => retire_code(doc, domain, code, replace_with.as_deref(), touched),
+            MigrationStep::RenameDomain { domain, to } => rename_domain(doc, domain, to),
+        }
+    }
+
+    /// docs/adr/0647 §3: the project's list takes the new id; every field linked to it follows, its codes and the
+    /// objects' values stay.
+    fn rename_domain(doc: &mut Document, domain: &str, to: &str) -> Result<Outcome, Stop> {
+        let (old, to) = (domain.trim(), to.trim());
+        let domains = doc.settings().domains.clone();
+        let Some(d) = domains.iter().find(|d| d.id == old) else {
+            if domains.iter().any(|d| d.id == to) {
+                return Ok(Outcome::skipped(
+                    None,
+                    format!("“{old}” değer listesi zaten “{to}” kimliğiyle duruyor."),
+                ));
+            }
+            return Ok(Outcome::missing(
+                None,
+                format!("Projede “{old}” değer listesi yok; adım atlandı."),
+            ));
+        };
+        let name = d.name.clone();
+        if domains.iter().any(|d| d.id == to) {
+            return Err(fail(
+                codes::DOMAIN_EXISTS,
+                format!(
+                    "“{name}” listesinin kimliği “{to}” olamaz: projede bu kimlikte bir liste var."
+                ),
+                "profile",
+            ));
+        }
+        // The linked fields as they are, each taking the new id once the list has it.
+        let relinked: Vec<(String, Vec<LayerField>)> = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter(|n| n.fields.iter().any(|f| f.domain.as_deref() == Some(old)))
+            .map(|n| {
+                let fields = n
+                    .fields
+                    .iter()
+                    .map(|f| {
+                        let mut f = f.clone();
+                        if f.domain.as_deref() == Some(old) {
+                            f.domain = Some(to.to_owned());
+                        }
+                        f
+                    })
+                    .collect();
+                (n.id.clone(), fields)
+            })
+            .collect();
+        let linked: usize = relinked
+            .iter()
+            .map(|(_, fs)| {
+                fs.iter()
+                    .filter(|f| f.domain.as_deref() == Some(to))
+                    .count()
+            })
+            .sum();
+        let next: Vec<FieldDomain> = domains
+            .iter()
+            .map(|x| {
+                let mut x = x.clone();
+                if x.id == old {
+                    x.id = to.to_owned();
+                }
+                x
+            })
+            .collect();
+        doc.set_domains(next, STEP).map_err(|r| refuse(r.0))?;
+        for (layer, fields) in relinked {
+            doc.set_layer_fields(&layer, fields, &[])
+                .map_err(|r| refuse(r.0))?;
+        }
+        Ok(Outcome {
+            layer: None,
+            applied: true,
+            objects: 0,
+            note: format!(
+                "“{name}” listesinin kimliği “{to}” oldu; {linked} alan yeni kimliğe bağlandı."
+            ),
+            warning: None,
+            losses: Vec::new(),
+        })
+    }
+
+    // ── A migration read through an institution's mapping (docs/adr/0647 §4) ─────────────────────────────────
+
+    /// `path` taken through the chain's layer renames after the `k`th step: its name at the target release.
+    fn final_path(steps: &[(u32, u32, MigrationStep)], k: usize, path: &[String]) -> Vec<String> {
+        let mut cur = path.to_vec();
+        for (_, _, s) in &steps[k + 1..] {
+            if let MigrationStep::RenameLayer { layer, to } = s
+                && *layer == cur
+                && let Some(last) = cur.last_mut()
+            {
+                *last = to.trim().to_owned();
+            }
+        }
+        cur
+    }
+
+    /// The profile's class whose layer `path` (at the `k`th step) becomes.
+    fn class_at<'a>(c: &'a Chain, k: usize, path: &[String]) -> Option<&'a ProfileClass> {
+        let last = final_path(&c.steps, k, path);
+        c.profile.classes.iter().find(|x| x.layer == last)
+    }
+
+    /// The class's field `name` (at the `k`th step) as the target release calls it.
+    fn final_field(c: &Chain, k: usize, class: &ProfileClass, name: &str) -> String {
+        let mut cur = name.to_owned();
+        for j in k + 1..c.steps.len() {
+            if let MigrationStep::RenameField { layer, from, to } = &c.steps[j].2
+                && *from == cur
+                && class_at(c, j, layer).is_some_and(|x| x.id == class.id)
+            {
+                cur = to.clone();
+            }
+        }
+        cur
+    }
+
+    fn mapped_class<'a>(m: &'a ProfileMapping, class: &ProfileClass) -> Option<&'a MappingClass> {
+        m.classes.iter().find(|x| x.class == class.id)
+    }
+
+    fn mapped_name<'a>(mc: &'a MappingClass, field: &str) -> Option<&'a str> {
+        mc.fields
+            .iter()
+            .find(|f| f.profile == field)
+            .map(|f| f.name.as_str())
+    }
+
+    /// The layer the institution keeps at `path`, for a step's report.
+    fn layer_id(doc: &Document, path: &[String]) -> Option<String> {
+        match profiles::find(doc.layers().nodes(), path) {
+            Place::Layer(id) => Some(id),
+            _ => None,
+        }
+    }
+
+    /// The `k`th step as it runs on the institution's names, or the outcome of a step the mapping makes moot.
+    fn translate(
+        doc: &Document,
+        c: &Chain,
+        m: &ProfileMapping,
+        k: usize,
+    ) -> Result<MigrationStep, Outcome> {
+        let step = &c.steps[k].2;
+        match step {
+            MigrationStep::RetireCode { .. } | MigrationStep::RenameDomain { .. } => {
+                Ok(step.clone())
+            }
+            MigrationStep::RenameLayer { layer, to } => {
+                let mut renamed = layer.clone();
+                if let Some(last) = renamed.last_mut() {
+                    *last = to.trim().to_owned();
+                }
+                match class_at(c, k, &renamed).and_then(|class| mapped_class(m, class)) {
+                    Some(mc) if !mc.layer.is_empty() => {
+                        let last = final_path(&c.steps, k, &renamed);
+                        Err(Outcome::skipped(
+                            layer_id(doc, &mc.layer),
+                            format!(
+                                "Eşleme “{}” katmanına “{}” adını veriyor; ad değişmez.",
+                                words(&last),
+                                words(&mc.layer)
+                            ),
+                        ))
+                    }
+                    _ => Ok(step.clone()),
+                }
+            }
+            MigrationStep::RenameField { layer, from, to } => {
+                let Some((class, mc)) =
+                    class_at(c, k, layer).and_then(|class| Some((class, mapped_class(m, class)?)))
+                else {
+                    return Ok(step.clone());
+                };
+                let at = if mc.layer.is_empty() {
+                    layer.clone()
+                } else {
+                    mc.layer.clone()
+                };
+                let last = final_field(c, k, class, to);
+                if let Some(name) = mapped_name(mc, &last) {
+                    return Err(Outcome::skipped(
+                        layer_id(doc, &at),
+                        format!("Eşleme “{last}” alanına “{name}” adını veriyor; ad değişmez."),
+                    ));
+                }
+                Ok(MigrationStep::RenameField {
+                    layer: at,
+                    from: from.clone(),
+                    to: to.clone(),
+                })
+            }
+            MigrationStep::ChangeFieldType {
+                layer,
+                field,
+                on_fail,
+            } => {
+                let Some((class, mc)) =
+                    class_at(c, k, layer).and_then(|class| Some((class, mapped_class(m, class)?)))
+                else {
+                    return Ok(step.clone());
+                };
+                let at = if mc.layer.is_empty() {
+                    layer.clone()
+                } else {
+                    mc.layer.clone()
+                };
+                let last = final_field(c, k, class, &field.name);
+                let mut next: LayerField = (**field).clone();
+                if let Some(codes) = mc.codes.iter().find(|x| x.field == last) {
+                    let (followed, _) =
+                        follow_domains(std::slice::from_ref(&next), &c.profile.domains);
+                    next = followed.into_iter().next().unwrap_or(next);
+                    next.domain = None;
+                    let named = |code: &str| {
+                        codes
+                            .codes
+                            .iter()
+                            .find(|x| x.profile == code)
+                            .map(|x| x.name.clone())
+                    };
+                    if let Some(values) = &mut next.values {
+                        for v in values.iter_mut() {
+                            if let Some(n) = named(&v.code) {
+                                v.code = n;
+                            }
+                        }
+                    }
+                    if let Some(d) = &next.default
+                        && let Some(n) = named(d)
+                    {
+                        next.default = Some(n);
+                    }
+                }
+                if let Some(name) = mapped_name(mc, &last) {
+                    next.id = Some(last.clone());
+                    next.name = name.to_owned();
+                }
+                Ok(MigrationStep::ChangeFieldType {
+                    layer: at,
+                    field: Box::new(next),
+                    on_fail: *on_fail,
+                })
+            }
+            MigrationStep::MapValues { layer, field, map } => {
+                let Some((class, mc)) =
+                    class_at(c, k, layer).and_then(|class| Some((class, mapped_class(m, class)?)))
+                else {
+                    return Ok(step.clone());
+                };
+                let at = if mc.layer.is_empty() {
+                    layer.clone()
+                } else {
+                    mc.layer.clone()
+                };
+                let last = final_field(c, k, class, field);
+                let codes = mc.codes.iter().find(|x| x.field == last);
+                let code = |v: &str| {
+                    codes
+                        .and_then(|cs| cs.codes.iter().find(|x| x.profile == v))
+                        .map_or_else(|| v.to_owned(), |x| x.name.clone())
+                };
+                let map = map
+                    .iter()
+                    .map(|x| {
+                        let mut x = x.clone();
+                        x.from = code(&x.from);
+                        x.to = code(&x.to);
+                        if let Some(w) = &x.when_field
+                            && let Some(n) = mapped_name(mc, &final_field(c, k, class, w))
+                        {
+                            x.when_field = Some(n.to_owned());
+                        }
+                        x
+                    })
+                    .collect();
+                Ok(MigrationStep::MapValues {
+                    layer: at,
+                    field: mapped_name(mc, &last).map_or_else(|| field.clone(), str::to_owned),
+                    map,
+                })
+            }
         }
     }
 
@@ -1403,8 +1700,16 @@ pub mod migrate {
         let mut unfit = 0u32;
         let mut samples: Vec<String> = Vec::new();
         let group = doc.begin_group(STEP);
-        for (migration, index, step) in &c.steps {
-            let out = match run_step(doc, &c.profile, step, &mut touched) {
+        for (k, (migration, index, step)) in c.steps.iter().enumerate() {
+            let read = match &c.mapping {
+                Some(m) => translate(doc, c, m, k),
+                None => Ok(step.clone()),
+            };
+            let ran = match read {
+                Ok(s) => run_step(doc, &c.profile, &s, &mut touched),
+                Err(moot) => Ok(moot),
+            };
+            let out = match ran {
                 Ok(o) => o,
                 Err(stop) => {
                     doc.cancel_group(group);
@@ -1473,6 +1778,7 @@ pub mod migrate {
                 losses,
                 objects: touched.len() as u32,
                 revision: doc.revision().to_string(),
+                mapping: c.mapping.as_ref().map(|m| m.name.clone()),
             },
             warnings,
         ))

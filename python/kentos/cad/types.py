@@ -134,6 +134,22 @@ ActionRunsName = Literal["auto", "here", "background"]
 """The names of :class:`ActionRuns`, for a plain string."""
 
 
+class AddressName(_StrEnum):
+    """Which name of the doors is set right.
+
+    - ``street``: The street's name, in each street (its doors grouped by street, neighbourhood and district).
+    - ``neighbourhood``: The neighbourhood's name, in each neighbourhood of a district.
+    - ``district``: The district's name.
+    """
+    STREET = "street"
+    NEIGHBOURHOOD = "neighbourhood"
+    DISTRICT = "district"
+
+
+AddressNameName = Literal["street", "neighbourhood", "district"]
+"""The names of :class:`AddressName`, for a plain string."""
+
+
 class AddressesDefineOperation(_StrEnum):
     """What `cad.addresses.define` does.
 
@@ -6915,6 +6931,7 @@ class MigrationStep(_Union):
     - :class:`ChangeFieldTypeMigrationStep` (``kind: changeFieldType``)
     - :class:`MapValuesMigrationStep` (``kind: mapValues``)
     - :class:`RetireCodeMigrationStep` (``kind: retireCode``)
+    - :class:`RenameDomainMigrationStep` (``kind: renameDomain``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -8471,6 +8488,58 @@ class AddressLocator(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddressNameSpelling(_Model):
+    """A neighbourhood or a district whose doors write its name in more than one way (docs/adr/0647 §1).
+    Attributes:
+        within: The district its first door writes (a neighbourhood's); empty for a district.
+    """
+    within: str
+    written: list[AddressWritten]
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["within"] = self.within
+        out["written"] = [e0.to_json() for e0 in self.written]
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressNameSpelling:
+        return cls(
+            within=data["within"],
+            written=[AddressWritten.from_json(e0) for e0 in data["written"]],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressNormalized(_Model):
+    """One group set right: the spelling chosen, the ones it took the place of, the doors written.
+    Attributes:
+        doors: Unit: count.
+    """
+    to: str
+    from_: list[str]
+    doors: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["to"] = self.to
+        out["from"] = list(self.from_)
+        out["doors"] = self.doors
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressNormalized:
+        return cls(
+            to=data["to"],
+            from_=list(data["from"]),
+            doors=data["doors"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressRepeat(_Model):
     """A door number one street has more than once.
     Attributes:
@@ -8597,6 +8666,8 @@ class AddressesChecked(_Model):
         repeated: Unit: count.
         coded: Unit: count.
         spelled: Unit: count.
+        neighbourhoods_spelled: Neighbourhoods written in more than one way (docs/adr/0647 §1). Unit: count.
+        districts_spelled: Districts written in more than one way. Unit: count.
     """
     locator: str
     doors: int
@@ -8617,6 +8688,10 @@ class AddressesChecked(_Model):
     codes: list[AddressCodeRepeat]
     spelled: int
     spellings: list[AddressSpelling]
+    neighbourhoods_spelled: int
+    neighbourhood_spellings: list[AddressNameSpelling]
+    districts_spelled: int
+    district_spellings: list[AddressNameSpelling]
     revision: str
 
     def to_json(self) -> dict[str, Any]:
@@ -8640,6 +8715,10 @@ class AddressesChecked(_Model):
         out["codes"] = [e0.to_json() for e0 in self.codes]
         out["spelled"] = self.spelled
         out["spellings"] = [e0.to_json() for e0 in self.spellings]
+        out["neighbourhoodsSpelled"] = self.neighbourhoods_spelled
+        out["neighbourhoodSpellings"] = [e0.to_json() for e0 in self.neighbourhood_spellings]
+        out["districtsSpelled"] = self.districts_spelled
+        out["districtSpellings"] = [e0.to_json() for e0 in self.district_spellings]
         out["revision"] = self.revision
         return out
 
@@ -8665,6 +8744,10 @@ class AddressesChecked(_Model):
             codes=[AddressCodeRepeat.from_json(e0) for e0 in data["codes"]],
             spelled=data["spelled"],
             spellings=[AddressSpelling.from_json(e0) for e0 in data["spellings"]],
+            neighbourhoods_spelled=data["neighbourhoodsSpelled"],
+            neighbourhood_spellings=[AddressNameSpelling.from_json(e0) for e0 in data["neighbourhoodSpellings"]],
+            districts_spelled=data["districtsSpelled"],
+            district_spellings=[AddressNameSpelling.from_json(e0) for e0 in data["districtSpellings"]],
             revision=data["revision"],
         )
 
@@ -8731,6 +8814,79 @@ class AddressesDefined(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AddressesDefined:
         return cls(
             locators=[AddressLocator.from_json(e0) for e0 in data["locators"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesNormalize(_Model):
+    """Input of `cad.addresses.normalize` v1. Refusals, in order: `invalid_revision`, `revision_conflict`,
+    `no_address_data`, `unknown_locator`, `invalid_input` (the doors have no field of that name, an empty preferred
+    spelling), `layer_locked`, a field's rule the spelling does not fit (`invalid_attribute`).
+    Attributes:
+        locator: The address data's id; none: the project's first.
+        prefer: Spellings preferred: a group that writes one of them takes the first it writes.
+    """
+    expected_revision: str | None | Unset = UNSET
+    locator: str | None | Unset = UNSET
+    prefer: list[str] | Unset = UNSET
+    what: AddressName | AddressNameName = AddressName.STREET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.locator is not UNSET:
+            out["locator"] = self.locator
+        if self.prefer is not UNSET:
+            out["prefer"] = list(self.prefer)
+        out["what"] = _enum_out(self.what)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesNormalize:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            locator=data.get("locator", UNSET),
+            prefer=list(data["prefer"]) if "prefer" in data else UNSET,
+            what=_enum_in(AddressName, data["what"]) if "what" in data else AddressName.STREET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesNormalized(_Model):
+    """Output of `cad.addresses.normalize` v1, and its plan.
+    Attributes:
+        groups: The groups, by their first doors.
+        written: The doors written (or to be written). Unit: count.
+        uids: Their persistent ids, in the drawing's order.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    locator: str
+    what: AddressName | AddressNameName
+    groups: list[AddressNormalized]
+    written: int
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["locator"] = self.locator
+        out["what"] = _enum_out(self.what)
+        out["groups"] = [e0.to_json() for e0 in self.groups]
+        out["written"] = self.written
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesNormalized:
+        return cls(
+            locator=data["locator"],
+            what=_enum_in(AddressName, data["what"]),
+            groups=[AddressNormalized.from_json(e0) for e0 in data["groups"]],
+            written=data["written"],
+            uids=list(data["uids"]),
             revision=data["revision"],
         )
 
@@ -42205,11 +42361,15 @@ class ProfilesMigrate(_Model):
     `migration_step_skipped`, `profile_layer_skipped` (a locked layer), `values_unfit`.
     Attributes:
         from_: The release the data is at. Unit: count.
+        mapping: The institution's mapping the data is written with (docs/adr/0647 §4): each step is read through it.
+        mapping_name: The mapping by its name, from the project's `profiller` folder.
         to: The release it goes to; none: the profile's. Unit: count.
     """
     from_: int
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    mapping_name: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     profile: DataProfile | None | Unset = UNSET
     to: int | None | Unset = UNSET
@@ -42221,6 +42381,10 @@ class ProfilesMigrate(_Model):
             out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.mapping_name is not UNSET:
+            out["mappingName"] = self.mapping_name
         if self.name is not UNSET:
             out["name"] = self.name
         if self.profile is not UNSET:
@@ -42235,6 +42399,8 @@ class ProfilesMigrate(_Model):
             from_=data["from"],
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
             to=data.get("to", UNSET),
@@ -42250,6 +42416,7 @@ class ProfilesMigrated(_Model):
         to: Unit: count.
         losses: The values that did not fit, by value and layer.
         objects: Objects written, once each. Unit: count.
+        mapping: The mapping the steps were read through.
     """
     changed: bool
     from_: int
@@ -42258,6 +42425,7 @@ class ProfilesMigrated(_Model):
     losses: list[MigrationLoss]
     objects: int
     revision: str
+    mapping: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -42268,6 +42436,8 @@ class ProfilesMigrated(_Model):
         out["losses"] = [e0.to_json() for e0 in self.losses]
         out["objects"] = self.objects
         out["revision"] = self.revision
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
         return out
 
     @classmethod
@@ -42280,6 +42450,7 @@ class ProfilesMigrated(_Model):
             losses=[MigrationLoss.from_json(e0) for e0 in data["losses"]],
             objects=data["objects"],
             revision=data["revision"],
+            mapping=data.get("mapping", UNSET),
         )
 
 
@@ -66873,6 +67044,27 @@ class RetireCodeMigrationStep(MigrationStep):
 
 
 @dataclass(kw_only=True, slots=True)
+class RenameDomainMigrationStep(MigrationStep):
+    """A project value list takes a new id; every field linked to it follows (docs/adr/0647 §3)."""
+    TAG_VALUE: ClassVar[str] = "renameDomain"
+    domain: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "renameDomain"}
+        out["domain"] = self.domain
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameDomainMigrationStep:
+        return cls(
+            domain=data["domain"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BothNetworkDirection(NetworkDirection):
     """Every edge both ways."""
     TAG_VALUE: ClassVar[str] = "both"
@@ -74590,7 +74782,7 @@ _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place
 _MEETING: dict[str, type[Meeting]] = {"distances": DistancesMeeting, "bearings": BearingsMeeting, "lines": LinesMeeting}
 
 
-_MIGRATION_STEP: dict[str, type[MigrationStep]] = {"renameLayer": RenameLayerMigrationStep, "renameField": RenameFieldMigrationStep, "changeFieldType": ChangeFieldTypeMigrationStep, "mapValues": MapValuesMigrationStep, "retireCode": RetireCodeMigrationStep}
+_MIGRATION_STEP: dict[str, type[MigrationStep]] = {"renameLayer": RenameLayerMigrationStep, "renameField": RenameFieldMigrationStep, "changeFieldType": ChangeFieldTypeMigrationStep, "mapValues": MapValuesMigrationStep, "retireCode": RetireCodeMigrationStep, "renameDomain": RenameDomainMigrationStep}
 
 
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
@@ -74791,6 +74983,10 @@ __all__ = [
     "AddVariantPaperOp",
     "AddressCodeRepeat",
     "AddressLocator",
+    "AddressName",
+    "AddressNameName",
+    "AddressNameSpelling",
+    "AddressNormalized",
     "AddressRepeat",
     "AddressSpelling",
     "AddressWritten",
@@ -74800,6 +74996,8 @@ __all__ = [
     "AddressesDefineOperation",
     "AddressesDefineOperationName",
     "AddressesDefined",
+    "AddressesNormalize",
+    "AddressesNormalized",
     "AdjoinWindow",
     "AdjustDifference",
     "AdjustKnownHeight",
@@ -76652,6 +76850,7 @@ __all__ = [
     "RemoveRelationsOp",
     "RemoveSheetPaperOp",
     "RemoveVariantPaperOp",
+    "RenameDomainMigrationStep",
     "RenameFieldMigrationStep",
     "RenameFormsOp",
     "RenameItemPaperOp",

@@ -6,8 +6,8 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    ADDRESS_CHECK_LIMIT, AddressCodeRepeat, AddressRepeat, AddressSpelling, AddressWritten,
-    AddressesCheck, AddressesChecked, CommandResult,
+    ADDRESS_CHECK_LIMIT, AddressCodeRepeat, AddressNameSpelling, AddressRepeat, AddressSpelling,
+    AddressWritten, AddressesCheck, AddressesChecked, CommandResult,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::geocode::check::check;
@@ -125,8 +125,36 @@ pub(crate) fn check_in(doc: &Document, input: &AddressesCheck) -> Result<Address
                 uids: uids(&by_place, &s.orders),
             })
             .collect(),
+        neighbourhoods_spelled: count(summary.neighbourhood_spellings.len()),
+        neighbourhood_spellings: names(&by_place, &summary.neighbourhood_spellings, limit),
+        districts_spelled: count(summary.district_spellings.len()),
+        district_spellings: names(&by_place, &summary.district_spellings, limit),
         revision: doc.revision().to_string(),
     })
+}
+
+/// A neighbourhood's or a district's spellings as the answer gives them (docs/adr/0647 §1): the first `limit`.
+fn names(
+    by_place: &HashMap<u32, String>,
+    groups: &[kentos_geometry_core::ops::geocode::check::NameGroup],
+    limit: usize,
+) -> Vec<AddressNameSpelling> {
+    groups
+        .iter()
+        .take(limit)
+        .map(|g| AddressNameSpelling {
+            within: g.within.clone(),
+            written: g
+                .written
+                .iter()
+                .map(|(text, n)| AddressWritten {
+                    text: text.clone(),
+                    doors: count(*n),
+                })
+                .collect(),
+            uids: uids(by_place, &g.doors.iter().map(|d| d.0).collect::<Vec<_>>()),
+        })
+        .collect()
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &AddressesCheck) -> CommandResult<()> {
