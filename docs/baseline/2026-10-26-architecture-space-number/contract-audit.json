@@ -1,0 +1,24 @@
+{
+  "addedCommands": [
+    "cad.spaces.number"
+  ],
+  "changedExistingCommands": [],
+  "removedCommands": [],
+  "topLevelChanges": [
+    "codes"
+  ],
+  "caseCount": 68,
+  "fixtureSha256": "8ab26d4f2ee9cfa22b70f7f4598f5129b0a67b5ac1f24bce6e115471b1ef1216",
+  "refusals": [
+    "entity_not_found",
+    "invalid_revision",
+    "invalid_space_number",
+    "invalid_uid",
+    "layer_locked",
+    "no_entities",
+    "not_a_space",
+    "not_finite",
+    "revision_conflict",
+    "space_number_conflict"
+  ]
+}

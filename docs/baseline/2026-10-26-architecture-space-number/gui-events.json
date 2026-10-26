@@ -1,0 +1,366 @@
+[
+  {
+    "file": "01-initial-dark13.jpg",
+    "note": "Yeni derleme, dört bağlı mahal/etiket ve canlı çizelge; gerçek başlangıç penceresi.",
+    "sha256": "d3cf148554cca57daa75d18d2f71bb42b268ea39e2f5437c1b3ca7235f714772",
+    "at": "2026-10-25T23:30:40.626Z",
+    "build": "binary.json"
+  },
+  {
+    "file": "02-tool-visible-settings.jpg",
+    "note": "Mimari şeridindeki yeni araç; görünür ilk numara/sıralama/adet ve önizleme açıklaması.",
+    "sha256": "b65fefddcb88af32486555ea2f88b1f95cdb7087e75e23e4589f767c448293a7",
+    "at": "2026-10-25T23:30:55.742Z",
+    "build": "binary.json"
+  },
+  {
+    "file": "03-interior-pick-failed.jpg",
+    "note": "Tanısal: üç iç alan tıklaması mahal seçmedi; sayı0 kaldı. Başarılı seçim/çakışma kabulü değildir.",
+    "sha256": "6cda7c094027f3cc8e05b5e0a75f90b9d28e46ce76f0bc841e3667c6950ab82f",
+    "at": "2026-10-25T23:31:09.421Z",
+    "build": "binary.json"
+  },
+  {
+    "file": "04-boundary-pick-probe.jpg",
+    "note": "Tanısal: iç alan seçimi çalışmayınca mevcut kenar seçimi denemesi.",
+    "sha256": "15639b9bbcd13803148521a8284ec184d72f7de0576e742fce79326ef00cb998",
+    "at": "2026-10-25T23:31:35.509Z",
+    "build": "binary.json"
+  },
+  {
+    "file": "05-diagnostic-cancel-save.jpg",
+    "note": "İç seçim kusurunu düzeltecek yeniden derleme öncesi Escape ve gerçek Kaydet; model değişmemeli.",
+    "sha256": "d5745d386a47e3ced8b5bdaa20762cf0288e68a03d6d27e015114674f8ab66e3",
+    "at": "2026-10-25T23:32:49.883Z",
+    "build": "binary.json"
+  },
+  {
+    "file": "06-fixed-build-initial.jpg",
+    "note": "İç alan seçimi düzeltmesi, ayrı ikinci paket; aynı korunmuş13 nesneli başlangıç modeli.",
+    "sha256": "000d9146251f2dfb91424724828419a4989fe105f6561e81722c46762e1a8820",
+    "at": "2026-10-25T23:55:36.649Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "07-body-pick-collision.jpg",
+    "note": "Düzeltilmiş gerçek pencerede üç mahal boş iç kısımdan seçildi; sayı3 ve seçim dışındaki Z-002 atomik ret önizlemesi.",
+    "sha256": "e8aeb666963fbc0a565de80c43f8b8a533876c5e6200cd0ccecb7ef8c1e2a33b",
+    "at": "2026-10-25T23:55:57.910Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "08-collision-refused-save.jpg",
+    "note": "Enter çakışmayı reddetti; araç açık ve eski numaralar korundu. Cmd-S denendi; etkin araçta kaydetme kanıtı değildir. Son atomik ret/kayıt kabulü42 ve collision-toolbar.kcad içindedir.",
+    "sha256": "ecf845865f526155cafcd7e1afa30682d0cd60b0a08279f644fc1f8a337c9264",
+    "at": "2026-10-25T23:56:09.285Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "09-ordered-number-preview.jpg",
+    "note": "İlk numara görünür alanda K-101 yapıldı; üçüncü/birinci/ikinci mahal tıklama sırasının eski→yeni önizlemesi.",
+    "sha256": "e147e2513babf4f288de41da8cbc140cecc5a5c37c1d8e5a7dbf4b8fa6ab7f55",
+    "at": "2026-10-25T23:56:46.350Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "10-toggle-remove.jpg",
+    "note": "Aynı mahalın boş içine yeniden tıklama onu çıkarır; sayı2, kalanlarK-101/K-102, belge henüz yazılmadı.",
+    "sha256": "6804370e88aa8cb0b0551d8a84501a7aa59349e78b99892fee78f07e3b5b786f",
+    "at": "2026-10-25T23:57:15.135Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "11-local-undo-pick.jpg",
+    "note": "Yeniden eklenen son mahal, görünür Geri al düğmesiyle çıkarıldı; sayı2, proje undo kullanılmadı.",
+    "sha256": "575c2cce99d778cca95bc211ce35c81bb90286c929466ca53cc9b15d8a90c08b",
+    "at": "2026-10-25T23:57:16.558Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "12-preview-command-s.jpg",
+    "note": "Tanısal: geçerli önizlemede Cmd-S komut satırına s gönderdi. Bu kare gerçek kaydetme kabulü değildir; önizlemede gerçek Kaydet20 ile ayrıca doğrulandı.",
+    "sha256": "7a4d69f1c48f3401b27c1063a3d5c6d10a2a1b0d16a0ac4f9953754b823b949b",
+    "at": "2026-10-25T23:57:33.425Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "13-escape-preserves-drawing.jpg",
+    "note": "Tek Escape aracı kapattı; numaralar, etiketler ve çizelge eski halde. Gerçek Kaydet.",
+    "sha256": "0d6c951de84af811569381027d7de51404af015b12f1110d5b4b091ac35bea26",
+    "at": "2026-10-25T23:57:34.144Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "14-valid-preview-command-s.jpg",
+    "note": "Tanısal: geçerli3→1→2 önizlemesinde Cmd-S komut satırına s gönderdi. Önceki disk görüntüsü valid-preview.kcad içinde saklandı; taze kayıt kanıtı değildir.",
+    "sha256": "3032c0f2fdc12588bf1d5eb12d0d6cce97b4ae4a0bcee87729e47ee1f92c7733",
+    "at": "2026-10-25T23:58:19.626Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "15-click-order-confirmed-once.jpg",
+    "note": "One Return with empty command input commits K-101..K-103 in click order and exits the tool; Cmd-S saves.",
+    "sha256": "d44e3d1fefc44d65f63cefde72469425d93bb2e54ffe9bf14abf1ad0604f628a",
+    "at": "2026-10-26T00:01:24.866Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "16-one-undo.jpg",
+    "note": "One Cmd-Z restores room numbers, both labels and live table; Cmd-S saves.",
+    "sha256": "f162e7c1dc22816fb8ddfeea35c4c9b9911ed18248d51dddc5fcc277dffb4c49",
+    "at": "2026-10-26T00:01:37.298Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "17-one-redo.jpg",
+    "note": "One Cmd-Shift-Z restores committed click order, tag text and table cells; tool remains finished.",
+    "sha256": "ff5bc3990b745d647d02f8e747f9a5074afdb00db1813ea2b824a52bf2cb7808",
+    "at": "2026-10-26T00:01:50.460Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "18-reopened-kcad.jpg",
+    "note": "Native Open reopens actual saved gui.kcad; K-102,K-103,K-101,Z-002 and live schedule persist.",
+    "sha256": "20e49b2e0c2cab154b262fdbb0c2fc8fea758c7e452cb8d970245f9b04a3409a",
+    "at": "2026-10-26T00:02:36.399Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "19-direction-preview.jpg",
+    "note": "N istemi D-009 kabul etti; görünür sıralama ve0,0→10,0 noktaları +X önizlemesini kurdu. Cmd-S harf s bıraktı; gerçek kaydetme20 içindedir.",
+    "sha256": "878937923afce8e8c3d8b872a817ab9259a54a397d4f5df37e6cc687e51d87a4",
+    "at": "2026-10-26T00:03:24.168Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "20-direction-preview-toolbar-save.jpg",
+    "note": "After clearing command S from Cmd-S routing, actual ribbon Save is clicked during valid +X direction preview; preview remains active.",
+    "sha256": "806ec3e07f8531f112cde891c4761318a6c424be81c6841c042edc083035c42f",
+    "at": "2026-10-26T00:03:44.174Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "21-context-confirm-menu.jpg",
+    "note": "Right-click opens context menu during valid direction preview; does not apply on pointer press.",
+    "sha256": "5c37ea7e938b77d1ff5e2e27b43065c0e216a14b59d2d54e1ec7857aaaf15b95",
+    "at": "2026-10-26T00:04:02.324Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "22-context-confirms-once.jpg",
+    "note": "One context-menu Onayla/bitir commits +X order D-010,D-011,D-009, exits tool, toolbar Save.",
+    "sha256": "c5dfcfbd408868a5d13b51c6ba2744b96e4831636e078792d9999d4709f6ad18",
+    "at": "2026-10-26T00:04:13.091Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "23-light13-wide.jpg",
+    "note": "Light theme, 13px, wide; visible first number edited to L-001, two interior picks and valid live preview; no commit.",
+    "sha256": "c837d9b7218c88fee745f8d13b72679931f207fbf247f9a2ed416aedad10ac7a",
+    "at": "2026-10-26T00:05:30.608Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "24-light13-narrow.jpg",
+    "note": "Native right-edge resize during active preview; narrow ribbon collapses groups, settings remain accessible; raw dimensions recorded separately.",
+    "sha256": "a45f10c27da98910853b29585c50c7e393a8d415ccc277d5789c4bba05a2038f",
+    "at": "2026-10-26T00:05:43.613Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "25-light13-compact-height.jpg",
+    "note": "Top edge native resize obtains shorter narrow window; visible fields and overflow actions preserved. Measure raw image instead of assuming requested size.",
+    "sha256": "b6ec0e4a91483d1bd43c6fb64414609c0115e650cb2cf3411e23ea4b107560a3",
+    "at": "2026-10-26T00:06:11.922Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "26-light13-overflow-actions.jpg",
+    "note": "Narrow tool prompt overflow exposes direction, local undo and Apply actions instead of clipping.",
+    "sha256": "f3329dd5add9e4ff932262749d6cc701d4cc85bf53a22db6668064a54da03081",
+    "at": "2026-10-26T00:06:29.501Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "27-light13-narrow-applied.jpg",
+    "note": "Narrow overflow Apply commits two rooms once and exits; toolbar Save; upper and other-floor rooms remain unchanged.",
+    "sha256": "4c4fd0dc6bca5b40b5ac448cb0788d36b21bd7a39574389d9222f3617aec1824",
+    "at": "2026-10-26T00:06:44.966Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "28-light18-narrow-collision.jpg",
+    "note": "Açık18 dar pencere: dar Düzenle menüsünden başlatma ve iki iç alan seçimi; hata satırı aşağıda, panel kaydırılabilir. Tam hata30 içinde görünür.",
+    "sha256": "73f9dabe34ec1d9db093bac60190b1c98a7d93110d34a34e1f1427e08a3fdb9c",
+    "at": "2026-10-26T00:08:57.865Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "29-light18-scrolled-past-error.jpg",
+    "note": "Tanısal: ilk kaydırma hata satırını geçti ve çizim özelliklerine ulaştı. Hata metni burada görünmez;30 içinde geri kaydırılarak doğrulandı.",
+    "sha256": "a3e50c9c8f1117ad4215248f28946eb5e107c36c2223d7e654c2367e986c791f",
+    "at": "2026-10-26T00:09:13.093Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "30-light18-complete-error.jpg",
+    "note": "Light18 narrow: full wrapped Z-002 conflict and correction text reached by scrolling; no horizontal clipping.",
+    "sha256": "912a4527ef427209c7d0a5f2c8054dc55d862bdc8cb75cc4ca8a74c9c432ae87",
+    "at": "2026-10-26T00:09:41.195Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "31-light18-escape.jpg",
+    "note": "One Escape exits the new tool in light18 compact window; actual toolbar Save preserves L-001,L-002,D-009,Z-002.",
+    "sha256": "62a499f5d5f2edd018f752ec52d7cba86b4fdb4f761d28aa8ee77cff23e72fce",
+    "at": "2026-10-26T00:09:42.299Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "32-light18-wide.jpg",
+    "note": "Light18 wide native window: focused MAHALNUMARALA command starts tool; two interior picks and N prompt W-010 produce valid preview; panel scroll returns to visible settings.",
+    "sha256": "7a2927c9901c6ab7f751bb7af45c9a255c5e4ea4cc23a4fc577186b2f788d767",
+    "at": "2026-10-26T00:12:42.801Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "33-dark18-wide.jpg",
+    "note": "Dark18 wide: visible first-number editor B-099 gives two-room B-099/B-100 preview, field values, wrapped guidance and readable options. Tanısal görsel takip: uzak zoomda uzun eski→yeni etiketler komşu mahalda birbirine değdi; final üçüncü pakette yalnız yeni numara gösterilecek.",
+    "sha256": "0dc118b0bde772c70cb81bfc447ecddd7bfabdbe2ed9656c890b5247fa4251fa",
+    "at": "2026-10-26T00:15:02.278Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "34-dark18-zoom-not-restored.jpg",
+    "note": "Tanısal: yerel zoom eylemi kompakt boyuta dönmedi; geniş pencerede geçerli önizleme kaldı. Gerçek dar/kısa boyut35 içinde fareyle kuruldu.",
+    "sha256": "7ee25b9a10df3fc140d69c5e4cc8d1f878acb4b654785ee04f3a8b8024daeb09",
+    "at": "2026-10-26T00:15:32.685Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "35-dark18-compact-actual.jpg",
+    "note": "Actual native right-edge and top-edge resize: dark18 compact window, valid B-099/B-100 preview, settings and overflow remain reachable. Önizleme metin tekrarı üçüncü pakette giderilecek; bu ikinci paket nihai yazı kabulü değildir.",
+    "sha256": "4ab8c11c6147f842397c221829165727a415c2f5f15c26cc47cab416601fa5af",
+    "at": "2026-10-26T00:16:17.453Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "36-dark18-compact-applied.jpg",
+    "note": "Dark18 compact overflow Apply commits B-099/B-100 once; tool exits, toolbar Save, unselected D-009/Z-002 remain.",
+    "sha256": "6a3ea4d0a41b95d412438f232a9c0658e06e74a97780ca4697b8a0a86038349c",
+    "at": "2026-10-26T00:16:37.913Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "37-dark13-compact.jpg",
+    "note": "Dark13 compact native window: focused alias starts tool, two empty interior picks, outside-floor collision notice wraps fully; settings and prompt overflow visible.",
+    "sha256": "88b12119a466383d1310cd7fe2bc1f1d324d2d38ab9fea94879b3f3414043b20",
+    "at": "2026-10-26T00:19:09.828Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "38-native-history.jpg",
+    "note": "Native command history after room numbering, undo/redo, direction and compact-window confirmations; inspect actual executed command presentation.",
+    "sha256": "e5125ef5367beaaabe9d0f7be98af9b4dd68453e19ee2de9ead6f3934bd82fd9",
+    "at": "2026-10-26T00:20:00.095Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "39-native-python-code.jpg",
+    "note": "Actual semantic history expands Python code for cad.spaces.number; UI writes the same product command.",
+    "sha256": "afaa3cff1ec0aa04afbfd94d472bf418fe6ecf0053d9db5724e4c2a04b71de97",
+    "at": "2026-10-26T00:20:24.969Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "40-existing-wall-settings.jpg",
+    "note": "Mevcut Duvar aracı, Etkin aracın ayarları başlığında Stil/Kalınlık/Hiza/Öteleme alanlarını korur; etkinleştirme/Escape regresyonu, tam duvar çizme kabulü değildir.",
+    "sha256": "b8fd1731212d921642317d0c39a0b0d9c3b1fae9eda79bc31aa2d01fe068c581",
+    "at": "2026-10-26T00:20:52.879Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "41-final-preserved-model.jpg",
+    "note": "Existing Wall activation/Escape regression and toolbar Save leave all13 entities unchanged except previously confirmed room numbers and derived labels/table.",
+    "sha256": "3e0da836a29aa0bb31778985f14b06e4e98b6c9da370f51d9ac981344f2d9873",
+    "at": "2026-10-26T00:21:16.030Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "42-conflict-actual-toolbar-save.jpg",
+    "note": "Final acceptance: two empty-interior picks, one Return refuses external Z-002 conflict, active tool remains; actual toolbar Save proves atomic rejection without document mutation.",
+    "sha256": "a64a634fc36960a8a70c0c34a4c6b8da2d89c1c062e0029e80b02d1b9b27a3f9",
+    "at": "2026-10-26T00:21:49.478Z",
+    "build": "binary2.json"
+  },
+  {
+    "file": "43-final-build-initial.jpg",
+    "note": "Third isolated build from binary3.json; shortened proposed-number preview; no geometry, number command or rendering-scale change.",
+    "sha256": "45bb90f3443139141ee70185e98af213587f6941ab43601e60acf92903d7bd40",
+    "at": "2026-10-26T00:33:03.039Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "44-final-dark13-preview.jpg",
+    "note": "Final build dark13 wide: only proposed T-099/T-100 labels; original room numbers stay neutral in the drawing, fields and count agree.",
+    "sha256": "5f04bb1f1329e043ccb0cc71ad8ff400fb514fe251917fa2071dcf51b0ac783d",
+    "at": "2026-10-26T00:33:37.350Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "45-final-confirm-once.jpg",
+    "note": "Final shortened-label build: one Enter commits T-099/T-100 and exits; actual toolbar Save; bound tag and table update.",
+    "sha256": "b4ea9101ea49d8d662b3b699e0bdd0482df835f5c49bcb98bdc33d08a8be99d7",
+    "at": "2026-10-26T00:34:07.940Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "46-final-single-undo.jpg",
+    "note": "One Cmd-Z followed by toolbar Save restores both room numbers, labels and schedule in the final package.",
+    "sha256": "612da3cfa4db24a3af4849b517a437347385a95cffc6bf6f3eeb7d5649b7bbd6",
+    "at": "2026-10-26T00:37:24.473Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "47-final-dark18-wide-preview.jpg",
+    "note": "Final proposed-only label text at 18 px dark theme; two interior picks, V-099/V-100 separated, source numbers unchanged.",
+    "sha256": "b3a1d7cf6a76c6cbb01f8ac05dfdba70f4ecf9a549c0208a7eaf721a219009d7",
+    "at": "2026-10-26T00:38:14.281Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "48-final-dark18-compact-preview.jpg",
+    "note": "Final proposed-only labels at dark 18 px in a genuinely narrow short native window; Home was pressed but the camera was not fitted by that key. Distinct V-099/V-100 previews; the following wheel zoom is recorded separately in 49.",
+    "sha256": "e08fcd64071183a80453cf10f524c0088155c200521d677acaf6793352360eb0",
+    "at": "2026-10-26T00:38:50.832Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "49-final-dark18-far-preview.jpg",
+    "note": "Final proposed-only room numbers remain distinct at a smaller scene zoom, dark 18 px, compact native frame.",
+    "sha256": "60857297e91f1b3ffb23ee88950273718d27f939f9da0d5ab735805fcf4ba3a1",
+    "at": "2026-10-26T00:39:02.006Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "50-final-light18-wide-preview.jpg",
+    "note": "Final proposed-only labels at 18 px light theme, far scene zoom: V-099/V-100 are distinct; two interior picks and full settings visible.",
+    "sha256": "5fa9b9776d54aaa440ccb945d26cec5dd8f371534341bcff586866b942dd6679",
+    "at": "2026-10-26T00:40:06.013Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "51-final-light18-compact-preview.jpg",
+    "note": "Final proposed-only labels at light 18 px, compact frame and far scene zoom; two previews remain separate and controls accessible via overflow.",
+    "sha256": "1c0e28df280ac0bd42432eb6146b996f1b38b41ce709aa318ba137c54a83b46a",
+    "at": "2026-10-26T00:40:21.619Z",
+    "build": "binary3.json"
+  },
+  {
+    "file": "52-final-light18-apply-once.jpg",
+    "note": "A single Uygula from overflow closes the final tool and commits V-099/V-100; toolbar Save, no second confirmation.",
+    "sha256": "989e94ec9d0c9950e6a08e4ae64ca02ec82b220a132d09d85c3a0d4a7029880d",
+    "at": "2026-10-26T00:40:34.516Z",
+    "build": "binary3.json"
+  }
+]

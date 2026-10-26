@@ -1,0 +1,29 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 13s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 3 tests
+test space_number::click_toggle_preview_settings_cancel_and_one_confirm_keep_uuids ... ok
+test space_number::collision_refusal_then_corrected_first_number_is_one_step ... ok
+test space_number::preselection_direction_two_points_and_stale_conflict_are_atomic ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 681 filtered out; finished in 0.01s
+

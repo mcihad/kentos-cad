@@ -7871,6 +7871,25 @@ class SourcesEditOp(_Union):
         return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
 
 
+class SpaceNumberOrder(_Union):
+    """One of:
+
+    - :class:`InputSpaceNumberOrder` (``kind: input``)
+    - :class:`DirectionSpaceNumberOrder` (``kind: direction``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceNumberOrder:
+        return _variant(_SPACE_NUMBER_ORDER, "SpaceNumberOrder", "kind", data).from_json(data)
+
+
 class SpaceSeparatorOperation(_Union):
     """One of:
 
@@ -49210,6 +49229,38 @@ class SpacesFinished(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpacesNumber(_Model):
+    """
+    Attributes:
+        uids: 1–10000 distinct room UUIDs. No implicit layer/level expansion.
+        first: Complete first number, with an ASCII decimal suffix: Z-001 → Z-002.
+            Up to 256 characters, no surrounding whitespace. Digits never become f64.
+    """
+    uids: list[str]
+    first: str
+    expected_revision: str | None | Unset = UNSET
+    order: SpaceNumberOrder = field(default_factory=(lambda: SpaceNumberOrder.from_json({'kind': 'input'})))
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["first"] = self.first
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["order"] = self.order.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesNumber:
+        return cls(
+            uids=list(data["uids"]),
+            first=data["first"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            order=SpaceNumberOrder.from_json(data["order"]) if "order" in data else (lambda: SpaceNumberOrder.from_json({'kind': 'input'}))(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpacesPlan(_Model):
     """What `cad.spaces.create` would write (plan mode)."""
     spaces: list[Entity]
@@ -69999,6 +70050,46 @@ class RelinkSourcesEditOp(SourcesEditOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class InputSpaceNumberOrder(SpaceNumberOrder):
+    """The UUID list is the click order; the command never sorts it."""
+    TAG_VALUE: ClassVar[str] = "input"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "input"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InputSpaceNumberOrder:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DirectionSpaceNumberOrder(SpaceNumberOrder):
+    """Ascending projection of each room's label anchor onto from→to;
+    equal projections use the left-normal projection, then UUID.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "direction"
+    from_: Vec2
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "direction"}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DirectionSpaceNumberOrder:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateSpaceSeparatorOperation(SpaceSeparatorOperation):
     """
     Attributes:
@@ -72990,6 +73081,9 @@ _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": System
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
+_SPACE_NUMBER_ORDER: dict[str, type[SpaceNumberOrder]] = {"input": InputSpaceNumberOrder, "direction": DirectionSpaceNumberOrder}
+
+
 _SPACE_SEPARATOR_OPERATION: dict[str, type[SpaceSeparatorOperation]] = {"create": CreateSpaceSeparatorOperation, "set": SetSpaceSeparatorOperation, "clear": ClearSpaceSeparatorOperation}
 
 
@@ -73530,6 +73624,7 @@ __all__ = [
     "DimensionsReassociate",
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
+    "DirectionSpaceNumberOrder",
     "DistanceAxis",
     "DistanceAxisName",
     "DistanceConstraintRule",
@@ -73940,6 +74035,7 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "InfoCard",
+    "InputSpaceNumberOrder",
     "InscribedRegularFrame",
     "InsertClip",
     "InsertClipped",
@@ -75111,6 +75207,7 @@ __all__ = [
     "SpaceFinishes",
     "SpaceMethod",
     "SpaceMethodName",
+    "SpaceNumberOrder",
     "SpacePart",
     "SpaceProposal",
     "SpaceRing",
@@ -75128,6 +75225,7 @@ __all__ = [
     "SpacesEdited",
     "SpacesFinish",
     "SpacesFinished",
+    "SpacesNumber",
     "SpacesOperation",
     "SpacesPlan",
     "SpacesQuantified",

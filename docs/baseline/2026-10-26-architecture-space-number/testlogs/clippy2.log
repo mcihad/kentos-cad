@@ -1,0 +1,28 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+    Checking kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+    Checking kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+    Checking kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Checking kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5m 33s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

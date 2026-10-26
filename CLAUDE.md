@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Açık mahal numaralandırma (26 Ekim 2026; [ADR 0653](docs/adr/0653-explicit-room-numbering.md)).**
+  Tıklama/yön izdüşümü, tam ilk numara ve sıfır dolgusu; UUID/etiket/çizelge
+  tek undo'da korunur. Seçim dışı aynı tam numara atomik reddir; plan/Python/MCP
+  aynı hesabı kullanır. [Kabul](docs/baseline/2026-10-26-architecture-space-number/README.md):
+  68 bağımsız durum, 300 Python, 270 application/6 interaction/7 MCP;
+  52 ham görüntü ve 20 disk kopyası (tanısal olanlar ayrıdır), gerçek tek onay,
+  undo/redo/kaydet-aç. GUI'de bulunan boş iç seçim ve uzun önizleme düzeltildi.
+  ARCH-SPACE-02 [~]; listeler/etiket şablonları/tam matris açık. Yeni TS yoktur.
+
 - **Metraj CSV ve kayıt sayısı (26 Ekim 2026; [ADR 0652](docs/adr/0652-selected-quantity-csv.md)).**
   CSV açık sekmeyi, XLSX/ODS aynı süzgeçte üç tabloyu yazar; bu ayrım görünürdür.
   Ortak desktop dosya bildirimi CSV'nin gerçekten yazılan ilk sayfasını sayar.

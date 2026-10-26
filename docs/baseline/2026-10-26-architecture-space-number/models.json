@@ -1,0 +1,197 @@
+[
+  {
+    "file": "diagnostic-cancel.kcad",
+    "numbers": null,
+    "note": "İç alan seçim kusurundan sonra Escape ve gerçek GUI Kaydet; tam başlangıç modeli korundu.",
+    "sha256": "7f845a28e2577c28c7c788c616a7c9aba97ca00f769f48f807a2a49505d273b2"
+  },
+  {
+    "file": "collision-refused.kcad",
+    "numbers": null,
+    "note": "İlk çakışma reddi sonrası mevcut disk dosyası; etkin araçta Cmd-S gerçek kayıt değildir. Son42/collision-toolbar.kcad taze Kaydet ile doğrulanır.",
+    "sha256": "7f845a28e2577c28c7c788c616a7c9aba97ca00f769f48f807a2a49505d273b2"
+  },
+  {
+    "file": "escape.kcad",
+    "numbers": null,
+    "note": "Geçerli K-101..103 önizlemesinden tek Escape ve GUI Kaydet; tam başlangıç modeli.",
+    "sha256": "7f845a28e2577c28c7c788c616a7c9aba97ca00f769f48f807a2a49505d273b2"
+  },
+  {
+    "file": "valid-preview.kcad",
+    "numbers": null,
+    "note": "Tanısal:14 önizlemesinde mevcut disk dosyası hâlâ başlangıçtı; Cmd-S kaydetmedi. Taze önizleme kaydı20/direction-preview.kcad ile ayrıca yapılmıştır.",
+    "sha256": "7f845a28e2577c28c7c788c616a7c9aba97ca00f769f48f807a2a49505d273b2"
+  },
+  {
+    "file": "click-order.kcad",
+    "numbers": [
+      "K-102",
+      "K-103",
+      "K-101",
+      "Z-002"
+    ],
+    "note": "One Return commits room 3,1,2 click order; moved tag position preserved and live table updates.",
+    "sha256": "e69a4651f16cffb6adea26146f1271b0d205ac9731b3bcd63275a1dcc1959eb1"
+  },
+  {
+    "file": "undo.kcad",
+    "numbers": null,
+    "note": "Single native GUI undo restores the entire original model including moved tag and schedule.",
+    "sha256": "7f845a28e2577c28c7c788c616a7c9aba97ca00f769f48f807a2a49505d273b2"
+  },
+  {
+    "file": "redo.kcad",
+    "numbers": [
+      "K-102",
+      "K-103",
+      "K-101",
+      "Z-002"
+    ],
+    "note": "One native GUI redo restores room and follower values.",
+    "sha256": "e69a4651f16cffb6adea26146f1271b0d205ac9731b3bcd63275a1dcc1959eb1"
+  },
+  {
+    "file": "reopened.kcad",
+    "numbers": [
+      "K-102",
+      "K-103",
+      "K-101",
+      "Z-002"
+    ],
+    "note": "Native file picker reopened saved KCAD; new save preserves all model fields.",
+    "sha256": "e69a4651f16cffb6adea26146f1271b0d205ac9731b3bcd63275a1dcc1959eb1"
+  },
+  {
+    "file": "direction-preview.kcad",
+    "numbers": [
+      "K-102",
+      "K-103",
+      "K-101",
+      "Z-002"
+    ],
+    "note": "Actual toolbar Save during +X direction preview; no preview number is written.",
+    "sha256": "e69a4651f16cffb6adea26146f1271b0d205ac9731b3bcd63275a1dcc1959eb1"
+  },
+  {
+    "file": "direction.kcad",
+    "numbers": [
+      "D-010",
+      "D-011",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "One native right-click Onayla/bitir commits +X direction order independent of click order and saves via toolbar.",
+    "sha256": "e16ad071bd6b734565b1a3dbda985997909d98cde545e8f7654b802a35a08ac6"
+  },
+  {
+    "file": "narrow-light.kcad",
+    "numbers": [
+      "L-001",
+      "L-002",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Light13 narrow native overflow Apply and toolbar Save; only two selected room numbers and followers change.",
+    "sha256": "46d1220b5a2cf008d1de9ed0b2d05cfeea5ec16e170ba9c517a4b07c1b9f88bf"
+  },
+  {
+    "file": "light18-cancel.kcad",
+    "numbers": [
+      "L-001",
+      "L-002",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Single Escape and toolbar Save in light18 compact native window preserves the model.",
+    "sha256": "46d1220b5a2cf008d1de9ed0b2d05cfeea5ec16e170ba9c517a4b07c1b9f88bf"
+  },
+  {
+    "file": "dark18-applied.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Dark18 compact native overflow Apply and toolbar Save; 099 to100 rollover and unselected rooms preserved.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "dark13-cancel.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Dark13 compact one Escape and real toolbar Save preserve final room numbers and all source entities.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "collision-toolbar.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Actual toolbar Save after Return refuses external-number collision while tool remains active; exact model preserved.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "wall-regression.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Working file from Wall activation/Escape real toolbar save; captured later because identical final collision save was already independently checked.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "final-confirm.kcad",
+    "numbers": [
+      "T-099",
+      "T-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Final label package: one Enter commits, toolbar Save persists the expected two numbers.",
+    "sha256": "6416380f50a31488c72f746b934c5bc09e23825106e79413e67849598dceffd3"
+  },
+  {
+    "file": "final-undo.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Final label package: one undo restores the entire previous numbering state, saved with toolbar.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "final-dark18-cancel.kcad",
+    "numbers": [
+      "B-099",
+      "B-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Final label package: Escape cancels the 18 px dark compact preview; toolbar Save preserves the previous full numbering state.",
+    "sha256": "cfd345ded63550d53b4479d89a05105f6f96e7f0903970f5313ef13be98d61e6"
+  },
+  {
+    "file": "final-light18-apply.kcad",
+    "numbers": [
+      "V-099",
+      "V-100",
+      "D-009",
+      "Z-002"
+    ],
+    "note": "Final label package: one compact light-theme overflow Uygula commits two numbers; toolbar Save persists them.",
+    "sha256": "36238b9cae3fa61a3c162ec0196ac0dc49bae3b33230be7bd890610a2ffae573"
+  }
+]

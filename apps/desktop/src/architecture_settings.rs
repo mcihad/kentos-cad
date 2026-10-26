@@ -63,7 +63,7 @@ impl App {
         column![
             container(
                 column![
-                    label::strong("Yeni nesnenin araç ayarları"),
+                    label::strong("Etkin aracın ayarları"),
                     label::caption("Enter veya alandan çıkış uygular")
                 ]
                 .spacing(4)

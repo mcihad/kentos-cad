@@ -1,0 +1,626 @@
+[
+  {
+    "file": "01-initial-dark13.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "02-tool-visible-settings.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "03-interior-pick-failed.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "04-boundary-pick-probe.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "05-diagnostic-cancel-save.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "06-fixed-build-initial.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "07-body-pick-collision.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "08-collision-refused-save.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "09-ordered-number-preview.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "10-toggle-remove.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "11-local-undo-pick.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "12-preview-command-s.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "13-escape-preserves-drawing.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "14-valid-preview-command-s.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "15-click-order-confirmed-once.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "16-one-undo.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "17-one-redo.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "18-reopened-kcad.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "19-direction-preview.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "20-direction-preview-toolbar-save.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "21-context-confirm-menu.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "22-context-confirms-once.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "23-light13-wide.jpg",
+    "rawPixels": [
+      2880,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "24-light13-narrow.jpg",
+    "rawPixels": [
+      2200,
+      1740
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      870.0
+    ]
+  },
+  {
+    "file": "25-light13-compact-height.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "26-light13-overflow-actions.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "27-light13-narrow-applied.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "28-light18-narrow-collision.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "29-light18-scrolled-past-error.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "30-light18-complete-error.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "31-light18-escape.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "32-light18-wide.jpg",
+    "rawPixels": [
+      3024,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "33-dark18-wide.jpg",
+    "rawPixels": [
+      3024,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "34-dark18-zoom-not-restored.jpg",
+    "rawPixels": [
+      3024,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "35-dark18-compact-actual.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "36-dark18-compact-applied.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "37-dark13-compact.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "38-native-history.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "39-native-python-code.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "40-existing-wall-settings.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "41-final-preserved-model.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "42-conflict-actual-toolbar-save.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "43-final-build-initial.jpg",
+    "rawPixels": [
+      2880,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      872.0
+    ]
+  },
+  {
+    "file": "44-final-dark13-preview.jpg",
+    "rawPixels": [
+      2880,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      872.0
+    ]
+  },
+  {
+    "file": "45-final-confirm-once.jpg",
+    "rawPixels": [
+      2880,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      872.0
+    ]
+  },
+  {
+    "file": "46-final-single-undo.jpg",
+    "rawPixels": [
+      2880,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      872.0
+    ]
+  },
+  {
+    "file": "47-final-dark18-wide-preview.jpg",
+    "rawPixels": [
+      2880,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1440.0,
+      872.0
+    ]
+  },
+  {
+    "file": "48-final-dark18-compact-preview.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "49-final-dark18-far-preview.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "50-final-light18-wide-preview.jpg",
+    "rawPixels": [
+      3024,
+      1744
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "51-final-light18-compact-preview.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "52-final-light18-apply-once.jpg",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "retinaScale": 2,
+    "observedWindowPoints": [
+      1100.0,
+      682.0
+    ]
+  }
+]

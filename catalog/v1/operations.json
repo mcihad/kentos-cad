@@ -2267,6 +2267,13 @@
         "cad.spaces.separators"
       ],
       "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0650)."
+    },
+    "tool.spaceNumber": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.number"
+      ],
+      "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0653)."
     }
   },
   "tools": {

@@ -1608,6 +1608,12 @@ const ENTRIES: &[Entry] = &[
     },
     // The spaces (docs/adr/0342 §4).
     Entry {
+        id: "cad.spaces.number",
+        refusals: &[OBJECTS, REVISION, &["not_a_space", "layer_locked", "not_finite", "invalid_space_number", "space_number_conflict"]],
+        warnings: &[],
+        targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+    },
+    Entry {
         id:"cad.spaces.separators",
         refusals:&[OBJECTS,LAYER,REVISION,ATTRS,&["invalid_space_separator","too_few_points","bulge_count","not_finite","invalid_line_weight","level_not_found","slots_exhausted"]],
         warnings:&["layer_hidden"],

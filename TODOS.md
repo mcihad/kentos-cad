@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR 0653: `cad.spaces.number` ve ayrı Mahal numarala aracı;
+  açık UUID/tıklama sırası veya iki SI noktayla yön izdüşümü, tam ilk numara,
+  çakışmada atomik ret, etiket/çizelge ve tek undo web dönüşünde aynı
+  sözleşmeyle desteklenmeli. Ortak 68 bağımsız durum hazır; web koşulmadı.
+  TS/TSX uygulama kaynağı eklenmedi. Genel etiket/numara kabulü açık kalır.
+
 - ARCH-SPACE-01 / ADR 0650: açık `spaceSeparator` rolü ve opt-in KCAD 106,
   `cad.spaces.separators` create/set/clear, kaynak/follower/kopya ret kuralları
   web dönüşünde aynı sözleşmeyle desteklenmeli. Her kopuk mahal için mevcut

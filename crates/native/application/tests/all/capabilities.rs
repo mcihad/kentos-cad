@@ -915,6 +915,7 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     // The command, the operation its targets name (none: the whole), the input for an object.
     type Make = fn(&str) -> Value;
     let tries: &[(&str, Option<&str>, Make)] = &[
+        ("cad.spaces.number",None,|u|json!({"uids":[u],"first":"TEST-001"})),
         ("cad.spaces.separators",Some("set"),|u|json!({"operation":{"kind":"set","uids":[u]}})),
         ("cad.spaces.separators",Some("clear"),|u|json!({"operation":{"kind":"clear","uids":[u]}})),
         (

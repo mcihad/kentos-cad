@@ -75,3 +75,5 @@ mod space_columns;
 mod space_scope;
 mod space_sources;
 mod space_separators;
+
+mod spaces_number;

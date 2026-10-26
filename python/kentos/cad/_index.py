@@ -186,6 +186,7 @@ COMMANDS: dict[str, Any] = {
     "cad.spaces.discover": spaces.discover,
     "cad.spaces.edit": spaces.edit,
     "cad.spaces.finish": spaces.finish,
+    "cad.spaces.number": spaces.number,
     "cad.spaces.quantities": spaces.quantities,
     "cad.spaces.separators": spaces.separators,
     "cad.stac.prepare": stac.prepare,

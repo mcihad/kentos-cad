@@ -1,0 +1,107 @@
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.14 at /Users/cihad/Projects/kentos-cad/.run/py/bin/python
+🔗 Found pyo3 bindings with abi3-py3.10 support
+Using Python 3.14.3 environment at: /Users/cihad/Projects/kentos-cad/.run/py
+Checked 1 package in 12ms
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+📦 Built wheel for abi3 Python ≥ 3.10 to /var/folders/2w/70w9fbms13192mq5ts3f8p2r0000gn/T/.tmpyGwgCg/kentos-0.1.0-cp310-abi3-macosx_11_0_arm64.whl
+✏️ Setting installed package as editable
+🛠 Installed kentos-0.1.0
+........................................../Users/cihad/Projects/kentos-cad/python/tests/test_crs.py:20: CommandWarning: cad.crs.transform: EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri). (unofficial_operation)
+  out = cad.crs.transform(
+../Users/cihad/Projects/kentos-cad/python/tests/test_csv.py:28: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  cad.file.import_.gpkg(doc, path=str(SOURCE))
+................../Users/cihad/Projects/kentos-cad/python/tests/test_dwg.py:74: CommandWarning: file.import.dxf: Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır. (import_losses)
+  result = cad.file.import_.dxf(doc, path=source, allow_polyline_loss=True)
+........................./Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:45: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  written = cad.file.export.gis(doc, path=str(out), tolerance=0.001)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:83: CommandWarning: cad.gis.derivation: Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın. (derivation_stale)
+  stale = cad.gis.derivation(doc, path=str(out))
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:88: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  finer = cad.file.export.gis(doc, path=str(fine), tolerance=0.000001)
+./Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:103: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 2 insert (annotations: skip verildi); 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 text (annotations: skip verildi); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  skipped = cad.file.export.gis(doc, path=str(out), annotations=GisAnnotations.SKIP)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:107: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  cad.file.export.gis(doc, path=str(full))
+./Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:51: CommandWarning: file.import.geojson: Okuyucu dosyanın 1 öğesini alamadı (Boş MultiPolygon); nedenleri report.skipped'te. (import_losses)
+  took = cad.file.import_.geojson(doc, path=path("parsel-rfc7946.geojson"), reproject=True)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:61: CommandWarning: file.import.geojson: parsel-rfc7946.geojson EPSG:4326 diyor; srid ile EPSG:5256 verildi: koordinatlar EPSG:5256 sayıldı, dönüştürülmeden (reproject verilirse yalnız EPSG:5256'den projenin sistemine çevrilir). (crs_overridden)
+  said = cad.file.import_.geojson(other, path=path("parsel-rfc7946.geojson"), srid=5256)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:61: CommandWarning: file.import.geojson: Okuyucu dosyanın 1 öğesini alamadı (Boş MultiPolygon); nedenleri report.skipped'te. (import_losses)
+  said = cad.file.import_.geojson(other, path=path("parsel-rfc7946.geojson"), srid=5256)
+........................................../Users/cihad/Projects/kentos-cad/python/tests/test_maplibre.py:26: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+/Users/cihad/Projects/kentos-cad/python/tests/test_maplibre.py:60: CommandWarning: file.export.maplibre: MapLibre stilinin söyleyemediği: 14 görünen katmanda çizilecek nokta, çizgi ya da alan yok, yazılmadı: Taslak, Ada sınırı, Parsel sınırı, Yapı, Yol ekseni, Kaldırım, Eşyükselti, Ana eşyükselti, Kot noktaları, Poligon noktaları, Pafta çerçevesi, Karelaj, Yazılar, malik. (export_losses)
+  everything = cad.file.export.maplibre(doc, path=str(whole))
+......................../Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x10eb55030>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+............/Users/cihad/Projects/kentos-cad/python/tests/test_processing_batch.py:77: CommandWarning: cad.processing.batch: 1 satır çalışıp durdu ve tek tek geri alındı (Satır 2); öteki satırlar yazıldı. (batch_rows_failed)
+  ran = cad.processing.batch(
+../Users/cihad/Projects/kentos-cad/python/tests/test_profile_files.py:47: CommandWarning: cad.profiles.migrate: 8 nesnenin değeri yeni kurala uymadı (“3,5”, “600”, “on beş”, “Akasya”, “Çınar; Palmiye”); göçün raporunda değer değer yazılı. Formla düzenle ya da Öznitelik tablosuyla düzeltin. (values_unfit)
+  moved = cad.profiles.migrate(doc, name="park-bahce", from_=1, drawing=drawing)
+.........../Users/cihad/Projects/kentos-cad/python/tests/test_qml.py:25: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+.............../Users/cihad/Projects/kentos-cad/python/tests/test_shapefile.py:42: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  cad.file.import_.gpkg(doc, path=str(SOURCE))
+........................./Users/cihad/Projects/kentos-cad/python/tests/test_sheet_view_links.py:10: CommandWarning: cad.views.edit: “Detay A” adlı görünümün yerine yenisi kaydedildi. (view_replaced)
+  return cad.views.edit(doc,edit=cad.SaveViewsOp(name=v['name'],center=(v['center']['x'],v['center']['y']),width=v['width'],height=v['height'],twist=v['twist']))
+./Users/cihad/Projects/kentos-cad/python/tests/test_sheet_view_links.py:10: CommandWarning: cad.views.edit: “Detay A güncel” adlı görünümün yerine yenisi kaydedildi. (view_replaced)
+  return cad.views.edit(doc,edit=cad.SaveViewsOp(name=v['name'],center=(v['center']['x'],v['center']['y']),width=v['width'],height=v['height'],twist=v['twist']))
+..../Users/cihad/Projects/kentos-cad/python/tests/test_sld.py:27: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+.........................../Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607b4c0>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607a980>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607b970>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607b2e0>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607bd30>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x11607be20>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/cihad/.local/share/uv/python/cpython-3.14.3-macos-aarch64-none/lib/python3.14/json/decoder.py:361: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x116078c70>
+  obj, end = self.scan_once(s, idx)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................................
+----------------------------------------------------------------------
+Ran 300 tests in 225.506s
+
+OK
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.

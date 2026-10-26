@@ -2142,6 +2142,16 @@ pub fn catalog() -> CommandCatalog {
         // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
         // fixtures/commands/v1/cad.spaces.{create,edit,quantities}.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
+            id: crate::CAD_SPACES_NUMBER.into(), version: crate::CAD_SPACES_NUMBER_VERSION,
+            title: "Mahalleri numarala".into(),
+            summary: "Açık 1–10000 farklı mahal UUID'sini first tam ilk numarasından başlayarak ardışık numaralar. first en çok 256 karakterdir, ASCII rakamla biter, baş/son boşluk ve kontrol karakteri içermez; Z-009→Z-010. Son rakam dizisi sayıya/f64'e çevrilmez. order=input (varsayılan) UUID listesi/tıklama sırasını korur. order=direction için from ve to SI metre noktalarıdır; mevcut etiket ankrajının yön izdüşümü, eşitlikte sol normal izdüşümü, sonra UUID sıralanır. Bu bir satır/sütun ya da en yakın komşu rotası değildir. Yalnız number değişir; UUID, ad, kullanım, geometri, kaynaklar ve etiket konumları korunur, etiket/çizelge mevcut follower ile tek undo adımında yenilenir. Seçim dışındaki mahalda aynı tam numara varsa (gizli/başka kat dahil) space_number_conflict bütün yazmayı reddeder; otomatik atlama yoktur. Seçimdeki eski yinelenenler düzeltilebilir; açıklık numaraları ayrı alandır. Kilitli mahal, tekrar UUID ve geçersiz yön atomik rettir. Plan SpacesEdited.spaces/kept alanlarını numaralandırma sırasıyla verir, yazmaz; aynı girdinin tekrarı boş undo üretmez. expectedRevision eski önizlemeden yazmayı engeller.".into(),
+            aliases: vec![], effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::SpacesNumber>(), output: schema::<crate::SpacesEdited>(), plan: Some(schema::<crate::SpacesEdited>()), capabilities: None,
+            examples: vec![CommandExample { title: "Tıklama sırasıyla zemin kat numaraları".into(),
+                input: json!({"uids":["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],"first":"Z-001"}), output: None }],
+        },
+        CommandDescriptor {
             id:crate::CAD_SPACES_SEPARATORS.into(),version:crate::CAD_SPACES_SEPARATORS_VERSION,
             title:"Mahal ayırıcı".into(),
             summary:"Sıfır kalınlıklı açık mahal sınırları. operation.create: layerId ve paths (pts metre, bulges kenar başına tan(açı/4), closed, arch açık kat/evre); 1–10000 yol, toplam en çok 100000 köşe, yol başına 2–10000 köşe. Duvar malzemesi/metrajı oluşturmaz; net/eksen/brüt ayırıcıyı ötelemez. operation.set uygun tek parçalı, düzlemsel, genişliksiz çoklu çizgilere açık spaceSeparator rolü ve tam arch bilgisi verir; clear yalnız rolü kaldırır, geometriyi ve görünüşü korur. Set/clear operation.uids kalıcı nesne kimlikleridir; düz çizgi dahil diğer türler reddedilir. Sıradan çizgi, katman adı, renk veya kesikli görünüş kendiliğinden sınır değildir. Kaynak değişiminde mahal/etiket/çizelge aynı undo adımında güncellenir; açık kaynak UUID listesi ayırıcıyı yalnız listede ise kullanır. Plan yazmaz, execute tek adım, expectedRevision eski önizlemenin yazılmasını engeller. KCAD 106 rolü korur; eski dosyalar değiştirilmez.".into(),
@@ -9997,6 +10007,9 @@ mod tests {
                     }
                     crate::CAD_SPACES_DISCOVER => {
                         serde_json::from_value::<crate::SpacesDiscover>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_NUMBER => {
+                        serde_json::from_value::<crate::SpacesNumber>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SPACES_SEPARATORS => {
                         serde_json::from_value::<crate::SpacesSeparators>(e.input.clone()).map(|_| ())

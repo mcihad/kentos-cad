@@ -2974,6 +2974,19 @@
       "shortcuts": [],
       "category": "Mimari",
       "status": "implemented"
+    },
+    {
+      "id": "tool.spaceNumber",
+      "title": "Mahal numarala",
+      "icon": "tag",
+      "description": "Mahallere sırayla tıklayın veya önseçimi kullanın. İlk numara Z-001 gibi tam önekli olabilir. Yön sırası iki noktayla belirlenir; önizlemeyi tek Enter ile uygulayın. UUID, etiket konumu ve çizelge bağları korunur; çakışan numarada hiçbir şey yazılmaz.",
+      "aliases": [
+        "MAHALNUMARALA",
+        "SPACENUMBER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
     }
   ],
   "icons": {

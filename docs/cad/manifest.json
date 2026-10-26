@@ -12028,6 +12028,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceNumber",
+   "kind": "command",
+   "title": "Mahal numarala",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.number"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.number",
+   "mcp": "cad.spaces.number",
+   "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0653).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceRebound",
    "kind": "command",
    "title": "İç nokta seç",

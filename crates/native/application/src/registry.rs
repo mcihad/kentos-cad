@@ -69,6 +69,7 @@ use crate::sources_query;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::time_query;
 use crate::spaces_separators;
+use crate::spaces_number;
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, arch_edit, array,
     arrays_edit, assets_check, blocks_define, blocks_edit, changeset, circle, columns_create,
@@ -234,6 +235,7 @@ macro_rules! by_command {
             kentos_commands::CAD_OPENINGS_EDIT => $then!(openings_edit, OpeningsEdit),
             kentos_commands::CAD_SPACES_CREATE => $then!(spaces_create, SpacesCreate),
             kentos_commands::CAD_SPACES_DISCOVER => $then!(spaces_discover, kentos_commands::SpacesDiscover),
+            kentos_commands::CAD_SPACES_NUMBER => $then!(spaces_number, kentos_commands::SpacesNumber),
             kentos_commands::CAD_SPACES_SEPARATORS => $then!(spaces_separators, kentos_commands::SpacesSeparators),
             kentos_commands::CAD_GRIDS_CREATE => $then!(grids_create, GridsCreate),
             kentos_commands::CAD_COLUMNS_CREATE => $then!(columns_create, ColumnsCreate),

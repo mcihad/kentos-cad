@@ -43,6 +43,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::drawing_compare;
 use kentos_native_application::spaces_discover;
 use kentos_native_application::spaces_separators;
+use kentos_native_application::spaces_number;
 use kentos_native_application::donut_create;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
@@ -787,6 +788,14 @@ impl Input for kentos_commands::WallsFromLines {
             "angle" => self.angle.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::SpacesNumber {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let kentos_commands::SpaceNumberOrder::Direction {from,to} = &mut self.order else {return None};
+        let path = path.strip_prefix("order.")?;
+        coordinate(from,"from",path).or_else(||coordinate(to,"to",path))
     }
 }
 
@@ -3667,6 +3676,9 @@ fn run_op(
         }
         kentos_commands::CAD_SPACES_DISCOVER => {
             run!(spaces_discover, kentos_commands::SpacesDiscover)
+        }
+        kentos_commands::CAD_SPACES_NUMBER => {
+            run!(spaces_number, kentos_commands::SpacesNumber)
         }
         kentos_commands::CAD_SPACES_SEPARATORS => {
             run!(spaces_separators,kentos_commands::SpacesSeparators)
