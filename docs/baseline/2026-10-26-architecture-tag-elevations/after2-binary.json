@@ -1,0 +1,28 @@
+{
+  "parentCommit": "cd0fc9217e7477e89492524eb4f5fb122b6ef5a1",
+  "recordedAt": "2026-10-26T04:30:48.622942+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Elevations Final QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "eec0fd84459be9fa1ffc36d832dc90bc0ae7a469c12a2d6bb2b2acb2e1efdf8e",
+  "sourceFiles": {
+    "apps/desktop/src/properties/rows.rs": "e3086775920df4d04d40606df0ce230e076468dec85d46f6f3990db24dd3ddaa",
+    "crates/native/domain/src/external.rs": "3bbe51162787d726351be19ecc440cce6dd9dc3fbfecff59aa8ba45cfa066e1c",
+    "tools/kcad/kcad.py": "9ce65d0286eaaa12018df8de4ec8677bed061dd91f7c7fa4e131e94612156282",
+    "crates/shared/contracts/src/arch_tags.rs": "0bfab7db0b382c1cfb99de846346e36ad8100f42e37e72d3049b2e0cd576a0ca",
+    "crates/shared/commands/src/catalog.rs": "70b12ead82cf6f9759ee1b5f0e0d97734f3f324b4dae0819e350616efd9f31bd",
+    "crates/native/domain/src/arch_values.rs": "f7c8cb94e5a517c441c4c0084a49cec416e6fcc59f8da8d6068fdf7b00912854",
+    "crates/native/domain/src/tag_follow.rs": "5666877f6165e4218b5dae3950159d17c6a4324203244a2859c8f0d55da7b4bb",
+    "crates/native/domain/src/edit.rs": "a8bc2fb3314d73a979f11e27a77ffa80e1ac7d210a32dc5d33ee2d5e220d40de",
+    "crates/native/domain/src/history.rs": "cc3ca5ff2d258d00305f72161ae9e1f3b1c47488b07e98ea998ac3202b732d67",
+    "crates/native/domain/src/step.rs": "3477aec91bb3e6db77ac8e710efbb4d694035dbd2ab5f65485df2796c5617340",
+    "crates/native/domain/src/store.rs": "dbdb57a1025b58f219b9eaafb85ca18ffa5089c3bb8d42dd24f14246a6e7c2f9",
+    "crates/native/domain/tests/all/steps.rs": "80ceb5d386c9858e7b1e81346c690e64762a2320dd013fe37985e17185d11fbe",
+    "crates/native/interaction/src/tag_settings.rs": "11c959a47d40875c6ccac783be1a1b48fc002eeb61cb13184f8c46062653d0d3",
+    "crates/native/mcp/tests/spaces_number.rs": "5c230121f5c5c39f25dbb30aaf342724bc10204f6c22288339f74bb201086e41",
+    "scripts/fixtures/tag_command_cases.py": "c73a260715368e866dc99de50b9ec2acadd30d9134dd211ef5341217783c102b",
+    "python/tests/test_tag_elevations.py": "7ea0a0a61366b8470a92d051d9c8a351e4d4d30f27d24c67fd33347e06335225",
+    "python/kentos/cad/tags.py": "c790dd9db5c504a13b25429e16959218a655d544db065f3e323515a8a3588878"
+  },
+  "note": "Existing tag template tokens extended with room elevations; current-settings refresh in model/history. Native UI and shared semantic command; SI/unit/renderer unchanged."
+}

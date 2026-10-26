@@ -651,6 +651,7 @@ impl Document {
             self.calls.drop_waiting(open.calls);
             if changed {
                 self.refresh_viewmarks();
+                self.refresh_elevation_tags();
                 self.mark_changed();
             }
         }
@@ -696,6 +697,7 @@ impl Document {
         self.calls.drop_waiting(at.calls);
         if !undone.is_empty() {
             self.refresh_viewmarks();
+            self.refresh_elevation_tags();
             self.mark_changed();
         }
     }
@@ -783,6 +785,7 @@ impl Document {
             .set_status(step.seq, kentos_contracts::CallStatus::Undone);
         self.history.redo.push(step);
         self.refresh_viewmarks();
+        self.refresh_elevation_tags();
         self.mark_edited();
         Some(label)
     }
@@ -801,6 +804,7 @@ impl Document {
             .set_status(step.seq, kentos_contracts::CallStatus::Done);
         self.history.undo.push_back(step);
         self.refresh_viewmarks();
+        self.refresh_elevation_tags();
         self.mark_edited();
         Some(label)
     }

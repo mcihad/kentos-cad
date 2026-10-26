@@ -45,7 +45,7 @@ impl TagTool {
             Setting::notice(
                 "A",
                 "Şablon alanları",
-                "{number}: numara · {name}: ad · {area}: alan · {level}: kat · {usage}: kullanım · {attr:Alan}: öznitelik. En çok 200 karakter, 6 satır.",
+                "{number}: numara · {name}: ad · {area}: alan · {level}: kat · {usage}: kullanım · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir; eksik veri boş kalır. En çok 200 karakter, 6 satır.",
             ),
         ];
         if let Some(why) = &self.problem {

@@ -265,6 +265,11 @@ impl Store {
         !self.tags.is_empty()
     }
 
+    /// Tags in slot order, without scanning unrelated drawing objects.
+    pub(crate) fn tag_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.tags.iter().copied()
+    }
+
     pub fn has_space_separators(&self) -> bool { !self.space_separators.is_empty() }
     pub fn space_separator_slots(&self) -> impl Iterator<Item=Slot> + '_ {
         self.space_separators.iter().copied()

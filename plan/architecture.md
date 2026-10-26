@@ -611,9 +611,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   testi; clippy/build, gerçek açık18/koyu13 geniş/dar girişleri ve 11 tam
   dosya karşılaştırması. [ADR 0656](../docs/adr/0656-visible-tag-settings.md),
   [kabul](../docs/baseline/2026-10-26-architecture-tag-settings/README.md).
+- [x] Kaynağa bağlı `{floorElevation}` / `{ceilingElevation}` şablonları:
+  bilinen kat kotu + yalnız açık mahal yüksekliği; eksik veri boş, bilinen
+  sıfır sıfırdır. Katlar arası yükseklik tavan sayılmaz. Mevcut çizim birimi,
+  manuel yer/UUID, takip/ayar/geçmiş/iptal ve dış aktarım korunur.
+  Gerçek GUI yüksekliğinin sayısal taşması düzeltildi; 19 ham ekran/on tam
+  bağımsız kayıt, tek Enter/ret/undo/redo/kaydet-aç; 195 ortak durum,
+  309 Python, 697 interaction/219 application/67 domain ve bir MCP testi.
+  [ADR 0658](../docs/adr/0658-room-tag-elevations.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-tag-elevations/README.md).
 - [ ] Eski etiketi açık Koru/Yenile yönetimi; çoklu kat ve aynı planın farklı
-  pafta oranları. Döşeme/tavan kotu dahil zengin şablon ve tam mimari matris
-  açıktır; bu dilim mevcut şablonun bağ/yer korunumunu doğrular.
+  pafta oranları. `{area}` seçilmiş alan yöntemidir; her yöntemde ayrı net
+  alan yeri, kat/listeler ve tam mimari matris açık kalır.
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [ ]
 
@@ -850,3 +859,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-02 / ADR 0655 | Gerçek etiket tutamacının boş geometri yazımı mevcut anlamsal Move'a yönlendirildi; sıcak alt küme ve kaynak bağı korunur. Duvar/mahal silme, 40 cm→20.16 m² zinciri, şablon/undo/redo/iptal/kaydet-aç gerçek fareyle doğrulandı; 692 interaction/219 application/303 Python, 22 ham görüntü ve 18 bağımsız dosya. | [~] Etiket yeri/izleme dilimi doğrulandı; listeler, Koru/Yenile, kot şablonları ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-follow/README.md) |
 | 2026-10-26 | ARCH-UX-01 / ARCH-SPACE-02 / ADR 0656 | Görünür yeni etiket ayarları; GUI’deki ilk yapıştırma ve uzun komut düğmesi kusuru düzeltildi. 697 interaction/40 UI-host/üç mevcut ayar/üç mevcut Python; clippy/build, 26 ham ekran/11 bağımsız tam KCAD. | [~] Panel dilimi doğrulandı; eski panel kaydırması için yeni takip, zengin etiketler ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-settings/README.md) |
 | 2026-10-26 | ARCH-UX-01 takip / ADR 0657 | Yeni ayarlı araç başlarken Özellikler başlangıcı gösterilir; aynı araçta düzenleme/önizleme kaydırmayı korur. Eski 508 px hata, 62 ilgili test, clippy/build; 19 ham ekran/beş bağımsız tam dosya. | [x] Kaydırma takip işi doğrulandı; genel docking/matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-settings-scroll/README.md) |
+| 2026-10-26 | ARCH-SPACE-02 / ADR 0658 | Bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan şablonu; eksik veri boş, mevcut birim/elle konum korunur. Gerçek GUI sayısal yükseklik taşması düzeltildi; 195 ortak durum, 309 Python, 697 interaction/219 application/67 domain/bir MCP, clippy/build/WASM; 19 ham ekran/on bağımsız tam kayıt. | [~] Kot dilimi doğrulandı; ayrı net alan, listeler, Koru/Yenile ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-elevations/README.md) |

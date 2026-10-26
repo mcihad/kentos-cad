@@ -1479,8 +1479,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 .and_then(|id| levels.iter().find(|l| l.id == id))
                 .and_then(|l| l.height);
             let height = x.height.or(level_height);
+            let cad = doc.settings().workspace == Some(kentos_commands::Workspace::Cad);
             let shown = match (x.height, level_height) {
                 (Some(h), _) => f.length_bare(h),
+                (None, Some(h)) if cad => f.length_bare(h),
                 (None, Some(h)) => format!("{} (katın)", f.length_bare(h)),
                 (None, None) => "Yok".to_owned(),
             };
@@ -1489,6 +1491,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .unit(if height.is_some() { f.length_unit_label() } else { "" })
                     .editor(number(Field::SpaceHeight(slot))),
             );
+            if cad && x.height.is_none() && level_height.is_some() {
+                // A numeric editor must not clip or parse a decorated fallback.
+                geo.push(Row::note("Katlar arası"));
+            }
             geo.push(words("Zemin kaplaması", &x.finishes.floor, Field::SpaceFloor(slot)));
             geo.push(words("Duvar kaplaması", &x.finishes.wall, Field::SpaceWall(slot)));
             geo.push(words("Tavan kaplaması", &x.finishes.ceiling, Field::SpaceCeiling(slot)));

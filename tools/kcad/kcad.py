@@ -293,7 +293,7 @@ ARCH_NAMES = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "ra
 # openings, spaces, columns or walls under `schedule` (docs/adr/0344 §1, §3).
 SCHEMA_WITH_TAGS = 80
 TAG_PLACES = ("number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
-              "phase", "tag", "place", "label", "style", "risers", "slope")
+              "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation")
 SCHEDULE_FIELDS = ("number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area",
                    "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr")
 # Schema 81: schema 80, the `viewmark` kind (its fields as one map under `viewmark`) and a named view's `id`

@@ -35,6 +35,7 @@ import json
 import math
 import sys
 from functools import cmp_to_key
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -135,6 +136,8 @@ class Drawing:
             self.objs[12 + j] = ("opening", "kapi", g, dict(a))
         self.objs[16] = ("tag", "etiket", tag_fields(self, FIRST_TAG["of"], FIRST_TAG), {})
         self.next = NEW
+        self.levels = copy.deepcopy(LEVELS)
+        self.drawing_unit = "m"
 
     def ids(self):
         return sorted(self.objs)
@@ -257,6 +260,18 @@ def value(d, i, place, attr=None):
             return ("text", PHASES[ph]) if ph else None
         return None
     if k == "space":
+        if place in ("floorElevation", "ceilingElevation"):
+            # Exact independent decimal sum and unit ratio. Missing room height
+            # must not substitute the level's floor-to-floor height.
+            lev = next((v for v in d.levels if v["id"] == f.get("arch", {}).get("level")), None)
+            if lev is None or (place == "ceilingElevation" and "height" not in f):
+                return None
+            metres = Decimal(str(lev["elevation"]))
+            if place == "ceilingElevation":
+                metres += Decimal(str(f["height"]))
+            ratio = dict(m=Decimal(1), cm=Decimal(100), mm=Decimal(1000),
+                         **{"in": Decimal(1)/Decimal(".0254"), "ft": Decimal(1)/Decimal(".3048")})[d.drawing_unit]
+            return ("text", str((metres*ratio).quantize(Decimal(".001"), rounding=ROUND_HALF_UP)))
         a = area_of(f["parts"])
         h = f.get("height", level_height(f.get("arch")))
         m = {"number": text(f.get("number")), "name": text(f.get("name")), "usage": text(f.get("usage")),
@@ -321,7 +336,7 @@ def number_of(v):
 
 
 PLACES = ["number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
-          "phase", "tag", "place", "label", "style", "risers", "slope"]
+          "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation"]
 TEMPLATES = {"opening": "{number}", "space": "{number}\n{name}\n{area}", "column": "{tag}", "grid": "{label}",
              "wall": "{style}", "stair": "{risers}", "ramp": "{slope}", "insert": "{attr:NO}"}
 SHAPES = {"opening": "hexagon", "space": "rectangle"}
@@ -690,6 +705,41 @@ def tag_create_cases():
     c.add("kolon silinince etiketi son yazısıyla kopar, geri alınca bağı döner",
           [made, *gone, {"op": "undo", "returns": "Sil", "expect": {"ids": [*IDS, NEW], "entities": {str(NEW): Drawing_after(made)}, "revision": "changed"}}])
     return c.cases
+
+
+
+def elevation_tag_cases():
+    """Thirty independent cases: five units × six known/unknown elevation states."""
+    cases = []
+    for unit in ["m", "mm", "cm", "in", "ft"]:
+        for state, elevation, height, level in [
+            ("zero", "0", "2.75", "zemin"),
+            ("basement", "-3.125", "2.625", "zemin"),
+            ("upper", "12.375", "3.125", "zemin"),
+            ("no-room-height", "3", None, "zemin"),
+            ("unassigned", "0", "2.75", None),
+            ("unknown-level", "0", "2.75", "missing"),
+        ]:
+            d = Drawing(); setup = copy.deepcopy(SETUP)
+            d.drawing_unit = unit; d.levels[0]["elevation"] = float(elevation)
+            setup["settings"]["drawingUnit"] = unit
+            setup["settings"]["arch"]["levels"] = copy.deepcopy(d.levels)
+            room = d.objs[3][2]
+            if level: room["arch"] = {"level": level}
+            else: room.pop("arch", None)
+            if height is not None: room["height"] = float(height)
+            else: room.pop("height", None)
+            setup["entities"][2] = d.entity(3)
+            inp = {"layerId": "etiket", "tags": [{"of": uid_of(3), "at": P(-5, 8), "leader": True,
+                "content": "{number} {name}\n{area}\nZ {floorElevation}\nT {ceilingElevation}"}]}
+            before = {str(i): d.entity(i) for i in d.ids()}
+            steps = [create_step(d, "validate", inp), create_step(d, "plan", inp), create_step(d, "execute", inp)]
+            after = {str(i): d.entity(i) for i in d.ids()}
+            steps += [{"op": "undo", "returns": "Etiket", "expect": {"ids": IDS, "entities": before, "revision": "changed", "canRedo": True}},
+                      {"op": "redo", "returns": "Etiket", "expect": {"ids": [*IDS, NEW], "entities": after, "revision": "changed", "canRedo": False}}]
+            cases.append({"name": f"Mahal kotu {unit}/{state}: exact values, preview and one undo", "setup": setup,
+                          "steps": copy.deepcopy(PRELUDE) + steps})
+    return cases
 
 
 def Drawing_after(step):
@@ -1512,7 +1562,7 @@ def document(command, title, cases):
 
 def files():
     return {
-        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases()),
+        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + elevation_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
         "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),

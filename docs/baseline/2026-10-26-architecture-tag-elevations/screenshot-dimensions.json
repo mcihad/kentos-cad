@@ -1,0 +1,97 @@
+[
+  {
+    "file": "01-before.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "02-before-unsupported.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "03-after-initial.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "04-template-help.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "05-visible-elevation-help.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "06-help-complete.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "07-coordinate-before-confirm.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "08-created-unknown-ceiling.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "09-inherited-height-clipped.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "10-height-number-fixed-note-long.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "11-final-readable-height.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "12-height-and-ceiling.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "13-single-undo.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "14-invalid-height.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "15-dark-wide.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "16-dark-compact-height.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "17-cancel-preview.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "18-cancelled.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "19-reopened.jpg",
+    "width": 2880,
+    "height": 1720
+  }
+]

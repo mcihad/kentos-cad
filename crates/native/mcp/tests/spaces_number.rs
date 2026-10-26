@@ -29,7 +29,7 @@ fn numbering_plan_keeps_ids_and_moved_tag_then_one_undo_restores_everything() {
     let tags = call(
         &mut server,
         "cad.tags.create",
-        json!({"drawing":drawing,"layerId":"duvar","tags":[{"of":id(1),"at":{"x":-2.,"y":5.},"content":"{number}","leader":true}]}),
+        json!({"drawing":drawing,"layerId":"duvar","tags":[{"of":id(1),"at":{"x":-2.,"y":5.},"content":"{number}\n{floorElevation}/{ceilingElevation}","leader":true}]}),
     );
     assert_eq!(tags["isError"], false, "{tags}");
     let before=call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"].clone();
@@ -59,7 +59,7 @@ fn numbering_plan_keeps_ids_and_moved_tag_then_one_undo_restores_everything() {
         .iter()
         .find(|r| r["entity"]["kind"] == "tag")
         .unwrap();
-    assert_eq!(tag["entity"]["text"], "Z-009");
+    assert_eq!(tag["entity"]["text"], "Z-009\n0.000/3.000");
     assert_eq!(tag["entity"]["at"], json!({"x":-2.,"y":5.}));
     assert_eq!(tag["entity"]["of"], id(1));
     let refused = call(

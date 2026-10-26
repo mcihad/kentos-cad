@@ -1,0 +1,135 @@
+[
+  {
+    "file": "01-before.jpg",
+    "note": "Existing room labels, four rooms, source-following tag and table; old immutable package before new elevation tokens.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T03:44:05.120Z",
+    "sha256": "6902d7df93686accc8ece74d1796fc9e3da1119e07a6bffddee9798e71e90228"
+  },
+  {
+    "file": "02-before-unsupported.jpg",
+    "note": "Old package rejects the new elevation token in real template input; document not changed.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T03:47:09.462Z",
+    "sha256": "3086ef919bc20560684a2a9a9050b4023a264ca57c1203fe1126e2c84744dabb"
+  },
+  {
+    "file": "03-after-initial.jpg",
+    "note": "New immutable package initial view; light18 profile, 14 original objects before any edit.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:18:48.010Z",
+    "sha256": "6902d7df93686accc8ece74d1796fc9e3da1119e07a6bffddee9798e71e90228"
+  },
+  {
+    "file": "04-template-help.jpg",
+    "note": "Save before placement; 14 objects. One full scroll passed the help to the existing no-selection section; this image is not evidence of complete help visibility.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:19:24.314Z",
+    "sha256": "c17015402d7e5986caaee3451d6ba7658dc64542969e8b1ea472022e13c496e2"
+  },
+  {
+    "file": "05-visible-elevation-help.jpg",
+    "note": "Top controls after scrolling upward; 3.5 mm and leader visible. The elevation help is still below the fold, so this is not full-help acceptance.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:20:01.278Z",
+    "sha256": "a7bec2deb167a89946169380df00873d6f42701368d9172f0f6dcceb93b2bc09"
+  },
+  {
+    "file": "06-help-complete.jpg",
+    "note": "Full new elevation help is now visible and wrapped within the pane at light18; rules for floor, explicit ceiling height, units and missing values can all be read.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:20:42.014Z",
+    "sha256": "caab31da9ff3710434afc3538ffb5ea33ac17aa27b86b9844e1b526bcba93808"
+  },
+  {
+    "file": "07-coordinate-before-confirm.jpg",
+    "note": "Exact 18,5 coordinate draft in actual command input; preview only, no write before one Enter. Floor 3.000 and unknown ceiling shown in the live preview.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:23:09.620Z",
+    "sha256": "74a6d2c0f48996df8edf3a662556ffe5488aaf14f12ecf9c2128daccbef8eec9"
+  },
+  {
+    "file": "08-created-unknown-ceiling.jpg",
+    "note": "One Enter created the linked tag at 18,5; repeat tool cancelled and saved. Known upper floor 3.000, unknown explicit ceiling stays blank.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:23:10.361Z",
+    "sha256": "cb0a6e10df1d6fbec67cc9d51f247be8cf4e26968b0d98a66d972d33186b857c"
+  },
+  {
+    "file": "09-inherited-height-clipped.jpg",
+    "note": "GUI finding: selected room #11 still inherits floor-to-floor height; the decorated 3.000 (katın) value is clipped at light18. New tag correctly leaves ceiling unknown. Final UI must separate this explanation from its numeric input.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T04:26:11.635Z",
+    "sha256": "0fc8413267fdfa5c9dcdec56c656fd8898b96f20aadfddc989a529f7bdf8b1cc"
+  },
+  {
+    "file": "10-height-number-fixed-note-long.jpg",
+    "note": "Intermediate UI: numeric height and unit fit, but the existing property note cell does not display the long explanation completely. The note must be shortened; this is not final note acceptance.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T04:33:20.370Z",
+    "sha256": "bfd610c3c6362352e59b27db247f0a92391286b4a940e3d5aec2f0d6baeafca0"
+  },
+  {
+    "file": "11-final-readable-height.jpg",
+    "note": "Final package: height numeric value and unit fit; short Katlar arası source note is fully readable at light18. Source room #11, tag ceiling still unknown.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:35:40.329Z",
+    "sha256": "8b1c5082a5a7566f7e1c5c33ad12582b128b3eff83d17305fdc41468b0cbf3d7"
+  },
+  {
+    "file": "12-height-and-ceiling.jpg",
+    "note": "Real source height 275 cm / single Enter: 2.750 m and linked tag ceiling 5.750, floor remains 3.000; schedule height changes in the same step.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:36:25.172Z",
+    "sha256": "614d3ba6cf97cd45a9dc401c034d52d71db3b17c4723949798cde5752ed12dc8"
+  },
+  {
+    "file": "13-single-undo.jpg",
+    "note": "Single model undo removes the explicit height, restores schedule 3.000 and unknown tag ceiling; tag location/source preserved.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:36:53.523Z",
+    "sha256": "509432a129be577a82359fb42a96f977f423d1411cd788f7a2868ca2b01f6147"
+  },
+  {
+    "file": "14-invalid-height.jpg",
+    "note": "Gerçek özellik alanında 0 m ve tek Enter: pozitif yükseklik reddi; kaynak/etiket/çizelge 2.750/5.750 değerlerinde kalır.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:40:44.877Z",
+    "sha256": "e80679adf2b2acb6984e5deef19289252042c5b763e5439921dd1ae0765e1cbd"
+  },
+  {
+    "file": "15-dark-wide.jpg",
+    "note": "Ayrı test profilinde gerçek görünüm ayarlarından koyu tema/13 px kaydedildi; mahal yüksekliği ve yeni kot etiketi geniş pencerede okunur.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:41:45.167Z",
+    "sha256": "fda4b449a9098312f5bf42f711b46592290fb9f007355166fb091b7e71239909"
+  },
+  {
+    "file": "16-dark-compact-height.jpg",
+    "note": "2200×1366 px dar pencerede koyu13; gerçek özellik girişinde 3,125 m ve tek Enter, 3.125 m yükseklik/6.125 tavan kotu.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:42:07.960Z",
+    "sha256": "af6f8bc29cbbf38980d651e2ac26bc635a80e175d003e0fcb556d83e6d41d6d5"
+  },
+  {
+    "file": "17-cancel-preview.jpg",
+    "note": "Koyu13/dar: yeni etiket aracı ve mevcut üst kat mahalı seçildi; hedef önizlemesi kayıttan önce iptal edilecek.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:42:34.976Z",
+    "sha256": "1b01060b2acb67915e3243b9a33d87282093ca887e27af284354a2c235ef8030"
+  },
+  {
+    "file": "18-cancelled.jpg",
+    "note": "İlk Escape hedef önizlemesini bıraktı, ikinci Escape araçtan çıktı. Kaydet sonrası 15 nesne; mevcut kot etiketi 3.000/5.750 korunur.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:42:50.583Z",
+    "sha256": "4d56e99d8245362a6fd905cb4252f8e85b8c05631b984d238e574f0a21f9df23"
+  },
+  {
+    "file": "19-reopened.jpg",
+    "note": "Test paketi kapatıldı ve yeni süreçle gerçek KCAD tekrar açıldı; 15 nesne, üst kat 3.000 ve tavan 5.750; tekrar Kaydet.",
+    "build": "after3-binary.json",
+    "recordedAt": "2026-10-26T04:43:25.159Z",
+    "sha256": "e46f32a0122e197055210c783a6698497d93460e5527af1275327f6f751cc0a1"
+  }
+]

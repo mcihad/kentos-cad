@@ -1,0 +1,90 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 57s
+     Running tests/all/main.rs (target/debug/deps/all-00e4186a94802638)
+
+running 67 tests
+test arrays::an_items_insert_removed_or_changed_by_hand_is_followed_in_the_same_step ... ok
+test arrays::another_editors_arrays_are_taken_as_the_drawing_holds_them ... ok
+test constraints::a_deleted_object_takes_its_constraints_and_their_parameters ... ok
+test constraints::a_parameter_another_reads_stays ... ok
+test dimension_ties::a_removed_object_breaks_both_references ... ok
+test dimension_ties::a_dragged_vertex_takes_the_dimension_along_in_the_same_step ... ok
+test dimension_ties::a_deleted_vertex_breaks_the_reference_and_keeps_the_point ... ok
+test exchange::names_fold_as_the_rule_says ... ok
+test dimension_ties::a_dimension_moved_by_itself_lets_the_moved_point_go ... ok
+test dimension_ties::an_inserted_vertex_rebinds_the_place_by_its_coordinates ... ok
+test dimension_ties::a_moved_insert_takes_the_dimension_on_its_piece_along ... ok
+test dimension_ties::a_redefined_block_moves_its_pieces_and_a_removed_piece_breaks ... ok
+test external::a_bad_change_or_an_open_edit_changes_nothing ... ok
+test external::a_change_from_outside_on_an_unsaved_drawing_leaves_it_unsaved ... ok
+test external::an_object_deleted_here_and_brought_back_elsewhere_loses_its_undo ... ok
+test external::another_editors_objects_come_in_without_an_undo_step_or_an_unsaved_mark ... ok
+test external::a_list_that_breaks_a_block_rule_changes_nothing ... ok
+test external::every_edit_moves_the_generation_with_the_revision ... ok
+test external::block_definitions_come_in_quietly_and_an_unchanged_one_keeps_its_object ... ok
+test external::another_editors_object_on_an_added_layer_drops_its_step ... ok
+test external::new_metadata_keeps_this_users_active_layer_when_it_can ... ok
+test external::removed_objects_go_and_unknown_ones_are_skipped ... ok
+test external::steps_that_changed_a_definition_someone_else_changed_or_place_a_gone_one_go ... ok
+test external::the_undo_steps_of_the_objects_it_changes_are_dropped ... ok
+test field_ids::an_unbound_field_takes_no_id_when_renamed ... ok
+test external::a_file_of_the_same_drawing_is_unchanged_by_its_equal_copy ... ok
+test field_ids::a_new_field_with_the_old_name_gets_a_fresh_id ... ok
+test field_ids::undo_takes_the_id_back ... ok
+test field_ids::a_bound_field_keeps_its_key_when_renamed_and_after ... ok
+test hatch_boundaries::a_boundary_whose_curve_misses_its_points_is_dropped ... ok
+test hatch_boundaries::a_boundary_draws_the_ring ... ok
+test hatch_boundaries::a_ring_changed_by_itself_drops_the_boundary ... ok
+test hatch_boundaries::a_face_follows_its_line_work ... ok
+test hatch_boundaries::a_face_moved_whole_takes_its_seed_along ... ok
+test hatch_boundaries::a_face_that_opens_breaks_the_tie ... ok
+test hatch_texts::a_hatch_does_not_leave_its_own_label_open ... ok
+test hatch_texts::a_hatch_follows_a_closed_polyline ... ok
+test hatch_texts::a_longer_text_widens_its_hole_and_a_moved_out_one_leaves_none ... ok
+test hatch_texts::denetle_finds_a_text_gone_and_a_label_left_open ... ok
+test hatch_texts::a_text_left_open_takes_its_hole_where_it_moves ... ok
+test layer_fields::fields_from_data_are_as_the_cases_say ... ok
+test layer_rules::layer_states_keep_and_change_the_tree_as_the_shared_cases_say ... ok
+test related::a_reached_pipe_gives_its_subscribers_and_a_reached_valve_its_chamber ... ok
+test exchange::a_drawing_becomes_one_block ... ok
+test identity::a_v1_file_opens_with_the_reference_ids ... ok
+test exchange::taking_from_another_drawing_skips_or_replaces_the_same_names ... ok
+test layer_rules::purge_finds_and_removes_as_the_shared_cases_say ... ok
+test identity::the_same_file_opens_with_the_same_ids_and_new_objects_get_v7 ... ok
+test snapshot_v2::a_v2_snapshot_keeps_every_id_through_edits_and_saves ... ok
+test steps::a_kept_step_is_one_undo_step_with_its_row_and_undo_marks_it ... ok
+test steps::a_seal_sees_the_step_as_it_will_be_recorded_and_may_refuse_it ... ok
+test steps::a_step_inside_a_group_waits_for_the_group ... ok
+test steps::a_refused_step_takes_back_what_is_no_undo_step_too ... ok
+test snapshot_v2::vertex_elevations_come_through_the_document_as_they_are ... ok
+test snapshot_v2::a_v1_file_becomes_the_reference_migration ... ok
+test snapshot_v2::a_v2_snapshot_with_bad_ids_is_refused ... ok
+test steps::a_step_writing_only_parts_is_journaled_without_an_undo_step ... ok
+test steps::integrity_names_what_a_step_would_leave_broken ... ok
+test steps::parts_written_outside_a_command_are_edit_rows_joined_while_they_follow ... ok
+test exchange::the_selections_drawing_keeps_what_its_objects_use ... ok
+test steps::an_inner_step_is_a_savepoint_of_the_outer ... ok
+test steps::the_ledger_goes_with_the_file ... ok
+test steps::stamps_come_from_the_content_and_come_back_with_undo ... ok
+test steps::refused_settings_step_restores_derived_room_elevation_words_without_moving_tag ... ok
+test exchange::a_layer_comes_with_its_objects ... ok
+test hatch_boundaries::a_tied_hatch_keeps_its_ellipse_island_exact ... ok
+test fixtures::every_document_fixture_matches_the_native_document ... ok
+
+test result: ok. 67 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

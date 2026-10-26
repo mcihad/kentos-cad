@@ -15,6 +15,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0658](docs/adr/0658-room-tag-elevations.md)).**
+  Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan;
+  bilinmeyen boş, katlar arası yükseklik tavan sayılmaz. Ayar/geçmiş/dış
+  değişiklikte yazı yenilenir, elle konum korunur. Gerçek GUI sayısal
+  yükseklik taşmasını yakalayıp düzeltti. [Kabul](docs/baseline/2026-10-26-architecture-tag-elevations/README.md):
+  195 ortak durum, 309 Python, 697 interaction/219 application/67 domain/
+  bir MCP; clippy/build/WASM, 19 ham ekran/on bağımsız tam kayıt.
+  ARCH-SPACE-02 [~]; ayrı net alan, listeler, Koru/Yenile ve tam matris açık.
+  Yeni TS/şema/birim/ölçek/renderer yoktur.
+
 - **Yeni araçta ayar başlangıcı (26 Ekim 2026; [ADR 0657](docs/adr/0657-reveal-new-tool-settings.md)).**
   Masaüstü Öznitelikler gövdesi tek scroll'unu adresler; ayarlı yeni araç
   başlatma üstü gösterir, aynı araçta düzenleme/önizleme kaydırmayı korur.

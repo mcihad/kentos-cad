@@ -103,6 +103,56 @@ impl Document {
                 out.push(op);
             }
         }
+        if ops
+            .iter()
+            .any(|op| matches!(op, Op::TemplateSettings { .. }))
+        {
+            out.extend(self.elevation_tag_updates());
+        }
         out
+    }
+
+    /// These new templates depend on settings outside ordinary model undo.
+    /// Refresh their derived words only: manually placed geometry stays intact.
+    fn elevation_tag_updates(&mut self) -> Vec<Op> {
+        let slots: Vec<_> = self.store.tag_slots().collect();
+        let mut ops = Vec::new();
+        for slot in slots {
+            let Some(current) = self.store.get(slot).cloned() else {
+                continue;
+            };
+            let Entity::Tag(t) = &*current.entity else {
+                continue;
+            };
+            let content = t.tag.content.as_deref().unwrap_or_default();
+            if !(content.contains("{floorElevation}") || content.contains("{ceilingElevation}")) {
+                continue;
+            }
+            let Some(target) = self.tag_target(&t.tag.of) else {
+                continue;
+            };
+            let text = self.tag_text(&target, t.tag.content.as_deref());
+            if t.tag.text == text {
+                continue;
+            }
+            let mut e = t.clone();
+            e.tag.text = text;
+            let op = Op::Update {
+                after: Stored {
+                    uid: current.uid,
+                    entity: Arc::new(Entity::Tag(e)),
+                },
+                before: current,
+            };
+            self.apply_op(&op);
+            ops.push(op);
+        }
+        ops
+    }
+
+    /// Settings, rollback and history may leave a stored derived string stale.
+    /// Like view marks this updates the derived cache without another undo step.
+    pub(crate) fn refresh_elevation_tags(&mut self) -> usize {
+        self.elevation_tag_updates().len()
     }
 }

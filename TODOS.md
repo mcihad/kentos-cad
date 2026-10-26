@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR 0658: etiketin `floorElevation` / `ceilingElevation`
+  yerleri, eksik veri kuralı ve güncel ayar altında kaynak/geçmiş yenilemesi
+  web dönüşünde desteklenmeli. Katın floor-to-floor yüksekliği açık mahal
+  yüksekliği yerine geçmez. Ortak 30 yeni bağımsız durum vardır; web
+  koşulmadı. Yeni TS/TSX türü yok; mevcut katalog açıklaması güncellendi.
+
 - ARCH-SPACE-02 / ADR 0653: `cad.spaces.number` ve ayrı Mahal numarala aracı;
   açık UUID/tıklama sırası veya iki SI noktayla yön izdüşümü, tam ilk numara,
   çakışmada atomik ret, etiket/çizelge ve tek undo web dönüşünde aynı

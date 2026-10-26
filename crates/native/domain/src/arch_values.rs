@@ -117,6 +117,18 @@ impl Document {
             .height
     }
 
+    /// The room's assigned floor; absence is unknown, not project zero.
+    fn room_floor_elevation(&self, arch: &ArchInfo) -> Option<f64> {
+        let id = arch.level.as_deref()?;
+        self.settings()
+            .arch
+            .as_ref()?
+            .levels
+            .iter()
+            .find(|l| l.id == id)
+            .map(|l| l.elevation)
+    }
+
     /// An opening type's name: KentOS's type of that id or name, else the words themselves.
     pub fn opening_type_name(&self, style: Option<&str>) -> String {
         let s = style.unwrap_or_default();
@@ -227,6 +239,12 @@ impl Document {
                     }
                     "height" => height.map(Length),
                     "volume" => height.map(|h| Volume(area * h)),
+                    "floorElevation" => self.room_floor_elevation(&x.arch).map(Length),
+                    // Floor-to-floor level height is not a stated room ceiling.
+                    "ceilingElevation" => self
+                        .room_floor_elevation(&x.arch)
+                        .zip(x.height)
+                        .map(|(floor, height)| Length(floor + height)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
                     _ => None,
