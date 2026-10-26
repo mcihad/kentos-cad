@@ -22,6 +22,24 @@ impl Token {
     pub fn stale(&self, now_ms: u64) -> bool {
         now_ms.saturating_add(60_000) >= self.expires_ms
     }
+
+    /// The server refused it before its end (revoked, or a clock apart): the next request asks for a new one
+    /// (docs/adr/0655 §1).
+    pub fn refused(&mut self) {
+        self.expires_ms = 0;
+    }
+}
+
+/// Whether a connection's requests carry a token it is given (ArcGIS, OAuth 2).
+pub fn takes_token(conn: &ServiceConnection) -> bool {
+    matches!(conn.auth, AuthKind::Arcgis | AuthKind::Oauth2)
+}
+
+/// Whether a token is asked for before a request (docs/adr/0655 §1): the connection takes one and none is held, or
+/// the one held is about to end or was refused. A token taken once at the start would end within the hour and every
+/// tile after it would be refused.
+pub fn renew(conn: &ServiceConnection, held: Option<&Token>, now_ms: u64) -> bool {
+    takes_token(conn) && held.is_none_or(|t| t.stale(now_ms))
 }
 
 /// Base64 (RFC 4648, with padding).
@@ -250,6 +268,31 @@ pub fn read_token(conn: &ServiceConnection, body: &str, now_ms: u64) -> Result<T
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_token_is_asked_for_again_before_its_end_and_after_a_refusal() {
+        let arcgis = conn(AuthKind::Arcgis, &[]);
+        let basic = conn(AuthKind::Basic, &[]);
+        let mut t = Token {
+            value: "t".into(),
+            expires_ms: 3_600_000,
+        };
+        assert!(renew(&arcgis, None, 0), "none held yet");
+        assert!(!renew(&arcgis, Some(&t), 0), "an hour left");
+        assert!(
+            !renew(&arcgis, Some(&t), 3_539_999),
+            "a minute and a little left"
+        );
+        assert!(
+            renew(&arcgis, Some(&t), 3_540_000),
+            "within a minute of its end"
+        );
+        assert!(renew(&arcgis, Some(&t), 7_200_000), "ended");
+        assert!(!renew(&basic, None, 0), "a connection without a token");
+        t.refused();
+        assert!(renew(&arcgis, Some(&t), 0), "refused by the server");
+        assert!(takes_token(&conn(AuthKind::Oauth2, &[])));
+    }
 
     fn conn(auth: AuthKind, names: &[&str]) -> ServiceConnection {
         ServiceConnection {

@@ -146,11 +146,23 @@ fn tile_request(
                 return Err(why);
             }
             if let Some(secret) = &secret {
-                let token = ready
+                let held = ready
                     .token
                     .lock()
                     .unwrap_or_else(PoisonError::into_inner)
                     .clone();
+                // A token ends (an hour for ArcGIS and OAuth 2): asked for again before it does (docs/adr/0655 §1).
+                let token = if auth::renew(c, held.as_ref(), now_ms()) {
+                    let fresh = super::resolve::token_for(
+                        &(c.clone(), secret.clone()),
+                        &entry.service.url,
+                        ready.per_host,
+                    )?;
+                    *ready.token.lock().unwrap_or_else(PoisonError::into_inner) = fresh.clone();
+                    fresh
+                } else {
+                    held
+                };
                 auth::apply(c, secret, token.as_ref(), &mut req);
             }
             query::without_params(&url, &names)
@@ -338,6 +350,9 @@ fn answer(s: &Arc<Shared>, a: Arrived) {
     };
     match res.status {
         200 => {
+            if let Some(r) = entry.ready() {
+                r.token_refused.store(false, Ordering::Relaxed);
+            }
             s.cache.put(&cache_url, 200, &res.headers, &res.body);
             done(s, &entry, k, vector, &res.body);
         }
@@ -352,6 +367,11 @@ fn answer(s: &Arc<Shared>, a: Arrived) {
         204 | 404 => finish(s, k, Some(ServiceTile::Empty)),
         401 | 403 => {
             failed(s, k);
+            // A token the server no longer takes is asked for again before the next tile; said only when a fresh one
+            // is refused too (docs/adr/0655 §1).
+            if refuse_token(&entry) {
+                return;
+            }
             s.notice(format!(
                 "“{}”: sunucu erişimi reddetti ({}). Bağlantının bilgilerini Bağlantılar penceresinden denetleyin.",
                 name_of(&entry),
@@ -364,6 +384,22 @@ fn answer(s: &Arc<Shared>, a: Arrived) {
                 s.notice(format!("“{}”: sunucu {status} dedi.", name_of(&entry)));
             }
         }
+    }
+}
+
+/// Marks the token a service's tile was refused with as refused, once until a tile comes again; false when there was
+/// none or a fresh one was refused too (that is said).
+fn refuse_token(entry: &Entry) -> bool {
+    let Some(ready) = entry.ready() else {
+        return false;
+    };
+    let mut token = ready.token.lock().unwrap_or_else(PoisonError::into_inner);
+    match token.as_mut() {
+        Some(t) if !ready.token_refused.swap(true, Ordering::Relaxed) => {
+            t.refused();
+            true
+        }
+        _ => false,
     }
 }
 

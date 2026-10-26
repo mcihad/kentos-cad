@@ -75,6 +75,8 @@ pub struct Ready {
     pub source_id: String,
     pub google: Mutex<Option<Session>>,
     pub token: Mutex<Option<Token>>,
+    /// A refused token was asked for again and no tile came since: the next refusal is said (docs/adr/0655 §1).
+    pub token_refused: std::sync::atomic::AtomicBool,
     pub per_host: usize,
     /// Its credits as the view shows them, and their links.
     pub attribution: Mutex<Credit>,

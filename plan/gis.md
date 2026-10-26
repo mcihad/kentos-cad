@@ -732,7 +732,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/04/13/20/24/28/32. Başlangıç hedefleri: 1 milyon feature/10 milyon köşe içeren testte bütün veri indirilmeden ilk yararlı görünüm; yerel ilk tablo sayfası ≤1 s, sıcak görünümde pick/snap p95 ≤30 ms, sürekli gezinmede p95 frame ≤33 ms. Bunlar **ölçülmemiş aday bütçelerdir**; G0'da donanım/örnek/ağ tanımıyla kesinleştirilir. 10 milyon satırlı provider ve 20 GB raster/bulut stresinde bellek veri büyüklüğüyle sınırsız artmamalı. Hedefe ulaşmak için etiket/geometri gizlice eksiltilmemeli.
 
-- [ ] **CBS-43 — Mevcut servis istemcisini canlı feature provider ve açık filtre profiliyle genişlet — P1; yayın P2**
+- [x] **CBS-43 — Mevcut servis istemcisini canlı feature provider ve açık filtre profiliyle genişlet — P1; yayın P2**
+
+  *Kapatıldı (26 Ekim 2026, sahibin kararı: “sadece en acil olanları yap, konuyu şimdilik kapatacağız”; [ADR 0655](../docs/adr/0655-service-token-renewal-and-desktop-gis-acceptance.md)): ArcGIS ve OAuth 2 bağlantılı karo servislerinin belirteci bitmeden ve sunucu reddedince yenilenir (`auth::renew`, `Token::refused`); önce servis hazırlanırken bir kez alınıyor, bir saat sonra her karo reddediliyordu. Kesilen ağda alma çizime hiçbir şey yazmaz (doğrulandı). Ertelenenler: servis üstünde canlı sorgu ve düzenleme, CQL2 JSON ve queryables, expires/ETag ile veri yenileme, QGIS FeatureServer kıyası, yayın (P2).*
 
   *Kısmen (18 Ekim 2026; [ADR 0513](../docs/adr/0513-feed-completeness-and-filter-profile.md)): Servisten veri al'ın bitişi `complete`, `capped`, `short`, `pages` (sınırlı ya da sayfalı servisin eksik sonucu tam sayılmaz; WFS 2.0 sunucunun kestiği sayfada sürer); OGC API'nin uygunluk sayfası profil olarak okunur (Bölüm 1–4, CQL2; Bölüm 4 taslak, kullanılmaz), CQL2 metin süzgeci yalnız bildiren servise gider. Bağımsız başvuru `feed_paging_cases.py` sahte sunucuyla; Python yerel sunucuyla uçtan uca. Kalan: canlı sağlayıcı (servis üstünde sorgu ve düzenleme), expires/ETag, belirteç yenileme, kesilen ağ, CQL2 JSON ve queryables, QGIS'in FeatureServer kıyası, yayın (P2).*
 
@@ -742,7 +744,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/38/39/42. Limitli/sayfalı servis eksik sonucu “tam veri” saymamalı; expires/ETag, token yenileme, kesilen ağ ve attribution çalışmalı. **P2'de ayrıca seçilirse** açık OGC API/tiles yayın servisi veya açık kaynak server adapter'ı; immutable yayın revision'ı, stil/metadata, erişim ve cache izolasyonuyla eklenir. Ticari servis/DB bağımlılığı oluşmaz; kaynak CAD/GIS ile yayın tile'ı ayrı kalır. İlgili OGC standardının yazma kısmı taslaksa bu durum sürüm profilinde açıkça yazılır.
 
-- [ ] **CBS-44 — Yeni provider'lar için QGIS 4.2 round-trip ve uçtan uca kabul korpusu ekle — P0**
+- [x] **CBS-44 — Yeni provider'lar için QGIS 4.2 round-trip ve uçtan uca kabul korpusu ekle — P0**
+
+  *Kapatıldı (26 Ekim 2026, sahibin kararı; [ADR 0655](../docs/adr/0655-service-token-renewal-and-desktop-gis-acceptance.md)): kabul projesi (`parcels.json`) masaüstünde de oynatılır: ajan bağlantısıyla komutlar, Ctrl+Z gibi geri alma, uygulamanın kendi kaydı ve açışı, yarıda durdurulan kaydın dosyaya dokunmaması, beş biçim ve GeoPackage'ın yeni projede açılması (`acceptance_gis_tests.rs`); MCP'de zaten oynatılıyordu. Senaryo artık Python, MCP ve masaüstünde. Ertelenenler: PostGIS, yetki ve geri yüklemenin senaryoya bağlanması, performans kabulü.*
 
   *Kısmen (17 Ekim 2026; ADR 0502): `fixtures/geopackage/v1` — QGIS 4.2.3'ün yazdığı GeoPackage → KentOS → GeoPackage → GDAL/OGR ve QGIS 4.2; kimlik, Türkçe metin, NULL/boş, delik, çok parça, Z/M, eğri korunumu; GDAL doğrulayıcısı. Kalan: PostGIS, yetki, restore ve performans kabulü.*
 

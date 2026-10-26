@@ -77,7 +77,7 @@ fn proof(entry: &Entry) -> Result<Option<(ServiceConnection, ConnectionSecret)>,
 }
 
 /// A token for an ArcGIS or OAuth 2 connection.
-fn token_for(
+pub(super) fn token_for(
     conn: &(ServiceConnection, ConnectionSecret),
     referer: &str,
     per_host: usize,
@@ -166,6 +166,7 @@ fn run(entry: &Entry) -> Result<Ready, String> {
         source_id,
         google: Mutex::new(google_session),
         token: Mutex::new(token),
+        token_refused: std::sync::atomic::AtomicBool::new(false),
         per_host,
         attribution: Mutex::new(credit_of(s, &attribution_text)),
     })

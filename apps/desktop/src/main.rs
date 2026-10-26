@@ -5,6 +5,8 @@
 //! çıktı.png [çizim.kcad]` draws the window into an image without opening it.
 
 #[cfg(test)]
+mod acceptance_gis_tests;
+#[cfg(test)]
 mod acceptance_tests;
 #[cfg(test)]
 mod measure_probe_tests;
