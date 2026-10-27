@@ -2783,6 +2783,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.slab",
+   "kind": "command",
+   "title": "Seçim süzgecinde Döşeme",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.space",
    "kind": "command",
    "title": "Seçim süzgecinde Mahal",
@@ -12221,6 +12235,23 @@
    "mcp": "cad.shapes.edit",
    "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.slab",
+   "kind": "command",
+   "title": "Döşeme",
+   "level": "semantic",
+   "via": [
+    "cad.slabs.create",
+    "cad.slabs.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.slabs.create, kentos.cad.slabs.edit",
+   "mcp": "cad.slabs.create, cad.slabs.edit",
+   "note": "Tıklanan iç nokta (Dış yüzler ya da Oda) veya çizilen köşeler, tür, kalınlık, kot farkı, kenar ötelemesi, kenar, malzeme, metraj ve kat cad.slabs.create'e; Delik açıkken tıklanan oda ya da çizilen alan altındaki döşemenin cad.slabs.edit subtract'ine verilir. Sınır, öteleme ve serbest kenarlar komutun hesabıdır, önizleme planından (ADR 0722 §4, §6).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

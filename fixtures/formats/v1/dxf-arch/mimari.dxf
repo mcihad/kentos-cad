@@ -113,7 +113,7 @@ $PDSIZE
   9
 $HANDSEED
   5
-94
+9B
   9
 $TILEMODE
  70
@@ -651,7 +651,7 @@ Continuous
   0
 LAYER
   5
-93
+9A
 330
 1
 100
@@ -947,7 +947,7 @@ BLOCK_RECORD
 100
 AcDbSymbolTable
  70
-12
+13
   0
 BLOCK_RECORD
   5
@@ -1180,6 +1180,26 @@ AcDbSymbolTableRecord
 AcDbBlockTableRecord
   2
 *U10
+340
+0
+ 70
+0
+280
+1
+281
+0
+  0
+BLOCK_RECORD
+  5
+93
+330
+9
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+*U11
 340
 0
  70
@@ -2410,6 +2430,14 @@ K1
 AcDbText
  73
 2
+1001
+KENTOS
+1002
+{
+1000
+mask
+1002
+}
   0
 ENDBLK
   5
@@ -3789,6 +3817,172 @@ AcDbEntity
 100
 AcDbBlockEnd
   0
+BLOCK
+  5
+97
+330
+93
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockBegin
+  2
+*U11
+ 70
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+*U11
+  1
+
+  0
+LWPOLYLINE
+  5
+94
+330
+93
+100
+AcDbEntity
+  8
+Çizim
+  6
+ByBlock
+ 62
+0
+370
+-2
+440
+16777216
+100
+AcDbPolyline
+ 90
+4
+ 70
+129
+ 10
+1.0
+ 20
+4.1
+ 10
+5.0
+ 20
+4.1
+ 10
+5.0
+ 20
+5.6
+ 10
+1.0
+ 20
+5.6
+1001
+KENTOS
+1002
+{
+1000
+line
+1002
+}
+  0
+LWPOLYLINE
+  5
+95
+330
+93
+100
+AcDbEntity
+  8
+Çizim
+  6
+ByBlock
+ 62
+0
+370
+-2
+440
+16777216
+100
+AcDbPolyline
+ 90
+4
+ 70
+128
+ 10
+5.0
+ 20
+4.1
+ 10
+5.0
+ 20
+5.6
+ 10
+1.0
+ 20
+5.6
+ 10
+1.0
+ 20
+4.1
+  0
+LWPOLYLINE
+  5
+96
+330
+93
+100
+AcDbEntity
+  8
+Çizim
+  6
+ByBlock
+ 62
+0
+370
+-2
+440
+16777216
+100
+AcDbPolyline
+ 90
+4
+ 70
+128
+ 10
+4.95
+ 20
+4.1
+ 10
+4.95
+ 20
+5.55
+ 10
+1.0499999999999994
+ 20
+5.55
+ 10
+1.05
+ 20
+4.1
+  0
+ENDBLK
+  5
+98
+330
+93
+100
+AcDbEntity
+  8
+0
+100
+AcDbBlockEnd
+  0
 ENDSEC
   0
 SECTION
@@ -3821,7 +4015,7 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"id":1,"kind":"grid","layerId":"cizim","name":"A","pts":[{"x":0.0,"y":-1.5},{"x":0.0,"y":5.5}],"uid":"01a15102-529c-7347-95d8-781e395f37e7"}
+{"attrs":{},"id":1,"kind":"grid","layerId":"cizim","name":"A","pts":[{"x":0.0,"y":-1.5},{"x":0.0,"y":5.5}],"uid":"01a17f79-772f-7545-8cf4-b4c723d7d974"}
 1002
 }
   0
@@ -3851,7 +4045,7 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"id":2,"kind":"grid","layerId":"cizim","name":"1","pts":[{"x":-1.5,"y":0.0},{"x":7.5,"y":0.0}],"uid":"01a15102-529c-7347-95d8-781f66fc3954"}
+{"attrs":{},"id":2,"kind":"grid","layerId":"cizim","name":"1","pts":[{"x":-1.5,"y":0.0},{"x":7.5,"y":0.0}],"uid":"01a17f79-772f-7545-8cf4-b4c88663b424"}
 1002
 }
   0
@@ -3881,7 +4075,7 @@ KENTOS
 1000
 object
 1000
-{"at":{"x":0.0,"y":0.0},"attrs":{},"depth":0.3,"grids":["01a15102-529c-7347-95d8-781e395f37e7","01a15102-529c-7347-95d8-781f66fc3954"],"id":3,"kind":"column","layerId":"cizim","place":"A-1","uid":"01a15102-529d-7463-8ed0-751fb1d75b2b","width":0.3}
+{"at":{"x":0.0,"y":0.0},"attrs":{},"depth":0.3,"grids":["01a17f79-772f-7545-8cf4-b4c723d7d974","01a17f79-772f-7545-8cf4-b4c88663b424"],"id":3,"kind":"column","layerId":"cizim","place":"A-1","uid":"01a17f79-7737-72c5-988a-ea653d65bf38","width":0.3}
 1002
 }
   0
@@ -3911,7 +4105,7 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"closed":true,"id":4,"justify":"center","kind":"wall","layerId":"cizim","pts":[{"x":0.0,"y":0.0},{"x":6.0,"y":0.0},{"x":6.0,"y":4.0},{"x":0.0,"y":4.0}],"uid":"01a15102-529e-71c8-a794-3a66887aa05d","width":0.2}
+{"attrs":{},"closed":true,"id":4,"justify":"center","kind":"wall","layerId":"cizim","pts":[{"x":0.0,"y":0.0},{"x":6.0,"y":0.0},{"x":6.0,"y":4.0},{"x":0.0,"y":4.0}],"uid":"01a17f79-773b-70d7-9b1d-b171d9e87579","width":0.2}
 1002
 }
   0
@@ -3943,9 +4137,9 @@ object
 1002
 {
 1000
-{"at":2.0,"attrs":{},"form":"door","frame":0.05,"head":2.1,"host":"01a15102-529e-71c8-a794-3a66887aa05d","id":5,"kind":"opening","layerId":"cizim","number":"K1","place":[{"x":1.5500000000000007,"y":0.1},{"x":1.5500000000000007,"y":-0.1},{"x":2.449999
+{"at":2.0,"attrs":{},"form":"door","frame":0.05,"head":2.1,"host":"01a17f79-773b-70d7-9b1d-b171d9e87579","id":5,"kind":"opening","layerId":"cizim","number":"K1","place":[{"x":1.5500000000000007,"y":0.1},{"x":1.5500000000000007,"y":-0.1},{"x":2.449999
 1000
-9999999993,"y":0.1},{"x":2.4499999999999993,"y":-0.1}],"style":"kentos-kapi-90","uid":"01a15102-529f-76c8-801c-1034ab62dfcd","width":0.9}
+9999999993,"y":0.1},{"x":2.4499999999999993,"y":-0.1}],"style":"kentos-kapi-90","uid":"01a17f79-773d-7287-9def-0aec07255518","width":0.9}
 1002
 }
 1002
@@ -3981,7 +4175,7 @@ object
 1000
 {"attrs":{},"id":6,"kind":"space","layerId":"cizim","name":"Salon","number":"Z-01","parts":[{"outer":{"pts":[{"x":0.09999999999999999,"y":0.10000000000000009},{"x":5.9,"y":0.1},{"x":5.9,"y":3.9},{"x":0.09999999999999964,"y":3.9}]}}],"seed":{"x":3.0,"
 1000
-y":2.0},"uid":"01a15102-52a0-7237-88c5-bd809baad89b"}
+y":2.0},"uid":"01a17f79-773f-74ba-a40c-e843c6edcfcb"}
 1002
 }
 1002
@@ -4013,7 +4207,7 @@ KENTOS
 1000
 object
 1000
-{"anchor":{"x":2.0,"y":0.0},"at":{"x":2.0,"y":0.5},"attrs":{},"id":7,"kind":"tag","layerId":"cizim","of":"01a15102-529f-76c8-801c-1034ab62dfcd","shape":"hexagon","text":"K1","uid":"01a15102-52a1-73bc-98a5-da56dd5e9455"}
+{"anchor":{"x":2.0,"y":0.0},"at":{"x":2.0,"y":0.5},"attrs":{},"id":7,"kind":"tag","layerId":"cizim","of":"01a17f79-773d-7287-9def-0aec07255518","shape":"hexagon","text":"K1","uid":"01a17f79-7740-7195-9743-b3b3479af763"}
 1002
 }
   0
@@ -4043,7 +4237,7 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"form":"section","id":8,"kind":"viewmark","layerId":"cizim","mark":"A","points":[{"x":-1.0,"y":2.0},{"x":7.0,"y":2.0}],"uid":"01a15102-52a2-7347-a188-33b6da9cc76c","words":{"bottom":"—","top":"A"}}
+{"attrs":{},"form":"section","id":8,"kind":"viewmark","layerId":"cizim","mark":"A","points":[{"x":-1.0,"y":2.0},{"x":7.0,"y":2.0}],"uid":"01a17f79-7741-70e8-9b8d-655e7d523da4","words":{"bottom":"—","top":"A"}}
 1002
 }
   0
@@ -4073,7 +4267,7 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"id":9,"kind":"stair","layerId":"cizim","pts":[{"x":1.0,"y":1.0},{"x":4.0,"y":1.0}],"riserHeight":0.17,"risers":10,"tread":0.28,"uid":"01a15102-52a2-7347-a188-33b755eec136","width":1.0}
+{"attrs":{},"id":9,"kind":"stair","layerId":"cizim","pts":[{"x":1.0,"y":1.0},{"x":4.0,"y":1.0}],"riserHeight":0.17,"risers":10,"tread":0.28,"uid":"01a17f79-7742-717f-b46d-f27826e9dfc4","width":1.0}
 1002
 }
   0
@@ -4103,7 +4297,43 @@ KENTOS
 1000
 object
 1000
-{"attrs":{},"id":10,"kind":"ramp","layerId":"cizim","pts":[{"x":8.0,"y":0.0},{"x":14.0,"y":0.0}],"rise":0.3,"slope":5.0,"uid":"01a15102-52a3-736b-90a4-158ef9483ea4","width":1.5}
+{"attrs":{},"id":10,"kind":"ramp","layerId":"cizim","pts":[{"x":8.0,"y":0.0},{"x":14.0,"y":0.0}],"rise":0.3,"slope":5.0,"uid":"01a17f79-7742-717f-b46d-f279f68e2549","width":1.5}
+1002
+}
+  0
+INSERT
+  5
+99
+330
+17
+100
+AcDbEntity
+  8
+Çizim
+100
+AcDbBlockReference
+  2
+*U11
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+1001
+KENTOS
+1002
+{
+1000
+object
+1002
+{
+1000
+{"attrs":{},"edge":{"kind":"railing","runs":[{"pts":[{"x":5.0,"y":4.1},{"x":5.0,"y":5.6},{"x":1.0,"y":5.6},{"x":1.0,"y":4.1}]}],"width":0.05},"id":11,"kind":"slab","layerId":"cizim","material":"Betonarme","parts":[{"outer":{"pts":[{"x":1.0,"y":4.1},{
+1000
+"x":5.0,"y":4.1},{"x":5.0,"y":5.6},{"x":1.0,"y":5.6}]}}],"role":"balcony","thickness":0.15,"uid":"01a17f79-7743-7181-9092-583928f71d6e"}
+1002
+}
 1002
 }
   0

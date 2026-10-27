@@ -1871,6 +1871,14 @@
       ],
       "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5)."
     },
+    "tool.slab": {
+      "level": "semantic",
+      "via": [
+        "cad.slabs.create",
+        "cad.slabs.edit"
+      ],
+      "note": "Tıklanan iç nokta (Dış yüzler ya da Oda) veya çizilen köşeler, tür, kalınlık, kot farkı, kenar ötelemesi, kenar, malzeme, metraj ve kat cad.slabs.create'e; Delik açıkken tıklanan oda ya da çizilen alan altındaki döşemenin cad.slabs.edit subtract'ine verilir. Sınır, öteleme ve serbest kenarlar komutun hesabıdır, önizleme planından (ADR 0722 §4, §6)."
+    },
     "tool.spaceRebound": {
       "level": "semantic",
       "via": [

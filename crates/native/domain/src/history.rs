@@ -975,6 +975,9 @@ impl Document {
         ops.extend(columns);
         let spaces = self.follow_spaces(ops);
         ops.extend(spaces);
+        // Then: the slabs' edges with their walls (docs/adr/0722 §3).
+        let slabs = self.follow_slabs(ops);
+        ops.extend(slabs);
         // Then: the tags with their objects (docs/adr/0344 §1).
         let tags = self.follow_tags(ops);
         ops.extend(tags);

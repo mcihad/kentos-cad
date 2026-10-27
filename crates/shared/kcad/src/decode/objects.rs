@@ -84,6 +84,7 @@ enum Kind {
     Ramp,
     Tag,
     ViewMark,
+    Slab,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -120,6 +121,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("ramp", Kind::Ramp),
     ("tag", Kind::Tag),
     ("viewmark", Kind::ViewMark),
+    ("slab", Kind::Slab),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -248,6 +250,8 @@ pub(super) struct Features {
     dimension_levels: bool,
     /// Schema 122: a block schedule's further columns (`columns`, docs/adr/0721 §4).
     schedule_columns: bool,
+    /// Schema 123: the slab kind (docs/adr/0722).
+    slabs: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -453,6 +457,7 @@ impl Features {
             level_state: schema >= crate::SCHEMA_WITH_LEVEL_STATE,
             dimension_levels: schema >= crate::SCHEMA_WITH_DIMENSION_LEVELS,
             schedule_columns: schema >= crate::SCHEMA_WITH_SCHEDULE_COLUMNS,
+            slabs: schema >= crate::SCHEMA_WITH_SLABS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -556,6 +561,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Ramp => key == "ramp",
             Kind::Tag => key == "tag",
             Kind::ViewMark => key == "viewmark",
+            Kind::Slab => key == "slab",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -764,6 +770,8 @@ struct Fields {
     ramp: Option<kentos_contracts::RampFields>,
     tag: Option<kentos_contracts::TagFields>,
     viewmark: Option<kentos_contracts::ViewMarkFields>,
+    /// A slab's fields (docs/adr/0722).
+    slab: Option<kentos_contracts::SlabFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -1044,6 +1052,7 @@ pub(super) fn object(
                 || !matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp))
             && (has.tags || *kind != Kind::Tag)
             && (has.viewmarks || *kind != Kind::ViewMark)
+            && (has.slabs || *kind != Kind::Slab)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -1087,6 +1096,10 @@ pub(super) fn object(
     // Nor a view mark: its target is the drawing's (docs/adr/0345 §1).
     if kind == Kind::ViewMark && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında görünüm işareti olamaz"));
+    }
+    // Nor a slab: its walls are the drawing's (docs/adr/0722 §1).
+    if kind == Kind::Slab && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında döşeme olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1338,6 +1351,8 @@ pub(super) fn object(
             "viewmark" if kind == Kind::ViewMark => {
                 f.viewmark = Some(json_part(r, "görünüm işaretinin alanları")?.0)
             }
+            // Schema 123 (docs/adr/0722): a slab's fields.
+            "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =
@@ -2319,6 +2334,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::ViewMark(kentos_contracts::ViewMarkEntity { base, mark })
+        }
+        Kind::Slab => {
+            let slab = required(r, f.slab.take(), "slab")?;
+            if let Some((_, problem)) = slab.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Slab(kentos_contracts::SlabEntity { base, slab })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

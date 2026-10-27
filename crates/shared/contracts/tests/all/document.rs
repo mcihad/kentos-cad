@@ -45,6 +45,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Wall(_) => "wall",
             Entity::Opening(_) => "opening",
             Entity::Space(_) => "space",
+            Entity::Slab(_) => "slab",
             Entity::Grid(_) => "grid",
             Entity::Column(_) => "column",
             Entity::Stair(_) => "stair",

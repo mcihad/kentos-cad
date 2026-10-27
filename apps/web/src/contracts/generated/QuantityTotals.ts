@@ -11,4 +11,16 @@ spaceArea: number,
 /**
  * The voids' area: shafts, lift shafts, openings in the floor.
  */
-voidArea?: number, wallLength: number, wallNetArea: number, openings: number, openingArea: number, };
+voidArea?: number, wallLength: number, wallNetArea: number, openings: number, openingArea: number, 
+/**
+ * The rooms' baseboards, metres (docs/adr/0722 §5).
+ */
+baseboardLength?: number, 
+/**
+ * The slabs' net area and volume, those left out not summed.
+ */
+slabArea?: number, slabVolume?: number, 
+/**
+ * The railings' and parapets' length along the slabs' free sides, metres.
+ */
+railingLength?: number, parapetLength?: number, };

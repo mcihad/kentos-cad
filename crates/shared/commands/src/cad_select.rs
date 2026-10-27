@@ -187,11 +187,13 @@ pub enum SelectKind {
     Tag,
     /// Görünüm işareti (docs/adr/0345 §5).
     ViewMark,
+    /// Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
+    Slab,
 }
 
 impl SelectKind {
     /// Every kind, in the filter's menu's order.
-    pub const ALL: [SelectKind; 26] = [
+    pub const ALL: [SelectKind; 27] = [
         SelectKind::Point,
         SelectKind::Line,
         SelectKind::Polyline,
@@ -218,6 +220,7 @@ impl SelectKind {
         SelectKind::Ramp,
         SelectKind::Tag,
         SelectKind::ViewMark,
+        SelectKind::Slab,
     ];
 
     /// Its name on the wire, the entity kind's.
@@ -249,6 +252,7 @@ impl SelectKind {
             SelectKind::Ramp => "ramp",
             SelectKind::Tag => "tag",
             SelectKind::ViewMark => "viewmark",
+            SelectKind::Slab => "slab",
         }
     }
 }

@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'fixtures/commands/v1/cad.spaces.columns.json'
 LABEL = {'net': 'Net (iç yüzler)', 'centerline': 'Duvar ekseni', 'gross': 'Brüt (dış yüzler)'}
 POLICY = {'net': 'Yalnız net', 'all': 'Her yöntemde'}
+# A room's baseboard rule, last in its rule; no passage in these drawings: the baseboard is the perimeter (ADR 0722 §5).
+BASEBOARD_RULE = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür"
 BASE = {'net': D('9.8')*D('7.8'), 'centerline': D(80), 'gross': D('10.2')*D('8.2')}
 PERIM = {'net': D('35.2'), 'centerline': D(36), 'gross': D('36.8')}
 
@@ -59,6 +61,9 @@ def case(unit, method, policy, level):
     if policy in POLICY:
         row['columns'] = policy
         row['rule'] += '; kolon alanı: '+POLICY[policy]
+    # No passage in this drawing: the baseboard is the perimeter (ADR 0722 §5).
+    row['rule'] += BASEBOARD_RULE
+    row['baseboard'] = row['perimeter']
     if level: row.update(level='zemin',height=3.,volume=float(area*D(3)))
     state = {'ids':[1,2,3,4,5],'entities':{'5':entity},'canUndo':True,'dirty':True,'revision':'changed'}
     return dict(name=f'{unit} / {method} / {policy or "legacy"} / {"zemin" if level else "tüm katlar"}',setup=setup(unit),steps=[

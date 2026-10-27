@@ -33,6 +33,7 @@ pub mod table;
 pub mod tangent_circle;
 pub mod tiles;
 pub mod opening;
+pub mod slab;
 pub mod space;
 pub mod space_index;
 pub mod arch;

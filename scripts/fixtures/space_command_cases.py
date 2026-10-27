@@ -14,7 +14,8 @@ perimeter and the area by each method, exact fractions as floats. The rules, as 
   cuts each along a line (the largest keeps its id), Duvarlardan bul finds the boundary from the walls round the seed
   given, else its own, else its label's point; the revision; a locked layer refuses all;
 - `cad.spaces.quantities`: spaces, walls and openings measured as the ADR says (§4), filtered by levels, phases,
-  usages, layers; totals summed in the rows' order;
+  usages, layers; totals summed in the rows' order; a room's baseboard, the slabs and the floor finishes' changes at
+  the passages as ADR 0722 §5 says (`baseboard`, `slab_row`, `transitions` below);
 - the document finds a space from its walls again when they change (a wall moved), and breaks it (`lostEnclosure`)
   when they no longer close round it.
 """
@@ -109,13 +110,14 @@ class Drawing:
     def __init__(self):
         self.walls = {i: copy.deepcopy(e) for i, e in BY_ID.items() if e["kind"] == "wall"}
         self.spaces = {}      # id → (layer, fields with "parts" as exact rings, entity extras)
-        self.openings = {}    # id → (host wall id, width, head, sill, form, style, depth)
+        self.openings = {}    # id → (host wall id, width, head, sill, form, style, depth, at)
+        self.slabs = {}       # id → (layer, fields with "parts" as exact rings, entity extras) (ADR 0722)
         self.next = NEW
         self.locked = set()
 
     def ids(self):
         kept = [i for i in IDS if BY_ID[i]["kind"] != "wall" or i in self.walls]
-        return kept + sorted(list(self.spaces) + list(self.openings) + [w for w in self.walls if w not in BY_ID])
+        return kept + sorted(list(self.spaces) + list(self.openings) + list(self.slabs) + [w for w in self.walls if w not in BY_ID])
 
     def follow(self):
         """The document's follower (ADR 0342 §3): each space found from the walls is found again."""
@@ -362,6 +364,188 @@ def level_height(arch):
     return None if lv is None else lv.get("height")
 
 
+# ── A room's baseboard, the passages and the slabs (ADR 0722 §5) ─────────────────────────────────────────────
+
+
+def reads(level, other):
+    """An object on `level` reads a passage or a void on `other`: the same level, or every one without a level."""
+    return level is None or level == other
+
+
+def passages(d):
+    """The doors and the gaps with no sill on a wall, in the drawing's order: (id, number, width, A, B, half, level)
+    with A→B the axis between its jambs' middles (the walls are straight, centred; `at` its middle along the wall)."""
+    out = []
+    for oid, (host, width, head, sill, form, style, depth, at) in sorted(d.openings.items()):
+        if not (form == "door" or (form == "opening" and (sill is None or sill <= 0))) or host not in d.walls:
+            continue
+        w = d.walls[host]
+        a, b = (F(w["pts"][0]["x"]), F(w["pts"][0]["y"])), (F(w["pts"][1]["x"]), F(w["pts"][1]["y"]))
+        t = sp.sub(b, a)
+        ln = sp.exact_len(t)
+        u = (t[0] / ln, t[1] / ln)
+        at, half_w = F(at), F(width) / 2
+        start, end = sp.add(a, sp.mul(u, at - half_w)), sp.add(a, sp.mul(u, at + half_w))
+        out.append((oid, None, width, start, end, F(w["width"]) / 2, w.get("arch", {}).get("level")))
+    return out
+
+
+def along(parts, p):
+    """How much of the passage's axis the rings' edges run along inside its band, and the side the room lies on by its
+    longest such edge (+1 left of the axis, −1 right); None when none does."""
+    _, _, _, a, b, half, _ = p
+    t = sp.sub(b, a)
+    ln = sp.exact_len(t)
+    u = (t[0] / ln, t[1] / ln)
+    total, best = F(0), None
+    for outer, holes in parts:
+        for k, ring in enumerate([outer] + list(holes)):
+            left = (sp.area2(ring) > 0) == (k == 0)
+            n = len(ring)
+            for i in range(n):
+                s0, s1 = ring[i], ring[(i + 1) % n]
+                e = sp.sub(s1, s0)
+                if e == (0, 0) or sp.cross(u, e) != 0:
+                    continue
+                if abs(sp.cross(u, sp.sub(s0, a))) > half:
+                    continue
+                k0, k1 = sp.dot(u, sp.sub(s0, a)), sp.dot(u, sp.sub(s1, a))
+                over = min(max(k0, k1), ln) - max(min(k0, k1), F(0))
+                if over <= 0:
+                    continue
+                total += over
+                side = 1 if (sp.dot(u, e) > 0) == left else -1
+                if best is None or over > best[0]:
+                    best = (over, side)
+    return None if best is None else (total, best[1])
+
+
+def baseboard(parts, level, all_passages):
+    off = sum((along(parts, p)[0] for p in all_passages if reads(level, p[6]) and along(parts, p) is not None), F(0))
+    return max(perimeter_of(parts) - off, F(0))
+
+
+def transitions(rooms, all_passages):
+    """rooms: (uid, level, parts, floor) of the rows' rooms; the passages with a room on each side whose floors are
+    known and differ."""
+    out = []
+    for p in all_passages:
+        sides = [None, None]
+        for uid, level, parts, floor in rooms:
+            if not reads(level, p[6]):
+                continue
+            got = along(parts, p)
+            if got is None:
+                continue
+            k = 0 if got[1] > 0 else 1
+            if sides[k] is None or got[0] > sides[k][0]:
+                sides[k] = (got[0], uid, floor)
+        if sides[0] and sides[1] and sides[0][2] and sides[1][2] and sides[0][2] != sides[1][2] and sides[0][1] != sides[1][1]:
+            row = {"opening": uid_of(p[0]), "width": p[2], "spaces": [sides[0][1], sides[1][1]],
+                   "floors": [sides[0][2], sides[1][2]]}
+            if p[1] is not None:
+                row["number"] = p[1]
+            out.append(row)
+    return out
+
+
+def clip(ring, window):
+    """The ring cut to a convex window (Sutherland–Hodgman), both counter-clockwise or the window either way."""
+    if sp.area2(window) < 0:
+        window = window[::-1]
+    out = list(ring)
+    n = len(window)
+    for i in range(n):
+        if not out:
+            break
+        a, b = window[i], window[(i + 1) % n]
+        inside_ = lambda q: sp.cross(sp.sub(b, a), sp.sub(q, a)) >= 0  # noqa: E731
+        res = []
+        for j in range(len(out)):
+            cur, nxt = out[j], out[(j + 1) % len(out)]
+            ci, ni = inside_(cur), inside_(nxt)
+            if ci:
+                res.append(cur)
+            if ci != ni:
+                d1, d2 = sp.sub(nxt, cur), sp.sub(b, a)
+                tt = sp.cross(sp.sub(a, cur), d2) / sp.cross(d1, d2)
+                res.append(sp.add(cur, sp.mul(d1, tt)))
+        out = res
+    return out
+
+
+def void_cut(parts, voids):
+    """The area the voids (convex, apart: the cases' rooms) take out of the parts."""
+    total = F(0)
+    for v_outer, _ in voids:
+        for outer, holes in parts:
+            c = clip(outer, v_outer)
+            total += abs(sp.area2(c)) / 2 if len(c) >= 3 else 0
+            for h in holes:
+                ch = clip(h, v_outer)
+                total -= abs(sp.area2(ch)) / 2 if len(ch) >= 3 else 0
+    return total
+
+
+ON_FACE = F(1, 10**6)
+
+
+def near_segment(m, a, b):
+    """Whether m lies within ON_FACE of the segment (the walls' widths are binary fractions: 0.2 is not 1/5)."""
+    t = sp.sub(b, a)
+    tt = sp.dot(t, t)
+    u = F(0) if tt == 0 else min(max(sp.dot(sp.sub(m, a), t) / tt, F(0)), F(1))
+    q = sp.sub(m, sp.add(a, sp.mul(t, u)))
+    return sp.dot(q, q) <= ON_FACE * ON_FACE
+
+
+def free_length(d, parts, level):
+    """The length of the rings' edges whose middle lies on no wall's face (within ON_FACE; of the walls the slab
+    reads)."""
+    walls = [from_json(w) for _, w in sorted(d.walls.items()) if level is None or w.get("arch", {}).get("level") == level]
+    segs = [(a, b) for a, b, w in sp.faces(walls) if w > 0] if walls else []
+    total = F(0)
+    for outer, holes in parts:
+        for ring in [outer] + list(holes):
+            n = len(ring)
+            for i in range(n):
+                s0, s1 = ring[i], ring[(i + 1) % n]
+                m = ((s0[0] + s1[0]) / 2, (s0[1] + s1[1]) / 2)
+                if not any(near_segment(m, a, b) for a, b in segs):
+                    total += sp.exact_len(sp.sub(s1, s0))
+    return total
+
+
+def slab_row(d, i, s):
+    """A slab measured; one whose rings a reference measured on its grid (`measure`: area, perimeter; slab_cases.py) has
+    no void or free side in the cases."""
+    parts = s.get("parts")
+    level = s.get("arch", {}).get("level")
+    area = area_of(parts) if parts is not None else s["measure"][0]
+    voids = [vp for _, (ly, v, _) in sorted(d.spaces.items()) if v.get("void") and reads(level, v.get("arch", {}).get("level"))
+             for vp in v["parts"]]
+    cut = void_cut(parts, voids) if parts is not None else F(0)
+    net = area - cut
+    thickness = F(s.get("thickness", 0.15))
+    offset = s.get("offset", 0.0)
+    lv = next((x for x in LEVELS if x["id"] == level), None)
+    edge = s.get("edge")
+    edge_len = free_length(d, parts, level) if edge and parts is not None else F(0)
+    rule = "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+    if edge:
+        rule += "; kenar: serbest kenarlar boyunca"
+    if s.get("excluded"):
+        rule += "; metraj dışı: toplamlara katılmaz"
+    row = {"uid": uid_of(i), "role": s.get("role", "floor"), "level": level, "material": s.get("material"),
+           "thickness": float(thickness), "offset": offset or None,
+           "top": None if lv is None else lv["elevation"] + offset,
+           "area": float(area), "voidArea": float(cut) or None, "netArea": float(net),
+           "perimeter": float(perimeter_of(parts) if parts is not None else s["measure"][1]), "volume": float(net * thickness),
+           "edge": edge["kind"] if edge else None, "edgeLength": float(edge_len) or None,
+           "excluded": True if s.get("excluded") else None, "rule": rule}
+    return {k: v for k, v in row.items() if v is not None}
+
+
 def quantities(d, inp):
     for k, lv in enumerate(inp.get("levels", []) or []):
         if not any(x["id"] == lv for x in LEVELS):
@@ -377,7 +561,7 @@ def quantities(d, inp):
     on_wall, openings = {}, []
     recess = ("niche", "flue")
     recessed = set()
-    for oid, (host, width, head, sill, form, style, depth) in sorted(d.openings.items()):
+    for oid, (host, width, head, sill, form, style, depth, _at) in sorted(d.openings.items()):
         h = None if head is None else head - (sill or 0.0)
         a = None if h is None else width * h
         wall_ok = host in d.walls
@@ -392,7 +576,8 @@ def quantities(d, inp):
         row = {"uid": uid_of(oid), "form": form, "style": style, "wall": uid_of(host) if wall_ok else None,
                "width": width, "height": h, "area": a, "depth": depth if form in recess else None}
         openings.append({k: v for k, v in row.items() if v is not None})
-    spaces_rows, walls_rows = [], []
+    spaces_rows, walls_rows, slab_rows, rooms = [], [], [], []
+    all_passages = passages(d)
     for i in d.ids():
         if i in d.spaces:
             layer_id, s, _ = d.spaces[i]
@@ -418,7 +603,15 @@ def quantities(d, inp):
             row["rule"] = f"alan: halkaların alanı, delikler düşülür ({METHOD_LABEL[s.get('method', 'net')]}); hacim: alan × yükseklik"
             if s.get("void"):
                 row["rule"] += "; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
+            else:
+                row["rule"] += "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür"
+                row["baseboard"] = float(baseboard(s["parts"], arch.get("level"), all_passages))
+                rooms.append((uid_of(i), arch.get("level"), s["parts"], s.get("finishes", {}).get("floor")))
             spaces_rows.append({k: v for k, v in row.items() if v is not None})
+        elif i in d.slabs and inp.get("usages") is None:
+            layer_id, s, _ = d.slabs[i]
+            if takes(layer_id, s.get("arch", {})):
+                slab_rows.append(slab_row(d, i, s))
         elif i in d.walls and inp.get("usages") is None:
             w = d.walls[i]
             arch = w.get("arch", {})
@@ -445,8 +638,22 @@ def quantities(d, inp):
     if void_area:
         # The voids' area apart (docs/adr/0708); none: the key is not written.
         totals["voidArea"] = void_area
-    return {"status": "completed", "output": {"spaces": spaces_rows, "walls": walls_rows, "openings": openings, "totals": totals},
-            "warnings": []}
+    # ADR 0722 §5: baseboards, slabs (those left out not summed), their edges; a zero is not written.
+    summed = [r for r in slab_rows if not r.get("excluded")]
+    for key, value in (("baseboardLength", sum((r.get("baseboard", 0.0) for r in spaces_rows), 0.0)),
+                       ("slabArea", sum((r["netArea"] for r in summed), 0.0)),
+                       ("slabVolume", sum((r["volume"] for r in summed), 0.0)),
+                       ("railingLength", sum((r.get("edgeLength", 0.0) for r in summed if r.get("edge") == "railing"), 0.0)),
+                       ("parapetLength", sum((r.get("edgeLength", 0.0) for r in summed if r.get("edge") == "parapet"), 0.0))):
+        if value:
+            totals[key] = value
+    out = {"spaces": spaces_rows, "walls": walls_rows, "openings": openings, "totals": totals}
+    if slab_rows:
+        out["slabs"] = slab_rows
+    moves = transitions(rooms, all_passages)
+    if moves:
+        out["transitions"] = moves
+    return {"status": "completed", "output": out, "warnings": []}
 
 
 def quant_step(d, inp=None, op="execute", command=None):
@@ -878,15 +1085,15 @@ def quantities_cases():
         o = {"host": uid_of(host), "at": at}
         if kind == "window":
             o["type"] = "Pencere 120"
-            d.openings[d.next] = (host, 1.2, 2.2, 0.9, "window", "kentos-pencere-120", None)
+            d.openings[d.next] = (host, 1.2, 2.2, 0.9, "window", "kentos-pencere-120", None, at)
         elif kind == "niche":
             o["type"] = "Niş 60"
-            d.openings[d.next] = (host, 0.6, 1.5, 0.9, "niche", "kentos-nis-60", 0.1)
+            d.openings[d.next] = (host, 0.6, 1.5, 0.9, "niche", "kentos-nis-60", 0.1, at)
         elif kind == "flue":
             o["form"], o["depth"] = "flue", 0.1
-            d.openings[d.next] = (host, 0.2, None, None, "flue", "kentos-baca-20", 0.1)
+            d.openings[d.next] = (host, 0.2, None, None, "flue", "kentos-baca-20", 0.1, at)
         else:
-            d.openings[d.next] = (host, 0.9, 2.1, None, "door", "kentos-kapi-90", None)
+            d.openings[d.next] = (host, 0.9, 2.1, None, "door", "kentos-kapi-90", None, at)
         d.next += 1
         return {"op": "execute", "command": "cad.openings.create", "input": {"layerId": "kapi", "openings": [o]},
                 "result": {"status": "completed", "output": "$any", "warnings": "$any"}, "expect": {"revision": "changed"}}

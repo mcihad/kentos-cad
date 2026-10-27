@@ -13,6 +13,8 @@ from space_scope_cases import setup,LABEL,DELTA
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'fixtures/commands/v1/cad.spaces.separators.json'
 def completed(output):return dict(status='completed',output=output,warnings=[])
+# A room's baseboard rule, last in its rule; no passage in these drawings: the baseboard is the perimeter (ADR 0722 §5).
+BASEBOARD_RULE = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür"
 def case(unit,method,far,reverse):
     doc,seed=setup(unit,far);doc['name']='Bağımsız sıfır kalınlıklı mahal ayırıcı'
     doc['entities']=[doc['entities'][0],dict(doc['entities'][2],id=2)]
@@ -33,7 +35,8 @@ def case(unit,method,far,reverse):
         d=DELTA[method]
         row=dict(uid='$uidOf:3',method=method,columns='all',area=by[method],
             perimeter=float(2*(width+d/(2 if half else 1)+D(8)+d)+8),byMethod=by,
-            rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde')
+            rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde'+BASEBOARD_RULE)
+        row['baseboard']=row['perimeter']
         return dict(op='execute',command='cad.spaces.quantities',input={},within=1e-6,result=completed(dict(spaces=[row],walls='$any',openings=[],totals='$any')),expect=dict(revision='same'))
     changed=completed(dict(uids=['$any'],ids=[4],revision='$current'))
     return dict(name=f'{unit}/{method}/{"far" if far else "local"}/{"reverse" if reverse else "forward"}',setup=doc,steps=[
@@ -134,7 +137,7 @@ def stale_boundary_cases():
                 by={method:float((D(4)+(D(0)if virtual else delta))*(D(3)+(D(0)if virtual else delta)))for method,delta in DELTA.items()}
                 perimeter=float(2*((D(4)+(D(0)if virtual else DELTA['net']))+(D(3)+(D(0)if virtual else DELTA['net']))))
                 def query(stale):
-                    row=dict(uid='$uidOf:2',method='net',area=by['net'],perimeter=perimeter,byMethod={}if stale else by,rule=rule+('; son geçerli sınır: '+reason if stale else''))
+                    row=dict(uid='$uidOf:2',method='net',area=by['net'],perimeter=perimeter,byMethod={}if stale else by,rule=rule+('; son geçerli sınır: '+reason if stale else'')+BASEBOARD_RULE,baseboard=perimeter)
                     if stale:row['boundaryBreak']='lostEnclosure'
                     return dict(op='execute',command='cad.spaces.quantities',input={},within=1e-6,result=completed(dict(spaces=[row],openings=[],walls='$any',totals='$any')),expect=dict(revision='same'))
                 out.append(dict(name=f'Kopuk sınır raporu/{unit}/{"far"if far else"local"}/{"virtual"if virtual else"legacy-wall"}',setup=doc,steps=[

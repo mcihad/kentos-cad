@@ -491,6 +491,7 @@ pub fn derive_entity(doc: &Document, e: &Entity, o: &Options) -> Outcome {
         Entity::Wall(_)
         | Entity::Opening(_)
         | Entity::Space(_)
+        | Entity::Slab(_)
         | Entity::Grid(_)
         | Entity::Column(_)
         | Entity::Stair(_)
@@ -573,6 +574,7 @@ fn arch_row(doc: &Document, e: &Entity, o: &Options) -> Outcome {
             })
         }
         Entity::Space(sp) => Entity::Polygon(sp.as_polygon()),
+        Entity::Slab(sl) => Entity::Polygon(sl.as_polygon()),
         Entity::Opening(op) => {
             let p = &op.opening.place;
             if p.len() != 4 {

@@ -31,6 +31,7 @@ impl Document {
                 &*s.entity,
                 kentos_contracts::Entity::Wall(_)
                     | kentos_contracts::Entity::Space(_)
+                    | kentos_contracts::Entity::Slab(_)
                     | kentos_contracts::Entity::Grid(_)
                     | kentos_contracts::Entity::Column(_)
                     | kentos_contracts::Entity::Stair(_)

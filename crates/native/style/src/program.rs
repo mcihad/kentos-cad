@@ -412,6 +412,7 @@ pub fn layer_call(
         | Entity::Wall(_)
         | Entity::Opening(_)
         | Entity::Space(_)
+        | Entity::Slab(_)
         | Entity::Grid(_)
         | Entity::Column(_)
         | Entity::Stair(_)

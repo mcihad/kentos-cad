@@ -5,7 +5,7 @@ Reads fixtures/formats/v1/dxf-arch/mimari.kcad with the independent KCAD reader 
 wrote from it, mimari.dxf (`KENTOS_WRITE_DXF=1 cargo test -p kentos-headless --test headless arch_dxf_goes_round`
 writes both), from DXF's group codes, and checks two things apart:
 
-- the look: each architectural object (wall, opening, space, grid, column, stair, ramp, tag, view mark) is one INSERT of
+- the look: each architectural object (wall, opening, space, slab, grid, column, stair, ramp, tag, view mark) is one INSERT of
   model space at the origin, unturned and unscaled, on the object's layer, of an anonymous block (`*U…`, flag 1) that
   draws something (lines, polylines, hatches, texts, circles, arcs, solids); the block's drawn points are where the
   object is — a space's block holds its rings exactly, a wall's lies within its width of its base line, the others hold
@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT / "tools/kcad"))
 import kcad  # noqa: E402  (the independent reader)
 
 DIR = ROOT / "fixtures/formats/v1/dxf-arch"
-ARCH = {"wall", "opening", "space", "grid", "column", "stair", "ramp", "tag", "viewmark"}
+ARCH = {"wall", "opening", "space", "slab", "grid", "column", "stair", "ramp", "tag", "viewmark"}
 DRAWN = {"LINE", "LWPOLYLINE", "POLYLINE", "HATCH", "TEXT", "MTEXT", "CIRCLE", "ARC", "SOLID", "ELLIPSE", "INSERT"}
 
 
@@ -109,7 +109,7 @@ def own_points(e):
     xy = lambda p: (p["x"], p["y"])  # noqa: E731
     if k == "wall":
         return [xy(p) for p in e["pts"]], e.get("width", 0.25)
-    if k == "space":
+    if k in ("space", "slab"):
         return [xy(p) for part in e["parts"] for p in part["outer"]["pts"]], 0.0
     if k in ("grid", "stair", "ramp"):
         return [xy(p) for p in e["pts"]], 0.0
@@ -207,12 +207,17 @@ def check():
         for p in own:
             if not inside(p, bb, slack + 1e-9):
                 problems.append(f"{e['kind']} {uid}: {p} bloğun çizdiğinin dışında {bb}")
-        if e["kind"] == "space":
+        if e["kind"] in ("space", "slab"):
+            polys = [points_of(gs) for k, gs in drawn if k == "LWPOLYLINE"]
             for part in e["parts"]:
                 ring = [(p["x"], p["y"]) for p in part["outer"]["pts"]]
-                polys = [points_of(gs) for k, gs in drawn if k == "LWPOLYLINE"]
                 if not any(sorted(r) == sorted(ring) for r in polys):
-                    problems.append(f"space {uid}: halkası bloğunda yok")
+                    problems.append(f"{e['kind']} {uid}: halkası bloğunda yok")
+            # A slab's edge (docs/adr/0722 §6): each run's two lines beside its rings.
+            runs = e.get("edge", {}).get("runs", [])
+            rings = sum(1 + len(part.get("holes", [])) for part in e["parts"])
+            if e["kind"] == "slab" and len(polys) < rings + 2 * len(runs):
+                problems.append(f"slab {uid}: kenarının çizgileri bloğunda yok")
         elif e["kind"] == "wall":
             bw = box(own)
             if not all(inside(p, bw, slack) for p in pts):

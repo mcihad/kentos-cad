@@ -46,7 +46,7 @@ SELECT_KINDS = ["edit.selectFilter.point", "edit.selectFilter.line", "edit.selec
     "edit.selectFilter.table", "edit.selectFilter.image"]
 ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selectFilter.space",
     "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.stair", "edit.selectFilter.ramp",
-    "edit.selectFilter.tag", "edit.selectFilter.viewmark"]
+    "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
 def select_filter(cad):
     # The status bar's Süzgeç lists every kind in both types; the drop-down is the same list.
     kinds = SELECT_KINDS + ARCH_KINDS
@@ -234,8 +234,9 @@ CAD = [
           overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
     ]),
     T("arch", "Mimari", [
+        # Döşeme (docs/adr/0722) beside Mahal: the tab keeps its words at 1440 px.
         P("Çiz", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"),
-            S("tool.wallFromLines"), S("tool.space"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
+            S("tool.wallFromLines"), S("tool.space"), S("tool.slab"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split: the tab keeps its words at 1440 px.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
             S("tool.column"),
@@ -567,6 +568,12 @@ CONTEXTUAL = [
         P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
         P("Mahal", "space", [L("view.properties"), S("arch.quantities"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.spaceNumber"), S("arch.spaceMerge"), S("tool.spaceFloor"),
             S("tool.spaceCeiling"), S("tool.tag"), S("tool.scheduleSpaces")]),
+    ]},
+    # Döşeme (docs/adr/0722 §6): its own fields in Öznitelikler, a hole cut with the tool's Delik, Metraj.
+    {"id": "ctx.slab", "label": "Döşeme", "kinds": ["slab"], "modes": ["cad"], "panels": [
+        SEL,
+        edit_panel(),
+        P("Döşeme", "slab", [L("view.properties"), L("tool.slab"), S("arch.quantities"), S("tool.space")]),
     ]},
     {"id": "ctx.arch", "label": "Mimari nesne", "kinds": ["grid", "column", "stair", "ramp", "tag", "viewmark"],
      "modes": ["cad"], "panels": [

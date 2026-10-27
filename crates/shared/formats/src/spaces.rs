@@ -51,6 +51,7 @@ pub fn spec(s: &SpaceFields) -> Spec {
         number: s.number.clone(),
         name: s.name.clone(),
         void: s.void,
+        slab: None,
     }
 }
 
@@ -60,4 +61,64 @@ pub fn core_space(s: &SpaceFields) -> Shape {
         parts: s.parts.iter().map(area).collect(),
         space: spec(s),
     }
+}
+
+/// A slab's look in the core (docs/adr/0722): its edge's kind, width and runs.
+pub fn slab_look(s: &kentos_contracts::SlabFields) -> kentos_geometry_core::geom::slab::Look {
+    use kentos_geometry_core::geom::slab::{Edge, Look, Run};
+    Look {
+        edge: s.edge.as_ref().map(|e| Edge {
+            parapet: e.kind == kentos_contracts::SlabEdgeKind::Parapet,
+            width: e.width,
+            runs: e
+                .runs
+                .iter()
+                .map(|r| Run {
+                    pts: r.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect(),
+                    bulges: r.bulges.clone(),
+                })
+                .collect(),
+        }),
+    }
+}
+
+/// The slab as the core's shape (docs/adr/0722): its rings as a space's, drawn by its look.
+pub fn core_slab(s: &kentos_contracts::SlabFields) -> Shape {
+    Shape::Space {
+        parts: s.parts.iter().map(area).collect(),
+        space: Spec {
+            slab: Some(slab_look(s)),
+            ..Spec::default()
+        },
+    }
+}
+
+/// The core's runs back as the contract's.
+pub fn runs(rs: &[kentos_geometry_core::geom::slab::Run]) -> Vec<kentos_contracts::SlabRun> {
+    rs.iter()
+        .map(|r| kentos_contracts::SlabRun {
+            pts: r.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect(),
+            bulges: r.bulges.clone(),
+        })
+        .collect()
+}
+
+/// A slab as plain objects (docs/adr/0722 §6): its rings and its edge's lines, each on its layer with its look. What
+/// DXF without KentOS's data and Patlat write.
+pub fn slab_pieces(s: &kentos_contracts::SlabEntity) -> Vec<kentos_contracts::Entity> {
+    let parts: Vec<Area> = s.slab.parts.iter().map(area).collect();
+    let mut out = Vec::new();
+    for piece in kentos_geometry_core::geom::slab::pieces(&parts, &slab_look(&s.slab)) {
+        let Some(mut plain) = crate::blocks::piece_entity(&piece) else {
+            continue;
+        };
+        let mut base = s.base.clone();
+        base.id = 0;
+        base.attachments.clear();
+        base.label_pins.clear();
+        base.label = None;
+        *plain.base_mut() = base;
+        out.push(plain);
+    }
+    out
 }

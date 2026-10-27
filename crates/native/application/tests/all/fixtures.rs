@@ -87,7 +87,7 @@ use kentos_native_application::{
     linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign, legends, north, revisions,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
-    sheets_create, sheets_edit, sheets_fit, sheets_levels, snap_find, spaces_create, spaces_edit,
+    sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create, slabs_edit, snap_find, spaces_create, spaces_edit,
     spaces_quantities, styles_edit, survey_adjust, survey_points, tables_edit, texts_check,
     texts_edit, time_version, transform, ucs_set, units_change, views_edit, walls_create,
     walls_edit, walls_from_lines, walls_joins, walls_partition, walls_rectangle,
@@ -903,6 +903,61 @@ impl Input for kentos_commands::SpacesEdit {
                 _ => None,
             },
             _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::SlabsCreate {
+    /// `slabs[0].seed.x` and `.y`, `.parts[k].outer.pts[j].x` and `.y` (a hole's `.holes[h]`), `.thickness`,
+    /// `.offset`, `.edgeOffset`, `.edge.width`, `lineWeight` (docs/adr/0722).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("slabs[")?.split_once("].")?;
+        let s = self.slabs.get_mut(i.parse::<usize>().ok()?)?;
+        if let Some(rest) = rest.strip_prefix("parts[") {
+            let (k, rest) = rest.split_once("].")?;
+            let part = s.parts.as_mut()?.get_mut(k.parse::<usize>().ok()?)?;
+            let (ring, rest) = match rest.strip_prefix("outer.") {
+                Some(rest) => (&mut part.outer, rest),
+                None => {
+                    let (h, rest) = rest.strip_prefix("holes[")?.split_once("].")?;
+                    (part.holes.get_mut(h.parse::<usize>().ok()?)?, rest)
+                }
+            };
+            return named_point(&mut ring.pts, "pts", rest);
+        }
+        match rest {
+            "seed.x" => s.seed.as_mut().map(|p| &mut p.x),
+            "seed.y" => s.seed.as_mut().map(|p| &mut p.y),
+            "thickness" => s.thickness.as_mut(),
+            "offset" => s.offset.as_mut(),
+            "edgeOffset" => s.edge_offset.as_mut(),
+            "edge.width" => s.edge.as_mut()?.width.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::SlabsEdit {
+    /// Değiştir's `operation.thickness`, `.offset`, `.edge.width`; Ötele's `operation.distance`; Kes's and Ekle's
+    /// `operation.seed.x`, `.y` (docs/adr/0722).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::SlabsOperation as Op;
+        match &mut self.operation {
+            Op::Set(c) => match path {
+                "operation.thickness" => c.thickness.as_mut(),
+                "operation.offset" => c.offset.as_mut(),
+                "operation.edge.width" => c.edge.as_mut()?.as_mut()?.width.as_mut(),
+                _ => None,
+            },
+            Op::Offset { distance } => (path == "operation.distance").then_some(distance),
+            Op::Subtract { seed, .. } | Op::Add { seed, .. } => match path {
+                "operation.seed.x" => seed.as_mut().map(|p| &mut p.x),
+                "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
+                _ => None,
+            },
         }
     }
 }
@@ -4060,6 +4115,8 @@ fn run_op(
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)
         }
+        kentos_commands::CAD_SLABS_CREATE => run!(slabs_create, kentos_commands::SlabsCreate),
+        kentos_commands::CAD_SLABS_EDIT => run!(slabs_edit, kentos_commands::SlabsEdit),
         kentos_commands::CAD_SPACES_DISCOVER => {
             run!(spaces_discover, kentos_commands::SpacesDiscover)
         }

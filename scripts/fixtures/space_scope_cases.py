@@ -16,6 +16,8 @@ OUT=ROOT/'fixtures/commands/v1/cad.spaces.scope.json'
 LABEL={'net':'Net (iç yüzler)','centerline':'Duvar ekseni','gross':'Brüt (dış yüzler)'}
 DELTA={'net':D('-.2'),'centerline':D(0),'gross':D('.2')}
 def completed(output):return {'status':'completed','output':output,'warnings':[]}
+# A room's baseboard rule, last in its rule; no passage in these drawings: the baseboard is the perimeter (ADR 0722 §5).
+BASEBOARD_RULE = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür"
 def setup(unit,far):
  d=deepcopy(json.loads((ROOT/'fixtures/commands/v1/cad.spaces.create.json').read_text())['setup'])
  d['name']='Atanmamış kaynak bağımsız kabulü';d['settings']['drawingUnit']=unit
@@ -45,6 +47,7 @@ def case(unit,method,scope,far):
  if unassigned:rule+='; kaynaklar: yalnız atanmamış'
  row=dict(uid='$uidOf:5',method=method,columns='all',area=float(area),perimeter=float(2*(width+D(8)+2*v)+8),byMethod=by,rule=rule)
  if unassigned:row['scope']=scope
+ row['rule']+=BASEBOARD_RULE;row['baseboard']=row['perimeter']
  state={'ids':[1,2,3,4,5],'entities':{'5':e},'canUndo':True,'dirty':True,'revision':'changed'}
  return dict(name=f'{unit}/{method}/{scope or "legacy"}/{"far" if far else "local"}',setup=d,steps=[
   dict(op='plan',input=inp,result=completed({'spaces':[dict(e,id=0)],'revision':'$current'}),expect={'revision':'same','ids':[1,2,3,4]}),

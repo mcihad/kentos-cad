@@ -84,6 +84,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Wall(e) => e.wall.pts.iter().for_each(&mut add),
         Entity::Opening(e) => e.opening.place.iter().for_each(&mut add),
         Entity::Space(e) => e.space.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
+        Entity::Slab(e) => e.slab.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
         Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             crate::arch_elements::outline_points(e).unwrap_or_default().iter().for_each(&mut add)
         }

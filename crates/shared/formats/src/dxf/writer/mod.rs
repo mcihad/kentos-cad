@@ -648,7 +648,12 @@ fn plain_walls(
         .count();
     let separators = input.entities.iter().filter(|e| matches!(e,
         kentos_contracts::Entity::Polyline(p) if p.space_separator.is_some())).count();
-    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 && separators == 0 {
+    let slabs = input
+        .entities
+        .iter()
+        .filter(|e| matches!(e, kentos_contracts::Entity::Slab(_)))
+        .count();
+    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 && separators == 0 && slabs == 0 {
         return None;
     }
     let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
@@ -714,6 +719,8 @@ fn plain_walls(
                 }
                 put(&mut out, e, pieces);
             }
+            // A slab's rings and its edge's lines (docs/adr/0722 §6).
+            (kentos_contracts::Entity::Slab(s), _) => put(&mut out, e, crate::spaces::slab_pieces(s)),
             // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
             (e, _) if crate::arch_elements::core_of(e).is_some() => {
                 put(&mut out, e, crate::arch_elements::plain_pieces(e, scale).unwrap_or_default());
@@ -746,6 +753,14 @@ fn plain_walls(
             "DXF'te KentOS'un mahali yoktur: mahaller sınırlarının kapalı çoklu çizgileri olarak yazıldı; numaraları, adları, ölçme yöntemleri ve kaplamaları taşınmaz, mahal olarak geri okunmaz",
             0,
             u32::try_from(spaces).unwrap_or(u32::MAX),
+        );
+    }
+    if slabs > 0 {
+        report.note_n(
+            "Döşeme",
+            "DXF'te KentOS'un döşemesi yoktur: döşemeler halkalarının kapalı çoklu çizgileri ve kenarlarının (korkuluk, parapet) çizgileri olarak yazıldı; türleri, kalınlıkları, kata göre kotları, malzemeleri ve metraj seçimi taşınmaz, döşeme olarak geri okunmaz",
+            0,
+            u32::try_from(slabs).unwrap_or(u32::MAX),
         );
     }
     if openings > 0 {

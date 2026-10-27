@@ -1138,7 +1138,8 @@
            "edit.selectFilter.stair",
            "edit.selectFilter.ramp",
            "edit.selectFilter.tag",
-           "edit.selectFilter.viewmark"
+           "edit.selectFilter.viewmark",
+           "edit.selectFilter.slab"
           ]
          },
          {
@@ -1347,6 +1348,10 @@
        },
        {
         "command": "tool.space",
+        "size": "small"
+       },
+       {
+        "command": "tool.slab",
         "size": "small"
        },
        {
@@ -2467,7 +2472,8 @@
            "edit.selectFilter.stair",
            "edit.selectFilter.ramp",
            "edit.selectFilter.tag",
-           "edit.selectFilter.viewmark"
+           "edit.selectFilter.viewmark",
+           "edit.selectFilter.slab"
           ]
          },
          {
@@ -5628,6 +5634,93 @@
       },
       {
        "command": "tool.scheduleSpaces",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ctx.slab",
+   "label": "Döşeme",
+   "kinds": [
+    "slab"
+   ],
+   "modes": [
+    "cad"
+   ],
+   "panels": [
+    {
+     "label": "Seçim",
+     "icon": "select",
+     "items": [
+      {
+       "command": "view.zoomSelection",
+       "size": "small"
+      },
+      {
+       "command": "edit.deselect",
+       "size": "small"
+      },
+      {
+       "command": "edit.invertSelection",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "tool.selectSimilar",
+      "edit.previousSelection",
+      "file.saveSelection"
+     ]
+    },
+    {
+     "label": "Düzenle",
+     "icon": "move",
+     "items": [
+      {
+       "command": "tool.move",
+       "size": "large"
+      },
+      {
+       "command": "tool.copy",
+       "size": "small"
+      },
+      {
+       "command": "tool.rotate",
+       "size": "small"
+      },
+      {
+       "command": "tool.scale",
+       "size": "small"
+      },
+      {
+       "command": "tool.mirror",
+       "size": "small"
+      },
+      {
+       "command": "tool.erase",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Döşeme",
+     "icon": "slab",
+     "items": [
+      {
+       "command": "view.properties",
+       "size": "large"
+      },
+      {
+       "command": "tool.slab",
+       "size": "large"
+      },
+      {
+       "command": "arch.quantities",
+       "size": "small"
+      },
+      {
+       "command": "tool.space",
        "size": "small"
       }
      ]

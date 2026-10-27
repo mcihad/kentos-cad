@@ -173,6 +173,11 @@ impl Seen {
                 s.space.parts.first().map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect()).unwrap_or_default(),
                 Vec::new(),
             ),
+            // A slab's first ring (docs/adr/0722 §1).
+            Entity::Slab(s) => (
+                s.slab.parts.first().map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect()).unwrap_or_default(),
+                Vec::new(),
+            ),
             // A grid's ends, a stair's or ramp's walking line, a column's centre (docs/adr/0343 §1).
             Entity::Grid(g) => (g.grid.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Stair(st) => (st.stair.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),

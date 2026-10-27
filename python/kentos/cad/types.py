@@ -4729,6 +4729,7 @@ class SelectKind(_StrEnum):
     - ``grid``: Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
     - ``tag``: Etiket (docs/adr/0344 §5).
     - ``viewMark``: Görünüm işareti (docs/adr/0345 §5).
+    - ``slab``: Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
     """
     POINT = "point"
     LINE = "line"
@@ -4756,9 +4757,10 @@ class SelectKind(_StrEnum):
     GRID = "grid"
     TAG = "tag"
     VIEW_MARK = "viewMark"
+    SLAB = "slab"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -4863,6 +4865,50 @@ class SinkMode(_StrEnum):
 
 SinkModeName = Literal["new", "addTables", "replaceTables"]
 """The names of :class:`SinkMode`, for a plain string."""
+
+
+class SlabBoundary(_StrEnum):
+    """Which of the walls' faces a slab found from them runs along.
+
+    - ``outline``: Dış yüzler: the outline of the walls round the point, to their outer faces (a storey's whole floor).
+    - ``room``: Oda: the room round the point, to the walls' inner faces (a wet room's lowered slab, a balcony between walls).
+    """
+    OUTLINE = "outline"
+    ROOM = "room"
+
+
+SlabBoundaryName = Literal["outline", "room"]
+"""The names of :class:`SlabBoundary`, for a plain string."""
+
+
+class SlabEdgeKind(_StrEnum):
+    """What runs along a slab's free sides.
+
+    - ``railing``: Korkuluk: two thin lines `width` apart.
+    - ``parapet``: Parapet: a filled band `width` wide.
+    """
+    RAILING = "railing"
+    PARAPET = "parapet"
+
+
+SlabEdgeKindName = Literal["railing", "parapet"]
+"""The names of :class:`SlabEdgeKind`, for a plain string."""
+
+
+class SlabRole(_StrEnum):
+    """What a slab is.
+
+    - ``floor``: Döşeme: a storey's floor.
+    - ``balcony``: Balkon.
+    - ``terrace``: Teras.
+    """
+    FLOOR = "floor"
+    BALCONY = "balcony"
+    TERRACE = "terrace"
+
+
+SlabRoleName = Literal["floor", "balcony", "terrace"]
+"""The names of :class:`SlabRole`, for a plain string."""
 
 
 class SnapKindName(_StrEnum):
@@ -6662,6 +6708,7 @@ class Entity(_Union):
     - :class:`WallEntity` (``kind: wall``)
     - :class:`OpeningEntity` (``kind: opening``)
     - :class:`SpaceEntity` (``kind: space``)
+    - :class:`SlabEntity` (``kind: slab``)
     - :class:`GridEntity` (``kind: grid``)
     - :class:`ColumnEntity` (``kind: column``)
     - :class:`StairEntity` (``kind: stair``)
@@ -8361,6 +8408,29 @@ class SheetTemplateSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SheetTemplateSource:
         return _variant(_SHEET_TEMPLATE_SOURCE, "SheetTemplateSource", "type", data).from_json(data)
+
+
+class SlabsOperation(_Union):
+    """What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).
+
+    One of:
+
+    - :class:`SetSlabsOperation` (``kind: set``)
+    - :class:`OffsetSlabsOperation` (``kind: offset``)
+    - :class:`SubtractSlabsOperation` (``kind: subtract``)
+    - :class:`AddSlabsOperation` (``kind: add``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsOperation:
+        return _variant(_SLABS_OPERATION, "SlabsOperation", "kind", data).from_json(data)
 
 
 class SourcesEditOp(_Union):
@@ -37300,6 +37370,103 @@ class NewRamp(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewSlab(_Model):
+    """One slab to make: with its outline `parts` drawn, or found from the walls round `seed`.
+    Attributes:
+        boundary: Which faces of the walls round `seed` it runs along; absent: their outer faces.
+        edge: A railing or a parapet along its free sides; the document draws it along the sides no wall runs along.
+        edge_offset: Every edge of its outline moved by this much, out of it when positive (a slab under the walls, a cantilever),
+            in when negative; at most 10 m either way. Unit: length.
+        excluded: Left out of the quantities' totals.
+        offset: Its top above its level's elevation (negative: below); absent: 0. Unit: elevation.
+        parts: Its outline drawn: one part or more, each an outer ring and its holes.
+        seed: A point: its outline found from the walls round it, those of its level (every wall when it has none). Unit: length.
+        thickness: Absent: 15 cm. Unit: length.
+    """
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    boundary: SlabBoundary | SlabBoundaryName | None | Unset = UNSET
+    edge: NewSlabEdge | None | Unset = UNSET
+    edge_offset: float | None | Unset = UNSET
+    excluded: bool | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    parts: list[SpacePart] | None | Unset = UNSET
+    role: SlabRole | SlabRoleName | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.boundary is not UNSET:
+            out["boundary"] = None if self.boundary is None else _enum_out(self.boundary)
+        if self.edge is not UNSET:
+            out["edge"] = None if self.edge is None else self.edge.to_json()
+        if self.edge_offset is not UNSET:
+            out["edgeOffset"] = None if self.edge_offset is None else float(self.edge_offset)
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.role is not UNSET:
+            out["role"] = None if self.role is None else _enum_out(self.role)
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewSlab:
+        return cls(
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else _enum_in(SlabBoundary, data["boundary"]),
+            edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
+            edge_offset=UNSET if "edgeOffset" not in data else None if data["edgeOffset"] is None else float(data["edgeOffset"]),
+            excluded=data.get("excluded", UNSET),
+            material=data.get("material", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(SlabRole, data["role"]),
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewSlabEdge(_Model):
+    """The edge a slab is given: its kind and its width (absent: the kind's, 5 cm a railing's, 15 cm a parapet's).
+    Attributes:
+        width: Unit: length.
+    """
+    kind: SlabEdgeKind | SlabEdgeKindName
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewSlabEdge:
+        return cls(
+            kind=_enum_in(SlabEdgeKind, data["kind"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
@@ -46528,6 +46695,11 @@ class QuantityTotals(_Model):
         wall_net_area: Unit: area.
         openings: Unit: count.
         opening_area: Unit: area.
+        baseboard_length: The rooms' baseboards, metres (docs/adr/0722 §5). Unit: length.
+        parapet_length: Unit: length.
+        railing_length: The railings' and parapets' length along the slabs' free sides, metres. Unit: length.
+        slab_area: The slabs' net area and volume, those left out not summed. Unit: area.
+        slab_volume: Unit: volume.
         void_area: The voids' area: shafts, lift shafts, openings in the floor. Unit: area.
     """
     space_area: float
@@ -46535,6 +46707,11 @@ class QuantityTotals(_Model):
     wall_net_area: float
     openings: int
     opening_area: float
+    baseboard_length: float | Unset = UNSET
+    parapet_length: float | Unset = UNSET
+    railing_length: float | Unset = UNSET
+    slab_area: float | Unset = UNSET
+    slab_volume: float | Unset = UNSET
     void_area: float | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -46544,6 +46721,16 @@ class QuantityTotals(_Model):
         out["wallNetArea"] = float(self.wall_net_area)
         out["openings"] = self.openings
         out["openingArea"] = float(self.opening_area)
+        if self.baseboard_length is not UNSET:
+            out["baseboardLength"] = float(self.baseboard_length)
+        if self.parapet_length is not UNSET:
+            out["parapetLength"] = float(self.parapet_length)
+        if self.railing_length is not UNSET:
+            out["railingLength"] = float(self.railing_length)
+        if self.slab_area is not UNSET:
+            out["slabArea"] = float(self.slab_area)
+        if self.slab_volume is not UNSET:
+            out["slabVolume"] = float(self.slab_volume)
         if self.void_area is not UNSET:
             out["voidArea"] = float(self.void_area)
         return out
@@ -46556,6 +46743,11 @@ class QuantityTotals(_Model):
             wall_net_area=float(data["wallNetArea"]),
             openings=data["openings"],
             opening_area=float(data["openingArea"]),
+            baseboard_length=float(data["baseboardLength"]) if "baseboardLength" in data else UNSET,
+            parapet_length=float(data["parapetLength"]) if "parapetLength" in data else UNSET,
+            railing_length=float(data["railingLength"]) if "railingLength" in data else UNSET,
+            slab_area=float(data["slabArea"]) if "slabArea" in data else UNSET,
+            slab_volume=float(data["slabVolume"]) if "slabVolume" in data else UNSET,
             void_area=float(data["voidArea"]) if "voidArea" in data else UNSET,
         )
 
@@ -52528,6 +52720,414 @@ class SinkTable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SlabEdge(_Model):
+    """The edge a slab carries along its free sides: its kind, its width inward from the outline and the runs it is drawn
+    along (the document's: every edge of the outline whose middle no wall's face on the slab's level runs through).
+    Attributes:
+        width: Metres, above 0 and at most 2. Unit: length.
+    """
+    kind: SlabEdgeKind | SlabEdgeKindName
+    width: float
+    runs: list[SlabRun] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["width"] = float(self.width)
+        if self.runs is not UNSET:
+            out["runs"] = [e0.to_json() for e0 in self.runs]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabEdge:
+        return cls(
+            kind=_enum_in(SlabEdgeKind, data["kind"]),
+            width=float(data["width"]),
+            runs=[SlabRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabEntity(Entity):
+    """A slab (docs/adr/0722).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        parts: Its outline: one part or more, each an outer ring and its holes (a courtyard, a hole for a lowered wet room).
+        thickness: Metres, above 0 and at most 5. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        excluded: Left out of the quantities' totals: listed, not summed.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        material: What it is made of (Betonarme); absent: not said.
+        offset: Its top above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0. Unit: elevation.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "slab"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    parts: list[SpacePart]
+    thickness: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    edge: SlabEdge | None | Unset = UNSET
+    excluded: bool | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    role: SlabRole | SlabRoleName | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "slab"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["thickness"] = float(self.thickness)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.edge is not UNSET:
+            out["edge"] = None if self.edge is None else self.edge.to_json()
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.role is not UNSET:
+            out["role"] = _enum_out(self.role)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            thickness=float(data["thickness"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            edge=UNSET if "edge" not in data else None if data["edge"] is None else SlabEdge.from_json(data["edge"]),
+            excluded=data.get("excluded", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            material=data.get("material", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            role=_enum_in(SlabRole, data["role"]) if "role" in data else UNSET,
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabRow(_Model):
+    """A slab measured (docs/adr/0722 §5).
+    Attributes:
+        thickness: Unit: length.
+        area: Its rings' area, its holes taken off, m². Unit: area.
+        net_area: `area` less `voidArea`, m². Unit: area.
+        perimeter: Unit: length.
+        volume: `netArea` × thickness, m³. Unit: volume.
+        edge_length: Its edge's runs' length, metres. Unit: length.
+        excluded: Listed, not summed.
+        offset: Its top above its level's elevation. Unit: elevation.
+        top: Its top's elevation: its level's elevation and its offset; none when its level has none. Unit: elevation.
+        void_area: The area the voids of its level (shafts, docs/adr/0708) take out of it, m². Unit: area.
+    """
+    uid: str
+    role: SlabRole | SlabRoleName
+    thickness: float
+    area: float
+    net_area: float
+    perimeter: float
+    volume: float
+    rule: str
+    edge: SlabEdgeKind | SlabEdgeKindName | None | Unset = UNSET
+    edge_length: float | Unset = UNSET
+    excluded: bool | Unset = UNSET
+    level: str | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    top: float | None | Unset = UNSET
+    void_area: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["role"] = _enum_out(self.role)
+        out["thickness"] = float(self.thickness)
+        out["area"] = float(self.area)
+        out["netArea"] = float(self.net_area)
+        out["perimeter"] = float(self.perimeter)
+        out["volume"] = float(self.volume)
+        out["rule"] = self.rule
+        if self.edge is not UNSET:
+            out["edge"] = None if self.edge is None else _enum_out(self.edge)
+        if self.edge_length is not UNSET:
+            out["edgeLength"] = float(self.edge_length)
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.top is not UNSET:
+            out["top"] = None if self.top is None else float(self.top)
+        if self.void_area is not UNSET:
+            out["voidArea"] = float(self.void_area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabRow:
+        return cls(
+            uid=data["uid"],
+            role=_enum_in(SlabRole, data["role"]),
+            thickness=float(data["thickness"]),
+            area=float(data["area"]),
+            net_area=float(data["netArea"]),
+            perimeter=float(data["perimeter"]),
+            volume=float(data["volume"]),
+            rule=data["rule"],
+            edge=UNSET if "edge" not in data else None if data["edge"] is None else _enum_in(SlabEdgeKind, data["edge"]),
+            edge_length=float(data["edgeLength"]) if "edgeLength" in data else UNSET,
+            excluded=data.get("excluded", UNSET),
+            level=data.get("level", UNSET),
+            material=data.get("material", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            top=UNSET if "top" not in data else None if data["top"] is None else float(data["top"]),
+            void_area=float(data["voidArea"]) if "voidArea" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabRun(_Model):
+    """A run of a slab's free sides: an open polyline along its outline, one bulge per edge when an edge is an arc.
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabRun:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabsCreate(_Model):
+    """Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_slab`, `level_not_found`, `slab_not_enclosed`,
+    `slab_offset_failed`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
+    `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
+    Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    slabs: list[NewSlab]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["slabs"] = [e0.to_json() for e0 in self.slabs]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            slabs=[NewSlab.from_json(e0) for e0 in data["slabs"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabsCreated(_Model):
+    """Output of `cad.slabs.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabsEdit(_Model):
+    """Input of `cad.slabs.edit` v1: slabs named by their persistent ids changed as one undo step “Döşemeyi düzenle”, all
+    or none.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_slab`, `nothing_to_set`, `not_finite`,
+    `invalid_slab`, `level_not_found`, `slab_not_enclosed`, `slab_offset_failed`, `slab_cut_missed`,
+    `invalid_revision`, `revision_conflict`, `layer_locked`.
+    """
+    uids: list[str]
+    operation: SlabsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsEdit:
+        return cls(
+            uids=list(data["uids"]),
+            operation=SlabsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabsEdited(_Model):
+    """Output of `cad.slabs.edit` v1 (its plan's too: the slabs as they would be, nothing written)."""
+    slabs: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["slabs"] = [e0.to_json() for e0 in self.slabs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsEdited:
+        return cls(
+            slabs=[Entity.from_json(e0) for e0 in data["slabs"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabsPlan(_Model):
+    """What `cad.slabs.create` would write (plan mode): the slabs with their outlines and their edges' runs."""
+    slabs: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["slabs"] = [e0.to_json() for e0 in self.slabs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabsPlan:
+        return cls(
+            slabs=[Entity.from_json(e0) for e0 in data["slabs"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SldExported(_Model):
     """What `file.export.sld` wrote (or with `plan` would write).
     Attributes:
@@ -54053,6 +54653,8 @@ class SpaceRow(_Model):
         area: Its rings' area, m². Unit: area.
         perimeter: Unit: length.
         rule: The rule its numbers come from.
+        baseboard: A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
+            gaps to the floor) its sides run along, metres; none for a void. Unit: length.
         boundary_break: A stale boundary's reason; area/perimeter/volume then describe the last
             valid geometry, included in totals. Absent for every valid boundary.
         by_method: A space from the walls: its area by each method, m². Unit: area.
@@ -54067,6 +54669,7 @@ class SpaceRow(_Model):
     area: float
     perimeter: float
     rule: str
+    baseboard: float | None | Unset = UNSET
     boundary_break: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     by_method: dict[str, float] | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
@@ -54087,6 +54690,8 @@ class SpaceRow(_Model):
         out["area"] = float(self.area)
         out["perimeter"] = float(self.perimeter)
         out["rule"] = self.rule
+        if self.baseboard is not UNSET:
+            out["baseboard"] = None if self.baseboard is None else float(self.baseboard)
         if self.boundary_break is not UNSET:
             out["boundaryBreak"] = None if self.boundary_break is None else _enum_out(self.boundary_break)
         if self.by_method is not UNSET:
@@ -54121,6 +54726,7 @@ class SpaceRow(_Model):
             area=float(data["area"]),
             perimeter=float(data["perimeter"]),
             rule=data["rule"],
+            baseboard=UNSET if "baseboard" not in data else None if data["baseboard"] is None else float(data["baseboard"]),
             boundary_break=UNSET if "boundaryBreak" not in data else None if data["boundaryBreak"] is None else _enum_in(SpaceBreak, data["boundaryBreak"]),
             by_method=UNSET if "byMethod" not in data else None if data["byMethod"] is None else {k0: float(e0) for k0, e0 in data["byMethod"].items()},
             columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
@@ -54516,11 +55122,17 @@ class SpacesPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SpacesQuantified(_Model):
-    """Output of `cad.spaces.quantities` v1 (its plan's too)."""
+    """Output of `cad.spaces.quantities` v1 (its plan's too).
+    Attributes:
+        slabs: The slabs (docs/adr/0722 §5).
+        transitions: The floor finishes' changes at the passages.
+    """
     spaces: list[SpaceRow]
     walls: list[WallRow]
     openings: list[OpeningRow]
     totals: QuantityTotals
+    slabs: list[SlabRow] | Unset = UNSET
+    transitions: list[TransitionRow] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -54528,6 +55140,10 @@ class SpacesQuantified(_Model):
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["openings"] = [e0.to_json() for e0 in self.openings]
         out["totals"] = self.totals.to_json()
+        if self.slabs is not UNSET:
+            out["slabs"] = [e0.to_json() for e0 in self.slabs]
+        if self.transitions is not UNSET:
+            out["transitions"] = [e0.to_json() for e0 in self.transitions]
         return out
 
     @classmethod
@@ -54537,6 +55153,8 @@ class SpacesQuantified(_Model):
             walls=[WallRow.from_json(e0) for e0 in data["walls"]],
             openings=[OpeningRow.from_json(e0) for e0 in data["openings"]],
             totals=QuantityTotals.from_json(data["totals"]),
+            slabs=[SlabRow.from_json(e0) for e0 in data["slabs"]] if "slabs" in data else UNSET,
+            transitions=[TransitionRow.from_json(e0) for e0 in data["transitions"]] if "transitions" in data else UNSET,
         )
 
 
@@ -60092,6 +60710,42 @@ class TopologyStamp(_Model):
             revision=data["revision"],
             rules=data["rules"],
             sources=[TopologySourceStamp.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TransitionRow(_Model):
+    """A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.
+    Attributes:
+        opening: The passage's id.
+        width: The strip's length: the passage's width, metres. Unit: length.
+        spaces: The rooms on its left and its right (along its wall's direction).
+        floors: Their floor finishes, in the same order.
+    """
+    opening: str
+    width: float
+    spaces: list[str]
+    floors: list[str]
+    number: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["opening"] = self.opening
+        out["width"] = float(self.width)
+        out["spaces"] = list(self.spaces)
+        out["floors"] = list(self.floors)
+        if self.number is not UNSET:
+            out["number"] = self.number
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TransitionRow:
+        return cls(
+            opening=data["opening"],
+            width=float(data["width"]),
+            spaces=list(data["spaces"]),
+            floors=list(data["floors"]),
+            number=data.get("number", UNSET),
         )
 
 
@@ -76022,6 +76676,139 @@ class CustomSheetTemplateSource(SheetTemplateSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetSlabsOperation(SlabsOperation):
+    """Değiştir: the fields given, on every slab named.
+    Attributes:
+        edge: Its edge's kind and width; null: no edge.
+        offset: Unit: elevation.
+        thickness: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    edge: NewSlabEdge | None | Unset = UNSET
+    excluded: bool | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    role: SlabRole | SlabRoleName | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.edge is not UNSET:
+            out["edge"] = None if self.edge is None else self.edge.to_json()
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.role is not UNSET:
+            out["role"] = None if self.role is None else _enum_out(self.role)
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSlabsOperation:
+        return cls(
+            edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
+            excluded=data.get("excluded", UNSET),
+            level=data.get("level", UNSET),
+            material=data.get("material", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(SlabRole, data["role"]),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OffsetSlabsOperation(SlabsOperation):
+    """Kenarı ötele: every edge of every ring of each slab moved by `distance`, out when positive.
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "offset"
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "offset"}
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OffsetSlabsOperation:
+        return cls(
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubtractSlabsOperation(SlabsOperation):
+    """Kes: the area drawn (`parts`) or found from the walls round `seed` taken out of each slab: a hole, a notch.
+    Attributes:
+        seed: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "subtract"
+    boundary: SlabBoundary | SlabBoundaryName | None | Unset = UNSET
+    parts: list[SpacePart] | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "subtract"}
+        if self.boundary is not UNSET:
+            out["boundary"] = None if self.boundary is None else _enum_out(self.boundary)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubtractSlabsOperation:
+        return cls(
+            boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else _enum_in(SlabBoundary, data["boundary"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddSlabsOperation(SlabsOperation):
+    """Ekle: the area drawn or found added to each slab.
+    Attributes:
+        seed: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    boundary: SlabBoundary | SlabBoundaryName | None | Unset = UNSET
+    parts: list[SpacePart] | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        if self.boundary is not UNSET:
+            out["boundary"] = None if self.boundary is None else _enum_out(self.boundary)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddSlabsOperation:
+        return cls(
+            boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else _enum_in(SlabBoundary, data["boundary"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinkSourcesEditOp(SourcesEditOp):
     """Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
     `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
@@ -79059,7 +79846,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -79272,6 +80059,9 @@ _SHAPE_WORK: dict[str, type[ShapeWork]] = {"reshape": ReshapeShapeWork, "continu
 _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": SystemSheetTemplateSource, "custom": CustomSheetTemplateSource}
 
 
+_SLABS_OPERATION: dict[str, type[SlabsOperation]] = {"set": SetSlabsOperation, "offset": OffsetSlabsOperation, "subtract": SubtractSlabsOperation, "add": AddSlabsOperation}
+
+
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
@@ -79347,6 +80137,7 @@ __all__ = [
     "AddMasterPaperOp",
     "AddParameterEdit",
     "AddSheetPaperOp",
+    "AddSlabsOperation",
     "AddVariantPaperOp",
     "AddressCodeRepeat",
     "AddressLocator",
@@ -80703,6 +81494,8 @@ __all__ = [
     "NewObject",
     "NewOpening",
     "NewRamp",
+    "NewSlab",
+    "NewSlabEdge",
     "NewSpace",
     "NewSpaceSeparator",
     "NewStair",
@@ -80749,6 +81542,7 @@ __all__ = [
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
+    "OffsetSlabsOperation",
     "OpenCurveEdit",
     "OpeningAnchor",
     "OpeningAnchorName",
@@ -81469,6 +82263,7 @@ __all__ = [
     "SetSheet",
     "SetSheetMasterPaperOp",
     "SetSheetPlotPaperOp",
+    "SetSlabsOperation",
     "SetSnapGridPaperOp",
     "SetSpaceSeparatorOperation",
     "SetSpacesOperation",
@@ -81530,6 +82325,22 @@ __all__ = [
     "SinkReport",
     "SinkTable",
     "SizeRectangleFrame",
+    "SlabBoundary",
+    "SlabBoundaryName",
+    "SlabEdge",
+    "SlabEdgeKind",
+    "SlabEdgeKindName",
+    "SlabEntity",
+    "SlabRole",
+    "SlabRoleName",
+    "SlabRow",
+    "SlabRun",
+    "SlabsCreate",
+    "SlabsCreated",
+    "SlabsEdit",
+    "SlabsEdited",
+    "SlabsOperation",
+    "SlabsPlan",
     "SldExported",
     "SldImported",
     "SlopeDimensionMeasure",
@@ -81687,6 +82498,7 @@ __all__ = [
     "SubnetworksUpdate",
     "SubnetworksUpdated",
     "SubtractAreaWork",
+    "SubtractSlabsOperation",
     "Subtype",
     "SubtypeField",
     "SurveyAdjust",
@@ -81830,6 +82642,7 @@ __all__ = [
     "TotalLengthenChange",
     "TrackPointConstruction",
     "Transform",
+    "TransitionRow",
     "TranslateRule",
     "TraverseShape",
     "TraverseShapeName",

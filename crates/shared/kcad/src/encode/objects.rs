@@ -551,6 +551,19 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("viewmark", Val::Json(serde_json::to_value(&e.mark).unwrap_or_default())));
             }
+            // A slab (docs/adr/0722): its fields as one map.
+            Entity::Slab(e) => {
+                // Only the drawing's: its walls are the drawing's (docs/adr/0722 §1).
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, "blok tanımında döşeme olamaz"));
+                }
+                if let Some((_, problem)) = e.slab.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

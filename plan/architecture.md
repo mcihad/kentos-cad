@@ -915,7 +915,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: toplam uzunluk/modül dağılımı, dar köşe, negatif kalan, çakışma,
   tek modül düzenleme ve kaynak duvar taşınması. İlk iş basit düz diziyle sınırlı.
 
-### ARCH-ELEM-01 — Döşeme, balkon, teras ve şaft sınırı [~]
+### ARCH-ELEM-01 — Döşeme, balkon, teras ve şaft sınırı [x]
 
 - [x] Şaft/döşeme boşluğu dilimi [ADR0708](../docs/adr/0708-space-voids.md):
   ikinci alan motoru yerine mahalin `void` işareti (KCAD şema 116, opt-in);
@@ -925,6 +925,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   Area List araştırıldı. Ortak durumlar bağımsız başvurulardan, KCAD/Python/
   araç testleri, gerçek GUI resimleri (`.run/shots/arac-saft-*`). Döşeme
   konturu/kot, balkon ve korkuluk, katlar arası şaft ve çizelge toplamı açık.
+- [x] Kalan bütün alt maddeler ve kabul [ADR0722](../docs/adr/0722-slabs.md): yeni
+  `slab` türü mahalin şekliyle (ikinci alan motoru yok): Döşeme/Balkon/Teras, kalınlık,
+  kata göre kot farkı, malzeme, metraj dışı; sınır çizilir, duvarların dış yüzlerinden
+  ya da odanın iç yüzlerinden bulunur (kat verilmişse o katın duvarları). Kenar ötelemesi
+  dört başarısızlıkla atomik ret ve önizlemede kırmızı uyarı. Korkuluk/parapet yalnız
+  serbest kenarlarda türer, duvarla izler. Metraj: döşeme alanı, şaft (boşluk mahali)
+  düşülmüş net alan, hacim, üst kot, kenar boyu; mahalde süpürgelik (kapı ve döşemeye
+  inen boşluk düşülür) ve kapıda kaplama geçişleri. Kes/Ekle ile ıslak hacim deliği ve
+  avlu. KCAD 123, DXF (mimari INSERT), sunucu göçü 0034, Python/MCP; 47+38 ortak durum
+  bağımsız başvurudan, gerçek GUI resimleri (`.run/shots/arac-doseme-*`). Katmanlı yapı,
+  kesit/3B ve katlar arası tek şaft açık (ADR'nin Açık kalanları).
 
 - Kapalı kontur, kenar ötelemesi, delik/boşluk, kat/kot ve malzeme/kaplama bilgisi.
 - Mevcut polygon/hatch/mahal modelleriyle nelerin temsil edilebildiğini incele;
@@ -1235,3 +1246,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-EDIT-01 / ADR0712 | Kolonun geçici ölçüsü: dört yanda paralel en yakın duvar yüzüne/kolon yanına net mesafe, sayıya bas-yaz-Enter kolonu kaydırır, mahal izler, akslara bağlı kolon nedenini hemen söyler; `cad.arch.edit` distance, `cad.columns.distances`. 22+23 durum, 3+4+2 test, Python/MCP, gerçek GUI resimleri; geçici ölçülerde maskeli sayı ve en yakın sayıya tıklama. | [~] Kolon dilimi; aksa mesafe, duvar boyu, kilitli referans açık |
 | 2026-10-27 | ARCH-DIM-01 / ADR0711 | İç ölçü zinciri: kesen çizgi, duvar yüzleri/bütün katmanlar, kolon kenar/merkez, toplam, kat; `cross` kuralı (KCAD 118) ile duvar kayınca değer, uzayınca çizgi yerinde; duvar yüzü ve kolonda `along`/`center` yerleri. 44 durum, Python/MCP, 5+4 test, gerçek GUI resimleri. | [x] Kesen çizgi alt maddesi; kalıcı üyelik açık |
 | 2026-10-28 | ARCH-DOC-01 / ADR0721 | Mimari işaretler: görünüm işareti paftanın çizim numarasını okur (A-101 → A-201, kopya, silinen pafta `targetGone`); kata bağlı kot (KCAD 121); kuzey oku (plan/coğrafi/açı); revizyon bulutu + üçgen ve Tarih/Açıklama sütunlu Revizyon listesi (KCAD 122); malzeme lejandı. İncelemede bulunan hata: stil verilen duvarın iç ölçü zinciri kopuyordu, düzeltildi. 27+35+20 yeni komut durumu, 6 tablo + 3 iç zincir durumu; PDF `pdftotext`/`pdffonts`; Python/MCP; masaüstü 1354, Python 374; gerçek GUI `arac-isaret-*`. | [x] Madde tamam; pafta başına revizyon çizelgesi açık |
+| 2026-10-28 | ARCH-ELEM-01 / ADR0722 | Döşeme, balkon, teras: duvarların dış yüzünden ya da odadan döşeme, kenar ötelemesi ve dört başarısızlığı, serbest kenarda korkuluk/parapet, Kes/Ekle (ıslak hacim, avlu, şaft); Metraj'da döşeme net alanı/hacmi, süpürgelik ve kaplama geçişleri. 47+38 ortak durum, KCAD 123, DXF, Python/MCP, gerçek GUI resimleri. | [x] |

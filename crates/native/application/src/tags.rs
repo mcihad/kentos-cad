@@ -99,6 +99,7 @@ fn source_level<'a>(
     let arch = match entity {
         Entity::Wall(e) => &e.wall.arch,
         Entity::Space(e) => &e.space.arch,
+        Entity::Slab(e) => &e.slab.arch,
         Entity::Column(e) => &e.column.arch,
         Entity::Grid(e) => &e.grid.arch,
         Entity::Stair(e) => &e.stair.arch,

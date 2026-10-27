@@ -182,6 +182,11 @@
     "contextual": true
    },
    {
+    "id": "ctx.slab",
+    "label": "Döşeme",
+    "contextual": true
+   },
+   {
     "id": "ctx.arch",
     "label": "Mimari nesne",
     "contextual": true

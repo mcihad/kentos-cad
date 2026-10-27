@@ -237,6 +237,17 @@ impl FaceIndex {
             .position(|&o| in_box(&self.rings[o], p) && self.rings[o].contains(p))
     }
 
+    /// The outline of the line work round `p` (docs/adr/0722 §2): the outer boundary of the outermost closed group
+    /// around it (a building's walls' outer faces round a room's own), as traced (clockwise); none outside every group.
+    pub fn outline_at(&self, p: Vec2) -> Option<Ring> {
+        self.groups
+            .iter()
+            .copied()
+            .filter(|&g| in_box(&self.rings[g], p) && self.rings[g].contains(p))
+            .max_by(|&a, &b| self.rings[a].area.abs().total_cmp(&self.rings[b].area.abs()))
+            .map(|g| self.rings[g].ring.clone())
+    }
+
     /// Whether `p` lies within `d` of a face's or a group's ring.
     pub fn near_ring(&self, p: Vec2, d: f64) -> bool {
         self.rings.iter().any(|r| {

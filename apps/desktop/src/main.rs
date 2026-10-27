@@ -473,6 +473,8 @@ mod level_state_scenes;
 #[cfg(test)]
 mod symbols_scenes;
 #[cfg(test)]
+mod slab_scenes;
+#[cfg(test)]
 mod space_scenes;
 #[cfg(test)]
 mod arch_scenes;

@@ -453,6 +453,12 @@ pub struct SpaceRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
+    /// A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
+    /// gaps to the floor) its sides run along, metres; none for a void.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub baseboard: Option<f64>,
     /// A space from the walls: its area by each method, m².
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -549,6 +555,85 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
+/// A slab measured (docs/adr/0722 §5).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabRow {
+    pub uid: String,
+    pub role: crate::SlabRole,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: f64,
+    /// Its top above its level's elevation.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub offset: f64,
+    /// Its top's elevation: its level's elevation and its offset; none when its level has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub top: Option<f64>,
+    /// Its rings' area, its holes taken off, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// The area the voids of its level (shafts, docs/adr/0708) take out of it, m².
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub void_area: f64,
+    /// `area` less `voidArea`, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub net_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub perimeter: f64,
+    /// `netArea` × thickness, m³.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edge: Option<crate::SlabEdgeKind>,
+    /// Its edge's runs' length, metres.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub edge_length: f64,
+    /// Listed, not summed.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub excluded: bool,
+    pub rule: String,
+}
+
+/// A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TransitionRow {
+    /// The passage's id.
+    pub opening: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    /// The strip's length: the passage's width, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// The rooms on its left and its right (along its wall's direction).
+    pub spaces: [String; 2],
+    /// Their floor finishes, in the same order.
+    pub floors: [String; 2],
+}
+
 /// The rows' sums.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -572,6 +657,29 @@ pub struct QuantityTotals {
     pub openings: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub opening_area: f64,
+    /// The rooms' baseboards, metres (docs/adr/0722 §5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub baseboard_length: f64,
+    /// The slabs' net area and volume, those left out not summed.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub slab_area: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub slab_volume: f64,
+    /// The railings' and parapets' length along the slabs' free sides, metres.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub railing_length: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub parapet_length: f64,
 }
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
@@ -584,5 +692,13 @@ pub struct SpacesQuantified {
     pub spaces: Vec<SpaceRow>,
     pub walls: Vec<WallRow>,
     pub openings: Vec<OpeningRow>,
+    /// The slabs (docs/adr/0722 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabRow>>", optional))]
+    pub slabs: Vec<SlabRow>,
+    /// The floor finishes' changes at the passages.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TransitionRow>>", optional))]
+    pub transitions: Vec<TransitionRow>,
     pub totals: QuantityTotals,
 }

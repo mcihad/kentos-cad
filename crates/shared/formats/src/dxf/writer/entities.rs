@@ -85,6 +85,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
         Entity::Space(_) => "Mahal",
+        Entity::Slab(_) => "Döşeme",
         Entity::Grid(_) => "Aks",
         Entity::Column(_) => "Kolon",
         Entity::Stair(_) => "Merdiven",
@@ -201,6 +202,10 @@ fn finite(e: &Entity) -> bool {
         Entity::Wall(w) => w.wall.pts.iter().all(|p| ok(*p)) && w.wall.width.is_finite(),
         Entity::Opening(o) => o.opening.place.iter().all(|p| ok(*p)) && o.opening.width.is_finite(),
         Entity::Space(s) => s.space.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts))),
+        Entity::Slab(s) => {
+            s.slab.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts)))
+                && nums_ok(&[s.slab.thickness, s.slab.offset])
+        }
         Entity::Grid(g) => all_ok(&g.grid.pts),
         Entity::Column(c) => ok(c.column.at) && nums_ok(&[c.column.width, c.column.rotation]),
         Entity::Stair(s) => all_ok(&s.stair.pts) && nums_ok(&[s.stair.width, s.stair.tread]),
@@ -725,6 +730,7 @@ impl Writer<'_> {
             Entity::Wall(_)
             | Entity::Opening(_)
             | Entity::Space(_)
+            | Entity::Slab(_)
             | Entity::Grid(_)
             | Entity::Column(_)
             | Entity::Stair(_)
@@ -743,6 +749,11 @@ impl Writer<'_> {
             // A space: its rings as closed polylines (`writer::plain_walls`, docs/adr/0342).
             Entity::Space(_) => {
                 self.report.skip("Mahal", "mahal halkalarına açılmadan yazılamaz", 0);
+                false
+            }
+            // A slab: its rings and edge as lines (`writer::plain_walls`, docs/adr/0722).
+            Entity::Slab(_) => {
+                self.report.skip("Döşeme", "döşeme halkalarına ve kenarına açılmadan yazılamaz", 0);
                 false
             }
             // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
@@ -1907,6 +1918,14 @@ impl Writer<'_> {
             "blok görünüşü olarak (adsız blok ve INSERT) yazıldı"
         };
         self.report.note(what, words, 0);
+        // What other programs miss of a slab (docs/adr/0722 §6): only its lines reach them.
+        if matches!(e, Entity::Slab(_)) {
+            self.report.note(
+                what,
+                "başka programlar yalnız halkalarının ve kenarının çizgilerini görür; türü, kalınlığı, kata göre kotu, malzemesi ve metraj seçimi KentOS verisindedir",
+                0,
+            );
+        }
         true
     }
 

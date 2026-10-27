@@ -73,6 +73,8 @@ pub struct Spec {
     pub name: Option<String>,
     /// A void (docs/adr/0708): drawn crossed.
     pub void: bool,
+    /// A slab (docs/adr/0722): drawn by `geom::slab::pieces`, without a label.
+    pub slab: Option<crate::geom::slab::Look>,
 }
 
 fn word(v: &Json, name: &str) -> Option<String> {
@@ -83,7 +85,7 @@ fn word(v: &Json, name: &str) -> Option<String> {
 }
 
 impl crate::api::json::Flat for Spec {
-    const NAMES: &'static [&'static str] = &["seed", "method", "number", "name", "void"];
+    const NAMES: &'static [&'static str] = &["seed", "method", "number", "name", "void", "slab"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         let method = match word(v, "method").as_deref() {
@@ -96,6 +98,7 @@ impl crate::api::json::Flat for Spec {
             number: word(v, "number"),
             name: word(v, "name"),
             void: matches!(v.get("void"), Json::Bool(true)),
+            slab: slab_look(v.get("slab"))?,
         })
     }
 
@@ -115,7 +118,65 @@ impl crate::api::json::Flat for Spec {
         if self.void {
             field(out, first, "void", &true);
         }
+        if let Some(look) = &self.slab {
+            if !*first {
+                out.push(',');
+            }
+            *first = false;
+            out.push_str("\"slab\":{");
+            if let Some(e) = &look.edge {
+                out.push_str("\"edge\":{");
+                let mut f = true;
+                field(out, &mut f, "kind", if e.parapet { "parapet" } else { "railing" });
+                field(out, &mut f, "width", &e.width);
+                out.push_str(",\"runs\":[");
+                for (i, r) in e.runs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    out.push('{');
+                    let mut g = true;
+                    field(out, &mut g, "pts", &r.pts);
+                    if let Some(b) = &r.bulges {
+                        field(out, &mut g, "bulges", b);
+                    }
+                    out.push('}');
+                }
+                out.push_str("]}");
+            }
+            out.push('}');
+        }
     }
+}
+
+/// A slab's look as the JSON API gives it (docs/adr/0722): `{edge: {kind, width, runs: [{pts, bulges}]}}`.
+fn slab_look(v: &Json) -> Result<Option<crate::geom::slab::Look>, String> {
+    if matches!(v, Json::Null) {
+        return Ok(None);
+    }
+    let edge = match v.get("edge") {
+        Json::Null => None,
+        e => {
+            let runs = match e.get("runs") {
+                Json::Arr(items) => items
+                    .iter()
+                    .map(|r| {
+                        Ok(crate::geom::slab::Run {
+                            pts: Vec::<Vec2>::from_json(r.get("pts"))?,
+                            bulges: Option::<Vec<f64>>::from_json(r.get("bulges"))?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, String>>()?,
+                _ => Vec::new(),
+            };
+            Some(crate::geom::slab::Edge {
+                parapet: matches!(e.get("kind"), Json::Str(k) if k == "parapet"),
+                width: f64::from_json(e.get("width"))?,
+                runs,
+            })
+        }
+    };
+    Ok(Some(crate::geom::slab::Look { edge }))
 }
 
 impl ToJson for Spec {
@@ -196,7 +257,7 @@ fn reaches(r: &Ring, faces: &[(Shape, f64)], method: Method) -> Vec<f64> {
 }
 
 /// The ring with each edge moved right by its reach.
-fn moved_ring(r: &Ring, reach: &[f64]) -> Ring {
+pub(crate) fn moved_ring(r: &Ring, reach: &[f64]) -> Ring {
     let n = r.pts.len();
     let bulge = |i: usize| r.bulges.as_ref().map_or(0.0, |b| b[i % n]);
     let mut pts = Vec::with_capacity(n);
@@ -398,6 +459,9 @@ pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
 /// `pieces`, its label left out when not `label`: a tagged space's tag is its label (docs/adr/0344's 27 October
 /// addendum).
 pub fn pieces_with(parts: &[Area], spec: &Spec, scale: f64, label: bool) -> Vec<Shape> {
+    if let Some(look) = &spec.slab {
+        return crate::geom::slab::pieces(parts, look);
+    }
     let mut out: Vec<Shape> = parts
         .iter()
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))

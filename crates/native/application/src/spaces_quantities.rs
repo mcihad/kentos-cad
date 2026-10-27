@@ -10,6 +10,7 @@
 //!   niche or flue does not); its net face the gross less the openings; its volume the net face × width.
 //! - An opening: its width, its height head − sill, its area; a niche's or flue's depth. The totals' opening area is
 //!   the through openings'.
+//! - A room's baseboard, a slab, the floor finishes' changes at the passages: `slab_quantities` (docs/adr/0722 §5).
 
 use std::collections::BTreeMap;
 
@@ -85,8 +86,20 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         spaces: Vec::new(),
         walls: Vec::new(),
         openings: Vec::new(),
+        slabs: Vec::new(),
+        transitions: Vec::new(),
         totals: QuantityTotals::default(),
     };
+    // The doors and gaps to the floor (docs/adr/0722 §5), and the voids a slab's area loses, by level.
+    let passages = crate::slab_quantities::passages(doc);
+    let voids: Vec<(Option<String>, Vec<kentos_commands::SpacePart>)> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Space(s) if s.space.void => Some((s.space.arch.level.clone(), s.space.parts.clone())),
+            _ => None,
+        })
+        .collect();
+    let mut rooms: Vec<crate::slab_quantities::Room<'_>> = Vec::new();
     // The openings of each wall, by the wall's id.
     let mut on_wall: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
     // The walls with a niche or flue: their rule says those stay (docs/adr/0719 §4).
@@ -144,6 +157,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 }
                 let area = spaces::area_of(&f.parts);
                 let height = f.height.or_else(|| level_height(doc, &f.arch));
+                if !f.void {
+                    rooms.push((uid(e), f.arch.level.clone(), &f.parts, f.finishes.floor.clone()));
+                }
                 let by_method = f.seed.map(|_| {
                     SpaceMethod::ALL
                         .iter()
@@ -173,6 +189,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
                     volume: height.map(|h| area * h),
+                    baseboard: (!f.void)
+                        .then(|| crate::slab_quantities::baseboard(&f.parts, f.arch.level.as_deref(), &passages)),
                     by_method,
                     rule: {
                         let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
@@ -185,10 +203,17 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                         }
                         if f.void {
                             rule.push_str("; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır");
+                        } else {
+                            rule.push_str("; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür");
                         }
                         rule
                     },
                 });
+            }
+            Entity::Slab(sl) if input.usages.is_none() => {
+                if takes(e, &sl.slab.arch) {
+                    out.slabs.push(crate::slab_quantities::slab_row(doc, uid(e), &sl.slab, &voids));
+                }
             }
             Entity::Wall(w) if input.usages.is_none() => {
                 let x = &w.wall;
@@ -229,6 +254,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             _ => {}
         }
     }
+    out.transitions = crate::slab_quantities::transitions(&rooms, &passages);
+    let summed = || out.slabs.iter().filter(|s| !s.excluded);
+    let edged = |k: kentos_commands::SlabEdgeKind| summed().filter(|s| s.edge == Some(k)).map(|s| s.edge_length).sum();
+    let (slab_area, slab_volume) = (summed().map(|s| s.net_area).sum(), summed().map(|s| s.volume).sum());
+    let (railing_length, parapet_length) =
+        (edged(kentos_commands::SlabEdgeKind::Railing), edged(kentos_commands::SlabEdgeKind::Parapet));
     out.totals = QuantityTotals {
         space_area: out.spaces.iter().filter(|s| !s.void).map(|s| s.area).sum(),
         void_area: out.spaces.iter().filter(|s| s.void).map(|s| s.area).sum(),
@@ -241,6 +272,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             .filter(|o| !o.form.is_recess())
             .filter_map(|o| o.area)
             .sum(),
+        baseboard_length: out.spaces.iter().filter_map(|s| s.baseboard).sum(),
+        slab_area,
+        slab_volume,
+        railing_length,
+        parapet_length,
     };
     Ok(out)
 }

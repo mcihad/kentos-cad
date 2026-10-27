@@ -486,7 +486,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:9",
@@ -502,7 +503,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -513,7 +515,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -591,7 +594,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 48.5
               }
             },
             "warnings": []
@@ -793,7 +797,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 }
               ],
               "walls": [
@@ -864,7 +869,8 @@
                 "wallLength": 31.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
               }
             },
             "warnings": []
@@ -1060,7 +1066,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [],
@@ -1070,7 +1077,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 14.0
               }
             },
             "warnings": []
@@ -1272,7 +1280,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 }
               ],
               "walls": [
@@ -1295,7 +1304,8 @@
                 "wallLength": 5.0,
                 "wallNetArea": 15.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
               }
             },
             "warnings": []
@@ -1497,7 +1507,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -1508,7 +1519,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [],
@@ -1518,7 +1530,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 29.25
               }
             },
             "warnings": []
@@ -2177,7 +2190,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:9",
@@ -2193,7 +2207,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -2204,7 +2219,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [],
@@ -2214,7 +2230,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 48.5
               }
             },
             "warnings": []
@@ -2417,7 +2434,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -2428,7 +2446,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -2499,7 +2518,8 @@
                 "wallLength": 31.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 33.25
               }
             },
             "warnings": []
@@ -2895,7 +2915,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 }
               ],
               "walls": [],
@@ -2905,7 +2926,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
               }
             },
             "warnings": []
@@ -3111,7 +3133,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 }
               ],
               "walls": [],
@@ -3121,7 +3144,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
               }
             },
             "warnings": []
@@ -3534,7 +3558,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 18.35
                 },
                 {
                   "uid": "$uidOf:9",
@@ -3550,7 +3575,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -3561,7 +3587,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -3652,7 +3679,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 91.11,
                 "openings": 1,
-                "openingArea": 1.8900000000000001
+                "openingArea": 1.8900000000000001,
+                "baseboardLength": 47.6
               }
             },
             "warnings": []
@@ -3872,7 +3900,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:9",
@@ -3888,7 +3917,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -3899,7 +3929,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -3990,7 +4021,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 91.44,
                 "openings": 1,
-                "openingArea": 1.5600000000000003
+                "openingArea": 1.5600000000000003,
+                "baseboardLength": 48.5
               }
             },
             "warnings": []
@@ -4231,7 +4263,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 18.35
                 },
                 {
                   "uid": "$uidOf:9",
@@ -4247,7 +4280,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -4258,7 +4292,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -4359,7 +4394,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 89.55,
                 "openings": 2,
-                "openingArea": 3.45
+                "openingArea": 3.45,
+                "baseboardLength": 47.6
               }
             },
             "warnings": []
@@ -4603,7 +4639,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 18.35
                 }
               ],
               "walls": [
@@ -4639,7 +4676,8 @@
                 "wallLength": 5.0,
                 "wallNetArea": 13.11,
                 "openings": 1,
-                "openingArea": 1.8900000000000001
+                "openingArea": 1.8900000000000001,
+                "baseboardLength": 18.35
               }
             },
             "warnings": []
@@ -4862,7 +4900,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 18.35
                 }
               ],
               "walls": [],
@@ -4872,7 +4911,8 @@
                 "wallLength": 0.0,
                 "wallNetArea": 0.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 18.35
               }
             },
             "warnings": []
@@ -5113,7 +5153,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 18.35
                 },
                 {
                   "uid": "$uidOf:9",
@@ -5129,7 +5170,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -5140,7 +5182,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -5241,7 +5284,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 91.11,
                 "openings": 2,
-                "openingArea": 1.8900000000000001
+                "openingArea": 1.8900000000000001,
+                "baseboardLength": 47.6
               }
             },
             "warnings": []
@@ -5462,7 +5506,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:9",
@@ -5478,7 +5523,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -5489,7 +5535,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -5576,7 +5623,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 93.0,
                 "openings": 1,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 48.5
               }
             },
             "warnings": []
@@ -5774,7 +5822,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
                 },
                 {
                   "uid": "$uidOf:9",
@@ -5790,7 +5839,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -5801,7 +5851,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -5879,7 +5930,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 48.5
               }
             },
             "warnings": []
@@ -6254,7 +6306,8 @@
                     "centerline": 25.0,
                     "gross": 26.91
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 20.75
                 },
                 {
                   "uid": "$uidOf:9",
@@ -6270,7 +6323,8 @@
                     "centerline": 15.0,
                     "gross": 16.51
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 15.25
                 },
                 {
                   "uid": "$uidOf:10",
@@ -6281,7 +6335,8 @@
                   "perimeter": 14.0,
                   "height": 3.0,
                   "volume": 36.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 14.0
                 }
               ],
               "walls": [
@@ -6359,7 +6414,8 @@
                 "wallLength": 35.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
-                "openingArea": 0.0
+                "openingArea": 0.0,
+                "baseboardLength": 50.0
               }
             },
             "warnings": []

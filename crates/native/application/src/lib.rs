@@ -277,6 +277,11 @@ pub use opening_distances::distances as openings_distances;
 pub use wall_distances::distances as walls_distances;
 pub mod spaces;
 pub mod spaces_create;
+// Döşeme ve Döşemeyi düzenle (docs/adr/0722).
+pub mod slabs;
+pub mod slabs_create;
+pub mod slabs_edit;
+pub mod slab_quantities;
 pub mod spaces_discover;
 pub mod spaces_separators;
 pub mod spaces_number;
@@ -806,6 +811,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_SPACES_QUANTITIES,
         kentos_commands::CAD_SPACES_QUANTITIES_VERSION,
     ),
+    // Döşeme and Döşemeyi düzenle ([`slabs_create`], [`slabs_edit`], docs/adr/0722).
+    (kentos_commands::CAD_SLABS_CREATE, kentos_commands::CAD_SLABS_CREATE_VERSION),
+    (kentos_commands::CAD_SLABS_EDIT, kentos_commands::CAD_SLABS_EDIT_VERSION),
     // Kapı, Pencere, Boşluk and Açıklığı düzenle ([`openings_create`], [`openings_edit`], docs/adr/0341).
     (
         kentos_commands::CAD_OPENINGS_CREATE,

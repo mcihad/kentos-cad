@@ -658,6 +658,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.spaces.edit"
             | "cad.spaces.separators"
             | "cad.spaces.number"
+            // A slab's fields, edges and outline changed; a hole cut out of it (docs/adr/0722 §4).
+            | "cad.slabs.edit"
             // A grid's, column's, stair's or ramp's fields changed; columns tied to grids move (docs/adr/0343 §4).
             | "cad.arch.edit"
             // It changes objects' levels; a room's boundary is found again on its new level (docs/adr/0717).

@@ -23,6 +23,7 @@ pub fn levelled(e: &Entity) -> bool {
     match e {
         Entity::Wall(_)
         | Entity::Space(_)
+        | Entity::Slab(_)
         | Entity::Grid(_)
         | Entity::Column(_)
         | Entity::Stair(_)
@@ -47,6 +48,7 @@ fn level_mut(e: &mut Entity) -> Option<&mut Option<String>> {
     match e {
         Entity::Wall(x) => Some(&mut x.wall.arch.level),
         Entity::Space(x) => Some(&mut x.space.arch.level),
+        Entity::Slab(x) => Some(&mut x.slab.arch.level),
         Entity::Grid(x) => Some(&mut x.grid.arch.level),
         Entity::Column(x) => Some(&mut x.column.arch.level),
         Entity::Stair(x) => Some(&mut x.stair.arch.level),

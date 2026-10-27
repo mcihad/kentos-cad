@@ -395,6 +395,12 @@ MAX_LEVEL_OFFSET = 1000.0
 # (Revizyon listesi's Tarih and Açıklama), at most ten, none blank.
 SCHEMA_WITH_SCHEDULE_COLUMNS = 122
 MAX_SCHEDULE_DATA = 10
+# Schema 123 (docs/adr/0722): the `slab` kind (a floor, a balcony or a terrace; its fields as one map under `slab`).
+SCHEMA_WITH_SLABS = 123
+MAX_SLAB_THICKNESS = 5.0
+MAX_SLAB_OFFSET = 100.0
+MAX_SLAB_EDGE = 2.0
+MAX_SLAB_MATERIAL = 120
 LEVEL_VIEWS = ("all", "active", "below")
 RECESS_FORMS = ("niche", "flue")
 MAX_RECESS_DEPTH = 10.0
@@ -642,7 +648,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3158,6 +3164,7 @@ class _Schema:
         self.level_state = version >= SCHEMA_WITH_LEVEL_STATE
         self.dim_levels = version >= SCHEMA_WITH_DIMENSION_LEVELS
         self.schedule_columns = version >= SCHEMA_WITH_SCHEDULE_COLUMNS
+        self.slabs = version >= SCHEMA_WITH_SLABS
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -5978,7 +5985,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks) or (kind == "slab" and not self.slabs):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -6013,6 +6020,10 @@ class _Schema:
         if kind == "viewmark" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında görünüm işareti olamaz")
+        # Nor a slab: its walls are the drawing's (docs/adr/0722 §1).
+        if kind == "slab" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında döşeme olamaz")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -6114,7 +6125,7 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
-        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark"):
+        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark", "slab"):
             fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
@@ -7398,6 +7409,50 @@ class _Schema:
                 bad("boş yazı yazılmaz")
             if any(len(x) > 128 or any(unicodedata.category(c) == "Cc" for c in x) for x in w.values()):
                 bad("İşaretin yazısı en çok 128 harftir, denetim karakteri olmaz.")
+        return f
+
+    def slab_fields(self, v):
+        """A slab's fields (schema 123, docs/adr/0722 §1), as the contract's JSON has them: each only when not its
+        default (a floor, a top on its level, no edge runs, summed); then the contract's rule (`SlabFields::problem`)."""
+        def not_default(read, default, words):
+            def check(x):
+                x = read(x)
+                if x == default:
+                    self.fail("bad_value", words)
+                return x
+            return check
+        def run(x):
+            r = self.fields({"pts": (self.array(self.jpoint), True), "bulges": (self.array(self.float), False)})(x)
+            if len(r["pts"]) < 2 or not all(math.isfinite(p["x"]) and math.isfinite(p["y"]) for p in r["pts"]):
+                self.fail("bad_value", "Kenarın her parçası en az iki sonlu noktadır.")
+            if "bulges" in r and (len(r["bulges"]) + 1 != len(r["pts"]) or not all(math.isfinite(b) for b in r["bulges"])):
+                self.fail("bad_value", "Kenar parçasının her kenarının bir sonlu bükümü olmalı.")
+            return r
+        edge = self.fields({"kind": (self.enum(("railing", "parapet")), True), "width": (self.float, True),
+                            "runs": (not_default(self.array(run), [], "boş kenar parçası listesi yazılmaz"), False)})
+        f = self.fields({"parts": (self.array(self.space_part), True),
+                         "role": (not_default(self.enum(("floor", "balcony", "terrace")), "floor", "varsayılan tür ('floor') yazılmaz"), False),
+                         "thickness": (self.float, True),
+                         "offset": (not_default(self.float, 0.0, "sıfır kot farkı yazılmaz"), False),
+                         "arch": (not_default(self.arch_info, {}, "boş mimari bilgi yazılmaz"), False),
+                         "material": (self.text, False), "edge": (edge, False),
+                         "excluded": (not_default(self.bool, False, "false yazılmaz; varsayılandır"), False)})(v)
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        if not f["parts"]:
+            bad("Döşemenin sınırı yok: en az bir halka verin.")
+        total = sum(len(p["outer"]["pts"]) + sum(len(h["pts"]) for h in p.get("holes", [])) for p in f["parts"])
+        if total > SPACE_MAX_POINTS:
+            bad(f"Döşemenin halkalarında {total} köşe var; en çok {SPACE_MAX_POINTS}.")
+        if not (math.isfinite(f["thickness"]) and 0 < f["thickness"] <= MAX_SLAB_THICKNESS):
+            bad("Döşemenin kalınlığı sıfırdan büyük, en çok 5 m olmalı.")
+        if "offset" in f and not (math.isfinite(f["offset"]) and abs(f["offset"]) <= MAX_SLAB_OFFSET):
+            bad("Döşemenin kata göre kotu sonlu, en çok ±100 m olmalı.")
+        m = f.get("material")
+        if m is not None and (not m.strip() or m.strip() != m or any(unicodedata.category(c) == "Cc" for c in m) or len(m) > MAX_SLAB_MATERIAL):
+            bad("Döşemenin malzemesi boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.")
+        e = f.get("edge")
+        if e is not None and not (math.isfinite(e["width"]) and 0 < e["width"] <= MAX_SLAB_EDGE):
+            bad("Kenarın eni sıfırdan büyük, en çok 2 m olmalı.")
         return f
 
     def table_sources(self, t):
@@ -8929,6 +8984,7 @@ ENTITY_KINDS = {
     "tag": lambda s: {"tag": (s.tag_fields, True)},
     # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
     "viewmark": lambda s: {"viewmark": (s.viewmark_fields, True)},
+    "slab": lambda s: {"slab": (s.slab_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

@@ -121,7 +121,7 @@ fn rooms_preview(app: &mut App) {
 }
 
 /// Enter: the rooms written.
-fn rooms(app: &mut App) {
+pub(crate) fn rooms(app: &mut App) {
     rooms_preview(app);
     typed(app, "");
     app.selection.clear();

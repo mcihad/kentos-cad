@@ -94,6 +94,15 @@ pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_commands::Sp
     said(kentos_native_application::spaces_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A slab's own field from Öznitelikler (docs/adr/0722 §6): through `cad.slabs.edit`; what to say.
+pub fn edit_slab(doc: &mut Document, slot: Slot, operation: kentos_commands::SlabsOperation) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_commands::SlabsEdit { uids: vec![uid.to_string()], operation, expected_revision: None };
+    said(kentos_native_application::slabs_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A tag's template, frame, words' height or leader from Öznitelikler (docs/adr/0344 §5): through `cad.tags.edit`;
 /// what to say.
 pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_commands::TagChange) -> Vec<String> {

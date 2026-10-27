@@ -777,6 +777,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Wall(w) => kentos_formats::walls::core_wall(&w.wall),
         Entity::Opening(o) => kentos_formats::openings::core_opening(&o.opening),
         Entity::Space(s) => kentos_formats::spaces::core_space(&s.space),
+        Entity::Slab(s) => kentos_formats::spaces::core_slab(&s.slab),
         Entity::Grid(g) => kentos_formats::arch_elements::core_grid(&g.grid),
         Entity::Column(c) => kentos_formats::arch_elements::core_column(&c.column),
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
@@ -1325,6 +1326,15 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Space(e), Shape::Space { parts, space }) => {
             e.space.parts = parts.iter().map(kentos_formats::spaces::part).collect();
             e.space.seed = space.seed.map(|q| Point { x: q.x, y: q.y });
+        }
+        // A slab's rings and its edge's runs as a transform carried them (docs/adr/0722 §1): the document writes the
+        // runs again after the step; the rest is its own.
+        (Entity::Slab(e), Shape::Space { parts, space }) => {
+            e.slab.parts = parts.iter().map(kentos_formats::spaces::part).collect();
+            if let (Some(edge), Some(look)) = (&mut e.slab.edge, space.slab.as_ref().and_then(|l| l.edge.as_ref())) {
+                edge.width = look.width;
+                edge.runs = kentos_formats::spaces::runs(&look.runs);
+            }
         }
         // A grid's, column's, stair's or ramp's path or centre and the sizes a transform scales (docs/adr/0343 §2).
         (Entity::Grid(e), Shape::Grid { pts, bulges, .. }) => {

@@ -1610,6 +1610,8 @@ KINDS = {
     "tag": {"tag": (opaque, True)},
     # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
     "viewmark": {"viewmark": (opaque, True)},
+    # Schema 123 (docs/adr/0722): a slab; its fields as one map.
+    "slab": {"slab": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -1956,8 +1958,8 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
-    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark"):
-        assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa, etiket ya da görünüm işareti olamaz"
+    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark", "slab"):
+        assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa, etiket, görünüm işareti ya da döşeme olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern")
         own = {k: v for k, v in e.items() if k not in keep}
@@ -2229,6 +2231,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "slab" for e in entities):
+        # A slab (docs/adr/0722).
+        return 123
     columned = lambda es: any(e["kind"] == "table" and e.get("source", {}).get("kind") == "blocks"  # noqa: E731
                               and e["source"].get("columns") for e in es)
     if columned(entities) or any(columned(b["entities"]) for b in blocks or []):
@@ -2894,7 +2899,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-123.kcad"] = container(root(cmap(parts), version=uint(123)))
+    files["schema-version-124.kcad"] = container(root(cmap(parts), version=uint(124)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3466,6 +3471,10 @@ def broken(minimal_content, minimal_file):
         return cmap({"pointcloud": cmap({k: v for k, v in body.items() if v is not None})})
 
     # A record without a geometry (docs/adr/0410 §2): not in a block, no field of its own.
+    # Nor a slab: its walls are the drawing's (docs/adr/0722 §1).
+    files["slab-in-block.kcad"] = with_blocks([block(1, "Döşeme", [cmap({"slab": cmap({"attrs": cmap({}), "layerId": text("0"),
+        "slab": opaque({"parts": [{"outer": {"pts": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 1.0}]}}],
+                        "thickness": 0.15})})})])], version=123)
     files["record-in-block.kcad"] = with_blocks([block(1, "Kayıt", [cmap({"record": cmap({"attrs": cmap({}), "layerId": text("0")})})])], version=72)
     files["record-with-point.kcad"] = in_schema(72, cmap({"record": cmap({**common, "p": point(one["p"])})}))
     files["pointcloud-in-schema-30.kcad"] = in_schema(30, cloud_of())
@@ -4981,6 +4990,26 @@ def build():
     columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
     columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
     columns_bad("type", lambda src: src.update(columns="Tarih"))
+    # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
+    # all round, left out of the totals, a curved two-part slab.
+    sl = document(load("slabs.json"))
+    assert sl.count(b"\x67version\x18\x7b") == 1
+    out["slabs.kcad"] = container(sl)
+    out["broken/slabs-in-schema-122.kcad"] = container(sl.replace(b"\x67version\x18\x7b", b"\x67version\x18\x7a"))
+    def slab_bad(name, index, change):
+        d = load("slabs.json")
+        change(d["entities"][index])
+        out["broken/slab-" + name + ".kcad"] = container(document(d))
+    slab_bad("thin", 0, lambda e: e.update(thickness=0.0))
+    slab_bad("default-role", 0, lambda e: e.update(role="floor"))
+    slab_bad("zero-offset", 1, lambda e: e.update(offset=0.0))
+    slab_bad("unknown-field", 0, lambda e: e.update(bogus=1.0))
+    slab_bad("wide-edge", 1, lambda e: e["edge"].update(width=3.0))
+    slab_bad("run-bulges", 1, lambda e: e["edge"]["runs"][0].update(bulges=[0.0]))
+    slab_bad("blank-material", 0, lambda e: e.update(material=" "))
+    slab_bad("two-point-ring", 3, lambda e: e["parts"][1]["outer"].update(pts=e["parts"][1]["outer"]["pts"][:2]))
+    slab_bad("false-excluded", 1, lambda e: e.update(excluded=False))
+
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

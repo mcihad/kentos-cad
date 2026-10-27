@@ -46,6 +46,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             .unwrap_or_default(),
         // Its middle: dragged, it slides along its wall (docs/adr/0341 §3).
         Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
+        // A slab's are its rings' as an area's: vertices, edges' middles, holes' vertices (docs/adr/0722 §1).
+        Shape::Space { parts, space } if space.slab.is_some() => entity_grips(&crate::geom::space::as_polygon(parts)),
         // Its label's place: dragged, the whole space moves (docs/adr/0342 §3).
         Shape::Space { parts, .. } => crate::geom::space::label_at(parts).into_iter().collect(),
         // A grid's ends, a stair's or ramp's walking line's points, a column's centre (docs/adr/0343 §2).
@@ -263,6 +265,21 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
     if let Some(path) = crate::geom::wall::path_of(&e.shape) {
         let moved = move_grip(&Entity::new(path), index, p)?;
         return Some(e.with(crate::geom::wall::with_path(&e.shape, moved.shape)?));
+    }
+    // A slab's grips are its rings' as an area's: they move as a polygon's and the slab keeps the rings
+    // (docs/adr/0722 §1); its edge's runs are the document's.
+    if let Shape::Space { parts, space } = &e.shape
+        && space.slab.is_some()
+    {
+        let moved = move_grip(&Entity::new(crate::geom::space::as_polygon(parts)), index, p)?;
+        let parts = crate::ops::areas::areas_of_entity(&moved.shape);
+        if parts.is_empty() {
+            return None;
+        }
+        return Some(e.with(Shape::Space {
+            parts,
+            space: space.clone(),
+        }));
     }
     let shape = match &e.shape {
         Shape::Point { z, .. } => Shape::Point {

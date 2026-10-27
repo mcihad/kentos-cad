@@ -898,8 +898,15 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının
     kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento −
     denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla
-    toplanır. levels, phases, usages ve layers verilen kat, evre, kullanım ve
-    katmanlarla süzer (usages verilince yalnız mahaller).
+    toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının
+    uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz
+    kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot
+    farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk
+    mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık),
+    kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler
+    (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler,
+    genişlikleri ve kaplamalarıyla. levels, phases, usages ve layers verilen kat, evre,
+    kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -933,7 +940,14 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net
         yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür,
         numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını
-        (rule) söyler; toplamlar satırların sırasıyla toplanır. levels, phases, usages ve
+        (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal):
+        süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin
+        (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs):
+        tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler
+        düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre,
+        hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir,
+        toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı
+        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. levels, phases, usages ve
         layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız
         mahaller).
 

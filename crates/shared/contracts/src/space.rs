@@ -251,6 +251,11 @@ pub struct SpaceEntity {
 }
 
 fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {
+    ring_problem_of(r, at, "Mahalin")
+}
+
+/// A ring's problem, its first words naming whose ring it is (“Mahalin”, “Döşemenin”).
+pub(crate) fn ring_problem_of(r: &SpaceRing, at: &str, whose: &str) -> Option<(String, String)> {
     let n = r.pts.len();
     let curved = r
         .bulges
@@ -259,7 +264,7 @@ fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {
     if n < 3 && !(n == 2 && curved) {
         return Some((
             at.into(),
-            format!("Mahalin halkası en az üç köşedir; {n} verildi."),
+            format!("{whose} halkası en az üç köşedir; {n} verildi."),
         ));
     }
     if let Some(i) = r
@@ -369,35 +374,40 @@ impl SpaceEntity {
     /// The space as an area object (its parts and holes): what the formats and the server write where a space has no
     /// kind of its own (docs/adr/0342 §1).
     pub fn as_polygon(&self) -> crate::PathEntity {
-        let ring = |r: &SpaceRing| crate::RingGeometry {
-            pts: r.pts.clone(),
-            bulges: r.bulges.clone(),
-            zs: None,
-        };
-        let holes =
-            |p: &SpacePart| (!p.holes.is_empty()).then(|| p.holes.iter().map(ring).collect());
-        let mut parts = self.space.parts.iter();
-        let first = parts.next().cloned().unwrap_or_default();
-        let rest: Vec<crate::AreaPart> = parts
-            .map(|p| crate::AreaPart {
-                pts: p.outer.pts.clone(),
-                bulges: p.outer.bulges.clone(),
-                holes: holes(p),
-                zs: None,
-                ms: None,
-            })
-            .collect();
-        crate::PathEntity {
-            space_separator: None,
-            base: self.base.clone(),
-            pts: first.outer.pts.clone(),
-            bulges: first.outer.bulges.clone(),
-            holes: holes(&first),
+        parts_polygon(&self.base, &self.space.parts)
+    }
+}
+
+/// Parts of rings as one polygon object with the base given (a space's, a slab's): what pickers, exports and
+/// anchors take.
+pub fn parts_polygon(base: &crate::EntityBase, parts: &[SpacePart]) -> crate::PathEntity {
+    let ring = |r: &SpaceRing| crate::RingGeometry {
+        pts: r.pts.clone(),
+        bulges: r.bulges.clone(),
+        zs: None,
+    };
+    let holes = |p: &SpacePart| (!p.holes.is_empty()).then(|| p.holes.iter().map(ring).collect());
+    let mut parts = parts.iter();
+    let first = parts.next().cloned().unwrap_or_default();
+    let rest: Vec<crate::AreaPart> = parts
+        .map(|p| crate::AreaPart {
+            pts: p.outer.pts.clone(),
+            bulges: p.outer.bulges.clone(),
+            holes: holes(p),
             zs: None,
             ms: None,
-            parts: (!rest.is_empty()).then_some(rest),
-            closed: false,
-            widths: None,
-        }
+        })
+        .collect();
+    crate::PathEntity {
+        space_separator: None,
+        base: base.clone(),
+        pts: first.outer.pts.clone(),
+        bulges: first.outer.bulges.clone(),
+        holes: holes(&first),
+        zs: None,
+        ms: None,
+        parts: (!rest.is_empty()).then_some(rest),
+        closed: false,
+        widths: None,
     }
 }

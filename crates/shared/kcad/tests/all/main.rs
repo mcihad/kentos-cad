@@ -12,6 +12,7 @@ mod columns;
 mod compose;
 mod dimension_levels;
 mod schedule_columns;
+mod slabs;
 mod dimension_refs;
 mod dimension_sets;
 mod dimensions;

@@ -439,6 +439,28 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             }
             s.height(&mut f.height);
         }
+        // A slab's outline and edge are lengths, its thickness and top heights (docs/adr/0722).
+        Entity::Slab(e) => {
+            let f = &mut e.slab;
+            for part in &mut f.parts {
+                s.points(&mut part.outer.pts);
+                for h in &mut part.holes {
+                    s.points(&mut h.pts);
+                }
+            }
+            let mut thickness = Some(f.thickness);
+            s.height(&mut thickness);
+            f.thickness = thickness.unwrap_or(f.thickness);
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
+            if let Some(edge) = &mut f.edge {
+                edge.width = s.apply(edge.width);
+                for r in &mut edge.runs {
+                    s.points(&mut r.pts);
+                }
+            }
+        }
         // Their paths and sizes are lengths, their rises and levels heights; a bubble is on paper (docs/adr/0343 §1).
         Entity::Grid(e) => s.points(&mut e.grid.pts),
         Entity::Column(e) => {

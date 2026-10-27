@@ -1976,6 +1976,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 123 (docs/adr/0722): a slab.
+    if objs.iter().any(|e| matches!(e, Entity::Slab(_))) {
+        return crate::SCHEMA_WITH_SLABS;
+    }
     // Schema 122 (docs/adr/0721 §4): a block schedule with further columns (of the drawing or a block).
     let columned = |list: Objs<'_>| {
         list.iter().any(|e| {

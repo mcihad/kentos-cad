@@ -671,6 +671,25 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             };
             let mut spec = space.clone();
             spec.seed = space.seed.map(|q| apply(m, q));
+            // A slab's edge goes with it: its runs map, its width scales and a mirror turns each run round so the
+            // edge stays on the slab's side (docs/adr/0722 §1); the document writes the runs again after the step.
+            if let Some(edge) = spec.slab.as_mut().and_then(|l| l.edge.as_mut()) {
+                edge.width *= s;
+                for run in &mut edge.runs {
+                    let pts: Vec<Vec2> = run.pts.iter().map(|q| apply(m, *q)).collect();
+                    if is_reflection(m) {
+                        let r = crate::geom::bulge::reverse_bulge_path(&pts, run.bulges.as_deref(), false);
+                        let edges = r.pts.len().saturating_sub(1);
+                        run.bulges = r
+                            .bulges
+                            .map(|b| b.into_iter().take(edges).collect::<Vec<f64>>())
+                            .filter(|b| b.iter().any(|x| *x != 0.0));
+                        run.pts = r.pts;
+                    } else {
+                        run.pts = pts;
+                    }
+                }
+            }
             Shape::Space {
                 parts: parts
                     .iter()

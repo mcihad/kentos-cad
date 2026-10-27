@@ -1,0 +1,315 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Döşemeler: delikli kat döşemesi, korkuluklu balkon, parapetli teras, yaylı iki parçalı döşeme",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 50.0,
+  "workspace": "cad",
+  "arch": {
+   "levels": [
+    {
+     "id": "zemin",
+     "name": "Zemin kat",
+     "elevation": 0.0,
+     "height": 3.0
+    }
+   ]
+  }
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "doseme",
+   "name": "Döşeme",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "doseme",
+ "uids": [
+  "0192f5a1-7230-7000-8000-000000000001",
+  "0192f5a1-7230-7000-8000-000000000002",
+  "0192f5a1-7230-7000-8000-000000000003",
+  "0192f5a1-7230-7000-8000-000000000004"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "entities": [
+  {
+   "kind": "slab",
+   "id": 1,
+   "layerId": "doseme",
+   "attrs": {},
+   "parts": [
+    {
+     "outer": {
+      "pts": [
+       {
+        "x": -0.1,
+        "y": -0.1
+       },
+       {
+        "x": 8.1,
+        "y": -0.1
+       },
+       {
+        "x": 8.1,
+        "y": 5.1
+       },
+       {
+        "x": -0.1,
+        "y": 5.1
+       }
+      ]
+     },
+     "holes": [
+      {
+       "pts": [
+        {
+         "x": 5.075,
+         "y": 0.1
+        },
+        {
+         "x": 5.075,
+         "y": 4.9
+        },
+        {
+         "x": 7.9,
+         "y": 4.9
+        },
+        {
+         "x": 7.9,
+         "y": 0.1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "thickness": 0.2,
+   "arch": {
+    "level": "zemin",
+    "phase": "new"
+   },
+   "material": "Betonarme"
+  },
+  {
+   "kind": "slab",
+   "id": 2,
+   "layerId": "doseme",
+   "attrs": {},
+   "parts": [
+    {
+     "outer": {
+      "pts": [
+       {
+        "x": 2.0,
+        "y": 5.1
+       },
+       {
+        "x": 6.0,
+        "y": 5.1
+       },
+       {
+        "x": 6.0,
+        "y": 6.6
+       },
+       {
+        "x": 2.0,
+        "y": 6.6
+       }
+      ]
+     }
+    }
+   ],
+   "role": "balcony",
+   "thickness": 0.15,
+   "arch": {
+    "level": "zemin"
+   },
+   "edge": {
+    "kind": "railing",
+    "width": 0.05,
+    "runs": [
+     {
+      "pts": [
+       {
+        "x": 6.0,
+        "y": 5.1
+       },
+       {
+        "x": 6.0,
+        "y": 6.6
+       },
+       {
+        "x": 2.0,
+        "y": 6.6
+       },
+       {
+        "x": 2.0,
+        "y": 5.1
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "kind": "slab",
+   "id": 3,
+   "layerId": "doseme",
+   "attrs": {
+    "Kat": "Çatı"
+   },
+   "parts": [
+    {
+     "outer": {
+      "pts": [
+       {
+        "x": 20.0,
+        "y": 10.0
+       },
+       {
+        "x": 26.0,
+        "y": 10.0
+       },
+       {
+        "x": 26.0,
+        "y": 14.0
+       },
+       {
+        "x": 20.0,
+        "y": 14.0
+       }
+      ]
+     }
+    }
+   ],
+   "role": "terrace",
+   "thickness": 0.3,
+   "offset": -0.05,
+   "edge": {
+    "kind": "parapet",
+    "width": 0.2,
+    "runs": [
+     {
+      "pts": [
+       {
+        "x": 20.0,
+        "y": 10.0
+       },
+       {
+        "x": 26.0,
+        "y": 10.0
+       },
+       {
+        "x": 26.0,
+        "y": 14.0
+       },
+       {
+        "x": 20.0,
+        "y": 14.0
+       },
+       {
+        "x": 20.0,
+        "y": 10.0
+       }
+      ]
+     }
+    ]
+   },
+   "excluded": true
+  },
+  {
+   "kind": "slab",
+   "id": 4,
+   "layerId": "doseme",
+   "attrs": {},
+   "parts": [
+    {
+     "outer": {
+      "pts": [
+       {
+        "x": 30.0,
+        "y": 0.0
+       },
+       {
+        "x": 34.0,
+        "y": 0.0
+       },
+       {
+        "x": 34.0,
+        "y": 3.0
+       },
+       {
+        "x": 30.0,
+        "y": 3.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.25,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "outer": {
+      "pts": [
+       {
+        "x": 36.0,
+        "y": 0.0
+       },
+       {
+        "x": 38.0,
+        "y": 0.0
+       },
+       {
+        "x": 38.0,
+        "y": 2.0
+       },
+       {
+        "x": 36.0,
+        "y": 2.0
+       }
+      ]
+     }
+    }
+   ],
+   "thickness": 0.15
+  }
+ ]
+}

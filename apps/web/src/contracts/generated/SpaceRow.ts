@@ -30,6 +30,11 @@ void?: boolean,
  */
 area: number, perimeter: number, height?: number, volume?: number, 
 /**
+ * A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
+ * gaps to the floor) its sides run along, metres; none for a void.
+ */
+baseboard?: number, 
+/**
  * A space from the walls: its area by each method, m².
  */
 byMethod?: { [key in string]: number }, 

@@ -93,6 +93,8 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("cad.entities.transform", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
     ("cad.blocks.define", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
 
+    ("cad.slabs.create", "invalid_attribute", "Katmanın alanlarına göre öznitelik her oluşturan komutun ortak denetimidir (checks::object_attrs); uyumsuz alan cad.polygon.create ve cad.entities.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722)."),
+    ("cad.slabs.create", "attribute_required", "Katmanın zorunlu alanı her oluşturan komutun ortak denetimidir (checks::object_attrs); cad.polygon.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722)."),
     ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679)."),
     ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679)."),
     ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679)."),

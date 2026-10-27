@@ -103,6 +103,8 @@ pub enum Event {
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, kentos_commands::SpacesOperation),
+    /// A slab's own field chosen (Tür, Kenar, Kat, Evre, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
+    Slab(Slot, kentos_commands::SlabsOperation),
     SpaceSeparator(Slot,bool),
     /// Kat ▾ of several architectural objects (docs/adr/0717 §2): through `cad.levels.assign`.
     Levels(Vec<Slot>, String),
@@ -275,6 +277,11 @@ pub enum Field {
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
+    /// A slab's thickness, top's offset, edge's width (lengths) and material (empty: none; docs/adr/0722 §6).
+    SlabThickness(Slot),
+    SlabOffset(Slot),
+    SlabEdgeWidth(Slot),
+    SlabMaterial(Slot),
     /// A grid's, column's, stair's or ramp's typed field (docs/adr/0343 §5).
     Arch(Slot, ArchField),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
@@ -795,6 +802,7 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
+            Event::Slab(slot, op) => properties::edit_slab(model, slot, op),
             Event::SpaceSeparator(slot,on)=> {
                 let arch=on.then(||model.get(slot).and_then(kentos_domain::space_follow::separator_path)
                     .and_then(|p|p.space_separator.clone()).unwrap_or_default());
@@ -1473,6 +1481,33 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
+        Field::SlabThickness(slot) | Field::SlabOffset(slot) | Field::SlabEdgeWidth(slot) | Field::SlabMaterial(slot) => {
+            use kentos_commands::{SlabChange, SlabsOperation};
+            let change = if let Field::SlabMaterial(_) = field {
+                let t = kentos_interaction::js_trim(text);
+                SlabChange { material: Some((!t.is_empty()).then(|| t.to_owned())), ..Default::default() }
+            } else {
+                let Some(n) = length(text) else {
+                    return vec!["Bir uzunluk girin; örneğin 15 cm ya da 0.15 m.".into()];
+                };
+                if !n.is_finite() {
+                    return Vec::new();
+                }
+                match field {
+                    Field::SlabThickness(_) => SlabChange { thickness: Some(n), ..Default::default() },
+                    Field::SlabOffset(_) => SlabChange { offset: Some(n), ..Default::default() },
+                    _ => {
+                        let Some(Entity::Slab(s)) = model.get(*slot) else { return Vec::new() };
+                        let Some(e) = &s.slab.edge else { return Vec::new() };
+                        SlabChange {
+                            edge: Some(Some(kentos_commands::NewSlabEdge { kind: e.kind, width: Some(n) })),
+                            ..Default::default()
+                        }
+                    }
+                }
+            };
+            return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
+        }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
             let height = matches!(field, Field::WallHeight(_));
             if height && text.trim().is_empty() {
@@ -1616,6 +1651,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceFloor(_)
         | Field::SpaceWall(_)
         | Field::SpaceCeiling(_)
+        | Field::SlabThickness(_)
+        | Field::SlabOffset(_)
+        | Field::SlabEdgeWidth(_)
+        | Field::SlabMaterial(_)
         | Field::Arch(..)
         | Field::Elevation(..)
         | Field::PolylineWidth(_)

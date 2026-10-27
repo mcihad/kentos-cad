@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Döşeme, balkon, teras (28 Ekim 2026; [ADR0722](docs/adr/0722-slabs.md)).**
+  Yeni `slab` türü mahalin şekliyle çizilir (ikinci alan motoru yok): Döşeme/Balkon/Teras, kalınlık, kata göre kot
+  farkı, malzeme, metraj dışı. `cad.slabs.create` çizilmiş, duvarların dış yüzlerinden (`outline`) ya da odadan
+  (`room`); `cad.slabs.edit` Değiştir/Kenarı ötele/Kes/Ekle. Kenar ötelemesinin dört başarısızlığı atomik ret.
+  Korkuluk/parapet yalnız serbest kenarlarda, belge duvarla izler (`follow_slabs`). Metraj: döşeme net alanı (boşluk
+  mahalleri düşülür), hacim, üst kot; mahalde süpürgelik (kapı ve döşemeye inen boşluk düşülür) ve kaplama geçişleri.
+  KCAD 123 (opt-in), `FORMATS_VERSION` 98, göç 0034, DXF mimari INSERT. Katmanlı yapı, kesit/3B, katlar arası şaft açık.
+
 - **Mimari işaretler (28 Ekim 2026; [ADR0721](docs/adr/0721-architectural-symbols.md)).**
   Görünüm işareti hedef paftanın çizim numarasını okur (yeniden numaralama, kopya, `targetGone`). Kot `level
   {id, offset?}` ile kata bağlanır, kat değişince izler (KCAD 121). `cad.north.create` (plan, coğrafi kuzey: meridyen

@@ -266,6 +266,8 @@ pub mod wall_distance;
 pub mod opening_tools;
 pub mod opening_array;
 pub mod space_tools;
+// Döşeme (docs/adr/0722).
+pub mod slab_tools;
 pub mod space_discover;
 pub mod space_number;
 mod architecture_level;

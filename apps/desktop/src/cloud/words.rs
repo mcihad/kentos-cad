@@ -244,6 +244,7 @@ pub fn kind(kind: &str) -> &'static str {
         "ramp" => "Rampa",
         "tag" => "Etiket",
         "viewmark" => "Görünüm işareti",
+        "slab" => "Döşeme",
         _ => "Nesne",
     }
 }

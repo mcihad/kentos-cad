@@ -43,6 +43,7 @@ pub(crate) fn kind_icon(kind: &str) -> &'static str {
         "ramp" => "ramp",
         "tag" => "tag",
         "viewmark" => "viewSection",
+        "slab" => "slab",
         _ => "more",
     }
 }

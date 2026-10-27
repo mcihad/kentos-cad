@@ -1602,7 +1602,8 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
 }
 
 /// A room's architectural objects as `arch_dxf_goes_round` writes them: grids and a column where they cross, four
-/// walls, a door, the space they close, a tag on the door, a section mark, a stair and a ramp.
+/// walls, a door, the space they close, a tag on the door, a section mark, a stair, a ramp and a balcony slab with its
+/// railing on its free sides (docs/adr/0722 §6).
 fn arch_room() -> Session {
     let mut s = Session::new(&NewDrawing {
         name: "Mimari DXF".into(),
@@ -1642,6 +1643,9 @@ fn arch_room() -> Session {
         { "pts": [p(1.0, 1.0), p(4.0, 1.0)], "width": 1.0, "risers": 10, "riserHeight": 0.17, "tread": 0.28 } ] }));
     call("cad.ramps.create", json!({ "layerId": layer, "ramps": [
         { "pts": [p(8.0, 0.0), p(14.0, 0.0)], "width": 1.5, "rise": 0.3, "slope": 5.0 } ] }));
+    call("cad.slabs.create", json!({ "layerId": layer, "slabs": [
+        { "parts": [{ "outer": { "pts": [p(1.0, 4.1), p(5.0, 4.1), p(5.0, 5.6), p(1.0, 5.6)] } }],
+          "role": "balcony", "edge": { "kind": "railing" }, "material": "Betonarme" } ] }));
     s
 }
 
@@ -1649,7 +1653,16 @@ fn arch_kind(e: &kentos_commands::Entity) -> bool {
     use kentos_commands::Entity as E;
     matches!(
         e,
-        E::Wall(_) | E::Opening(_) | E::Space(_) | E::Grid(_) | E::Column(_) | E::Stair(_) | E::Ramp(_) | E::Tag(_) | E::ViewMark(_)
+        E::Wall(_)
+            | E::Opening(_)
+            | E::Space(_)
+            | E::Slab(_)
+            | E::Grid(_)
+            | E::Column(_)
+            | E::Stair(_)
+            | E::Ramp(_)
+            | E::Tag(_)
+            | E::ViewMark(_)
     )
 }
 
@@ -1692,7 +1705,7 @@ fn arch_dxf_goes_round() {
         .map(|e| (uid(back.document(), e), serde_json::to_value(e).expect("json")))
         .collect();
     let kinds: std::collections::BTreeSet<&str> = before.iter().filter_map(|(_, e)| e["kind"].as_str()).collect();
-    assert_eq!(kinds.len(), 9, "every architectural kind: {kinds:?}");
+    assert_eq!(kinds.len(), 10, "every architectural kind: {kinds:?}");
     assert_eq!(before.len(), after.len(), "{answer}");
     // The ids in the writing drawing → in the reading one, by the objects' order.
     let ids: std::collections::HashMap<&str, &str> =

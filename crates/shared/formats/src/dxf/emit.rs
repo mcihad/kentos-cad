@@ -517,6 +517,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Wall(w) => w.wall.pts.clone(),
         Entity::Opening(o) => o.opening.place.clone(),
         Entity::Space(s) => s.as_polygon().pts,
+        Entity::Slab(s) => s.as_polygon().pts,
         Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             crate::arch_elements::outline_points(e).unwrap_or_default()
         }
@@ -2781,7 +2782,7 @@ impl<'l> Emitter<'l> {
         map.insert("layerId".into(), layer.into());
         let arch = matches!(
             map.get("kind").and_then(|k| k.as_str()),
-            Some("wall" | "opening" | "space" | "grid" | "column" | "stair" | "ramp" | "tag" | "viewmark")
+            Some("wall" | "opening" | "space" | "slab" | "grid" | "column" | "stair" | "ramp" | "tag" | "viewmark")
         ) || (map.get("kind").and_then(|k| k.as_str()) == Some("polyline") && map.contains_key("spaceSeparator"));
         // An architectural object keeps its own look, attributes and label (docs/adr/0347 §2).
         if arch {
@@ -3549,6 +3550,7 @@ fn is_arch(e: &Entity) -> bool {
         Entity::Wall(_)
             | Entity::Opening(_)
             | Entity::Space(_)
+            | Entity::Slab(_)
             | Entity::Grid(_)
             | Entity::Column(_)
             | Entity::Stair(_)

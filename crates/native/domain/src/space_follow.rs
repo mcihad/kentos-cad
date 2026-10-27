@@ -199,7 +199,7 @@ fn updated(before: Stored, after: Entity) -> Op {
     }
 }
 
-fn takes_level(e: &Entity, level: Option<&str>) -> bool {
+pub(crate) fn takes_level(e: &Entity, level: Option<&str>) -> bool {
     level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
@@ -441,7 +441,7 @@ impl Document {
         self.space_walls_near(area, None)
     }
 
-    fn space_walls_near(&self, area: Box4, level: Option<&str>) -> Vec<CoreWall> {
+    pub(crate) fn space_walls_near(&self, area: Box4, level: Option<&str>) -> Vec<CoreWall> {
         let area = grow(area, 1.0);
         self.entities()
             .filter(|e| takes_level(e, level))

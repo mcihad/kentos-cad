@@ -13,7 +13,7 @@
 use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 29] = [
+pub const KINDS: [&str; 30] = [
     "point",
     "line",
     "polyline",
@@ -37,6 +37,7 @@ pub const KINDS: [&str; 29] = [
     "wall",
     "opening",
     "space",
+    "slab",
     "grid",
     "column",
     "stair",
@@ -1766,6 +1767,45 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
+    // The slabs (docs/adr/0722 §4).
+    Entry {
+        id: "cad.slabs.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_slab",
+                "level_not_found",
+                "slab_not_enclosed",
+                "slab_offset_failed",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.slabs.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_slab",
+                "nothing_to_set",
+                "not_finite",
+                "invalid_slab",
+                "level_not_found",
+                "slab_not_enclosed",
+                "slab_offset_failed",
+                "slab_cut_missed",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["slab"], &[], Some("not_a_slab"), None)],
+    },
     Entry {
         id: "cad.spaces.quantities",
         refusals: &[&["level_not_found", "layer_not_found"]],
@@ -1840,7 +1880,7 @@ const ENTRIES: &[Entry] = &[
         targets: || {
             vec![target(
                 None,
-                &["wall", "space", "grid", "column", "stair", "ramp", "polyline"],
+                &["wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline"],
                 &[],
                 Some("not_levelled"),
                 Some("Çoklu çizgi yalnız mahal ayırıcıysa kat alır."),
@@ -4630,6 +4670,7 @@ const ENTRIES: &[Entry] = &[
                         "column",
                         "stair",
                         "ramp",
+                        "slab",
                         "image",
                         "raster",
                         "pointcloud",

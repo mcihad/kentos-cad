@@ -129,6 +129,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve duvar stili değişince yüze bağlı ölçülerin izlemesi; ortak durumlar `cad.north.create.json`,
   `cad.revisions.mark.json`, `cad.legends.materials.json`, `cad.tables.edit.json`,
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-ELEM-01 / ADR0722: Döşeme, balkon, teras. Web'in belgesi `slab` türünü (KCAD 123, tipli sütunlarda tür 30)
+  okuyup yazmalı, mahalin şekliyle çizmeli ve kenarın çizgilerini (`edge.runs`) serbest kenarlardan yeniden
+  türetmeli; `cad.slabs.create`, `cad.slabs.edit` işleyicileri, Döşeme aracı (T/S/K/F/E/W/Ö/M/D), Öznitelikler'in
+  döşeme satırları, seçim süzgecinde Döşeme ve `ctx.slab` sekmesi; Metraj'da Süpürgelik sütunu, Döşemeler ve
+  Geçişler sekmeleri; ortak durumlar `cad.slabs.create.json`, `cad.slabs.edit.json`, `cad.spaces.quantities.json`,
+  `cad.spaces.edit.json` ile sınanmalı.
 - ARCH-ELEM-02 / ADR0719: Niş, baca ve tesisat boşluğu. Web'in açıklık modeli `niche`/`flue`
   biçimlerini, `depth`/`inset`'i ve `tooDeep`'i (KCAD 119), duvar çiziminin kısmi derinlik
   kesimini ve kesme yüksekliğine göre kesikli çizimi (`fixtures/walls/v1/openings.json`),

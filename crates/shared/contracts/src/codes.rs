@@ -1679,6 +1679,18 @@ codes! {
     SPACES_NOT_TOUCHING = "spaces_not_touching", Failed, false, "Birleştirilecek mahaller değmiyor; birleşince tek parça olmuyorlar.";
     SPLIT_MISSED = "split_missed", Failed, false, "Çizgi mahali bölmüyor: mahalin içinden geçip sınırını iki yerde kesmeli.";
 
+    // ── Slabs (docs/adr/0722) ────────────────────────────────────────────
+    /// An object a slab command was given that is not a slab.
+    NOT_A_SLAB = "not_a_slab", Failed, false, "Nesne döşeme değil.";
+    /// A slab's fields that make none.
+    INVALID_SLAB = "invalid_slab", Failed, false, "Döşemenin alanları bir döşeme tanımlamıyor: ya çizilmiş sınır ya da iç nokta, halka en az üç köşe, sonlu koordinatlar, sıfırdan büyük kalınlık, geçerli kenar eni.";
+    /// A point no walls enclose: no outline or room is found round it.
+    SLAB_NOT_ENCLOSED = "slab_not_enclosed", Failed, false, "Duvarlar noktanın çevresini kapatmıyor; döşemenin sınırı bulunamadı. Duvarları kapatın, noktayı duvarların içine verin ya da sınırı çizin.";
+    /// An edge offset that turns a ring over or makes it cross itself or another ring.
+    SLAB_OFFSET_FAILED = "slab_offset_failed", Failed, false, "Kenar ötelemesi döşemenin sınırını bozuyor: halka ters dönüyor, kendini ya da başka bir halkayı kesiyor. Ötelemeyi küçültün ya da sınırı düzeltin.";
+    /// An area cut out of a slab that misses it, or one that would take all of it.
+    SLAB_CUT_MISSED = "slab_cut_missed", Failed, false, "Kesilen alan döşemeye değmiyor ya da döşemenin hepsini götürüyor; döşemenin içinde kalan bir alan verin ya da döşemeyi silin.";
+
     // ── Grids, columns, stairs and ramps (docs/adr/0343) ────────────────
     /// A grid's fields that make none.
     INVALID_GRID = "invalid_grid", Failed, false, "Aksın alanları bir aks tanımlamıyor: iki ayrı nokta, boş olmayan etiket, sonlu büküm ve balon çapı.";

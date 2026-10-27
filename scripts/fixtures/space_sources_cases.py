@@ -15,6 +15,8 @@ from space_scope_cases import setup, LABEL, DELTA
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'fixtures/commands/v1/cad.spaces.sources.json'
 UIDS=[f'00000000-0000-4000-8000-{n:012d}'for n in range(1,5)]
+# A room's baseboard rule, last in its rule; no passage in these drawings: the baseboard is the perimeter (ADR 0722 §5).
+BASEBOARD_RULE = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür"
 def completed(output,warnings=None):return dict(status='completed',output=output,warnings=warnings or [])
 def case(unit,method,partition,far):
     d,seed=setup(unit,far);d['version']=2;d['uids']=UIDS
@@ -32,7 +34,8 @@ def case(unit,method,partition,far):
     if method!='net':e['method']=method
     row=dict(uid='$uidOf:5',method=method,columns='all',sources=members,area=by[method],
         perimeter=float(2*(width+D(8)+2*delta)+8),byMethod=by,
-        rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde')
+        rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde'+BASEBOARD_RULE)
+    row['baseboard']=row['perimeter']
     state=dict(ids=[1,2,3,4,5],entities={'5':e},canUndo=True,dirty=True,revision='changed')
     return dict(name=f'{unit}/{method}/{"left"if partition else "whole"}/{"far"if far else "local"}',setup=d,steps=[
         dict(op='plan',input=inp,result=completed(dict(spaces=[dict(e,id=0)],revision='$current')),expect=dict(revision='same',ids=[1,2,3,4])),

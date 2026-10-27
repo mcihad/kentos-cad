@@ -4,6 +4,32 @@ use kentos_domain::{Document,Slot};
 use kentos_native_application::{ExecutionContext,spaces,spaces_create,spaces_edit,spaces_separators,transform,edit};
 use serde_json::json;
 
+/// The answer without what docs/adr/0722 §5 added (a room's baseboard, its rule's sentence, the totals' baseboard
+/// length, the floor changes): the frozen answers predate it, and everything else must stay as it was.
+fn before_0722(mut v: serde_json::Value) -> serde_json::Value {
+    const SENTENCE: &str = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür";
+    fn walk(v: &mut serde_json::Value) {
+        match v {
+            serde_json::Value::Object(map) => {
+                if let Some(b) = map.remove("baseboard") {
+                    let perimeter = map.get("perimeter").and_then(|p| p.as_f64()).unwrap_or(f64::INFINITY);
+                    assert!(b.as_f64().is_some_and(|b| b >= 0.0 && b <= perimeter + 1e-9), "{b} {perimeter}");
+                }
+                map.remove("baseboardLength");
+                map.remove("transitions");
+                if let Some(serde_json::Value::String(rule)) = map.get_mut("rule") {
+                    *rule = rule.replace(SENTENCE, "");
+                }
+                map.values_mut().for_each(walk);
+            }
+            serde_json::Value::Array(items) => items.iter_mut().for_each(walk),
+            _ => {}
+        }
+    }
+    walk(&mut v);
+    v
+}
+
 #[test]
 fn quantity_query_reuses_sources_without_changing_frozen_answers_or_document_order() {
     use kentos_native_application::spaces_quantities;
@@ -20,7 +46,7 @@ fn quantity_query_reuses_sources_without_changing_frozen_answers_or_document_ord
         for answer in case["answers"].as_array().unwrap() {
             let input:SpacesQuantities=serde_json::from_value(answer["query"].clone()).unwrap();
             let plan=completed(spaces_quantities::plan_in(&doc,&input));
-            assert_eq!(serde_json::to_value(&plan).unwrap(),answer["output"],"{name}: {:?}",input);
+            assert_eq!(before_0722(serde_json::to_value(&plan).unwrap()),answer["output"],"{name}: {:?}",input);
             let executed=completed(spaces_quantities::execute(&mut ExecutionContext::new(&mut doc),input));
             assert_eq!(executed,plan);
             assert_eq!(doc.to_snapshot_v2(),before);

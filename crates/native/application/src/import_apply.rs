@@ -982,6 +982,11 @@ fn finite(e: &Entity) -> bool {
                 .parts
                 .iter()
                 .all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
+            Entity::Slab(e) => {
+                e.slab.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts)))
+                    && fs(&[e.slab.thickness, e.slab.offset])
+                    && e.slab.edge.as_ref().is_none_or(|g| g.width.is_finite() && g.runs.iter().all(|r| ps(&r.pts)))
+            }
             Entity::Grid(e) => ps(&e.grid.pts),
             Entity::Column(e) => p(&e.column.at) && fs(&[e.column.width, e.column.rotation]),
             Entity::Stair(e) => {

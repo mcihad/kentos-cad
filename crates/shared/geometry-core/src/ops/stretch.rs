@@ -83,6 +83,15 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         }
         // A cloud's place is its files' (docs/adr/0207 §3): it stays.
         Shape::PointCloud { .. } | Shape::Record {} => return None,
+        // A slab's vertices in the window move as an area's (docs/adr/0722 §1); its edge's runs are the document's.
+        Shape::Space { parts, space } if space.slab.is_some() => {
+            let moved = stretch_entity(&Entity::new(crate::geom::space::as_polygon(parts)), r, dx, dy)?;
+            let parts = crate::ops::areas::areas_of_entity(&moved.shape);
+            (!parts.is_empty()).then(|| Shape::Space {
+                parts,
+                space: space.clone(),
+            })?
+        }
         // It moves whole when its label is in the window (docs/adr/0342 §3).
         Shape::Space { parts, .. } => {
             let c = crate::geom::space::label_at(parts)?;

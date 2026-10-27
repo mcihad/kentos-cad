@@ -1388,6 +1388,8 @@ fn shape(entity: &Entity) -> Shape {
         Entity::Opening(_) => kentos_native_style::entity_shape(entity),
         // A space (docs/adr/0342): its rings and label, likewise.
         Entity::Space(_) => kentos_native_style::entity_shape(entity),
+        // A slab (docs/adr/0722): its rings and its edge, likewise.
+        Entity::Slab(_) => kentos_native_style::entity_shape(entity),
         Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             kentos_native_style::entity_shape(entity)
         }

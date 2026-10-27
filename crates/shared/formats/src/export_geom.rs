@@ -542,6 +542,8 @@ pub(crate) fn geometry(
         }
         // Its area, as an area object's (docs/adr/0342): GeoJSON, KML and GPX have no space.
         Entity::Space(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
+        // A slab's outline, an area object's (docs/adr/0722 §6).
+        Entity::Slab(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
         // Its path, or its outline (docs/adr/0343 §5).
         Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             return geometry(&crate::arch_elements::simple(e)?, blocks, rep, w);

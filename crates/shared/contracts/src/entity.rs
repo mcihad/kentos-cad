@@ -1790,6 +1790,8 @@ pub enum Entity {
     /// jambs' points.
     Opening(crate::OpeningEntity),
     Space(crate::SpaceEntity),
+    /// A slab (docs/adr/0722): a floor, a balcony or a terrace: its outline, thickness, top and free sides' edge.
+    Slab(crate::SlabEntity),
     /// A grid (docs/adr/0343): its line, label and bubbles.
     Grid(crate::GridEntity),
     /// A column (docs/adr/0343): its centre, outline and the grids it stands on.
@@ -1863,6 +1865,7 @@ impl Entity {
             Entity::Ramp(e) => &e.base,
             Entity::Tag(e) => &e.base,
             Entity::ViewMark(e) => &e.base,
+            Entity::Slab(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1898,6 +1901,7 @@ impl Entity {
             Entity::Ramp(e) => &mut e.base,
             Entity::Tag(e) => &mut e.base,
             Entity::ViewMark(e) => &mut e.base,
+            Entity::Slab(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1945,6 +1949,7 @@ impl Entity {
         match self {
             Entity::Wall(x) => x.wall.arch.level.as_deref(),
             Entity::Space(x) => x.space.arch.level.as_deref(),
+            Entity::Slab(x) => x.slab.arch.level.as_deref(),
             Entity::Grid(x) => x.grid.arch.level.as_deref(),
             Entity::Column(x) => x.column.arch.level.as_deref(),
             Entity::Stair(x) => x.stair.arch.level.as_deref(),
@@ -1999,6 +2004,7 @@ impl Entity {
             Entity::Wall(_) => "wall",
             Entity::Opening(_) => "opening",
             Entity::Space(_) => "space",
+            Entity::Slab(_) => "slab",
             Entity::Grid(_) => "grid",
             Entity::Column(_) => "column",
             Entity::Stair(_) => "stair",

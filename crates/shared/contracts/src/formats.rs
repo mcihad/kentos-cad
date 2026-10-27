@@ -222,7 +222,9 @@ use crate::layer::LineType;
 /// 96: DWG exchange (CAD-IO).
 /// 97 (docs/adr/0627 §3): a raster's `tiles` (the GeoPackage tile table it shows from its file): `.kcad` document
 ///    schema 103; in the typed columns a raster's option 6, the table as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 97;
+/// 98 (docs/adr/0722): the slab: `.kcad` document schema 123's `slab` kind; in the typed columns kind 30, its fields as
+///    one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 98;
 
 // ── Every import ────────────────────────────────────────────────────────
 

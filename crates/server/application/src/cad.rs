@@ -388,6 +388,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0722 §1): its rings, thickness, top, edge and texts; the drawing's only.
+        Slab(x) => {
+            if in_block {
+                return Err("Blok tanımında döşeme olamaz".into());
+            }
+            if let Some((_, why)) = x.slab.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0343 §1); the drawing's only.
         Grid(x) => {
             if in_block {
@@ -540,6 +549,8 @@ fn geometry_is_source(e: &Entity) -> bool {
                 && x.widths.is_none()
                 && x.ms.is_none()
                 && x.holes.is_none()
+                // A room separator's role (docs/adr/0650) is not in the geometry either.
+                && x.space_separator.is_none()
                 && x.parts.as_ref().is_none_or(|ps| {
                     !ps.is_empty()
                         && ps
@@ -766,6 +777,8 @@ fn projection_of(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         }
         // Its area, as an area object's (docs/adr/0342 §1); its source is its definition.
         Entity::Space(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
+        // Its area, likewise (docs/adr/0722 §1); its source is its definition.
+        Entity::Slab(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
         // A grid's path, a column's, stair's or ramp's outline (docs/adr/0343 §5); its source is its definition.
         Entity::Grid(_)
         | Entity::Column(_)

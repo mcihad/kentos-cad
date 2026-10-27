@@ -2312,6 +2312,90 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_SLABS_CREATE.into(),
+            version: crate::CAD_SLABS_CREATE_VERSION,
+            title: "Döşeme oluştur".into(),
+            summary: "Döşeme, balkon ya da teras ekler; tek geri alma adımı “Döşeme”. \
+                      Her döşemenin sınırı ya çizilir (parts: dış halka ve delikler, birden çok parça olabilir: L kontur, avlu, ıslak hacim deliği) ya da duvarlardan bulunur (seed: bir iç nokta; boundary outline duvarların dış yüzlerine kadar yapının konturu, room noktayı çevreleyen odanın iç yüzleri). Kat verilmişse yalnız o katın duvarları, verilmemişse bütün duvarlar kullanılır; bulunan sınır duvarlara bağlı kalmaz. \
+                      edgeOffset bütün kenarları aynı mesafede öteler (artı dışa: duvarların altına ya da çıkma, eksi içe); halka ters döner, kendini ya da başka halkayı keserse yazılmaz (slab_offset_failed). \
+                      role (floor döşeme, balcony balkon, terrace teras), thickness (yoksa 15 cm), offset (üst yüzün katın kotuna göre farkı; ıslak hacimde eksi), arch (kat, evre), material ve katmanın tipli alanlarıyla öznitelikler. \
+                      edge serbest kenarlar boyunca korkuluk (railing, iki ince çizgi) ya da parapet (dolu bant) çizer; en verilmezse türünün (5 cm, 15 cm). Serbest kenar, ortasından aynı katın hiçbir duvar yüzü geçmeyen kenardır; belge her adımda duvarlara göre yeniden yazar. \
+                      excluded metrajda listeler ama toplamaz. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan döşemeleri sınırları ve kenarlarıyla gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SlabsCreate>(),
+            output: schema::<crate::SlabsCreated>(),
+            plan: Some(schema::<crate::SlabsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Zemin katın döşemesi: duvarların dış yüzlerinden, 20 cm".into(),
+                    input: json!({
+                        "layerId": "doseme",
+                        "slabs": [{ "seed": { "x": 3.0, "y": 2.0 }, "thickness": 0.2, "arch": { "level": "zemin" } }]
+                    }),
+                    output: Some(json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e71"], "ids": [31], "revision": "41" })),
+                },
+                CommandExample {
+                    title: "Korkuluklu balkon: çizilmiş sınır".into(),
+                    input: json!({
+                        "layerId": "doseme",
+                        "slabs": [{
+                            "parts": [{ "outer": { "pts": [ { "x": 0.0, "y": 6.0 }, { "x": 4.0, "y": 6.0 }, { "x": 4.0, "y": 7.5 }, { "x": 0.0, "y": 7.5 } ] } }],
+                            "role": "balcony", "edge": { "kind": "railing" }
+                        }]
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SLABS_EDIT.into(),
+            version: crate::CAD_SLABS_EDIT_VERSION,
+            title: "Döşemeyi düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen döşemeleri değiştirir; tek geri alma adımı “Döşemeyi düzenle”, hepsi ya da hiçbiri. \
+                      operation: set (tür, kalınlık, kot farkı, kat, evre, malzeme, kenar, metraj dışı; null alanı kaldırır, edge null kenarı kaldırır), offset (distance: bütün kenarlar ötelenir, artı dışa), subtract (parts ya da seed/boundary ile bulunan alan döşemeden çıkarılır: delik, girinti; döşemeye değmeyen ya da hepsini götüren alan slab_cut_missed), add (aynı alan döşemeye eklenir). \
+                      Kenarın parçaları belgede duvarlara göre yeniden yazılır. Kilitli katmandaki döşeme bütün değişikliği reddeder. Plan yazmadan döşemeleri olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SlabsEdit>(),
+            output: schema::<crate::SlabsEdited>(),
+            plan: Some(schema::<crate::SlabsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Islak hacmin alanını döşemeden çıkar".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e71"],
+                        "operation": { "kind": "subtract", "seed": { "x": 1.0, "y": 1.0 }, "boundary": "room" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Döşemeyi 5 cm aşağı al, parapet ver".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e71"],
+                        "operation": { "kind": "set", "offset": -0.05, "edge": { "kind": "parapet" } }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_SPACES_QUANTITIES.into(),
             version: crate::CAD_SPACES_QUANTITIES_VERSION,
             title: "Metraj".into(),
@@ -2319,6 +2403,7 @@ pub fn catalog() -> CommandCatalog {
                       Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. \
                       Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. \
                       Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. \
+                      Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler, genişlikleri ve kaplamalarıyla. \
                       levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller)."
                 .into(),
             aliases: vec![],
@@ -10869,6 +10954,12 @@ mod tests {
                     crate::CAD_SPACES_CREATE => {
                         serde_json::from_value::<crate::SpacesCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SLABS_CREATE => {
+                        serde_json::from_value::<crate::SlabsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SLABS_EDIT => {
+                        serde_json::from_value::<crate::SlabsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SPACES_DISCOVER => {
                         serde_json::from_value::<crate::SpacesDiscover>(e.input.clone()).map(|_| ())
                     }
@@ -12097,6 +12188,9 @@ mod tests {
                         crate::CAD_SPACES_CREATE | crate::CAD_SPACES_DISCOVER => {
                             serde_json::from_value::<crate::SpacesCreated>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_SLABS_CREATE => {
+                            serde_json::from_value::<crate::SlabsCreated>(output.clone()).map(|_| ())
                         }
                         crate::CAD_SPACES_SEPARATORS => {
                             serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone()).map(|_| ())

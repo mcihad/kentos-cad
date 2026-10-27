@@ -1,7 +1,8 @@
-//! Metraj (docs/adr/0342 §4, §5; `arch.quantities`): the drawing's spaces, walls and openings measured by
-//! `cad.spaces.quantities`, a level's or all, each row with the rule its numbers come from, and the totals. Panoya
-//! kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the shown table as CSV or all three
-//! tables as a workbook's sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
+//! Metraj (docs/adr/0342 §4, §5; `arch.quantities`): the drawing's spaces, walls, openings, slabs and the floor
+//! finishes' changes at the passages (docs/adr/0722 §5) measured by `cad.spaces.quantities`, a level's or all, each row
+//! with the rule its numbers come from, and the totals; a room's baseboard in its own column. Panoya kopyala copies the
+//! table shown as tab-separated text; Dışa aktar ▾ writes the shown table as CSV or all five tables as a workbook's
+//! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
 use iced::widget::{Column, Row, column, container, row, scrollable, text};
@@ -35,6 +36,9 @@ pub enum Tab {
     Spaces,
     Walls,
     Openings,
+    /// The slabs and the passages' floor changes (docs/adr/0722 §5).
+    Slabs,
+    Transitions,
 }
 
 impl std::fmt::Display for Tab {
@@ -43,6 +47,8 @@ impl std::fmt::Display for Tab {
             Tab::Spaces => "Mahaller",
             Tab::Walls => "Duvarlar",
             Tab::Openings => "Açıklıklar",
+            Tab::Slabs => "Döşemeler",
+            Tab::Transitions => "Geçişler",
         })
     }
 }
@@ -191,7 +197,7 @@ impl App {
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 3] {
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 5] {
         let f = self
             .document
             .as_ref()
@@ -226,6 +232,8 @@ impl App {
                 "Yöntem",
                 "Alan",
                 "Çevre",
+                // A room's baseboard (docs/adr/0722 §5); a void has none.
+                "Süpürgelik",
                 "Yükseklik",
                 "Hacim",
                 "Net",
@@ -233,10 +241,10 @@ impl App {
                 "Brüt",
             ],
             numbers: vec![
-                false, false, false, false, false, true, true, true, true, true, true, true,
+                false, false, false, false, false, true, true, true, true, true, true, true, true,
             ],
             widths: vec![
-                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 64.0, 64.0, 60.0, 60.0, 60.0,
+                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 72.0, 64.0, 64.0, 60.0, 60.0, 60.0,
             ],
             shown: q
                 .spaces
@@ -250,6 +258,7 @@ impl App {
                         short(r.method).to_owned(),
                         area(r.area),
                         len(r.perimeter),
+                        r.baseboard.map_or_else(String::new, len),
                         r.height.map_or_else(String::new, len),
                         opt(r.volume, 2),
                         by(r, "net"),
@@ -273,6 +282,7 @@ impl App {
                         r.method.label().to_owned(),
                         n(r.area),
                         n(r.perimeter),
+                        o(r.baseboard),
                         o(r.height),
                         o(r.volume),
                         b("net"),
@@ -421,10 +431,105 @@ impl App {
                 })
                 .collect(),
         };
-        [spaces, walls, openings]
+        let slabs = Table {
+            name: "Döşemeler",
+            heading: vec![
+                "Tür", "Kat", "Malzeme", "Kalınlık", "Üst kot", "Alan", "Boşluk", "Net alan", "Çevre", "Hacim", "Kenar",
+                "Kenar uzunluğu", "Metraj",
+            ],
+            numbers: vec![false, false, false, true, true, true, true, true, true, true, false, true, false],
+            widths: vec![72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 80.0, 96.0, 72.0],
+            shown: q
+                .slabs
+                .iter()
+                .map(|r| {
+                    vec![
+                        r.role.label().to_owned(),
+                        level_name(&r.level),
+                        words(&r.material),
+                        len(r.thickness),
+                        r.top.map_or_else(String::new, len),
+                        area(r.area),
+                        if r.void_area > 0.0 { area(r.void_area) } else { String::new() },
+                        area(r.net_area),
+                        len(r.perimeter),
+                        fixed(r.volume, 3),
+                        r.edge.map_or_else(String::new, |e| e.label().to_owned()),
+                        if r.edge_length > 0.0 { len(r.edge_length) } else { String::new() },
+                        if r.excluded { "Dışında" } else { "Toplamda" }.to_owned(),
+                    ]
+                })
+                .collect(),
+            cells: q
+                .slabs
+                .iter()
+                .map(|r| {
+                    let n = |v: f64| format!("{v}");
+                    vec![
+                        r.role.label().to_owned(),
+                        level_name(&r.level),
+                        words(&r.material),
+                        n(r.thickness),
+                        r.top.map_or_else(String::new, n),
+                        n(r.area),
+                        n(r.void_area),
+                        n(r.net_area),
+                        n(r.perimeter),
+                        n(r.volume),
+                        r.edge.map_or_else(String::new, |e| e.label().to_owned()),
+                        n(r.edge_length),
+                        if r.excluded { "Dışında" } else { "Toplamda" }.to_owned(),
+                    ]
+                })
+                .collect(),
+        };
+        // A room by its number and name (its id when it has neither), for the passages' sides.
+        let room = |uid: &str| {
+            q.spaces.iter().find(|s| s.uid == uid).map_or_else(
+                || uid.to_owned(),
+                |s| match (&s.number, &s.name) {
+                    (Some(n), Some(a)) => format!("{n} {a}"),
+                    (Some(n), None) => n.clone(),
+                    (None, Some(a)) => a.clone(),
+                    (None, None) => uid.to_owned(),
+                },
+            )
+        };
+        let rows: Vec<Vec<String>> = q
+            .transitions
+            .iter()
+            .map(|r| {
+                vec![
+                    words(&r.number),
+                    room(&r.spaces[0]),
+                    r.floors[0].clone(),
+                    room(&r.spaces[1]),
+                    r.floors[1].clone(),
+                    len(r.width),
+                ]
+            })
+            .collect();
+        let transitions = Table {
+            name: "Geçişler",
+            heading: vec!["Açıklık", "Sol mahal", "Sol kaplama", "Sağ mahal", "Sağ kaplama", "Şerit"],
+            numbers: vec![false, false, false, false, false, true],
+            widths: vec![72.0, 120.0, 110.0, 120.0, 110.0, 72.0],
+            cells: q
+                .transitions
+                .iter()
+                .zip(&rows)
+                .map(|(r, shown)| {
+                    let mut cells = shown.clone();
+                    cells[5] = format!("{}", r.width);
+                    cells
+                })
+                .collect(),
+            shown: rows,
+        };
+        [spaces, walls, openings, slabs, transitions]
     }
 
-    /// CSV has one table: the one shown. Workbooks keep all three sheets,
+    /// CSV has one table: the one shown. Workbooks keep all five sheets,
     /// including empty headings, under the same selected level filter.
     fn quantities_sheets(&self, q: &SpacesQuantified, tab: Tab, format: WorkbookFormat) -> Vec<WorkbookSheet> {
         self.quantities_tables(q)
@@ -511,7 +616,7 @@ impl App {
             })
             .searchable(false)
             .into();
-        let tabs = Segmented::new([Tab::Spaces, Tab::Walls, Tab::Openings], w.tab, |t| {
+        let tabs = Segmented::new([Tab::Spaces, Tab::Walls, Tab::Openings, Tab::Slabs, Tab::Transitions], w.tab, |t| {
             msg(Event::Tab(t))
         });
         let head = row![
@@ -571,6 +676,37 @@ impl App {
         if stale > 0 {
             summary_lines.push(words::text_line(Kind::Warn,
                 format!("{stale} mahalın sınırı güncel değil; alan ve toplamlar son geçerli sınırı içeriyor.")));
+        }
+        // Baseboards, slabs and their edges (docs/adr/0722 §5): said only when the drawing has them.
+        let mut finish = Vec::new();
+        if t.baseboard_length > 0.0 {
+            finish.push(format!("süpürgelik {}", f.length(t.baseboard_length)));
+        }
+        if !q.slabs.is_empty() {
+            let out = q.slabs.iter().filter(|s| s.excluded).count();
+            finish.push(format!(
+                "{} döşeme, net {} ({} m³){}",
+                q.slabs.len(),
+                f.area(t.slab_area),
+                kentos_geometry_core::display::fixed(t.slab_volume, 2),
+                if out > 0 { format!(", {out} döşeme metraj dışında") } else { String::new() }
+            ));
+        }
+        if t.railing_length > 0.0 {
+            finish.push(format!("korkuluk {}", f.length(t.railing_length)));
+        }
+        if t.parapet_length > 0.0 {
+            finish.push(format!("parapet {}", f.length(t.parapet_length)));
+        }
+        if !q.transitions.is_empty() {
+            finish.push(format!("{} kaplama geçişi", q.transitions.len()));
+        }
+        if !finish.is_empty() {
+            let mut line = finish.join("; ");
+            if let Some(first) = line.get(..1) {
+                line = first.to_uppercase() + &line[1..];
+            }
+            summary_lines.push(words::text_line(Kind::Info, format!("{line}.")));
         }
         let summary = words::summary(summary_lines);
         let tables = self.quantities_tables(q);
@@ -673,7 +809,7 @@ impl App {
             .push(summary)
             .push(table)
             .push(words::text_line(Kind::Info,
-                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki üç tablo ayrı sayfalarda."))
+                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki beş tablo ayrı sayfalarda."))
             .push(row![export].width(Fill));
         overlay::modal(
             Frame::new(TITLE)
@@ -703,6 +839,11 @@ impl App {
                 "Kural: genişlik × (lento − denizlik); denizliği olmayanın yüksekliği lentodur. Niş ve baca duvardan düşülmez; derinlikleri ayrı."
                     .to_owned()
             }
+            Tab::Slabs => q.slabs.first().map_or_else(
+                || "Alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık.".to_owned(),
+                |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
+            ),
+            Tab::Transitions => "Kural: iki yanındaki odaların döşeme kaplaması bilinen ve farklı olan kapı ve döşemeye inen boşluklar; şerit geçişin genişliğidir.".to_owned(),
         }
     }
 
@@ -720,6 +861,8 @@ impl App {
             Control::Press("Mahaller") => Some(msg(Event::Tab(Tab::Spaces))),
             Control::Press("Duvarlar") => Some(msg(Event::Tab(Tab::Walls))),
             Control::Press("Açıklıklar") => Some(msg(Event::Tab(Tab::Openings))),
+            Control::Press("Döşemeler") => Some(msg(Event::Tab(Tab::Slabs))),
+            Control::Press("Geçişler") => Some(msg(Event::Tab(Tab::Transitions))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -737,7 +880,7 @@ mod tests {
             "uid":uid,"number":uid,"name":"Salon","method":"net","area":12.,"perimeter":14.,
             "boundaryBreak":broken,"rule":"alan: halkaların alanı"
         })).unwrap();
-        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],totals:Default::default()};
+        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],slabs:vec![],transitions:vec![],totals:Default::default()};
         let [table,..]=app.quantities_tables(&q);
         let status=table.heading.iter().position(|s|*s=="Durum").unwrap();
         assert!(table.shown[0][status].is_empty());
@@ -745,7 +888,7 @@ mod tests {
         assert_eq!(table.shown[1][status],table.cells[1][status],"copy/export lost the stale-area warning");
         q.spaces[1].boundary_break=None;
         let [valid,..]=app.quantities_tables(&q);
-        assert_eq!(valid.heading,["Numara","Ad","Kullanım","Kat","Yöntem","Alan","Çevre","Yükseklik","Hacim","Net","Eksen","Brüt"]);
-        assert!(valid.cells.iter().all(|r|r.len()==12),"valid export shape changed");
+        assert_eq!(valid.heading,["Numara","Ad","Kullanım","Kat","Yöntem","Alan","Çevre","Süpürgelik","Yükseklik","Hacim","Net","Eksen","Brüt"]);
+        assert!(valid.cells.iter().all(|r|r.len()==13),"valid export shape changed");
     }
 }

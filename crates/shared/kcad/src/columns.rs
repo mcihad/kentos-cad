@@ -54,6 +54,7 @@
 //! | grid, column, stair, ramp | | | its fields as one JSON object (docs/adr/0343) |
 //! | tag | | | its fields (of, at, content, shape, size, leader, text, anchor, broken) as one JSON object (docs/adr/0344) |
 //! | viewmark | | | its fields (form, points, radius, at, angle, flip, mark, target, size, label, broken) as one JSON object (docs/adr/0345) |
+//! | slab | | | its fields (parts, role, thickness, offset, arch, material, edge, excluded) as one JSON object (docs/adr/0722) |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
@@ -179,7 +180,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 30] = [
+pub const KINDS: [&str; 31] = [
     "point",
     "line",
     "polyline",
@@ -210,6 +211,7 @@ pub const KINDS: [&str; 30] = [
     "ramp",
     "tag",
     "viewmark",
+    "slab",
 ];
 
 const COLOR: u32 = 1;
@@ -432,6 +434,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Ramp(_) => 27,
         Entity::Tag(_) => 28,
         Entity::ViewMark(_) => 29,
+        Entity::Slab(_) => 30,
     }
 }
 
@@ -1531,6 +1534,7 @@ impl Packer {
             Entity::Tag(e) => self.text(&serde_json::to_value(&e.tag).unwrap_or_default().to_string()),
             // A view mark (docs/adr/0345 §1): its fields as one JSON text.
             Entity::ViewMark(e) => self.text(&serde_json::to_value(&e.mark).unwrap_or_default().to_string()),
+            Entity::Slab(e) => self.text(&serde_json::to_value(&e.slab).unwrap_or_default().to_string()),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
                 self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
@@ -3459,6 +3463,15 @@ fn geometry(
                 return Err(broken(&problem));
             }
             Entity::ViewMark(kentos_contracts::ViewMarkEntity { base, mark })
+        }
+        30 => {
+            let text = c.text(|| "döşemenin alanları".into())?;
+            let slab: kentos_contracts::SlabFields =
+                serde_json::from_str(&text).map_err(|_| broken("döşemenin alanları"))?;
+            if let Some((_, problem)) = slab.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Slab(kentos_contracts::SlabEntity { base, slab })
         }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;
