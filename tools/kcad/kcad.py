@@ -381,6 +381,11 @@ SCHEMA_WITH_SPACE_VOIDS = 116
 SCHEMA_WITH_STAIR_ARCS = 117
 # Schema 118 (docs/adr/0711): a dimension's references' rule `cross` (a linear dimension along a cut).
 SCHEMA_WITH_DIMENSION_CROSS = 118
+# Schema 119 (docs/adr/0719): a niche and a flue (an opening's forms `niche`, `flue`), an opening's `depth` and `inset`,
+# the break `tooDeep`, and a schedule's filter naming them.
+SCHEMA_WITH_RECESSES = 119
+RECESS_FORMS = ("niche", "flue")
+MAX_RECESS_DEPTH = 10.0
 MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
@@ -625,7 +630,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3137,6 +3142,7 @@ class _Schema:
         self.space_voids = version >= SCHEMA_WITH_SPACE_VOIDS
         self.stair_arcs = version >= SCHEMA_WITH_STAIR_ARCS
         self.dim_cross = version >= SCHEMA_WITH_DIMENSION_CROSS
+        self.recesses = version >= SCHEMA_WITH_RECESSES
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -7244,7 +7250,7 @@ class _Schema:
             return x
         column = self.fields({"field": (self.enum(SCHEDULE_FIELDS), True), "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
-                           "forms": (self.array(self.enum(("door", "window", "opening"))), False), "layers": (self.array(self.text), False)})
+                           "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False)})
         sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False)})
         d = self.fields({"kind": (self.enum(("schedule",)), True), "of": (self.enum(("openings", "spaces", "columns", "walls")), True),
                          "columns": (self.array(column), True), "filter": (flt, False), "sort": (self.array(sort), False),
@@ -7980,9 +7986,22 @@ class _Schema:
                     self.fail("bad_value", f"varsayılan değer ({default!r}) yazılmaz")
                 return x
             return f
+        def recess(read, words):
+            # Schema 119 (docs/adr/0719): a niche's and flue's fields.
+            def f(x):
+                if not self.recesses:
+                    self.fail("bad_value", f"{words} şema 119 ister")
+                return read(x)
+            return f
+
+        def broken(x):
+            x = self.enum(("hostGone", "offWall", "overlap", "tooDeep"))(x)
+            if x == "tooDeep" and not self.recesses:
+                self.fail("bad_value", "tooDeep şema 119 ister")
+            return x
         return self.fields({
             "anchor": (unless("center", self.enum(("start", "center", "end"))), False),
-            "form": (self.enum(OPENING_FORMS), True),
+            "form": (self.opening_form, True),
             "leaves": (unless(1, self.uint(8)), False),
             "operation": (unless("swing", self.enum(("swing", "slide", "fixed"))), False),
             "hand": (unless("start", self.enum(("start", "end"))), False),
@@ -7992,10 +8011,19 @@ class _Schema:
             "frame": (self.float, False),
             "sill": (self.float, False),
             "head": (self.float, False),
+            "depth": (recess(self.float, "derinlik (depth)"), False),
+            "inset": (recess(self.float, "yüzden uzaklık (inset)"), False),
             "style": (self.text, False),
             "number": (self.text, False),
-            "broken": (self.enum(("hostGone", "offWall", "overlap")), False),
+            "broken": (broken, False),
         })(v)
+
+    def opening_form(self, x):
+        """An opening's form: a door, a window, a bare opening, and from schema 119 a niche and a flue."""
+        x = self.enum(OPENING_FORMS + RECESS_FORMS)(x)
+        if x in RECESS_FORMS and not self.recesses:
+            self.fail("bad_value", "niş ve baca şema 119 ister")
+        return x
 
     def opening_rules(self, o):
         """An opening (schema 77, docs/adr/0341 §1): a wall, a finite place along it, a width above 0 and at most
@@ -8021,6 +8049,20 @@ class _Schema:
                 bad("Açıklığın denizlik ya da lento yüksekliği sonlu olmalı.")
         if "sill" in f and "head" in f and f["head"] <= f["sill"]:
             bad("Lento denizlikten yüksek olmalı.")
+        # A niche and a flue (docs/adr/0719 §1): a depth above 0, at most 10 m; a flue's inset above 0; a niche none; one
+        # that goes through neither.
+        form = f["form"]
+        if form in RECESS_FORMS:
+            if "depth" not in f:
+                bad("Niş ya da bacanın derinliği belirtilmeli.")
+            if not (math.isfinite(f["depth"]) and 0 < f["depth"] <= MAX_RECESS_DEPTH):
+                bad("Derinlik sıfırdan büyük, en çok 10 m olmalı.")
+            if "inset" in f and form == "niche":
+                bad("Nişin yüzden uzaklığı olmaz.")
+            if "inset" in f and not (math.isfinite(f["inset"]) and 0 < f["inset"] <= MAX_RECESS_DEPTH):
+                bad("Bacanın yüzden uzaklığı sıfırdan büyük olmalı.")
+        elif "depth" in f or "inset" in f:
+            bad("Derinlik ve yüzden uzaklık yalnız niş ve bacanındır.")
         if "number" in f and f["number"].strip() == "":
             bad("Açıklığın numarası boş olamaz.")
         if len(o["place"]) != 4:

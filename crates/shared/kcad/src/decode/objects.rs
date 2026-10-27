@@ -240,6 +240,8 @@ pub(super) struct Features {
     stair_arcs: bool,
     /// Schema 118: a dimension's references' rule `cross` (docs/adr/0711).
     dimension_cross: bool,
+    /// Schema 119: a niche, a flue, an opening's depth and inset and the break `tooDeep` (docs/adr/0719).
+    recesses: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -441,6 +443,7 @@ impl Features {
             railings: schema >= crate::SCHEMA_WITH_RAILINGS,
             stair_arcs: schema >= crate::SCHEMA_WITH_STAIR_ARCS,
             dimension_cross: schema >= crate::SCHEMA_WITH_DIMENSION_CROSS,
+            recesses: schema >= crate::SCHEMA_WITH_RECESSES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2052,6 +2055,10 @@ pub(super) fn object(
     // Schema 117 (docs/adr/0709): a curved stair's arc.
     if matches!(&entity, Entity::Stair(s) if s.stair.bulges.is_some()) && !has.stair_arcs {
         return Err(r.fail(Code::BadValue, "döner merdivenin bükümü (bulges) şema 117 ister"));
+    }
+    // Schema 119 (docs/adr/0719): a niche, a flue, a depth, an inset, an opening too deep.
+    if kentos_contracts::needs_recesses(&entity) && !has.recesses {
+        return Err(r.fail(Code::BadValue, "niş, baca, derinlik (depth) ve yüzden uzaklık (inset) şema 119 ister"));
     }
     // A closed and a wide polyline's rules (docs/adr/0258).
     if let Entity::Polyline(p) = &entity

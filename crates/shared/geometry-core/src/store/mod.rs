@@ -675,16 +675,20 @@ impl Store {
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2).
             Shape::Space { parts, space } => self.space_pieces(parts, space, true),
-            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2).
-            Shape::Opening { place, opening, .. } => crate::geom::opening::symbol(place, opening)
+            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2); a flue's cross, and the outline of one
+            // plan does not cut dashed (docs/adr/0719 §2).
+            Shape::Opening { place, opening, .. } => crate::geom::opening::pieces(place, opening)
                 .into_iter()
-                .map(|shape| crate::block::Piece {
-                    shape,
+                .map(|m| crate::block::Piece {
+                    shape: m.shape,
                     color: None,
                     line_weight: None,
                     by_layer: Vec::new(),
                     gates: Vec::new(),
-                    stroke: Default::default(),
+                    stroke: crate::block::PieceStroke {
+                        line_type: m.dashed.then(|| "dashed".to_owned()),
+                        ..Default::default()
+                    },
                     attribute: None,
                 })
                 .collect(),

@@ -620,11 +620,14 @@ pub const SCHEMA_WITH_SPACE_VOIDS: u32 = 116;
 pub const SCHEMA_WITH_STAIR_ARCS: u32 = 117;
 /// Schema 118 (docs/adr/0711): a dimension's references' rule `cross`, written only when a dimension has it.
 pub const SCHEMA_WITH_DIMENSION_CROSS: u32 = 118;
+/// Schema 119 (docs/adr/0719): an opening that is a niche or a flue (its form, `depth`, `inset`) or whose break is
+/// `tooDeep`, written only when an opening is one.
+pub const SCHEMA_WITH_RECESSES: u32 = 119;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 117] = [
+pub const SCHEMAS: [u32; 118] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -742,6 +745,7 @@ pub const SCHEMAS: [u32; 117] = [
     SCHEMA_WITH_SPACE_VOIDS,
     SCHEMA_WITH_STAIR_ARCS,
     SCHEMA_WITH_DIMENSION_CROSS,
+    SCHEMA_WITH_RECESSES,
 ];
 
 /// The file a drawing is saved as.

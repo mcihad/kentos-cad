@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Niş, baca ve tesisat boşluğu (27 Ekim 2026; [ADR0719](docs/adr/0719-niches-flues-service-holes.md)).**
+  Açıklığın `niche` (bir yüzden `depth` içeri) ve `flue` (duvarın içinde, `inset` yoksa ortada) biçimleri, yüz `side`;
+  KCAD 119 opt-in. Sığmayan derinlik `recess_too_deep`, sonradan incelen duvarda `tooDeep`. Boşluk/niş/baca
+  `PLAN_CUT_HEIGHT` (1,10 m) kesmeyi kesiyorsa duvarı keser (çözücüde `opening::Hole`/`Recess`, nişin arkası ve kalan
+  dolgu, `Drawn.recesses`), kesmiyorsa kesik çizgi (`opening::pieces`); kapı/pencere her zaman kesilir. Kotları ayrı ve
+  plan birini kesen iki açıklık aynı yerde durur (`clashes_with`). Metrajda niş/baca duvardan düşülmez; ölçü dizisi
+  nişi kendi yüzünde ölçer. Mimari › Boşluk ▾ (Boşluk/Niş/Baca), araç ayarları ve Öznitelikler.
+
 - **Kat planı paftaları (27 Ekim 2026; [ADR0718](docs/adr/0718-level-plan-sheets.md)).**
   Her kat için pafta tek adımda: pafta çekirdeği `levels::level_sheets` (tasarımcının Yeni ▾
   ve `cad.sheets.levels` aynı yol), haritası o katı çizer, bütün haritalar katların nesnelerinin

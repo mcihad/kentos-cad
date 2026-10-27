@@ -70,8 +70,18 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
     if let Some(v) = c.head {
         f.head = v;
     }
+    if let Some(v) = c.depth {
+        f.depth = v;
+    }
+    if let Some(v) = c.inset {
+        f.inset = v;
+    }
     if let Some(v) = &c.number {
         f.number.clone_from(v);
+    }
+    // A form changed keeps its depth and inset in step (docs/adr/0719 §1).
+    if c.form.is_some() {
+        openings::recess_follows_form(&mut f, c.depth.is_some(), c.inset.is_some());
     }
     f
 }
@@ -83,6 +93,8 @@ fn finite_numbers(c: &OpeningChange) -> Result<(), Stop> {
         (c.frame.flatten(), "frame", "Kasa"),
         (c.sill.flatten(), "sill", "Denizlik"),
         (c.head.flatten(), "head", "Lento"),
+        (c.depth.flatten(), "depth", "Derinlik"),
+        (c.inset.flatten(), "inset", "Yüzden uzaklık"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -171,7 +183,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             if c == &OpeningChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento ya da numara verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.".into(),
                     "operation",
                 ));
             }

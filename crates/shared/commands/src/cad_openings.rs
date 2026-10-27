@@ -104,7 +104,7 @@ pub struct NewOpening {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[serde(rename = "type")]
     pub kind: Option<String>,
-    /// Over the type's: a door, a window or a bare opening.
+    /// Over the type's: a door, a window, a bare opening, a niche or a flue (docs/adr/0719).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub form: Option<OpeningForm>,
@@ -123,7 +123,7 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub hand: Option<OpeningHand>,
-    /// The side it opens to. Absent: the side `point` is on, else the left.
+    /// The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub side: Option<OpeningSide>,
@@ -131,6 +131,26 @@ pub struct NewOpening {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub swing: Option<f64>,
+    /// Over the type's: its sill above the floor, metres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub sill: Option<f64>,
+    /// Over the type's: its head above the floor, metres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub head: Option<f64>,
+    /// Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub depth: Option<f64>,
+    /// A flue's distance from its face to its cavity, metres; absent: centred in its wall.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub inset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
@@ -139,9 +159,11 @@ pub struct NewOpening {
     pub attrs: Option<BTreeMap<String, String>>,
 }
 
-/// Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step
-/// (“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the
-/// values chosen (TODOS.md CMD-07).
+/// Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one
+/// undo step (“Kapı”, “Pencere”, “Boşluk”, “Niş” or “Baca”, the first's form). The tool gives the wall clicked and the
+/// point, the type and the values chosen (TODOS.md CMD-07). A niche is cut from its face (`side`, absent: the side
+/// `point` is on) `depth` into the wall, short of its other face; a flue is a cavity `inset` from its face (absent:
+/// centred) and `depth` across, clear of both faces (docs/adr/0719).
 ///
 /// Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
 /// with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
@@ -150,8 +172,9 @@ pub struct NewOpening {
 /// `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 ///
 /// Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
-/// `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
-/// `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+/// `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+/// `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
+/// Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -279,6 +302,26 @@ pub struct OpeningChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub head: Option<Option<f64>>,
+    /// A niche's or flue's depth, metres (docs/adr/0719); null: none (a form that goes through).
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub depth: Option<Option<f64>>,
+    /// A flue's distance from its face to its cavity, metres; null: centred.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub inset: Option<Option<f64>>,
     /// Its mark; null: none.
     #[serde(
         default,
@@ -459,7 +502,9 @@ fn first_number() -> u32 {
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
 /// `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-/// `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
+/// `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also
+/// `slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
+/// one changed to a form that goes through drops its depth and inset (docs/adr/0719).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

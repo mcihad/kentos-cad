@@ -21,6 +21,14 @@ swing?: number | null, showSwing?: boolean,
  */
 frame?: number | null, sill?: number | null, head?: number | null, 
 /**
+ * A niche's or flue's depth, metres (docs/adr/0719); null: none (a form that goes through).
+ */
+depth?: number | null, 
+/**
+ * A flue's distance from its face to its cavity, metres; null: centred.
+ */
+inset?: number | null, 
+/**
  * Its mark; null: none.
  */
 number?: string | null, };

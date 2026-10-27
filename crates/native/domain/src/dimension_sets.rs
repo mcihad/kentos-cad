@@ -525,6 +525,18 @@ impl Document {
         let mut openings = Vec::new();
         if set.rows.contains(&DimensionSetRow::Openings) {
             for (slot, opening) in self.openings_of(&set.wall.to_string()) {
+                // A flue reaches no face; a niche shows on its own face only (docs/adr/0719 §4).
+                let seen = match opening.form {
+                    kentos_contracts::OpeningForm::Flue => false,
+                    kentos_contracts::OpeningForm::Niche => {
+                        (opening.side == kentos_contracts::OpeningSide::Right)
+                            == (set.face == DimensionSetFace::Right)
+                    }
+                    _ => true,
+                };
+                if !seen {
+                    continue;
+                }
                 if opening.broken.is_some() || opening.place.len() != 4 {
                     return Err(DimensionSetBreak::OpeningUnplaced);
                 }

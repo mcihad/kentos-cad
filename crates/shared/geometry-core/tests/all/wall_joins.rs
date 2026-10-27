@@ -282,7 +282,8 @@ fn cross_level_curved_wall_keeps_analytic_openings_and_requested_indices() {
     let mut first = Spec::read_flat(&Json::parse(r#"{"width":0.2,"justify":"center","arch":{"level":"zemin"}}"#).unwrap()).unwrap();
     let second = first.clone();
     let same_level = [WallIn {pts:&pts,bulges:Some(&arc),spec:&first},WallIn {pts:&pts,bulges:Some(&arc),spec:&second}];
-    let intervals=vec![vec![(1.,2.)],vec![(4.,5.)]];
+    use kentos_geometry_core::geom::opening::Hole;
+    let intervals=vec![vec![Hole::through(1.,2.)],vec![Hole::through(4.,5.)]];
     // Each output has its own opening interval; floor separation must not
     // remap those indices when only the second wall's drawing is requested.
     let solo = solve_with(&same_level[1..],&intervals[1..],None).drawn[0].clone();

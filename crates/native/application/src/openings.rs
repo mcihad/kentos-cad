@@ -103,10 +103,26 @@ pub(crate) fn type_matches(o: &OpeningFields, key: &str) -> bool {
 
 /// The step's name for openings of `form`.
 pub fn step_of(form: OpeningForm) -> &'static str {
-    match form {
-        OpeningForm::Door => "Kapı",
-        OpeningForm::Window => "Pencere",
-        OpeningForm::Opening => "Boşluk",
+    form.label()
+}
+
+/// A form's depth and inset kept in step with it (docs/adr/0719 §1): a niche or flue without a depth takes its form's
+/// first type's, a form that goes through drops both unless `given` names them (then its check refuses).
+pub(crate) fn recess_follows_form(f: &mut OpeningFields, given_depth: bool, given_inset: bool) {
+    if f.form.is_recess() {
+        if f.depth.is_none() {
+            f.depth = first_type(f.form).depth;
+        }
+        if f.form == OpeningForm::Niche && !given_inset {
+            f.inset = None;
+        }
+    } else {
+        if !given_depth {
+            f.depth = None;
+        }
+        if !given_inset {
+            f.inset = None;
+        }
     }
 }
 
@@ -137,6 +153,26 @@ pub(crate) fn placed(
     path: &str,
 ) -> Result<OpeningFields, Stop> {
     let p = opening_follow::placed_on(o, Some(line), false);
+    if p.broken == Some(kentos_commands::OpeningBreak::TooDeep) {
+        let thickness = line.spec.width;
+        let (near, far) = o.recess_in(thickness).unwrap_or((0.0, 0.0));
+        let words = if o.form == OpeningForm::Niche {
+            format!(
+                "Nişin derinliği ({far:.3} m) duvarın kalınlığından ({thickness:.3} m) küçük olmalı; niş öbür yüze varmamalı. Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın."
+            )
+        } else {
+            format!(
+                "Baca duvarın içinde kalmalı: yüzden {near:.3} m, derinliği {:.3} m; duvar {thickness:.3} m kalınlığında. Derinliği ya da yüzden uzaklığı azaltın.",
+                far - near
+            )
+        };
+        let at = if path.is_empty() {
+            "depth".to_owned()
+        } else {
+            format!("{path}.depth")
+        };
+        return Err(fail(codes::RECESS_TOO_DEEP, words, &at));
+    }
     if p.broken.is_some() {
         let (s0, s1) = opening_follow::span(o);
         return Err(fail(
@@ -229,6 +265,8 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         frame: None,
         sill: None,
         head: None,
+        depth: None,
+        inset: None,
         style: None,
         number: None,
         place: Vec::new(),
@@ -238,6 +276,19 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
     if let Some(v) = n.form {
         f.form = v;
     }
+    if let Some(v) = n.sill {
+        f.sill = Some(v);
+    }
+    if let Some(v) = n.head {
+        f.head = Some(v);
+    }
+    if let Some(v) = n.depth {
+        f.depth = Some(v);
+    }
+    if let Some(v) = n.inset {
+        f.inset = Some(v);
+    }
+    recess_follows_form(&mut f, n.depth.is_some(), n.inset.is_some());
     if let Some(v) = n.width {
         f.width = v;
     }
@@ -257,11 +308,12 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
     f
 }
 
-/// An opening's interval along its wall and, for one a call gives, where the input names it.
-type Standing<'a> = ((f64, f64), Option<&'a str>);
+/// An opening's interval along its wall, for one a call gives where the input names it, and its fields.
+type Standing<'a> = ((f64, f64), Option<&'a str>, OpeningFields);
 
 /// The openings standing on each wall, slot by slot, broken ones left out; `changed` the ones a call changes, as they
-/// will be (their old selves left out), `new` the ones it adds (each its place in the input).
+/// will be (their old selves left out), `new` the ones it adds (each its place in the input). Two whose intervals run
+/// into each other clash unless their heights are apart and plan cuts at most one (docs/adr/0719 §3).
 pub(crate) fn clear_of_others(
     doc: &Document,
     changed: &[(Slot, &OpeningFields, String)],
@@ -274,7 +326,7 @@ pub(crate) fn clear_of_others(
             by_host
                 .entry(&f.host)
                 .or_default()
-                .push((opening_follow::span(f), Some(at.as_str())));
+                .push((opening_follow::span(f), Some(at.as_str()), (*f).clone()));
         }
     }
     for (f, at) in new {
@@ -282,31 +334,35 @@ pub(crate) fn clear_of_others(
             by_host
                 .entry(&f.host)
                 .or_default()
-                .push((opening_follow::span(f), Some(at.as_str())));
+                .push((opening_follow::span(f), Some(at.as_str()), (*f).clone()));
         }
     }
+    let cut = kentos_commands::PLAN_CUT_HEIGHT;
     for (host, list) in by_host.iter_mut() {
         for (slot, o) in doc.openings_of(host) {
             if !changed_slots.contains(&slot) && o.broken.is_none() {
-                list.push((opening_follow::span(&o), None));
+                list.push((opening_follow::span(&o), None, o));
             }
         }
         for i in 0..list.len() {
             let Some(at) = list[i].1 else { continue };
-            if let Some((j, _)) = list
-                .iter()
-                .enumerate()
-                .find(|(j, (b, _))| *j != i && opening_follow::overlap(list[i].0, *b))
-            {
+            if let Some((j, _)) = list.iter().enumerate().find(|(j, (b, _, g))| {
+                *j != i && opening_follow::overlap(list[i].0, *b) && list[i].2.clashes_with(g, cut)
+            }) {
                 let (a, b) = (list[i].0, list[j].0);
-                return Err(fail(
-                    codes::OPENINGS_OVERLAP,
+                let ((h0, h1), (k0, k1)) = (list[i].2.heights(), list[j].2.heights());
+                let words = if h0 < k1 - 1e-9 && k0 < h1 - 1e-9 {
                     format!(
                         "Açıklık ({:.3}–{:.3} m) aynı duvardaki başka bir açıklığa ({:.3}–{:.3} m) biniyor. Açıklığı kaydırın ya da daraltın.",
                         a.0, a.1, b.0, b.1
-                    ),
-                    at,
-                ));
+                    )
+                } else {
+                    format!(
+                        "Açıklık ({:.3}–{:.3} m) aynı duvardaki başka bir açıklığın ({:.3}–{:.3} m) altında ya da üstünde ama ikisi de planda kesilir. Birinin alt ya da üst kotunu kesme yüksekliğinin ({cut:.2} m) dışına alın ya da açıklığı kaydırın.",
+                        a.0, a.1, b.0, b.1
+                    )
+                };
+                return Err(fail(codes::OPENINGS_OVERLAP, words, at));
             }
         }
     }

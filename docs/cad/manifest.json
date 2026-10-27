@@ -10476,6 +10476,22 @@
    "tests": 0
   },
   {
+   "id": "tool.flue",
+   "kind": "command",
+   "title": "Baca",
+   "level": "semantic",
+   "via": [
+    "cad.openings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.create",
+   "mcp": "cad.openings.create",
+   "note": "Baca biçimiyle aynı komut; derinlik ve yüzden uzaklık açık (ADR 0719).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.fourthCorner",
    "kind": "tool",
    "title": "Dördüncü köşe",
@@ -11154,6 +11170,22 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.niche",
+   "kind": "command",
+   "title": "Niş",
+   "level": "semantic",
+   "via": [
+    "cad.openings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.create",
+   "mcp": "cad.openings.create",
+   "note": "Niş biçimiyle aynı komut; yüz imlecin yanı, derinlik açık (ADR 0719).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.nurbs",

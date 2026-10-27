@@ -3,4 +3,4 @@
 /**
  * What an opening is.
  */
-export type OpeningForm = "door" | "window" | "opening";
+export type OpeningForm = "door" | "window" | "opening" | "niche" | "flue";

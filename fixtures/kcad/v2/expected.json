@@ -7,6 +7,8 @@
     {"file": "broken/stair-arcs-in-schema-116.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "dimension-cross.kcad", "sniff": "kcad", "content": "dimension-cross.json"},
     {"file": "broken/dimension-cross-in-schema-117.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "recesses.kcad", "sniff": "kcad", "content": "recesses.json"},
+    {"file": "broken/recesses-in-schema-118.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "railings.kcad", "sniff": "kcad", "content": "railings.json"},
     {"file": "broken/railings-in-schema-114.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "space-voids.kcad", "sniff": "kcad", "content": "space-voids.json"},
@@ -105,7 +107,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-119.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-120.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

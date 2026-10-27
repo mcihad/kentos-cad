@@ -210,6 +210,27 @@ impl OpeningTool {
                     }
                 ));
             }
+            // A niche's or flue's place across its wall (docs/adr/0719).
+            if let Some((near, far)) = o.recess_in(m.thickness) {
+                let face = match o.side {
+                    OpeningSide::Left => "Sol yüz",
+                    OpeningSide::Right => "Sağ yüz",
+                };
+                self.placement.info.push(if o.form == OpeningForm::Flue {
+                    format!("{face} · yüzden {} · derinlik {}", f.length(near), f.length(far - near))
+                } else {
+                    format!("{face} · derinlik {} / duvar {}", f.length(far), f.length(m.thickness))
+                });
+            }
+        }
+        // Whether plan cuts it: a bare opening, a niche or a flue only across the cut height (docs/adr/0719 §2).
+        if o.form.cut_by_height() {
+            let cut = kentos_commands::PLAN_CUT_HEIGHT;
+            self.placement.info.push(if o.cut_in_plan(cut) {
+                format!("Planda kesilir ({} kesme yüksekliği)", f.length(cut))
+            } else {
+                format!("Planda kesik çizgi: kesme yüksekliği ({}) dışında", f.length(cut))
+            });
         }
     }
 }
@@ -269,6 +290,19 @@ impl OpeningTool {
             // The remembered offset does not apply to a centred opening.
             rows.retain(|row| !matches!(row.key, "U" | "F" | "R"));
         }
+        // A niche's or flue's depth and face, a flue's distance from it; a form plan cuts by its heights its sill and
+        // head (docs/adr/0719).
+        if self.form.is_recess() {
+            rows.push(Setting::text("D", "Derinlik", self.depth_shown()));
+            rows.push(Setting::choice("Y", "Yüz", self.option_choices("Y")));
+            if self.form == OpeningForm::Flue {
+                rows.push(Setting::text("Z", "Yüzden uzaklık", self.inset_shown()));
+            }
+        }
+        if self.by_height() {
+            rows.push(Setting::text("L", "Alt kot", self.height_shown(true)));
+            rows.push(Setting::text("Ü", "Üst kot", self.height_shown(false)));
+        }
         if self.form == OpeningForm::Door {
             rows.push(Setting::choice(
                 "Y",
@@ -299,6 +333,9 @@ impl OpeningTool {
         }
         if matches!(key, "T" | "Y") {
             return self.choose_option(key, value, cx);
+        }
+        if matches!(key, "D" | "Z" | "L" | "Ü") {
+            return self.configure_height(key, value, cx);
         }
         match (key, value) {
             ("O", "free" | "distance" | "center") => {
@@ -338,6 +375,40 @@ impl OpeningTool {
                 }
             }
             _ => return false,
+        }
+        self.see(cx);
+        true
+    }
+}
+
+impl OpeningTool {
+    /// Derinlik, Yüzden uzaklık, Alt kot or Üst kot given in the settings: a length; Yüzden's “Ortada” (or empty)
+    /// centres a flue, Alt's and Üst's “Türün” (or empty) takes the type's again.
+    fn configure_height(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let folded = js_trim(value).to_lowercase();
+        let back = folded.is_empty() || folded.ends_with("türün") || folded == "ortada";
+        let ask = match key {
+            "D" => Ask::Depth,
+            "Z" => Ask::Inset,
+            "L" => Ask::Sill,
+            _ => Ask::Head,
+        };
+        if back {
+            match ask {
+                Ask::Depth => self.depth = None,
+                Ask::Inset => self.inset = Some(None),
+                Ask::Sill => self.sill = None,
+                _ => self.head = None,
+            }
+            self.see(cx);
+            return true;
+        }
+        let Some(v) = cx.typed_length(value).filter(|v| v.is_finite()) else {
+            cx.say(Level::Warn, "Bir uzunluk yazın: 10cm veya 0.10m gibi.");
+            return false;
+        };
+        if !self.take_height(ask, v, cx) {
+            return false;
         }
         self.see(cx);
         true

@@ -7,8 +7,9 @@
 //!   turned when the jambs run against the path or their left points fell on its right;
 //! - its jambs are written from its wall and `at` (a wall moved, stretched or thickened takes its openings along);
 //! - a wall that is gone or no wall breaks it (`hostGone`) where it stands; an interval past its wall's end or round
-//!   a corner breaks it (`offWall`); one running into another opening of its wall breaks both (`overlap`); a break
-//!   that no longer holds goes. It never moves to another wall by itself.
+//!   a corner breaks it (`offWall`); a niche or flue its wall is no longer thick enough for breaks (`tooDeep`,
+//!   docs/adr/0719 §3); one running into another opening of its wall breaks both (`overlap`); a break that no longer
+//!   holds goes. It never moves to another wall by itself.
 //!
 //! The changes join the step: one undo takes them back with the rest. `scripts/fixtures/opening_command_cases.py`
 //! writes the same without KentOS's code.
@@ -97,7 +98,7 @@ pub fn placed_on(o: &OpeningFields, wall: Option<&WallLine>, moved: bool) -> Ope
     match opening::jambs(&w.path, &w.spec, s0, s1) {
         Some(j) => {
             out.place = j.into_iter().map(contract).collect();
-            out.broken = None;
+            out.broken = (!out.fits(w.spec.width)).then_some(OpeningBreak::TooDeep);
         }
         None => out.broken = Some(OpeningBreak::OffWall),
     }
@@ -110,8 +111,8 @@ pub fn overlap(a: (f64, f64), b: (f64, f64)) -> bool {
     a.0 < b.1 - tol && b.0 < a.1 - tol
 }
 
-/// An opening's slot and its interval along its wall.
-type Spanned = (Slot, (f64, f64));
+/// An opening's slot, its interval along its wall and its fields (whose heights and cut say whether it clashes).
+type Spanned = (Slot, (f64, f64), OpeningFields);
 
 fn updated(before: Stored, after: Entity) -> Op {
     Op::Update {
@@ -235,23 +236,25 @@ impl Document {
                 by_host
                     .entry(f.host.clone())
                     .or_default()
-                    .push((*slot, span(f)));
+                    .push((*slot, span(f), f.clone()));
             }
         }
         // The other openings of those walls, as they stand.
         for (host, list) in by_host.iter_mut() {
             for (slot, o) in self.openings_of(host) {
                 if !next.contains_key(&slot) && o.broken.is_none() {
-                    list.push((slot, span(&o)));
+                    list.push((slot, span(&o), o));
                 }
             }
         }
+        // Two clash where they run into each other and their heights meet or plan would cut both (docs/adr/0719 §3).
+        let cut = kentos_contracts::PLAN_CUT_HEIGHT;
         for list in by_host.values() {
-            for (i, (slot, a)) in list.iter().enumerate() {
+            for (i, (slot, a, fa)) in list.iter().enumerate() {
                 if list
                     .iter()
                     .enumerate()
-                    .any(|(j, (_, b))| i != j && overlap(*a, *b))
+                    .any(|(j, (_, b, fb))| i != j && overlap(*a, *b) && fa.clashes_with(fb, cut))
                     && let Some((_, f)) = next.get_mut(slot)
                 {
                     f.broken = Some(OpeningBreak::Overlap);

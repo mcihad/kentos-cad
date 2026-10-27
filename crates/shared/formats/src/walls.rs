@@ -364,4 +364,97 @@ mod tests {
         };
         assert_eq!(contract_wall(&core_wall(&w)), Some(w));
     }
+
+    /// A niche, a flue and a service hole above the cut as plain objects (docs/adr/0719): the niche's back and the
+    /// flue's sides in the wall's pieces, the flue's cross its own, the service hole dashed and its wall whole.
+    #[test]
+    fn niches_flues_and_service_holes_go_out_plain() {
+        use kentos_contracts::{
+            EntityBase, LineType, OpeningEntity, OpeningFields, OpeningForm, OpeningSide, WallEntity,
+        };
+        let wall = WallFields {
+            pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 6.0, y: 0.0 }],
+            bulges: None,
+            closed: false,
+            width: 0.3,
+            justify: WallJustify::Center,
+            offset: 0.0,
+            style: None,
+            components: Vec::new(),
+            caps: WallCaps::Closed,
+            fill: None,
+            height: None,
+            arch: ArchInfo::default(),
+            joins: WallJoins::default(),
+            cleanup: true,
+        };
+        let base = |id: u32| EntityBase {
+            look: Default::default(),
+            id,
+            layer_id: "0".into(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        };
+        let uid = "0192f5a1-2590-7000-8000-000000000071".to_owned();
+        let opening = |id: u32, at: f64, width: f64, form: OpeningForm, depth: Option<f64>, sill: Option<f64>| {
+            let mut f = OpeningFields {
+                host: uid.clone(),
+                at,
+                anchor: Default::default(),
+                width,
+                form,
+                leaves: 1,
+                operation: kentos_contracts::OpeningOperation::Fixed,
+                hand: Default::default(),
+                side: OpeningSide::Right,
+                swing: None,
+                show_swing: true,
+                frame: None,
+                sill,
+                head: sill.map(|s| s + 0.2),
+                depth,
+                inset: None,
+                style: None,
+                number: None,
+                place: Vec::new(),
+                broken: None,
+            };
+            let (s0, s1) = (at - width / 2.0, at + width / 2.0);
+            f.place = [(s0, 0.15), (s0, -0.15), (s1, 0.15), (s1, -0.15)]
+                .into_iter()
+                .map(|(x, y)| Vec2 { x, y })
+                .collect();
+            Entity::Opening(OpeningEntity { base: base(id), opening: f })
+        };
+        // Plain alone: its faces and its two end caps.
+        let alone = plain_pieces(&base(1), &wall, View::default()).unwrap().len();
+        let entities = vec![
+            Entity::Wall(WallEntity {
+                base: base(1),
+                wall,
+            }),
+            opening(2, 1.5, 0.6, OpeningForm::Niche, Some(0.1), None),
+            opening(3, 3.0, 0.2, OpeningForm::Flue, Some(0.2), None),
+            opening(4, 4.5, 0.2, OpeningForm::Opening, None, Some(2.3)),
+        ];
+        let view = View::default();
+        let plain = plain_joined(&entities, view, |id| (id == 1).then(|| uid.clone()));
+        let pieces = |i: usize| plain[i].as_ref().expect("drawn");
+        // The niche cuts the right face (one piece more), adds its back and two jambs; the flue adds its two sides
+        // and four jambs; the service hole above the cut leaves the wall whole.
+        assert_eq!(pieces(0).len(), alone + 1 + 1 + 2 + 2 + 2, "{:?}", pieces(0));
+        assert!(pieces(1).is_empty(), "a cut niche is its wall's");
+        assert_eq!(pieces(2).len(), 2, "the flue's cross");
+        let hole = pieces(3);
+        assert_eq!(hole.len(), 4, "jambs and a cross");
+        assert!(
+            hole.iter().all(|e| e.base().look.line_type == Some(LineType::Dashed)),
+            "above the cut: dashed"
+        );
+    }
 }

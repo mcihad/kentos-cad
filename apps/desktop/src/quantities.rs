@@ -385,9 +385,10 @@ impl App {
         };
         let openings = Table {
             name: "Açıklıklar",
-            heading: vec!["Numara", "Biçim", "Tür", "Genişlik", "Yükseklik", "Alan"],
-            numbers: vec![false, false, false, true, true, true],
-            widths: vec![72.0, 90.0, 180.0, 88.0, 88.0, 88.0],
+            // A niche's or flue's depth (docs/adr/0719 §4).
+            heading: vec!["Numara", "Biçim", "Tür", "Genişlik", "Yükseklik", "Alan", "Derinlik"],
+            numbers: vec![false, false, false, true, true, true, true],
+            widths: vec![72.0, 90.0, 180.0, 88.0, 88.0, 88.0, 88.0],
             shown: q
                 .openings
                 .iter()
@@ -399,6 +400,7 @@ impl App {
                         len(r.width),
                         r.height.map_or_else(String::new, len),
                         opt(r.area, 2),
+                        r.depth.map_or_else(String::new, len),
                     ]
                 })
                 .collect(),
@@ -414,6 +416,7 @@ impl App {
                         format!("{}", r.width),
                         o(r.height),
                         o(r.area),
+                        o(r.depth),
                     ]
                 })
                 .collect(),
@@ -691,13 +694,13 @@ impl App {
             ),
             Tab::Walls => q.walls.first().map_or_else(
                 || {
-                    "Yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür."
+                    "Yüzey: taban çizgisinin uzunluğu × yükseklik, duvarı geçen açıklıkların alanı düşülür (niş ve baca düşülmez)."
                         .to_owned()
                 },
                 |r| format!("Kural: {}.", r.rule),
             ),
             Tab::Openings => {
-                "Kural: genişlik × (lento − denizlik); denizliği olmayanın yüksekliği lentodur."
+                "Kural: genişlik × (lento − denizlik); denizliği olmayanın yüksekliği lentodur. Niş ve baca duvardan düşülmez; derinlikleri ayrı."
                     .to_owned()
             }
         }

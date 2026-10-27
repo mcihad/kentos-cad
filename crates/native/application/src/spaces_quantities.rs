@@ -6,9 +6,10 @@
 //! - A space: its rings' area and length; its height its own, else its level's; its volume area × height; a space
 //!   from the walls its area by each method too.
 //! - A wall: its base line's length; its height its own, else its level's; its gross face length × height; its
-//!   openings' area (width × (head − sill), sill absent 0, those with a head); its net face the gross less the openings;
-//!   its volume the net face × width.
-//! - An opening: its width, its height head − sill, its area.
+//!   openings' area (width × (head − sill), sill absent 0, those with a head and going through; docs/adr/0719 §4: a
+//!   niche or flue does not); its net face the gross less the openings; its volume the net face × width.
+//! - An opening: its width, its height head − sill, its area; a niche's or flue's depth. The totals' opening area is
+//!   the through openings'.
 
 use std::collections::BTreeMap;
 
@@ -88,14 +89,20 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     };
     // The openings of each wall, by the wall's id.
     let mut on_wall: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
+    // The walls with a niche or flue: their rule says those stay (docs/adr/0719 §4).
+    let mut recessed: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for e in doc.entities() {
         let Entity::Opening(o) = e else { continue };
         let x = &o.opening;
         let wall = doc.wall_line_of(&x.host).is_some().then(|| x.host.clone());
         let height = x.head.map(|h| h - x.sill.unwrap_or(0.0));
         let area = height.map(|h| x.width * h);
-        if let (Some(w), Some(a)) = (&wall, area) {
+        // A niche or flue does not go through: its wall's net face keeps it (docs/adr/0719 §4).
+        if let (Some(w), Some(a), false) = (&wall, area, x.form.is_recess()) {
             on_wall.entry(w.clone()).or_default().push((uid(e), a));
+        }
+        if let (Some(w), true) = (&wall, x.form.is_recess()) {
+            recessed.insert(w.clone());
         }
         let host_arch = wall
             .as_ref()
@@ -118,6 +125,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             width: x.width,
             height,
             area,
+            depth: x.form.is_recess().then_some(x.depth).flatten(),
         });
     }
     // One borrow owns all temporary source networks for this read-only report.
@@ -198,6 +206,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 let openings_area: f64 = openings.iter().map(|(_, a)| a).sum();
                 let gross = height.map(|h| length * h);
                 let net = gross.map(|g| g - openings_area);
+                let rule = if recessed.contains(&id) {
+                    "yüzey: taban çizgisinin uzunluğu × yükseklik, duvarı geçen açıklıkların alanı düşülür (niş ve baca düşülmez); hacim: net yüzey × kalınlık"
+                } else {
+                    "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                };
                 out.walls.push(WallRow {
                     uid: id,
                     style: x.style.clone(),
@@ -210,7 +223,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     net_area: net,
                     volume: net.map(|n| n * x.width),
                     openings: openings.into_iter().map(|(u, _)| u).collect(),
-                    rule: "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık".into(),
+                    rule: rule.into(),
                 });
             }
             _ => {}
@@ -222,7 +235,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         wall_length: out.walls.iter().map(|w| w.length).sum(),
         wall_net_area: out.walls.iter().filter_map(|w| w.net_area).sum(),
         openings: u32::try_from(out.openings.len()).unwrap_or(u32::MAX),
-        opening_area: out.openings.iter().filter_map(|o| o.area).sum(),
+        opening_area: out
+            .openings
+            .iter()
+            .filter(|o| !o.form.is_recess())
+            .filter_map(|o| o.area)
+            .sum(),
     };
     Ok(out)
 }

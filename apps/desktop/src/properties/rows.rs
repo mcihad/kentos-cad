@@ -1611,6 +1611,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         OpeningForm::Door => "door",
                         OpeningForm::Window => "window",
                         OpeningForm::Opening => "wallOpening",
+                        OpeningForm::Niche => "wallNiche",
+                        OpeningForm::Flue => "wallFlue",
                     };
                     pick(v.label().to_owned(), v == x.form, set(OpeningChange { form: Some(v), ..Default::default() }), Some(icon))
                 })
@@ -1639,6 +1641,25 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
             geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
             geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
+            // A niche's or flue's face, depth and a flue's distance from its face (docs/adr/0719).
+            if x.form.is_recess() {
+                let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]
+                    .into_iter()
+                    .map(|(v, l, i)| pick(l.to_owned(), v == x.side, set(OpeningChange { side: Some(v), ..Default::default() }), Some(i)))
+                    .collect();
+                let side = if x.side == OpeningSide::Right { "Sağ" } else { "Sol" };
+                geo.push(Row::text("Yüz", side).editor(select(side.to_owned(), sides)));
+                match x.depth {
+                    Some(d) => geo.push(metres("Derinlik", d).editor(number(Field::OpeningDepth(slot)))),
+                    None => geo.push(Row::figure("Derinlik", "Yok").editor(number(Field::OpeningDepth(slot)))),
+                }
+                if x.form == OpeningForm::Flue {
+                    match x.inset {
+                        Some(v) => geo.push(metres("Yüzden uzaklık", v).editor(number(Field::OpeningInset(slot)))),
+                        None => geo.push(Row::text("Yüzden uzaklık", "Ortada").editor(number(Field::OpeningInset(slot)))),
+                    }
+                }
+            }
             if x.form == OpeningForm::Door {
                 let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]
                     .into_iter()
@@ -1653,7 +1674,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 let hand = if x.hand == OpeningHand::End { "Son" } else { "Baş" };
                 geo.push(Row::text("Menteşe", hand).editor(select(hand.to_owned(), hands)));
             }
-            if x.form != OpeningForm::Opening {
+            if matches!(x.form, OpeningForm::Door | OpeningForm::Window) {
                 let leaves = [1u8, 2]
                     .into_iter()
                     .map(|n| pick(n.to_string(), n == x.leaves, set(OpeningChange { leaves: Some(n), ..Default::default() }), None))
@@ -1682,13 +1703,31 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Some(v) => metres(label, v).editor(number(field)),
                 None => Row::figure(label, "Yok").editor(number(field)),
             };
-            if x.form != OpeningForm::Opening {
+            if matches!(x.form, OpeningForm::Door | OpeningForm::Window) {
                 geo.push(optional("Kasa", x.frame, Field::OpeningFrame(slot)));
             }
-            if x.form == OpeningForm::Window {
-                geo.push(optional("Denizlik", x.sill, Field::OpeningSill(slot)));
+            match x.form {
+                OpeningForm::Window => geo.push(optional("Denizlik", x.sill, Field::OpeningSill(slot))),
+                OpeningForm::Opening | OpeningForm::Niche | OpeningForm::Flue => {
+                    geo.push(optional("Alt kot", x.sill, Field::OpeningSill(slot)));
+                }
+                OpeningForm::Door => {}
             }
-            geo.push(optional("Lento", x.head, Field::OpeningHead(slot)));
+            if x.form.is_recess() {
+                geo.push(optional("Üst kot", x.head, Field::OpeningHead(slot)));
+            } else {
+                geo.push(optional("Lento", x.head, Field::OpeningHead(slot)));
+            }
+            // Whether plan cuts it, at the plan's cut height (docs/adr/0719 §2).
+            if x.form.cut_by_height() {
+                let cut = kentos_commands::PLAN_CUT_HEIGHT;
+                let words = if x.cut_in_plan(cut) {
+                    format!("Kesilir ({} kesme)", f.length(cut))
+                } else {
+                    format!("Kesik çizgi ({} kesmenin dışında)", f.length(cut))
+                };
+                geo.push(Row::text("Planda", words));
+            }
             geo.push(
                 Row::text("Numara", x.number.clone().unwrap_or_default())
                     .editor(edit(Editor::Text(Field::OpeningNumber(slot)))),

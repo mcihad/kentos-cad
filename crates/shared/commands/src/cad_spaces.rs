@@ -537,6 +537,12 @@ pub struct OpeningRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
+    /// A niche's or flue's depth across its wall (docs/adr/0719 §4); none for one that goes through, which alone is
+    /// taken off its wall's net face.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub depth: Option<f64>,
 }
 
 fn is_zero(v: &f64) -> bool {

@@ -3177,13 +3177,15 @@ class OpeningBreak(_StrEnum):
     - ``hostGone``: Its wall is gone, or is no wall.
     - ``offWall``: It runs past its wall's end or round one of its corners.
     - ``overlap``: It runs into another opening of its wall.
+    - ``tooDeep``: A niche or flue deeper than its wall is thick (docs/adr/0719 §3).
     """
     HOST_GONE = "hostGone"
     OFF_WALL = "offWall"
     OVERLAP = "overlap"
+    TOO_DEEP = "tooDeep"
 
 
-OpeningBreakName = Literal["hostGone", "offWall", "overlap"]
+OpeningBreakName = Literal["hostGone", "offWall", "overlap", "tooDeep"]
 """The names of :class:`OpeningBreak`, for a plain string."""
 
 
@@ -3226,13 +3228,17 @@ class OpeningForm(_StrEnum):
     - ``door``: Kapı.
     - ``window``: Pencere.
     - ``opening``: Boşluk: a gap in the wall and nothing in it.
+    - ``niche``: Niş: a recess cut from one face of the wall, `depth` into it (docs/adr/0719).
+    - ``flue``: Baca: a cavity inside the wall, clear of both faces (docs/adr/0719).
     """
     DOOR = "door"
     WINDOW = "window"
     OPENING = "opening"
+    NICHE = "niche"
+    FLUE = "flue"
 
 
-OpeningFormName = Literal["door", "window", "opening"]
+OpeningFormName = Literal["door", "window", "opening", "niche", "flue"]
 """The names of :class:`OpeningForm`, for a plain string."""
 
 
@@ -36882,14 +36888,18 @@ class NewOpening(_Model):
     Attributes:
         host: The wall's persistent id.
         at: Its centre's distance along the wall's base line from its start. Absent: from `point`. Unit: length.
+        depth: Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719). Unit: length.
         distance: With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe). Unit: length.
         distance_reference: With `distance`: near jamb (default), centre, or the hinge jamb.
             This chooses placement only; the stored opening keeps its centre anchor.
-        form: Over the type's: a door, a window or a bare opening.
+        form: Over the type's: a door, a window, a bare opening, a niche or a flue (docs/adr/0719).
+        head: Over the type's: its head above the floor, metres. Unit: elevation.
+        inset: A flue's distance from its face to its cavity, metres; absent: centred in its wall. Unit: length.
         leaves: Unit: count.
         middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
         point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
-        side: The side it opens to. Absent: the side `point` is on, else the left.
+        side: The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
+        sill: Over the type's: its sill above the floor, metres. Unit: elevation.
         span: Two jamb points projected onto the named wall's base line. Their arc-length
             separation is the width, their midpoint along the path is the centre.
             Both must fit on one edge. Cannot be combined with at/distance/middle/width.
@@ -36901,17 +36911,21 @@ class NewOpening(_Model):
     host: str
     at: float | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
     distance: float | None | Unset = UNSET
     distance_reference: OpeningDistanceReference | OpeningDistanceReferenceName | None | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     from_: OpeningFrom | OpeningFromName | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | None | Unset = UNSET
+    head: float | None | Unset = UNSET
+    inset: float | None | Unset = UNSET
     leaves: int | None | Unset = UNSET
     middle: bool | Unset = UNSET
     number: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
     point: Vec2 | None | Unset = UNSET
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
+    sill: float | None | Unset = UNSET
     span: list[Vec2] | None | Unset = UNSET
     swing: float | None | Unset = UNSET
     type: str | None | Unset = UNSET
@@ -36924,6 +36938,8 @@ class NewOpening(_Model):
             out["at"] = None if self.at is None else float(self.at)
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
         if self.distance is not UNSET:
             out["distance"] = None if self.distance is None else float(self.distance)
         if self.distance_reference is not UNSET:
@@ -36934,6 +36950,10 @@ class NewOpening(_Model):
             out["from"] = None if self.from_ is None else _enum_out(self.from_)
         if self.hand is not UNSET:
             out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.head is not UNSET:
+            out["head"] = None if self.head is None else float(self.head)
+        if self.inset is not UNSET:
+            out["inset"] = None if self.inset is None else float(self.inset)
         if self.leaves is not UNSET:
             out["leaves"] = self.leaves
         if self.middle is not UNSET:
@@ -36946,6 +36966,8 @@ class NewOpening(_Model):
             out["point"] = None if self.point is None else _vec2_out(self.point)
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.sill is not UNSET:
+            out["sill"] = None if self.sill is None else float(self.sill)
         if self.span is not UNSET:
             out["span"] = None if self.span is None else [_vec2_out(e0) for e0 in self.span]
         if self.swing is not UNSET:
@@ -36962,17 +36984,21 @@ class NewOpening(_Model):
             host=data["host"],
             at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
             distance_reference=UNSET if "distanceReference" not in data else None if data["distanceReference"] is None else _enum_in(OpeningDistanceReference, data["distanceReference"]),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             from_=UNSET if "from" not in data else None if data["from"] is None else _enum_in(OpeningFrom, data["from"]),
             hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
+            head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            inset=UNSET if "inset" not in data else None if data["inset"] is None else float(data["inset"]),
             leaves=data.get("leaves", UNSET),
             middle=data.get("middle", UNSET),
             number=data.get("number", UNSET),
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
+            sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
             span=UNSET if "span" not in data else None if data["span"] is None else [Vec2.from_json(e0) for e0 in data["span"]],
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
             type=data.get("type", UNSET),
@@ -38051,9 +38077,12 @@ class OpeningEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        depth: A niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719); none for one that goes
+            through. Its face is `side`. Unit: length.
         frame: Its frame's width at each jamb, along the wall, metres. Absent: none. Unit: length.
         hand: Its hinge's end. Absent: its start.
         head: Its head's height above the floor, metres. Unit: elevation.
+        inset: A flue's distance from its face (`side`) to its cavity, metres; absent: centred in its wall (docs/adr/0719). Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         leaves: Its leaves, 1 or 2. Absent: 1. Unit: count.
@@ -38091,10 +38120,12 @@ class OpeningEntity(Entity):
     broken: OpeningBreak | OpeningBreakName | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
     form: OpeningForm | OpeningFormName = OpeningForm.DOOR
     frame: float | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | Unset = UNSET
     head: float | None | Unset = UNSET
+    inset: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     leaves: int | Unset = UNSET
@@ -38133,6 +38164,8 @@ class OpeningEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
         out["form"] = _enum_out(self.form)
         if self.frame is not UNSET:
             out["frame"] = None if self.frame is None else float(self.frame)
@@ -38140,6 +38173,8 @@ class OpeningEntity(Entity):
             out["hand"] = _enum_out(self.hand)
         if self.head is not UNSET:
             out["head"] = None if self.head is None else float(self.head)
+        if self.inset is not UNSET:
+            out["inset"] = None if self.inset is None else float(self.inset)
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -38193,10 +38228,12 @@ class OpeningEntity(Entity):
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(OpeningBreak, data["broken"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             form=_enum_in(OpeningForm, data["form"]) if "form" in data else OpeningForm.DOOR,
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             hand=_enum_in(OpeningHand, data["hand"]) if "hand" in data else UNSET,
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            inset=UNSET if "inset" not in data else None if data["inset"] is None else float(data["inset"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             leaves=data.get("leaves", UNSET),
@@ -38224,12 +38261,15 @@ class OpeningRow(_Model):
     Attributes:
         width: Unit: length.
         area: Unit: area.
+        depth: A niche's or flue's depth across its wall (docs/adr/0719 §4); none for one that goes through, which alone is
+            taken off its wall's net face. Unit: length.
         height: Head less sill (sill absent: 0); none without a head. Unit: length.
     """
     uid: str
     form: OpeningForm | OpeningFormName
     width: float
     area: float | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     number: str | None | Unset = UNSET
     style: str | None | Unset = UNSET
@@ -38242,6 +38282,8 @@ class OpeningRow(_Model):
         out["width"] = float(self.width)
         if self.area is not UNSET:
             out["area"] = None if self.area is None else float(self.area)
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.number is not UNSET:
@@ -38259,6 +38301,7 @@ class OpeningRow(_Model):
             form=_enum_in(OpeningForm, data["form"]),
             width=float(data["width"]),
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             number=data.get("number", UNSET),
             style=data.get("style", UNSET),
@@ -38268,9 +38311,11 @@ class OpeningRow(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class OpeningsCreate(_Model):
-    """Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step
-    (“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the
-    values chosen (TODOS.md CMD-07).
+    """Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one
+    undo step (“Kapı”, “Pencere”, “Boşluk”, “Niş” or “Baca”, the first's form). The tool gives the wall clicked and the
+    point, the type and the values chosen (TODOS.md CMD-07). A niche is cut from its face (`side`, absent: the side
+    `point` is on) `depth` into the wall, short of its other face; a flue is a cavity `inset` from its face (absent:
+    centred) and `depth` across, clear of both faces (docs/adr/0719).
 
     Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
     with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
@@ -38279,8 +38324,9 @@ class OpeningsCreate(_Model):
     `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
-    `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
-    `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+    `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
+    Warning: `layer_hidden`.
     Attributes:
         layer_id: The layer they go on: a layer's id, not a group's.
         line_weight: Unit: paper-mm.
@@ -38392,7 +38438,9 @@ class OpeningsEdit(_Model):
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
     `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-    `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
+    `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also
+    `slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
+    one changed to a form that goes through drops its depth and inset (docs/adr/0719).
     """
     operation: OpeningsOperation
     expected_revision: str | None | Unset = UNSET
@@ -70557,8 +70605,10 @@ class WallOpeningReference(OpeningReference):
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
+        depth: A niche's or flue's depth, metres (docs/adr/0719); null: none (a form that goes through). Unit: length.
         frame: Metres; null: no frame. Unit: length.
         head: Unit: elevation.
+        inset: A flue's distance from its face to its cavity, metres; null: centred. Unit: length.
         leaves: Unit: count.
         number: Its mark; null: none.
         sill: Unit: elevation.
@@ -70566,10 +70616,12 @@ class SetOpeningsOperation(OpeningsOperation):
         width: The rough opening, metres; it grows about its anchor. Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
+    depth: float | None | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     frame: float | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | None | Unset = UNSET
     head: float | None | Unset = UNSET
+    inset: float | None | Unset = UNSET
     leaves: int | None | Unset = UNSET
     number: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
@@ -70581,6 +70633,8 @@ class SetOpeningsOperation(OpeningsOperation):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
         if self.form is not UNSET:
             out["form"] = None if self.form is None else _enum_out(self.form)
         if self.frame is not UNSET:
@@ -70589,6 +70643,8 @@ class SetOpeningsOperation(OpeningsOperation):
             out["hand"] = None if self.hand is None else _enum_out(self.hand)
         if self.head is not UNSET:
             out["head"] = None if self.head is None else float(self.head)
+        if self.inset is not UNSET:
+            out["inset"] = None if self.inset is None else float(self.inset)
         if self.leaves is not UNSET:
             out["leaves"] = self.leaves
         if self.number is not UNSET:
@@ -70610,10 +70666,12 @@ class SetOpeningsOperation(OpeningsOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetOpeningsOperation:
         return cls(
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            inset=UNSET if "inset" not in data else None if data["inset"] is None else float(data["inset"]),
             leaves=data.get("leaves", UNSET),
             number=data.get("number", UNSET),
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),

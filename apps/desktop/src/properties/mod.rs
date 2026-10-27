@@ -263,6 +263,9 @@ pub enum Field {
     OpeningFrame(Slot),
     OpeningSill(Slot),
     OpeningHead(Slot),
+    /// A niche's or flue's depth and a flue's distance from its face (empty: centred; docs/adr/0719).
+    OpeningDepth(Slot),
+    OpeningInset(Slot),
     OpeningNumber(Slot),
     /// A space's number, name, usage, height (empty: the level's) and finishes (empty: none; docs/adr/0342 §5).
     SpaceNumber(Slot),
@@ -1250,6 +1253,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::OpeningFrame(slot)
         | Field::OpeningSill(slot)
         | Field::OpeningHead(slot)
+        | Field::OpeningDepth(slot)
+        | Field::OpeningInset(slot)
         | Field::OpeningNumber(slot) => {
             use kentos_commands::{OpeningChange, OpeningsOperation};
             let blank = text.trim().is_empty();
@@ -1261,13 +1266,18 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         ..Default::default()
                     })
                 }
-                Field::OpeningFrame(_) | Field::OpeningSill(_) | Field::OpeningHead(_) | Field::OpeningSwing(_)
+                Field::OpeningFrame(_)
+                | Field::OpeningSill(_)
+                | Field::OpeningHead(_)
+                | Field::OpeningSwing(_)
+                | Field::OpeningInset(_)
                     if blank =>
                 {
                     OpeningsOperation::Set(match field {
                         Field::OpeningFrame(_) => OpeningChange { frame: Some(None), ..Default::default() },
                         Field::OpeningSill(_) => OpeningChange { sill: Some(None), ..Default::default() },
                         Field::OpeningHead(_) => OpeningChange { head: Some(None), ..Default::default() },
+                        Field::OpeningInset(_) => OpeningChange { inset: Some(None), ..Default::default() },
                         _ => OpeningChange { swing: Some(None), ..Default::default() },
                     })
                 }
@@ -1289,6 +1299,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         Field::OpeningSwing(_) => OpeningsOperation::Set(OpeningChange { swing: Some(Some(n)), ..Default::default() }),
                         Field::OpeningFrame(_) => OpeningsOperation::Set(OpeningChange { frame: Some(Some(n)), ..Default::default() }),
                         Field::OpeningSill(_) => OpeningsOperation::Set(OpeningChange { sill: Some(Some(n)), ..Default::default() }),
+                        Field::OpeningDepth(_) => OpeningsOperation::Set(OpeningChange { depth: Some(Some(n)), ..Default::default() }),
+                        Field::OpeningInset(_) => OpeningsOperation::Set(OpeningChange { inset: Some(Some(n)), ..Default::default() }),
                         _ => OpeningsOperation::Set(OpeningChange { head: Some(Some(n)), ..Default::default() }),
                     }
                 }
@@ -1568,6 +1580,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::OpeningFrame(_)
         | Field::OpeningSill(_)
         | Field::OpeningHead(_)
+        | Field::OpeningDepth(_)
+        | Field::OpeningInset(_)
         | Field::OpeningNumber(_)
         | Field::SpaceNumber(_)
         | Field::SpaceName(_)

@@ -48,7 +48,7 @@ middle?: boolean,
  */
 type?: string, 
 /**
- * Over the type's: a door, a window or a bare opening.
+ * Over the type's: a door, a window, a bare opening, a niche or a flue (docs/adr/0719).
  */
 form?: OpeningForm, 
 /**
@@ -56,6 +56,22 @@ form?: OpeningForm,
  */
 width?: number, leaves?: number, operation?: OpeningOperation, hand?: OpeningHand, 
 /**
- * The side it opens to. Absent: the side `point` is on, else the left.
+ * The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
  */
-side?: OpeningSide, swing?: number, number?: string, attrs?: { [key in string]: string }, };
+side?: OpeningSide, swing?: number, 
+/**
+ * Over the type's: its sill above the floor, metres.
+ */
+sill?: number, 
+/**
+ * Over the type's: its head above the floor, metres.
+ */
+head?: number, 
+/**
+ * Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719).
+ */
+depth?: number, 
+/**
+ * A flue's distance from its face to its cavity, metres; absent: centred in its wall.
+ */
+inset?: number, number?: string, attrs?: { [key in string]: string }, };

@@ -8,4 +8,9 @@ export type OpeningRow = { uid: string, form: OpeningForm, style?: string, numbe
 /**
  * Head less sill (sill absent: 0); none without a head.
  */
-height?: number, area?: number, };
+height?: number, area?: number, 
+/**
+ * A niche's or flue's depth across its wall (docs/adr/0719 §4); none for one that goes through, which alone is
+ * taken off its wall's net face.
+ */
+depth?: number, };

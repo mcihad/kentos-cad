@@ -98,9 +98,10 @@ impl Store {
         }
     }
 
-    /// Each wall's openings' intervals, for the walls of `keys` in their order.
-    fn intervals(&self, keys: &[u64]) -> Vec<Vec<(f64, f64)>> {
-        let mut by_wall: IdMap<Vec<(f64, f64)>> = IdMap::default();
+    /// Each wall's openings' holes (docs/adr/0719 §3: none for one plan does not cut), for the walls of `keys` in
+    /// their order.
+    fn intervals(&self, keys: &[u64]) -> Vec<Vec<opening::Hole>> {
+        let mut by_wall: IdMap<Vec<opening::Hole>> = IdMap::default();
         for (&o, &w) in &self.opening_hosts {
             let Some(it) = self.by_id.get(&o).and_then(|&s| self.slots[s as usize].as_ref()) else {
                 continue;
@@ -108,17 +109,15 @@ impl Store {
             if let Shape::Opening {
                 at, width, opening, ..
             } = &it.shape
+                && let Some(h) = opening::hole(*at, *width, opening)
             {
-                by_wall
-                    .entry(w.to_bits())
-                    .or_default()
-                    .push(opening::span(*at, opening.anchor, *width));
+                by_wall.entry(w.to_bits()).or_default().push(h);
             }
         }
         keys.iter()
             .map(|k| {
                 let mut v = by_wall.remove(k).unwrap_or_default();
-                v.sort_by(|a, b| a.0.total_cmp(&b.0));
+                v.sort_by(|a, b| a.s0.total_cmp(&b.s0));
                 v
             })
             .collect()

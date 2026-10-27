@@ -1049,6 +1049,54 @@ fn cad_wall_and_opening_lengths_use_explicit_units_and_one_undo() {
     }
 }
 
+// ── docs/adr/0719: a niche's and a flue's rows ─────────────────────────────
+
+#[test]
+fn a_niches_depth_and_a_flues_inset_are_written_from_the_rows_one_step_each() {
+    use kentos_commands::Workspace;
+    use serde_json::json;
+    let mut app = objects();
+    // A CAD drawing: its length cells read explicit units (docs/adr/0647).
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let wall = add(&mut app, serde_json::from_value(json!({
+        "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
+    })).unwrap());
+    let host = app.document.as_ref().unwrap().model.uid(Slot(wall)).unwrap().to_string();
+    let niche = add(&mut app, serde_json::from_value(json!({
+        "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+        "host":host, "at":5., "width":0.6, "form":"niche", "depth":0.1, "place":[]
+    })).unwrap());
+    let flue = add(&mut app, serde_json::from_value(json!({
+        "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+        "host":host, "at":9., "width":0.2, "form":"flue", "depth":0.2, "place":[]
+    })).unwrap());
+    let fields = |app: &App, slot: u32| match entity(app, slot) {
+        Entity::Opening(o) => o.opening,
+        _ => panic!("an opening"),
+    };
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::Commit(Field::OpeningDepth(Slot(niche)), "15 cm".into()));
+    assert_eq!(fields(&app, niche).depth, Some(0.15), "{:?} {:?}", warned(&app), fields(&app, niche));
+    assert!(undo_label(&mut app).is_some());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    // Too deep for the wall: refused, said, nothing written.
+    event(&mut app, Event::Commit(Field::OpeningDepth(Slot(niche)), "30 cm".into()));
+    assert_eq!(fields(&app, niche).depth, Some(0.1));
+    assert!(warned(&app).is_some_and(|w| w.contains("Nişin derinliği")), "{:?}", warned(&app));
+    event(&mut app, Event::Commit(Field::OpeningInset(Slot(flue)), "3 cm".into()));
+    assert_eq!(fields(&app, flue).inset, Some(0.03));
+    event(&mut app, Event::Commit(Field::OpeningInset(Slot(flue)), String::new()));
+    assert_eq!(fields(&app, flue).inset, None, "empty: centred");
+    assert!(undo_label(&mut app).is_some());
+    assert!(undo_label(&mut app).is_some());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+}
+
 fn wire(x: f64, y: f64) -> Wire {
     Wire { x: E + x, y: N + y }
 }

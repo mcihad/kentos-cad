@@ -5,4 +5,8 @@ import type { OpeningOperation } from "./OpeningOperation";
 /**
  * A door's, window's or bare opening's values (docs/adr/0341 §1): KentOS's own types.
  */
-export type OpeningTypeDef = { id: string, name: string, form: OpeningForm, width: number, leaves: number, operation: OpeningOperation, swing?: number, frame?: number, sill?: number, head?: number, };
+export type OpeningTypeDef = { id: string, name: string, form: OpeningForm, width: number, leaves: number, operation: OpeningOperation, swing?: number, frame?: number, sill?: number, head?: number, 
+/**
+ * A niche's or flue's depth (docs/adr/0719).
+ */
+depth?: number, };

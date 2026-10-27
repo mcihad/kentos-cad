@@ -27,6 +27,8 @@ pub fn spec(o: &OpeningFields) -> Spec {
             OpeningForm::Door => Form::Door,
             OpeningForm::Window => Form::Window,
             OpeningForm::Opening => Form::Opening,
+            OpeningForm::Niche => Form::Niche,
+            OpeningForm::Flue => Form::Flue,
         },
         leaves: o.leaves,
         operation: match o.operation {
@@ -39,7 +41,16 @@ pub fn spec(o: &OpeningFields) -> Spec {
         swing: o.swing_angle(),
         show_swing: o.show_swing,
         frame: o.frame.unwrap_or(0.0),
+        sill: o.sill,
+        head: o.head,
+        depth: o.depth,
+        inset: o.inset,
     }
+}
+
+/// What it takes out of its wall in plan (docs/adr/0719 §3); none when plan does not cut it.
+pub fn hole(o: &OpeningFields) -> Option<opening::Hole> {
+    opening::hole(o.at, o.width, &spec(o))
 }
 
 /// Its place along its wall, from its start to its end.
@@ -62,20 +73,25 @@ pub fn core_opening(o: &OpeningFields) -> Shape {
 }
 
 /// Its symbol as the contract's plain objects on its layer, with its look: closed polylines for its frame, lines for
-/// its leaves and glass, arcs for its swings. Empty for a bare opening or one without its four jambs.
+/// its leaves and glass, arcs for its swings, a flue's cross, the dashed outline of one plan does not cut (docs/adr/0719
+/// §2). Empty for a cut bare opening or niche or one without its four jambs.
 pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
     let place: Vec<CoreVec2> = o.place.iter().map(core).collect();
-    let mut b = base.clone();
-    b.attachments.clear();
-    b.label_pins.clear();
-    b.label = None;
+    let mut plain = base.clone();
+    plain.attachments.clear();
+    plain.label_pins.clear();
+    plain.label = None;
     let back = |p: CoreVec2| Vec2 { x: p.x, y: p.y };
-    opening::symbol(&place, &spec(o))
+    opening::pieces(&place, &spec(o))
         .into_iter()
-        .filter_map(|s| {
-            Some(match s {
+        .filter_map(|m| {
+            let mut b = plain.clone();
+            if m.dashed {
+                b.look.line_type = kentos_contracts::LineType::from_name("dashed");
+            }
+            Some(match m.shape {
                 Shape::Line { a, b: end } => Entity::Line(LineEntity {
-                    base: b.clone(),
+                    base: b,
                     a: back(a),
                     b: back(end),
                     za: None,
@@ -84,7 +100,7 @@ pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
                     mb: None,
                 }),
                 Shape::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity {
-                    base: b.clone(),
+                    base: b,
                     c: back(c),
                     r,
                     a0,
@@ -97,7 +113,7 @@ pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
                     ..
                 } => Entity::Polyline(PathEntity {
                     space_separator: None,
-                    base: b.clone(),
+                    base: b,
                     pts: pts.into_iter().map(back).collect(),
                     bulges,
                     holes: None,
@@ -114,13 +130,13 @@ pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
 }
 
 /// Every wall's openings by the wall's place in `walls` (indexes into `entities`): the openings of `entities` whose
-/// host is one of those walls by its persistent id (`uid_of` an object's id) and that are not broken, as their spans
-/// along it.
+/// host is one of those walls by its persistent id (`uid_of` an object's id), that are not broken and that plan cuts,
+/// as their holes along it.
 pub fn spans_by_wall(
     entities: &[Entity],
     walls: &[usize],
     uid_of: impl Fn(u32) -> Option<String>,
-) -> Vec<Vec<(f64, f64)>> {
+) -> Vec<Vec<opening::Hole>> {
     let mut out = vec![Vec::new(); walls.len()];
     let place: std::collections::HashMap<String, usize> = walls
         .iter()
@@ -131,8 +147,9 @@ pub fn spans_by_wall(
         if let Entity::Opening(o) = e
             && o.opening.broken.is_none()
             && let Some(&k) = place.get(o.opening.host.as_str())
+            && let Some(h) = hole(&o.opening)
         {
-            out[k].push(span(&o.opening));
+            out[k].push(h);
         }
     }
     out

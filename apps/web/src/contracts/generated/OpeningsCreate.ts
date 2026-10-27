@@ -2,9 +2,11 @@
 import type { NewOpening } from "./NewOpening";
 
 /**
- * Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step
- * (“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the
- * values chosen (TODOS.md CMD-07).
+ * Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one
+ * undo step (“Kapı”, “Pencere”, “Boşluk”, “Niş” or “Baca”, the first's form). The tool gives the wall clicked and the
+ * point, the type and the values chosen (TODOS.md CMD-07). A niche is cut from its face (`side`, absent: the side
+ * `point` is on) `depth` into the wall, short of its other face; a flue is a cavity `inset` from its face (absent:
+ * centred) and `depth` across, clear of both faces (docs/adr/0719).
  *
  * Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
  * with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
@@ -13,8 +15,9 @@ import type { NewOpening } from "./NewOpening";
  * `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
- * `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
- * `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+ * `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+ * `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
+ * Warning: `layer_hidden`.
  */
 export type OpeningsCreate = { 
 /**

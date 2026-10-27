@@ -21,6 +21,13 @@ them:
   (their centre's nearest place on the base line; hand and side turned when the jambs run against the line or their
   left points fell on its right), else jambs written from the wall and `at`; a wall gone breaks it (`hostGone`), its
   place kept; a wall's split, flip and other path edits read its openings back onto the new line.
+
+ADR 0719 adds the niche and the flue: a niche is cut from its face (`side`) `depth` into the wall, a flue is a cavity
+`inset` from its face (none: centred) and `depth` across. A niche or flue needs a depth (none: its form's first
+type's), only a flue has an inset (above 0), a form that goes through has neither; one that does not stay inside its
+wall (a niche reaching its other face, a flue either face) is refused (`recess_too_deep`), and one whose wall grew too
+thin since breaks (`tooDeep`). A form changed to a niche or flue takes its form's first type's depth when it has none;
+one changed to a form that goes through drops its depth and inset unless the change names them.
 """
 
 import argparse
@@ -100,8 +107,14 @@ TYPES = [
     {"id": "kentos-pencere-120", "name": "Pencere 120", "form": "window", "width": 1.2, "leaves": 2, "operation": "swing", "frame": 0.06, "sill": 0.9, "head": 2.2},
     {"id": "kentos-sabit-pencere-100", "name": "Sabit pencere 100", "form": "window", "width": 1.0, "leaves": 1, "operation": "fixed", "frame": 0.06, "sill": 0.9, "head": 2.2},
     {"id": "kentos-bosluk-100", "name": "Boşluk 100", "form": "opening", "width": 1.0, "leaves": 1, "operation": "fixed", "head": 2.1},
+    {"id": "kentos-tesisat-20", "name": "Tesisat boşluğu 20", "form": "opening", "width": 0.2, "leaves": 1, "operation": "fixed", "sill": 2.3, "head": 2.5},
+    {"id": "kentos-nis-60", "name": "Niş 60", "form": "niche", "width": 0.6, "leaves": 1, "operation": "fixed", "sill": 0.9, "head": 1.5, "depth": 0.1},
+    {"id": "kentos-kalorifer-nisi-100", "name": "Kalorifer nişi 100", "form": "niche", "width": 1.0, "leaves": 1, "operation": "fixed", "sill": 0.1, "head": 0.8, "depth": 0.1},
+    {"id": "kentos-baca-20", "name": "Baca 20", "form": "flue", "width": 0.2, "leaves": 1, "operation": "fixed", "depth": 0.2},
 ]
-STEPS = {"door": "Kapı", "window": "Pencere", "opening": "Boşluk"}
+STEPS = {"door": "Kapı", "window": "Pencere", "opening": "Boşluk", "niche": "Niş", "flue": "Baca"}
+LABELS = STEPS
+RECESS = ("niche", "flue")
 
 
 def find_type(key):
@@ -126,9 +139,25 @@ def first_type(form):
 def apply_type(f, t):
     f["form"], f["width"], f["leaves"], f["operation"] = t["form"], t["width"], t["leaves"], t["operation"]
     f["swing"] = None
-    for k in ("frame", "sill", "head"):
+    for k in ("frame", "sill", "head", "depth"):
         f[k] = t.get(k)
+    if t["form"] != "flue":
+        f["inset"] = None
     f["style"] = t["id"]
+
+
+def recess_follows_form(f, given_depth, given_inset):
+    """A form's depth and inset kept in step with it (ADR 0719 §1)."""
+    if f["form"] in RECESS:
+        if f.get("depth") is None:
+            f["depth"] = first_type(f["form"])["depth"]
+        if f["form"] == "niche" and not given_inset:
+            f["inset"] = None
+    else:
+        if not given_depth:
+            f["depth"] = None
+        if not given_inset:
+            f["inset"] = None
 
 
 # ── The wall's base line ────────────────────────────────────────────────────────────────────────────────────────
@@ -146,6 +175,7 @@ class Line:
         just = {"left": 0.0, "center": w["width"] / 2, "right": w["width"]}[w["justify"]]
         self.left = w.get("offset", 0.0) + just
         self.right = self.left - w["width"]
+        self.width = w["width"]
 
     def edge_len(self, i):
         a, b = self.edges[i]
@@ -200,6 +230,28 @@ def overlap(a, b):
     return a[0] < b[1] - tol and b[0] < a[1] - tol
 
 
+CUT = 1.1
+
+
+def heights(f):
+    """Its sill (none: the floor) to its head (none: full height)."""
+    return (f["sill"] if f.get("sill") is not None else 0.0, f["head"] if f.get("head") is not None else math.inf)
+
+
+def cut_in_plan(f):
+    """Plan cuts a door or window always; a bare opening, niche or flue where it crosses the cut height (ADR 0719 §2)."""
+    if f["form"] in ("door", "window"):
+        return True
+    s0, s1 = heights(f)
+    return s0 < CUT and s1 > CUT
+
+
+def clashes(a, b):
+    """Two on one stretch of wall clash when their heights meet or plan would cut both (ADR 0719 §3)."""
+    (a0, a1), (b0, b1) = heights(a), heights(b)
+    return (a0 < b1 - 1e-9 and b0 < a1 - 1e-9) or (cut_in_plan(a) and cut_in_plan(b))
+
+
 def read_back(line, place, anchor, width):
     """The `at` of jambs on `line`, and whether the hand and the side turned."""
     m = (sum(p["x"] for p in place) / 4, sum(p["y"] for p in place) / 4)
@@ -235,6 +287,22 @@ def problem(f):
         return "frame", f"Kasa genişliği {num(fr)} m; sıfır ya da daha büyük, açıklığın yarısından ({num(w / 2)} m) küçük olmalı."
     if f.get("sill") is not None and f.get("head") is not None and f["head"] <= f["sill"]:
         return "head", f"Lento ({num(f['head'])} m) denizlikten ({num(f['sill'])} m) yüksek olmalı."
+    label = LABELS[f["form"]]
+    depth, inset = f.get("depth"), f.get("inset")
+    if f["form"] not in RECESS:
+        if depth is not None:
+            return "depth", f"Derinlik yalnız niş ve bacanındır; {label.lower()} duvarı geçer. Derinliği kaldırın ya da biçimi Niş yapın."
+        if inset is not None:
+            return "inset", "Yüzden uzaklık yalnız bacanındır. Kaldırın ya da biçimi Baca yapın."
+    else:
+        if depth is None:
+            return "depth", f"{label} derinliği belirtilmeli: duvarın içine ne kadar girdiği (ör. 0,10 m)."
+        if not (math.isfinite(depth) and 0 < depth <= 10):
+            return "depth", f"{label} derinliği {num(depth)}; sıfırdan büyük, en çok 10 m olmalı."
+        if f["form"] == "niche" and inset is not None:
+            return "inset", "Niş yüzünden başlar; yüzden uzaklığı yoktur. Duvarın içindeki boşluk için Baca kullanın."
+        if f["form"] == "flue" and inset is not None and not (math.isfinite(inset) and 0 < inset <= 10):
+            return "inset", f"Bacanın yüzden uzaklığı {num(inset)}; sıfırdan büyük olmalı. Yüze açık oyuk için Niş kullanın."
     if f.get("number") is not None and f["number"].strip() == "":
         return "number", "Açıklığın numarası boş olamaz; numarayı kaldırın ya da bir numara yazın."
     return None
@@ -246,12 +314,48 @@ def off_wall(f, line, path):
                    f"uzunluğu {line.length:.3f} m; açıklık duvarın tek bir kenarında, uçlarının arasında kalmalı. Açıklığı kaydırın ya da daraltın.", path)
 
 
-def placed(f, line, path):
+def recess_in(f, t):
+    """A niche's or flue's near and far distance from its face in a wall t thick; None for one that goes through."""
+    if f["form"] not in RECESS:
+        return None
+    d = f["depth"]
+    near = (f["inset"] if f.get("inset") is not None else (t - d) / 2) if f["form"] == "flue" else 0.0
+    return near, near + d
+
+
+def fits(f, t):
+    tol = 1e-9 * max(abs(t), 1.0)
+    r = recess_in(f, t)
+    if r is None:
+        return True
+    near, far = r
+    return near > -tol and far < t - tol and (f["form"] != "flue" or near > tol)
+
+
+def place_on(f, line):
+    """Its jambs written from its wall: (fields, None), or (fields kept, "offWall")."""
     j = line.jambs(*span(f))
     if j is None:
-        return off_wall(f, line, path)
+        return f, "offWall"
     out = dict(f, place=j)
     out.pop("broken", None)
+    return out, (None if fits(out, line.width) else "tooDeep")
+
+
+def placed(f, line, path):
+    out, broken = place_on(f, line)
+    if broken == "offWall":
+        return off_wall(f, line, path)
+    if broken == "tooDeep":
+        t = line.width
+        near, far = recess_in(f, t)
+        if f["form"] == "niche":
+            words = (f"Nişin derinliği ({far:.3f} m) duvarın kalınlığından ({t:.3f} m) küçük olmalı; niş öbür yüze varmamalı. "
+                     "Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın.")
+        else:
+            words = (f"Baca duvarın içinde kalmalı: yüzden {near:.3f} m, derinliği {far - near:.3f} m; duvar {t:.3f} m kalınlığında. "
+                     "Derinliği ya da yüzden uzaklığı azaltın.")
+        return refusal("recess_too_deep", words, f"{path}.depth" if path else "depth")
     return out
 
 
@@ -275,7 +379,7 @@ def stored(f):
             out[k] = float(f[k])
     if f.get("showSwing", True) is False:
         out["showSwing"] = False
-    for k in ("frame", "sill", "head"):
+    for k in ("frame", "sill", "head", "depth", "inset"):
         if f.get(k) is not None:
             out[k] = float(f[k])
     for k in ("style", "number"):
@@ -372,22 +476,29 @@ class Drawing:
         ids = [i for i, _, _ in changed]
         for _, f, path in changed:
             if not f.get("broken"):
-                by_host.setdefault(f["host"], []).append((span(f), path))
+                by_host.setdefault(f["host"], []).append((span(f), path, f))
         for f, path in new:
             if not f.get("broken"):
-                by_host.setdefault(f["host"], []).append((span(f), path))
+                by_host.setdefault(f["host"], []).append((span(f), path, f))
         for host in sorted(by_host):
             lst = by_host[host]
             for i, o in self.on(host):
                 if i not in ids and not o.get("broken"):
-                    lst.append((span(o), None))
-            for k, (a, path) in enumerate(lst):
+                    lst.append((span(o), None, o))
+            for k, (a, path, fa) in enumerate(lst):
                 if path is None:
                     continue
-                for j, (b, _) in enumerate(lst):
-                    if j != k and overlap(a, b):
-                        return refusal("openings_overlap", f"Açıklık ({a[0]:.3f}–{a[1]:.3f} m) aynı duvardaki başka bir açıklığa ({b[0]:.3f}–{b[1]:.3f} m) "
-                                       "biniyor. Açıklığı kaydırın ya da daraltın.", path)
+                for j, (b, _, fb) in enumerate(lst):
+                    if j != k and overlap(a, b) and clashes(fa, fb):
+                        (h0, h1), (k0, k1) = heights(fa), heights(fb)
+                        if h0 < k1 - 1e-9 and k0 < h1 - 1e-9:
+                            words = (f"Açıklık ({a[0]:.3f}–{a[1]:.3f} m) aynı duvardaki başka bir açıklığa ({b[0]:.3f}–{b[1]:.3f} m) "
+                                     "biniyor. Açıklığı kaydırın ya da daraltın.")
+                        else:
+                            words = (f"Açıklık ({a[0]:.3f}–{a[1]:.3f} m) aynı duvardaki başka bir açıklığın ({b[0]:.3f}–{b[1]:.3f} m) "
+                                     f"altında ya da üstünde ama ikisi de planda kesilir. Birinin alt ya da üst kotunu kesme yüksekliğinin "
+                                     f"({CUT:.2f} m) dışına alın ya da açıklığı kaydırın.")
+                        return refusal("openings_overlap", words, path)
         return None
 
 
@@ -401,7 +512,8 @@ def create(d, inp, conflict=False):
     made = []
     for i, n in enumerate(inp["openings"]):
         at = f"openings[{i}]"
-        for key, name in (("at", "Konum"), ("distance", "Uzaklık"), ("width", "Genişlik"), ("swing", "Açılma açısı")):
+        for key, name in (("at", "Konum"), ("distance", "Uzaklık"), ("width", "Genişlik"), ("swing", "Açılma açısı"),
+                          ("sill", "Alt kot"), ("head", "Üst kot"), ("depth", "Derinlik"), ("inset", "Yüzden uzaklık")):
             if key in n and not math.isfinite(n[key]):
                 return not_finite(name, f"{at}.{key}"), None
         if "point" in n:
@@ -424,9 +536,10 @@ def create(d, inp, conflict=False):
             t = first_type(n.get("form", "door"))
         f = {"host": n["host"], "at": 0.0, "anchor": "center", "hand": "start", "side": "left", "showSwing": True}
         apply_type(f, t)
-        for key in ("form", "width", "leaves", "operation", "hand", "swing"):
+        for key in ("form", "width", "leaves", "operation", "hand", "swing", "sill", "head", "depth", "inset"):
             if key in n:
                 f[key] = n[key]
+        recess_follows_form(f, "depth" in n, "inset" in n)
         f["number"] = n.get("number")
         side = None
         if "span" in n:
@@ -666,6 +779,61 @@ def create_cases():
         ("merkez mesafesi gizli hedefi söyler", one(layer="gizli",point=P(4,.2),distance=2.,distanceReference="center")),
     ]:
         c.add(f"hassas ret/katman: {name}", [create_step(Drawing(), "execute", inp)])
+    # ADR 0719: niches, flues and service holes.
+    for name, inp in [
+        ("niş biçimi türsüz: Niş 60, imlecin yanındaki (sol) yüzden 0,10 m; tek adım “Niş”", one(point=P(5, 0.4), form="niche")),
+        ("niş imlecin sağ yanında: sağ yüzden oyulur", one(point=P(5, -0.4), form="niche")),
+        ("niş türüyle, türün üstüne derinlik ve alt/üst kot", one(at=5.0, type="Niş 60", depth=0.15, sill=0.6, head=1.8)),
+        ("kalorifer nişi türüyle: kesme yüksekliğinin altında", one(host=3, at=3.0, type="Kalorifer nişi 100", side="right")),
+        ("niş duvarın neredeyse tamamı: 0,19 m derinlik 0,20 m duvarda", one(at=5.0, form="niche", depth=0.19)),
+        ("baca biçimi türsüz: Baca 20, kalın duvarın ortasında; tek adım “Baca”", one(host=3, at=3.0, form="flue")),
+        ("baca sağ yüzden 0,05 m içeride, 0,20 m derinlik", one(host=3, at=3.0, form="flue", side="right", inset=0.05)),
+        ("baca kimliğiyle, numarasıyla", one(host=3, at=4.0, type="kentos-baca-20", number="BC1")),
+        ("tesisat boşluğu türüyle: duvarı geçer, kesme yüksekliğinin üstünde", one(at=8.0, type="Tesisat boşluğu 20")),
+        ("boşluğa alt ve üst kot", one(at=7.0, form="opening", sill=0.3, head=0.6)),
+        ("kapı türüne niş biçimi: derinlik nişin ilk türünden", one(at=5.0, type="Kapı 90", form="niche")),
+        ("niş türüne kapı biçimi: derinlik düşer", one(at=5.0, type="Niş 60", form="door")),
+    ]:
+        c.add(name, [create_step(Drawing(), "execute", inp)])
+    c.add("niş ve baca tek çağrıda: tek adım ilkinin biçimiyle “Niş”", [create_step(Drawing(), "execute", {
+        "layerId": "kapi", "openings": [{"host": uid_of(3), "at": 1.5, "form": "niche"}, {"host": uid_of(3), "at": 4.0, "form": "flue"}]})])
+    c.add("niş planı yazmadan gösterir", [create_step(Drawing(), "plan", one(at=5.0, form="niche"))])
+    for name, inp, kw in [
+        ("duvarı geçecek kadar derin niş reddedilir", one(at=5.0, form="niche", depth=0.2), {}),
+        ("öbür yüze varan baca reddedilir", one(host=3, at=3.0, form="flue", inset=0.05, depth=0.25), {}),
+        ("duvar kalınlığında ortalanmış baca reddedilir", one(at=5.0, form="flue", depth=0.2), {}),
+        ("nişe yüzden uzaklık verilmez", one(at=5.0, form="niche", inset=0.05), {}),
+        ("bacanın yüzden uzaklığı sıfır olamaz", one(host=3, at=3.0, form="flue", inset=0.0), {}),
+        ("sıfır derinlik reddedilir", one(at=5.0, form="niche", depth=0.0), {}),
+        ("10 m'den derin niş reddedilir", one(at=5.0, form="niche", depth=12.0), {}),
+        ("kapıya derinlik verilmez", one(at=5.0, depth=0.1), {}),
+        ("pencereye yüzden uzaklık verilmez", one(at=5.0, form="window", inset=0.05), {}),
+        ("nişin üst kotu alt kotundan alçak olamaz", one(at=5.0, form="niche", sill=1.5, head=1.2), {}),
+        ("sonsuz derinlik reddedilir", one(at=5.0, form="niche", depth=0.1), {"non_finite": {"openings[0].depth": "NaN"}}),
+        ("sonsuz yüzden uzaklık reddedilir", one(host=3, at=3.0, form="flue", inset=0.05), {"non_finite": {"openings[0].inset": "Infinity"}}),
+        ("sonsuz üst kot reddedilir", one(at=5.0, form="niche", head=1.5), {"non_finite": {"openings[0].head": "NaN"}}),
+        ("duvarın ucundan taşan niş reddedilir", one(at=9.9, form="niche"), {}),
+    ]:
+        c.add(name, [create_step(Drawing(), "execute", inp, **kw)])
+    d = Drawing()
+    made = create_step(d, "execute", one(at=5.0))
+    c.add("kapıya binen niş reddedilir", [made, create_step(d, "execute", one(at=5.3, form="niche"))])
+    # ADR 0719 §3: one under or over another on the same stretch, at other heights, plan cutting at most one.
+    d = Drawing()
+    made = create_step(d, "execute", one(at=5.0, type="Pencere 120"))
+    c.add("pencerenin altına kalorifer nişi: kotları ayrı, plan yalnız pencereyi keser",
+          [made, create_step(d, "execute", one(at=5.0, type="Kalorifer nişi 100"))])
+    d = Drawing()
+    made = create_step(d, "execute", one(at=5.0))
+    c.add("kapının üstüne tesisat boşluğu: lentonun üstünde, kesilmez",
+          [made, create_step(d, "execute", one(at=5.0, type="Tesisat boşluğu 20"))])
+    d = Drawing()
+    made = create_step(d, "execute", one(at=5.0, form="window", sill=1.3, head=2.2))
+    c.add("yüksek pencerenin altında kesmeyi kesen niş: ikisi de kesilir, reddedilir",
+          [made, create_step(d, "execute", one(at=5.0, form="niche", sill=0.3, head=1.2))])
+    d = Drawing()
+    made = create_step(d, "execute", one(at=5.0, type="Pencere 120"))
+    c.add("pencereyle aynı kotta niş reddedilir", [made, create_step(d, "execute", one(at=5.0, type="Niş 60"))])
     return c.cases
 
 
@@ -726,13 +894,16 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento ya da numara verin.", "operation"), None, None
-        for key, name in (("width", "Genişlik"), ("swing", "Açılma açısı"), ("frame", "Kasa"), ("sill", "Denizlik"), ("head", "Lento")):
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.", "operation"), None, None
+        for key, name in (("width", "Genişlik"), ("swing", "Açılma açısı"), ("frame", "Kasa"), ("sill", "Denizlik"), ("head", "Lento"),
+                          ("depth", "Derinlik"), ("inset", "Yüzden uzaklık")):
             if ch.get(key) is not None and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None, None
         for at, i in found:
             f = dict(d.openings[i])
             f.update(ch)
+            if "form" in ch:
+                recess_follows_form(f, "depth" in ch, "inset" in ch)
             nxt.append((at, i, f, False))
     elif kind == "move":
         if "by" not in op and "at" not in op:
@@ -910,8 +1081,8 @@ def follow(d, ids):
         if line is None:
             d.openings[i] = dict(f, broken="hostGone")
             continue
-        r = placed(f, line, "")
-        d.openings[i] = dict(f, broken="offWall") if "status" in r else r
+        out, broken = place_on(f, line)
+        d.openings[i] = dict(out, broken=broken) if broken else out
     return ids
 
 
@@ -1052,6 +1223,40 @@ def edit_cases():
     stale = edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "flip"}, "expectedRevision": "$prepared"}, conflict=True)
     c.add("hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict", [
         {"op": "captureRevision", "as": "prepared"}, made, stale])
+    # ADR 0719: niches and flues edited.
+    niche = {"host": uid_of(3), "at": 3.0, "form": "niche"}
+    flue = {"host": uid_of(3), "at": 3.0, "form": "flue"}
+    for name, o, op in [
+        ("Değiştir: nişin derinliği 0,15 m", niche, {"kind": "set", "depth": 0.15}),
+        ("Değiştir: nişin alt ve üst kotu", niche, {"kind": "set", "sill": 0.2, "head": 2.0}),
+        ("Değiştir: bacanın yüzden uzaklığı 0,03 m", flue, {"kind": "set", "inset": 0.03}),
+        ("Değiştir: baca yeniden ortada (null)", {**flue, "side": "right", "inset": 0.04}, {"kind": "set", "inset": None}),
+        ("Değiştir: kapı nişe döner, derinlik nişin ilk türünden", {"host": uid_of(3), "at": 3.0}, {"kind": "set", "form": "niche"}),
+        ("Değiştir: niş boşluğa döner, derinliği düşer", niche, {"kind": "set", "form": "opening"}),
+        ("Değiştir: baca nişe döner, yüzden uzaklığı düşer", {**flue, "inset": 0.05}, {"kind": "set", "form": "niche"}),
+        ("Çevir: niş öbür yüze geçer", niche, {"kind": "flip", "what": "side"}),
+        ("Türü değiştir: Niş 60'tan Kalorifer nişi 100'e", niche, {"kind": "replaceType", "to": "Kalorifer nişi 100"}),
+        ("Türü değiştir: baca kapıya döner, derinliği düşer", flue, {"kind": "replaceType", "to": "Kapı 90"}),
+        ("Taşı: niş duvar boyunca 1 m", niche, {"kind": "move", "by": 1.0}),
+        ("Kopyala: niş duvar boyunca, numarasız", niche, {"kind": "copy", "offsets": [2.0]}),
+    ]:
+        d, made = fresh(o)
+        c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op})])
+    for name, o, op, kw in [
+        ("Değiştir: duvarı geçecek derinlik reddedilir", niche, {"kind": "set", "depth": 0.3}, {}),
+        ("Değiştir: kapıya derinlik reddedilir", {"host": uid_of(3), "at": 3.0}, {"kind": "set", "depth": 0.1}, {}),
+        ("Değiştir: sonsuz derinlik reddedilir", niche, {"kind": "set", "depth": 0.1}, {"non_finite": {"operation.depth": "NaN"}}),
+        ("Değiştir: öbür yüze varan yüzden uzaklık reddedilir", flue, {"kind": "set", "inset": 0.1}, {}),
+    ]:
+        d, made = fresh(o)
+        c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op}, **kw)])
+    d, made = fresh(niche)
+
+    def thinned(d):
+        d.walls[3] = dict(d.walls[3], width=0.08)
+        return follow(d, [first])
+    c.add("duvar nişten inceltilince niş tooDeep olur, pervazları yeni yüzlerde", [made, other_step(
+        d, "cad.walls.edit", {"uids": [uid_of(3)], "operation": {"kind": "set", "width": 0.08}}, thinned)])
     from opening_array_cases import cases as array_cases
     return c.cases + array_cases()
 

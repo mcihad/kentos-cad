@@ -1299,7 +1299,8 @@ impl Input for kentos_commands::SpacesQuantities {
 }
 
 impl Input for kentos_commands::OpeningsCreate {
-    /// `openings[0].at`, `.distance`, `.width`, `.swing`, `.point.x` and `.y`, `lineWeight` (docs/adr/0341).
+    /// `openings[0].at`, `.distance`, `.width`, `.swing`, `.sill`, `.head`, `.depth`, `.inset`, `.point.x` and `.y`,
+    /// `lineWeight` (docs/adr/0341, 0719).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1311,6 +1312,10 @@ impl Input for kentos_commands::OpeningsCreate {
             "distance" => o.distance.as_mut(),
             "width" => o.width.as_mut(),
             "swing" => o.swing.as_mut(),
+            "sill" => o.sill.as_mut(),
+            "head" => o.head.as_mut(),
+            "depth" => o.depth.as_mut(),
+            "inset" => o.inset.as_mut(),
             "point.x" => o.point.as_mut().map(|p| &mut p.x),
             "point.y" => o.point.as_mut().map(|p| &mut p.y),
             _ => None,
@@ -1319,7 +1324,7 @@ impl Input for kentos_commands::OpeningsCreate {
 }
 
 impl Input for kentos_commands::OpeningsEdit {
-    /// Değiştir's `operation.width`, `.swing`, `.frame`, `.sill`, `.head`; Taşı's `operation.by` and `.at`; Başka
+    /// Değiştir's `operation.width`, `.swing`, `.frame`, `.sill`, `.head`, `.depth`, `.inset`; Taşı's `operation.by` and `.at`; Başka
     /// duvara's `operation.point.x` and `.y`; Kopyala's `operation.offsets[k]` (docs/adr/0341).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::OpeningsOperation as Op;
@@ -1330,6 +1335,8 @@ impl Input for kentos_commands::OpeningsEdit {
                 "operation.frame" => c.frame.as_mut()?.as_mut(),
                 "operation.sill" => c.sill.as_mut()?.as_mut(),
                 "operation.head" => c.head.as_mut()?.as_mut(),
+                "operation.depth" => c.depth.as_mut()?.as_mut(),
+                "operation.inset" => c.inset.as_mut()?.as_mut(),
                 _ => None,
             },
             Op::Move { by, at } => match path {

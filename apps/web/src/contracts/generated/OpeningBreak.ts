@@ -3,4 +3,4 @@
 /**
  * Why an opening is not where its wall says (docs/adr/0341 §3): it stays, drawn from its jambs, until it is fixed.
  */
-export type OpeningBreak = "hostGone" | "offWall" | "overlap";
+export type OpeningBreak = "hostGone" | "offWall" | "overlap" | "tooDeep";

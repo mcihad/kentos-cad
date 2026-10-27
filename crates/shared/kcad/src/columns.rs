@@ -50,7 +50,7 @@
 //! | record | | | |
 //! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch, joins, cleanup) as one JSON object (docs/adr/0339, 0340) |
 //! | space | | | its parts and the rest of its source (seed, method, number, name, usage, arch, height, finishes, broken) as one JSON object (docs/adr/0342) |
-//! | opening | n | place (2n) | the rest of its source (host, at, anchor, width, form, leaves, operation, hand, side, swing, showSwing, frame, sill, head, style, number, broken) as one JSON object (docs/adr/0341) |
+//! | opening | n | place (2n) | the rest of its source (host, at, anchor, width, form, leaves, operation, hand, side, swing, showSwing, frame, sill, head, depth, inset, style, number, broken) as one JSON object (docs/adr/0341, 0719) |
 //! | grid, column, stair, ramp | | | its fields as one JSON object (docs/adr/0343) |
 //! | tag | | | its fields (of, at, content, shape, size, leader, text, anchor, broken) as one JSON object (docs/adr/0344) |
 //! | viewmark | | | its fields (form, points, radius, at, angle, flip, mark, target, size, label, broken) as one JSON object (docs/adr/0345) |

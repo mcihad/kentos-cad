@@ -923,7 +923,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: L kontur, avlu, ıslak hacim deliği, şaft, offset başarısızlığı,
   metraj dahil/harici seçimi ve açık kayıp raporuyla temel CAD'e verme.
 
-### ARCH-ELEM-02 — Niş, baca, tesisat boşluğu [ ]
+### ARCH-ELEM-02 — Niş, baca, tesisat boşluğu [x]
+
+- [x] Bütün madde [ADR0719](../docs/adr/0719-niches-flues-service-holes.md): niş ve baca
+  açıklığın kendi biçimleri (Archicad'in sınırlı açıklığı; yüz duvarın yüzü): niş bir
+  yüzden `depth` içeri, baca duvarın içinde `inset` (yoksa ortada); kalınlığı aşan
+  derinlik `recess_too_deep`, sonradan incelen duvarda `tooDeep`. Boşluk/niş/baca kesme
+  yüksekliğini (1,10 m) kesiyorsa duvarı keser (nişin arkası ve kalan dolgu, bacanın
+  çaprazı; yaylı duvarda merkeze göre yay), kesmiyorsa kesik çizgi; tesisat boşluğu türü.
+  Kotları ayrı ve plan birini kesiyorsa aynı yerde iki açıklık (pencere altı kalorifer
+  nişi). Metrajda niş/baca duvardan düşülmez, derinliği satırda; ölçü dizisi nişi kendi
+  yüzünde ölçer. Boşluk ▾ (Boşluk/Niş/Baca), araç ayarları ve Öznitelikler; KCAD 119.
+  Ortak durumlar (16 geometri, 33+17 komut, 2 ölçü, 2 metraj), testler ve gerçek GUI
+  (`arac-nis-*`, `arac-baca-*`). Evre ve duvar taşıma açıklığın kuralıyla.
 
 - Duvar içinde niş/kısmi oyuk ile tam geçişli boşluk ayrımı; genişlik, derinlik,
   yüz, kot ve gösterim. Mevcut kapı boşluğunu farklı anlamda sessizce kullanma.
@@ -1185,6 +1197,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-ELEM-02 / ADR0719 | Niş, baca ve tesisat boşluğu: açıklığın `niche`/`flue` biçimleri, `depth`/`inset` (KCAD 119), `recess_too_deep`/`tooDeep`; kesme yüksekliği 1,10 m'ye göre kesik ya da kesikli çizim, çözücüde kısmi derinlik kesimi; kotları ayrı açıklıkların aynı yerde durması; metraj ve ölçü dizisi kuralları; Boşluk ▾, araç ayarları, Öznitelikler. Ortak durumlar bağımsız başvurulardan (geometri 41, oluşturma 112, düzenleme 102), çekirdek/etkileşim/uygulama/masaüstü (1348)/KCAD/Python (368)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-UX-04, ARCH-DOC-04 / ADR0718 | Kat planı paftaları: pafta çekirdeği `levels::level_sheets` (katın paftası, ortak zemin ve ölçek, A-101'den numara, alt küme Mimari › Kat planları, paftası olan kat atlanır), `cad.sheets.levels` (`levels_have_sheets`, `level_not_found`, `not_fixed_map`, `bad_drawing_info`, `invalid_options`); Pafta › Yeni ▾ ve CAD'in Çıktı › Pafta › Kat planları, tek adım. 31 ortak durum (Rust, Python), çekirdek/tasarımcı/masaüstü (1347) testleri, bütün ortak durumlar, clippy, gerçek GUI. | [x] Pafta seti alt maddesi; pafta takımının kalanı açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0717 | Kat ver: `cad.levels.assign` (katsızlar ya da verilen mimari nesneler, kilitli atlanır, mahal yeni katında yeniden bulunur, kapanmazsa `arch_space_broken`); Denetim'de kat bulgusunun Düzelt'i etkin katı verir, Kata ver ▾ (Seç ve göster, tek adım); Öznitelikler'de karışık seçimde ortak Kat; ayırıcı kat denetiminde. Ortak durum koşucusunun yığın taşması düzeldi (komut başına çerçeve). 32+41 durum, uygulama/etkileşim/masaüstü (1346)/MCP takımları, clippy, Python, gerçek GUI. | [x] Toplu kat atama alt maddesi |
 | 2026-10-27 | ARCH-UX-04 / ADR0716 | Paftada kat: haritanın kendi Kat'ı ve Alt kat soluk (çekirdek `MapItem.level`, `setViewport.level`, `level_not_found`/`bad_level`, PDF ve masaüstü kâğıdı, ön denetim `map_level_missing`, denetçi); yerinde model düzenleme haritanın katıyla; görünüm penceresinin kapsamı geometrik (soluk kat kenetlenmiyordu). 56 ortak durum (10 yeni), 2+2+1+1 test, etkileşim (771)/pafta çekirdeği/çıktı/tasarımcı takımları, clippy, gerçek GUI. | [x] Pafta katı alt maddesi; toplu kat atama açık |

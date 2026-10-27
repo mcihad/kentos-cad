@@ -1,5 +1,6 @@
 //! An opening's fields beside its wall, place along it, width and jambs (docs/adr/0341 §1), as schema 77 writes
-//! them: one map, each field only when it is not its default, so a file has one way to say an opening.
+//! them: one map, each field only when it is not its default, so a file has one way to say an opening. Schema 119
+//! (docs/adr/0719) adds a niche's and flue's form, `depth` and `inset` and the break `tooDeep`.
 
 use kentos_contracts::{
     OpeningAnchor, OpeningBreak, OpeningFields, OpeningForm, OpeningHand, OpeningOperation, OpeningSide,
@@ -30,6 +31,10 @@ pub(crate) struct OpeningRest {
     pub sill: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub head: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub depth: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -77,6 +82,8 @@ impl OpeningRest {
             frame: f.frame,
             sill: f.sill,
             head: f.head,
+            depth: f.depth,
+            inset: f.inset,
             style: f.style.clone(),
             number: f.number.clone(),
             broken: f.broken,
@@ -99,6 +106,8 @@ impl OpeningRest {
             frame: self.frame,
             sill: self.sill,
             head: self.head,
+            depth: self.depth,
+            inset: self.inset,
             style: self.style,
             number: self.number,
             place,

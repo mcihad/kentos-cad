@@ -56,6 +56,15 @@ sill?: number,
  */
 head?: number, 
 /**
+ * A niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719); none for one that goes
+ * through. Its face is `side`.
+ */
+depth?: number, 
+/**
+ * A flue's distance from its face (`side`) to its cavity, metres; absent: centred in its wall (docs/adr/0719).
+ */
+inset?: number, 
+/**
  * The opening type it was made with, by its id (`builtin_opening_types`).
  */
 style?: string, 

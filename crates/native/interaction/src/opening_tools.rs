@@ -2,8 +2,10 @@
 //! tools say what was clicked and chosen; `cad.openings.create` and `cad.openings.edit` compute and write, one undo
 //! step each, and the plan is the preview.
 //!
-//! - Kapı, Pencere, Boşluk: with the pointer by a wall, the opening the command would put there is drawn; a click
-//!   writes it and the tool stays. Numara (N, docs/adr/0714): Otomatik numbers it after the last numbered opening of
+//! - Kapı, Pencere, Boşluk, Niş, Baca (docs/adr/0719): with the pointer by a wall, the opening the command would put
+//!   there is drawn; a click writes it and the tool stays. A niche or flue takes its face from the side of the wall
+//!   the pointer is on (Yüz, Y), its depth (Derinlik, D), a flue its distance from that face (Yüzden, Z; Ortada:
+//!   centred); a bare opening, a niche or a flue its sill and head (Alt, L; Üst, Ü), which say whether plan cuts it. Numara (N, docs/adr/0714): Otomatik numbers it after the last numbered opening of
 //!   its form (K3 → K4; none yet: K1, P1, B1), a number typed starts there, Yok leaves it unnumbered. Tür (T) the type, Genişlik (E) a width over the type's, Yan (Y) the side it opens
 //!   to (Otomatik: the pointer's side), Menteşe (M) its hinge's end, Uzaklık (U) its near jamb that far from the
 //!   wall's near end (a number; 0 or Esc takes it off), Orta (O) centred on the edge.
@@ -34,6 +36,8 @@ mod placement;
 pub const DOOR_ID: &str = "door";
 pub const WINDOW_ID: &str = "window";
 pub const OPENING_ID: &str = "opening";
+pub const NICHE_ID: &str = "niche";
+pub const FLUE_ID: &str = "flue";
 pub const FLIP_ID: &str = "openingFlip";
 pub const MOVE_ID: &str = "openingMove";
 pub const NUMBER_ID: &str = "openingNumber";
@@ -55,6 +59,8 @@ fn type_icon(
         (OpeningForm::Window, _, Op::Fixed) => "windowFixed",
         (OpeningForm::Window, _, _) => "window",
         (OpeningForm::Opening, _, _) => "wallOpening",
+        (OpeningForm::Niche, _, _) => "wallNiche",
+        (OpeningForm::Flue, _, _) => "wallFlue",
     }
 }
 
@@ -65,6 +71,11 @@ enum Ask {
     Distance,
     /// A type's name, typed after T: words (Space types a space).
     Type,
+    /// A niche's or flue's depth (D), a flue's distance from its face (Z), the sill (L) and the head (Ü).
+    Depth,
+    Inset,
+    Sill,
+    Head,
 }
 
 /// Kapı, Pencere or Boşluk.
@@ -82,6 +93,12 @@ pub struct OpeningTool {
     hand: OpeningHand,
     distance: Option<f64>,
     middle: bool,
+    /// Over the type's: a niche's or flue's depth, a flue's distance from its face (`Some(None)`: centred), the sill
+    /// and the head (docs/adr/0719).
+    depth: Option<f64>,
+    inset: Option<Option<f64>>,
+    sill: Option<f64>,
+    head: Option<f64>,
     ask: Option<Ask>,
     hover: Option<(Slot, Vec2)>,
     /// The opening the plan would write, drawn; or why it would not.
@@ -102,6 +119,10 @@ impl OpeningTool {
             hand: OpeningHand::Start,
             distance: None,
             middle: false,
+            depth: None,
+            inset: None,
+            sill: None,
+            head: None,
             ask: None,
             hover: None,
             drawn: Preview::default(),
@@ -119,22 +140,48 @@ impl OpeningTool {
     pub fn opening() -> Self {
         Self::with(OpeningForm::Opening)
     }
-
-    fn label(&self) -> &'static str {
-        match self.form {
-            OpeningForm::Door => "Kapı",
-            OpeningForm::Window => "Pencere",
-            OpeningForm::Opening => "Boşluk",
+    /// Niş and Baca: unnumbered at first (a niche or flue rarely has a mark; Numara turns it on).
+    pub fn niche() -> Self {
+        Self {
+            numbering: Numbering::Off,
+            ..Self::with(OpeningForm::Niche)
+        }
+    }
+    pub fn flue() -> Self {
+        Self {
+            numbering: Numbering::Off,
+            ..Self::with(OpeningForm::Flue)
         }
     }
 
-    /// The form's first number's prefix: Kapı K, Pencere P, Boşluk B.
+    fn label(&self) -> &'static str {
+        self.form.label()
+    }
+
+    /// The form's first number's prefix: Kapı K, Pencere P, Boşluk B, Niş N, Baca BC.
     fn prefix(&self) -> &'static str {
         match self.form {
             OpeningForm::Door => "K",
             OpeningForm::Window => "P",
             OpeningForm::Opening => "B",
+            OpeningForm::Niche => "N",
+            OpeningForm::Flue => "BC",
         }
+    }
+
+    /// The type chosen, or the form's first.
+    fn kind_def(&self) -> Option<kentos_commands::OpeningTypeDef> {
+        let all = builtin_opening_types();
+        self.kind
+            .as_deref()
+            .and_then(|k| all.iter().find(|t| t.id == k))
+            .or_else(|| all.iter().find(|t| t.form == self.form))
+            .cloned()
+    }
+
+    /// Whether Yüz, Alt and Üst apply: a form plan cuts by its heights (docs/adr/0719 §2).
+    fn by_height(&self) -> bool {
+        self.form.cut_by_height()
     }
 
     /// The number the next opening takes (docs/adr/0714): none with Yok; the one typed, else after the last numbered
@@ -233,6 +280,10 @@ impl OpeningTool {
                 width: span.is_none().then_some(self.width).flatten(),
                 hand: Some(self.hand),
                 side: self.side,
+                sill: self.sill,
+                head: self.head,
+                depth: self.depth.filter(|_| self.form.is_recess()),
+                inset: self.inset.flatten().filter(|_| self.form == OpeningForm::Flue),
                 // Numara (docs/adr/0714), explicit in the input (CMD-07).
                 number: self.next_number(cx.doc),
                 ..NewOpening::default()
@@ -304,6 +355,61 @@ impl OpeningTool {
             Some(OpeningSide::Right) => "Sağ",
         }
     }
+
+    /// Derinlik's words: the one typed, else the type's.
+    fn depth_shown(&self) -> String {
+        let f = &self.placement.format;
+        match self.depth.or_else(|| self.kind_def().and_then(|t| t.depth)) {
+            Some(d) if self.depth.is_some() => f.length(d),
+            Some(d) => format!("{} · türün", f.length(d)),
+            None => "Yok".into(),
+        }
+    }
+
+    /// Yüzden's words: Ortada, or the distance typed.
+    fn inset_shown(&self) -> String {
+        match self.inset.flatten() {
+            Some(v) => self.placement.format.length(v),
+            None => "Ortada".into(),
+        }
+    }
+
+    /// Alt's (`sill`) or Üst's words: the one typed, else the type's (Döşeme, Tam boy when it has none).
+    fn height_shown(&self, sill: bool) -> String {
+        let f = &self.placement.format;
+        let own = if sill { self.sill } else { self.head };
+        let typed = self.kind_def().and_then(|t| if sill { t.sill } else { t.head });
+        match (own, typed) {
+            (Some(v), _) => f.length(v),
+            (None, Some(v)) => format!("{} · türün", f.length(v)),
+            (None, None) if sill => "Döşeme".into(),
+            (None, None) => "Tam boy".into(),
+        }
+    }
+
+    /// A depth, inset, sill or head typed: `false` (and said why) when it cannot be.
+    fn take_height(&mut self, ask: Ask, v: f64, cx: &mut Context<'_>) -> bool {
+        match ask {
+            Ask::Depth if v > 0.0 && v <= kentos_commands::MAX_RECESS_DEPTH => self.depth = Some(v),
+            Ask::Depth => {
+                cx.say(Level::Warn, "Derinlik sıfırdan büyük, en çok 10 m olmalı.");
+                return false;
+            }
+            Ask::Inset if v > 0.0 && v <= kentos_commands::MAX_RECESS_DEPTH => self.inset = Some(Some(v)),
+            Ask::Inset => {
+                cx.say(Level::Warn, "Yüzden uzaklık sıfırdan büyük olmalı; ortada için boş bırakın.");
+                return false;
+            }
+            Ask::Sill | Ask::Head if v.abs() > 1000.0 => {
+                cx.say(Level::Warn, "Kot en çok 1000 m olabilir.");
+                return false;
+            }
+            Ask::Sill => self.sill = Some(v),
+            Ask::Head => self.head = Some(v),
+            _ => return false,
+        }
+        true
+    }
 }
 
 impl Tool for OpeningTool {
@@ -317,6 +423,8 @@ impl Tool for OpeningTool {
             OpeningForm::Door => DOOR_ID,
             OpeningForm::Window => WINDOW_ID,
             OpeningForm::Opening => OPENING_ID,
+            OpeningForm::Niche => NICHE_ID,
+            OpeningForm::Flue => FLUE_ID,
         }
     }
 
@@ -361,6 +469,20 @@ impl Tool for OpeningTool {
                 )
                 .option("Geri", "G");
             }
+            Some(Ask::Depth) => {
+                return Prompt::new(self.label(), "duvarın içine ne kadar girdiğini yazın")
+                    .option("Geri", "G");
+            }
+            Some(Ask::Inset) => {
+                return Prompt::new(self.label(), "bacanın yüzden uzaklığını yazın (boş: ortada)")
+                    .option("Geri", "G");
+            }
+            Some(Ask::Sill) => {
+                return Prompt::new(self.label(), "alt kotunu yazın (döşemeden)").option("Geri", "G");
+            }
+            Some(Ask::Head) => {
+                return Prompt::new(self.label(), "üst kotunu yazın (döşemeden)").option("Geri", "G");
+            }
             None => {}
         }
         let note = if self.placement.two_points {
@@ -383,6 +505,19 @@ impl Tool for OpeningTool {
                 self.width
                     .map_or_else(|| "Türün".to_owned(), |w| self.placement.format.length(w)),
             );
+        }
+        if self.form.is_recess() {
+            p = p
+                .option_with("Derinlik", "D", self.depth_shown())
+                .option_with("Yüz", "Y", self.side_label());
+            if self.form == OpeningForm::Flue {
+                p = p.option_with("Yüzden", "Z", self.inset_shown());
+            }
+        }
+        if self.by_height() {
+            p = p
+                .option_with("Alt", "L", self.height_shown(true))
+                .option_with("Üst", "Ü", self.height_shown(false));
         }
         if self.form == OpeningForm::Door {
             p = p.option_with("Yan", "Y", self.side_label()).option_with(
@@ -530,11 +665,22 @@ impl Tool for OpeningTool {
                 self.see(cx);
                 return true;
             }
+            if ask == Ask::Inset && js_trim(text).is_empty() {
+                self.inset = Some(None);
+                self.ask = None;
+                self.see(cx);
+                return true;
+            }
             let Some(v) = cx.typed_length(text) else {
                 cx.say(Level::Warn, "Bir uzunluk yazın.");
                 return true;
             };
             match ask {
+                Ask::Depth | Ask::Inset | Ask::Sill | Ask::Head => {
+                    if !self.take_height(ask, v, cx) {
+                        return true;
+                    }
+                }
                 Ask::Width if v > 0.0 && v <= 100.0 => self.width = Some(v),
                 Ask::Width => cx.say(
                     Level::Warn,
@@ -553,7 +699,11 @@ impl Tool for OpeningTool {
             "E" => self.ask = Some(Ask::Width),
             "U" => self.ask = Some(Ask::Distance),
             "O" => self.middle = !self.middle,
-            "Y" if self.form == OpeningForm::Door => {
+            "D" if self.form.is_recess() => self.ask = Some(Ask::Depth),
+            "Z" if self.form == OpeningForm::Flue => self.ask = Some(Ask::Inset),
+            "L" if self.by_height() => self.ask = Some(Ask::Sill),
+            "Ü" if self.by_height() => self.ask = Some(Ask::Head),
+            "Y" if self.form == OpeningForm::Door || self.form.is_recess() => {
                 self.side = match self.side {
                     None => Some(OpeningSide::Left),
                     Some(OpeningSide::Left) => Some(OpeningSide::Right),
@@ -605,7 +755,7 @@ impl Tool for OpeningTool {
                     })
                     .collect()
             }
-            "Y" if self.form == OpeningForm::Door => [
+            "Y" if self.form == OpeningForm::Door || self.form.is_recess() => [
                 (None, "Otomatik", "openingSideAuto"),
                 (Some(OpeningSide::Left), "Sol", "openingSideLeft"),
                 (Some(OpeningSide::Right), "Sağ", "openingSideRight"),

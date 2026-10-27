@@ -584,6 +584,21 @@ struct PendingTee {
     listed: bool,
 }
 
+/// How close two distances across a wall are one, relative to its faces' distances from its path.
+const CUT_EPS: f64 = 1e-9;
+
+/// An opening's hole in a wall (docs/adr/0719 §3): its jambs, the span it leaves out on each of the wall's lines, its
+/// interval along the base line, and how far across the wall it goes, as distances to the path's left (`lo` to `hi`;
+/// the right face to the left one goes through).
+struct Cut {
+    jambs: [Vec2; 4],
+    spans: Vec<Span>,
+    s0: f64,
+    s1: f64,
+    lo: f64,
+    hi: f64,
+}
+
 /// A tee made: what its gaps need.
 struct Tee {
     joiner: usize,
@@ -611,8 +626,8 @@ struct Solver<'a> {
     crosses: Vec<Cross>,
     joints: Vec<Joint>,
     issues: Vec<Issue>,
-    /// Each wall's openings' intervals along its base line (docs/adr/0341 §2).
-    openings: Vec<Vec<(f64, f64)>>,
+    /// Each wall's openings' holes along its base line (docs/adr/0341 §2, 0719 §3).
+    openings: Vec<Vec<crate::geom::opening::Hole>>,
 }
 
 /// The wall's base line as a path.
@@ -1249,9 +1264,9 @@ impl<'a> Solver<'a> {
         }
     }
 
-    /// Wall `i`'s openings on one edge of its base line within its ends (docs/adr/0341 §2): each its jambs and, on
-    /// each of the wall's lines, the span it leaves out.
-    fn opening_spans(&self, i: usize, lines: &[Line]) -> Vec<([Vec2; 4], Vec<Span>)> {
+    /// Wall `i`'s openings on one edge of its base line within its ends (docs/adr/0341 §2, 0719 §3): each its jambs,
+    /// the span it leaves out on each of the wall's lines and how far across the wall it goes.
+    fn opening_cuts(&self, i: usize, lines: &[Line]) -> Vec<Cut> {
         let Some(list) = self.openings.get(i).filter(|l| !l.is_empty()) else {
             return Vec::new();
         };
@@ -1260,9 +1275,12 @@ impl<'a> Solver<'a> {
         };
         let spec = self.spec(i);
         let offsets = wall::boundaries(spec);
+        let left = wall::left_face(spec);
+        let right = left - spec.width;
         let paths: Vec<Option<(Path, Shape)>> = lines.iter().map(|l| line_path(l, spec.closed)).collect();
         list.iter()
-            .filter_map(|&(s0, s1)| {
+            .filter_map(|h| {
+                let (s0, s1) = (h.s0, h.s1);
                 let jambs = crate::geom::opening::jambs(&base, spec, s0, s1)?;
                 let spans = offsets
                     .iter()
@@ -1277,9 +1295,53 @@ impl<'a> Solver<'a> {
                         })
                     })
                     .collect::<Option<Vec<Span>>>()?;
-                Some((jambs, spans))
+                // Across the wall, as distances to the path's left: the left face down to the right one.
+                let (lo, hi) = match h.recess {
+                    None => (right, left),
+                    Some(r) => {
+                        let (near, far) = r.across(spec.width);
+                        if r.right {
+                            (right + near, right + far)
+                        } else {
+                            (left - far, left - near)
+                        }
+                    }
+                };
+                Some(Cut {
+                    jambs,
+                    spans,
+                    s0,
+                    s1,
+                    lo,
+                    hi,
+                })
             })
             .collect()
+    }
+
+    /// The stretch of wall `i`'s line `d` to the path's left between `s0` and `s1` along its base line.
+    fn stretch(&self, i: usize, base: &Path, s0: f64, s1: f64, d: f64) -> Option<Line> {
+        let w = &self.walls[i];
+        let closed = w.spec.closed;
+        let l = wall::line_at(w.pts, w.bulges, closed, d).ok()?;
+        let (lp, shape) = line_path(&l, closed)?;
+        let on = |s: f64| nearest_s(&lp, crate::geom::opening::beside(base, s, d));
+        let span = Span {
+            a: on(s0),
+            b: on(s1),
+            mid: on((s0 + s1) / 2.0),
+        };
+        let (a, b) = *spans(&lp, &[span]).first()?;
+        sub_line(&lp, &shape, a, b)
+    }
+
+    /// The wall between its lines `upper` and `lower` (distances to the path's left) on `[s0, s1]`, as a body.
+    fn between(&self, i: usize, base: &Path, s0: f64, s1: f64, upper: f64, lower: f64) -> Option<Body> {
+        let a = self.stretch(i, base, s0, s1, upper)?;
+        let b = self.stretch(i, base, s0, s1, lower)?;
+        let mut ring = a.outline(false);
+        ring.extend(b.outline(false).into_iter().rev());
+        (ring.len() >= 3).then_some((ring, None))
     }
 
     fn drawn(&self, i: usize) -> Option<Drawn> {
@@ -1287,10 +1349,20 @@ impl<'a> Solver<'a> {
         let spec = self.spec(i);
         let closed = spec.closed;
         let mut d = wall::drawn_of(lines, spec);
-        let holes = self.opening_spans(i, lines);
+        let holes = self.opening_cuts(i, lines);
+        let offsets = wall::boundaries(spec);
+        let (left, right) = (wall::left_face(spec), wall::left_face(spec) - spec.width);
+        let eps = CUT_EPS * js_max(1.0, js_max(left.abs(), right.abs()));
+        // Whether a hole leaves out the line `d` to the path's left: one inside it, or a face it opens on; a line it
+        // only touches inside the wall stays (a niche's back on a component's boundary).
+        let takes = |h: &Cut, d: f64| {
+            (d > h.lo + eps && d < h.hi - eps)
+                || ((d - left).abs() <= eps && h.hi >= left - eps)
+                || ((d - right).abs() <= eps && h.lo <= right + eps)
+        };
         let gaps_of = |k: usize| -> Vec<Span> {
             let mut g = self.gaps[i][k].clone();
-            g.extend(holes.iter().map(|(_, spans)| spans[k]));
+            g.extend(holes.iter().filter(|h| takes(h, offsets[k])).map(|h| h.spans[k]));
             g
         };
         d.lines = lines
@@ -1309,22 +1381,78 @@ impl<'a> Solver<'a> {
                     .push((left.pts[left.pts.len() - 1], right.pts[right.pts.len() - 1]));
             }
         }
+        let base = if holes.is_empty() {
+            None
+        } else {
+            base_path(&self.walls[i])
+        };
+        // A band between `upper` and `lower` (distances to the path's left) less the joins' cuts and the holes it
+        // meets: each hole cut out between its jambs, what it leaves of the band's thickness put back between them.
+        let band = |a: &Line, b: &Line, ka: usize, kb: usize, upper: f64, lower: f64, extra: &[(Span, Span)]| {
+            let mut cuts = extra.to_vec();
+            let mut back = Vec::new();
+            for h in &holes {
+                let (top, bottom) = (js_min(h.hi, upper), js_max(h.lo, lower));
+                if top - bottom <= eps {
+                    continue;
+                }
+                cuts.push((h.spans[ka], h.spans[kb]));
+                let Some(base) = &base else { continue };
+                if upper - top > eps {
+                    back.extend(self.between(i, base, h.s0, h.s1, upper, top));
+                }
+                if bottom - lower > eps {
+                    back.extend(self.between(i, base, h.s0, h.s1, bottom, lower));
+                }
+            }
+            let mut out = bands_between(a, b, closed, &cuts);
+            out.extend(back);
+            out
+        };
         if !d.bands.is_empty() {
             d.bands = (0..d.bands.len())
                 .map(|c| {
-                    let mut cuts = self.cuts[i][c].clone();
-                    cuts.extend(holes.iter().map(|(_, spans)| (spans[c], spans[c + 1])));
-                    bands_between(&lines[c], &lines[c + 1], closed, &cuts)
+                    band(
+                        &lines[c],
+                        &lines[c + 1],
+                        c,
+                        c + 1,
+                        offsets[c],
+                        offsets[c + 1],
+                        &self.cuts[i][c],
+                    )
                 })
                 .collect();
         }
-        if !holes.is_empty() {
-            let last = lines.len() - 1;
-            let cuts: Vec<(Span, Span)> = holes.iter().map(|(_, spans)| (spans[0], spans[last])).collect();
-            d.fill = bands_between(&lines[0], &lines[last], closed, &cuts);
-            for (j, _) in &holes {
-                d.caps.push((j[0], j[1]));
-                d.caps.push((j[2], j[3]));
+        if holes.is_empty() {
+            return Some(d);
+        }
+        let last = lines.len() - 1;
+        d.fill = band(&lines[0], &lines[last], 0, last, left, right, &[]);
+        let Some(base) = &base else {
+            return Some(d);
+        };
+        for h in &holes {
+            if h.lo <= right + eps && h.hi >= left - eps {
+                d.caps.push((h.jambs[0], h.jambs[1]));
+                d.caps.push((h.jambs[2], h.jambs[3]));
+                continue;
+            }
+            // Its jambs as far across as it goes, and its sides inside the wall where no line of the wall runs.
+            for s in [h.s0, h.s1] {
+                d.caps.push((
+                    crate::geom::opening::beside(base, s, h.hi),
+                    crate::geom::opening::beside(base, s, h.lo),
+                ));
+            }
+            for side in [h.hi, h.lo] {
+                let inside = side < left - eps && side > right + eps;
+                if inside && !offsets.iter().any(|&o| (o - side).abs() <= eps) {
+                    d.recesses.extend(
+                        self.stretch(i, base, h.s0, h.s1, side)
+                            .map(|line| Stroke { line, closed: false }),
+                    );
+                }
             }
         }
         Some(d)
@@ -1344,9 +1472,9 @@ fn level(spec: &Spec) -> Option<&str> {
     }
 }
 
-/// [`solve`] with each wall's openings' intervals along its base line (docs/adr/0341 §2; a missing list: none): its
-/// lines, bands and fill cut out between each opening's jambs and the jambs drawn.
-pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<(f64, f64)>], only: Option<&[usize]>) -> Solved {
+/// [`solve`] with each wall's openings' holes along its base line (docs/adr/0341 §2, 0719 §3; a missing list: none):
+/// its lines, bands and fill cut out between each opening's jambs as far across as it goes, and the jambs drawn.
+pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<crate::geom::opening::Hole>], only: Option<&[usize]>) -> Solved {
     let n = walls.len();
     // A level is a semantic identity, not its elevation: equal elevations may
     // belong to different storeys. Unassigned walls retain their legacy group.

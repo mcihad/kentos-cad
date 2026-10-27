@@ -52,6 +52,8 @@ pub struct Measurement {
     pub start_clear: f64,
     pub end_clear: f64,
     pub width: f64,
+    /// Its wall's thickness (docs/adr/0719: what a niche's depth is told against).
+    pub thickness: f64,
 }
 pub fn measure(doc: &Document, opening: &OpeningFields) -> Option<Measurement> {
     let line = doc.wall_line_of(&opening.host)?;
@@ -70,5 +72,6 @@ pub fn measure(doc: &Document, opening: &OpeningFields) -> Option<Measurement> {
         start_clear: lo - line.path.cum[i],
         end_clear: line.path.cum[i] + edge_length(&line.path.edges[i]) - hi,
         width: opening.width,
+        thickness: line.spec.width,
     })
 }

@@ -588,6 +588,9 @@ pub struct Drawn {
     pub bands: Vec<Vec<Body>>,
     /// The body between the faces, its pieces.
     pub fill: Vec<Body>,
+    /// A niche's back and a flue's sides inside the wall where none of its lines runs (docs/adr/0719 §3), drawn as its
+    /// faces are.
+    pub recesses: Vec<Stroke>,
 }
 
 /// A wall's drawing on its own, or why it cannot be drawn.
@@ -625,6 +628,7 @@ pub fn drawn_of(all: &[Line], spec: &Spec) -> Drawn {
         caps,
         bands,
         fill: vec![band(left, right, closed)],
+        recesses: Vec::new(),
     }
 }
 
@@ -686,6 +690,9 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     }
     for &(a, b) in &d.caps {
         out.push(piece(Shape::Line { a, b }, None, None));
+    }
+    for st in &d.recesses {
+        out.push(piece(st.line.shape(st.closed), None, None));
     }
     for k in 1..comps.len() {
         if shown(&comps[k - 1]) && shown(&comps[k]) {

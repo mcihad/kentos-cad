@@ -95,6 +95,9 @@ pub const TOOLS: &[&str] = &[
     opening_tools::DOOR_ID,
     opening_tools::WINDOW_ID,
     opening_tools::OPENING_ID,
+    // Niş and Baca (docs/adr/0719).
+    opening_tools::NICHE_ID,
+    opening_tools::FLUE_ID,
     opening_tools::FLIP_ID,
     opening_tools::MOVE_ID,
     opening_tools::NUMBER_ID,
@@ -482,6 +485,8 @@ impl Session {
             opening_tools::DOOR_ID => Box::new(opening_tools::OpeningTool::door()),
             opening_tools::WINDOW_ID => Box::new(opening_tools::OpeningTool::window()),
             opening_tools::OPENING_ID => Box::new(opening_tools::OpeningTool::opening()),
+            opening_tools::NICHE_ID => Box::new(opening_tools::OpeningTool::niche()),
+            opening_tools::FLUE_ID => Box::new(opening_tools::OpeningTool::flue()),
             opening_tools::FLIP_ID => Box::new(opening_tools::OpeningEditTool::flip()),
             opening_tools::MOVE_ID => Box::new(opening_tools::OpeningEditTool::mover()),
             opening_tools::NUMBER_ID => Box::new(opening_tools::OpeningEditTool::number()),

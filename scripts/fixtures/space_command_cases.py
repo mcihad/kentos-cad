@@ -109,7 +109,7 @@ class Drawing:
     def __init__(self):
         self.walls = {i: copy.deepcopy(e) for i, e in BY_ID.items() if e["kind"] == "wall"}
         self.spaces = {}      # id → (layer, fields with "parts" as exact rings, entity extras)
-        self.openings = {}    # id → (host wall id, width, head, sill, form, style)
+        self.openings = {}    # id → (host wall id, width, head, sill, form, style, depth)
         self.next = NEW
         self.locked = set()
 
@@ -375,17 +375,22 @@ def quantities(d, inp):
                 and (inp.get("levels") is None or arch.get("level") in inp["levels"])
                 and (inp.get("phases") is None or arch.get("phase") in inp["phases"]))
     on_wall, openings = {}, []
-    for oid, (host, width, head, sill, form, style) in sorted(d.openings.items()):
+    recess = ("niche", "flue")
+    recessed = set()
+    for oid, (host, width, head, sill, form, style, depth) in sorted(d.openings.items()):
         h = None if head is None else head - (sill or 0.0)
         a = None if h is None else width * h
         wall_ok = host in d.walls
-        if wall_ok and a is not None:
+        # A niche or flue does not go through: its wall's net face keeps it (ADR 0719 §4).
+        if wall_ok and a is not None and form not in recess:
             on_wall.setdefault(host, []).append((oid, a))
+        if wall_ok and form in recess:
+            recessed.add(host)
         arch = d.walls[host].get("arch", {}) if wall_ok else {}
         if not takes("kapi", arch) or inp.get("usages") is not None:
             continue
         row = {"uid": uid_of(oid), "form": form, "style": style, "wall": uid_of(host) if wall_ok else None,
-               "width": width, "height": h, "area": a}
+               "width": width, "height": h, "area": a, "depth": depth if form in recess else None}
         openings.append({k: v for k, v in row.items() if v is not None})
     spaces_rows, walls_rows = [], []
     for i in d.ids():
@@ -428,12 +433,14 @@ def quantities(d, inp):
             row = {"uid": uid_of(i), "level": arch.get("level"), "length": length, "width": w["width"], "height": height,
                    "grossArea": gross, "openingsArea": oa, "netArea": net,
                    "volume": None if net is None else net * w["width"], "openings": [uid_of(o) for o, _ in ops] or None,
-                   "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"}
+                   "rule": ("yüzey: taban çizgisinin uzunluğu × yükseklik, duvarı geçen açıklıkların alanı düşülür (niş ve baca düşülmez); hacim: net yüzey × kalınlık"
+                            if i in recessed else "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık")}
             walls_rows.append({k: v for k, v in row.items() if v is not None})
     totals = {"spaceArea": sum((r["area"] for r in spaces_rows if not r.get("void")), 0.0),
               "wallLength": sum((r["length"] for r in walls_rows), 0.0),
               "wallNetArea": sum((r["netArea"] for r in walls_rows if "netArea" in r), 0.0),
-              "openings": len(openings), "openingArea": sum((r["area"] for r in openings if "area" in r), 0.0)}
+              "openings": len(openings),
+              "openingArea": sum((r["area"] for r in openings if "area" in r and r["form"] not in recess), 0.0)}
     void_area = sum((r["area"] for r in spaces_rows if r.get("void")), 0.0)
     if void_area:
         # The voids' area apart (docs/adr/0708); none: the key is not written.
@@ -871,9 +878,15 @@ def quantities_cases():
         o = {"host": uid_of(host), "at": at}
         if kind == "window":
             o["type"] = "Pencere 120"
-            d.openings[d.next] = (host, 1.2, 2.2, 0.9, "window", "kentos-pencere-120")
+            d.openings[d.next] = (host, 1.2, 2.2, 0.9, "window", "kentos-pencere-120", None)
+        elif kind == "niche":
+            o["type"] = "Niş 60"
+            d.openings[d.next] = (host, 0.6, 1.5, 0.9, "niche", "kentos-nis-60", 0.1)
+        elif kind == "flue":
+            o["form"], o["depth"] = "flue", 0.1
+            d.openings[d.next] = (host, 0.2, None, None, "flue", "kentos-baca-20", 0.1)
         else:
-            d.openings[d.next] = (host, 0.9, 2.1, None, "door", "kentos-kapi-90")
+            d.openings[d.next] = (host, 0.9, 2.1, None, "door", "kentos-kapi-90", None)
         d.next += 1
         return {"op": "execute", "command": "cad.openings.create", "input": {"layerId": "kapi", "openings": [o]},
                 "result": {"status": "completed", "output": "$any", "warnings": "$any"}, "expect": {"revision": "changed"}}
@@ -889,6 +902,11 @@ def quantities_cases():
           [made, opening(d, 5, 2.5), opening(d, 1, 6.5), quant_step(d, {"phases": ["new"]})])
     d, made = drawn()
     c.add("kullanım süzgecinde açıklık yok", [made, opening(d, 1, 2.0), quant_step(d, {"usages": ["Oturma"]})])
+    d, made = drawn()
+    c.add("niş duvarın net yüzeyinden düşülmez; satırında derinliği, toplam açıklık alanında yok",
+          [made, opening(d, 1, 2.0), opening(d, 1, 6.0, "niche"), quant_step(d)])
+    d, made = drawn()
+    c.add("baca: yüksekliksiz, alansız; derinliği satırında", [made, opening(d, 3, 6.0, "flue"), quant_step(d)])
     d, made = drawn()
     c.add("plan aynı cevabı verir, çizim değişmez", [made, quant_step(d, op="plan")])
     d = Drawing()

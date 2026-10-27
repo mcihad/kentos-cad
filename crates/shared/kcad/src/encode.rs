@@ -1976,6 +1976,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 119 (docs/adr/0719): a niche or flue, an opening too deep for its wall or a schedule of niches (of the
+    // drawing or a block).
+    let recessed = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_recesses);
+    if recessed(objs) || doc.blocks.iter().any(|b| recessed(Objs::Plain(&b.entities))) {
+        return crate::SCHEMA_WITH_RECESSES;
+    }
     // Schema 118 (docs/adr/0711): a dimension (of the drawing or of a block) whose references follow a cut.
     let crossed = |list: Objs<'_>| {
         list.iter().any(|e| {

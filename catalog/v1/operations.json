@@ -1814,6 +1814,20 @@
       ],
       "note": "Boşluk biçimiyle aynı komut (ADR 0341 §5)."
     },
+    "tool.niche": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.create"
+      ],
+      "note": "Niş biçimiyle aynı komut; yüz imlecin yanı, derinlik açık (ADR 0719)."
+    },
+    "tool.flue": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.create"
+      ],
+      "note": "Baca biçimiyle aynı komut; derinlik ve yüzden uzaklık açık (ADR 0719)."
+    },
     "tool.openingFlip": {
       "level": "semantic",
       "via": [

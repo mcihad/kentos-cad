@@ -59,7 +59,7 @@ def row_geometry(d,spec,*,existing=None):
     part=0 if face=='left' else 1
     ends=[(0.,line[0],ref(WALL,0,part)),(length,line[1],ref(WALL,1,part))];nodes=ends.copy()
     for uid,e in zip(d['uids'],d['entities']):
-        if e['kind']!='opening':continue
+        if e['kind']!='opening' or not on_face(e,face):continue
         if spec.get('openings','ends')=='centers':
             p=point(sum(q['x'] for q in e['place'])/4,sum(q['y'] for q in e['place'])/4);nodes.append(((p['x']-line[0]['x'])*u[0]+(p['y']-line[0]['y'])*u[1],p,center(uid)))
         else:
@@ -252,6 +252,13 @@ def query_cases():
 ROOM='0192f5a1-6000-7000-8000-000000000101'
 DOOR='0192f5a1-6000-7000-8000-000000000102'
 WINDOW='0192f5a1-6000-7000-8000-000000000103'
+NICHE='0192f5a1-6000-7000-8000-000000000104'
+FLUE='0192f5a1-6000-7000-8000-000000000105'
+
+def on_face(e,face):
+    """Whether an opening shows on the wall's `face` (ADR 0719 §4): a flue on none, a niche on its own only."""
+    if e.get('form')=='flue':return False
+    return e.get('form')!='niche' or e.get('side','left')==face
 
 def unit(a,b):
     dx=b['x']-a['x'];dy=b['y']-a['y'];l=math.hypot(dx,dy);return (dx/l,dy/l),l
@@ -285,10 +292,10 @@ def walled(pts,closed=True,width=.25,openings=(),bulges=None):
     d['layers'] += [layer('hidden','Gizli',False),layer('locked','Kilitli',True,True),layer('group','Grup',kind='group')]
     n=len(pts);start=[0.]
     for k in range(n if closed else n-1):start.append(start[-1]+unit(pts[k],pts[(k+1)%n])[1])
-    for i,(edge,c,ow,uid,form) in enumerate(openings):
+    for i,(edge,c,ow,uid,form,*extra) in enumerate(openings):
         (ux,uy),_=unit(pts[edge],pts[(edge+1)%n]);nx,ny=-uy,ux;v=pts[edge];t=width/2
         place=[point(v['x']+ux*a+nx*o,v['y']+uy*a+ny*o) for a,o in [(c-ow/2,t),(c-ow/2,-t),(c+ow/2,t),(c+ow/2,-t)]]
-        d['entities'].append(dict(kind='opening',id=2+i,layerId='0',attrs={},host=ROOM,at=start[edge]+c,width=ow,form=form,place=place))
+        d['entities'].append(dict(kind='opening',id=2+i,layerId='0',attrs={},host=ROOM,at=start[edge]+c,width=ow,form=form,**(extra[0] if extra else {}),place=place))
         d['uids'].append(uid)
     return d
 
@@ -300,7 +307,7 @@ def edge_geometry(d,edge,face,at,*,rows=('openings','overall'),mode='ends',gap_m
     along=lambda p:(p['x']-a['x'])*ux+(p['y']-a['y'])*uy
     ends=[(0.,a,ref(ROOM,edge,part)),(length,b,ref(ROOM,(edge+1)%n,part))];nodes=ends.copy()
     for uid,e in zip(d['uids'],d['entities']):
-        if e['kind']!='opening':continue
+        if e['kind']!='opening' or not on_face(e,face):continue
         mid=point(sum(q['x'] for q in e['place'])/4,sum(q['y'] for q in e['place'])/4)
         if not -1e-9<=along(mid)<=length+1e-9 or abs((mid['x']-a['x'])*nx+(mid['y']-a['y'])*ny)>t+1e-9:continue
         if mode=='centers':nodes.append((along(mid),mid,center(uid)))
@@ -363,6 +370,11 @@ def edge_cases():
     d=walled(ell,closed=False,openings=((1,2.,.9,DOOR,'door'),))
     plan_case('açık L duvarın ikinci kenarı, gönyeli köşeden',d,dict(layerId='0',wall=ROOM,edge=1,face='right',at=point(7,2)),1,'right')
     plan_case('açık L duvarın ilk kenarı, iç köşeye kadar',d,dict(layerId='0',wall=ROOM,edge=0,face='left',at=point(3,1)),0,'left')
+    # ADR 0719 §4: a niche on its own face only, a flue on none.
+    nf=((0,2.,1.,DOOR,'door'),(0,4.5,.6,NICHE,'niche',dict(operation='fixed',side='right',depth=.1)),(0,6.5,.2,FLUE,'flue',dict(operation='fixed',depth=.1)))
+    d=walled(room,openings=nf)
+    plan_case('niş kendi yüzünde ölçülür, baca ölçülmez (dış yüz)',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=point(4,-1)),0,'right')
+    plan_case('öbür yüzün nişi ve baca ölçülmez (iç yüz)',d,dict(layerId='0',wall=ROOM,edge=0,face='left',at=point(4,1)),0,'left')
     # Refusals: which edge, an edge not there, an arc edge.
     d=walled(room,openings=openings)
     out.append(case('Ret: çok kenarlı duvarda kenar verilmedi',d,step('plan',dict(layerId='0',wall=ROOM,at=point(4,-1)),error('invalid_dimension_set','Duvarın 4 kenarı var; ölçülecek kenarı (edge) verin ya da bütün kenarları (around) seçin.','edge'),state(d))))

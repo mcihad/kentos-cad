@@ -1372,8 +1372,25 @@
         "size": "large"
        },
        {
-        "command": "tool.opening",
-        "size": "small"
+        "key": "archOpenings",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.opening",
+          "title": "Boşluk",
+          "label": "Boşluk"
+         },
+         {
+          "command": "tool.niche",
+          "title": "Boşluk",
+          "label": "Niş"
+         },
+         {
+          "command": "tool.flue",
+          "title": "Boşluk",
+          "label": "Baca"
+         }
+        ]
        },
        {
         "command": "tool.column",
@@ -5362,8 +5379,25 @@
        "size": "small"
       },
       {
-       "command": "tool.opening",
-       "size": "small"
+       "key": "archOpenings",
+       "size": "small",
+       "split": [
+        {
+         "command": "tool.opening",
+         "title": "Boşluk",
+         "label": "Boşluk"
+        },
+        {
+         "command": "tool.niche",
+         "title": "Boşluk",
+         "label": "Niş"
+        },
+        {
+         "command": "tool.flue",
+         "title": "Boşluk",
+         "label": "Baca"
+        }
+       ]
       },
       {
        "command": "tool.tag",

@@ -2227,6 +2227,18 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    def recessed(es):
+        for e in es:
+            if e["kind"] == "opening" and (e.get("form") in ("niche", "flue") or "depth" in e or "inset" in e
+                                           or e.get("broken") == "tooDeep"):
+                return True
+            src = (e.get("source") or {}) if e["kind"] == "table" else {}
+            if src.get("kind") == "schedule" and any(f in ("niche", "flue") for f in (src.get("filter") or {}).get("forms", [])):
+                return True
+        return False
+    if recessed(entities) or any(recessed(b["entities"]) for b in blocks or []):
+        # A niche, a flue, an opening too deep for its wall, a schedule of niches (docs/adr/0719).
+        return 119
     crossed = lambda es: any(e["kind"] == "dimension" and e.get("refs", {}).get("rule") == "cross" for e in es)  # noqa: E731
     if crossed(entities) or any(crossed(b["entities"]) for b in blocks or []):
         # A dimension along a cut (docs/adr/0711).
@@ -2867,7 +2879,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-119.kcad"] = container(root(cmap(parts), version=uint(119)))
+    files["schema-version-120.kcad"] = container(root(cmap(parts), version=uint(120)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4907,6 +4919,12 @@ def build():
     assert cp.count(b"\x67version\x18\x76") == 1
     out["dimension-cross.kcad"] = container(cp)
     out["broken/dimension-cross-in-schema-117.kcad"] = container(cp.replace(b"\x67version\x18\x76", b"\x67version\x18\x75"))
+    # Schema 119 (docs/adr/0719): a niche, a flue and a service hole.
+    recesses = load("recesses.json")
+    np_ = document(recesses)
+    assert np_.count(b"\x67version\x18\x77") == 1
+    out["recesses.kcad"] = container(np_)
+    out["broken/recesses-in-schema-118.kcad"] = container(np_.replace(b"\x67version\x18\x77", b"\x67version\x18\x76"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

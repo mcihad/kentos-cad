@@ -1658,6 +1658,8 @@ codes! {
     OPENINGS_OVERLAP = "openings_overlap", Failed, false, "Açıklık aynı duvardaki başka bir açıklığa biniyor. Açıklığı kaydırın ya da daraltın.";
     /// An opening whose wall is gone, moved along a wall it has not.
     OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
+    /// A niche or flue that does not stay inside its wall's thickness (docs/adr/0719 §3).
+    RECESS_TOO_DEEP = "recess_too_deep", Failed, false, "Niş ya da baca duvarın kalınlığına sığmıyor: niş öbür yüze, baca iki yüze varmamalı. Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

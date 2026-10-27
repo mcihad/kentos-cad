@@ -442,8 +442,8 @@ pub(crate) fn joined_pieces(
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};
     let (shapes, others) = neighbourhood(doc, &[(Some(slot), w)], &[]);
-    // Each wall's openings' gaps (docs/adr/0341 §2).
-    let spans: Vec<Vec<(f64, f64)>> = std::iter::once(slot)
+    // Each wall's openings' holes (docs/adr/0341 §2, 0719 §3).
+    let spans: Vec<Vec<kentos_geometry_core::geom::opening::Hole>> = std::iter::once(slot)
         .chain(others)
         .map(|s| {
             doc.uid(s)
@@ -451,7 +451,7 @@ pub(crate) fn joined_pieces(
                     doc.openings_of(&u.to_string())
                         .into_iter()
                         .filter(|(_, o)| o.broken.is_none())
-                        .map(|(_, o)| kentos_domain::opening_follow::span(&o))
+                        .filter_map(|(_, o)| kentos_formats::openings::hole(&o))
                         .collect()
                 })
                 .unwrap_or_default()

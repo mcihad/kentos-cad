@@ -1,12 +1,14 @@
-//! `cad.openings.create` v1 (docs/adr/0341 §4, plan/cad.md `CAD-ARCH-15`): doors, windows and bare openings put in
-//! their walls on a named layer, one undo step named for the first's form (“Kapı”, “Pencere”, “Boşluk”). The door,
+//! `cad.openings.create` v1 (docs/adr/0341 §4, plan/cad.md `CAD-ARCH-15`): doors, windows, bare openings, niches and
+//! flues (docs/adr/0719) put in their walls on a named layer, one undo step named for the first's form (“Kapı”,
+//! “Pencere”, “Boşluk”, “Niş”, “Baca”). The door,
 //! window and opening tools preview the plan's openings and write through `execute`; Python and an agent give the wall
 //! and the place and get the same openings. The shared cases are `fixtures/commands/v1/cad.openings.create.json`.
 //!
 //! The checks, in order (the first that fails answers): 1. at least one opening (`no_objects`), at most
 //! `MAX_OPENINGS` (`invalid_opening`); 2. each opening in the input's order: its numbers (`not_finite`), its wall
 //! (`invalid_uid`, `entity_not_found`, `not_a_wall`), its type (`style_not_found`), its fields (`invalid_opening`),
-//! its place on one edge within its wall's ends (`opening_off_wall`); 3. clear of its wall's other openings and the
+//! its place on one edge within its wall's ends (`opening_off_wall`), a niche or flue inside its wall's thickness
+//! (`recess_too_deep`); 3. clear of its wall's other openings and the
 //! call's (`openings_overlap`); 4. the line weight; 5. the expected revision; 6. the layer; 7. the attributes.
 
 use kentos_commands::{
@@ -136,6 +138,10 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
             (n.distance, "distance", "Uzaklık"),
             (n.width, "width", "Genişlik"),
             (n.swing, "swing", "Açılma açısı"),
+            (n.sill, "sill", "Alt kot"),
+            (n.head, "head", "Üst kot"),
+            (n.depth, "depth", "Derinlik"),
+            (n.inset, "inset", "Yüzden uzaklık"),
         ] {
             if let Some(x) = v {
                 checks::finite(x, name, "Sonlu bir sayı verin.", &format!("{at}.{what}"))?;

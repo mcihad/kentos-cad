@@ -42,6 +42,7 @@ mod robustness;
 mod carriage;
 mod railings;
 mod space_voids;
+mod recesses;
 mod stair_arcs;
 mod dimension_cross;
 mod schemas;

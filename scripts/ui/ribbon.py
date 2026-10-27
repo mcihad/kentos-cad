@@ -18,6 +18,12 @@ def C(i, size='small'): return {"command": i, "size": size}
 def L(i): return C(i, 'large')
 def S(i): return C(i, 'small')
 def SP(key, size='small'): return {"split": key, "size": size}
+# Boşluk, Niş, Baca: the openings that are no door or window (docs/adr/0719).
+OPENINGS = {"key": "archOpenings", "size": "small", "split": [
+    {"command": "tool.opening", "title": "Boşluk", "label": "Boşluk"},
+    {"command": "tool.niche", "title": "Boşluk", "label": "Niş"},
+    {"command": "tool.flue", "title": "Boşluk", "label": "Baca"},
+]}
 def M(label, blocks, size='small', checklist=False):
     m = {"menu": label, "size": size, "blocks": [{"label": t, "items": ids} for t, ids in blocks]}
     if checklist: m["checklist"] = True
@@ -228,7 +234,8 @@ CAD = [
     T("arch", "Mimari", [
         P("Çiz", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"),
             S("tool.wallFromLines"), S("tool.space"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
-        P("Yerleştir", "door", [L("tool.door"), L("tool.window"), S("tool.opening"),
+        # Boşluk, Niş and Baca (docs/adr/0719) share one small split: the tab keeps its words at 1440 px.
+        P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
             S("tool.column"),
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
@@ -534,7 +541,7 @@ CONTEXTUAL = [
         edit_panel(),
         P("Duvar", "wall", [L("tool.wallDimensions"), L("view.properties"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
             S("tool.wallTrim"), S("tool.wallFlip"), S("tool.wallRestyle"), S("arch.wallJoinCheck")]),
-        P("Açıklık", "door", [S("tool.door"), S("tool.window"), S("tool.opening"), S("tool.tag")]),
+        P("Açıklık", "door", [S("tool.door"), S("tool.window"), OPENINGS, S("tool.tag")]),
     ]},
     {"id": "ctx.opening", "label": "Açıklık", "kinds": ["opening"], "modes": ["cad"], "panels": [
         SEL,
