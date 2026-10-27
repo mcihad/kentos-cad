@@ -89,6 +89,13 @@ pub fn store_for_viewport(
         || crate::walls::view_of(doc.settings()),
         |v| crate::walls::view_at(doc.settings(), v.denominator),
     ));
+    // A tagged space's tag is its label (docs/adr/0344's 27 October addendum): sent before the objects.
+    store.set_tagged_spaces(
+        &doc.tagged_spaces()
+            .into_iter()
+            .map(|s| f64::from(s.0))
+            .collect::<Vec<_>>(),
+    );
     store
         .put_many(doc.entities().filter_map(|e| {
             crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale))

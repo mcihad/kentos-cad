@@ -392,6 +392,12 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
 
 /// A space's pieces at 1:`scale`: its rings, a void's cross and its label's lines, centred one under another.
 pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
+    pieces_with(parts, spec, scale, true)
+}
+
+/// `pieces`, its label left out when not `label`: a tagged space's tag is its label (docs/adr/0344's 27 October
+/// addendum).
+pub fn pieces_with(parts: &[Area], spec: &Spec, scale: f64, label: bool) -> Vec<Shape> {
     let mut out: Vec<Shape> = parts
         .iter()
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
@@ -408,7 +414,7 @@ pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
         out.extend(void_cross(parts));
     }
     // One text of its lines, centred on the pole: its lines grow together as the view asks (docs/adr/0205 §5).
-    if let Some(at) = label_at(parts) {
+    if label && let Some(at) = label_at(parts) {
         let h = LABEL_MM * scale / 1000.0;
         out.push(text(at, label_lines(parts, spec).join("\n"), h));
     }

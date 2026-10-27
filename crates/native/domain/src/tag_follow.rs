@@ -25,6 +25,25 @@ impl Document {
         Some((*self.store.get(slot)?.entity).clone())
     }
 
+    /// The spaces that have a tag (docs/adr/0344's 27 October addendum), in slot order: their tag is their label, they
+    /// draw none of their own (as an object whose label a text writes, docs/adr/0175 §4).
+    pub fn tagged_spaces(&self) -> Vec<crate::identity::Slot> {
+        let mut out: Vec<crate::identity::Slot> = self
+            .store
+            .tag_slots()
+            .filter_map(|t| {
+                let Entity::Tag(tag) = &*self.store.get(t)?.entity else {
+                    return None;
+                };
+                let slot = self.store.slot_of(Uuid::parse_str(&tag.tag.of).ok()?)?;
+                matches!(&*self.store.get(slot)?.entity, Entity::Space(_)).then_some(slot)
+            })
+            .collect();
+        out.sort_unstable();
+        out.dedup();
+        out
+    }
+
     /// `t` written again from its object: its words, the point it ties to and, when `follow`, its place moved as far as
     /// that point went.
     pub fn tag_settled(&self, t: &TagFields, follow: bool) -> TagFields {

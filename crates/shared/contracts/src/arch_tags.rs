@@ -234,8 +234,8 @@ pub fn tag_template(t: &str) -> Result<Vec<TagPiece>, String> {
     Ok(out)
 }
 
-/// A template filled: each place by `value` (none: nothing), each line's ends trimmed, the empty lines at its end
-/// dropped.
+/// A template filled: each place by `value` (none: nothing), each line's ends trimmed, the empty lines dropped (a room
+/// with no number shows its name and area, not a blank line over them: docs/adr/0344's 27 October addendum).
 pub fn tag_fill(pieces: &[TagPiece], value: &dyn Fn(&TagPiece) -> Option<String>) -> String {
     let mut out = String::new();
     for p in pieces {
@@ -244,12 +244,11 @@ pub fn tag_fill(pieces: &[TagPiece], value: &dyn Fn(&TagPiece) -> Option<String>
             _ => out.push_str(&value(p).unwrap_or_default()),
         }
     }
-    let lines: Vec<&str> = out.split('\n').map(str::trim).collect();
-    let keep = lines
-        .iter()
-        .rposition(|l| !l.is_empty())
-        .map_or(0, |i| i + 1);
-    lines[..keep].join("\n")
+    out.split('\n')
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// The template a tag of an object of `kind` takes when it names none; none: such an object is not tagged.
@@ -361,12 +360,17 @@ mod tests {
     }
 
     #[test]
-    fn a_fill_drops_its_empty_last_lines() {
+    fn a_fill_drops_its_empty_lines() {
         let p = tag_template("{number}\n{name}\n{area}").unwrap();
         let v = |p: &TagPiece| match p {
             TagPiece::Place("number") => Some("101".to_owned()),
             _ => None,
         };
         assert_eq!(tag_fill(&p, &v), "101");
+        let v = |p: &TagPiece| match p {
+            TagPiece::Place("area") => Some("36.00 m²".to_owned()),
+            _ => None,
+        };
+        assert_eq!(tag_fill(&p, &v), "36.00 m²", "no blank lines over it");
     }
 }

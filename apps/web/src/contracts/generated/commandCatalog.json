@@ -561449,7 +561449,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "layer_hidden"
+          "layer_hidden",
+          "tag_empty"
         ]
       },
       "examples": [
@@ -1456197,6 +1456198,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Açıklığın ya da mahalin etiketi yok."
+    },
+    {
+      "code": "tag_empty",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Etiketin yazısı şimdilik boş: nesnesinin şablondaki değerleri yok; değerler verilince kendiliğinden dolar."
     },
     {
       "code": "arch_wall_end_gap",

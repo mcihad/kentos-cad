@@ -2266,7 +2266,12 @@
               ],
               "revision": "$current"
             },
-            "warnings": []
+            "warnings": [
+              {
+                "code": "tag_empty",
+                "message": "1 etiketin yazısı şimdilik boş: nesnelerinin şablondaki değerleri yok (numarasız açıklık gibi). Değerler verilince etiketler kendiliğinden dolar; açıklıklara Açıklıkları numarala ile numara verin."
+              }
+            ]
           },
           "within": 1e-09,
           "expect": {
@@ -6524,7 +6529,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -6541,7 +6546,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -6558,7 +6563,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -7889,7 +7894,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -7906,7 +7911,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -7923,7 +7928,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -9099,7 +9104,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -9116,7 +9121,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -9133,7 +9138,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -10379,7 +10384,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -10396,7 +10401,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -10413,7 +10418,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -11637,7 +11642,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -11654,7 +11659,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -11671,7 +11676,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -12871,7 +12876,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -12888,7 +12893,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -12905,7 +12910,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -14299,7 +14304,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -14316,7 +14321,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -14333,7 +14338,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5
@@ -15533,7 +15538,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nAna giriş\n12.00 m²",
+                "text": "Ana giriş\n12.00 m²",
                 "anchor": {
                   "x": 7.0,
                   "y": 1.5
@@ -15550,7 +15555,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nÇalışma\n12.00 m²",
+                "text": "Çalışma\n12.00 m²",
                 "anchor": {
                   "x": 12.0,
                   "y": 1.5
@@ -15567,7 +15572,7 @@
                   "y": 1.5
                 },
                 "shape": "rectangle",
-                "text": "\nDepo\n12.00 m²",
+                "text": "Depo\n12.00 m²",
                 "anchor": {
                   "x": 17.0,
                   "y": 1.5

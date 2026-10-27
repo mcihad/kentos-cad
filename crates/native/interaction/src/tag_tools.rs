@@ -152,12 +152,9 @@ impl TagTool {
             return;
         };
         let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
-            cx.say(
-                Level::Success,
-                "Etiket yazıldı; nesnesi değişince etiketi de değişir.",
-            );
-        }
+        said_after(result, cx, |_| {
+            "Etiket yazıldı; nesnesi değişince etiketi de değişir.".into()
+        });
         self.target = None;
         self.drawn = Preview::default();
     }
@@ -433,6 +430,17 @@ impl TagAllTool {
                     plan.tags.len(),
                     plan.refreshed.len()
                 );
+                // Tags with no words yet (doors without numbers): said before they are written.
+                let empty = plan
+                    .tags
+                    .iter()
+                    .chain(&plan.refreshed)
+                    .filter(|e| matches!(e, kentos_commands::Entity::Tag(t) if t.tag.text.is_empty()))
+                    .count();
+                if empty > 0 {
+                    self.summary
+                        .push_str(&format!(" · {empty} boş (numara verilince dolar)"));
+                }
                 if count > 200 {
                     self.summary.push_str(" · çizimde ilk 200 gösteriliyor");
                 }
@@ -701,26 +709,40 @@ impl Tool for TagAllTool {
         }
         let mut input = self.made(cx);
         input.expected_revision = self.revision.map(|r| r.to_string());
-        match points::written(
-            tags_create::execute(&mut ExecutionContext::new(cx.doc), input),
-            cx,
-        ) {
-            Some(out) => {
-                cx.say(
-                    Level::Success,
-                    format!(
-                        "{} yeni etiket · {} etiket yenilendi.",
-                        out.uids.len(),
-                        out.refreshed.len()
-                    ),
-                );
-                Flow::Exit
-            }
-            None => {
-                self.see(cx);
-                Flow::Stay
-            }
+        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
+        let written = said_after(result, cx, |out| {
+            format!(
+                "{} yeni etiket · {} etiket yenilendi.",
+                out.uids.len(),
+                out.refreshed.len()
+            )
+        });
+        if written {
+            Flow::Exit
+        } else {
+            self.see(cx);
+            Flow::Stay
         }
+    }
+}
+
+/// What a tag write did, said: its success first, then its warnings (a tag with no words yet, a hidden layer), so the
+/// status line ends on what still needs doing (docs/adr/0344's 27 October addendum); a refusal as `points::written`
+/// says it. Whether it wrote.
+fn said_after(
+    result: kentos_commands::CommandResult<kentos_commands::TagsCreated>,
+    cx: &mut Context<'_>,
+    success: impl FnOnce(&kentos_commands::TagsCreated) -> String,
+) -> bool {
+    match result {
+        kentos_commands::CommandResult::Completed { output, warnings } => {
+            cx.say(Level::Success, success(&output));
+            for w in warnings {
+                cx.say(Level::Warn, w.message);
+            }
+            true
+        }
+        other => points::written(other, cx).is_some(),
     }
 }
 

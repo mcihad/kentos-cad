@@ -1738,6 +1738,9 @@ codes! {
     TAG_TARGET_GONE = "tag_target_gone", Warning, false, "Etiketin nesnesi çizimde yok.";
     /// An opening or space without a tag (Etiketleri denetle).
     TAG_UNTAGGED = "tag_untagged", Warning, false, "Açıklığın ya da mahalin etiketi yok.";
+    /// Tags written with no words yet: their objects have none of their template's values (docs/adr/0344's 27 October
+    /// addendum).
+    TAG_EMPTY = "tag_empty", Warning, false, "Etiketin yazısı şimdilik boş: nesnesinin şablondaki değerleri yok; değerler verilince kendiliğinden dolar.";
 
     // ── Mimari denetim (docs/adr/0703) ─────────────────────────────────
     /// A free wall end that stops short of another wall's body.

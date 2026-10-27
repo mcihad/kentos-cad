@@ -174,3 +174,38 @@ fn a_void_is_crossed_inside_its_parts() {
     let void = space::pieces(&[shaft], &space::Spec { void: true, ..room }, 50.0);
     assert_eq!(void.len(), plain.len() + 2);
 }
+
+/// docs/adr/0344's 27 October addendum: a space with a tag is drawn without its own label (its tag is it), put again
+/// while tagged too; untagged, the label is back.
+#[test]
+fn a_tagged_space_is_drawn_without_its_label() {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::arrangement::Area;
+    use kentos_geometry_core::store::Store;
+    let ring = |pts: &[(f64, f64)]| Ring {
+        pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+        bulges: None,
+    };
+    let room = Area {
+        outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 3.0), (0.0, 3.0)]),
+        holes: vec![],
+    };
+    let shape = Shape::Space {
+        parts: vec![room],
+        space: space::Spec::default(),
+    };
+    let texts = |s: &Store| {
+        s.get(1.0)
+            .and_then(|it| it.expanded.as_ref())
+            .map_or(0, |x| x.shapes.iter().filter(|p| matches!(p, Shape::Text { .. })).count())
+    };
+    let mut store = Store::new();
+    store.put(1.0, "0", false, shape.clone());
+    assert_eq!(texts(&store), 1);
+    store.set_tagged_spaces(&[1.0]);
+    assert_eq!(texts(&store), 0);
+    store.put(1.0, "0", false, shape);
+    assert_eq!(texts(&store), 0, "put again while tagged");
+    store.set_tagged_spaces(&[]);
+    assert_eq!(texts(&store), 1);
+}

@@ -347,7 +347,22 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
     }
     checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let warnings = checks::layer(doc, &input.layer_id)?;
+    let mut warnings = checks::layer(doc, &input.layer_id)?;
+    // Tags with no words yet (a door without a number): written, they fill when their objects get the values.
+    let empty = made.iter().filter(|t| t.text.is_empty()).count()
+        + refreshed
+            .iter()
+            .filter(|(_, e)| matches!(e, Entity::Tag(t) if t.tag.text.is_empty()))
+            .count();
+    if empty > 0 {
+        warnings.push(CommandWarning {
+            code: codes::TAG_EMPTY.into(),
+            message: format!(
+                "{empty} etiketin yazısı şimdilik boş: nesnelerinin şablondaki değerleri yok (numarasız açıklık gibi). Değerler verilince etiketler kendiliğinden dolar; açıklıklara Açıklıkları numarala ile numara verin."
+            ),
+            path: None,
+        });
+    }
     let entities = made
         .into_iter()
         .map(|tag| {

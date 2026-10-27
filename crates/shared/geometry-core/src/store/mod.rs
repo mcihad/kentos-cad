@@ -264,6 +264,8 @@ pub struct Store {
     blocks: Blocks,
     /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
     text_labelled: IdSet,
+    /// The spaces that have a tag (`set_tagged_spaces`, docs/adr/0344's 27 October addendum): drawn without their label.
+    tagged_spaces: IdSet,
     /// The times of the temporal layers' timed objects (`set_times`, docs/adr/0210 §4); a timeless or
     /// another layer's object has none.
     times: IdMap<crate::time::Time>,
@@ -449,7 +451,7 @@ impl Store {
     /// putting many objects calls `put_many` (or a packed form), which does.
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
-        let (expanded, bounds) = self.expansion(&shape);
+        let (expanded, bounds) = self.expansion_of(id, &shape);
         self.note_wall(id, matches!(shape, Shape::Wall { .. }).then_some(bounds));
         let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();
@@ -669,18 +671,7 @@ impl Store {
                 crate::geom::arch::pieces(shape, self.wall_view.scale)
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2).
-            Shape::Space { parts, space } => crate::geom::space::pieces(parts, space, self.wall_view.scale)
-                .into_iter()
-                .map(|shape| crate::block::Piece {
-                    shape,
-                    color: None,
-                    line_weight: None,
-                    by_layer: Vec::new(),
-                    gates: Vec::new(),
-                    stroke: Default::default(),
-                    attribute: None,
-                })
-                .collect(),
+            Shape::Space { parts, space } => self.space_pieces(parts, space, true),
             // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2).
             Shape::Opening { place, opening, .. } => crate::geom::opening::symbol(place, opening)
                 .into_iter()
@@ -700,6 +691,39 @@ impl Store {
     }
 
     /// Pieces as an object's expansion, its box grown around them.
+    /// A space's rings and, when `label`, its label at the view's scale (docs/adr/0342 §2).
+    fn space_pieces(
+        &self,
+        parts: &[crate::geom::arrangement::Area],
+        space: &crate::geom::space::Spec,
+        label: bool,
+    ) -> Vec<crate::block::Piece> {
+        crate::geom::space::pieces_with(parts, space, self.wall_view.scale, label)
+            .into_iter()
+            .map(|shape| crate::block::Piece {
+                shape,
+                color: None,
+                line_weight: None,
+                by_layer: Vec::new(),
+                gates: Vec::new(),
+                stroke: Default::default(),
+                attribute: None,
+            })
+            .collect()
+    }
+
+    /// `expansion` of the object `id`: a space that has a tag draws no label of its own (docs/adr/0344's 27 October
+    /// addendum).
+    pub(super) fn expansion_of(&self, id: f64, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
+        match shape {
+            Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
+                let b = entity_bounds_in(shape, self.font);
+                self.expanded_of(self.space_pieces(parts, space, false), b)
+            }
+            _ => self.expansion(shape),
+        }
+    }
+
     fn expanded_of(&self, pieces: Vec<crate::block::Piece>, b: Bounds) -> (Option<Arc<Expanded>>, Bounds) {
         if pieces.is_empty() {
             return (None, b);
@@ -755,6 +779,40 @@ impl Store {
     /// sent before; `clear` empties it with the objects.
     pub fn set_text_labelled(&mut self, ids: &[f64]) {
         self.text_labelled = ids.iter().map(|id| id.to_bits()).collect();
+    }
+
+    /// The spaces that have a tag (docs/adr/0344's 27 October addendum): their tag is their label, they are drawn
+    /// without their own. Replaces the list sent before; the spaces it adds or drops are drawn again. `clear` empties it
+    /// with the objects.
+    pub fn set_tagged_spaces(&mut self, ids: &[f64]) {
+        let now: IdSet = ids.iter().map(|id| id.to_bits()).collect();
+        let changed: Vec<u64> = now
+            .symmetric_difference(&self.tagged_spaces)
+            .copied()
+            .collect();
+        self.tagged_spaces = now;
+        for key in changed {
+            let Some(&s) = self.by_id.get(&key) else {
+                continue;
+            };
+            let fresh = self.slots[s as usize]
+                .as_ref()
+                .filter(|it| matches!(it.shape, Shape::Space { .. }))
+                .map(|it| {
+                    let (x, b) = self.expansion_of(it.id, &it.shape);
+                    let veiled = x.as_deref().and_then(|x| self.veil(x));
+                    (x, b, veiled)
+                });
+            if let (Some(it), Some((expanded, bounds, veiled))) =
+                (self.slots[s as usize].as_mut(), fresh)
+            {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = veiled;
+                self.loosen(s);
+            }
+        }
+        self.maybe_rebuild();
     }
 
     /// Objects' times (docs/adr/0210 §4): a time is kept, none forgets the

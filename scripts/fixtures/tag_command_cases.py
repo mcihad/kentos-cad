@@ -391,10 +391,8 @@ def fill(d, i, template):
         out += value_text(v, True) if v else ""
         rest = rest[b + 1:]
     out += rest
-    lines = [ln.strip() for ln in out.split("\n")]
-    while lines and not lines[-1]:
-        lines.pop()
-    return "\n".join(lines)
+    # Every empty line dropped (docs/adr/0344's 27 October addendum).
+    return "\n".join(ln.strip() for ln in out.split("\n") if ln.strip())
 
 
 def anchor(d, i):
@@ -540,7 +538,7 @@ def tags_create(d, inp, conflict=False):
         if found == 0 and not inp.get("tags"):
             message = "Verilen kapsamda yeni ya da hedef katmanda değişecek etiket yok." if al.get("refresh") else "Verilen türlerde etiketsiz ve görünen nesne yok."
             return refusal("no_objects", message, "all.kinds"), None
-    result, made = finish(inp, conflict, made)
+    result, made = finish(inp, conflict, made, refreshed)
     if made is not None and refreshed: result["refreshed"] = refreshed
     return result, made
 
@@ -556,7 +554,7 @@ def phase_of(d, i):
     return (f.get("arch") or {}).get("phase")
 
 
-def finish(inp, conflict, made):
+def finish(inp, conflict, made, refreshed=()):
     lw = inp.get("lineWeight")
     if lw is not None and not 0 <= lw <= 100:
         return refusal("invalid_line_weight", "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.", "lineWeight"), None
@@ -566,6 +564,9 @@ def finish(inp, conflict, made):
     r, warn = layer_check(inp["layerId"])
     if r:
         return r, None
+    empty = sum(1 for t in made if t is not None and not t.get("text")) + sum(1 for _, nf in refreshed if not nf.get("text"))
+    if empty:
+        warn = warn + [{"code": "tag_empty", "message": f"{empty} etiketin yazısı şimdilik boş: nesnelerinin şablondaki değerleri yok (numarasız açıklık gibi). Değerler verilince etiketler kendiliğinden dolar; açıklıklara Açıklıkları numarala ile numara verin."}]
     return {"warnings": warn}, made
 
 

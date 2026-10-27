@@ -99,6 +99,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kolonda `along`/`center` yerleri. Web'in İç ölçü zinciri aracı (kesen çizgi,
   zincirin yeri, Enter kesen çizgide), `columns.ts`'in kural biti ve izleme
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-SPACE-02 / ADR0344 eki (27 Ekim): etiketli mahal kendi yazısını çizmez
+  (web deposunda `set_tagged_spaces` karşılığı), etiket yazısında bütün boş
+  satırlar atılır, `cad.tags.create`'in `tag_empty` uyarısı ve Hepsini
+  etiketle önizlemesindeki boş sayısı; `cad.tags.*.json` ile sınanmalı.
 - ARCH-EDIT-01 / ADR0712: `cad.arch.edit`'in `distance`'ı ve salt okunur
   `cad.columns.distances`. Web'in seçili kolonu dört yandaki net mesafeleri
   göstermeli, sayıya basıp yazınca kolonu kaydırmalı, akslara bağlı kolonda

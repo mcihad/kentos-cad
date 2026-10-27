@@ -114,3 +114,26 @@ Tablonun yeni kaynağı `TableSource::Schedule`:
 - Resimler: `KENTOS_SHOTS_ONLY=mimari-etiket-serit,mimari-etiket-plan,mimari-etiket-arac,mimari-etiket-oznitelikler,mimari-etiket-denetim,cizelge-arac,cizelge-izleme
   cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`.
 - `.kcad` şema 80: `fixtures/kcad/v2/tags.json` ve bozuk örnekleri (`python3 scripts/fixtures/kcad_v2_reference.py --check`).
+
+## 27 Ekim 2026 eki: etiketli mahal, boş satırlar ve boş etiket
+
+Bir dairenin baştan sona çizildiği gerçek GUI yürüyüşünde (`apps/desktop/src/walkthrough_scenes.rs`: Dikdörtgen duvar, iki
+Ölçülü bölme, kapı ve pencereler, Toplu mahal bul, Hepsini etiketle, Duvar ölçüleri, İç ölçü zinciri, Metraj, Denetim) üç kusur
+bulundu:
+
+- **Aynı alan iki kez.** Mahal kendi yazısını (numara, ad, alan; ADR 0342 §2) etiket noktasında çizer; Hepsini etiketle
+  mahalin etiketini aynı noktaya koyar: alan üst üste iki kez yazıyordu. Karar: etiketi olan mahal kendi yazısını çizmez,
+  etiketi onun yazısıdır (bağlı yazısı olan nesnenin etiketi gibi, ADR 0175 §4). Belge etiketli mahalleri söyler
+  (`Document::tagged_spaces`), geometri deposu onları yazısız çizer (`Store::set_tagged_spaces`; ekranın ve paftanın
+  deposu). Etiket silinince ya da geri alınınca yazı döner. Web'in deposu bunu bilmez (ADR 0228; TODOS.md §0.2).
+- **Boş satırlar.** Şablonun doldurulmuşu yalnız sondaki boş satırları atıyordu: numarası ve adı olmayan mahalin etiketi
+  iki boş satırın altında alanıydı, çerçeve üç satır boyundaydı. Karar: bütün boş satırlar atılır (`tag_fill`).
+- **Boş etiket.** Numarasız kapı ve pencerenin etiketi (`{number}`) boş altıgendir. Etiket yazılır (numara verilince
+  kendiliğinden dolar; Revit'in Mark'ı boş kapı etiketi de böyledir), ama söylenir: `cad.tags.create` yeni uyarısı
+  `tag_empty` (kaç etiket, neden, nasıl dolar); Hepsini etiketle'nin önizlemesi “6 boş (numara verilince dolar)” der;
+  araçlar önce yazıldığını, sonra uyarıları söyler: durum satırı yapılacak işle biter.
+
+Doğrulama: 164+29 etiket durumu bağımsız başvurudan yeniden yazıldı (`tag_command_cases.py`: boş satır ve `tag_empty`);
+`cargo test -p kentos-geometry-core --test all spaces` (etiketli mahal yazısız, yeniden konunca da), `cargo test -p
+kentos-interaction --test all tagged_spaces` (etiket konunca yazı gider, belge yeniden okununca da, geri alınınca döner),
+`kentos-contracts`'ın `a_fill_drops_its_empty_lines`'ı; resimler `KENTOS_SHOTS_ONLY=daire-etiket-onizleme,daire-etiketler`.

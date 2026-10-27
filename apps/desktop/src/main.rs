@@ -460,6 +460,8 @@ mod interior_scenes;
 #[cfg(test)]
 mod column_scenes;
 #[cfg(test)]
+mod walkthrough_scenes;
+#[cfg(test)]
 mod opening_scenes;
 #[cfg(test)]
 mod space_scenes;

@@ -28,6 +28,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Etiketli mahal ve boş etiket (27 Ekim 2026; [ADR0344 eki](docs/adr/0344-tags-and-schedules.md)).**
+  Daire yürüyüşünde (`walkthrough_scenes.rs`) bulundu: etiketi olan mahal kendi
+  yazısını çizmez (`Document::tagged_spaces`, `Store::set_tagged_spaces`; ekran ve
+  pafta), şablonun boş satırları atılır, numarasız açıklığın boş etiketi
+  `tag_empty` uyarısıyla ve önizlemede söylenir. Açık: araçların kat ataması.
+
 - **Kolonun geçici ölçüsü (27 Ekim 2026; [ADR0712](docs/adr/0712-column-temporary-distances.md)).**
   Seçili kolonun dört yanında aynı kattaki en yakın paralel yüze (duvarın bakan
   yüzü ya da öbür kolonun yanı) net mesafe; sayıya bas-yaz-Enter kolonu o yana

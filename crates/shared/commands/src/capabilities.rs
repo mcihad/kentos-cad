@@ -2013,7 +2013,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "tag_empty"],
         targets: || {
             vec![target(
                 None,

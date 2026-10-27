@@ -131,7 +131,7 @@ impl Store {
                 let b = entity_bounds_in(shape, self.font);
                 self.expanded_of(wall::pieces_of(d, pts, wall, self.wall_view), b)
             }
-            _ => self.expansion(shape),
+            _ => self.expansion_of(id, shape),
         }
     }
 
