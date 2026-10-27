@@ -22,6 +22,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.settings.set.json"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import levels_assign_cases as la  # noqa: E402  (ADR 0717's drawing: every kind that has a level of its own)
 REGISTRY = {s["srid"] for s in json.loads((ROOT / "fixtures/crs/v1/registry.json").read_text(encoding="utf-8"))["systems"]}
 
 STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
@@ -239,10 +241,12 @@ def cases():
     walled = setup(arch={"levels": levels})
     walled["entities"].append(wall)
     in_use = refused("duvarın andığı kat kaldırılmaz", {"arch": {"levels": levels[1:]}}, "level_in_use",
-                     "“zemin” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın.", "arch.levels", walled)
+                     "“Zemin kat” katını 1 duvar anıyor; kaldırılmadı. " + FIX_OBJECTS, "arch.levels", walled)
+    in_use["steps"][0]["result"]["error"]["uids"] = ["$uidOf:5"]
     in_use["steps"][0]["expect"]["ids"] = IDS + [5]
     in_use["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
     out.append(in_use)
+    out.extend(level_state_cases(levels, walled))
     out.append({"name": "duvarın andığı kat kaldıkça öbürleri değişir", "setup": walled,
                 "steps": [step("execute", {"arch": {"levels": levels[:1], "detail": "detailed"}}, done(["arch"]),
                                {**FLAGS, "ids": IDS + [5], "settings": {"arch": {"levels": levels[:1], "detail": "detailed"}}})]})
@@ -298,6 +302,158 @@ def cases():
     return out
 
 
+# A level an object names by its own level or a sheet's map shows stays (docs/adr/0339 §3, 0720 §3): the refusal says
+# the level by its name, how many of each kind name it (in this order) and the maps that show it; the objects' ids go
+# with it. Only the levels the input takes away are looked at.
+KINDS = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa"]
+FIX_OBJECTS = "Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın."
+FIX_MAPS = "Önce haritanın katını değiştirin (paftada Harita › Kat) ya da katı bırakın."
+FIX_BOTH = "Önce nesnelere ve haritalara başka kat verin ya da katı bırakın."
+
+
+def kind_of(e):
+    if e["kind"] == "polyline":
+        return KINDS.index("mahal ayırıcı") if "spaceSeparator" in e else None
+    names = {"wall": "duvar", "space": "mahal", "column": "kolon", "grid": "aks", "stair": "merdiven", "ramp": "rampa"}
+    return KINDS.index(names[e["kind"]]) if e["kind"] in names else None
+
+
+def listed(items):
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " ve " + items[-1]
+
+
+def in_use_words(doc, level):
+    """What the refusal of taking `level` away says, and the ids of the objects that name it (None: nothing does)."""
+    counts, ids = [0] * len(KINDS), []
+    for e in doc["entities"]:
+        k = kind_of(e)
+        if k is not None and la.level_of(e) == level["id"]:
+            counts[k] += 1
+            ids.append(e["id"])
+    book = (doc.get("sheets") or {}).get("book") or {}
+    maps = sum(1 for sheet in book.get("sheets", []) + book.get("masters", []) for it in sheet.get("items", [])
+               if it.get("kind", {}).get("type") == "map" and (it["kind"].get("level") or {}).get("id") == level["id"])
+    objects = [f"{n} {name}" for n, name in zip(counts, KINDS) if n]
+    if not objects and not maps:
+        return None, []
+    if objects and not maps:
+        what, fix = f"{listed(objects)} anıyor", FIX_OBJECTS
+    elif maps and not objects:
+        what, fix = f"{maps} pafta haritası gösteriyor", FIX_MAPS
+    else:
+        what, fix = f"{listed(objects)} anıyor, {maps} pafta haritası gösteriyor", FIX_BOTH
+    return f"“{level['name']}” katını {what}; kaldırılmadı. {fix}", ids
+
+
+def book_with_map(level_id):
+    """A sheet book of one sheet whose map shows `level_id` (docs/adr/0716), the preflight cases' book's form."""
+    book = copy.deepcopy(json.loads((ROOT / "fixtures/commands/v1/file.preflight.sheets.json").read_text(encoding="utf-8"))["book"])
+    book["sheets"][0]["items"][0]["kind"]["level"] = {"id": level_id}
+    return book
+
+
+def as_v2(doc, uid_base=0x5e7):
+    """The v1 setup as the file's v2 form: its objects' persistent ids given, so a sheet book can go with it."""
+    d = copy.deepcopy(doc)
+    d["version"] = 2
+    d["uids"] = [f"0192f5a1-7171-7000-8000-{uid_base * 0x1000 + e['id']:012x}" for e in d["entities"]]
+    # A file's elevations and heights are floats (KCAD's arch settings, docs/specs/kcad-v2.md).
+    for level in (d["settings"].get("arch") or {}).get("levels", []):
+        for key in ("elevation", "height"):
+            if key in level:
+                level[key] = float(level[key])
+    return d
+
+
+def level_state_cases(levels, walled):
+    """Taking levels away (ADR 0720 §3) and the level and view a drawing opens with (ADR 0720 §1)."""
+    out = []
+    zemin, k1 = levels
+    # Every kind that names a level by its own, ADR 0717's drawing with them all on Zemin kat (a locked wall too).
+    every = la.drawing()
+    for e in every["entities"]:
+        if e["id"] in (la.WALL, la.ROOM, la.COLUMN, la.STAIR, la.RAMP, la.GRID, la.SEPARATOR, la.LOCKED):
+            e.update(la.given(e, "zemin"))
+    every_levels = every["settings"]["arch"]["levels"]
+    words, ids = in_use_words(every, every_levels[0])
+    assert words.startswith("“Zemin kat” katını 2 duvar, 1 mahal, 1 mahal ayırıcı, 1 kolon, 1 aks, 1 merdiven ve 1 rampa anıyor")
+    c = refused("her türün andığı kat kaldırılmaz: sayılar ve kimlikler", {"arch": {"levels": every_levels[1:]}},
+                "level_in_use", words, "arch.levels", every)
+    c["steps"][0]["result"]["error"]["uids"] = [f"$uidOf:{i}" for i in ids]
+    c["steps"][0]["expect"].pop("ids")
+    c["steps"][0]["expect"]["settings"] = {"arch": {"levels": every_levels}}
+    out.append(c)
+    # Both levels taken away: the first in the project's order is said.
+    words, ids = in_use_words(every, every_levels[0])
+    c = refused("bütün katlar kaldırılınca ilk kullanılan kat söylenir", {"arch": {}}, "level_in_use", words, "arch.levels", every)
+    c["steps"][0]["result"]["error"]["uids"] = [f"$uidOf:{i}" for i in ids]
+    c["steps"][0]["expect"].pop("ids")
+    out.append(c)
+    # 1. kat names only its own wall.
+    words, ids = in_use_words(every, every_levels[1])
+    assert words.startswith("“1. kat” katını 1 duvar anıyor")
+    c = refused("üst katın tek duvarı", {"arch": {"levels": every_levels[:1]}}, "level_in_use", words, "arch.levels", every)
+    c["steps"][0]["result"]["error"]["uids"] = [f"$uidOf:{i}" for i in ids]
+    c["steps"][0]["expect"].pop("ids")
+    out.append(c)
+    # A sheet's map shows 1. kat; nothing else names it.
+    mapped = as_v2(setup(arch={"levels": levels}))
+    mapped["sheets"] = {"book": book_with_map("k1")}
+    words, _ = in_use_words(mapped, k1)
+    assert words == "“1. kat” katını 1 pafta haritası gösteriyor; kaldırılmadı. " + FIX_MAPS
+    c = refused("pafta haritasının gösterdiği kat kaldırılmaz", {"arch": {"levels": levels[:1]}}, "level_in_use", words,
+                "arch.levels", mapped)
+    c["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
+    out.append(c)
+    # A wall and a map on the same level.
+    both = copy.deepcopy(mapped)
+    wall = {"kind": "wall", "id": 5, "layerId": "yazi", "attrs": {}, "pts": [{"x": X, "y": Y + 20}, {"x": X + 5, "y": Y + 20}],
+            "width": 0.2, "justify": "center", "arch": {"level": "k1"}}
+    both["entities"].append(wall)
+    both["uids"].append("0192f5a1-7171-7000-8000-0000005e7005")
+    words, ids = in_use_words(both, k1)
+    assert words == "“1. kat” katını 1 duvar anıyor, 1 pafta haritası gösteriyor; kaldırılmadı. " + FIX_BOTH
+    c = refused("hem duvar hem pafta haritası", {"arch": {"levels": levels[:1]}}, "level_in_use", words, "arch.levels", both)
+    c["steps"][0]["result"]["error"]["uids"] = ["$uidOf:5"]
+    c["steps"][0]["expect"]["ids"] = IDS + [5]
+    c["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
+    out.append(c)
+    # The map's level kept, another taken away: written.
+    out.append({"name": "haritanın katı kaldıkça öbür kat kaldırılır", "setup": mapped,
+                "steps": [step("execute", {"arch": {"levels": levels[1:]}}, done(["arch"]),
+                               {**FLAGS, "settings": {"arch": {"levels": levels[1:]}}})]})
+    # A level the project lacked before is not looked at: a wall on “eski” does not keep other changes out.
+    stale = setup(arch={"levels": levels[:1]})
+    stale["entities"].append(dict(walled["entities"][-1], arch={"level": "eski"}))
+    out.append({"name": "projede zaten olmayan katı anan duvar öbür değişikliği engellemez", "setup": stale,
+                "steps": [step("execute", {"arch": {"levels": levels}}, done(["arch"]),
+                               {**FLAGS, "ids": IDS + [5], "settings": {"arch": {"levels": levels}}})]})
+    # The level and view a drawing opens with (ADR 0720 §1): a level's id or null (Katsız); Bütün katlar is no
+    # setting; one of the project's levels, and none without levels.
+    on = {"levels": levels, "activeLevel": "k1", "levelView": "below"}
+    out.append({"name": "Etkin kat ve kat görünümü: açılışın katı ve görünümü yazılır",
+                "steps": [step("execute", {"arch": on}, done(["arch"]), {**FLAGS, "settings": {"arch": on}}),
+                          step("execute", {"arch": {"levels": levels, "activeLevel": None, "levelView": "active"}}, done(["arch"]),
+                               {"settings": {"arch": {"levels": levels, "activeLevel": None, "levelView": "active"}},
+                                "revision": "changed"}),
+                          step("execute", {"arch": {"levels": levels}}, done(["arch"]),
+                               {"settings": {"arch": {"levels": levels}}, "revision": "changed"})]})
+    out.append({"name": "Bütün katlar yazılmaz: kat görünümü yokmuş gibi",
+                "steps": [step("execute", {"arch": {"levels": levels, "activeLevel": "zemin", "levelView": "all"}}, done(["arch"]),
+                               {**FLAGS, "settings": {"arch": {"levels": levels, "activeLevel": "zemin"}}})]})
+    out.append(refused("etkin kat projede yok", {"arch": {"levels": levels, "activeLevel": "yok"}}, "invalid_arch",
+                       "Etkin kat olarak verilen “yok” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın.",
+                       "arch.activeLevel"))
+    out.append(refused("kaldırılan kat etkin kat olarak kalamaz", {"arch": {"levels": levels[1:], "activeLevel": "zemin"}}, "invalid_arch",
+                       "Etkin kat olarak verilen “zemin” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın.",
+                       "arch.activeLevel"))
+    out.append(refused("katsız projenin kat görünümü olmaz", {"arch": {"levelView": "active"}}, "invalid_arch",
+                       "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.", "arch.levelView"))
+    out.append(refused("katsız projede Katsız da yazılmaz", {"arch": {"activeLevel": None, "detail": "standard"}}, "invalid_arch",
+                       "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.", "arch.activeLevel"))
+    return out
+
+
 def room_choice_cases():
     """Optional project suggestions: settings history stays unchanged; no source is renamed."""
     levels=[dict(id='zemin',name='Zemin kat',elevation=0.0),dict(id='kat-1',name='1. kat',elevation=3.0)]
@@ -341,7 +497,7 @@ def build():
         "command": "cad.settings.set",
         "commandVersion": 1,
         "title": "Proje ayarları",
-        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3; do not edit by hand.",
+        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720; do not edit by hand.",
         "setup": setup(),
         "cases": cases()+room_choice_cases(),
     }

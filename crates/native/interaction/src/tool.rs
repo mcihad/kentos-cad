@@ -1658,6 +1658,10 @@ pub trait Tool {
     fn point_count(&self) -> usize;
     /// Right after it starts, with what the session knows (the web's
     /// `activate`): the erase tool deletes the selection and leaves.
+    /// Etkin kat changed under the running tool (docs/adr/0720 §4): it sees the context again, so its settings and
+    /// its preview follow at once, the pointer resting where it was.
+    fn level_changed(&mut self, _cx: &mut Context<'_>) {}
+
     fn activate(&mut self, _cx: &mut Context<'_>) -> Flow {
         Flow::Stay
     }

@@ -2227,6 +2227,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    arch = (settings or {}).get("arch", {})
+    if "activeLevel" in arch or "levelView" in arch:
+        # The level and view the drawing opens with (docs/adr/0720).
+        return 120
     def recessed(es):
         for e in es:
             if e["kind"] == "opening" and (e.get("form") in ("niche", "flue") or "depth" in e or "inset" in e
@@ -2879,7 +2883,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-120.kcad"] = container(root(cmap(parts), version=uint(120)))
+    files["schema-version-121.kcad"] = container(root(cmap(parts), version=uint(121)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4925,6 +4929,20 @@ def build():
     assert np_.count(b"\x67version\x18\x77") == 1
     out["recesses.kcad"] = container(np_)
     out["broken/recesses-in-schema-118.kcad"] = container(np_.replace(b"\x67version\x18\x77", b"\x67version\x18\x76"))
+    # Schema 120 (docs/adr/0720): the level and view a drawing opens with, a level's or Katsız (null).
+    for name in ("level-state", "level-state-unassigned"):
+        lp = document(load(name + ".json"))
+        assert lp.count(b"\x67version\x18\x78") == 1
+        out[name + ".kcad"] = container(lp)
+    lp = document(load("level-state.json"))
+    out["broken/level-state-in-schema-119.kcad"] = container(lp.replace(b"\x67version\x18\x78", b"\x67version\x18\x77"))
+    def level_bad(name, change):
+        d = load("level-state.json")
+        change(d["settings"]["arch"])
+        out["broken/level-state-" + name + ".kcad"] = container(document(d))
+    level_bad("unknown-level", lambda a: a.update(activeLevel="yok"))
+    level_bad("without-levels", lambda a: a.pop("levels"))
+    level_bad("view-type", lambda a: a.update(levelView="hepsi"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

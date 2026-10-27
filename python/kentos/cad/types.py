@@ -2668,6 +2668,23 @@ LevelMethodName = Literal["geometric", "trigonometric"]
 """The names of :class:`LevelMethod`, for a plain string."""
 
 
+class LevelView(_StrEnum):
+    """Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;
+    Yalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.
+
+    - ``all``: Bütün katlar.
+    - ``active``: Yalnız etkin kat.
+    - ``below``: Etkin kat ve alt kat: the level under the active one faint.
+    """
+    ALL = "all"
+    ACTIVE = "active"
+    BELOW = "below"
+
+
+LevelViewName = Literal["all", "active", "below"]
+"""The names of :class:`LevelView`, for a plain string."""
+
+
 class LibraryConflict(_StrEnum):
     """What an import does with an id the library has.
 
@@ -10397,13 +10414,18 @@ class ArchSettings(_Model):
     """The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
     by the drawing's scale, `WallDetail::at_scale`).
     Attributes:
+        active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
+            level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+        level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
         space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
         space_usages: Suggested room usages in project order, never a mandatory classification.
     """
+    active_level: str | None | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
+    level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -10413,8 +10435,12 @@ class ArchSettings(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.active_level is not UNSET:
+            out["activeLevel"] = self.active_level
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
+        if self.level_view is not UNSET:
+            out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
         if self.phase_view is not UNSET:
@@ -10432,7 +10458,9 @@ class ArchSettings(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ArchSettings:
         return cls(
+            active_level=data.get("activeLevel", UNSET),
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
+            level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
@@ -50795,7 +50823,9 @@ class SettingsSet(_Model):
     - `drawingFont`: the drawing's typeface;
     - `arch`: the project's levels and the detail its walls are drawn at
       (docs/adr/0339 §3), whole: the given settings take the place of the
-      old ones, an empty object takes them away;
+      old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
+      `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
+      (docs/adr/0720 §1);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -50807,17 +50837,20 @@ class SettingsSet(_Model):
     (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
-    (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
+    (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
+    view without levels), `invalid_heights`, `invalid_epoch`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `project_type_locked` (an existing project type changed),
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
     `style_needs_imperial` (a feet-and-inches style for a metric unit),
-    `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
-    project without a system).
+    `level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a
+    sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
+    `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
     Attributes:
-        arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+        arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the
+            level and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).
             Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
             These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
         area_decimals: Unit: count.
@@ -79903,6 +79936,8 @@ __all__ = [
     "LevelMethod",
     "LevelMethodName",
     "LevelPaperMapLevelChoice",
+    "LevelView",
+    "LevelViewName",
     "LevelsAssign",
     "LevelsAssigned",
     "LibraryConflict",

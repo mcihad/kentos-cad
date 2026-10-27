@@ -949,6 +949,45 @@ pub fn wall_styles_problem(styles: &[WallStyleDef]) -> Option<String> {
     })
 }
 
+/// Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;
+/// Yalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LevelView {
+    /// Bütün katlar.
+    #[default]
+    All,
+    /// Yalnız etkin kat.
+    Active,
+    /// Etkin kat ve alt kat: the level under the active one faint.
+    Below,
+}
+
+impl LevelView {
+    pub const ALL: [LevelView; 3] = [LevelView::All, LevelView::Active, LevelView::Below];
+
+    /// Its wire name.
+    pub fn name(self) -> &'static str {
+        match self {
+            LevelView::All => "all",
+            LevelView::Active => "active",
+            LevelView::Below => "below",
+        }
+    }
+
+    /// Its name, as the menus say it.
+    pub fn label(self) -> &'static str {
+        match self {
+            LevelView::All => "Bütün katlar",
+            LevelView::Active => "Yalnız etkin kat",
+            LevelView::Below => "Etkin kat ve alt kat",
+        }
+    }
+}
+
 /// A level (kat) of the project: its id, name, floor's elevation and storey height.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -1005,11 +1044,30 @@ pub struct ArchSettings {
         ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
     )]
     pub space_number_prefixes: std::collections::BTreeMap<String, String>,
+    /// Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
+    /// level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub active_level: Option<Option<String>>,
+    /// Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level_view: Option<LevelView>,
 }
 
 impl ArchSettings {
     pub fn is_empty(&self) -> bool {
         self == &ArchSettings::default()
+    }
+
+    /// Whether it says the level and view the drawing opens with (KCAD 120, docs/adr/0720 §1).
+    pub fn has_level_state(&self) -> bool {
+        self.active_level.is_some() || self.level_view.is_some()
     }
 
     /// The detail walls are drawn at in a drawing at 1:`scale`.
@@ -1110,6 +1168,22 @@ impl ArchSettings {
             {
                 return Some((path, "Mahal numara öneki boş, başında/sonunda boşluklu veya kontrol karakterli olamaz; en çok 253 karakterdir.".into()));
             }
+        }
+        // Etkin kat and Kat görünümü the drawing opens with (docs/adr/0720 §1): a project's level, Katsız or none.
+        if self.levels.is_empty() && self.has_level_state() {
+            let path = if self.active_level.is_some() { "activeLevel" } else { "levelView" };
+            return Some((
+                path.into(),
+                "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.".into(),
+            ));
+        }
+        if let Some(Some(id)) = &self.active_level
+            && !self.levels.iter().any(|l| l.id == *id)
+        {
+            return Some((
+                "activeLevel".into(),
+                format!("Etkin kat olarak verilen “{id}” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın."),
+            ));
         }
         None
     }
@@ -1329,6 +1403,32 @@ mod tests {
             serde_json::from_value::<ArchSettings>(serde_json::to_value(&a).unwrap()).unwrap(),
             a
         );
+    }
+
+    /// The level a drawing opens on (docs/adr/0720 §1): a level, null for Katsız, absent for its ground level; one of
+    /// the project's, and none without levels.
+    #[test]
+    fn the_level_state_is_a_level_katsiz_or_absent_and_needs_the_projects_levels() {
+        let levels = serde_json::json!([{"id":"zemin","name":"Zemin kat","elevation":0.},{"id":"k1","name":"1. kat","elevation":3.}]);
+        let read = |extra: serde_json::Value| {
+            let mut v = serde_json::json!({ "levels": levels });
+            v.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+            serde_json::from_value::<ArchSettings>(v).unwrap()
+        };
+        let on = read(serde_json::json!({"activeLevel":"k1","levelView":"below"}));
+        assert_eq!((on.active_level.clone(), on.level_view), (Some(Some("k1".into())), Some(LevelView::Below)));
+        assert!(on.has_level_state() && on.problem().is_none());
+        let katsiz = read(serde_json::json!({"activeLevel":null}));
+        assert_eq!(katsiz.active_level, Some(None));
+        assert_eq!(serde_json::to_value(&katsiz).unwrap()["activeLevel"], serde_json::Value::Null);
+        assert!(katsiz.problem().is_none());
+        let plain = read(serde_json::json!({}));
+        assert!(!plain.has_level_state());
+        assert!(serde_json::to_value(&plain).unwrap().get("activeLevel").is_none());
+        assert_eq!(read(serde_json::json!({"activeLevel":"yok"})).problem().unwrap().0, "activeLevel");
+        let bare: ArchSettings = serde_json::from_value(serde_json::json!({"levelView":"active"})).unwrap();
+        assert_eq!(bare.problem().unwrap().0, "levelView");
+        assert_eq!(LevelView::ALL.map(LevelView::name), ["all", "active", "below"]);
     }
 
     #[test]

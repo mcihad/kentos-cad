@@ -48,7 +48,8 @@ katsızdır.
 
 ### 3. Masaüstü
 
-- Durum oturumundur (etkin kat gibi), dosyaya yazılmaz; açılış Bütün katlar'dır.
+- Durum oturumundur (etkin kat gibi), dosyaya yazılmaz; açılış Bütün katlar'dır. ([ADR 0720](0720-active-level-in-the-file.md)
+  ile dosyada: çizim kaydedildiği görünümle açılır.)
 - Durum çubuğunun Kat menüsü: etkin kat seçimi, sonra **Kat görünümü** başlığı altında üç seçim. Kat hücresinin ikonu
   görünümü söyler (üç çizgi: bütün katlar; kalın orta: yalnız etkin kat; altında soluk: alt kat soluk); ipucu da yazar.
 - Görünüm sekmesinin Görünüş panelinde (yalnız CAD) **Kat görünümü ▾**; komut adları `view.levels.all`, `.active`,

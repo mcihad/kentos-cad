@@ -568,6 +568,13 @@
             "additionalProperties": false,
             "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
             "properties": {
+              "activeLevel": {
+                "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "detail": {
                 "anyOf": [
                   {
@@ -577,6 +584,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "levelView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LevelView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar."
               },
               "levels": {
                 "items": {
@@ -11448,6 +11466,26 @@
               {
                 "const": "fractional",
                 "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
+          "LevelView": {
+            "description": "Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;\nYalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Bütün katlar.",
+                "type": "string"
+              },
+              {
+                "const": "active",
+                "description": "Yalnız etkin kat.",
+                "type": "string"
+              },
+              {
+                "const": "below",
+                "description": "Etkin kat ve alt kat: the level under the active one faint.",
                 "type": "string"
               }
             ]
@@ -31641,6 +31679,13 @@
             "additionalProperties": false,
             "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
             "properties": {
+              "activeLevel": {
+                "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "detail": {
                 "anyOf": [
                   {
@@ -31650,6 +31695,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "levelView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LevelView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar."
               },
               "levels": {
                 "items": {
@@ -37890,6 +37946,26 @@
               }
             ]
           },
+          "LevelView": {
+            "description": "Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;\nYalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Bütün katlar.",
+                "type": "string"
+              },
+              {
+                "const": "active",
+                "description": "Yalnız etkin kat.",
+                "type": "string"
+              },
+              {
+                "const": "below",
+                "description": "Etkin kat ve alt kat: the level under the active one faint.",
+                "type": "string"
+              }
+            ]
+          },
           "LineLabelMode": {
             "description": "Where a line's label goes.",
             "oneOf": [
@@ -42165,6 +42241,13 @@
             "additionalProperties": false,
             "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
             "properties": {
+              "activeLevel": {
+                "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "detail": {
                 "anyOf": [
                   {
@@ -42174,6 +42257,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "levelView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LevelView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar."
               },
               "levels": {
                 "items": {
@@ -52947,6 +53041,26 @@
               {
                 "const": "fractional",
                 "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
+          "LevelView": {
+            "description": "Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;\nYalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Bütün katlar.",
+                "type": "string"
+              },
+              {
+                "const": "active",
+                "description": "Yalnız etkin kat.",
+                "type": "string"
+              },
+              {
+                "const": "below",
+                "description": "Etkin kat ve alt kat: the level under the active one faint.",
                 "type": "string"
               }
             ]
@@ -1120022,6 +1120136,13 @@
             "additionalProperties": false,
             "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
             "properties": {
+              "activeLevel": {
+                "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "detail": {
                 "anyOf": [
                   {
@@ -1120031,6 +1120152,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "levelView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LevelView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar."
               },
               "levels": {
                 "items": {
@@ -1120224,6 +1120356,26 @@
               }
             ]
           },
+          "LevelView": {
+            "description": "Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;\nYalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Bütün katlar.",
+                "type": "string"
+              },
+              {
+                "const": "active",
+                "description": "Yalnız etkin kat.",
+                "type": "string"
+              },
+              {
+                "const": "below",
+                "description": "Etkin kat ve alt kat: the level under the active one faint.",
+                "type": "string"
+              }
+            ]
+          },
           "PhaseView": {
             "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
             "enum": [
@@ -1120269,7 +1120421,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away;\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a\nproject without a system).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -1120290,7 +1120442,7 @@
                 "type": "null"
               }
             ],
-            "description": "Whole architectural project preferences, including optional room name/usage lists and level prefixes.\nCopy existing levels/detail/phase when changing suggestions; this is not a nested patch.\nThese suggestions do not rename or renumber existing rooms. Settings retain the existing history policy."
+            "description": "Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the\nlevel and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).\nCopy existing levels/detail/phase when changing suggestions; this is not a nested patch.\nThese suggestions do not rename or renumber existing rooms. Settings retain the existing history policy."
           },
           "areaDecimals": {
             "format": "uint32",
@@ -1188381,6 +1188533,13 @@
             "additionalProperties": false,
             "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
             "properties": {
+              "activeLevel": {
+                "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "detail": {
                 "anyOf": [
                   {
@@ -1188390,6 +1188549,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "levelView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LevelView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar."
               },
               "levels": {
                 "items": {
@@ -1199261,6 +1199431,26 @@
               {
                 "const": "fractional",
                 "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
+          "LevelView": {
+            "description": "Kat görünümü (docs/adr/0715, 0720): which of the project's levels the plan shows. Bütün katlar draws them all;\nYalnız etkin kat the active level's objects and those on no level; Etkin kat ve alt kat the level under it faint.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Bütün katlar.",
+                "type": "string"
+              },
+              {
+                "const": "active",
+                "description": "Yalnız etkin kat.",
+                "type": "string"
+              },
+              {
+                "const": "below",
+                "description": "Etkin kat ve alt kat: the level under the active one faint.",
                 "type": "string"
               }
             ]
@@ -1465817,7 +1466007,7 @@
       "code": "level_in_use",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Katı bir ya da daha çok duvar anıyor; kaldırılmadı. Önce duvarların katını değiştirin."
+      "meaning": "Katı bir mimari nesne ya da pafta haritası anıyor; kaldırılmadı. Önce onlara başka kat verin."
     },
     {
       "code": "not_a_wall",

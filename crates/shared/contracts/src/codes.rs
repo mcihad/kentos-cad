@@ -1608,7 +1608,7 @@ codes! {
     /// Project levels that do not hold: two of one id or name, an elevation or a height.
     INVALID_ARCH = "invalid_arch", Failed, false, "Katlar geçersiz: iki katın kimliği ya da adı aynı, ya da bir katın kotu ya da yüksekliği sayı değil.";
     /// A level a wall names, not taken away.
-    LEVEL_IN_USE = "level_in_use", Failed, false, "Katı bir ya da daha çok duvar anıyor; kaldırılmadı. Önce duvarların katını değiştirin.";
+    LEVEL_IN_USE = "level_in_use", Failed, false, "Katı bir mimari nesne ya da pafta haritası anıyor; kaldırılmadı. Önce onlara başka kat verin.";
     /// An object that is no wall where a wall is asked.
     NOT_A_WALL = "not_a_wall", Failed, false, "Nesne duvar değil.";
     /// An object no wall is drawn along.

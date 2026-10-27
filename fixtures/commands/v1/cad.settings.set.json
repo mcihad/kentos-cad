@@ -4,7 +4,7 @@
   "command": "cad.settings.set",
   "commandVersion": 1,
   "title": "Proje ayarları",
-  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3; do not edit by hand.",
+  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -4166,8 +4166,11 @@
             "status": "failed",
             "error": {
               "code": "level_in_use",
-              "message": "“zemin” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın.",
-              "path": "arch.levels"
+              "message": "“Zemin kat” katını 1 duvar anıyor; kaldırılmadı. Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın.",
+              "path": "arch.levels",
+              "uids": [
+                "$uidOf:5"
+              ]
             }
           },
           "expect": {
@@ -4348,6 +4351,2974 @@
           "categories": []
         }
       }
+    },
+    {
+      "name": "her türün andığı kat kaldırılmaz: sayılar ve kimlikler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 3.0,
+                  "height": 3.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“Zemin kat” katını 2 duvar, 1 mahal, 1 mahal ayırıcı, 1 kolon, 1 aks, 1 merdiven ve 1 rampa anıyor; kaldırılmadı. Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın.",
+              "path": "arch.levels",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:4",
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:11"
+              ]
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0,
+                    "height": 3.0
+                  },
+                  {
+                    "id": "kat-1",
+                    "name": "1. kat",
+                    "elevation": 3.0,
+                    "height": 3.0
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kat ver",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat-1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              },
+              {
+                "x": 0.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "closed": true,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7170-7000-8000-000000000001",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.55,
+                "y": 0.1
+              },
+              {
+                "x": 1.55,
+                "y": -0.1
+              },
+              {
+                "x": 2.45,
+                "y": 0.1
+              },
+              {
+                "x": 2.45,
+                "y": -0.1
+              }
+            ],
+            "number": "K1"
+          },
+          {
+            "kind": "tag",
+            "id": 3,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7170-7000-8000-000000000002",
+            "at": {
+              "x": 2.0,
+              "y": -0.8
+            },
+            "text": "K1",
+            "anchor": {
+              "x": 2.0,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "space",
+            "id": 4,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 3.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 3.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 3.0,
+              "y": 2.0
+            },
+            "name": "Oda",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "column",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 10.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "stair",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 15.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "ramp",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 5.0
+              },
+              {
+                "x": 22.0,
+                "y": 5.0
+              }
+            ],
+            "width": 1.5,
+            "rise": 0.5,
+            "slope": 5.0,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -2.0,
+                "y": -2.0
+              },
+              {
+                "x": -2.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 9,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 40.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 10,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 10.0
+              },
+              {
+                "x": 6.0,
+                "y": 10.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 11,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": 0.0
+              },
+              {
+                "x": 34.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 20.0
+            },
+            "b": {
+              "x": 5.0,
+              "y": 20.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "cizim",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 24.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-7170-7000-8000-000000000001",
+          "0192f5a1-7170-7000-8000-000000000002",
+          "0192f5a1-7170-7000-8000-000000000003",
+          "0192f5a1-7170-7000-8000-000000000004",
+          "0192f5a1-7170-7000-8000-000000000005",
+          "0192f5a1-7170-7000-8000-000000000006",
+          "0192f5a1-7170-7000-8000-000000000007",
+          "0192f5a1-7170-7000-8000-000000000008",
+          "0192f5a1-7170-7000-8000-000000000009",
+          "0192f5a1-7170-7000-8000-00000000000a",
+          "0192f5a1-7170-7000-8000-00000000000b",
+          "0192f5a1-7170-7000-8000-00000000000c",
+          "0192f5a1-7170-7000-8000-00000000000d"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "bütün katlar kaldırılınca ilk kullanılan kat söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {}
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“Zemin kat” katını 2 duvar, 1 mahal, 1 mahal ayırıcı, 1 kolon, 1 aks, 1 merdiven ve 1 rampa anıyor; kaldırılmadı. Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın.",
+              "path": "arch.levels",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:4",
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:11"
+              ]
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kat ver",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat-1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              },
+              {
+                "x": 0.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "closed": true,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7170-7000-8000-000000000001",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.55,
+                "y": 0.1
+              },
+              {
+                "x": 1.55,
+                "y": -0.1
+              },
+              {
+                "x": 2.45,
+                "y": 0.1
+              },
+              {
+                "x": 2.45,
+                "y": -0.1
+              }
+            ],
+            "number": "K1"
+          },
+          {
+            "kind": "tag",
+            "id": 3,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7170-7000-8000-000000000002",
+            "at": {
+              "x": 2.0,
+              "y": -0.8
+            },
+            "text": "K1",
+            "anchor": {
+              "x": 2.0,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "space",
+            "id": 4,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 3.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 3.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 3.0,
+              "y": 2.0
+            },
+            "name": "Oda",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "column",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 10.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "stair",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 15.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "ramp",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 5.0
+              },
+              {
+                "x": 22.0,
+                "y": 5.0
+              }
+            ],
+            "width": 1.5,
+            "rise": 0.5,
+            "slope": 5.0,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -2.0,
+                "y": -2.0
+              },
+              {
+                "x": -2.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 9,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 40.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 10,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 10.0
+              },
+              {
+                "x": 6.0,
+                "y": 10.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 11,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": 0.0
+              },
+              {
+                "x": 34.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 20.0
+            },
+            "b": {
+              "x": 5.0,
+              "y": 20.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "cizim",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 24.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-7170-7000-8000-000000000001",
+          "0192f5a1-7170-7000-8000-000000000002",
+          "0192f5a1-7170-7000-8000-000000000003",
+          "0192f5a1-7170-7000-8000-000000000004",
+          "0192f5a1-7170-7000-8000-000000000005",
+          "0192f5a1-7170-7000-8000-000000000006",
+          "0192f5a1-7170-7000-8000-000000000007",
+          "0192f5a1-7170-7000-8000-000000000008",
+          "0192f5a1-7170-7000-8000-000000000009",
+          "0192f5a1-7170-7000-8000-00000000000a",
+          "0192f5a1-7170-7000-8000-00000000000b",
+          "0192f5a1-7170-7000-8000-00000000000c",
+          "0192f5a1-7170-7000-8000-00000000000d"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "üst katın tek duvarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“1. kat” katını 1 duvar anıyor; kaldırılmadı. Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın.",
+              "path": "arch.levels",
+              "uids": [
+                "$uidOf:10"
+              ]
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kat ver",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat-1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              },
+              {
+                "x": 0.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "closed": true,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7170-7000-8000-000000000001",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.55,
+                "y": 0.1
+              },
+              {
+                "x": 1.55,
+                "y": -0.1
+              },
+              {
+                "x": 2.45,
+                "y": 0.1
+              },
+              {
+                "x": 2.45,
+                "y": -0.1
+              }
+            ],
+            "number": "K1"
+          },
+          {
+            "kind": "tag",
+            "id": 3,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7170-7000-8000-000000000002",
+            "at": {
+              "x": 2.0,
+              "y": -0.8
+            },
+            "text": "K1",
+            "anchor": {
+              "x": 2.0,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "space",
+            "id": 4,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.9,
+                      "y": 3.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 3.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 3.0,
+              "y": 2.0
+            },
+            "name": "Oda",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "column",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 10.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "stair",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 15.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "ramp",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 5.0
+              },
+              {
+                "x": 22.0,
+                "y": 5.0
+              }
+            ],
+            "width": 1.5,
+            "rise": 0.5,
+            "slope": 5.0,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -2.0,
+                "y": -2.0
+              },
+              {
+                "x": -2.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 9,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 40.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 10,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 10.0
+              },
+              {
+                "x": 6.0,
+                "y": 10.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 11,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": 0.0
+              },
+              {
+                "x": 34.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 20.0
+            },
+            "b": {
+              "x": 5.0,
+              "y": 20.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "cizim",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 22.0
+              },
+              {
+                "x": 5.0,
+                "y": 24.0
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-7170-7000-8000-000000000001",
+          "0192f5a1-7170-7000-8000-000000000002",
+          "0192f5a1-7170-7000-8000-000000000003",
+          "0192f5a1-7170-7000-8000-000000000004",
+          "0192f5a1-7170-7000-8000-000000000005",
+          "0192f5a1-7170-7000-8000-000000000006",
+          "0192f5a1-7170-7000-8000-000000000007",
+          "0192f5a1-7170-7000-8000-000000000008",
+          "0192f5a1-7170-7000-8000-000000000009",
+          "0192f5a1-7170-7000-8000-00000000000a",
+          "0192f5a1-7170-7000-8000-00000000000b",
+          "0192f5a1-7170-7000-8000-00000000000c",
+          "0192f5a1-7170-7000-8000-00000000000d"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "pafta haritasının gösterdiği kat kaldırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“1. kat” katını 1 pafta haritası gösteriyor; kaldırılmadı. Önce haritanın katını değiştirin (paftada Harita › Kat) ya da katı bırakın.",
+              "path": "arch.levels"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5a1-7171-7000-8000-0000005e7001",
+          "0192f5a1-7171-7000-8000-0000005e7002",
+          "0192f5a1-7171-7000-8000-0000005e7003",
+          "0192f5a1-7171-7000-8000-0000005e7004"
+        ],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "export": {
+                  "dpi": 300,
+                  "fileName": "[% @pafta_adi %]",
+                  "format": "svg"
+                },
+                "guides": [],
+                "id": "ground",
+                "items": [
+                  {
+                    "bindings": [],
+                    "constraints": {
+                      "h": "left",
+                      "relativeTo": "margins",
+                      "v": "top"
+                    },
+                    "frame": {
+                      "height": 230000,
+                      "left": 20000,
+                      "top": 10000,
+                      "width": 390000
+                    },
+                    "hidden": false,
+                    "id": "ground-harita",
+                    "kind": {
+                      "clipToAtlasFeature": false,
+                      "grids": [],
+                      "labelBand": 0,
+                      "layers": {
+                        "type": "all"
+                      },
+                      "overviewFrame": {
+                        "cap": "butt",
+                        "color": "#d0021b",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 500
+                      },
+                      "type": "map",
+                      "view": {
+                        "center": {
+                          "x": 2.5,
+                          "y": 0.0
+                        },
+                        "rotation": 0,
+                        "scale": 50,
+                        "type": "fixed"
+                      },
+                      "viewLocked": true,
+                      "level": {
+                        "id": "k1"
+                      }
+                    },
+                    "locked": false,
+                    "name": "Harita",
+                    "opacity": 100,
+                    "padding": 0,
+                    "printable": true,
+                    "rotation": 0
+                  },
+                  {
+                    "id": "ground-title",
+                    "name": "Başlık",
+                    "frame": {
+                      "left": 30000,
+                      "top": 260000,
+                      "width": 200000,
+                      "height": 10000
+                    },
+                    "kind": {
+                      "type": "text",
+                      "content": "[% @pafta_adi %]",
+                      "style": {
+                        "size": 3500
+                      }
+                    }
+                  },
+                  {
+                    "id": "ground-marker",
+                    "name": "Sıra kontrolü",
+                    "frame": {
+                      "left": 30000,
+                      "top": 245000,
+                      "width": 10000,
+                      "height": 1000
+                    },
+                    "kind": {
+                      "type": "line",
+                      "points": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          1000000,
+                          0
+                        ]
+                      ],
+                      "stroke": {
+                        "width": 250,
+                        "color": "#aa22cc"
+                      }
+                    }
+                  }
+                ],
+                "name": "Kat planı",
+                "page": {
+                  "margins": {
+                    "bottom": 10000,
+                    "left": 20000,
+                    "right": 10000,
+                    "top": 10000
+                  },
+                  "orientation": "landscape",
+                  "paper": "a3",
+                  "size": {
+                    "height": 297000,
+                    "width": 420000
+                  }
+                },
+                "snapGrid": {
+                  "enabled": false,
+                  "spacing": 5000,
+                  "visible": false
+                },
+                "variables": [],
+                "variants": []
+              }
+            ],
+            "masters": [],
+            "assets": [],
+            "variables": []
+          }
+        }
+      }
+    },
+    {
+      "name": "hem duvar hem pafta haritası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“1. kat” katını 1 duvar anıyor, 1 pafta haritası gösteriyor; kaldırılmadı. Önce nesnelere ve haritalara başka kat verin ya da katı bırakın.",
+              "path": "arch.levels",
+              "uids": [
+                "$uidOf:5"
+              ]
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400020
+              },
+              {
+                "x": 500005,
+                "y": 4400020
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "k1"
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5a1-7171-7000-8000-0000005e7001",
+          "0192f5a1-7171-7000-8000-0000005e7002",
+          "0192f5a1-7171-7000-8000-0000005e7003",
+          "0192f5a1-7171-7000-8000-0000005e7004",
+          "0192f5a1-7171-7000-8000-0000005e7005"
+        ],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "export": {
+                  "dpi": 300,
+                  "fileName": "[% @pafta_adi %]",
+                  "format": "svg"
+                },
+                "guides": [],
+                "id": "ground",
+                "items": [
+                  {
+                    "bindings": [],
+                    "constraints": {
+                      "h": "left",
+                      "relativeTo": "margins",
+                      "v": "top"
+                    },
+                    "frame": {
+                      "height": 230000,
+                      "left": 20000,
+                      "top": 10000,
+                      "width": 390000
+                    },
+                    "hidden": false,
+                    "id": "ground-harita",
+                    "kind": {
+                      "clipToAtlasFeature": false,
+                      "grids": [],
+                      "labelBand": 0,
+                      "layers": {
+                        "type": "all"
+                      },
+                      "overviewFrame": {
+                        "cap": "butt",
+                        "color": "#d0021b",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 500
+                      },
+                      "type": "map",
+                      "view": {
+                        "center": {
+                          "x": 2.5,
+                          "y": 0.0
+                        },
+                        "rotation": 0,
+                        "scale": 50,
+                        "type": "fixed"
+                      },
+                      "viewLocked": true,
+                      "level": {
+                        "id": "k1"
+                      }
+                    },
+                    "locked": false,
+                    "name": "Harita",
+                    "opacity": 100,
+                    "padding": 0,
+                    "printable": true,
+                    "rotation": 0
+                  },
+                  {
+                    "id": "ground-title",
+                    "name": "Başlık",
+                    "frame": {
+                      "left": 30000,
+                      "top": 260000,
+                      "width": 200000,
+                      "height": 10000
+                    },
+                    "kind": {
+                      "type": "text",
+                      "content": "[% @pafta_adi %]",
+                      "style": {
+                        "size": 3500
+                      }
+                    }
+                  },
+                  {
+                    "id": "ground-marker",
+                    "name": "Sıra kontrolü",
+                    "frame": {
+                      "left": 30000,
+                      "top": 245000,
+                      "width": 10000,
+                      "height": 1000
+                    },
+                    "kind": {
+                      "type": "line",
+                      "points": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          1000000,
+                          0
+                        ]
+                      ],
+                      "stroke": {
+                        "width": 250,
+                        "color": "#aa22cc"
+                      }
+                    }
+                  }
+                ],
+                "name": "Kat planı",
+                "page": {
+                  "margins": {
+                    "bottom": 10000,
+                    "left": 20000,
+                    "right": 10000,
+                    "top": 10000
+                  },
+                  "orientation": "landscape",
+                  "paper": "a3",
+                  "size": {
+                    "height": 297000,
+                    "width": 420000
+                  }
+                },
+                "snapGrid": {
+                  "enabled": false,
+                  "spacing": 5000,
+                  "visible": false
+                },
+                "variables": [],
+                "variants": []
+              }
+            ],
+            "masters": [],
+            "assets": [],
+            "variables": []
+          }
+        }
+      }
+    },
+    {
+      "name": "haritanın katı kaldıkça öbür kat kaldırılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5a1-7171-7000-8000-0000005e7001",
+          "0192f5a1-7171-7000-8000-0000005e7002",
+          "0192f5a1-7171-7000-8000-0000005e7003",
+          "0192f5a1-7171-7000-8000-0000005e7004"
+        ],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "export": {
+                  "dpi": 300,
+                  "fileName": "[% @pafta_adi %]",
+                  "format": "svg"
+                },
+                "guides": [],
+                "id": "ground",
+                "items": [
+                  {
+                    "bindings": [],
+                    "constraints": {
+                      "h": "left",
+                      "relativeTo": "margins",
+                      "v": "top"
+                    },
+                    "frame": {
+                      "height": 230000,
+                      "left": 20000,
+                      "top": 10000,
+                      "width": 390000
+                    },
+                    "hidden": false,
+                    "id": "ground-harita",
+                    "kind": {
+                      "clipToAtlasFeature": false,
+                      "grids": [],
+                      "labelBand": 0,
+                      "layers": {
+                        "type": "all"
+                      },
+                      "overviewFrame": {
+                        "cap": "butt",
+                        "color": "#d0021b",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 500
+                      },
+                      "type": "map",
+                      "view": {
+                        "center": {
+                          "x": 2.5,
+                          "y": 0.0
+                        },
+                        "rotation": 0,
+                        "scale": 50,
+                        "type": "fixed"
+                      },
+                      "viewLocked": true,
+                      "level": {
+                        "id": "k1"
+                      }
+                    },
+                    "locked": false,
+                    "name": "Harita",
+                    "opacity": 100,
+                    "padding": 0,
+                    "printable": true,
+                    "rotation": 0
+                  },
+                  {
+                    "id": "ground-title",
+                    "name": "Başlık",
+                    "frame": {
+                      "left": 30000,
+                      "top": 260000,
+                      "width": 200000,
+                      "height": 10000
+                    },
+                    "kind": {
+                      "type": "text",
+                      "content": "[% @pafta_adi %]",
+                      "style": {
+                        "size": 3500
+                      }
+                    }
+                  },
+                  {
+                    "id": "ground-marker",
+                    "name": "Sıra kontrolü",
+                    "frame": {
+                      "left": 30000,
+                      "top": 245000,
+                      "width": 10000,
+                      "height": 1000
+                    },
+                    "kind": {
+                      "type": "line",
+                      "points": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          1000000,
+                          0
+                        ]
+                      ],
+                      "stroke": {
+                        "width": 250,
+                        "color": "#aa22cc"
+                      }
+                    }
+                  }
+                ],
+                "name": "Kat planı",
+                "page": {
+                  "margins": {
+                    "bottom": 10000,
+                    "left": 20000,
+                    "right": 10000,
+                    "top": 10000
+                  },
+                  "orientation": "landscape",
+                  "paper": "a3",
+                  "size": {
+                    "height": 297000,
+                    "width": 420000
+                  }
+                },
+                "snapGrid": {
+                  "enabled": false,
+                  "spacing": 5000,
+                  "visible": false
+                },
+                "variables": [],
+                "variants": []
+              }
+            ],
+            "masters": [],
+            "assets": [],
+            "variables": []
+          }
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede zaten olmayan katı anan duvar öbür değişikliği engellemez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400020
+              },
+              {
+                "x": 500005,
+                "y": 4400020
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "eski"
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etkin kat ve kat görünümü: açılışın katı ve görünümü yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "activeLevel": "k1",
+              "levelView": "below"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "activeLevel": "k1",
+                "levelView": "below"
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "activeLevel": null,
+              "levelView": "active"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "activeLevel": null,
+                "levelView": "active"
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bütün katlar yazılmaz: kat görünümü yokmuş gibi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "activeLevel": "zemin",
+              "levelView": "all"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "activeLevel": "zemin"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "etkin kat projede yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "activeLevel": "yok"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Etkin kat olarak verilen “yok” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın.",
+              "path": "arch.activeLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaldırılan kat etkin kat olarak kalamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "activeLevel": "zemin"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Etkin kat olarak verilen “zemin” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın.",
+              "path": "arch.activeLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız projenin kat görünümü olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levelView": "active"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.",
+              "path": "arch.levelView"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız projede Katsız da yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "activeLevel": null,
+              "detail": "standard"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.",
+              "path": "arch.activeLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
     },
     {
       "name": "duvarın andığı kat kaldıkça öbürleri değişir",

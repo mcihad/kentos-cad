@@ -1253,6 +1253,8 @@ __all__ = [
     "LevelMethod",
     "LevelMethodName",
     "LevelPaperMapLevelChoice",
+    "LevelView",
+    "LevelViewName",
     "LevelsAssign",
     "LevelsAssigned",
     "LibraryConflict",

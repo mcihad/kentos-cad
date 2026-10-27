@@ -14,6 +14,24 @@ use kentos_ui::{label, style};
 
 use crate::app::Message;
 
+/// A level the rows take away that objects or a sheet's map name (docs/adr/0720 §3): why it stays, under the
+/// levels, with Nesneleri seç when objects name it; nothing otherwise. Kaydet waits meanwhile.
+pub fn in_use_view<'a>(
+    in_use: Option<&kentos_commands::CommandError>,
+    select: Message,
+) -> Element<'a, Message> {
+    let Some(e) = in_use else {
+        return Column::new().into();
+    };
+    // Said before Kaydet: it cannot go, rather than it did not.
+    let banner = Banner::warning(e.message.replacen("; kaldırılmadı.", "; kaldırılamaz.", 1));
+    if e.uids.is_empty() {
+        banner.into()
+    } else {
+        banner.action(format!("Nesneleri seç ({})", e.uids.len()), select).into()
+    }
+}
+
 /// A level as typed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Row {
@@ -159,6 +177,9 @@ pub fn read(
         detail,
         space_method,
         phase_view: None,
+        // The level and view the drawing opens with are not this form's (docs/adr/0720 §1).
+        active_level: None,
+        level_view: None,
         space_names: choices.map_or_else(Vec::new, |a| {
             a.space_names.iter().map(|s| s.trim().to_owned()).collect()
         }),

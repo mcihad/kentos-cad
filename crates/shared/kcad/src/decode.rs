@@ -1108,6 +1108,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }
+                if !has.level_state && a.has_level_state() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin etkin katı ve kat görünümü şema 120'den beri yazılır",
+                    ));
+                }
                 if !has.phases && a.phase_view.is_some() {
                     return Err(r.fail_at(
                         Code::UnknownField,

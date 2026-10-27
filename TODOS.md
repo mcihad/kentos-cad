@@ -117,6 +117,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-UX-04 / ADR0717: Kat ver. Web'in Denetim'i kat bulgularının düzeltmesini
   (`cad.levels.assign`, etkin kat) ve Kata ver ▾'yi (Seç ve göster, tek adım), web'in
   Öznitelikler'i karışık mimari seçimde ortak Kat satırını almalı.
+- ARCH-UX-04 / ADR0720: Etkin kat dosyada. Web'in kaydı ekrandaki etkin katı ve kat
+  görünümünü `arch.activeLevel`/`levelView`'e (KCAD 120) yazmalı, açılış onlarla başlamalı (her
+  sekme kendi katı); Proje ayarları kullanılan katı silmeden önce sayıları ve Nesneleri seç'i
+  göstermeli; Üst kat/Alt kat (Ctrl+↑/↓) ve araçların kat değişimini hemen izlemesi
+  (`cad.settings.set.json` ile sınanmalı).
 - ARCH-ELEM-02 / ADR0719: Niş, baca ve tesisat boşluğu. Web'in açıklık modeli `niche`/`flue`
   biçimlerini, `depth`/`inset`'i ve `tooDeep`'i (KCAD 119), duvar çiziminin kısmi derinlik
   kesimini ve kesme yüksekliğine göre kesikli çizimi (`fixtures/walls/v1/openings.json`),

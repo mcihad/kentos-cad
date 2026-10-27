@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Etkin kat dosyada (27 Ekim 2026; [ADR0720](docs/adr/0720-active-level-in-the-file.md)).**
+  Çizim kaydedildiği etkin katta ve kat görünümüyle açılır: `arch.activeLevel` (kat kimliği, Katsız `null`) ve
+  `levelView`, KCAD 120 opt-in; kaydetme ve kurtarma kopyası ekrandakini anlık görüntüye yazar
+  (`active_level::with_level_state`), belge değişmez; sekme başına kat. `cad.settings.set` kaldırılan katı anan her
+  mimari türü ve pafta haritasını sayıp kimlikleriyle reddeder (`settings_set::levels_in_use`); Proje ayarları uyarıyı
+  ve Nesneleri seç'i gösterir. Üst kat/Alt kat (`view.levels.up/down`, Ctrl+↑/↓); `Tool::level_changed` ile araçlar
+  katı hemen izler.
+
 - **Niş, baca ve tesisat boşluğu (27 Ekim 2026; [ADR0719](docs/adr/0719-niches-flues-service-holes.md)).**
   Açıklığın `niche` (bir yüzden `depth` içeri) ve `flue` (duvarın içinde, `inset` yoksa ortada) biçimleri, yüz `side`;
   KCAD 119 opt-in. Sığmayan derinlik `recess_too_deep`, sonradan incelen duvarda `tooDeep`. Boşluk/niş/baca

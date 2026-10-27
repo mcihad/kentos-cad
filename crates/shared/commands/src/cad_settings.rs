@@ -50,7 +50,9 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `drawingFont`: the drawing's typeface;
 /// - `arch`: the project's levels and the detail its walls are drawn at
 ///   (docs/adr/0339 §3), whole: the given settings take the place of the
-///   old ones, an empty object takes them away;
+///   old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
+///   `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
+///   (docs/adr/0720 §1);
 /// - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
 ///   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -62,15 +64,17 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
 /// (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
 /// (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
-/// (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
+/// (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
+/// view without levels), `invalid_heights`, `invalid_epoch`; then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `project_type_locked` (an existing project type changed),
 /// `second_needs_system` (a second system for a project without one),
 /// `second_is_own` (the second system the project's own), `unit_needs_local`
 /// (a unit other than metres for a project with a system),
 /// `style_needs_imperial` (a feet-and-inches style for a metric unit),
-/// `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
-/// project without a system).
+/// `level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a
+/// sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
+/// `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -132,7 +136,8 @@ pub struct SettingsSet {
     pub drawing_font: Option<DrawingFont>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    /// Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+    /// Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the
+    /// level and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).
     /// Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
     /// These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
     pub arch: Option<crate::ArchSettings>,

@@ -27,6 +27,8 @@ pub struct Parked {
     camera: Camera,
     pub(crate) selection: Selection,
     views: ViewHistory,
+    /// Its Etkin kat and Kat görünümü (docs/adr/0720 §2).
+    level: (crate::active_level::Chosen, kentos_interaction::level_view::LevelView),
 }
 
 /// The drawings set aside, and where the one on screen stands among them.
@@ -115,6 +117,7 @@ impl App {
             camera: self.viewport.camera,
             selection,
             views: std::mem::replace(&mut self.view_history, ViewHistory::new()),
+            level: (std::mem::take(&mut self.active_level), std::mem::take(&mut self.level_view)),
         };
         let at = self.doc_tabs.at.min(self.doc_tabs.parked.len());
         self.doc_tabs.parked.insert(at, parked);
@@ -137,13 +140,14 @@ impl App {
         }
         // Parking put the drawing on screen at `at - 1`: the one asked for shifted when it stood after.
         let index = if k_parked >= self.doc_tabs.at - 1 { k_parked + 1 } else { k_parked };
-        let Parked { document, camera, selection, views } = self.doc_tabs.parked.remove(index);
+        let Parked { document, camera, selection, views, level } = self.doc_tabs.parked.remove(index);
         self.doc_tabs.at = index;
         let name = document.name().to_owned();
         self.show_document(document);
         self.viewport.camera = camera;
         self.selection = selection;
         self.view_history = views;
+        self.give_level_state(level);
         self.output(format!("Önde: {name}."));
     }
 
@@ -175,12 +179,13 @@ impl App {
         };
         match next {
             Some(index) => {
-                let Parked { document, camera, selection, views } = self.doc_tabs.parked.remove(index);
+                let Parked { document, camera, selection, views, level } = self.doc_tabs.parked.remove(index);
                 self.doc_tabs.at = index;
                 self.show_document(document);
                 self.viewport.camera = camera;
                 self.selection = selection;
                 self.view_history = views;
+                self.give_level_state(level);
             }
             None => {
                 self.doc_tabs.at = 0;

@@ -290,6 +290,11 @@ impl InteriorDimensions {
 }
 
 impl Tool for InteriorDimensions {
+    /// Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.menus(cx);
+        self.see(cx);
+    }
     fn id(&self) -> &'static str {
         ID
     }

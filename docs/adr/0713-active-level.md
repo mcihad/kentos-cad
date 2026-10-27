@@ -53,7 +53,8 @@ söyleyen oturum durumu. Kat görünümü (yalnız etkin katı gösterme, öbür
 
 ## Sınırlar
 
-- Etkin kat dosyaya yazılmaz; çizim her açılışta zemin katta başlar.
+- Etkin kat dosyaya yazılmaz; çizim her açılışta zemin katta başlar. ([ADR 0720](0720-active-level-in-the-file.md) ile
+  dosyada: çizim kaydedildiği katta açılır.)
 - Kat görünümü yoktur: bütün katlar birlikte çizilir; katları planda ayırmak katmanlarla ya da yan yana çizimle yapılır.
   (ADR 0715 ile geldi: Yalnız etkin kat, Etkin kat ve alt kat.)
 - Açıklık katını duvarından, etiket kaynağının katını kendi kuralından alır (ADR 0663); onlara etkin kat yazılmaz.

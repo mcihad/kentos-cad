@@ -116,7 +116,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         Args:
             doc: The drawing it works on.
             angle_unit:
-            arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+            arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the
+                level and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).
                 Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
                 These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
             area_decimals: Unit: count.

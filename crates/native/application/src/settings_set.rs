@@ -12,7 +12,7 @@
 use std::sync::OnceLock;
 
 use kentos_commands::{
-    CommandResult, DrawingUnit, Entity, HeightKind, LengthStyle, MAX_PLOT_SCALE,
+    CommandResult, DrawingUnit, Entity, HeightKind, LengthStyle, LevelView, MAX_PLOT_SCALE,
     MAX_SHOWN_DECIMALS, ProjectSettings, ScaleChange, SettingsChanged, SettingsSet, Workspace,
 };
 use kentos_domain::Document;
@@ -24,6 +24,99 @@ use crate::codes;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+/// What names a level by its own level, in the order a refusal says them (docs/adr/0720 §3).
+const LEVELLED: [&str; 7] = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa"];
+
+/// The place of an object that names a level by its own (`Entity::own_level`) in [`LEVELLED`].
+fn levelled_kind(e: &Entity) -> Option<usize> {
+    match e {
+        Entity::Wall(_) => Some(0),
+        Entity::Space(_) => Some(1),
+        Entity::Polyline(p) if p.space_separator.is_some() => Some(2),
+        Entity::Column(_) => Some(3),
+        Entity::Grid(_) => Some(4),
+        Entity::Stair(_) => Some(5),
+        Entity::Ramp(_) => Some(6),
+        _ => None,
+    }
+}
+
+/// `a`, `a ve b`, `a, b ve c`.
+fn listed(items: &[String]) -> String {
+    match items {
+        [] => String::new(),
+        [one] => one.clone(),
+        [rest @ .., last] => format!("{} ve {last}", rest.join(", ")),
+    }
+}
+
+/// A level `arch` takes away that an object names by its own level or a sheet's map shows (docs/adr/0339 §3, 0720
+/// §3): the refusal, said by the level's name with how many of each kind name it, their ids given. The first such
+/// level of the project's order; a level the project lacked before is not looked at (Denetim says those). Proje
+/// ayarları asks it before Kaydet.
+pub fn levels_in_use(doc: &Document, arch: &kentos_commands::ArchSettings) -> Option<kentos_commands::CommandError> {
+    let before = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    let mut removed = before.iter().filter(|l| !arch.levels.iter().any(|k| k.id == l.id)).peekable();
+    removed.peek()?;
+    // The levels the sheets' maps show (docs/adr/0716), one per map; an unreadable book names none.
+    let maps: Vec<String> = doc
+        .sheets()
+        .and_then(|s| kentos_sheet::project::read_project_sheets(s).ok())
+        .map(|(book, _)| {
+            let items = book.sheets.iter().flat_map(|s| &s.items).chain(book.masters.iter().flat_map(|m| &m.items));
+            items
+                .filter_map(|it| match &it.kind {
+                    kentos_sheet::kinds::ItemKind::Map(m) => m.level.as_ref().map(|l| l.id.clone()),
+                    _ => None,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    for level in removed {
+        let mut counts = [0_usize; LEVELLED.len()];
+        let mut uids = Vec::new();
+        for e in doc.entities() {
+            let Some(kind) = levelled_kind(e).filter(|_| e.own_level() == Some(level.id.as_str())) else {
+                continue;
+            };
+            counts[kind] += 1;
+            if let Some(uid) = doc.uid(kentos_domain::Slot(e.base().id)) {
+                uids.push(uid.to_string());
+            }
+        }
+        let shown = maps.iter().filter(|m| **m == level.id).count();
+        let objects: Vec<String> = counts
+            .iter()
+            .zip(LEVELLED)
+            .filter(|(n, _)| **n > 0)
+            .map(|(n, kind)| format!("{n} {kind}"))
+            .collect();
+        let (what, fix) = match (objects.is_empty(), shown) {
+            (true, 0) => continue,
+            (false, 0) => (
+                format!("{} anıyor", listed(&objects)),
+                "Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın.",
+            ),
+            (true, n) => (
+                format!("{n} pafta haritası gösteriyor"),
+                "Önce haritanın katını değiştirin (paftada Harita › Kat) ya da katı bırakın.",
+            ),
+            (false, n) => (
+                format!("{} anıyor, {n} pafta haritası gösteriyor", listed(&objects)),
+                "Önce nesnelere ve haritalara başka kat verin ya da katı bırakın.",
+            ),
+        };
+        let mut e = error(
+            codes::LEVEL_IN_USE,
+            format!("“{}” katını {what}; kaldırılmadı. {fix}", level.name),
+            Some("arch.levels".into()),
+        );
+        e.uids = uids;
+        return Some(e);
+    }
+    None
 }
 
 /// Whether the registry has the system (0: a local project, no system). The
@@ -267,25 +360,14 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
         s.drawing_font = Some(f);
     }
     if let Some(arch) = &input.arch {
-        // A wall keeps the level it names (docs/adr/0339 §3).
-        if let Some(id) = doc.entities().find_map(|e| match e {
-            Entity::Wall(w) => w
-                .wall
-                .arch
-                .level
-                .as_deref()
-                .filter(|id| !arch.levels.iter().any(|l| l.id == *id)),
-            _ => None,
-        }) {
-            return Err(fail(
-                codes::LEVEL_IN_USE,
-                format!(
-                    "“{id}” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın."
-                ),
-                "arch.levels",
-            ));
+        // A level an object or a sheet's map names stays (docs/adr/0339 §3, 0720 §3).
+        if let Some(e) = levels_in_use(doc, arch) {
+            return Err(Stop::failed(e));
         }
-        s.arch = (!arch.is_empty()).then(|| arch.clone());
+        let mut arch = arch.clone();
+        // Bütün katlar is no setting: a drawing without it opens with all levels (docs/adr/0720 §1).
+        arch.level_view = arch.level_view.filter(|v| *v != LevelView::All);
+        s.arch = (!arch.is_empty()).then_some(arch);
     }
     // What the elevations are and the epoch (docs/adr/0519 §1): assigned, no coordinate moves.
     if let Some(h) = &input.heights {

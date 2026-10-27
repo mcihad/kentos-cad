@@ -242,6 +242,8 @@ pub(super) struct Features {
     dimension_cross: bool,
     /// Schema 119: a niche, a flue, an opening's depth and inset and the break `tooDeep` (docs/adr/0719).
     recesses: bool,
+    /// Schema 120: the architectural settings' active level and level view (docs/adr/0720).
+    pub(super) level_state: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -444,6 +446,7 @@ impl Features {
             stair_arcs: schema >= crate::SCHEMA_WITH_STAIR_ARCS,
             dimension_cross: schema >= crate::SCHEMA_WITH_DIMENSION_CROSS,
             recesses: schema >= crate::SCHEMA_WITH_RECESSES,
+            level_state: schema >= crate::SCHEMA_WITH_LEVEL_STATE,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

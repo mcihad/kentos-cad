@@ -467,6 +467,8 @@ mod opening_scenes;
 #[cfg(test)]
 mod recess_scenes;
 #[cfg(test)]
+mod level_state_scenes;
+#[cfg(test)]
 mod space_scenes;
 #[cfg(test)]
 mod arch_scenes;

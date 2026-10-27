@@ -17,7 +17,7 @@ use crate::tools_screens::{Pointed, Scene, press_caption};
 use crate::wall_scenes::opened;
 
 /// The plan with room round it for the dimension rows.
-fn view(app: &mut App) {
+pub(crate) fn view(app: &mut App) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E - 3.5,
@@ -288,7 +288,7 @@ fn audit(app: &mut App) {
 /// docs/adr/0715: a 1. kat (3.06 m up) drawn over the finished ground floor: the same shell, a partition 6 m from the
 /// west wall and one 4 m from the north wall east of it, two doors, three windows, its rooms found and everything
 /// tagged on 1. kat. Kat görünümü still Bütün katlar: both floors over each other.
-fn upper_floor(app: &mut App) {
+pub(crate) fn upper_floor(app: &mut App) {
     interior(app);
     if let Some(doc) = app.document.as_mut() {
         let mut settings = doc.model.settings().clone();

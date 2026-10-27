@@ -901,6 +901,13 @@ impl Session {
         }
     }
 
+    /// Etkin kat changed (docs/adr/0720 §4): the running tool sees it at once.
+    pub fn level_changed(&mut self, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.level_changed(cx);
+        }
+    }
+
     /// Leaves the running tool; its draft is dropped (ADR 0018, “İptal”),
     /// and so is a command suspended under it.
     pub fn exit(&mut self) {

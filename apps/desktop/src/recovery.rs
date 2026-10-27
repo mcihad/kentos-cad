@@ -500,6 +500,7 @@ impl App {
         r.writing = true;
         let (session, drawing) = (doc.session, r.drawing);
         let model = doc.model.clone();
+        let level = (self.active_level.clone(), self.level_view);
         let facts = Facts {
             version: 1,
             name: doc.name().to_owned(),
@@ -512,9 +513,11 @@ impl App {
         };
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let result = (|| -> Result<(), String> {
-                let bytes =
-                    kentos_kcad::encode_verified(&model.to_snapshot_v2()).map_err(|e| e.message)?;
+                let mut snapshot = model.to_snapshot_v2();
                 drop(model);
+                // A recovered drawing opens on the level it was on (docs/adr/0720 §1).
+                crate::active_level::with_level_state(&mut snapshot.settings, &level.0, level.1);
+                let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| e.message)?;
                 write_atomically(&data, &bytes).map_err(|e| e.to_string())?;
                 let text = serde_json::to_vec_pretty(&facts).map_err(|e| e.to_string())?;
                 write_atomically(&facts_path, &text).map_err(|e| e.to_string())

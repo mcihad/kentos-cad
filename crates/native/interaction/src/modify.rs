@@ -345,6 +345,11 @@ impl<S: Stages> Modify<S> {
 }
 
 impl<S: Stages> Tool for Modify<S> {
+    /// Etkin kat changed (docs/adr/0720 §4): the stages see it (Çizgiden duvar's Kat follows it).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.stages.see(cx);
+    }
+
     fn snaps(&self) -> bool {
         self.stages.snaps()
     }

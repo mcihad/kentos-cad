@@ -13650,6 +13650,34 @@
    "tests": 0
   },
   {
+   "id": "view.levels.down",
+   "kind": "command",
+   "title": "Alt kat",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "view.levels.up",
+   "kind": "command",
+   "title": "Üst kat",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.lineWeights",
    "kind": "command",
    "title": "Çizgi kalınlığını göster",

@@ -1762,6 +1762,13 @@
            "view.levels.active",
            "view.levels.below"
           ]
+         },
+         {
+          "label": "Etkin kat",
+          "items": [
+           "view.levels.up",
+           "view.levels.down"
+          ]
          }
         ]
        },

@@ -140,6 +140,10 @@ impl Tool for Discover {
         self.see(cx);
         Flow::Stay
     }
+    /// Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.see(cx);
+    }
     fn point_count(&self) -> usize {
         usize::from(!self.region || self.corners.len() == 2)
     }

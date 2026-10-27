@@ -2158,6 +2158,8 @@ impl App {
                     );
                 }
                 self.show_document(*doc);
+                // The level and view the drawing was saved with (docs/adr/0720 §1).
+                self.say_level_state();
                 self.say_located(&located);
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
                 self.remember_file();
@@ -2522,6 +2524,8 @@ impl App {
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);
+        // The level and view it opens with are the file's (docs/adr/0720 §1); a tab brought in front gives its own.
+        self.take_level_state();
         // A linked file that changed or went is said, never loaded silently (docs/adr/0348 §5, 0349 §2).
         self.xrefs_check_opened();
     }
@@ -2771,6 +2775,9 @@ impl App {
             "xref.attach" => return self.start_xref_attach(),
             "arch.template" => self.apply_arch_template(),
             id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
+            // Üst kat, Alt kat (docs/adr/0720 §5; Archicad's Go Up/Down a Story).
+            "view.levels.up" => self.step_level(true),
+            "view.levels.down" => self.step_level(false),
             // Kat görünümü (docs/adr/0715).
             id if id.starts_with("view.levels.") => {
                 if let Some(view) = crate::active_level::level_view_named(&id["view.levels.".len()..]) {
@@ -3199,6 +3206,8 @@ impl App {
             id if id.starts_with("arch.phase.") => {
                 self.phase_view().name() == &id["arch.phase.".len()..]
             }
+            // Üst kat and Alt kat move, they are not checked (docs/adr/0720 §5).
+            "view.levels.up" | "view.levels.down" => return None,
             id if id.starts_with("view.levels.") => {
                 crate::active_level::level_view_named(&id["view.levels.".len()..]) == Some(self.level_view)
             }

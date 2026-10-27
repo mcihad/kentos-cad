@@ -8,28 +8,8 @@
 use kentos_commands::{ArchLevel, ProjectSettings};
 use kentos_domain::{Document, Uuid};
 
-/// Which levels the plan shows.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub enum LevelView {
-    /// Bütün katlar.
-    #[default]
-    All,
-    /// Yalnız etkin kat.
-    Active,
-    /// Etkin kat ve alt kat: the level under the active one faint.
-    Below,
-}
-
-impl LevelView {
-    /// Its name, as the menus say it.
-    pub fn name(self) -> &'static str {
-        match self {
-            LevelView::All => "Bütün katlar",
-            LevelView::Active => "Yalnız etkin kat",
-            LevelView::Below => "Etkin kat ve alt kat",
-        }
-    }
-}
+/// Which levels the plan shows: the contract's, a drawing saves the one it was seen with (docs/adr/0720 §1).
+pub use kentos_commands::LevelView;
 
 /// What a level view hides and draws faint, by the objects' numbers (slots), in the drawing's order; and, whatever
 /// the view, the objects on a level of the project other than the active one: a click takes the active level's (and

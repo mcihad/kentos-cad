@@ -434,6 +434,8 @@ impl App {
         };
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
+        // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
+        let level = (self.active_level.clone(), self.level_view);
         let stop = Arc::new(AtomicBool::new(false));
         let faults = self.save_faults;
         self.saving = Some(Saving {
@@ -461,6 +463,7 @@ impl App {
             // The objects are shared with the document, not copied (docs/adr/0654).
             let (mut snapshot, objects) = model.to_snapshot_v2_shared();
             drop(model);
+            crate::active_level::with_level_state(&mut snapshot.settings, &level.0, level.1);
             // Bound GeoPackages and external references get their path from the file's folder (docs/adr/0506, 0348).
             if let Target::File(path) = &target {
                 kentos_native_application::source_places::with_relative(

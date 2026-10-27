@@ -156,3 +156,46 @@ fn a_stair_rises_the_active_levels_height() {
     b.start("stair");
     assert_eq!(shown(&b), "3.000 m");
 }
+
+/// docs/adr/0720 §4: Etkin kat changed while a tool runs, the pointer resting: the stair's height row and its
+/// preview's rise follow the new level at once; a space tool's Kat follows a level with walls.
+#[test]
+fn a_running_tool_follows_the_active_level_at_once() {
+    let mut b = bench("wall");
+    let mut s = b.doc.settings().clone();
+    s.arch = Some(
+        serde_json::from_value(serde_json::json!({
+            "levels": [
+                {"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.06},
+                {"id": "kat-1", "name": "1. kat", "elevation": 3.06, "height": 2.8}
+            ]
+        }))
+        .unwrap(),
+    );
+    b.doc.set_settings(s);
+    b.session.exit();
+    b.level = Some("zemin".into());
+    let row = |b: &Bench, key: &str| {
+        b.session
+            .settings(&Default::default())
+            .into_iter()
+            .find(|r| r.key == key)
+            .map(|r| r.value)
+            .unwrap()
+    };
+    b.start("stair");
+    b.click(0., 0.);
+    b.move_to(6., 0.);
+    assert_eq!(row(&b, "Y"), "3.060 m · katın");
+    let before = b.session.preview(&Default::default());
+    // The level changes on the status bar: no pointer move.
+    b.level = Some("kat-1".into());
+    b.run(|s, cx| s.level_changed(cx));
+    assert_eq!(row(&b, "Y"), "2.800 m · katın", "the row follows at once");
+    assert_ne!(b.session.preview(&Default::default()), before, "and the preview's rise");
+    b.click(6., 0.);
+    b.confirm();
+    let Entity::Stair(st) = b.newest() else { panic!("a stair") };
+    assert_eq!(st.stair.arch.level.as_deref(), Some("kat-1"));
+    assert!((f64::from(st.stair.risers) * st.stair.riser_height - 2.8).abs() < 1e-9);
+}

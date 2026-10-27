@@ -264,6 +264,11 @@ impl Tool for SpaceTool {
         Flow::Stay
     }
 
+    /// Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.see(cx);
+    }
+
     fn id(&self) -> &'static str {
         SPACE_ID
     }

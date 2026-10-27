@@ -1830,6 +1830,11 @@ impl Path {
 }
 
 impl Tool for Path {
+    /// Mahal ayırıcı's Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.see(cx);
+    }
+
     /// A point computed by the point calculator, as if clicked (the web's `acceptPoint`).
     fn accepts_points(&self) -> bool {
         true

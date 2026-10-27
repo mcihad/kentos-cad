@@ -309,7 +309,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   34 bağımsız yeni durum, Python/MCP ve gerçek yerel/projeksiyonlu GUI;
   [19 gerçek ekran ve 16 GPU görünümü](../docs/baseline/2026-10-24-architecture-template/README.md).
 
-### ARCH-UX-04 — Etkin kat ve yeni nesnenin katı [~]
+### ARCH-UX-04 — Etkin kat ve yeni nesnenin katı [x]
 
 - [x] Etkin kat dilimi [ADR0713](../docs/adr/0713-active-level.md): Archicad'in
   geçerli katı (Home Story) gibi; çizim zemin katta açılır, durum çubuğunun Kat
@@ -344,15 +344,26 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kâğıtta üst üste oturur. Numara A-101'den, paftası olan kat atlanır.
   `cad.sheets.levels`, Pafta › Yeni ▾ ve Çıktı › Pafta › Kat planları; 31 ortak durum,
   testler ve gerçek GUI (`arac-pafta-kat-planlari*`).
-- Etkin katın dosyaya yazılması.
+- [x] Etkin kat dosyada [ADR0720](../docs/adr/0720-active-level-in-the-file.md): çizim
+  kaydedildiği etkin katta ve kat görünümüyle açılır (Revit'in son görünümü; `arch.activeLevel`,
+  `levelView`, Katsız `null`, KCAD 120 opt-in); kaydetme belgeyi değiştirmez (geri alma yok,
+  kaydedilmemiş olmaz), her sekme kendi katını tutar. Kullanılan kat silinmez: her mimari tür
+  ve pafta haritası sayılır, kimlikler verilir; Proje ayarları uyarıyı satırların altında
+  gösterir, **Nesneleri seç** ile seçtirir, Kaydet bekler. Üst kat / Alt kat (Ctrl+↑/↓);
+  çalışan araç (merdiven yüksekliği, mahal araçlarının Kat'ı) katı hemen izler.
 - [x] Kat ver [ADR0717](../docs/adr/0717-assign-levels.md): `cad.levels.assign` (yer
   değişmez; Archicad'in Relink Home Story'si gibi). Denetim'in kat bulgularının Düzelt'i
   etkin katı verir; Kata ver (n) ▾: Seç ve göster (önizleme), sonra bir kat, hepsi tek
   adımda. Öznitelikler'de karışık mimari seçimde ortak Kat. Mahal yeni katında kapanmazsa
   uyarı; mahal ayırıcı da kat denetiminde. 32+41 ortak durum, testler ve gerçek GUI
   (`arac-denetim-kat*`).
-- Kabul: çok katlı plan, kat silme/yeniden adlandırma, eski katsız çizim, kat
-  değişince araçların önizlemesi, Python/MCP girdisinde açık kat.
+- [x] Kabul (ADR0720): çok katlı plan kaydet/aç (Katsız ve sekmeler dahil), kat silme
+  (her tür, harita, Nesneleri seç) ve yeniden adlandırma, eski katsız çizim (katsız projede
+  açılış katı yazılmaz, baytlar aynı), kat değişince araçların ayar ve önizlemesi,
+  Python/MCP girdisinde açık kat (`level_not_found`, `level_in_use` kimlikleriyle, açılış
+  katı dosyada). 104 ortak durum (13 yeni), KCAD/Python okuyucusu, etkileşim/uygulama/
+  masaüstü (1352)/MCP/Python (370) takımları, clippy, gerçek GUI (`arac-kat-dosya-*`,
+  `arac-kat-silme*`, `arac-kat-merdiven-izler`).
 
 ### ARCH-PERF-01 — Büyük belgede mimari önizleme [~]
 
@@ -1197,6 +1208,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-UX-04 / ADR0720 | Etkin kat dosyada: `arch.activeLevel`/`levelView` (Katsız `null`, KCAD 120), kaydet/kurtarma kopyası ekrandakini yazar, belge değişmez; açılış söyler; sekme başına kat. Kat silme her mimari türü ve pafta haritasını sayar, kimlikleri verir (zaten olmayan kat artık engellemiyor); Proje ayarları'nda uyarı + Nesneleri seç, Kaydet bekler. Üst kat/Alt kat (Ctrl+↑/↓), araçlar katı hemen izler (`Tool::level_changed`). 104 ortak durum (Rust, Python), KCAD, etkileşim/uygulama/masaüstü (1352)/MCP/Python (370), clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-ELEM-02 / ADR0719 | Niş, baca ve tesisat boşluğu: açıklığın `niche`/`flue` biçimleri, `depth`/`inset` (KCAD 119), `recess_too_deep`/`tooDeep`; kesme yüksekliği 1,10 m'ye göre kesik ya da kesikli çizim, çözücüde kısmi derinlik kesimi; kotları ayrı açıklıkların aynı yerde durması; metraj ve ölçü dizisi kuralları; Boşluk ▾, araç ayarları, Öznitelikler. Ortak durumlar bağımsız başvurulardan (geometri 41, oluşturma 112, düzenleme 102), çekirdek/etkileşim/uygulama/masaüstü (1348)/KCAD/Python (368)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-UX-04, ARCH-DOC-04 / ADR0718 | Kat planı paftaları: pafta çekirdeği `levels::level_sheets` (katın paftası, ortak zemin ve ölçek, A-101'den numara, alt küme Mimari › Kat planları, paftası olan kat atlanır), `cad.sheets.levels` (`levels_have_sheets`, `level_not_found`, `not_fixed_map`, `bad_drawing_info`, `invalid_options`); Pafta › Yeni ▾ ve CAD'in Çıktı › Pafta › Kat planları, tek adım. 31 ortak durum (Rust, Python), çekirdek/tasarımcı/masaüstü (1347) testleri, bütün ortak durumlar, clippy, gerçek GUI. | [x] Pafta seti alt maddesi; pafta takımının kalanı açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0717 | Kat ver: `cad.levels.assign` (katsızlar ya da verilen mimari nesneler, kilitli atlanır, mahal yeni katında yeniden bulunur, kapanmazsa `arch_space_broken`); Denetim'de kat bulgusunun Düzelt'i etkin katı verir, Kata ver ▾ (Seç ve göster, tek adım); Öznitelikler'de karışık seçimde ortak Kat; ayırıcı kat denetiminde. Ortak durum koşucusunun yığın taşması düzeldi (komut başına çerçeve). 32+41 durum, uygulama/etkileşim/masaüstü (1346)/MCP takımları, clippy, Python, gerçek GUI. | [x] Toplu kat atama alt maddesi |

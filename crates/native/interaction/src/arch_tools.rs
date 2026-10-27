@@ -1311,6 +1311,11 @@ impl Tool for FlightTool {
         Flow::Stay
     }
 
+    /// The stair's height follows the new level's at once (docs/adr/0720 §4).
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.see(cx);
+    }
+
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.pts.pop().is_some() {
             self.turned = 0.0;

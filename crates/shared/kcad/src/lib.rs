@@ -623,11 +623,14 @@ pub const SCHEMA_WITH_DIMENSION_CROSS: u32 = 118;
 /// Schema 119 (docs/adr/0719): an opening that is a niche or a flue (its form, `depth`, `inset`) or whose break is
 /// `tooDeep`, written only when an opening is one.
 pub const SCHEMA_WITH_RECESSES: u32 = 119;
+/// Schema 120 (docs/adr/0720): the architectural settings' `activeLevel` and `levelView` (the level and view a drawing
+/// opens with), written only when one is said.
+pub const SCHEMA_WITH_LEVEL_STATE: u32 = 120;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 118] = [
+pub const SCHEMAS: [u32; 119] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -746,6 +749,7 @@ pub const SCHEMAS: [u32; 118] = [
     SCHEMA_WITH_STAIR_ARCS,
     SCHEMA_WITH_DIMENSION_CROSS,
     SCHEMA_WITH_RECESSES,
+    SCHEMA_WITH_LEVEL_STATE,
 ];
 
 /// The file a drawing is saved as.

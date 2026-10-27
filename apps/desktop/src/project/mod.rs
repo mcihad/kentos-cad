@@ -7,7 +7,7 @@
 //! not an undo step, and a new coordinate system is assigned, never a
 //! transformation of the coordinates (CLAUDE.md §5).
 
-mod arch;
+pub(crate) mod arch;
 mod ask_type;
 mod choices;
 mod content;

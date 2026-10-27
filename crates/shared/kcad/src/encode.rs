@@ -1976,6 +1976,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 120 (docs/adr/0720): the level and view the drawing opens with.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_level_state)
+    {
+        return crate::SCHEMA_WITH_LEVEL_STATE;
+    }
     // Schema 119 (docs/adr/0719): a niche or flue, an opening too deep for its wall or a schedule of niches (of the
     // drawing or a block).
     let recessed = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_recesses);

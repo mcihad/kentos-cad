@@ -266,6 +266,9 @@ pub enum Event {
     /// Mimari: a level's row changed, Kat ekle, the walls' detail (docs/adr/0339 §3).
     Level(usize, super::arch::Edit),
     AddLevel,
+    /// Nesneleri seç beside a level taken away that objects name (docs/adr/0720 §3): they are selected, the window
+    /// closes as Vazgeç would, for them to be given another level.
+    SelectLevelUsers,
     ArchDetail(Option<kentos_commands::WallDetail>),
     ArchMethod(Option<kentos_commands::SpaceMethod>),
     RoomChoices(super::arch::ChoiceEvent),
@@ -349,6 +352,12 @@ impl State {
         super::heights::read(&self.heights, self.settings.has_system()).is_err()
     }
 
+    /// A level the rows take away that objects or a sheet's map name (docs/adr/0720 §3): why it stays; Kaydet waits.
+    pub(super) fn levels_in_use(&self, doc: &kentos_domain::Document) -> Option<kentos_commands::CommandError> {
+        let arch = super::arch::read(&self.arch, self.arch_detail, self.arch_method, self.settings.arch.as_ref()).ok()?;
+        kentos_native_application::settings_set::levels_in_use(doc, &arch)
+    }
+
     fn arch_blocked(&self) -> bool {
         super::arch::read(
             &self.arch, self.arch_detail, self.arch_method, self.settings.arch.as_ref(),
@@ -392,6 +401,10 @@ impl App {
         }
         if let Event::Custom(e) = e {
             return self.custom_crs_event(e);
+        }
+        if let Event::SelectLevelUsers = e {
+            self.select_level_users();
+            return Task::none();
         }
         // A project keeps the type it has (docs/adr/0622 §1): only one not asked its type yet takes one here.
         if let Event::Mode(_) = e
@@ -563,7 +576,7 @@ impl App {
                 s.reduce = d.reduces_to_grid();
                 s.variables = variable_form::rows(&d.variables);
             }
-            Event::OpenApp | Event::Save | Event::UnitAnswer(_) => {}
+            Event::OpenApp | Event::Save | Event::UnitAnswer(_) | Event::SelectLevelUsers => {}
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
         d.second_srid = d.second();
@@ -722,6 +735,17 @@ impl App {
         ).unwrap_or_default();
         // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
+        // So are the level and view the drawing opens with (docs/adr/0720 §1), but not a level taken away here.
+        if !arch.levels.is_empty() {
+            let kept = |id: &String| arch.levels.iter().any(|l| l.id == *id);
+            arch.active_level = s
+                .initial
+                .arch
+                .as_ref()
+                .and_then(|a| a.active_level.clone())
+                .filter(|a| a.as_ref().is_none_or(kept));
+            arch.level_view = s.initial.arch.as_ref().and_then(|a| a.level_view);
+        }
         if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
         {
             let input = kentos_commands::SettingsSet {
@@ -736,7 +760,24 @@ impl App {
             | kentos_commands::CommandResult::Conflict { error }
             | kentos_commands::CommandResult::NeedsInput { error } = result
             {
-                self.warn(error.message);
+                // A level objects name stays (docs/adr/0720 §3): they are selected, to give them another level.
+                let named: Vec<kentos_domain::Slot> = if error.code == kentos_commands::codes::LEVEL_IN_USE {
+                    error
+                        .uids
+                        .iter()
+                        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                        .filter_map(|u| doc.model.slot_of(u))
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+                if named.is_empty() {
+                    self.warn(error.message);
+                } else {
+                    let n = named.len();
+                    self.selection.set(named);
+                    self.warn(format!("{} Andığı {n} nesne seçildi.", error.message));
+                }
                 return;
             }
         }
@@ -806,7 +847,24 @@ impl App {
             | kentos_commands::CommandResult::Conflict { error }
             | kentos_commands::CommandResult::NeedsInput { error } = result
             {
-                self.warn(error.message);
+                // A level objects name stays (docs/adr/0720 §3): they are selected, to give them another level.
+                let named: Vec<kentos_domain::Slot> = if error.code == kentos_commands::codes::LEVEL_IN_USE {
+                    error
+                        .uids
+                        .iter()
+                        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                        .filter_map(|u| doc.model.slot_of(u))
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+                if named.is_empty() {
+                    self.warn(error.message);
+                } else {
+                    let n = named.len();
+                    self.selection.set(named);
+                    self.warn(format!("{} Andığı {n} nesne seçildi.", error.message));
+                }
                 return;
             }
         }
@@ -884,6 +942,9 @@ impl App {
                     .style(style::button::navigation(*section == s.section)),
                 )
             });
+        // A level the rows take away that objects name (docs/adr/0720 §3): said under the levels, Kaydet waits.
+        let waiting = s.levels_in_use(&doc.model);
+        let in_use = waiting.clone();
         let page: Element<'a, Message> = match s.section {
             Section::General => self.general(s, doc),
             Section::Crs => self.crs_section(s),
@@ -941,6 +1002,7 @@ impl App {
                     s.arch_method,
                     |m| event(Event::ArchMethod(m)),
                 ),
+                super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
                 super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(e))),
             ].spacing(14).into(),
         };
@@ -984,13 +1046,15 @@ impl App {
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),
                 ))
-                // A datum choice, an Ölçme field or a variable with something to put right keeps it waiting.
+                // A datum choice, an Ölçme field, a variable or a level in use with something to put right keeps it
+                // waiting.
                 .action(words::primary(
                     "Kaydet",
                     (!s.choices.blocked()
                         && !s.survey_blocked()
                         && !s.variables_blocked()
                         && !s.arch_blocked()
+                        && waiting.is_none()
                         && !s.heights_blocked())
                     .then(|| event(Event::Save)),
                 ))
@@ -1589,5 +1653,34 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
         Section::Variables => d.variables = Vec::new(),
         Section::Arch => d.arch = None,
         Section::Crs | Section::Heights => {}
+    }
+}
+
+impl App {
+    /// Nesneleri seç (docs/adr/0720 §3): what names the level the rows take away is selected and the window closes as
+    /// Vazgeç would; giving them another level (Öznitelikler › Kat) lets the level go.
+    fn select_level_users(&mut self) {
+        let Some(Window::Settings(s)) = &self.project else {
+            return;
+        };
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let Some(error) = s.levels_in_use(&doc.model) else {
+            return;
+        };
+        let named: Vec<kentos_domain::Slot> = error
+            .uids
+            .iter()
+            .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect();
+        let n = named.len();
+        self.close_project_window();
+        self.selection.set(named);
+        self.say(
+            kentos_interaction::Level::Info,
+            format!("Katı anan {n} nesne seçildi: Öznitelikler › Kat'tan onlara başka kat verin, sonra katı kaldırın."),
+        );
     }
 }
