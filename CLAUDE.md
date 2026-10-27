@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Etkin kat (27 Ekim 2026; [ADR0713](docs/adr/0713-active-level.md)).**
+  Archicad'in geçerli katı gibi: çizim zemin katta açılır (kotu 0, yoksa ilk);
+  durum çubuğunun Kat hücresi ve yeni nesne çizen araçların ilk ayar satırı
+  katı seçer (Katsız da). Duvar, dikdörtgen duvar, bölme, kolon, merdiven,
+  rampa ve aks ağı etkin katla yazar (`Context::level`, `level_arch`; komut
+  girdisinde açık); mahal/toplu mahal/ayırıcı/iç zincir o katta duvar varken
+  izler, elle seçilen kalır. Oturumundur, dosyaya yazılmaz; kat görünümü yok.
+  Belgele'de Duvar ölçüleri ile İç ölçü zinciri tek “Ölçü ▾”.
+
 - **Etiketli mahal ve boş etiket (27 Ekim 2026; [ADR0344 eki](docs/adr/0344-tags-and-schedules.md)).**
   Daire yürüyüşünde (`walkthrough_scenes.rs`) bulundu: etiketi olan mahal kendi
   yazısını çizmez (`Document::tagged_spaces`, `Store::set_tagged_spaces`; ekran ve

@@ -1550,6 +1550,11 @@ impl App {
             if let Some(cell) = self.scenario_cell(fit < 5) {
                 bar = bar.separator().push(cell);
             }
+            // Kat (docs/adr/0713): while the project has levels, the one new architectural objects go on; its
+            // words stay longer than the mode's: what new objects get is worth the room.
+            if let Some(cell) = self.level_cell(fit < 7) {
+                bar = bar.separator().push(cell);
+            }
             bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
@@ -1759,6 +1764,10 @@ impl App {
             if let Some(words) = self.scenario_words() {
                 // Its icon and its words; the icon alone once tight.
                 width += SEPARATOR + if fit < 5 { cell(&words, true) } else { 35.0 };
+            }
+            // Kat (docs/adr/0713), as Senaryo, its words kept until the lamps fold.
+            if let Some(words) = self.level_words() {
+                width += SEPARATOR + if fit < 7 { cell(&words, true) } else { 35.0 };
             }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.

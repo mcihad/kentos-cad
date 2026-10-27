@@ -176,7 +176,8 @@ impl GridSystemTool {
                 extension: (self.extension != DEFAULT_GRID_EXTENSION).then_some(self.extension),
                 bubbles: (self.bubbles != GridBubbles::Both).then_some(self.bubbles),
                 bubble_size: None,
-                arch: None,
+                // Etkin kat (docs/adr/0713): its columns' (and grids') level.
+                arch: cx.level_arch(),
                 columns: self.columns.then(|| SystemColumns {
                     width: self.width,
                     depth: (self.depth != self.width).then_some(self.depth),

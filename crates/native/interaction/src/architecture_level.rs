@@ -1,11 +1,23 @@
-//! Explicit architectural target level; no guessing from source CAD attributes.
+//! Explicit architectural target level; no guessing from source CAD attributes. Until one is chosen here it follows
+//! Etkin kat (docs/adr/0713), the host's level for new objects.
 use crate::{tool::OptionChoice, tool_settings::Setting};
-use kentos_commands::{ArchInfo, ArchLevel, ProjectSettings};
+use kentos_commands::{ArchInfo, ArchLevel, Entity, ProjectSettings};
+use kentos_domain::Document;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Choice {
     selected: Option<String>,
     levels: Vec<ArchLevel>,
+    /// A level (or none) was chosen here: Etkin kat is no longer followed.
+    chosen: bool,
+    /// Whether the drawing has walls on a level, as last asked: its revision, the level and the answer.
+    walls: Option<(u64, String, bool)>,
+}
+
+/// Whether the drawing has a wall on level `id`.
+fn walls_on(doc: &Document, id: &str) -> bool {
+    doc.entities()
+        .any(|e| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
 impl Choice {
@@ -17,6 +29,32 @@ impl Choice {
         // A removed selection remains explicit and fails command validation.
         // Silently reverting it would write walls to the wrong level.
     }
+    /// Follows `active`, Etkin kat (docs/adr/0713), until a level is chosen here; one not of the drawing is none.
+    pub fn follow(&mut self, active: Option<&str>) {
+        if !self.chosen {
+            self.selected = active
+                .filter(|id| self.levels.iter().any(|l| l.id == *id))
+                .map(str::to_owned);
+        }
+    }
+
+    /// `follow`, for a tool that looks for walls (a room's, a cut's): Etkin kat while the drawing has walls on it,
+    /// else every level, as before levels were set (an older drawing's walls have none).
+    pub fn follow_where_walls(&mut self, active: Option<&str>, doc: &Document) {
+        let active = active.filter(|id| {
+            let revision = doc.revision();
+            match &self.walls {
+                Some((at, level, yes)) if *at == revision && level == id => *yes,
+                _ => {
+                    let yes = walls_on(doc, id);
+                    self.walls = Some((revision, (*id).to_owned(), yes));
+                    yes
+                }
+            }
+        });
+        self.follow(active);
+    }
+
     pub fn id(&self) -> Option<String> {
         self.selected.clone()
     }
@@ -33,7 +71,17 @@ impl Choice {
                 .levels
                 .iter()
                 .find(|l| l.id == *id)
-                .map_or_else(|| format!("Bulunamadı: {id}"), |l| l.name.clone()),
+                .map_or_else(
+                    || format!("Bulunamadı: {id}"),
+                    // Followed, not chosen: said so (docs/adr/0713).
+                    |l| {
+                        if self.chosen {
+                            l.name.clone()
+                        } else {
+                            format!("{} (etkin kat)", l.name)
+                        }
+                    },
+                ),
         }
     }
     pub fn setting(&self) -> Setting {
@@ -78,9 +126,11 @@ impl Choice {
         } else {
             return false;
         }
+        self.chosen = true;
         true
     }
     pub fn next(&mut self) {
+        self.chosen = true;
         self.selected = match self
             .selected
             .as_ref()

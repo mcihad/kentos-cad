@@ -85,7 +85,8 @@ impl WallRectangle {
             width: (!fixed).then_some(cx.memory.wall_width),
             style: style.map(|s| s.id),
             height: None,
-            arch: None,
+            // Etkin kat (docs/adr/0713).
+            arch: cx.level_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
             color: cx.draft.color_text(),

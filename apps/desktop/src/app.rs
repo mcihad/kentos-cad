@@ -359,6 +359,8 @@ pub enum Picker {
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
+    /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
+    ActiveLevel(Option<String>),
     /// Run a command ticked on a menu that stays open (a checklist's row:
     /// the selection filter's and the snap kinds, docs/adr/0187 §5): as
     /// `Run`, but the ribbon opened over the drawing stays as it is.
@@ -996,6 +998,8 @@ pub struct App {
     /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
     /// its stamp is in the tools' context while its tool runs.
     pub(crate) template: Option<crate::templates::TemplateRun>,
+    /// Etkin kat (active_level.rs, docs/adr/0713): the level new architectural objects go on, the session's.
+    pub(crate) active_level: crate::active_level::Chosen,
     pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
@@ -1400,6 +1404,7 @@ impl App {
             locks: kentos_interaction::LockState::default(),
             ucs_history: crate::ucs::UcsHistory::default(),
             template: None,
+            active_level: Default::default(),
             arch_template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
@@ -1866,6 +1871,7 @@ impl App {
             Message::Run(id) | Message::RunKept(id) => return self.run(id),
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
+            Message::ActiveLevel(level) => self.choose_level(level),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }

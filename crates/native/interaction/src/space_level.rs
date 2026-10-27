@@ -9,6 +9,10 @@ pub(crate) struct Choice {
 }
 impl Choice {
     pub fn see(&mut self, settings: &ProjectSettings) { self.level.see(settings); }
+    /// Etkin kat while the drawing has walls on it and nothing was chosen here (docs/adr/0713).
+    pub fn follow_where_walls(&mut self, active: Option<&str>, doc: &kentos_domain::Document) {
+        if !self.unassigned { self.level.follow_where_walls(active, doc); }
+    }
     pub fn id(&self) -> Option<String> { self.level.id() }
     pub fn arch(&self) -> Option<ArchInfo> { self.level.arch() }
     pub fn scope(&self) -> SpaceScope {

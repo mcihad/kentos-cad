@@ -457,6 +457,7 @@ mod wipeout_scenes;
 mod wall_scenes;
 #[cfg(test)]
 mod interior_scenes;
+mod active_level;
 #[cfg(test)]
 mod column_scenes;
 #[cfg(test)]

@@ -194,6 +194,8 @@ impl SpaceTool {
     /// The plan at the hover, drawn.
     fn see(&mut self, cx: &Context<'_>) {
         self.level.see(cx.doc.settings());
+        // Etkin kat while it has walls (docs/adr/0713).
+        self.level.follow_where_walls(cx.level, cx.doc);
         let level = self.level.id();
         if self.choice_revision != Some(cx.doc.revision()) || self.choice_level != level {
             let arch = cx.doc.settings().arch.as_ref();

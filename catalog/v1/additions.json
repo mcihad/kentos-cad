@@ -3329,6 +3329,7 @@
     "wallLeft": "<rect x=\"7\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M7 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
     "wallCenter": "<rect x=\"6\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M10 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
     "wallRight": "<rect x=\"5\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M13 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
+    "archLevel": "<path d=\"M5 17V5h11v12\"/><path d=\"M5 11h11\"/><path d=\"M1.5 14h3\"/><path d=\"M3 12.5l1.5 1.5L3 15.5\"/>",
     "archSettings": "<path d=\"M3 17h14\"/><path d=\"M4.5 17V8L10 4l5.5 4v9\"/><path d=\"M4.5 12.5h11\"/><path d=\"M8.5 17v-2.5h3V17\"/>",
     "wallJoins": "<path d=\"M3 6.5h10.5V17M3 10.5h6.5V17\"/><path d=\"M13 3h3.5v3.5H13z\"/>",
     "wallSplit": "<path d=\"M2 7.5h6M2 12.5h6M12 7.5h6M12 12.5h6\"/><path d=\"M10 3.5v2.5M10 8.5v3M10 14v2.5\"/>",

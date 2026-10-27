@@ -405,7 +405,7 @@ impl Path {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        if let Some(level)=&mut self.separator_level {level.see(cx.doc.settings());}
+        if let Some(level)=&mut self.separator_level {level.see(cx.doc.settings()); level.follow_where_walls(cx.level, cx.doc);}
         self.memory = *cx.memory;
         self.format = cx.format();
         if self.shape == Shape::Wall {

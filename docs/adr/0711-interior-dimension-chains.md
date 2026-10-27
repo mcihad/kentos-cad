@@ -100,3 +100,9 @@ bitini bilmez (ADR 0228; TODOS.md §0.2).
   every_command_case`; Python koşucusu; `cargo test -p kentos-mcp`.
 - `cargo test -p kentos-interaction --test all interior_dims` (üç tıklama, Enter, Esc, ayarlar, tek geri alma).
 - Gerçek GUI resimleri `.run/shots/arac-ic-olcu-*`.
+
+## 27 Ekim 2026 eki: şeritteki yeri
+
+İç ölçü zinciri'nin Belgele'ye ayrı düğme olarak girmesi Mimari sekmesini 1440 px'te taşırıyordu: Proje paneli yalnız
+ikonlara iniyordu (`ribbon_tests::every_tab_fits_1100_pixels_without_scrolling` düşüyordu). Duvar ölçüleri ile İç ölçü zinciri
+artık tek bölünmüş düğmedir: “Ölçü ▾” (`archDimensions`; son seçilen önde, listede ikisi). Komutlar ve kısayollar değişmedi.

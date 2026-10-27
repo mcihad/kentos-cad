@@ -188,6 +188,8 @@ impl Stages for WallFromLines {
         self.format = cx.format();
         self.offer = wall::offered(cx.doc.settings());
         self.level.see(cx.doc.settings());
+        // Etkin kat until a level is chosen here (docs/adr/0713).
+        self.level.follow(cx.level);
         self.replan(cx);
         if cx.memory.wall_contours && self.hover.is_none() {
             self.hover = cx

@@ -260,7 +260,8 @@ pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Wa
             style: style.map(|s| s.id),
             caps: None,
             height: None,
-            arch: None,
+            // Etkin kat (docs/adr/0713).
+            arch: cx.level_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
         }],

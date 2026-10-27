@@ -99,6 +99,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kolonda `along`/`center` yerleri. Web'in İç ölçü zinciri aracı (kesen çizgi,
   zincirin yeri, Enter kesen çizgide), `columns.ts`'in kural biti ve izleme
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-UX-04 / ADR0713: Etkin kat. Web'in araçları yeni duvar, kolon, merdiven,
+  rampa ve aks ağına etkin katı yazmalı (zemin katta açılış), durum çubuğu ve
+  araç ayarlarında Kat menüsü; mahal araçları o katta duvar varken izlemeli.
 - ARCH-SPACE-02 / ADR0344 eki (27 Ekim): etiketli mahal kendi yazısını çizmez
   (web deposunda `set_tagged_spaces` karşılığı), etiket yazısında bütün boş
   satırlar atılır, `cad.tags.create`'in `tag_empty` uyarısı ve Hepsini

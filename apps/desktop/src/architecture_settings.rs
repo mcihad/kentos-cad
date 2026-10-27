@@ -49,6 +49,10 @@ impl App {
         }
         let tool = self.session.tool_id();
         let mut sheet = PropertySheet::new();
+        // Etkin kat (docs/adr/0713) first for the tools that draw on it: chosen here as on the status bar.
+        if let Some(cell) = self.level_setting(tool) {
+            sheet = sheet.row("Kat", cell);
+        }
         for setting in rows {
             if setting.note {
                 sheet = sheet.note(column![

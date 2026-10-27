@@ -10,9 +10,9 @@
 //!
 //! Test code only.
 
-use crate::app::App;
+use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
-use crate::tools_screens::Scene;
+use crate::tools_screens::{Pointed, Scene, press_caption};
 use crate::wall_scenes::opened;
 
 /// The plan with room round it for the dimension rows.
@@ -163,6 +163,53 @@ fn interior(app: &mut App) {
     hover(app, [14.0, 11.0]);
 }
 
+/// docs/adr/0713: a project of two levels (Zemin kat and 1. kat at 3 m), opened on Zemin kat.
+fn two_levels(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    if let Some(doc) = app.document.as_mut() {
+        let mut settings = doc.model.settings().clone();
+        settings.arch.get_or_insert_with(Default::default).levels = vec![
+            kentos_commands::ArchLevel {
+                id: "zemin".into(),
+                name: "Zemin kat".into(),
+                elevation: 0.0,
+                height: Some(3.0),
+            },
+            kentos_commands::ArchLevel {
+                id: "kat-1".into(),
+                name: "1. kat".into(),
+                elevation: 3.0,
+                height: Some(3.0),
+            },
+        ];
+        doc.model.set_settings(settings);
+    }
+    view(app);
+    app.tab = "arch";
+    app.command_expanded = true;
+}
+
+/// Duvar started: Etkin kat first in its settings (Zemin kat, the ground level the drawing opened on).
+fn wall_tool_on_level(app: &mut App) {
+    two_levels(app);
+    run(app, "tool.wall");
+    hover(app, [3.0, 2.0]);
+}
+
+/// 1. kat chosen on the Kat menu, a wall drawn: it is on 1. kat (its Öznitelikler say so).
+fn on_first_floor(app: &mut App) {
+    two_levels(app);
+    let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
+    run(app, "tool.wall");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 0.0]);
+    typed(app, "");
+    typed(app, "");
+    hover(app, [4.0, 0.0]);
+    click(app, [4.0, 0.0]);
+    hover(app, [14.0, 11.0]);
+}
+
 /// Metraj over it all.
 fn quantities(app: &mut App) {
     interior(app);
@@ -175,8 +222,34 @@ fn audit(app: &mut App) {
     run(app, "arch.audit");
 }
 
+/// The status bar's Kat cell open (docs/adr/0713): the levels, Katsız, Katları düzenle.
+pub(crate) fn pointed() -> Vec<Pointed> {
+    vec![
+        (
+            "kat-menu",
+            wall_tool_on_level,
+            |s, app| press_caption(s, app, "Zemin kat", false, false),
+        ),
+        // The wall drawn on 1. kat, its Öznitelikler scrolled to its Mimari rows: Kat 1. kat.
+        ("kat-duvar-oznitelik", on_first_floor, |s, app| {
+            let mut update = |app: &mut App, message: Message| {
+                let _ = app.update(message);
+            };
+            let at = crate::tools_screens::caption_at(s, app, "Sembol", false);
+            s.input(
+                app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Scroll(at, -30.0),
+            );
+        }),
+    ]
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("kat-arac", wall_tool_on_level),
+        ("kat-duvar", on_first_floor),
         ("daire-kabuk", shell),
         ("daire-bolme-onizleme", partition_preview),
         ("daire-bolmeler", partitions),

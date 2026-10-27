@@ -68,7 +68,8 @@ impl Partition {
                     offset: None,
                     caps: None,
                     height: None,
-                    arch: None,
+                    // Etkin kat (docs/adr/0713).
+                    arch: cx.level_arch(),
                     attrs: cx.template_attrs(None),
                     label: cx.template_label(),
                 }],

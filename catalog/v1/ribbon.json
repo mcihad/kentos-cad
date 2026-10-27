@@ -1480,12 +1480,20 @@
       "icon": "tag",
       "items": [
        {
-        "command": "tool.wallDimensions",
-        "size": "large"
-       },
-       {
-        "command": "tool.interiorDimensions",
-        "size": "small"
+        "key": "archDimensions",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.wallDimensions",
+          "title": "Ölçü",
+          "label": "Duvar ölçüleri"
+         },
+         {
+          "command": "tool.interiorDimensions",
+          "title": "Ölçü",
+          "label": "İç ölçü zinciri"
+         }
+        ]
        },
        {
         "command": "tool.tag",

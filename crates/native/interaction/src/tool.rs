@@ -1325,11 +1325,22 @@ pub struct Context<'a> {
     /// object the tool writes takes besides its geometry; none while the
     /// tool runs by itself.
     pub template: Option<&'a crate::templates::Stamp>,
+    /// Etkin kat (docs/adr/0713): the level new walls, columns, stairs and ramps go on, one of the drawing's; none: no
+    /// level (a project without levels, or Katsız chosen).
+    pub level: Option<&'a str>,
 }
 
 impl Context<'_> {
     pub fn format(&self) -> Format {
         Format::of(self.doc.settings())
+    }
+
+    /// Etkin kat as a new architectural object's input takes it (docs/adr/0713, CMD-07); none without one.
+    pub fn level_arch(&self) -> Option<kentos_commands::ArchInfo> {
+        self.level.map(|id| kentos_commands::ArchInfo {
+            level: Some(id.to_owned()),
+            ..Default::default()
+        })
     }
 
     /// A new annotation's height of `kind` on paper, mm: what its tool was

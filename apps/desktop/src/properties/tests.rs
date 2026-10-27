@@ -39,6 +39,16 @@ fn wall_dimension_set() -> (App, Slot, Slot) {
     ));
     let model = &mut app.document.as_mut().unwrap().model;
     let uid = model.uid(wall).unwrap().to_string();
+    // A door at its middle: the openings row is two dimensions, the overall row another (docs/adr/0695's 27 October
+    // addendum: without an opening the two rows would be one dimension).
+    let door = registry::run(
+        &mut ExecutionContext::new(model),
+        "cad.openings.create",
+        CallOp::Execute,
+        json!({"layerId":"parsel","openings":[{"host":uid,"at":10.0}]}),
+    )
+    .unwrap();
+    assert_eq!(door["status"], "completed", "{door}");
     let result=registry::run(&mut ExecutionContext::new(model),"cad.dimensionsets.create",CallOp::Execute,json!({
         "wall":uid,"layerId":"parsel","at":{"x":10.,"y":2.4},"rows":["openings","overall"],"openings":"centers","gapMm":7.5
     })).unwrap();
@@ -112,14 +122,15 @@ fn wall_dimension_set_selection_is_read_only_and_release_removes_recipe_ownershi
     let (mut app, wall, member) = wall_dimension_set();
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(&mut app, Event::DimensionSet(member, "select"));
-    assert_eq!(app.selection.len(), 2);
+    assert_eq!(app.selection.len(), 3, "the openings row's two and the overall row's one");
     assert!(
         rows(&app)
             .iter()
             .any(|(section, _)| section == "Duvar ölçüleri")
     );
     event(&mut app, Event::DimensionSet(member, "row"));
-    assert_eq!(app.selection.ids(), [member]);
+    assert_eq!(app.selection.len(), 2, "the openings row");
+    assert!(app.selection.ids().contains(&member));
     event(&mut app, Event::DimensionSet(member, "source"));
     assert_eq!(app.selection.ids(), [wall]);
     assert_eq!(

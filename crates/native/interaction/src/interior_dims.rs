@@ -30,6 +30,10 @@ pub struct InteriorDimensions {
     columns: InteriorColumns,
     total: bool,
     level: Option<String>,
+    /// Kat (V) was chosen here: Etkin kat is no longer followed (docs/adr/0713).
+    level_chosen: bool,
+    /// What Etkin kat gives while it has walls.
+    follow: crate::architecture_level::Choice,
     layer: String,
     style: Option<String>,
     layer_choices: Vec<OptionChoice>,
@@ -92,6 +96,12 @@ impl InteriorDimensions {
             .as_ref()
             .map(|a| a.levels.clone())
             .unwrap_or_default();
+        // Etkin kat while it has walls, until Kat is chosen here (docs/adr/0713).
+        if !self.level_chosen {
+            self.follow.see(cx.doc.settings());
+            self.follow.follow_where_walls(cx.level, cx.doc);
+            self.level = self.follow.id();
+        }
         self.level_choices = std::iter::once(choice("", "Tüm katlar", self.level.is_none()))
             .chain(
                 levels
@@ -483,6 +493,7 @@ impl Tool for InteriorDimensions {
             }
             "V" if self.level_choices.iter().any(|c| c.typed == value) => {
                 self.level = (!value.is_empty()).then(|| value.into());
+                self.level_chosen = true;
                 true
             }
             _ => false,

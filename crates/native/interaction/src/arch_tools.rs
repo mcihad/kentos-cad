@@ -475,6 +475,8 @@ impl ColumnTool {
             depth: if self.round { None } else { self.depth },
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
+            // Etkin kat (docs/adr/0713).
+            arch: cx.level_arch(),
             ..NewColumn::default()
         }
     }
@@ -646,7 +648,7 @@ impl Tool for ColumnTool {
                     rotation: (self.turn != 0.0).then_some(self.turn),
                     kind: None,
                     fill: None,
-                    arch: None,
+                    arch: cx.level_arch(),
                 };
                 let input = self.made(Vec::new(), Some(crossings), cx);
                 self.write(input, cx);
@@ -936,6 +938,8 @@ impl FlightTool {
                     landing: self.landing,
                     fit: self.fit.then_some(true),
                     railings: self.railings,
+                    // Etkin kat (docs/adr/0713).
+                    arch: cx.level_arch(),
                     ..NewRamp::default()
                 }],
                 color,
@@ -973,6 +977,8 @@ impl FlightTool {
                     landing: self.landing,
                     numbering: self.numbering.then_some(true),
                     railings: self.railings,
+                    // Etkin kat (docs/adr/0713).
+                    arch: cx.level_arch(),
                     ..NewStair::default()
                 }],
                 color,

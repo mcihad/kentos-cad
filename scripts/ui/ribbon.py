@@ -238,7 +238,11 @@ CAD = [
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
-        P("Belgele", "tag", [L("tool.wallDimensions"), S("tool.interiorDimensions"), S("tool.tag"), S("arch.quantities"),
+        # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split: the tab keeps its words at 1440 px.
+        P("Belgele", "tag", [{"key": "archDimensions", "size": "large", "split": [
+                {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
+                {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
+            ]}, S("tool.tag"), S("arch.quantities"),
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},

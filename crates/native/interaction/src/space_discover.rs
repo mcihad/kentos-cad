@@ -41,6 +41,8 @@ impl Discover {
     }
     fn see(&mut self, cx: &Context<'_>) {
         self.level.see(cx.doc.settings());
+        // Etkin kat while it has walls (docs/adr/0713).
+        self.level.follow_where_walls(cx.level, cx.doc);
         self.revision = Some(cx.doc.revision());
         self.layer = cx.doc.layers().active().into();
         self.counts = [0; 3];
