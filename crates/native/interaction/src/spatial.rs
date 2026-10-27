@@ -230,6 +230,8 @@ impl Spatial {
         } else if changed {
             self.sync_layers_of(doc);
             self.sync_sheet_boundary();
+            // The map's level may be what changed (docs/adr/0716).
+            self.sync_phases(doc);
         }
     }
     fn sync_sheet_boundary(&mut self) {
@@ -311,18 +313,42 @@ impl Spatial {
     /// The objects the project's phase view hides (docs/adr/0346 §2): every object again while a view other than
     /// Tümü is set (an object's phase may come from its wall or its tag's object), none to do otherwise.
     /// Kat görünümü (docs/adr/0715) joins it: the levels it hides are hidden as well, the level it draws faint is
-    /// snapped to only. A sheet's map shows every level.
+    /// snapped to only. A sheet's map edited in place shows its own level instead (docs/adr/0716).
     fn sync_phases(&mut self, doc: &Document) {
+        // A sheet's map edited in place shows its own level (docs/adr/0716), not the session's.
+        let (view, active) = match &self.sheet_view {
+            Some(v) => match &v.level {
+                Some(l) => (
+                    if l.below {
+                        crate::level_view::LevelView::Below
+                    } else {
+                        crate::level_view::LevelView::Active
+                    },
+                    Some(l.id.clone()),
+                ),
+                None => (crate::level_view::LevelView::All, None),
+            },
+            None => (self.level_view, self.active_level.clone()),
+        };
+        let looks = crate::level_view::looks(doc, view, active.as_deref());
         if self.sheet_view.is_some() {
-            self.store.set_phase_hidden(
-                kentos_native_application::viewport_scope::hidden_entities(doc),
-            );
-            if !self.store.no_unpicked() {
-                self.store.set_unpicked(std::iter::empty());
+            self.elsewhere.clear();
+            let shown = crate::level_view::LevelLooks {
+                hidden: looks.hidden,
+                faded: looks.faded,
+                elsewhere: Vec::new(),
+            };
+            let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
+            hidden.extend(shown.hidden.iter().map(|&id| f64::from(id)));
+            self.store.set_phase_hidden(hidden);
+            self.store
+                .set_unpicked(shown.faded.iter().map(|&id| f64::from(id)));
+            if *self.level_looks != shown {
+                self.level_looks = Arc::new(shown);
+                self.level_version += 1;
             }
             return;
         }
-        let looks = crate::level_view::looks(doc, self.level_view, self.active_level.as_deref());
         self.elsewhere = looks.elsewhere.iter().copied().collect();
         let shown = crate::level_view::LevelLooks {
             hidden: looks.hidden,

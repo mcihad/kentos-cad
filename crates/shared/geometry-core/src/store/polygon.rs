@@ -258,7 +258,39 @@ fn touches(e: &Shape, ring: &Ring<'_>, font: Font) -> bool {
         || holds_polygon(e, ring.pts[0], font)
 }
 
+/// The box a ring's candidates are looked for in.
+fn ring_query(pts: &[Vec2]) -> Bounds {
+    let mut q = Bounds {
+        min_x: f64::INFINITY,
+        min_y: f64::INFINITY,
+        max_x: f64::NEG_INFINITY,
+        max_y: f64::NEG_INFINITY,
+    };
+    for p in pts {
+        q.min_x = js_min(q.min_x, p.x);
+        q.min_y = js_min(q.min_y, p.y);
+        q.max_x = js_max(q.max_x, p.x);
+        q.max_y = js_max(q.max_y, p.y);
+    }
+    padded(q, ON_BOUNDARY)
+}
+
 impl Store {
+    /// Every object touching a simple ring, whatever the view shows now (a sheet map's model scope, docs/adr/0716):
+    /// the view's phase, level, layers, filter and time are read with it ([`Store::view_shown`]), so what a view
+    /// hides or draws faint now and shows later is in it already. A ring [`ring_problem`] refuses holds nothing.
+    pub fn touching_ring(&self, pts: &[Vec2]) -> Vec<f64> {
+        if ring_problem(pts).is_some() {
+            return Vec::new();
+        }
+        let ring = Ring::new(pts);
+        self.candidates(&ring_query(pts))
+            .into_iter()
+            .filter(|it| it.shapes().any(|s| touches(s, &ring, self.font)))
+            .map(|it| it.id)
+            .collect()
+    }
+
     /// Çokgenle seç (docs/adr/0187 §2): the visible objects wholly inside a
     /// simple ring, touching it too (`Crossing`), or not touching it at all
     /// (`Outside`), in the document's order. An insert by its pieces, all of
@@ -269,19 +301,7 @@ impl Store {
             return Vec::new();
         }
         let ring = Ring::new(pts);
-        let mut q = Bounds {
-            min_x: f64::INFINITY,
-            min_y: f64::INFINITY,
-            max_x: f64::NEG_INFINITY,
-            max_y: f64::NEG_INFINITY,
-        };
-        for p in pts {
-            q.min_x = js_min(q.min_x, p.x);
-            q.min_y = js_min(q.min_y, p.y);
-            q.max_x = js_max(q.max_x, p.x);
-            q.max_y = js_max(q.max_y, p.y);
-        }
-        let q = padded(q, ON_BOUNDARY);
+        let q = ring_query(pts);
         let touching = |it: &Item| it.shapes().any(|s| touches(s, &ring, self.font));
         match mode {
             PolygonMode::Inside => self

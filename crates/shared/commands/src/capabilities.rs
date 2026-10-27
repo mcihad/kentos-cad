@@ -112,6 +112,7 @@ const SHEET_CORE: &[&str] = &[
     "bad_group",
     "bad_id",
     "bad_layout",
+    "bad_level",
     "bad_link",
     "bad_name",
     "bad_order",
@@ -4098,7 +4099,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             SHEET_CORE,
             REVISION,
-            &["no_operations", "invalid_operation", "book_unreadable"],
+            &["no_operations", "invalid_operation", "book_unreadable", "level_not_found"],
         ],
         warnings: &[],
         targets: none,

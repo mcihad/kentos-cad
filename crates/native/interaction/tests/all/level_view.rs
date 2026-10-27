@@ -166,3 +166,91 @@ fn a_click_takes_the_active_levels_wall_where_walls_lie_over_each_other() {
     b.spatial.sync(&b.doc);
     assert_eq!(b.spatial.pick(at, 0.2), Some(walls[0]), "Zemin kat's now");
 }
+
+/// docs/adr/0716: a sheet's map edited in place picks and snaps as the map draws: its level and what is on no level;
+/// with Alt kat soluk the level under it is snapped to, not picked. The session's Kat görünümü does not count there.
+#[test]
+fn a_sheet_maps_level_is_what_its_model_edit_picks() {
+    use serde_json::json;
+    let (mut b, [ground, first, second, _door, line]) = building();
+    let edit = |b: &mut Bench, ops: serde_json::Value| {
+        let r = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+            "cad.sheets.edit",
+            kentos_commands::CallOp::Execute,
+            json!({ "ops": ops }),
+        )
+        .unwrap();
+        assert_eq!(r["status"], "completed", "{r}");
+    };
+    edit(
+        &mut b,
+        json!([{"op": "addSheet", "sheet": {
+            "export": {"dpi": 300, "fileName": "plan", "format": "svg"}, "guides": [], "id": "page",
+            "items": [{"bindings": [], "constraints": {"h": "left", "relativeTo": "margins", "v": "top"},
+                "frame": {"height": 230000, "left": 20000, "top": 10000, "width": 390000}, "hidden": false,
+                "id": "viewport", "kind": {"clipToAtlasFeature": false, "grids": [], "labelBand": 0,
+                    "layers": {"type": "all"},
+                    "overviewFrame": {"cap": "butt", "color": "#d0021b", "dash": [], "join": "miter", "width": 500},
+                    "type": "map", "level": {"id": "kat-1"},
+                    "view": {"center": {"x": E + 5.0, "y": N + 6.0}, "rotation": 0, "scale": 100, "type": "fixed"}},
+                "locked": false, "name": "Harita", "opacity": 100, "padding": 0, "printable": true, "rotation": 0}],
+            "name": "1. kat planı",
+            "page": {"margins": {"bottom": 10000, "left": 20000, "right": 10000, "top": 10000},
+                "orientation": "landscape", "paper": "a3", "size": {"height": 297000, "width": 420000}},
+            "snapGrid": {"enabled": false, "spacing": 5000, "visible": false}, "variables": [], "variants": []
+        }}]),
+    );
+    let scope = |b: &Bench| {
+        kentos_native_application::viewport_scope::resolve(
+            &b.doc,
+            &kentos_commands::SheetModelScope {
+                sheet: "page".into(),
+                item: "viewport".into(),
+            },
+        )
+        .unwrap()
+    };
+    let at = |x: f64, y: f64| Vec2::new(E + x, N + y);
+    let kinds = kentos_interaction::default_snap_kinds();
+    let snapped = |b: &Bench, x: f64, y: f64| {
+        b.spatial
+            .snap(at(x, y), 0.3, kinds, None)
+            .map(|h| Slot(h.id as u32))
+    };
+    b.spatial.sync(&b.doc);
+    // The session shows Zemin kat alone; the map, 1. kat.
+    b.spatial
+        .set_level_view(&b.doc, LevelView::Active, Some("zemin".into()));
+    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), Some(ground));
+    let s = scope(&b);
+    b.spatial.set_sheet_view(&b.doc, Some(s));
+    assert_eq!(b.spatial.pick(at(3.0, 4.1), 0.2), Some(first), "the map's level");
+    assert_eq!(b.spatial.pick(at(3.0, 12.0), 0.2), Some(line), "what is on no level");
+    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), None, "not the session's level");
+    assert_ne!(snapped(&b, 0.05, 0.05), Some(ground), "nor snapped to");
+    assert_eq!(b.spatial.pick(at(3.0, 8.1), 0.2), None);
+    // Alt kat soluk: Zemin kat snapped to, not picked.
+    edit(
+        &mut b,
+        json!([{"op": "setViewport", "id": "viewport", "level": {"type": "level", "id": "kat-1", "below": true}}]),
+    );
+    let s = scope(&b);
+    b.spatial.set_sheet_view(&b.doc, Some(s));
+    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), None, "the faint level is not picked");
+    assert_eq!(snapped(&b, 0.05, 0.05), Some(ground), "but snapped to");
+    assert_ne!(snapped(&b, 0.05, 8.05), Some(second));
+    // Bütün katlar on the map: every wall.
+    edit(
+        &mut b,
+        json!([{"op": "setViewport", "id": "viewport", "level": {"type": "all"}}]),
+    );
+    let s = scope(&b);
+    b.spatial.set_sheet_view(&b.doc, Some(s));
+    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), Some(ground));
+    assert_eq!(b.spatial.pick(at(3.0, 8.1), 0.2), Some(second));
+    // Off the sheet, the session's Zemin kat again.
+    b.spatial.set_sheet_view(&b.doc, None);
+    assert_eq!(b.spatial.pick(at(3.0, 4.1), 0.2), None);
+    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), Some(ground));
+}

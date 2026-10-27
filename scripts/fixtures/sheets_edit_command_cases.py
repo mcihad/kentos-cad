@@ -358,6 +358,86 @@ def asset_cases():
     return out
 
 
+# A map's level (docs/adr/0716): the project's levels, a map that draws one of them (and the one under it faint).
+LEVELS = [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
+          {"id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0}]
+LEVEL_SETUP = copy.deepcopy(SETUP)
+LEVEL_SETUP["settings"]["arch"] = {"levels": LEVELS}
+LEVEL_NOT_FOUND = ("Projede “{id}” kimlikte kat yok: harita ancak projenin bir katını çizer. Proje ayarları › Mimari'deki "
+                   "katlardan birinin kimliğini verin.")
+BAD_LEVEL = "Haritanın katı boş olmayan, en çok 128 harflik bir kat kimliği olmalı."
+
+
+def leveled(level: str | None = None, below: bool = False) -> dict:
+    """The plan sheet as the answer lists it with its map drawing `level` (the one under it faint with `below`)."""
+    s = listed(PLAN)
+    if level is not None:
+        s["maps"][0]["level"] = level
+        if below:
+            s["maps"][0]["below"] = True
+    return s
+
+
+def level_cases() -> list:
+    """setViewport's `level` and the designer's item patch: the map lists its level; a level the project does not have
+    is refused before the book is touched; an empty id is the core's refusal. The inverse is the core's own ($any)."""
+    add_plan = {"op": "execute", "input": {"ops": [{"op": "addSheet", "sheet": PLAN}]},
+                "result": done("Pafta ekle: Kat planı", [{"id": "kat-plani", "op": "removeSheet"}], [listed(PLAN)])}
+
+    def viewport(level: dict) -> dict:
+        return {"op": "setViewport", "id": "kat-plani-harita", "level": level}
+
+    def set_level(level: dict, sheets: list) -> dict:
+        return {"op": "execute", "input": {"ops": [viewport(level)]},
+                "result": {"status": "completed", "warnings": [],
+                           "output": {"inverse": "$any", "label": "Görünüm penceresi: kat-plani-harita",
+                                      "revision": "$current", "sheets": sheets}},
+                "expect": {"sheets": sheets, "dirty": True, "canUndo": False, "revision": "changed"}}
+
+    def refused(ops: list, code: str, message: str, path: str) -> dict:
+        return {"op": "execute", "input": {"ops": ops}, "result": failed(code, message, path),
+                "expect": {"sheets": [listed(PLAN)], "revision": "same"}}
+
+    kat1 = {"type": "level", "id": "kat-1"}
+    kat1_below = {"type": "level", "id": "kat-1", "below": True}
+    cases = [
+        ("Haritanın katı: 1. kat; harita o katın ve katsız nesneleri çizer",
+         [add_plan, set_level(kat1, [leveled("kat-1")])]),
+        ("Haritanın katı ve alt kat soluk",
+         [add_plan, set_level(kat1_below, [leveled("kat-1", True)])]),
+        ("Bütün katlar: haritanın katı kalkar",
+         [add_plan, set_level(kat1_below, [leveled("kat-1", True)]), set_level({"type": "all"}, [leveled()])]),
+        ("Başka kat verilince alt kat solukluğu yenisinin: verilmeyen kapalı",
+         [add_plan, set_level(kat1_below, [leveled("kat-1", True)]),
+          set_level({"type": "level", "id": "zemin"}, [leveled("zemin")])]),
+        ("Projede olmayan kat reddedilir; kitap değişmez",
+         [add_plan, refused([viewport({"type": "level", "id": "kat-9"})], "level_not_found",
+                            LEVEL_NOT_FOUND.format(id="kat-9"), "ops[0].level.id")]),
+        ("Boş kat kimliği çekirdeğin reddi",
+         [add_plan, refused([viewport({"type": "level", "id": " "})], "bad_level", BAD_LEVEL, "ops[0]")]),
+        ("Kat kimliği 128 harften uzun: çekirdeğin reddi",
+         [add_plan, refused([viewport({"type": "level", "id": "k" * 129})], "level_not_found",
+                            LEVEL_NOT_FOUND.format(id="k" * 129), "ops[0].level.id")]),
+        ("İkinci işlem projede olmayan katı verince ilki de yazılmaz",
+         [add_plan, refused([{"op": "renameSheet", "id": "kat-plani", "name": "Zemin kat"},
+                             viewport({"type": "level", "id": "yok"})], "level_not_found",
+                            LEVEL_NOT_FOUND.format(id="yok"), "ops[1].level.id")]),
+        ("Tasarımcının yolu: öğenin özelliğiyle kat, listede görünür",
+         [add_plan, {"op": "execute",
+                     "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                        "patch": {"kind": {"level": {"id": "kat-1", "below": True}}}}]},
+                     "result": {"status": "completed", "warnings": [],
+                                "output": {"inverse": "$any", "label": "Değiştir: Harita", "revision": "$current",
+                                           "sheets": [leveled("kat-1", True)]}},
+                     "expect": {"sheets": [leveled("kat-1", True)], "revision": "changed"}}]),
+    ]
+    out = [{"name": name, "setup": LEVEL_SETUP, "steps": copy.deepcopy(steps)} for name, steps in cases]
+    # A project with no levels: no map can draw one.
+    out.append({"name": "Katsız projede haritaya kat verilemez", "steps": copy.deepcopy([
+        add_plan, refused([viewport(kat1)], "level_not_found", LEVEL_NOT_FOUND.format(id="kat-1"), "ops[0].level.id")])})
+    return out
+
+
 def build() -> dict:
     return {
         "format": "kentos.command-cases",
@@ -368,7 +448,7 @@ def build() -> dict:
         "note": "Written by scripts/fixtures/sheets_edit_command_cases.py from the contract's rules, the sheet core's "
                 "model and docs/adr/0251 §3, 0252 §2; do not edit by hand.",
         "setup": SETUP,
-        "cases": cases() + more_cases() + asset_cases(),
+        "cases": cases() + more_cases() + asset_cases() + level_cases(),
     }
 
 

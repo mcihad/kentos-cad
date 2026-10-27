@@ -1159,6 +1159,8 @@ codes! {
     SHEET_BAD_ID = "bad_id", Failed, false, "Pafta öğesinin kimliği geçersiz.";
     /// Forwarded from the shared sheet core.
     SHEET_BAD_LAYOUT = "bad_layout", Failed, false, "Pafta yerleşim tanımı geçersiz.";
+    /// Forwarded from the shared sheet core (docs/adr/0716).
+    SHEET_BAD_LEVEL = "bad_level", Failed, false, "Haritanın katı boş ya da 128 harften uzun.";
     /// Forwarded from the shared sheet core.
     SHEET_BAD_LINK = "bad_link", Failed, false, "Pafta öğesinin başvurduğu öğe uygun değil.";
     /// Forwarded from the shared sheet core.

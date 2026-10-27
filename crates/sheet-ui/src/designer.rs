@@ -132,6 +132,8 @@ pub struct Context {
     /// (docs/adr/0314 §1).
     pub layer_states: Vec<String>,
     pub line_types: Vec<String>,
+    /// The project's levels (id, name), low to high as the project lists them, for a map's level (docs/adr/0716).
+    pub levels: Vec<(String, String)>,
 }
 
 /// One step of the undo or redo stack: its name and the operations that

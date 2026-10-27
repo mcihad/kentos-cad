@@ -406,6 +406,9 @@ impl Designer {
                 if let Some(row) = self.picture_row(&chosen, editable) {
                     col = col.push(row);
                 }
+                if let Some(part) = self.map_level_part(&chosen, editable) {
+                    col = col.push(part);
+                }
                 if let Some(part) = self.map_layers_part(&chosen, editable) {
                     col = col.push(part);
                 }
@@ -735,6 +738,60 @@ impl Designer {
             .padding([4, 4])
             .into(),
         )
+    }
+
+    /// One map's level (docs/adr/0716) while the project has levels: Kat (Bütün katlar, or a level: its plan) and Alt kat
+    /// soluk (the level under it faint); a level the project no longer has is said so.
+    fn map_level_part(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {
+        use kentos_sheet::kinds::ItemKind;
+        use kentos_ui::widget::select::{Choice, Select};
+        let [one] = chosen else { return None };
+        let ItemKind::Map(m) = &one.kind else {
+            return None;
+        };
+        let levels = self.ctx.levels.clone();
+        if levels.is_empty() && m.level.is_none() {
+            return None;
+        }
+        let mut labels = vec!["Bütün katlar".to_owned()];
+        labels.extend(levels.iter().map(|(_, name)| name.clone()));
+        let at = match &m.level {
+            None => Some(0),
+            Some(l) => match levels.iter().position(|(id, _)| *id == l.id) {
+                Some(i) => Some(i + 1),
+                None => {
+                    labels.push(format!("{} (projede yok)", l.id));
+                    Some(labels.len() - 1)
+                }
+            },
+        };
+        let ids: Vec<String> = levels.iter().map(|(id, _)| id.clone()).collect();
+        let kept = m.level.as_ref().map(|l| l.id.clone());
+        let choose = Select::new(labels.into_iter().map(Choice::new), at, move |i| {
+            Message::MapLevel(match i {
+                0 => None,
+                i => ids.get(i - 1).cloned().or_else(|| kept.clone()),
+            })
+        })
+        .searchable(false);
+        let said = match &m.level {
+            None => "Bütün katların nesneleri çizilir.".to_owned(),
+            Some(l) if l.below => {
+                "Katın ve katsız nesneler; altındaki kat soluk. Öbür katlar haritada yok.".to_owned()
+            }
+            Some(_) => "Katın ve katsız nesneler çizilir; öbür katlar haritada yok.".to_owned(),
+        };
+        let mut col = column![labelled("Kat", choose.into(), said)].spacing(6);
+        if m.level.is_some() {
+            let below = Switch::new(m.level.as_ref().is_some_and(|l| l.below), |on| {
+                Message::MapLevelBelow(on)
+            })
+            .label("Alt kat soluk");
+            col = col.push(container(below).padding([0, 12]));
+        }
+        // A locked map is not patched (`patch_map_layers`); its choices show what it is.
+        let _ = editable;
+        Some(container(col).padding([4, 4]).into())
     }
 
     /// One map's own layers (docs/adr/0314 §1): Katman durumu (a layer state of the project in this map only, or the

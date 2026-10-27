@@ -635857,6 +635857,7 @@
           "bad_group",
           "bad_id",
           "bad_layout",
+          "bad_level",
           "bad_link",
           "bad_name",
           "bad_order",
@@ -643811,6 +643812,17 @@
                       "type": "all"
                     }
                   },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLevel"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The project's level this map draws (docs/adr/0716): a level's plan. None: every level."
+                  },
                   "overviewFrame": {
                     "$ref": "#/$defs/PaperStroke",
                     "default": {
@@ -645121,6 +645133,24 @@
                 "type": "object"
               }
             ]
+          },
+          "PaperMapLevel": {
+            "additionalProperties": false,
+            "description": "A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.",
+            "properties": {
+              "below": {
+                "description": "The level under it drawn faint too.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The level's id among the project's levels.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
           },
           "PaperMapView": {
             "oneOf": [
@@ -649124,6 +649154,17 @@
                       "type": "all"
                     }
                   },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLevel"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The project's level this map draws (docs/adr/0716): a level's plan. None: every level."
+                  },
                   "overviewFrame": {
                     "$ref": "#/$defs/PaperStroke",
                     "default": {
@@ -650434,6 +650475,24 @@
                 "type": "object"
               }
             ]
+          },
+          "PaperMapLevel": {
+            "additionalProperties": false,
+            "description": "A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.",
+            "properties": {
+              "below": {
+                "description": "The level under it drawn faint too.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The level's id among the project's levels.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
           },
           "PaperMapView": {
             "oneOf": [
@@ -1166626,6 +1166685,17 @@
                       "type": "all"
                     }
                   },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLevel"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The project's level this map draws (docs/adr/0716): a level's plan. None: every level."
+                  },
                   "overviewFrame": {
                     "$ref": "#/$defs/PaperStroke",
                     "default": {
@@ -1167936,6 +1168006,24 @@
                 "type": "object"
               }
             ]
+          },
+          "PaperMapLevel": {
+            "additionalProperties": false,
+            "description": "A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.",
+            "properties": {
+              "below": {
+                "description": "The level under it drawn faint too.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The level's id among the project's levels.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
           },
           "PaperMapView": {
             "oneOf": [
@@ -1170353,9 +1170441,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1170532,9 +1170634,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1170641,6 +1170757,7 @@
           "bad_group",
           "bad_id",
           "bad_layout",
+          "bad_level",
           "bad_link",
           "bad_name",
           "bad_order",
@@ -1170876,9 +1170993,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1171055,9 +1171186,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1172814,6 +1172959,17 @@
                       "type": "all"
                     }
                   },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLevel"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The project's level this map draws (docs/adr/0716): a level's plan. None: every level."
+                  },
                   "overviewFrame": {
                     "$ref": "#/$defs/PaperStroke",
                     "default": {
@@ -1174125,6 +1174281,62 @@
               }
             ]
           },
+          "PaperMapLevel": {
+            "additionalProperties": false,
+            "description": "A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.",
+            "properties": {
+              "below": {
+                "description": "The level under it drawn faint too.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The level's id among the project's levels.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          "PaperMapLevelChoice": {
+            "description": "A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "all",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "below": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "level",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "PaperMapView": {
             "oneOf": [
               {
@@ -1175113,6 +1175325,17 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "level": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/PaperMapLevelChoice"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The level the map draws (docs/adr/0716)."
                   },
                   "locked": {
                     "type": [
@@ -1178106,9 +1178329,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1178285,9 +1178522,23 @@
           "SheetMapInfo": {
             "description": "A map frame of a sheet as the answer lists it.",
             "properties": {
+              "below": {
+                "description": "With a level: the level under it drawn faint too.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "item": {
                 "description": "The item's id.",
                 "type": "string"
+              },
+              "level": {
+                "description": "The level the map draws (docs/adr/0716), by its id; none: every level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "name": {
                 "description": "The item's name, unique in its sheet.",
@@ -1178394,6 +1178645,7 @@
           "bad_group",
           "bad_id",
           "bad_layout",
+          "bad_level",
           "bad_link",
           "bad_name",
           "bad_order",
@@ -1178436,7 +1178688,8 @@
           "revision_conflict",
           "no_operations",
           "invalid_operation",
-          "book_unreadable"
+          "book_unreadable",
+          "level_not_found"
         ]
       },
       "examples": [
@@ -1454452,6 +1454705,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Pafta yerleşim tanımı geçersiz."
+    },
+    {
+      "code": "bad_level",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Haritanın katı boş ya da 128 harften uzun."
     },
     {
       "code": "bad_link",

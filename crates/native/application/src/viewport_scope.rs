@@ -58,18 +58,16 @@ pub fn visible_layers(doc: &Document, scope: &Viewport) -> std::collections::Has
     .collect()
 }
 
-/// Cache the visible original ids from the spatial tree; no scan or source clone on each pointer.
+/// Cache the original ids within the viewport's boundary from the spatial tree; no scan or source clone on each
+/// pointer.
 pub fn apply_boundary(store: &mut Store, scope: &Viewport) {
-    store.set_scope_visible(None);
     let ring = scope
         .model_boundary()
         .into_iter()
         .map(|p| Vec2::new(p[0], p[1]))
         .collect::<Vec<_>>();
-    let inside = store.in_polygon(
-        &ring,
-        kentos_geometry_core::store::polygon::PolygonMode::Crossing,
-    );
+    // Whatever the view hides or draws faint now (docs/adr/0716): the map's level may change without the boundary.
+    let inside = store.touching_ring(&ring);
     store.set_scope_visible(Some(inside));
 }
 

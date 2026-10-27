@@ -23,7 +23,7 @@ Araştırma (üretici belgeleri; yerelde çalıştırılmadı):
   noktaları kullanılır; başvurunun elemanları doğrudan düzenlenmez.
 
 KentOS kararı: Revit'in plan-kat ilişkisi ve altlığı, Archicad'in izleme başvurusu oturumun **Kat görünümü** olarak. Pafta
-görünümü (her pafta haritasının kendi katı) bu dilimde yoktur.
+haritasının kendi katı sonraki dilimdedir: [ADR 0716](0716-sheet-map-level.md).
 
 ## Karar
 
@@ -67,7 +67,7 @@ katsızdır.
 
 ## Sınırlar
 
-- Pafta haritaları ve PDF bütün katları çizer; haritanın kendi katı (Revit'in kat planı görünümü) sonraki dilimdir.
+- Pafta haritaları ve PDF oturumun kat görünümüyle değişmez; haritanın kendi katı [ADR 0716](0716-sheet-map-level.md)'dadır.
 - Bloklar, çizgiler ve yazılar katsızdır: her katta görünürler (katman ayrımı sürer).
 - Etkin kat ve görünüm çizimle saklanmaz; kat görünümünün seçimi bölünmüş görünümde her görünüm için ayrı değildir.
 - Katsız çizilmiş nesnelere toplu kat atama hâlâ açıktır.

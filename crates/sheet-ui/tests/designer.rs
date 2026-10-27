@@ -2213,3 +2213,54 @@ fn an_unpaintable_raster_map_refuses_pdf_and_svg_instead_of_succeeding_with_gray
     assert!(d.pdf(&Missing, host).unwrap_err().contains("çizilemedi"));
     assert!(d.svg(&Missing).unwrap_err().contains("çizilemedi"));
 }
+
+/// A map's level (docs/adr/0716): Kat writes the level whole (a patch's object merges key by key), Alt kat soluk keeps
+/// it, Bütün katlar takes it away, each one step; Alt kat soluk with no level is no step.
+#[test]
+fn a_map_draws_a_level() {
+    use kentos_sheet::kinds::MapLevel;
+    let level = |d: &Designer| match &item(d, "Harita").kind {
+        ItemKind::Map(m) => m.level.clone(),
+        other => panic!("{other:?}"),
+    };
+    let on = |id: &str, below: bool| {
+        Some(MapLevel {
+            id: id.to_owned(),
+            below,
+        })
+    };
+    let mut d = Designer::new(Context {
+        levels: vec![
+            ("zemin".into(), "Zemin kat".into()),
+            ("kat-1".into(), "1. kat".into()),
+        ],
+        ..context()
+    });
+    new_sheet(&mut d);
+    let map = item(&d, "Harita").id.clone();
+    d.update(Message::Select(vec![map]));
+    assert_eq!(level(&d), None, "a new map draws every level");
+    d.update(Message::MapLevelBelow(true));
+    assert_eq!(level(&d), None);
+    d.update(Message::MapLevel(Some("kat-1".into())));
+    assert_eq!(level(&d), on("kat-1", false));
+    d.update(Message::MapLevelBelow(true));
+    assert_eq!(level(&d), on("kat-1", true));
+    d.update(Message::MapLevel(Some("zemin".into())));
+    assert_eq!(level(&d), on("zemin", true), "Alt kat soluk is kept");
+    d.update(Message::MapLevel(None));
+    assert_eq!(level(&d), None);
+    d.update(Message::Undo);
+    assert_eq!(level(&d), on("zemin", true), "one step each");
+    d.update(Message::Undo);
+    d.update(Message::Undo);
+    assert_eq!(level(&d), on("kat-1", false));
+    d.update(Message::Undo);
+    assert_eq!(level(&d), None);
+    // A step would drop what Yinele brings back.
+    assert!(d.can_redo());
+    d.update(Message::MapLevelBelow(true));
+    assert!(d.can_redo(), "Alt kat soluk with no level is no step");
+    d.update(Message::Redo);
+    assert_eq!(level(&d), on("kat-1", false));
+}

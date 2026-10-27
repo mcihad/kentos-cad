@@ -1530,6 +1530,7 @@ mod tests {
                 rotation: 0,
             },
             layers: MapLayers::default(),
+            level: None,
             crs: None,
             extent: None,
             clip_feature: None,

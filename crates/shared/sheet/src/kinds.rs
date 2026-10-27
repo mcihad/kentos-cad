@@ -381,6 +381,27 @@ pub struct MapItem {
     /// Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
     #[serde(default, skip_serializing_if = "Vec::is_empty", deserialize_with = "crate::viewport::default_on_null")]
     pub layer_overrides: Vec<LayerOverride>,
+    /// The project's level this map draws (docs/adr/0716): a level's plan. None: every level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<MapLevel>,
+}
+
+/// A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
+/// no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMapLevel"))]
+pub struct MapLevel {
+    /// The level's id among the project's levels.
+    pub id: String,
+    /// The level under it drawn faint too.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub below: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1833,6 +1854,7 @@ pub fn default_kind(type_name: &str) -> Option<ItemKind> {
             clip_to_atlas_feature: false,
             label_band: 0,
             layer_overrides: Vec::new(),
+            level: None,
         }),
         "text" => ItemKind::Text(TextItem {
             content: String::new(),

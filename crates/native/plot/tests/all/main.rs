@@ -10,6 +10,7 @@ mod atlas_timing;
 mod bands;
 mod book;
 mod map_layers;
+mod map_levels;
 mod output;
 mod units;
 

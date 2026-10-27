@@ -75,6 +75,23 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
     // One by one, so a refusal names its operation; the inverse undoes them all, last first.
     let mut inverse: Vec<Op> = Vec::new();
     let mut labels = Vec::new();
+    // A map's level (docs/adr/0716) is one of the project's.
+    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    for (i, op) in parsed.iter().enumerate() {
+        if let Op::SetViewport(v) = op
+            && let Some(kentos_sheet::viewport::MapLevelChoice::Level { id, .. }) = &v.level
+            && !id.trim().is_empty()
+            && !levels.iter().any(|l| l.id == *id)
+        {
+            return Err(Stop::failed(error(
+                codes::LEVEL_NOT_FOUND,
+                format!(
+                    "Projede “{id}” kimlikte kat yok: harita ancak projenin bir katını çizer. Proje ayarları › Mimari'deki katlardan birinin kimliğini verin."
+                ),
+                Some(format!("ops[{i}].level.id")),
+            )));
+        }
+    }
     for (i, original) in parsed.iter().enumerate() {
         let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().named_views).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
         let op=prepared.as_ref().unwrap_or(original);
@@ -167,6 +184,8 @@ pub fn sheets_of_with_views(
                             }
                             MapView::Atlas(_) => None,
                         },
+                        level: m.level.as_ref().map(|l| l.id.clone()),
+                        below: m.level.as_ref().filter(|l| l.below).map(|_| true),
                     }),
                     _ => None,
                 })

@@ -13,6 +13,8 @@ pub struct Viewport {
     pub annotation_scale: f64,
     pub layers: crate::kinds::MapLayers,
     pub layer_overrides: Vec<crate::kinds::LayerOverride>,
+    /// The level the map draws (docs/adr/0716): the paper's model edit picks and snaps as it shows.
+    pub level: Option<crate::kinds::MapLevel>,
     pub rotation: i32,
     pivot: [f64; 2],
     frame_rotation: i32,
@@ -71,6 +73,7 @@ impl Viewport {
             annotation_scale: map.annotation_scale.unwrap_or(view.denominator()),
             layers: map.layers.clone(),
             layer_overrides: map.layer_overrides.clone(),
+            level: map.level.clone(),
             rotation: view.rotation,
             pivot: item.frame.center(),
             frame_rotation: item.rotation,

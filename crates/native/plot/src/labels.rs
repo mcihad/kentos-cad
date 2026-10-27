@@ -10,6 +10,11 @@ use kentos_sheet::{display::MapPrim, pdf::TextAnchor};
 
 use crate::maps::{MapLabel, PX_MM};
 
+/// The object a label spot is written for.
+pub fn spot_slot(s: &LabelSpot) -> Slot {
+    slot(s)
+}
+
 fn slot(s: &LabelSpot) -> Slot {
     match s {
         LabelSpot::Dimension { slot, .. }
@@ -126,6 +131,7 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
         &m.view,
         &m.layers,
         &m.layer_overrides,
+        m.level.as_ref(),
         m.extent,
     )
 }
@@ -171,11 +177,16 @@ pub fn labels_in_view(
     view: &kentos_sheet::display::MapViewPrim,
     layers: &kentos_sheet::kinds::MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
+    level: Option<&kentos_sheet::kinds::MapLevel>,
     extent: Option<[f64; 4]>,
 ) -> Vec<MapLabel> {
     let Some(bounds) = extent else {
         return Vec::new();
     };
+    // A level's plan (docs/adr/0716): the other levels' words out, the one under it faint.
+    let (left_out, faint) = level
+        .map(|l| crate::layers::level_looks(doc, l))
+        .unwrap_or_default();
     let scale = view.scale.max(1e-6);
     let pixels = kentos_sheet::projection::Scale::for_rendering(scale)
         .pixels_per_metre(1. / (PX_MM * 1000.));
@@ -199,8 +210,24 @@ pub fn labels_in_view(
     let mut out = Vec::new();
     let mut placed: Option<(Slot, kentos_contracts::LabelStyle)> = None;
     let mut filled = std::collections::HashSet::new();
+    // Where the words of an object drawn faint start: made faint when the next object's begin, and at the end.
+    let mut faint_from: Option<usize> = None;
+    let fade = |out: &mut [MapLabel]| {
+        for l in out {
+            l.color = crate::layers::faint_on_paper(&l.color);
+        }
+    };
     for spot in spots {
+        if let Some(from) = faint_from.take() {
+            fade(&mut out[from..]);
+        }
         let id = slot(&spot);
+        if left_out.contains(&id.0) {
+            continue;
+        }
+        if faint.contains(&id.0) {
+            faint_from = Some(out.len());
+        }
         let Some(entity) = doc.get(id) else { continue };
         let Some(layer) = visible.get(entity.base().layer_id.as_str()) else {
             continue;
@@ -587,6 +614,9 @@ pub fn labels_in_view(
             }
             out.push(l);
         }
+    }
+    if let Some(from) = faint_from {
+        fade(&mut out[from..]);
     }
     out
 }

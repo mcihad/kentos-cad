@@ -3,6 +3,7 @@ import type { Clip } from "./Clip";
 import type { LayerOverride } from "./LayerOverride";
 import type { MapGrid } from "./MapGrid";
 import type { MapLayers } from "./MapLayers";
+import type { MapLevel } from "./MapLevel";
 import type { MapView } from "./MapView";
 import type { Source } from "./Source";
 import type { Stroke } from "./Stroke";
@@ -43,4 +44,8 @@ labelBand: number,
 /**
  * Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
  */
-layerOverrides?: Array<LayerOverride>, };
+layerOverrides?: Array<LayerOverride>,
+/**
+ * The project's level this map draws (docs/adr/0716): a level's plan. None: every level.
+ */
+level?: MapLevel, };

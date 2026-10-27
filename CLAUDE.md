@@ -28,13 +28,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Paftada kat (27 Ekim 2026; [ADR0716](docs/adr/0716-sheet-map-level.md)).**
+  Pafta haritasının kendi Kat'ı (`MapItem.level`: `id`, `below`; Revit'in kat
+  planı ve altlığı, görünüm kopyası yok): katın ve katsız nesneler, alt kat kâğıtta
+  yarım ton; ekranın kat görünümü paftayı değiştirmez. `setViewport.level` bütün
+  yazılır, projede olmayan kat `level_not_found` (atomik), ön denetimde
+  `map_level_missing`; denetçide Kat ve Alt kat soluk; yerinde model düzenleme
+  haritanın katıyla. Görünüm penceresinin kapsamı artık geometrik (`touching_ring`).
+
 - **Kat görünümü (27 Ekim 2026; [ADR0715](docs/adr/0715-level-view.md)).**
   Oturumun durumu: Bütün katlar / Yalnız etkin kat / Etkin kat ve alt kat (alt
   kat %60 soluk, yazıları da; kenetlenir, seçilmez: Revit altlığı). Nesnenin katı
   `Entity::level` (açıklık duvarının, etiket nesnesinin, kaplama mahalin, ölçü
   bağlarının); çekirdek depoda `set_unpicked`/`pickable`, `Spatial::set_level_view`,
   tıklamada etkin kat önce (üst üste duvarda kapı/pencere etkin kata). Kat menüsü,
-  hücre ikonu, Görünüm › Kat görünümü ▾ (`view.levels.*`). Pafta bütün katları çizer.
+  hücre ikonu, Görünüm › Kat görünümü ▾ (`view.levels.*`). Paftanın katı ADR0716'da.
 
 - **Açıklığın numarası yerleştirirken (27 Ekim 2026; [ADR0714](docs/adr/0714-opening-numbers-on-placement.md)).**
   Revit'in Mark'ı gibi: Kapı/Pencere/Boşluk'un Numara (N) ayarı Otomatik (aynı

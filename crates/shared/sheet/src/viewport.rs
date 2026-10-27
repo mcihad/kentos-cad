@@ -138,6 +138,24 @@ pub fn valid_annotation_scale(scale: f64) -> bool {
     scale.is_finite() && scale > 0. && scale <= kentos_contracts::MAX_ANNOTATIVE_SCALE
 }
 
+/// A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMapLevelChoice"))]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
+pub enum MapLevelChoice {
+    #[default]
+    All,
+    Level {
+        id: String,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        below: bool,
+    },
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -154,6 +172,10 @@ pub struct SetViewport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_overrides: Option<Vec<crate::kinds::LayerOverride>>,
+    /// The level the map draws (docs/adr/0716).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<MapLevelChoice>,
 
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -359,6 +381,23 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     if let Some(overrides) = &input.layer_overrides {
         changed.layer_overrides = overrides.clone();
     }
+    if let Some(level) = &input.level {
+        changed.level = match level {
+            MapLevelChoice::All => None,
+            MapLevelChoice::Level { id, below } => {
+                if id.trim().is_empty() || id.chars().count() > 128 {
+                    return Err(SheetError::new(
+                        "bad_level",
+                        "Haritanın katı boş olmayan, en çok 128 harflik bir kat kimliği olmalı.",
+                    ));
+                }
+                Some(crate::kinds::MapLevel {
+                    id: id.clone(),
+                    below: *below,
+                })
+            }
+        };
+    }
     let ratio = view.ratio;
     changed.view = MapView::Fixed(view);
     let mut patch = serde_json::json!({"kind":changed});
@@ -376,6 +415,13 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     }
     if input.layer_overrides.is_some() {
         patch["kind"]["layerOverrides"] = serde_json::json!(changed.layer_overrides);
+    }
+    if input.level.is_some() {
+        // Both fields, so that the item's patch replaces a level whole (objects merge key by key).
+        patch["kind"]["level"] = match &changed.level {
+            Some(l) => serde_json::json!({"id": l.id, "below": l.below}),
+            None => serde_json::Value::Null,
+        };
     }
     patch["kind"]["view"]["ratio"] = serde_json::json!(ratio);
     Ok(Op::SetItemProps(SetItemProps {

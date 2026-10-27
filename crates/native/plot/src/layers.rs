@@ -65,6 +65,32 @@ pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::ph
     out
 }
 
+/// What a map of `level` leaves out and draws faint (docs/adr/0716): Kat görünümü's rule (docs/adr/0715) for that level,
+/// the level under it faint with `below`.
+pub fn level_looks(
+    doc: &kentos_domain::Document,
+    level: &kentos_sheet::kinds::MapLevel,
+) -> (std::collections::HashSet<u32>, std::collections::HashSet<u32>) {
+    use kentos_interaction::level_view::{LevelView, looks};
+    let view = if level.below { LevelView::Below } else { LevelView::Active };
+    let l = looks(doc, view, Some(&level.id));
+    (l.hidden.into_iter().collect(), l.faded.into_iter().collect())
+}
+
+/// A colour on white paper as faint as a faded object (`PHASE_FADED`, docs/adr/0716): its mix with white, its own
+/// opacity kept.
+pub fn faint_on_paper(hex: &str) -> String {
+    let p = kentos_native_style::color::parse_hex(hex, 1.0);
+    let k = kentos_contracts::PHASE_FADED;
+    let mix = |c: f64| ((c * (1.0 - k) + k) * 255.0).round() as u8;
+    let a = (p[3] * 255.0).round() as u8;
+    if a == 255 {
+        format!("#{:02x}{:02x}{:02x}", mix(p[0]), mix(p[1]), mix(p[2]))
+    } else {
+        format!("#{:02x}{:02x}{:02x}{a:02x}", mix(p[0]), mix(p[1]), mix(p[2]))
+    }
+}
+
 /// The phase view's looks of `doc`'s objects (docs/adr/0346 §2); nothing to change in Tümü.
 pub fn phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
     let view = doc

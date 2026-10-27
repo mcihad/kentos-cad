@@ -595,6 +595,7 @@ pub fn paint_in_map(
     format: Format,
     fence: Fence,
     map_layer_colors: Option<&HashMap<String, String>>,
+    faded: Rc<std::collections::HashSet<u32>>,
 ) {
     Labels {
         doc,
@@ -608,7 +609,7 @@ pub fn paint_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
-        faded: Rc::default(),
+        faded,
         map_marks: None,
         preview: None,
         pinned: false,

@@ -108,6 +108,9 @@ pub struct MapSource<'a> {
     /// The paper's system when it is not the project's (docs/adr/0638 §1): the map's ground, its extent and its
     /// origin are in it, the drawing is moved there as it is built. None: the project's.
     pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    /// The level the map draws (docs/adr/0716): the other levels' objects left out, the one under it faint with
+    /// `below`. None: every level.
+    pub level: Option<&'a kentos_sheet::kinds::MapLevel>,
 }
 
 /// A box of the paper's system as a box of the project's (docs/adr/0638 §1): the store is searched in the project's.
@@ -154,6 +157,15 @@ pub(crate) fn built_layers_profile(
         return Ok(Vec::new());
     };
     let origin = src.origin;
+    // A level's plan (docs/adr/0716): the other levels' objects out, the one under it faint.
+    let (left_out, faint) = src
+        .level
+        .map(|l| crate::layers::level_looks(doc, l))
+        .unwrap_or_default();
+    let mut phasing = crate::layers::plot_phasing_of(doc);
+    for &id in &faint {
+        phasing.fade(id);
+    }
     let look = Look {
         palette: paper_style(),
         symbol_scale: scale,
@@ -170,7 +182,7 @@ pub(crate) fn built_layers_profile(
         line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
             doc.settings(),
         )),
-        phasing: std::sync::Arc::new(crate::layers::plot_phasing_of(doc)),
+        phasing: std::sync::Arc::new(phasing),
     };
     let clip = Bounds {
         min_x: searched[0],
@@ -190,7 +202,7 @@ pub(crate) fn built_layers_profile(
     // large layer reads its own objects, not the layer's every one (docs/adr/0638 §4).
     let mut reaching: HashMap<&str, Vec<&kentos_contracts::Entity>> = HashMap::new();
     for id in src.store.reaching(&clip) {
-        if !src.store.view_shown(id) {
+        if !src.store.view_shown(id) || left_out.contains(&(id as u32)) {
             continue;
         }
         if let Some(e) = doc.get(kentos_domain::Slot(id as u32)) {

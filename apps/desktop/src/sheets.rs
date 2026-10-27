@@ -204,13 +204,14 @@ impl SheetMaps {
         library: &kentos_native_style::library::StyleLibrary,
         view: &kentos_sheet::display::MapViewPrim,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
+        level: Option<&kentos_sheet::kinds::MapLevel>,
     ) -> Rc<StyledAt> {
         let scale = view.scale;
         let origin = view
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
-        let own_key = match own {
-            (MapLayers::Theme(_), _) | (_, [_, ..]) => {
+        let own_key = match (own, level) {
+            ((MapLayers::Theme(_), _), _) | ((_, [_, ..]), _) | (_, Some(_)) => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
                 serde_json::to_string(&own.0)
@@ -219,6 +220,8 @@ impl SheetMaps {
                 serde_json::to_string(own.1)
                     .unwrap_or_default()
                     .hash(&mut h);
+                // The map's level (docs/adr/0716).
+                level.map(|l| (l.id.as_str(), l.below)).hash(&mut h);
                 h.finish() | 1
             }
             _ => 0,
@@ -236,6 +239,10 @@ impl SheetMaps {
         if let Some(at) = self.styled.borrow().iter().find(|a| a.key == key) {
             return Rc::clone(at);
         }
+        // The map's level (docs/adr/0716): the other levels' objects left out, the one under it faint.
+        let (left_out, faint) = level
+            .map(|l| kentos_plot::layers::level_looks(&doc.model, l))
+            .unwrap_or_default();
         let look = crate::style::scene::Look {
             line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
                 doc.model.settings(),
@@ -248,7 +255,14 @@ impl SheetMaps {
             view_build: Default::default(),
             view_colors: Default::default(),
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
-            phasing: std::sync::Arc::new(kentos_plot::layers::plot_phasing_of(&doc.model)),
+            phasing: std::sync::Arc::new({
+                // A level's plan (docs/adr/0716): the level under it faint.
+                let mut p = kentos_plot::layers::plot_phasing_of(&doc.model);
+                for &id in &faint {
+                    p.fade(id);
+                }
+                p
+            }),
         };
         let clip = scene::extents(doc).map_or(
             kentos_render_wgpu::Bounds {
@@ -281,8 +295,12 @@ impl SheetMaps {
             own.1,
         ) {
             let node: &kentos_commands::LayerNode = &node;
-            let objects: Vec<&kentos_commands::Entity> =
-                kentos_plot::layers::in_order(doc.model.by_layer(&node.id).collect());
+            let objects: Vec<&kentos_commands::Entity> = kentos_plot::layers::in_order(
+                doc.model
+                    .by_layer(&node.id)
+                    .filter(|e| !left_out.contains(&e.base().id))
+                    .collect(),
+            );
             if objects.is_empty() {
                 continue;
             }
@@ -503,6 +521,7 @@ impl MapPainter for SheetPainter<'_> {
             };
             let src = kentos_plot::maps::MapSource {
                 map: None,
+                level: primitive.level.as_ref(),
                 doc,
                 store: spatial.store(),
                 library: self.library,
@@ -590,16 +609,19 @@ impl MapPainter for SheetPainter<'_> {
         let Some(extent) = r.extent else {
             return Ok(None);
         };
+        let level = r.primitive.and_then(|p| p.level.as_ref());
         let texts = kentos_plot::labels::labels_in_view(
             doc,
             spatial,
             r.view,
             r.layers,
             r.overrides,
+            level,
             r.extent,
         );
         let src = kentos_plot::maps::MapSource {
             map: None,
+            level,
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
@@ -708,6 +730,7 @@ impl SheetPainter<'_> {
             self.library,
             r.view,
             (r.layers, r.overrides),
+            r.primitive.and_then(|p| p.level.as_ref()),
         );
         let s = scale;
         let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
@@ -818,6 +841,7 @@ impl SheetPainter<'_> {
             self.library,
             r.view,
             (r.layers, r.overrides),
+            r.primitive.and_then(|p| p.level.as_ref()),
         );
         let s = scale;
         let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
@@ -925,6 +949,16 @@ impl SheetPainter<'_> {
         let Some((camera, spots, fence)) = self.label_layout(doc, spatial, r) else {
             return;
         };
+        // The map's level (docs/adr/0716): the other levels' words out, the one under it faint.
+        let (left_out, faint) = r
+            .primitive
+            .and_then(|p| p.level.as_ref())
+            .map(|l| kentos_plot::layers::level_looks(doc, l))
+            .unwrap_or_default();
+        let spots: Vec<_> = spots
+            .into_iter()
+            .filter(|s| !left_out.contains(&kentos_plot::labels::spot_slot(s).0))
+            .collect();
         if spots.is_empty() {
             return;
         }
@@ -954,6 +988,7 @@ impl SheetPainter<'_> {
                 self.format,
                 fence,
                 Some(&layer_colors),
+                std::rc::Rc::new(faint),
             );
         });
     }
@@ -1311,6 +1346,12 @@ impl App {
             }),
             line_types: settings.map_or_else(Vec::new, |s| {
                 s.line_types.iter().map(|t| t.name.clone()).collect()
+            }),
+            // A map's level (docs/adr/0716): the project's levels.
+            levels: settings.map_or_else(Vec::new, |s| {
+                s.arch.as_ref().map_or_else(Vec::new, |a| {
+                    a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect()
+                })
             }),
         }
     }

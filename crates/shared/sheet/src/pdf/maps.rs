@@ -363,6 +363,7 @@ mod tests {
                 rotation: view_rot,
             },
             layers: MapLayers::default(),
+            level: None,
             crs: None,
             extent: None,
             clip_feature: None,

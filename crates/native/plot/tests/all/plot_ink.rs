@@ -176,6 +176,7 @@ fn the_cpu_print_picture_has_the_same_stroke_ink_and_keeps_large_coordinate_came
         let library = kentos_plot::book::library_of(&doc);
         let source = kentos_plot::maps::MapSource {
             map: None,
+            level: m.level.as_ref(),
             doc: &doc,
             store: spatial.store(),
             library: &library,
@@ -348,6 +349,7 @@ fn a_wide_plot_pen_collects_geometry_outside_the_unstyled_view_box() {
         let library = kentos_plot::book::library_of(doc);
         let src = kentos_plot::maps::MapSource {
             map: None,
+            level: m.level.as_ref(),
             doc,
             store: spatial.store(),
             library: &library,

@@ -81,6 +81,14 @@ pub struct SheetMapInfo {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<f64>,
+    /// The level the map draws (docs/adr/0716), by its id; none: every level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// With a level: the level under it drawn faint too.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub below: Option<bool>,
 }
 
 /// A sheet of the book as the answer lists it.

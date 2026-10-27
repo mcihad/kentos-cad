@@ -4,10 +4,15 @@ import type { Clip } from "./Clip";
 import type { GroundPoint } from "./GroundPoint";
 import type { LayerOverride } from "./LayerOverride";
 import type { MapLayers } from "./MapLayers";
+import type { MapLevelChoice } from "./MapLevelChoice";
 import type { PaperScaleRatio } from "./PaperScaleRatio";
 import type { Source } from "./Source";
 
-export type SetViewport = { annotation?: AnnotationScale, layers?: MapLayers, layerOverrides?: Array<LayerOverride>, id: string, source?: Source, center?: GroundPoint,
+export type SetViewport = { annotation?: AnnotationScale, layers?: MapLayers, layerOverrides?: Array<LayerOverride>,
+/**
+ * The level the map draws (docs/adr/0716).
+ */
+level?: MapLevelChoice, id: string, source?: Source, center?: GroundPoint,
 /**
  * Canonical metres; an unrotated model-space rectangle to fit exactly.
  */

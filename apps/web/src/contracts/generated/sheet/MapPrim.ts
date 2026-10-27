@@ -2,6 +2,7 @@
 import type { Clip } from "./Clip";
 import type { LayerOverride } from "./LayerOverride";
 import type { MapLayers } from "./MapLayers";
+import type { MapLevel } from "./MapLevel";
 import type { MapViewPrim } from "./MapViewPrim";
 import type { RectUm } from "./RectUm";
 
@@ -13,7 +14,11 @@ clip: RectUm, rotation: number, view: MapViewPrim, layers: MapLayers,
 /**
  * Layers drawn otherwise in this map (docs/adr/0314 §1).
  */
-layerOverrides?: Array<LayerOverride>, crs?: string,
+layerOverrides?: Array<LayerOverride>,
+/**
+ * The level the map draws (docs/adr/0716); none: every level.
+ */
+level?: MapLevel, crs?: string,
 /**
  * The ground the clip covers: min east, min north, max east, max north.
  */

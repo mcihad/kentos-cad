@@ -374,6 +374,45 @@ fn view_tab_levels(app: &mut App) {
     app.tab = "view";
 }
 
+/// A designer's message to the sheets, and what it starts done.
+fn sheet(app: &mut App, m: kentos_sheet_ui::Message) {
+    let task = app.update(Message::Sheet(m));
+    crate::files_testing::drive(app, task);
+}
+
+/// docs/adr/0716: Yeni pafta over the two floors (its template's questions answered), its map chosen, fitted to the
+/// drawing and set to draw 1. kat; with `below`, Zemin kat faint under it.
+fn sheet_of_level(app: &mut App, below: bool) {
+    use kentos_sheet_ui::Message as Sheet;
+    upper_floor(app);
+    sheet(app, Sheet::NewSheet);
+    if app.sheets.questions().is_some() {
+        sheet(app, Sheet::Questions(kentos_sheet_ui::questions::QuestionsMessage::Make));
+    }
+    let map = app.sheets.open_sheet().and_then(|s| {
+        s.items
+            .iter()
+            .find(|i| matches!(i.kind, kentos_sheet::kinds::ItemKind::Map(_)))
+            .map(|i| i.id.clone())
+    });
+    if let Some(id) = map {
+        sheet(app, Sheet::Select(vec![id]));
+        sheet(app, Sheet::MapFitDrawing);
+        sheet(app, Sheet::MapLevel(Some("kat-1".into())));
+        if below {
+            sheet(app, Sheet::MapLevelBelow(true));
+        }
+    }
+}
+
+fn sheet_upper(app: &mut App) {
+    sheet_of_level(app, false);
+}
+
+fn sheet_upper_over_ground(app: &mut App) {
+    sheet_of_level(app, true);
+}
+
 /// The status bar's Kat cell open (docs/adr/0713): the levels, Katsız, Katları düzenle.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
@@ -397,6 +436,19 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 let _ = app.update(message);
             };
             s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Click(at));
+        }),
+        // docs/adr/0716: the map's inspector scrolled to its Kat and Alt kat soluk.
+        ("pafta-kat-denetci", sheet_upper_over_ground, |s, app| {
+            let mut update = |app: &mut App, message: Message| {
+                let _ = app.update(message);
+            };
+            let at = crate::tools_screens::caption_at(s, app, "Konum ve boyut", false);
+            s.input(
+                app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Scroll(at, -11.0),
+            );
         }),
         ("kat-gorunumu-serit", view_tab_levels, |s, app| {
             crate::tools_screens::open_ribbon_menu(s, app, "Kat görünümü")
@@ -443,5 +495,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("kat-gorunumu-yalniz", upper_floor_alone),
         ("kat-gorunumu-alt", upper_floor_over_ground),
         ("kat-gorunumu-zemin", ground_floor_alone),
+        ("pafta-kat-1", sheet_upper),
+        ("pafta-kat-1-alt", sheet_upper_over_ground),
     ]
 }

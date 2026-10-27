@@ -180,6 +180,10 @@ pub struct MapPrim {
     /// Layers drawn otherwise in this map (docs/adr/0314 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub layer_overrides: Vec<crate::kinds::LayerOverride>,
+    /// The level the map draws (docs/adr/0716); none: every level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<crate::kinds::MapLevel>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,

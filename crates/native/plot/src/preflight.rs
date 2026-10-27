@@ -99,6 +99,39 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
             });
             out.push(f);
         }
+        // A map's level the project no longer has (docs/adr/0716): it draws the objects on no level only.
+        if let Some(level) = &m.level
+            && !doc
+                .settings()
+                .arch
+                .as_ref()
+                .is_some_and(|a| a.levels.iter().any(|l| l.id == level.id))
+        {
+            let name = scene
+                .item(&m.item)
+                .map_or_else(|| m.item.clone(), |it| it.name.clone());
+            let mut f = finding(
+                &m.item,
+                "map_level_missing",
+                format!(
+                    "“{name}” haritasının katı (“{}”) projede yok: harita yalnız katsız nesneleri çizer.",
+                    level.id
+                ),
+                "Denetçide haritanın Kat'ını projenin bir katı ya da Bütün katlar yapın.",
+                Severity::Warning,
+            );
+            f.fixes.push(kentos_sheet::preflight::Fix {
+                label: "Bütün katları çiz".into(),
+                action: None,
+                ops: vec![kentos_sheet::ops::Op::SetItemProps(
+                    kentos_sheet::ops::SetItemProps {
+                        id: m.item.clone(),
+                        patch: serde_json::json!({"kind":{"type":"map","level":null}}),
+                    },
+                )],
+            });
+            out.push(f);
+        }
         let Some(extent) = m.extent else {
             continue;
         };
@@ -355,6 +388,7 @@ mod tests {
             let center = map.view.center.unwrap();
             let src = crate::maps::MapSource {
                 map: None,
+                level: map.level.as_ref(),
                 doc: &doc,
                 store: spatial.store(),
                 library: &library,

@@ -525,6 +525,9 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     match &item.kind {
         ItemKind::Map(m) => {
             if m.annotation_scale.is_some_and(|v|!crate::viewport::valid_annotation_scale(v)) {return Err(err("bad_annotation_scale",&format!("{p}.annotationScale"),"Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı."));}
+            if m.level.as_ref().is_some_and(|l| l.id.trim().is_empty() || l.id.chars().count() > 128) {
+                return Err(err("bad_level", &format!("{p}.level.id"), "Haritanın katı boş olmayan, en çok 128 harflik bir kat kimliği olmalı."));
+            }
             m.clip.validate()?;
             if let Some(view) = m.source.captured_view()
                 && (!kentos_contracts::view_holds(view)

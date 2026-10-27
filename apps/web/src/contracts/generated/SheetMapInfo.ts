@@ -15,4 +15,12 @@ name: string,
 /**
  * The map's scale denominator (1:N); none for a map that follows something else (an atlas).
  */
-scale?: number, };
+scale?: number, 
+/**
+ * The level the map draws (docs/adr/0716), by its id; none: every level.
+ */
+level?: string, 
+/**
+ * With a level: the level under it drawn faint too.
+ */
+below?: boolean, };

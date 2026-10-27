@@ -293,6 +293,10 @@ pub enum Message {
     /// The chosen map's own layers (docs/adr/0314 §1): a layer state of the project by its name (none: the
     /// drawing's), a layer overridden, one override's change, one taken away.
     MapLayerState(Option<String>),
+    /// The chosen map's level (docs/adr/0716): a level by its id (none: every level), and whether the level under it
+    /// is drawn faint.
+    MapLevel(Option<String>),
+    MapLevelBelow(bool),
     MapOverrideAdd(String),
     MapOverride(usize, OverrideEdit),
     MapOverrideRemove(usize),

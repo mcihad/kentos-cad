@@ -111,6 +111,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-UX-04 / ADR0715: Kat görünümü (Bütün katlar, Yalnız etkin kat, Etkin kat
   ve alt kat soluk). Web'in deposu `set_unpicked`/`pickable`'ı, `Entity::level`
   kuralını, tıklamada etkin katı öne alan sırayı ve görünümün menüsünü almalı.
+- ARCH-UX-04 / ADR0716: Paftada kat. Web'in pafta kipi haritanın `level`'ini
+  çizmeli (katın ve katsızlar, `below` ile alt kat yarım ton), denetçide Kat ve Alt
+  kat soluk; görünüm penceresinin kapsamı geometrik (`touching_ring`).
 - ARCH-DOC-02 / ADR0344 eki: kapı ve pencere çizelgesinin Duvar sütunu stilsiz
   duvarda kalınlığı yazar; `cad.schedules.create.json`'un yeni durumuyla.
 - ARCH-SPACE-02 / ADR0344 eki (27 Ekim): etiketli mahal kendi yazısını çizmez

@@ -7595,6 +7595,27 @@ class PaperMapLayers(_Union):
         return _variant(_PAPER_MAP_LAYERS, "PaperMapLayers", "type", data).from_json(data)
 
 
+class PaperMapLevelChoice(_Union):
+    """A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`.
+
+    One of:
+
+    - :class:`AllPaperMapLevelChoice` (``type: all``)
+    - :class:`LevelPaperMapLevelChoice` (``type: level``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperMapLevelChoice:
+        return _variant(_PAPER_MAP_LEVEL_CHOICE, "PaperMapLevelChoice", "type", data).from_json(data)
+
+
 class PaperMapView(_Union):
     """One of:
 
@@ -39522,6 +39543,32 @@ class PaperMapGrid(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperMapLevel(_Model):
+    """A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
+    no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
+    Attributes:
+        id: The level's id among the project's levels.
+        below: The level under it drawn faint too.
+    """
+    id: str
+    below: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.below is not UNSET:
+            out["below"] = self.below
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperMapLevel:
+        return cls(
+            id=data["id"],
+            below=data.get("below", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperMargins(_Model):
     """Empty space on each side of the page; the printable area is inside it.
     Attributes:
@@ -50903,16 +50950,24 @@ class SheetMapInfo(_Model):
     Attributes:
         item: The item's id.
         name: The item's name, unique in its sheet.
+        below: With a level: the level under it drawn faint too.
+        level: The level the map draws (docs/adr/0716), by its id; none: every level.
         scale: The map's scale denominator (1:N); none for a map that follows something else (an atlas). Unit: scale.
     """
     item: str
     name: str
+    below: bool | None | Unset = UNSET
+    level: str | None | Unset = UNSET
     scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["item"] = self.item
         out["name"] = self.name
+        if self.below is not UNSET:
+            out["below"] = self.below
+        if self.level is not UNSET:
+            out["level"] = self.level
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
         return out
@@ -50922,6 +50977,8 @@ class SheetMapInfo(_Model):
         return cls(
             item=data["item"],
             name=data["name"],
+            below=data.get("below", UNSET),
+            level=data.get("level", UNSET),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
@@ -71068,6 +71125,7 @@ class MapPaperItemKind(PaperItemKind):
         grids: Coordinate grids (karelaj).
         label_band: A band inside the frame and around the content for the grid's outside labels: the frame holds them (design §3.1). Unit: paper-um.
         layer_overrides: Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
+        level: The project's level this map draws (docs/adr/0716): a level's plan. None: every level.
         overview_frame: How the overview draws the other map's frame.
         overview_of: An overview: this map shows where that map's frame is.
     """
@@ -71082,6 +71140,7 @@ class MapPaperItemKind(PaperItemKind):
     label_band: int = 0
     layer_overrides: list[PaperLayerOverride] | Unset = UNSET
     layers: PaperMapLayers = field(default_factory=(lambda: PaperMapLayers.from_json({'type': 'all'})))
+    level: PaperMapLevel | None | Unset = UNSET
     overview_frame: PaperStroke = field(default_factory=(lambda: PaperStroke.from_json({'cap': 'butt', 'color': '#d0021b', 'dash': [], 'join': 'miter', 'width': 500})))
     overview_of: str | None | Unset = UNSET
     source: PaperViewportSource | None | Unset = UNSET
@@ -71104,6 +71163,8 @@ class MapPaperItemKind(PaperItemKind):
         if self.layer_overrides is not UNSET:
             out["layerOverrides"] = [e0.to_json() for e0 in self.layer_overrides]
         out["layers"] = self.layers.to_json()
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
         out["overviewFrame"] = self.overview_frame.to_json()
         if self.overview_of is not UNSET:
             out["overviewOf"] = self.overview_of
@@ -71126,6 +71187,7 @@ class MapPaperItemKind(PaperItemKind):
             label_band=data["labelBand"] if "labelBand" in data else 0,
             layer_overrides=[PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]] if "layerOverrides" in data else UNSET,
             layers=PaperMapLayers.from_json(data["layers"]) if "layers" in data else (lambda: PaperMapLayers.from_json({'type': 'all'}))(),
+            level=UNSET if "level" not in data else None if data["level"] is None else PaperMapLevel.from_json(data["level"]),
             overview_frame=PaperStroke.from_json(data["overviewFrame"]) if "overviewFrame" in data else (lambda: PaperStroke.from_json({'cap': 'butt', 'color': '#d0021b', 'dash': [], 'join': 'miter', 'width': 500}))(),
             overview_of=data.get("overviewOf", UNSET),
             source=UNSET if "source" not in data else None if data["source"] is None else PaperViewportSource.from_json(data["source"]),
@@ -71724,6 +71786,40 @@ class ListPaperMapLayers(PaperMapLayers):
     def from_json(cls, data: Mapping[str, Any]) -> ListPaperMapLayers:
         return cls(
             layers=list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AllPaperMapLevelChoice(PaperMapLevelChoice):
+    TAG_VALUE: ClassVar[str] = "all"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "all"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AllPaperMapLevelChoice:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class LevelPaperMapLevelChoice(PaperMapLevelChoice):
+    TAG_VALUE: ClassVar[str] = "level"
+    id: str
+    below: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "level"}
+        out["id"] = self.id
+        if self.below is not UNSET:
+            out["below"] = self.below
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelPaperMapLevelChoice:
+        return cls(
+            id=data["id"],
+            below=data.get("below", UNSET),
         )
 
 
@@ -72366,6 +72462,7 @@ class SetViewportPaperOp(PaperOp):
     """
     Attributes:
         bounds: Canonical metres; an unrotated model-space rectangle to fit exactly. Unit: length.
+        level: The level the map draws (docs/adr/0716).
         rotation: Unit: mdeg.
         scale: Unit: scale.
     """
@@ -72378,6 +72475,7 @@ class SetViewportPaperOp(PaperOp):
     frame_plot: bool | None | Unset = UNSET
     layer_overrides: list[PaperLayerOverride] | None | Unset = UNSET
     layers: PaperMapLayers | None | Unset = UNSET
+    level: PaperMapLevelChoice | None | Unset = UNSET
     locked: bool | None | Unset = UNSET
     ratio: PaperScaleRatio | None | Unset = UNSET
     rotation: int | None | Unset = UNSET
@@ -72401,6 +72499,8 @@ class SetViewportPaperOp(PaperOp):
             out["layerOverrides"] = None if self.layer_overrides is None else [e0.to_json() for e0 in self.layer_overrides]
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else self.layers.to_json()
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
         if self.locked is not UNSET:
             out["locked"] = self.locked
         if self.ratio is not UNSET:
@@ -72424,6 +72524,7 @@ class SetViewportPaperOp(PaperOp):
             frame_plot=data.get("framePlot", UNSET),
             layer_overrides=UNSET if "layerOverrides" not in data else None if data["layerOverrides"] is None else [PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else PaperMapLayers.from_json(data["layers"]),
+            level=UNSET if "level" not in data else None if data["level"] is None else PaperMapLevelChoice.from_json(data["level"]),
             locked=data.get("locked", UNSET),
             ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else PaperScaleRatio.from_json(data["ratio"]),
             rotation=data.get("rotation", UNSET),
@@ -78245,6 +78346,9 @@ _PAPER_LEGEND_ENTRIES: dict[str, type[PaperLegendEntries]] = {"auto": AutoPaperL
 _PAPER_MAP_LAYERS: dict[str, type[PaperMapLayers]] = {"all": AllPaperMapLayers, "theme": ThemePaperMapLayers, "list": ListPaperMapLayers}
 
 
+_PAPER_MAP_LEVEL_CHOICE: dict[str, type[PaperMapLevelChoice]] = {"all": AllPaperMapLevelChoice, "level": LevelPaperMapLevelChoice}
+
+
 _PAPER_MAP_VIEW: dict[str, type[PaperMapView]] = {"fixed": FixedPaperMapView, "atlas": AtlasPaperMapView}
 
 
@@ -78446,6 +78550,7 @@ __all__ = [
     "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllPaperMapLayers",
+    "AllPaperMapLevelChoice",
     "AllSelectRegion",
     "AllTrimBoundaries",
     "AlongAnnotationWork",
@@ -79579,6 +79684,7 @@ __all__ = [
     "LevelAdjustWork",
     "LevelMethod",
     "LevelMethodName",
+    "LevelPaperMapLevelChoice",
     "LibraryConflict",
     "LibraryConflictName",
     "LibraryEdit",
@@ -79922,6 +80028,8 @@ __all__ = [
     "PaperLineJoinName",
     "PaperMapGrid",
     "PaperMapLayers",
+    "PaperMapLevel",
+    "PaperMapLevelChoice",
     "PaperMapView",
     "PaperMargins",
     "PaperMaster",
