@@ -1860,6 +1860,7 @@ const ENTRIES: &[Entry] = &[
                 "no_objects",
                 "not_finite",
                 "invalid_grid",
+                "invalid_column",
                 "level_not_found",
                 "invalid_line_weight",
             ],

@@ -26758,6 +26758,76 @@ class GridSeries(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GridSystem(_Model):
+    """A grid system (docs/adr/0707): two families of straight grids crossing at right angles. Those across its x axis
+    (standing along its y axis) are `x` apart, the first through `origin`; those across its y axis `y` apart; the whole
+    turned `angle` about `origin`. Each grid reaches `extension` past the outermost grids it crosses; a grid across x
+    runs up its y axis, one across y along its x axis.
+    Attributes:
+        origin: Where its first two grids cross. Unit: length.
+        angle: Its turn, radians counter-clockwise; absent: none. Unit: rad.
+        bubble_size: Unit: paper-mm.
+        columns: A column at every crossing, tied to its two grids, row by row from `origin` (the first grid across y's first);
+            absent: none.
+        extension: How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5. Unit: length.
+        x: The gaps between the grids across its x axis, the first's from `origin` on, each above 0; empty: one grid. Unit: length.
+        x_start: The first label of the grids across x, the next ones following on; absent: “1”.
+        y: The gaps between the grids across its y axis. Unit: length.
+        y_start: The first label of the grids across y; absent: “A”.
+    """
+    origin: Vec2
+    angle: float | None | Unset = UNSET
+    arch: ArchInfo | None | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    columns: SystemColumns | None | Unset = UNSET
+    extension: float | None | Unset = UNSET
+    x: list[float] = field(default_factory=list)
+    x_start: str | None | Unset = UNSET
+    y: list[float] = field(default_factory=list)
+    y_start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["origin"] = _vec2_out(self.origin)
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else self.columns.to_json()
+        if self.extension is not UNSET:
+            out["extension"] = None if self.extension is None else float(self.extension)
+        out["x"] = [float(e0) for e0 in self.x]
+        if self.x_start is not UNSET:
+            out["xStart"] = self.x_start
+        out["y"] = [float(e0) for e0 in self.y]
+        if self.y_start is not UNSET:
+            out["yStart"] = self.y_start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridSystem:
+        return cls(
+            origin=Vec2.from_json(data["origin"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else SystemColumns.from_json(data["columns"]),
+            extension=UNSET if "extension" not in data else None if data["extension"] is None else float(data["extension"]),
+            x=[float(e0) for e0 in data["x"]] if "x" in data else list(),
+            x_start=data.get("xStart", UNSET),
+            y=[float(e0) for e0 in data["y"]] if "y" in data else list(),
+            y_start=data.get("yStart", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridUse(_Model):
     """A grid an operation reads: its file's name and SHA-256."""
     name: str
@@ -26779,9 +26849,10 @@ class GridUse(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class GridsCreate(_Model):
-    """Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, on a named layer, as one undo step.
+    """Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns
+    (docs/adr/0707), on a named layer, as one undo step.
 
-    Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
     `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
     Warning: `layer_hidden`.
     Attributes:
@@ -26793,6 +26864,7 @@ class GridsCreate(_Model):
     grids: list[NewGrid] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     series: GridSeries | None | Unset = UNSET
+    system: GridSystem | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -26807,6 +26879,8 @@ class GridsCreate(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.series is not UNSET:
             out["series"] = None if self.series is None else self.series.to_json()
+        if self.system is not UNSET:
+            out["system"] = None if self.system is None else self.system.to_json()
         return out
 
     @classmethod
@@ -26818,6 +26892,7 @@ class GridsCreate(_Model):
             grids=[NewGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             series=UNSET if "series" not in data else None if data["series"] is None else GridSeries.from_json(data["series"]),
+            system=UNSET if "system" not in data else None if data["system"] is None else GridSystem.from_json(data["system"]),
         )
 
 
@@ -56116,6 +56191,53 @@ class SyncedRelation(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SystemColumns(_Model):
+    """The columns a grid system puts at its crossings (docs/adr/0707).
+    Attributes:
+        width: Across, metres (a round column's diameter). Unit: length.
+        depth: Along, metres; absent: its width. Unit: length.
+        rotation: Their turn, radians counter-clockwise; absent: the system's. Unit: rad.
+        tag_start: The first column's tag, the next ones' following on (S1, S2 …); absent: none.
+    """
+    width: float
+    depth: float | None | Unset = UNSET
+    fill: bool | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
+    tag_start: str | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["width"] = float(self.width)
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.tag_start is not UNSET:
+            out["tagStart"] = self.tag_start
+        if self.type is not UNSET:
+            out["type"] = self.type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SystemColumns:
+        return cls(
+            width=float(data["width"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fill=data.get("fill", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
+            tag_start=data.get("tagStart", UNSET),
+            type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TableEntity(Entity):
     """A table (docs/adr/0184 §1).
     Attributes:
@@ -78651,6 +78773,7 @@ __all__ = [
     "GridOrigin",
     "GridOriginName",
     "GridSeries",
+    "GridSystem",
     "GridTableEdit",
     "GridUse",
     "GridsCreate",
@@ -80092,6 +80215,7 @@ __all__ = [
     "SyncedLayer",
     "SyncedPins",
     "SyncedRelation",
+    "SystemColumns",
     "SystemPaperPrintDevice",
     "SystemSheetTemplateSource",
     "TabFormItem",

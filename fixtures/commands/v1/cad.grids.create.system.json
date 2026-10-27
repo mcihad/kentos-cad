@@ -1,0 +1,6328 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.grids.create",
+  "commandVersion": 1,
+  "title": "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Kolonlu aks ağı: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "depth": 0.5,
+                "fill": true,
+                "tagStart": "S1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolonlu aks ağı: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "depth": 0.5,
+                "fill": true,
+                "tagStart": "S1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "grids": [
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 18.5
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 31.5
+                    }
+                  ],
+                  "name": "1"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 6.0,
+                      "y": 18.5
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 31.5
+                    }
+                  ],
+                  "name": "2"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 12.0,
+                      "y": 18.5
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 31.5
+                    }
+                  ],
+                  "name": "3"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 16.5,
+                      "y": 18.5
+                    },
+                    {
+                      "x": 16.5,
+                      "y": 31.5
+                    }
+                  ],
+                  "name": "4"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": -1.5,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 18.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "name": "A"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": -1.5,
+                      "y": 25.0
+                    },
+                    {
+                      "x": 18.0,
+                      "y": 25.0
+                    }
+                  ],
+                  "name": "B"
+                },
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": -1.5,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 18.0,
+                      "y": 30.0
+                    }
+                  ],
+                  "name": "C"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S1",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "A-1"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 6.0,
+                    "y": 20.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S2",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "A-2"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 12.0,
+                    "y": 20.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S3",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "A-3"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 16.5,
+                    "y": 20.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S4",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "A-4"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 0.0,
+                    "y": 25.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S5",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "B-1"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 6.0,
+                    "y": 25.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S6",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "B-2"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 12.0,
+                    "y": 25.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S7",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "B-3"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 16.5,
+                    "y": 25.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S8",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "B-4"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S9",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "C-1"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 6.0,
+                    "y": 30.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S10",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "C-2"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 12.0,
+                    "y": 30.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S11",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "C-3"
+                },
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "at": {
+                    "x": 16.5,
+                    "y": 30.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "tag": "S12",
+                  "fill": true,
+                  "grids": [
+                    "$any",
+                    "$any"
+                  ],
+                  "place": "C-4"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolonlu aks ağı: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "depth": 0.5,
+                "fill": true,
+                "tagStart": "S1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S1",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S2",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "A-2"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S3",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "A-3"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S4",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "A-4"
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S5",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "B-1"
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S6",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2"
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S7",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "B-3"
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S8",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "B-4"
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S9",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "C-1"
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S10",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "C-2"
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S11",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3"
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S12",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "C-4"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Aks",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolonlu aks ağı: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "depth": 0.5,
+                "fill": true,
+                "tagStart": "S1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S1",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S2",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "A-2"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S3",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "A-3"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S4",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "A-4"
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S5",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "B-1"
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S6",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2"
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S7",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "B-3"
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S8",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "B-4"
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S9",
+                "fill": true,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "C-1"
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S10",
+                "fill": true,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "C-2"
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S11",
+                "fill": true,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3"
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "tag": "S12",
+                "fill": true,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "C-4"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ağı: 1–4 ve A–C, öntanımlı 1.5 m uzatma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "30° döndürülmüş aks ağı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "angle": 0.5235987755982988
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.7499999999999999,
+                    "y": 18.700961894323342
+                  },
+                  {
+                    "x": -5.749999999999999,
+                    "y": 29.959292143521047
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 5.946152422706632,
+                    "y": 21.700961894323342
+                  },
+                  {
+                    "x": -0.5538475772933671,
+                    "y": 32.95929214352105
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 11.142304845413264,
+                    "y": 24.700961894323342
+                  },
+                  {
+                    "x": 4.642304845413265,
+                    "y": 35.95929214352104
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 15.039419162443238,
+                    "y": 26.950961894323342
+                  },
+                  {
+                    "x": 8.539419162443238,
+                    "y": 38.20929214352104
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.299038105676658,
+                    "y": 19.25
+                  },
+                  {
+                    "x": 15.588457268119896,
+                    "y": 29.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -3.7990381056766576,
+                    "y": 23.580127018922195
+                  },
+                  {
+                    "x": 13.088457268119896,
+                    "y": 33.33012701892219
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -6.299038105676657,
+                    "y": 27.91025403784439
+                  },
+                  {
+                    "x": 10.588457268119896,
+                    "y": 37.66025403784438
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "döndürülmüş ağın kolonları ağın açısıyla döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "angle": 0.5235987755982988,
+              "columns": {
+                "width": 0.4
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.7499999999999999,
+                    "y": 18.700961894323342
+                  },
+                  {
+                    "x": -5.749999999999999,
+                    "y": 29.959292143521047
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 5.946152422706632,
+                    "y": 21.700961894323342
+                  },
+                  {
+                    "x": -0.5538475772933671,
+                    "y": 32.95929214352105
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 11.142304845413264,
+                    "y": 24.700961894323342
+                  },
+                  {
+                    "x": 4.642304845413265,
+                    "y": 35.95929214352104
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 15.039419162443238,
+                    "y": 26.950961894323342
+                  },
+                  {
+                    "x": 8.539419162443238,
+                    "y": 38.20929214352104
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.299038105676658,
+                    "y": 19.25
+                  },
+                  {
+                    "x": 15.588457268119896,
+                    "y": 29.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -3.7990381056766576,
+                    "y": 23.580127018922195
+                  },
+                  {
+                    "x": 13.088457268119896,
+                    "y": 33.33012701892219
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -6.299038105676657,
+                    "y": 27.91025403784439
+                  },
+                  {
+                    "x": 10.588457268119896,
+                    "y": 37.66025403784438
+                  }
+                ],
+                "name": "C"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 1.2153873173309953e-16,
+                  "y": 20.0
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 5.196152422706632,
+                  "y": 23.0
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "A-2"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 10.392304845413264,
+                  "y": 26.0
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "A-3"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 14.289419162443238,
+                  "y": 28.25
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "A-4"
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -2.4999999999999996,
+                  "y": 24.330127018922195
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "B-1"
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 2.696152422706633,
+                  "y": 27.330127018922195
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2"
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 7.892304845413264,
+                  "y": 30.33012701892219
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "B-3"
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 11.789419162443238,
+                  "y": 32.58012701892219
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "B-4"
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -4.999999999999999,
+                  "y": 28.66025403784439
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "C-1"
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.19615242270663383,
+                  "y": 31.660254037844386
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "C-2"
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 5.392304845413264,
+                  "y": 34.66025403784438
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3"
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 9.289419162443238,
+                  "y": 36.91025403784438
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "C-4"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yuvarlak kolonlar kendi dönüşüyle, türüyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "A-2"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "A-3"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 20.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "A-4"
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "B-1"
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2"
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "B-3"
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 25.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "B-4"
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 30.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "C-1"
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 30.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "C-2"
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 30.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3"
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 30.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "rotation": 0.25,
+                "type": "C1",
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "C-4"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ilk adlar verilir: harfler x'te, sayılar y'de",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "xStart": "A",
+              "yStart": "1",
+              "columns": {
+                "width": 0.3
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "A"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "B"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "C"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "D"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "1"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "2"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "3"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "B-1"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "C-1"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "D-1"
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "A-2"
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2"
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "C-2"
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "D-2"
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "A-3"
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "B-3"
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3"
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 16.5,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "D-3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız y aralıkları: x'te tek aks",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 40.0,
+                "y": 0.0
+              },
+              "y": [
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 40.0,
+                    "y": -1.5
+                  },
+                  {
+                    "x": 40.0,
+                    "y": 9.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 38.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 41.5,
+                    "y": 0.0
+                  }
+                ],
+                "name": "A"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 38.5,
+                    "y": 4.0
+                  },
+                  {
+                    "x": 41.5,
+                    "y": 4.0
+                  }
+                ],
+                "name": "B"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 38.5,
+                    "y": 8.0
+                  },
+                  {
+                    "x": 41.5,
+                    "y": 8.0
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek akslı iki aile: iki uzatma boyu aks",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 40.0,
+                "y": 30.0
+              },
+              "extension": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 40.0,
+                    "y": 28.0
+                  },
+                  {
+                    "x": 40.0,
+                    "y": 32.0
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 38.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 42.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "A"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "uzatma 0.5, başında balon, 10 mm balon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "extension": 0.5,
+              "bubbles": "start",
+              "bubbleSize": 10.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 30.5
+                  }
+                ],
+                "name": "1",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 30.5
+                  }
+                ],
+                "name": "2",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 30.5
+                  }
+                ],
+                "name": "3",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 30.5
+                  }
+                ],
+                "name": "4",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 17.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 17.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 17.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "uzatma sıfırken akslar en dış akslarda biter",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "extension": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 30.0
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katı ve evresiyle ağ, renk ve kalınlıkla; kolonlar katla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "color": "#c03030",
+            "lineWeight": 0.18,
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "arch": {
+                "level": "zemin",
+                "phase": "new"
+              },
+              "columns": {
+                "width": 0.3
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "A-1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "A-2",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "A-3",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 16.5,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:14"
+                ],
+                "place": "A-4",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "21": {
+                "kind": "column",
+                "id": 21,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:15"
+                ],
+                "place": "B-1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "22": {
+                "kind": "column",
+                "id": 22,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:15"
+                ],
+                "place": "B-2",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "23": {
+                "kind": "column",
+                "id": 23,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:15"
+                ],
+                "place": "B-3",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "24": {
+                "kind": "column",
+                "id": 24,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 16.5,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:15"
+                ],
+                "place": "B-4",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "25": {
+                "kind": "column",
+                "id": 25,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 0.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:16"
+                ],
+                "place": "C-1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 6.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:16"
+                ],
+                "place": "C-2",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "27": {
+                "kind": "column",
+                "id": 27,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 12.0,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:16"
+                ],
+                "place": "C-3",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "28": {
+                "kind": "column",
+                "id": 28,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "at": {
+                  "x": 16.5,
+                  "y": 30.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:13",
+                  "$uidOf:16"
+                ],
+                "place": "C-4",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ve seriyle birlikte: ağ en sonda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "label": "M"
+              }
+            ],
+            "series": {
+              "from": {
+                "x": 52.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 52.0,
+                "y": 10.0
+              },
+              "spacings": [
+                2.0
+              ]
+            },
+            "system": {
+              "origin": {
+                "x": 60.0,
+                "y": 0.0
+              },
+              "x": [
+                3.0
+              ],
+              "y": [
+                3.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "M"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 52.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "N"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "P"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 60.0,
+                    "y": -1.5
+                  },
+                  {
+                    "x": 60.0,
+                    "y": 4.5
+                  }
+                ],
+                "name": "1"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 63.0,
+                    "y": -1.5
+                  },
+                  {
+                    "x": 63.0,
+                    "y": 4.5
+                  }
+                ],
+                "name": "2"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 58.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 64.5,
+                    "y": 0.0
+                  }
+                ],
+                "name": "A"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 58.5,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 64.5,
+                    "y": 3.0
+                  }
+                ],
+                "name": "B"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "y ailesi H'den: I harfi atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 60.0
+              },
+              "x": [
+                5.0
+              ],
+              "y": [
+                3.0,
+                3.0,
+                3.0
+              ],
+              "yStart": "H"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 58.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 70.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 5.0,
+                    "y": 58.5
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 70.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 60.0
+                  },
+                  {
+                    "x": 6.5,
+                    "y": 60.0
+                  }
+                ],
+                "name": "H"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 63.0
+                  },
+                  {
+                    "x": 6.5,
+                    "y": 63.0
+                  }
+                ],
+                "name": "J"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 66.0
+                  },
+                  {
+                    "x": 6.5,
+                    "y": 66.0
+                  }
+                ],
+                "name": "K"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 69.0
+                  },
+                  {
+                    "x": 6.5,
+                    "y": 69.0
+                  }
+                ],
+                "name": "L"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğik başlangıç ve -90° dönüş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 7.25,
+                "y": -3.5
+              },
+              "angle": -1.5707963267948966,
+              "x": [
+                4.0
+              ],
+              "y": [
+                2.5,
+                2.5
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 5.75,
+                    "y": -3.5
+                  },
+                  {
+                    "x": 13.75,
+                    "y": -3.4999999999999996
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 5.75,
+                    "y": -7.5
+                  },
+                  {
+                    "x": 13.75,
+                    "y": -7.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 7.25,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 7.25,
+                    "y": -9.0
+                  }
+                ],
+                "name": "A"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 9.75,
+                    "y": -1.9999999999999998
+                  },
+                  {
+                    "x": 9.75,
+                    "y": -9.0
+                  }
+                ],
+                "name": "B"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.25,
+                    "y": -1.9999999999999998
+                  },
+                  {
+                    "x": 12.25,
+                    "y": -9.0
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın eksi aralığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                -1.0
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Akslar arası -1; sıfırdan büyük olmalı.",
+              "path": "system.x[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın sıfır aralığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                0.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Akslar arası 0; sıfırdan büyük olmalı.",
+              "path": "system.y[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın sonsuz aralığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "nonFinite": {
+            "system.y[1]": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Aralık sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "system.y[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın sonsuz açısı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "angle": 0.5
+            }
+          },
+          "nonFinite": {
+            "system.angle": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Açı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "system.angle"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın sonsuz başlangıcı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "nonFinite": {
+            "system.origin.x": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Aks ağının başlangıcının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "system.origin.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi uzatma reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "extension": -1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Uzatma -1; sıfır ya da daha büyük olmalı.",
+              "path": "system.extension"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek akslı yönde sıfır uzatma reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "x": [
+                3.0
+              ],
+              "extension": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Bir yönde tek aks varken uzatma sıfır olursa öbür yönün aksları nokta olur; uzatma verin.",
+              "path": "system.extension"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ilk ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "xStart": "  "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aksın ilk adı boş; 1, A gibi bir ad verin.",
+              "path": "system.xStart"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır balon çapı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "bubbleSize": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Balonun çapı 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "system.bubbleSize"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır kolon eni reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun eni 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "system.columns.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz kolon eni reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3
+              }
+            }
+          },
+          "nonFinite": {
+            "system.columns.width": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "En sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "system.columns.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kolon türü reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "type": " "
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Boş metin yazılmaz; alanı kaldırın ya da bir değer yazın.",
+              "path": "system.columns.type"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağın olmayan katı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ],
+              "arch": {
+                "level": "yok"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "system.arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman grubu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz çizgi kalınlığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            },
+            "lineWeight": 120.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm değişince yazılmaz (çakışma)",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 31.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 31.5
+                  }
+                ],
+                "name": "4"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "15": {
+                "kind": "grid",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "16": {
+                "kind": "grid",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "y": [
+                5.0,
+                5.0
+              ]
+            },
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1732,7 +1732,7 @@
             "status": "failed",
             "error": {
               "code": "no_objects",
-              "message": "Yazılacak aks verilmedi. Akslar (grids) ya da bir seri (series) verin.",
+              "message": "Yazılacak aks verilmedi. Akslar (grids), bir seri (series) ya da bir aks ağı (system) verin.",
               "path": "grids"
             }
           },

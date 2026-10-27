@@ -13,16 +13,20 @@
 //! A stair may be drawn from its height (docs/adr/0704 §1): its risers given or as many as keep each under its highest
 //! riser, each `height / risers` high; its cut from a cut height; its walking line fitted to end at its last riser.
 //! The stored stair is as before: its points (fitted), its risers, their height and its cut.
+//!
+//! A grid system (docs/adr/0707) writes its two families of grids and, if asked, a column at every crossing tied to
+//! its two grids, in the same step: the grids get their persistent ids before they are written so that the columns
+//! can name them.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
     ArchInfo, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated, ColumnsPlan,
-    CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridsCreate,
-    GridsCreated, GridsPlan, RampEntity, RampFields, RampsCreate, RampsCreated, RampsPlan,
-    SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, Vec2,
+    CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridSystem,
+    GridsCreate, GridsCreated, GridsPlan, RampEntity, RampFields, RampsCreate, RampsCreated,
+    RampsPlan, SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, Vec2,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, Uuid};
 use kentos_domain::arch_follow;
 use kentos_geometry_core::geom::arch;
 
@@ -281,11 +285,16 @@ fn next_of(prev: &Option<String>) -> String {
 }
 
 fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
+    grids_with_ids(doc, input).map(|(checked, _)| checked)
+}
+
+/// The grids' checks and objects, with the persistent id each object gets (a system's columns name their grids').
+fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<Uuid>), Stop> {
     let series = input.series.as_ref().map_or(0, |s| s.spacings.len() + 1);
-    if input.grids.is_empty() && input.series.is_none() {
+    if input.grids.is_empty() && input.series.is_none() && input.system.is_none() {
         return Err(fail(
             codes::NO_OBJECTS,
-            "Yazılacak aks verilmedi. Akslar (grids) ya da bir seri (series) verin.".into(),
+            "Yazılacak aks verilmedi. Akslar (grids), bir seri (series) ya da bir aks ağı (system) verin.".into(),
             "grids",
         ));
     }
@@ -383,7 +392,11 @@ fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
             ));
         }
     }
-    finish(
+    let mut ids: Vec<Uuid> = made.iter().map(|_| Uuid::now_v7()).collect();
+    if let Some(s) = &input.system {
+        system_made(doc, s, &mut made, &mut ids)?;
+    }
+    let checked = finish(
         doc,
         &input.layer_id,
         input.line_weight,
@@ -391,7 +404,197 @@ fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
         made,
         &input.color,
         Vec::new(),
-    )
+    )?;
+    Ok((checked, ids))
+}
+
+/// The positions along an axis of grids `gaps` apart from 0 on, added in order.
+fn along(gaps: &[f64]) -> Vec<f64> {
+    let mut at = 0.0;
+    let mut out = Vec::with_capacity(gaps.len() + 1);
+    out.push(0.0);
+    for d in gaps {
+        at += d;
+        out.push(at);
+    }
+    out
+}
+
+/// A grid system's grids, those across x then those across y, then its columns row by row, with their ids
+/// (docs/adr/0707).
+fn system_made(
+    doc: &Document,
+    s: &GridSystem,
+    made: &mut Vec<Made>,
+    ids: &mut Vec<Uuid>,
+) -> Result<(), Stop> {
+    checks::point(s.origin, "Aks ağının başlangıcının", "system.origin")?;
+    finite_each(
+        &[
+            (s.angle, "angle", "Açı"),
+            (s.extension, "extension", "Uzatma"),
+            (s.bubble_size, "bubbleSize", "Balon çapı"),
+        ],
+        "system",
+    )?;
+    for (axis, gaps) in [("x", &s.x), ("y", &s.y)] {
+        for (k, d) in gaps.iter().enumerate() {
+            let path = format!("system.{axis}[{k}]");
+            checks::finite(*d, "Aralık", "Sonlu bir sayı verin.", &path)?;
+            if *d <= 0.0 {
+                return Err(fail(
+                    codes::INVALID_GRID,
+                    format!("Akslar arası {d}; sıfırdan büyük olmalı."),
+                    &path,
+                ));
+            }
+        }
+    }
+    if let Some(c) = &s.columns {
+        finite_each(
+            &[
+                (Some(c.width), "width", "En"),
+                (c.depth, "depth", "Boy"),
+                (c.rotation, "rotation", "Dönüş"),
+            ],
+            "system.columns",
+        )?;
+    }
+    let extension = s.extension.unwrap_or(kentos_commands::DEFAULT_GRID_EXTENSION);
+    if extension < 0.0 {
+        return Err(fail(
+            codes::INVALID_GRID,
+            format!("Uzatma {extension}; sıfır ya da daha büyük olmalı."),
+            "system.extension",
+        ));
+    }
+    if extension == 0.0 && (s.x.is_empty() || s.y.is_empty()) {
+        return Err(fail(
+            codes::INVALID_GRID,
+            "Bir yönde tek aks varken uzatma sıfır olursa öbür yönün aksları nokta olur; uzatma verin.".into(),
+            "system.extension",
+        ));
+    }
+    for (start, path) in [(&s.x_start, "system.xStart"), (&s.y_start, "system.yStart")] {
+        if start.as_deref().is_some_and(|t| t.trim().is_empty()) {
+            return Err(fail(
+                codes::INVALID_GRID,
+                "Aksın ilk adı boş; 1, A gibi bir ad verin.".into(),
+                path,
+            ));
+        }
+    }
+    too_many(
+        made.len() + s.x.len() + s.y.len() + 2,
+        codes::INVALID_GRID,
+        "aks",
+        "system",
+    )?;
+    let info = s.arch.clone().unwrap_or_default();
+    crate::walls::level_known(doc, &info, "system.arch.level")?;
+    let (xs, ys) = (along(&s.x), along(&s.y));
+    let angle = s.angle.unwrap_or(0.0);
+    let (cos, sin) = if angle == 0.0 {
+        (1.0, 0.0)
+    } else {
+        (angle.cos(), angle.sin())
+    };
+    let o = s.origin;
+    let world = |x: f64, y: f64| Vec2 {
+        x: o.x + (x * cos - y * sin),
+        y: o.y + (x * sin + y * cos),
+    };
+    let (x_last, y_last) = (xs[xs.len() - 1], ys[ys.len() - 1]);
+    let family = |positions: &[f64], start: &Option<String>, first: &str, across_x: bool| {
+        let mut label = start.clone().unwrap_or_else(|| first.to_owned());
+        positions
+            .iter()
+            .enumerate()
+            .map(|(i, &v)| {
+                if i > 0 {
+                    label = kentos_commands::next_label(&label);
+                }
+                GridFields {
+                    pts: if across_x {
+                        vec![world(v, -extension), world(v, y_last + extension)]
+                    } else {
+                        vec![world(-extension, v), world(x_last + extension, v)]
+                    },
+                    bulges: None,
+                    label: label.clone(),
+                    bubbles: s.bubbles.unwrap_or_default(),
+                    bubble_size: s.bubble_size,
+                    arch: info.clone(),
+                }
+            })
+            .collect::<Vec<GridFields>>()
+    };
+    let across_x = family(&xs, &s.x_start, "1", true);
+    let across_y = family(&ys, &s.y_start, "A", false);
+    let mut grid_ids: Vec<Uuid> = Vec::with_capacity(across_x.len() + across_y.len());
+    for g in across_x.iter().chain(&across_y) {
+        grid_valid(g, "system")?;
+        let g = g.clone();
+        made.push((
+            "system".into(),
+            None,
+            Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+        ));
+        let id = Uuid::now_v7();
+        grid_ids.push(id);
+        ids.push(id);
+    }
+    let Some(c) = &s.columns else {
+        return Ok(());
+    };
+    too_many(
+        across_x.len() * across_y.len(),
+        codes::INVALID_COLUMN,
+        "kolon",
+        "system.columns",
+    )?;
+    let edges_x: Vec<_> = across_x.iter().map(arch_follow::grid_edge).collect();
+    let edges_y: Vec<_> = across_y.iter().map(arch_follow::grid_edge).collect();
+    let mut tag = c.tag_start.clone();
+    for (j, gy) in across_y.iter().enumerate() {
+        for (i, gx) in across_x.iter().enumerate() {
+            let (Some(ex), Some(ey)) = (&edges_x[i], &edges_y[j]) else {
+                continue;
+            };
+            let Some(p) = arch::grid_crossings(ex, ey).into_iter().next() else {
+                continue;
+            };
+            let own_tag = tag.clone();
+            if let Some(t) = &tag {
+                tag = Some(kentos_commands::next_label(t));
+            }
+            let column = ColumnFields {
+                at: Vec2 { x: p.x, y: p.y },
+                shape: c.shape.unwrap_or_default(),
+                width: c.width,
+                depth: c.depth,
+                rotation: c.rotation.unwrap_or(angle),
+                kind: c.kind.clone(),
+                tag: own_tag,
+                fill: c.fill.unwrap_or(false),
+                grids: Some(vec![
+                    grid_ids[i].to_string(),
+                    grid_ids[across_x.len() + j].to_string(),
+                ]),
+                place: Some(arch_follow::place_of(&gx.label, &gy.label)),
+                broken: None,
+                arch: info.clone(),
+            };
+            column_valid(&column, "system.columns")?;
+            made.push((
+                "system.columns".into(),
+                None,
+                Box::new(move |base| Entity::Column(ColumnEntity { base, column })),
+            ));
+            ids.push(Uuid::now_v7());
+        }
+    }
+    Ok(())
 }
 
 fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop> {
@@ -888,17 +1091,67 @@ macro_rules! create_command {
     };
 }
 
-create_command!(
-    grids_create,
-    GridsCreate,
-    GridsPlan,
-    grids,
-    GridsCreated,
-    grids_check,
-    GRID_STEP,
-    CAD_GRIDS_CREATE,
-    CAD_GRIDS_CREATE_VERSION
-);
+/// `cad.grids.create`: the other kinds' shape, but its objects are written with the ids the check gave them, which a
+/// grid system's columns name (docs/adr/0707).
+pub mod grids_create {
+    use super::*;
+
+    pub fn validate(cx: &ExecutionContext<'_>, input: &GridsCreate) -> CommandResult<()> {
+        validated(grids_check(cx.doc, input))
+    }
+
+    pub fn plan(cx: &ExecutionContext<'_>, input: &GridsCreate) -> CommandResult<GridsPlan> {
+        plan_in(cx.doc, input)
+    }
+
+    /// [`plan`] on a document: what the tool draws as its preview.
+    pub fn plan_in(doc: &Document, input: &GridsCreate) -> CommandResult<GridsPlan> {
+        planned(doc, grids_check(doc, input), |grids, revision| GridsPlan {
+            grids,
+            revision,
+        })
+    }
+
+    pub fn execute(cx: &mut ExecutionContext<'_>, input: GridsCreate) -> CommandResult<GridsCreated> {
+        crate::call::recorded(
+            cx,
+            kentos_commands::CAD_GRIDS_CREATE,
+            kentos_commands::CAD_GRIDS_CREATE_VERSION,
+            input,
+            write_execute,
+        )
+    }
+
+    fn write_execute(cx: &mut ExecutionContext<'_>, input: GridsCreate) -> CommandResult<GridsCreated> {
+        let ((warnings, entities), ids) = match grids_with_ids(cx.doc, &input) {
+            Ok(checked) => checked,
+            Err(stop) => return stop.into(),
+        };
+        let slots = match cx
+            .doc
+            .add_many_with_uids(ids.into_iter().zip(entities).collect(), GRID_STEP)
+        {
+            Ok(slots) => slots,
+            Err(refusal) => {
+                return Stop::failed(error(codes::SLOTS_EXHAUSTED, refusal.to_string(), None))
+                    .into();
+            }
+        };
+        let uids = slots
+            .iter()
+            .filter_map(|s| cx.doc.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
+        CommandResult::Completed {
+            output: GridsCreated {
+                uids,
+                ids: slots.iter().map(|s| s.0).collect(),
+                revision: cx.doc.revision().to_string(),
+            },
+            warnings,
+        }
+    }
+}
 create_command!(
     columns_create,
     ColumnsCreate,

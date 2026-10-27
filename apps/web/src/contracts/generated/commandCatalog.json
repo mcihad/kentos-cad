@@ -484749,6 +484749,14 @@
             ],
             "type": "string"
           },
+          "ColumnShape": {
+            "description": "A column's outline.",
+            "enum": [
+              "rect",
+              "round"
+            ],
+            "type": "string"
+          },
           "GridBubbles": {
             "description": "Which ends of a grid carry a bubble.",
             "enum": [
@@ -484831,6 +484839,112 @@
               "from",
               "to",
               "spacings"
+            ],
+            "type": "object"
+          },
+          "GridSystem": {
+            "additionalProperties": false,
+            "description": "A grid system (docs/adr/0707): two families of straight grids crossing at right angles. Those across its x axis\n(standing along its y axis) are `x` apart, the first through `origin`; those across its y axis `y` apart; the whole\nturned `angle` about `origin`. Each grid reaches `extension` past the outermost grids it crosses; a grid across x\nruns up its y axis, one across y along its x axis.",
+            "properties": {
+              "angle": {
+                "description": "Its turn, radians counter-clockwise; absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "rad"
+              },
+              "arch": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "bubbleSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "paper-mm"
+              },
+              "bubbles": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GridBubbles"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SystemColumns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A column at every crossing, tied to its two grids, row by row from `origin` (the first grid across y's first);\nabsent: none."
+              },
+              "extension": {
+                "description": "How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where its first two grids cross.",
+                "x-unit": "length"
+              },
+              "x": {
+                "default": [],
+                "description": "The gaps between the grids across its x axis, the first's from `origin` on, each above 0; empty: one grid.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "length"
+              },
+              "xStart": {
+                "description": "The first label of the grids across x, the next ones following on; absent: “1”.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "y": {
+                "default": [],
+                "description": "The gaps between the grids across its y axis.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "length"
+              },
+              "yStart": {
+                "description": "The first label of the grids across y; absent: “A”.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "origin"
             ],
             "type": "object"
           },
@@ -484917,6 +485031,69 @@
             ],
             "type": "string"
           },
+          "SystemColumns": {
+            "additionalProperties": false,
+            "description": "The columns a grid system puts at its crossings (docs/adr/0707).",
+            "properties": {
+              "depth": {
+                "description": "Along, metres; absent: its width.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "fill": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "rotation": {
+                "description": "Their turn, radians counter-clockwise; absent: the system's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "rad"
+              },
+              "shape": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ColumnShape"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tagStart": {
+                "description": "The first column's tag, the next ones' following on (S1, S2 …); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Across, metres (a round column's diameter).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -484938,7 +485115,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
+        "description": "Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns\n(docs/adr/0707), on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
         "properties": {
           "color": {
             "type": [
@@ -484976,6 +485153,16 @@
             "anyOf": [
               {
                 "$ref": "#/$defs/GridSeries"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "system": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GridSystem"
               },
               {
                 "type": "null"
@@ -495344,6 +495531,7 @@
           "no_objects",
           "not_finite",
           "invalid_grid",
+          "invalid_column",
           "level_not_found",
           "invalid_line_weight",
           "layer_not_found",

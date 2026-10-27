@@ -844,7 +844,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: kalınlığı aşan derinlik reddi, açıklıkla çakışma, evre, duvar taşıma ve
   2B görünüş/metraj sözleşmesi. 3B katı sonucu bu aşamada vaat edilmez.
 
-### ARCH-ELEM-03 — Aks ve kolon yerleşimini güçlendir [ ]
+### ARCH-ELEM-03 — Aks ve kolon yerleşimini güçlendir [~]
+
+- [x] Aks ağı dilimi [ADR0707](../docs/adr/0707-grid-systems.md): `cad.grids.create`'in
+  `system`'i iki yönde aralık listeleri, açı, ilk adlar, uzatma, balonlar ve
+  kesişimlere akslarına bağlı kolonlar tek adımda; Aks ağı aracı (Aks ▾)
+  imleçle gelir, tıklayınca yerleşir, İki nokta açıyı imleçten alır, “3*6”
+  aralık yazımı. Archicad Grid System araştırıldı. 36 ortak durum bağımsız
+  başvurudan, araç testleri, Python/MCP, gerçek GUI resimleri
+  (`.run/shots/arac-aks-agi-*`). GUI'de Enter'ın aynı yere ikinci ağ yazması
+  bulunup düzeltildi. Eğrisel ağ, kolon hizası, L kolon ve eşit bölme açık.
 
 - Aks aralık listesiyle ortogonal/döndürülmüş ağ, iki uç balonu, kesik aralık;
   aks kesişimine kolon, dikdörtgen/daire/L varyant ve hiza.
@@ -1069,3 +1078,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
+| 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |

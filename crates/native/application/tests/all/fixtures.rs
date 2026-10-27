@@ -916,6 +916,25 @@ impl Input for kentos_commands::GridsCreate {
             let k = rest.strip_suffix(']')?.parse::<usize>().ok()?;
             return self.series.as_mut()?.spacings.get_mut(k);
         }
+        if let Some(rest) = path.strip_prefix("system.") {
+            let s = self.system.as_mut()?;
+            return match rest {
+                "origin.x" => Some(&mut s.origin.x),
+                "origin.y" => Some(&mut s.origin.y),
+                "angle" => s.angle.as_mut(),
+                "extension" => s.extension.as_mut(),
+                "columns.width" => Some(&mut s.columns.as_mut()?.width),
+                _ => {
+                    let (axis, k) = rest.split_once('[')?;
+                    let k = k.strip_suffix(']')?.parse::<usize>().ok()?;
+                    match axis {
+                        "x" => s.x.get_mut(k),
+                        "y" => s.y.get_mut(k),
+                        _ => None,
+                    }
+                }
+            };
+        }
         let (i, rest) = path.strip_prefix("grids[")?.split_once("].")?;
         let g = self.grids.get_mut(i.parse::<usize>().ok()?)?;
         named_point(&mut g.pts, "pts", rest)

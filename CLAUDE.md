@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Aks ağı (27 Ekim 2026; [ADR0707](docs/adr/0707-grid-systems.md)).**
+  `cad.grids.create`'in isteğe bağlı `system`'i: iki yönde aralık listeleri,
+  açı, ilk adlar (1, A), uzatma (öntanımlı 1,5 m), balonlar ve kesişimlere
+  akslarına bağlı kolonlar tek adımda; akslar kimliklerini yazılmadan önce
+  alır. Aks ağı aracı (Aks ▾) imleçle gelir, tıklama yerleştirir, İki nokta
+  açıyı imleçten alır; “3*6” aralık yazımı. 36 ortak durum, 3+1 araç testi,
+  Python/MCP, gerçek GUI resimleri. ARCH-ELEM-03 [~]: eğrisel ağ, kolon hizası,
+  L kolon ve eşit bölme açık.
+
 - **Düz mutfak dizisi (27 Ekim 2026; [ADR0706](docs/adr/0706-kitchen-casework-runs.md)).**
   Yeni `cad.casework.run`: çizgi boyunca modül enli Alt dolaplar (sağ yanda
   aynalı), 0,90 m evye modülü, ocak, isteğe bağlı üst dolap, kalan için dolgu

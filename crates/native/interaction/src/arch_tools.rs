@@ -156,6 +156,7 @@ impl GridTool {
             layer_id: cx.doc.layers().active().to_owned(),
             grids: Vec::new(),
             series: None,
+            system: None,
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
             expected_revision: None,
@@ -742,7 +743,7 @@ fn railings_setting(on: Option<Railings>) -> Setting {
 
 /// The plan of a stair or ramp drawn as the preview: its pieces as strokes (dashed past a stair's cut), its numbers
 /// as ghost texts.
-fn flight_drawn(entities: &[Entity], scale: f64, out: &mut Preview) {
+pub(crate) fn flight_drawn(entities: &[Entity], scale: f64, out: &mut Preview) {
     for e in entities {
         for piece in arch::pieces(&shape(e), scale) {
             match &piece.shape {

@@ -1380,8 +1380,20 @@
         "size": "small"
        },
        {
-        "command": "tool.grid",
-        "size": "small"
+        "key": "archGrids",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.grid",
+          "title": "Aks",
+          "label": "Aks"
+         },
+         {
+          "command": "tool.gridSystem",
+          "title": "Aks",
+          "label": "Aks ağı"
+         }
+        ]
        },
        {
         "command": "tool.stair",

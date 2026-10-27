@@ -111,9 +111,105 @@ pub enum SeriesSide {
     Right,
 }
 
-/// Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, on a named layer, as one undo step.
+/// How far a grid system's grids reach past the outermost grids they cross when no extension is given, metres
+/// (docs/adr/0707): KentOS's value.
+pub const DEFAULT_GRID_EXTENSION: f64 = 1.5;
+
+/// A grid system (docs/adr/0707): two families of straight grids crossing at right angles. Those across its x axis
+/// (standing along its y axis) are `x` apart, the first through `origin`; those across its y axis `y` apart; the whole
+/// turned `angle` about `origin`. Each grid reaches `extension` past the outermost grids it crosses; a grid across x
+/// runs up its y axis, one across y along its x axis.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GridSystem {
+    /// Where its first two grids cross.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: Vec2,
+    /// Its turn, radians counter-clockwise; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub angle: Option<f64>,
+    /// The gaps between the grids across its x axis, the first's from `origin` on, each above 0; empty: one grid.
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: Vec<f64>,
+    /// The gaps between the grids across its y axis.
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: Vec<f64>,
+    /// The first label of the grids across x, the next ones following on; absent: “1”.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub x_start: Option<String>,
+    /// The first label of the grids across y; absent: “A”.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub y_start: Option<String>,
+    /// How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub extension: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bubbles: Option<GridBubbles>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub bubble_size: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    /// A column at every crossing, tied to its two grids, row by row from `origin` (the first grid across y's first);
+    /// absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SystemColumns>,
+}
+
+/// The columns a grid system puts at its crossings (docs/adr/0707).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SystemColumns {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shape: Option<ColumnShape>,
+    /// Across, metres (a round column's diameter).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// Along, metres; absent: its width.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub depth: Option<f64>,
+    /// Their turn, radians counter-clockwise; absent: the system's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fill: Option<bool>,
+    /// The first column's tag, the next ones' following on (S1, S2 …); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tag_start: Option<String>,
+}
+
+/// Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns
+/// (docs/adr/0707), on a named layer, as one undo step.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -129,6 +225,9 @@ pub struct GridsCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub series: Option<GridSeries>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub system: Option<GridSystem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,

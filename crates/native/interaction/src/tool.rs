@@ -743,6 +743,13 @@ pub struct Memory {
     pub casework_module: f64,
     pub casework_depth: f64,
     pub casework_upper: bool,
+    /// Aks ağı's spacings across x and y, its extension (metres), its columns and their width and depth
+    /// (docs/adr/0707).
+    pub grid_system_x: Values,
+    pub grid_system_y: Values,
+    pub grid_system_extension: f64,
+    pub grid_system_columns: bool,
+    pub grid_system_column: (f64, f64),
     /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
     /// style) (docs/adr/0339 §6).
     pub wall_width: f64,
@@ -1158,6 +1165,11 @@ impl Default for Memory {
             casework_module: kentos_commands::DEFAULT_CASEWORK_MODULE,
             casework_depth: kentos_commands::DEFAULT_CASEWORK_DEPTH,
             casework_upper: false,
+            grid_system_x: Values::default(),
+            grid_system_y: Values::default(),
+            grid_system_extension: kentos_commands::DEFAULT_GRID_EXTENSION,
+            grid_system_columns: false,
+            grid_system_column: (0.3, 0.5),
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,

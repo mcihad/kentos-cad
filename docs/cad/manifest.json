@@ -10508,6 +10508,22 @@
    "tests": 0
   },
   {
+   "id": "tool.gridSystem",
+   "kind": "command",
+   "title": "Aks ağı",
+   "level": "semantic",
+   "via": [
+    "cad.grids.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.grids.create",
+   "mcp": "cad.grids.create",
+   "note": "Başlangıç, açı, x ve y aralıkları, ilk adlar, uzatma, balonlar ve kesişim kolonlarının ölçüleri komutun system'ine verilir; aksların yerleri, adları ve akslara bağlı kolonlar komutun hesabı, önizleme planından (ADR 0707).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.hatch",
    "kind": "tool",
    "title": "Tarama",

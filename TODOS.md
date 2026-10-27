@@ -88,6 +88,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   işleyicisi ve Mutfak dizisi aracı (baş, son, taraf; Otomatik evye/ocak;
   blokların Genişlik'iyle açılmış önizleme) `cad.casework.run.json` ile
   sınanmalı.
+- ARCH-ELEM-03 / ADR0707: `cad.grids.create`'in `system`'i (aks ağı ve
+  kesişim kolonları). Web'in Aks ağı aracı (imleçle gelen ağ, İki nokta,
+  “3*6” aralıklar) ve işleyicisi `cad.grids.create.system.json` ile sınanmalı.
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı

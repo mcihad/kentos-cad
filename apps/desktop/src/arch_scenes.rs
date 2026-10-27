@@ -10,6 +10,7 @@
 //! KENTOS_SHOTS_ONLY=aks-serit,aks-sistem,aks-arac,kolon-arac,kolon-oznitelikler,merdiven-arac,merdiven-denetim,rampa,aks-numarala,aks-izleme cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! KENTOS_SHOTS_ONLY=merdiven-yukseklik,merdiven-l,merdiven-u,merdiven-u-yazildi,merdiven-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0704
 //! KENTOS_SHOTS_ONLY=rampa-egim,rampa-l-korkuluk,merdiven-korkuluk,rampa-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0705
+//! KENTOS_SHOTS_ONLY=aks-agi,aks-agi-dondur,aks-agi-yazildi cargo test -p kentos-desktop tools_screens::screens -- --ignored --nocapture   # docs/adr/0707
 //! ```
 //!
 //! Test code only.
@@ -290,6 +291,55 @@ fn ramp_tool(app: &mut App) {
     hover(app, [9.0, 16.0]);
 }
 
+/// docs/adr/0707: Aks ağı under the cursor on an empty level: 6 6 4.5 by 5 5 from 1 and A, a 0.30 × 0.50 column at
+/// every crossing; the tool's settings beside.
+fn grid_system(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 100.0);
+    on_level(app);
+    fit(app, 18.0, 13.0);
+    app.command_expanded = true;
+    run(app, "tool.gridSystem");
+    typed(app, "X");
+    typed(app, "6 6 4.5");
+    typed(app, "Y");
+    typed(app, "2*5");
+    typed(app, "K");
+    hover(app, [0.5, 1.0]);
+}
+
+/// İki nokta: the origin clicked, the system turned 30° toward the cursor.
+fn grid_system_turned(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 100.0);
+    on_level(app);
+    fit(app, 20.0, 18.0);
+    app.command_expanded = true;
+    run(app, "tool.gridSystem");
+    typed(app, "P");
+    click(app, [3.0, 1.0]);
+    let turn = 30f64.to_radians();
+    hover(app, [3.0 + 12.0 * turn.cos(), 1.0 + 12.0 * turn.sin()]);
+}
+
+/// The system written with its columns tagged from S1, column B-3 selected: its place and grids in Öznitelikler.
+fn grid_system_written(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 100.0);
+    on_level(app);
+    fit(app, 18.0, 13.0);
+    app.command_expanded = true;
+    run(app, "tool.gridSystem");
+    typed(app, "X");
+    typed(app, "6 6 4.5");
+    typed(app, "Y");
+    typed(app, "2*5");
+    typed(app, "K");
+    typed(app, "S");
+    typed(app, "S1");
+    click(app, [0.5, 1.0]);
+    typed(app, "");
+    app.selection.set([Slot(14)]);
+    hover(app, [19.5, 13.5]);
+}
+
 /// Aksları numarala from E: D and C picked, the plan's labels drawn.
 fn numbering(app: &mut App) {
     system(app);
@@ -341,6 +391,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("rampa-sigmaz", ramp_no_fit),
         ("rampa", ramp_tool),
         ("aks-numarala", numbering),
+        ("aks-agi", grid_system),
+        ("aks-agi-dondur", grid_system_turned),
+        ("aks-agi-yazildi", grid_system_written),
         ("aks-izleme", following),
     ]
 }

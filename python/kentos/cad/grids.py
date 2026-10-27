@@ -12,6 +12,7 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     GridSeries,
+    GridSystem,
     GridsCreate,
     GridsCreated,
     GridsPlan,
@@ -53,6 +54,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
+        system: GridSystem | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> GridsCreated:
@@ -73,6 +75,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             grids:
             line_weight: Unit: paper-mm.
             series:
+            system:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -92,6 +95,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
             series=series,
+            system=system,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -105,6 +109,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
+        system: GridSystem | None | Unset = UNSET,
     ) -> GridsPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -116,6 +121,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
             series=series,
+            system=system,
         ))
 
     def validate(
@@ -129,6 +135,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
+        system: GridSystem | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -140,6 +147,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
             series=series,
+            system=system,
         ))
 
     def answer(
@@ -153,6 +161,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
+        system: GridSystem | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -169,6 +178,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
             series=series,
+            system=system,
         ), op=op, request_id=request_id, expected=expected)
 
 

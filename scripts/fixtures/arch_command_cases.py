@@ -470,8 +470,8 @@ def after(prev):
 
 def grids_create(d, inp, conflict=False):
     series = inp.get("series")
-    if not inp.get("grids") and series is None:
-        return refusal("no_objects", "Yazılacak aks verilmedi. Akslar (grids) ya da bir seri (series) verin.", "grids"), None
+    if not inp.get("grids") and series is None and inp.get("system") is None:
+        return refusal("no_objects", "Yazılacak aks verilmedi. Akslar (grids), bir seri (series) ya da bir aks ağı (system) verin.", "grids"), None
     prev = last_label(d)
     made = []
     for i, n in enumerate(inp.get("grids", [])):
@@ -535,7 +535,103 @@ def grids_create(d, inp, conflict=False):
             if r:
                 return r, None
             made.append(g)
+    if inp.get("system") is not None:
+        r = system_made(inp["system"], made)
+        if r:
+            return r, None
     return finish(inp, conflict, made, [])
+
+
+def system_made(s, made):
+    """A grid system (ADR 0707): its grids across x, then across y, then a column at every crossing row by row; a
+    column names its grids as `@k`, the index of the grid among the objects made."""
+    r = point_not_finite(s["origin"], "Aks ağının başlangıcının", "system.origin")
+    r = r or finite_each([(s.get("angle"), "angle", "Açı"), (s.get("extension"), "extension", "Uzatma"),
+                          (s.get("bubbleSize"), "bubbleSize", "Balon çapı")], "system")
+    if r:
+        return r
+    for axis in ("x", "y"):
+        for k, gap in enumerate(s.get(axis, [])):
+            if not math.isfinite(gap):
+                return not_finite("Aralık", f"system.{axis}[{k}]")
+            if gap <= 0:
+                return refusal("invalid_grid", f"Akslar arası {num(gap)}; sıfırdan büyük olmalı.", f"system.{axis}[{k}]")
+    cols = s.get("columns")
+    if cols is not None:
+        r = finite_each([(cols["width"], "width", "En"), (cols.get("depth"), "depth", "Boy"),
+                         (cols.get("rotation"), "rotation", "Dönüş")], "system.columns")
+        if r:
+            return r
+    e = s.get("extension", 1.5)
+    if e < 0:
+        return refusal("invalid_grid", f"Uzatma {num(e)}; sıfır ya da daha büyük olmalı.", "system.extension")
+    if e == 0 and (not s.get("x") or not s.get("y")):
+        return refusal("invalid_grid", "Bir yönde tek aks varken uzatma sıfır olursa öbür yönün aksları nokta olur; uzatma verin.", "system.extension")
+    for key in ("xStart", "yStart"):
+        if s.get(key) is not None and s[key].strip() == "":
+            return refusal("invalid_grid", "Aksın ilk adı boş; 1, A gibi bir ad verin.", f"system.{key}")
+    r = level_check(s.get("arch"), "system.arch.level")
+    if r:
+        return r
+
+    def along(gaps):
+        at, out = 0.0, [0.0]
+        for g in gaps:
+            at += g
+            out.append(at)
+        return out
+
+    xs, ys = along(s.get("x", [])), along(s.get("y", []))
+    angle = s.get("angle", 0.0)
+    c, sn = (1.0, 0.0) if angle == 0 else (math.cos(angle), math.sin(angle))
+    o = s["origin"]
+
+    def world(x, y):
+        return P(o["x"] + (x * c - y * sn), o["y"] + (x * sn + y * c))
+
+    def family(positions, start, first, across_x):
+        label, out = start if start is not None else first, []
+        for i, v in enumerate(positions):
+            if i:
+                label = next_label(label)
+            g = {"pts": [world(v, -e), world(v, ys[-1] + e)] if across_x else [world(-e, v), world(xs[-1] + e, v)],
+                 "name": label}
+            if s.get("bubbles", "both") != "both":
+                g["bubbles"] = s["bubbles"]
+            if s.get("bubbleSize") is not None:
+                g["bubbleSize"] = s["bubbleSize"]
+            if s.get("arch"):
+                g["arch"] = s["arch"]
+            out.append(g)
+        return out
+
+    across_x = family(xs, s.get("xStart"), "1", True)
+    across_y = family(ys, s.get("yStart"), "A", False)
+    first = len(made)
+    for g in across_x + across_y:
+        r = grid_problem(g, "system")
+        if r:
+            return r
+        made.append(g)
+    if cols is None:
+        return None
+    tag = cols.get("tagStart")
+    for j, gy in enumerate(across_y):
+        for i, gx in enumerate(across_x):
+            pt = cross(gx, gy)
+            n = {**cols, "rotation": cols.get("rotation", angle)}
+            col = column_fields(n, tag, P(pt[0], pt[1]))
+            if tag is not None:
+                tag = next_label(tag)
+            col["grids"] = [f"@{first + i}", f"@{first + len(across_x) + j}"]
+            col["place"] = place_of(gx["name"], gy["name"])
+            if s.get("arch"):
+                col["arch"] = s["arch"]
+            r = column_problem(col, "system.columns")
+            if r:
+                return r
+            made.append(("column", col))
+    return None
 
 
 def grid_named(d, u, path):
@@ -927,7 +1023,16 @@ def create_step(d, command, op, inp, non_finite=None, conflict=False, with_comma
         s["result"] = {"status": "completed", "output": None, "warnings": result["warnings"]}
         s["expect"] = {"ids": d.ids(), "revision": "same"}
         return s
-    ents = [made_entity(kind, inp["layerId"], f, extra_of(inp)) for f in made]
+    # A grid system's column is (kind, fields), its grids `@k`: the k-th object made (ADR 0707).
+    made = [m if isinstance(m, tuple) else (kind, m) for m in made]
+
+    def named(f, ids):
+        f = copy.deepcopy(f)
+        if any(isinstance(g, str) and g.startswith("@") for g in f.get("grids") or []):
+            f["grids"] = ["$any" if ids is None else uid_of(ids[int(g[1:])]) for g in f["grids"]]
+        return f
+
+    ents = [made_entity(k, inp["layerId"], named(f, None), extra_of(inp)) for k, f in made]
     if op == "plan":
         s["result"] = {"status": "completed", "output": {plural: ents, "revision": "$current"}, "warnings": result["warnings"]}
         s["within"] = 1e-9
@@ -935,8 +1040,8 @@ def create_step(d, command, op, inp, non_finite=None, conflict=False, with_comma
         return s
     ids = list(range(d.next, d.next + len(made)))
     d.next += len(made)
-    for i, f in zip(ids, made):
-        d.objs[i] = (kind, inp["layerId"], f)
+    for i, (k, f) in zip(ids, made):
+        d.objs[i] = (k, inp["layerId"], named(f, ids))
     s["result"] = {"status": "completed", "output": {"uids": ["$any"] * len(made), "ids": ids, "revision": "$current"},
                    "warnings": result["warnings"]}
     s["within"] = 1e-9
@@ -1021,6 +1126,48 @@ def grid_cases():
         ("olmayan kat reddedilir", {"layerId": "aks", "grids": [{"pts": [P(0, 0), P(5, 0)], "label": "A", "arch": {"level": "yok"}}]}, {}),
     ])
     common_refusals(c, GRIDS, one)
+    return c.cases
+
+
+def system_cases():
+    """Aks ağı (ADR 0707): two families of grids at right angles, turned, with columns at their crossings."""
+    c = Cases()
+    base = {"origin": P(0, 20), "x": [6.0, 6.0, 4.5], "y": [5.0, 5.0]}
+    turn = math.pi / 6
+    cols = {"width": 0.3, "depth": 0.5, "fill": True, "tagStart": "S1"}
+    life(c, GRIDS, {"layerId": "aks", "system": {**base, "columns": cols}}, "Kolonlu aks ağı")
+    for name, inp in [
+        ("aks ağı: 1–4 ve A–C, öntanımlı 1.5 m uzatma", {"layerId": "aks", "system": base}),
+        ("30° döndürülmüş aks ağı", {"layerId": "aks", "system": {**base, "angle": turn}}),
+        ("döndürülmüş ağın kolonları ağın açısıyla döner", {"layerId": "kolon", "system": {**base, "angle": turn, "columns": {"width": 0.4}}}),
+        ("yuvarlak kolonlar kendi dönüşüyle, türüyle", {"layerId": "kolon", "system": {**base, "columns": {"shape": "round", "width": 0.5, "rotation": 0.25, "type": "C1"}}}),
+        ("ilk adlar verilir: harfler x'te, sayılar y'de", {"layerId": "aks", "system": {**base, "xStart": "A", "yStart": "1", "columns": {"width": 0.3}}}),
+        ("yalnız y aralıkları: x'te tek aks", {"layerId": "aks", "system": {"origin": P(40, 0), "y": [4.0, 4.0]}}),
+        ("tek akslı iki aile: iki uzatma boyu aks", {"layerId": "aks", "system": {"origin": P(40, 30), "extension": 2.0}}),
+        ("uzatma 0.5, başında balon, 10 mm balon", {"layerId": "aks", "system": {**base, "extension": 0.5, "bubbles": "start", "bubbleSize": 10.0}}),
+        ("uzatma sıfırken akslar en dış akslarda biter", {"layerId": "aks", "system": {**base, "extension": 0.0}}),
+        ("katı ve evresiyle ağ, renk ve kalınlıkla; kolonlar katla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "system": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"width": 0.3}}}),
+        ("aks ve seriyle birlikte: ağ en sonda", {"layerId": "aks", "grids": [{"pts": [P(50, 0), P(50, 10)], "label": "M"}], "series": {"from": P(52, 0), "to": P(52, 10), "spacings": [2.0]}, "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}}),
+        ("y ailesi H'den: I harfi atlanır", {"layerId": "aks", "system": {"origin": P(0, 60), "x": [5.0], "y": [3.0, 3.0, 3.0], "yStart": "H"}}),
+        ("eğik başlangıç ve -90° dönüş", {"layerId": "aks", "system": {"origin": P(7.25, -3.5), "angle": -math.pi / 2, "x": [4.0], "y": [2.5, 2.5]}}),
+    ]:
+        c.add(name, [create_step(Drawing(), GRIDS, "execute", inp)])
+    refusals(c, GRIDS, [
+        ("ağın eksi aralığı reddedilir", {"layerId": "aks", "system": {**base, "x": [6.0, -1.0]}}, {}),
+        ("ağın sıfır aralığı reddedilir", {"layerId": "aks", "system": {**base, "y": [0.0]}}, {}),
+        ("ağın sonsuz aralığı reddedilir", {"layerId": "aks", "system": base}, {"non_finite": {"system.y[1]": "Infinity"}}),
+        ("ağın sonsuz açısı reddedilir", {"layerId": "aks", "system": {**base, "angle": 0.5}}, {"non_finite": {"system.angle": "NaN"}}),
+        ("ağın sonsuz başlangıcı reddedilir", {"layerId": "aks", "system": base}, {"non_finite": {"system.origin.x": "Infinity"}}),
+        ("eksi uzatma reddedilir", {"layerId": "aks", "system": {**base, "extension": -1.0}}, {}),
+        ("tek akslı yönde sıfır uzatma reddedilir", {"layerId": "aks", "system": {"origin": P(0, 0), "x": [3.0], "extension": 0.0}}, {}),
+        ("boş ilk ad reddedilir", {"layerId": "aks", "system": {**base, "xStart": "  "}}, {}),
+        ("sıfır balon çapı reddedilir", {"layerId": "aks", "system": {**base, "bubbleSize": 0.0}}, {}),
+        ("sıfır kolon eni reddedilir", {"layerId": "aks", "system": {**base, "columns": {"width": 0.0}}}, {}),
+        ("sonsuz kolon eni reddedilir", {"layerId": "aks", "system": {**base, "columns": {"width": 0.3}}}, {"non_finite": {"system.columns.width": "NaN"}}),
+        ("boş kolon türü reddedilir", {"layerId": "aks", "system": {**base, "columns": {"width": 0.3, "type": " "}}}, {}),
+        ("ağın olmayan katı reddedilir", {"layerId": "aks", "system": {**base, "arch": {"level": "yok"}}}, {}),
+    ])
+    common_refusals(c, GRIDS, {"layerId": "aks", "system": base})
     return c.cases
 
 
@@ -1555,6 +1702,7 @@ def files():
         "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
+        "cad.grids.create.system.json": document(GRIDS, "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)", system_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }
 
