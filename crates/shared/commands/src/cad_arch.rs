@@ -27,6 +27,9 @@ pub const CAD_RAMPS_CREATE: &str = "cad.ramps.create";
 pub const CAD_RAMPS_CREATE_VERSION: u32 = 1;
 pub const CAD_ARCH_EDIT: &str = "cad.arch.edit";
 pub const CAD_ARCH_EDIT_VERSION: u32 = 1;
+/// A column's temporary distances (docs/adr/0712): on each side the clear distance to the nearest parallel face.
+pub const CAD_COLUMNS_DISTANCES: &str = "cad.columns.distances";
+pub const CAD_COLUMNS_DISTANCES_VERSION: u32 = 1;
 /// The most objects one call writes.
 pub const MAX_ARCH_ELEMENTS: usize = 10_000;
 
@@ -839,6 +842,14 @@ pub enum ArchOperation {
     },
     /// Bağı kopar: each column off its grids, staying where it is.
     Detach,
+    /// Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,
+    /// 1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.
+    Distance {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        side: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: f64,
+    },
 }
 
 /// Input of `cad.arch.edit` v1: grids, columns, stairs and ramps named by their persistent ids changed as one undo step
@@ -861,6 +872,89 @@ pub struct ArchEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// Input of `cad.columns.distances` v1 (docs/adr/0712): the columns measured.
+///
+/// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_column`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ColumnsDistancesInput {
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+}
+
+/// What a column's side is measured to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ColumnGapTarget {
+    Wall,
+    Column,
+}
+
+/// One side's clear distance: square to the side, to the nearest parallel face (a wall's facing face or another
+/// column's side).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ColumnGap {
+    /// The side: 0 below the centre, 1 right, 2 above, 3 left, as the column is turned.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub side: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    /// The object measured to, by its persistent id, and its kind.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    pub target: ColumnGapTarget,
+    /// A wall's path edge, or a column's side.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub edge: u32,
+    /// A wall's face that faces the column; absent for a column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub face: Option<crate::DimensionSetFace>,
+    /// Where it is measured, at the middle of where the two run side by side: on the column's side, on the face.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+}
+
+/// A column's sides' clear distances; a side with nothing parallel facing it is absent.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ColumnGaps {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub tied: bool,
+    pub sides: Vec<ColumnGap>,
+}
+
+/// Output of `cad.columns.distances` v1 (its plan's too).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ColumnsDistances {
+    pub columns: Vec<ColumnGaps>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
 }
 
 /// Output of `cad.arch.edit` v1 (its plan's too: the objects as they would be, nothing written).

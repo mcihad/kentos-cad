@@ -25,7 +25,7 @@ use crate::tools_screens::{Pointed, Scene, open_split};
 use crate::wall_scenes::{fit, opened};
 
 /// The level the stair climbs: Zemin kat of 3.06 m.
-fn on_level(app: &mut App) {
+pub(crate) fn on_level(app: &mut App) {
     let Some(doc) = app.document.as_mut() else {
         return;
     };

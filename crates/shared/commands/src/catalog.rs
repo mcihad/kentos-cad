@@ -2163,6 +2163,31 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kolonun geçici ölçüleri (docs/adr/0712), held together by fixtures/commands/v1/cad.columns.distances.json.
+        CommandDescriptor {
+            id: crate::CAD_COLUMNS_DISTANCES.into(),
+            version: crate::CAD_COLUMNS_DISTANCES_VERSION,
+            title: "Kolonun mesafeleri".into(),
+            summary: "Kalıcı kimlikleri verilen kolonların dört yanındaki net mesafeleri okur (docs/adr/0712): her yandan (side: 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, kolonun dönüşüyle; yuvarlak kolonda çevreleyen karenin yanları) dışarıya, aynı kattaki ona paralel ve boyunca örtüşen en yakın yüze dik uzaklık: bir duvarın bakan yüzü (target wall, edge yolun kenarı, face yüzü) ya da başka bir kolonun yanı (target column, edge onun yanı). from ve to örtüşmenin ortasında iki yüzdeki noktalardır (metre); paralel yüzü olmayan yan yoktur. Akslara bağlı kolon tied ile söylenir: yeri aksların kesişimidir. Belgeye yazmaz; kolonu kaydırmak için cad.arch.edit'in distance işlemi."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ColumnsDistancesInput>(),
+            output: schema::<crate::ColumnsDistances>(),
+            plan: Some(schema::<crate::ColumnsDistances>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Odadaki kolonun dört yanındaki duvarlara mesafeler".into(),
+                input: json!({ "uids": ["0192f5a1-6000-7000-8000-000000000204"] }),
+                output: None,
+            }],
+        },
         // Kapı, Pencere, Boşluk and Açıklığı düzenle (docs/adr/0341 §4), held together by
         // fixtures/commands/v1/cad.openings.{create,edit}.json. The web is paused (docs/adr/0228).
         // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
@@ -2443,7 +2468,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ARCH_EDIT_VERSION,
             title: "Mimari nesneyi düzenle".into(),
             summary: "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır). \
+                      operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). \
                       Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -10646,6 +10671,9 @@ mod tests {
                     crate::CAD_WALLS_DISTANCES => {
                         serde_json::from_value::<crate::WallsDistancesInput>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_COLUMNS_DISTANCES => {
+                        serde_json::from_value::<crate::ColumnsDistancesInput>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_DIMENSIONS_INTERIOR => {
                         serde_json::from_value::<crate::DimensionsInterior>(e.input.clone()).map(|_| ())
                     }
@@ -11853,6 +11881,9 @@ mod tests {
                         }
                         crate::CAD_WALLS_DISTANCES => {
                             serde_json::from_value::<crate::WallsDistances>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_COLUMNS_DISTANCES => {
+                            serde_json::from_value::<crate::ColumnsDistances>(output.clone()).map(|_| ())
                         }
                         crate::CAD_DIMENSIONS_INTERIOR => {
                             serde_json::from_value::<crate::EntitiesCreated>(output.clone()).map(|_| ())

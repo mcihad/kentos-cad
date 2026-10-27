@@ -99,6 +99,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kolonda `along`/`center` yerleri. Web'in İç ölçü zinciri aracı (kesen çizgi,
   zincirin yeri, Enter kesen çizgide), `columns.ts`'in kural biti ve izleme
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-EDIT-01 / ADR0712: `cad.arch.edit`'in `distance`'ı ve salt okunur
+  `cad.columns.distances`. Web'in seçili kolonu dört yandaki net mesafeleri
+  göstermeli, sayıya basıp yazınca kolonu kaydırmalı, akslara bağlı kolonda
+  nedeni söylemeli; geçici ölçü sayıları maskeli, tıklama en yakın sayıya;
+  `cad.columns.distances.json` ve `cad.arch.edit.distance.json` ile sınanmalı.
 - ARCH-EDIT-01 / ADR0710: `cad.walls.edit`'in `shift`/`distance`'ı ve salt okunur
   `cad.walls.distances`. Web'in seçili duvarı iki yandaki net mesafeleri
   göstermeli, sayıya basıp yazınca kenarı kaydırmalı (köşe/T izler);

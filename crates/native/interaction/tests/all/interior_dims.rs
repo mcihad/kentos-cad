@@ -35,8 +35,11 @@ fn rooms() -> Bench {
     b
 }
 
-/// The drawing's dimensions: their two points (local) and whether both follow the cut.
-fn dimensions(b: &Bench) -> Vec<((f64, f64), (f64, f64), bool)> {
+/// A dimension's two points (local) and whether both follow the cut.
+type Measured = ((f64, f64), (f64, f64), bool);
+
+/// The drawing's dimensions.
+fn dimensions(b: &Bench) -> Vec<Measured> {
     b.doc
         .entities()
         .filter_map(|e| match e {

@@ -795,6 +795,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   salt okunur `cad.walls.distances` Python/MCP'de; 22+32 ortak durum bağımsız
   başvurudan, 4 araç testi, resimler `.run/shots/arac-duvar-mesafe-*`. Kolonun
   geçici ölçüsü, duvar boyu, kilitli referans ve UCS kabulü açık.
+- [x] Kolon dilimi [ADR0712](../docs/adr/0712-column-temporary-distances.md):
+  seçili kolonun dört yanında aynı kattaki en yakın paralel yüze (duvarın bakan
+  yüzü ya da öbür kolonun yanı) net mesafe; sayıya basıp yazınca kolon o yana dik
+  kayar, karşı yüz sabit, kolonu düşen mahal aynı adımda izler, tek Geri al.
+  Akslara bağlı kolonda sayıya basınca neden ve çözüm söylenir. `cad.arch.edit`
+  `distance` ve salt okunur `cad.columns.distances` Python/MCP'de; 22+23 ortak
+  durum bağımsız başvurudan, 3 çekirdek+4 araç+2 SDK testi, resimler
+  `.run/shots/arac-kolon-mesafe-*`. Üç geçici ölçüde sayı çizgiyi örter ve
+  tıklama en yakın sayıya gider. Aksa mesafe, duvar boyu, kilitli referans ve
+  UCS kabulü açık.
 
 - Seçili kapı/duvar/kolonun yakındaki referansa mesafesini göster; sayıya basıp
   hedef mesafe yazılabilsin. Sabit kalan taraf/ankraj açık olsun.
@@ -1122,4 +1132,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-EDIT-01 / ADR0712 | Kolonun geçici ölçüsü: dört yanda paralel en yakın duvar yüzüne/kolon yanına net mesafe, sayıya bas-yaz-Enter kolonu kaydırır, mahal izler, akslara bağlı kolon nedenini hemen söyler; `cad.arch.edit` distance, `cad.columns.distances`. 22+23 durum, 3+4+2 test, Python/MCP, gerçek GUI resimleri; geçici ölçülerde maskeli sayı ve en yakın sayıya tıklama. | [~] Kolon dilimi; aksa mesafe, duvar boyu, kilitli referans açık |
 | 2026-10-27 | ARCH-DIM-01 / ADR0711 | İç ölçü zinciri: kesen çizgi, duvar yüzleri/bütün katmanlar, kolon kenar/merkez, toplam, kat; `cross` kuralı (KCAD 118) ile duvar kayınca değer, uzayınca çizgi yerinde; duvar yüzü ve kolonda `along`/`center` yerleri. 44 durum, Python/MCP, 5+4 test, gerçek GUI resimleri. | [x] Kesen çizgi alt maddesi; kalıcı üyelik açık |

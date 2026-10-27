@@ -34,6 +34,7 @@ COMMANDS: dict[str, Any] = {
     "cad.changeset.apply": changeset.apply,
     "cad.circle.create": circle.create,
     "cad.columns.create": columns.create,
+    "cad.columns.distances": columns.distances,
     "cad.constraints.edit": constraints.edit,
     "cad.constraints.query": constraints.query,
     "cad.constructions.create": constructions.create,

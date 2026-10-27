@@ -280,6 +280,8 @@ pub mod wall_partition;
 pub mod wall_dimensions;
 // İç ölçü zinciri (docs/adr/0711).
 pub mod interior_dims;
+// Kolonun geçici ölçüleri (docs/adr/0712).
+pub mod column_distance;
 pub mod tool_settings;
 
 pub use clipboard::Clipboard;

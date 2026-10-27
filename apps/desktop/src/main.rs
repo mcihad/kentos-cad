@@ -458,6 +458,8 @@ mod wall_scenes;
 #[cfg(test)]
 mod interior_scenes;
 #[cfg(test)]
+mod column_scenes;
+#[cfg(test)]
 mod opening_scenes;
 #[cfg(test)]
 mod space_scenes;

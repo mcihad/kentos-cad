@@ -13,6 +13,7 @@ pub mod constraints;
 pub mod continuation;
 pub mod contour_elevations;
 pub mod convert;
+pub mod column_shift;
 pub mod coordinate_labels;
 pub mod curve_cuts;
 pub mod data_search;

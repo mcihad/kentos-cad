@@ -28,6 +28,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Kolonun geçici ölçüsü (27 Ekim 2026; [ADR0712](docs/adr/0712-column-temporary-distances.md)).**
+  Seçili kolonun dört yanında aynı kattaki en yakın paralel yüze (duvarın bakan
+  yüzü ya da öbür kolonun yanı) net mesafe; sayıya bas-yaz-Enter kolonu o yana
+  dik kaydırır, karşı yüz sabit, kolonu düşen mahal aynı adımda izler, tek undo.
+  Akslara bağlı kolon `column_on_grids`: sayıya basınca neden ve çözüm söylenir.
+  `cad.arch.edit` `distance` ve salt okunur `cad.columns.distances` (Python/MCP);
+  çekirdek `ops::column_shift`. 22+23 bağımsız durum, 3 çekirdek+4 araç+2 SDK
+  testi, gerçek GUI. Üç geçici ölçüde sayı çizgiyi örter, tıklama en yakın
+  sayıya gider. Aksa mesafe, duvar boyu, kilitli referans açık.
+
 - **Kesen çizgiyle iç ölçü zinciri (27 Ekim 2026; [ADR0711](docs/adr/0711-interior-dimension-chains.md)).**
   Archicad'in iç ölçülendirmesi: kesen çizginin kestiği duvar yüzleri (dış yüzler
   ya da bütün katmanlar) ve kolonlar (kenar/merkez) sırayla doğrusal ölçü zinciri,

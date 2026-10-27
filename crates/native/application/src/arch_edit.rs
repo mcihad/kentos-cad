@@ -351,6 +351,73 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 out.push((*slot, Entity::Column(c)));
             }
         }
+        ArchOperation::Distance { side, distance } => {
+            // docs/adr/0712: one column, not tied to grids, moved square to a side.
+            let [(at, slot, e, _)] = found.as_slice() else {
+                return Err(fail(
+                    codes::INVALID_COLUMN,
+                    "Mesafe tek kolonla çalışır; bir kolon verin.".into(),
+                    "uids",
+                ));
+            };
+            let Entity::Column(c) = e else {
+                return Err(fail(
+                    codes::NOT_A_COLUMN,
+                    format!("Mesafe yalnız kolonu kaydırır; {} kaydırılmaz.", kind_name(e)),
+                    &format!("uids[{at}]"),
+                ));
+            };
+            checks::finite(
+                *distance,
+                "Mesafe",
+                "Sonlu bir uzunluk verin.",
+                "operation.distance",
+            )?;
+            if *distance < 0.0 {
+                return Err(fail(
+                    codes::INVALID_COLUMN,
+                    format!("Mesafe {distance}; sıfır ya da daha büyük olmalı."),
+                    "operation.distance",
+                ));
+            }
+            if c.column.grids.is_some() {
+                let place = c
+                    .column
+                    .place
+                    .as_deref()
+                    .map(|p| format!(" ({p})"))
+                    .unwrap_or_default();
+                return Err(fail(
+                    codes::COLUMN_ON_GRIDS,
+                    format!(
+                        "Kolon akslara bağlı{place}; yeri aksların kesişimidir. Kaydırmak için önce Bağı kopar'ı seçin ya da aksı taşıyın."
+                    ),
+                    &format!("uids[{at}]"),
+                ));
+            }
+            let around = crate::column_distances::Around::of(doc, *slot);
+            let (walls, columns) = (around.walls(), around.columns());
+            let to = kentos_geometry_core::ops::column_shift::moved(
+                &walls,
+                &columns,
+                0,
+                *side as usize,
+                *distance,
+            )
+            .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.side"))?;
+            let from = c.column.at;
+            if (to.x - from.x).hypot(to.y - from.y) <= kentos_geometry_core::ops::wall_shift::TIE {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Kolon zaten bu konumda; kaydırılacak bir şey yok.".into(),
+                    "operation",
+                ));
+            }
+            let mut c = c.clone();
+            c.column.at = kentos_commands::Vec2 { x: to.x, y: to.y };
+            column_valid(&c.column, &format!("uids[{at}]"))?;
+            out.push((*slot, Entity::Column(c)));
+        }
         ArchOperation::Detach => {
             for (_, slot, e, _) in &found {
                 let Entity::Column(c) = e else {

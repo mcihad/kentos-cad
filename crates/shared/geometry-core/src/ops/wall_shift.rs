@@ -58,7 +58,7 @@ fn inline() -> f64 {
 }
 
 /// A wall's level: walls join and face each other only on the same one (or both on none), as the joins say.
-fn level<'a>(w: &WallIn<'a>) -> Option<&'a str> {
+pub(crate) fn level<'a>(w: &WallIn<'a>) -> Option<&'a str> {
     match w.spec.arch.as_ref()?.get("level") {
         crate::api::json::Json::Str(id) => Some(id.as_str()),
         _ => None,
@@ -80,7 +80,7 @@ fn bulge(w: &WallIn<'_>, i: usize) -> f64 {
 }
 
 /// Edge `k`'s two points, when it is a straight edge of a length.
-fn edge(w: &WallIn<'_>, k: usize) -> Option<(Vec2, Vec2)> {
+pub(crate) fn edge(w: &WallIn<'_>, k: usize) -> Option<(Vec2, Vec2)> {
     if k >= edge_count(w) || bulge(w, k) != 0.0 {
         return None;
     }

@@ -421078,6 +421078,357 @@
       ]
     },
     {
+      "id": "cad.columns.distances",
+      "version": 1,
+      "title": "Kolonun mesafeleri",
+      "summary": "Kalıcı kimlikleri verilen kolonların dört yanındaki net mesafeleri okur (docs/adr/0712): her yandan (side: 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, kolonun dönüşüyle; yuvarlak kolonda çevreleyen karenin yanları) dışarıya, aynı kattaki ona paralel ve boyunca örtüşen en yakın yüze dik uzaklık: bir duvarın bakan yüzü (target wall, edge yolun kenarı, face yüzü) ya da başka bir kolonun yanı (target column, edge onun yanı). from ve to örtüşmenin ortasında iki yüzdeki noktalardır (metre); paralel yüzü olmayan yan yoktur. Akslara bağlı kolon tied ile söylenir: yeri aksların kesişimidir. Belgeye yazmaz; kolonu kaydırmak için cad.arch.edit'in distance işlemi.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.columns.distances` v1 (docs/adr/0712): the columns measured.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_column`.",
+        "properties": {
+          "uids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "ColumnsDistancesInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ColumnGap": {
+            "description": "One side's clear distance: square to the side, to the nearest parallel face (a wall's facing face or another\ncolumn's side).",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "edge": {
+                "description": "A wall's path edge, or a column's side.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "face": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetFace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A wall's face that faces the column; absent for a column."
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured, at the middle of where the two run side by side: on the column's side, on the face.",
+                "x-unit": "length"
+              },
+              "side": {
+                "description": "The side: 0 below the centre, 1 right, 2 above, 3 left, as the column is turned.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "target": {
+                "$ref": "#/$defs/ColumnGapTarget"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object measured to, by its persistent id, and its kind.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "side",
+              "distance",
+              "uid",
+              "target",
+              "edge",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "ColumnGapTarget": {
+            "description": "What a column's side is measured to.",
+            "enum": [
+              "wall",
+              "column"
+            ],
+            "type": "string"
+          },
+          "ColumnGaps": {
+            "description": "A column's sides' clear distances; a side with nothing parallel facing it is absent.",
+            "properties": {
+              "sides": {
+                "items": {
+                  "$ref": "#/$defs/ColumnGap"
+                },
+                "type": "array"
+              },
+              "tied": {
+                "description": "Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.",
+                "type": "boolean"
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "sides"
+            ],
+            "type": "object"
+          },
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.columns.distances` v1 (its plan's too).",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ColumnGaps"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "columns",
+          "revision"
+        ],
+        "title": "ColumnsDistances",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ColumnGap": {
+            "description": "One side's clear distance: square to the side, to the nearest parallel face (a wall's facing face or another\ncolumn's side).",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "edge": {
+                "description": "A wall's path edge, or a column's side.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "face": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetFace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A wall's face that faces the column; absent for a column."
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured, at the middle of where the two run side by side: on the column's side, on the face.",
+                "x-unit": "length"
+              },
+              "side": {
+                "description": "The side: 0 below the centre, 1 right, 2 above, 3 left, as the column is turned.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "target": {
+                "$ref": "#/$defs/ColumnGapTarget"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object measured to, by its persistent id, and its kind.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "side",
+              "distance",
+              "uid",
+              "target",
+              "edge",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "ColumnGapTarget": {
+            "description": "What a column's side is measured to.",
+            "enum": [
+              "wall",
+              "column"
+            ],
+            "type": "string"
+          },
+          "ColumnGaps": {
+            "description": "A column's sides' clear distances; a side with nothing parallel facing it is absent.",
+            "properties": {
+              "sides": {
+                "items": {
+                  "$ref": "#/$defs/ColumnGap"
+                },
+                "type": "array"
+              },
+              "tied": {
+                "description": "Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.",
+                "type": "boolean"
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "sides"
+            ],
+            "type": "object"
+          },
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.columns.distances` v1 (its plan's too).",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ColumnGaps"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "columns",
+          "revision"
+        ],
+        "title": "ColumnsDistances",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "column"
+            ],
+            "refusedWith": "not_a_column"
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_column"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Odadaki kolonun dört yanındaki duvarlara mesafeler",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000204"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.spaces.number",
       "version": 1,
       "title": "Mahalleri numarala",
@@ -529289,7 +529640,7 @@
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -529565,6 +529916,32 @@
                 },
                 "required": [
                   "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,\n1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "distance",
+                    "type": "string"
+                  },
+                  "side": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "side",
+                  "distance"
                 ],
                 "type": "object"
               }
@@ -550346,6 +550723,8 @@
           "not_a_grid",
           "grids_parallel",
           "level_not_found",
+          "not_a_column",
+          "column_on_grids",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -1455638,6 +1456017,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesne aks değil."
+    },
+    {
+      "code": "not_a_column",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne kolon değil."
+    },
+    {
+      "code": "column_on_grids",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kolon akslara bağlı; yeri aksların kesişimidir. Bağı koparın ya da aksı taşıyın."
     },
     {
       "code": "grids_parallel",

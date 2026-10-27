@@ -1676,6 +1676,10 @@ codes! {
     INVALID_RAMP = "invalid_ramp", Failed, false, "Rampanın alanları bir rampa tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, sonlu yükseklik.";
     /// An object that is no grid where a grid is asked.
     NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
+    /// An object that is no column where a column is asked (docs/adr/0712).
+    NOT_A_COLUMN = "not_a_column", Failed, false, "Nesne kolon değil.";
+    /// A column tied to two grids moved by a distance (docs/adr/0712): it stands where they cross.
+    COLUMN_ON_GRIDS = "column_on_grids", Failed, false, "Kolon akslara bağlı; yeri aksların kesişimidir. Bağı koparın ya da aksı taşıyın.";
     /// Two grids that do not cross.
     GRIDS_PARALLEL = "grids_parallel", Failed, false, "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.";
     /// An object no architectural element command takes.

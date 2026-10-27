@@ -107,6 +107,7 @@ mod spiral_stair;
 mod setting_choices;
 mod wall_distance;
 mod interior_dims;
+mod column_distance;
 mod casework;
 mod grid_system;
 mod space_void;

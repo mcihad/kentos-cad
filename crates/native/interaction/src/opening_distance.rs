@@ -48,6 +48,25 @@ fn v(p: kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
+/// Of the numbers whose text stands within reach of `screen` (a box `REACH_PX` wide and high round each), the nearest:
+/// two numbers close together (a narrow opening's, a column's sides) go to the one the click is by, not the first.
+pub(crate) fn nearest_number<'a, T>(
+    items: &'a [T],
+    text_at: impl Fn(&T) -> Vec2,
+    screen: [f64; 2],
+    cx: &Context<'_>,
+) -> Option<&'a T> {
+    items
+        .iter()
+        .filter_map(|item| {
+            let p = cx.view.to_screen(text_at(item));
+            let (dx, dy) = ((p[0] - screen[0]).abs(), (p[1] - screen[1]).abs());
+            (dx <= REACH_PX[0] && dy <= REACH_PX[1]).then(|| ((dx / REACH_PX[0]).hypot(dy / REACH_PX[1]), item))
+        })
+        .min_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|(_, item)| item)
+}
+
 /// An aligned dimension from `a` to `b`, `offset` to its left, numbers `height` high: drawn, never written.
 pub(crate) fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
     Entity::Dimension(kentos_commands::DimensionEntity {
@@ -201,7 +220,10 @@ impl Overlay {
                         s.tone = Tone::Snap;
                     }
                     self.preview.strokes.extend(drawn.strokes);
-                    self.preview.texts.extend(drawn.texts);
+                    // The number over a mask of the view's ground: the line it stands on does not cross it.
+                    self.preview
+                        .texts
+                        .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
                 }
                 // A jamb at its reference: the number alone.
                 None => self.preview.texts.push(TextGhost {
@@ -236,10 +258,7 @@ impl Overlay {
 
     /// The text field of the side whose number is under the pointer.
     pub fn at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<OpeningDistance> {
-        let side = self.sides.iter().find(|s| {
-            let p = cx.view.to_screen(s.text_at);
-            (p[0] - screen[0]).abs() <= REACH_PX[0] && (p[1] - screen[1]).abs() <= REACH_PX[1]
-        })?;
+        let side = nearest_number(&self.sides, |s| s.text_at, screen, cx)?;
         Some(OpeningDistance {
             uid: self.uid?,
             side: if side.start { WallEnd::Start } else { WallEnd::End },

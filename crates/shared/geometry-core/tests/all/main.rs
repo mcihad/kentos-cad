@@ -32,6 +32,7 @@ mod golden;
 mod hatch;
 mod image;
 mod interior_dims;
+mod column_shift;
 mod label_engine;
 mod label_stability;
 mod ghosts;

@@ -151,6 +151,8 @@ pub struct Select {
     temporary: crate::opening_distance::Overlay,
     /// The one selected wall's temporary distances (docs/adr/0710).
     wall_temporary: crate::wall_distance::Overlay,
+    /// The one selected column's temporary distances (docs/adr/0712).
+    column_temporary: crate::column_distance::Overlay,
     pointer: Option<Vec2>,
 }
 
@@ -290,6 +292,7 @@ impl Select {
             self.pointer = Some(p.raw);
             self.temporary.see(self.pointer, cx);
             self.wall_temporary.see(self.pointer, cx);
+            self.column_temporary.see(cx);
             // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
             let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
@@ -426,6 +429,7 @@ impl Select {
         if self.grip.is_none() && self.param.is_none() {
             self.temporary.see(self.pointer, cx);
             self.wall_temporary.see(self.pointer, cx);
+            self.column_temporary.see(cx);
         }
     }
 
@@ -436,6 +440,7 @@ impl Select {
             .iter()
             .map(|s| s.text_at)
             .chain(self.wall_temporary.sides.iter().map(|s| s.text_at))
+            .chain(self.column_temporary.sides.iter().map(|s| s.text_at))
             .collect()
     }
 
@@ -447,7 +452,10 @@ impl Select {
         if let Some(field) = self.temporary.at(screen, cx) {
             return Some(Box::new(field));
         }
-        self.wall_temporary.at(screen, cx).map(|f| Box::new(f) as Box<dyn crate::tool::Tool>)
+        if let Some(field) = self.wall_temporary.at(screen, cx) {
+            return Some(Box::new(field));
+        }
+        self.column_temporary.at(screen, cx).map(|f| Box::new(f) as Box<dyn crate::tool::Tool>)
     }
 
     /// Whether a grip is being moved: the select tool then takes points,
@@ -805,7 +813,10 @@ impl Select {
                 if !self.temporary.sides.is_empty() {
                     return Some(self.temporary.preview.clone());
                 }
-                return (!self.wall_temporary.sides.is_empty()).then(|| self.wall_temporary.preview.clone());
+                if !self.wall_temporary.sides.is_empty() {
+                    return Some(self.wall_temporary.preview.clone());
+                }
+                return (!self.column_temporary.sides.is_empty()).then(|| self.column_temporary.preview.clone());
             };
             let mut lines: Vec<String> = tag
                 .z

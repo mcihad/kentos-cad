@@ -84,7 +84,7 @@ use kentos_native_application::{
     labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
     sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
@@ -1285,6 +1285,8 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.rise" => c.rise.as_mut(),
                 _ => None,
             },
+            // Mesafe's `operation.distance` (docs/adr/0712).
+            Op::Distance { distance, .. } if path == "operation.distance" => Some(distance),
             _ => None,
         }
     }
@@ -1362,6 +1364,12 @@ impl Input for kentos_commands::DimensionsInterior {
             "lineWeight" => self.look.line_weight.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::ColumnsDistancesInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -3935,6 +3943,9 @@ fn run_op(
         }
         kentos_commands::CAD_WALLS_DISTANCES => {
             run!(walls_distances, kentos_commands::WallsDistancesInput)
+        }
+        kentos_commands::CAD_COLUMNS_DISTANCES => {
+            run!(columns_distances, kentos_commands::ColumnsDistancesInput)
         }
         kentos_commands::CAD_ARCH_AUDIT => {
             run!(arch_audit, kentos_commands::ArchAudit)

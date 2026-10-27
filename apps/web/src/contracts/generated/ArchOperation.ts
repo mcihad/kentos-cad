@@ -4,4 +4,4 @@ import type { ArchChange } from "./ArchChange";
 /**
  * What `cad.arch.edit` does (docs/adr/0343 §4).
  */
-export type ArchOperation = { "kind": "set" } & ArchChange | { "kind": "renumber", start: string, } | { "kind": "attach", grids: Array<string>, } | { "kind": "detach" };
+export type ArchOperation = { "kind": "set" } & ArchChange | { "kind": "renumber", start: string, } | { "kind": "attach", grids: Array<string>, } | { "kind": "detach" } | { "kind": "distance", side: number, distance: number, };

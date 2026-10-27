@@ -1847,6 +1847,12 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["wall", "column"], &[], None, None)],
     },
     Entry {
+        id: "cad.columns.distances",
+        refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_column"]],
+        warnings: &[],
+        targets: || vec![target(None, &["column"], &[], Some("not_a_column"), None)],
+    },
+    Entry {
         id: "cad.walls.distances",
         refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_wall", "invalid_wall"]],
         warnings: &[],
@@ -1967,6 +1973,8 @@ const ENTRIES: &[Entry] = &[
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",
+                "not_a_column",
+                "column_on_grids",
             ],
             REVISION,
         ],

@@ -268,6 +268,9 @@ pub mod opening_placement;
 pub mod openings_edit;
 pub mod opening_distances;
 pub mod wall_distances;
+// Kolonun geçici ölçüleri (docs/adr/0712).
+pub mod column_distances;
+pub use column_distances::distances as columns_distances;
 // Mimari denetim (docs/adr/0703).
 pub mod arch_audit;
 pub use opening_distances::distances as openings_distances;
@@ -815,6 +818,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_WALLS_DISTANCES,
         kentos_commands::CAD_WALLS_DISTANCES_VERSION,
+    ),
+    // Kolonun geçici ölçüleri ([`column_distances`], docs/adr/0712).
+    (
+        kentos_commands::CAD_COLUMNS_DISTANCES,
+        kentos_commands::CAD_COLUMNS_DISTANCES_VERSION,
     ),
     // Mimari denetim ([`arch_audit`], docs/adr/0703).
     (

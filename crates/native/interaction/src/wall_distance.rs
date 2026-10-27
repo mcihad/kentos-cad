@@ -8,7 +8,7 @@ use kentos_domain::{Slot, Uuid};
 use kentos_native_application::{ExecutionContext, wall_distances, walls_edit};
 
 use crate::prompt::Prompt;
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, Tone, Tool, ViewChange};
+use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
 use crate::{Format, Level, Vec2, dimension_layout};
 
 pub const ID: &str = "wallDistance";
@@ -16,8 +16,6 @@ pub const LABEL: &str = "Duvarın mesafesi";
 
 /// The numbers' height, logical pixels: readable at any zoom.
 const TEXT_PX: f64 = 12.0;
-/// How near a number a click takes it, logical pixels.
-const REACH_PX: [f64; 2] = [30.0, 12.0];
 
 /// One side's temporary dimension: its side of the edge, its value and where its number stands.
 #[derive(Clone, Debug, PartialEq)]
@@ -154,7 +152,10 @@ impl Overlay {
                     s.tone = Tone::Snap;
                 }
                 self.preview.strokes.extend(drawn.strokes);
-                self.preview.texts.extend(drawn.texts);
+                // The number over a mask of the view's ground: the line it stands on does not cross it.
+                self.preview
+                    .texts
+                    .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
                 // The face met, marked across the measurement.
                 let (dx, dy) = ((to.x - from.x) / length, (to.y - from.y) / length);
                 let n = (-dy * height * 0.8, dx * height * 0.8);
@@ -187,10 +188,7 @@ impl Overlay {
 
     /// The text field of the side whose number is under the pointer.
     pub fn at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<WallDistance> {
-        let side = self.sides.iter().find(|s| {
-            let p = cx.view.to_screen(s.text_at);
-            (p[0] - screen[0]).abs() <= REACH_PX[0] && (p[1] - screen[1]).abs() <= REACH_PX[1]
-        })?;
+        let side = crate::opening_distance::nearest_number(&self.sides, |s| s.text_at, screen, cx)?;
         Some(WallDistance {
             uid: self.uid?,
             edge: self.edge? as u32,

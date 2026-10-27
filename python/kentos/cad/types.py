@@ -893,6 +893,16 @@ ColumnBreakName = Literal["gridGone"]
 """The names of :class:`ColumnBreak`, for a plain string."""
 
 
+class ColumnGapTarget(_StrEnum):
+    """What a column's side is measured to."""
+    WALL = "wall"
+    COLUMN = "column"
+
+
+ColumnGapTargetName = Literal["wall", "column"]
+"""The names of :class:`ColumnGapTarget`, for a plain string."""
+
+
 class ColumnShape(_StrEnum):
     """A column's outline."""
     RECT = "rect"
@@ -5884,6 +5894,7 @@ class ArchOperation(_Union):
     - :class:`RenumberArchOperation` (``kind: renumber``)
     - :class:`AttachArchOperation` (``kind: attach``)
     - :class:`DetachArchOperation` (``kind: detach``)
+    - :class:`DistanceArchOperation` (``kind: distance``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -14673,6 +14684,82 @@ class ColumnEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class ColumnGap(_Model):
+    """One side's clear distance: square to the side, to the nearest parallel face (a wall's facing face or another
+    column's side).
+    Attributes:
+        side: The side: 0 below the centre, 1 right, 2 above, 3 left, as the column is turned. Unit: index.
+        distance: Unit: length.
+        uid: The object measured to, by its persistent id, and its kind.
+        edge: A wall's path edge, or a column's side. Unit: index.
+        from_: Where it is measured, at the middle of where the two run side by side: on the column's side, on the face. Unit: length.
+        to: Unit: length.
+        face: A wall's face that faces the column; absent for a column.
+    """
+    side: int
+    distance: float
+    uid: str
+    target: ColumnGapTarget | ColumnGapTargetName
+    edge: int
+    from_: Vec2
+    to: Vec2
+    face: DimensionSetFace | DimensionSetFaceName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = self.side
+        out["distance"] = float(self.distance)
+        out["uid"] = self.uid
+        out["target"] = _enum_out(self.target)
+        out["edge"] = self.edge
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        if self.face is not UNSET:
+            out["face"] = None if self.face is None else _enum_out(self.face)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnGap:
+        return cls(
+            side=data["side"],
+            distance=float(data["distance"]),
+            uid=data["uid"],
+            target=_enum_in(ColumnGapTarget, data["target"]),
+            edge=data["edge"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            face=UNSET if "face" not in data else None if data["face"] is None else _enum_in(DimensionSetFace, data["face"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnGaps(_Model):
+    """A column's sides' clear distances; a side with nothing parallel facing it is absent.
+    Attributes:
+        tied: Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.
+    """
+    uid: str
+    sides: list[ColumnGap]
+    tied: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["sides"] = [e0.to_json() for e0 in self.sides]
+        if self.tied is not UNSET:
+            out["tied"] = self.tied
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnGaps:
+        return cls(
+            uid=data["uid"],
+            sides=[ColumnGap.from_json(e0) for e0 in data["sides"]],
+            tied=data.get("tied", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ColumnsCreate(_Model):
     """Input of `cad.columns.create` v1 (“Kolon”): `columns`, then those at the `crossings`, on a named layer, as one undo
     step. A column with grids stands at their crossing and the document keeps it there (docs/adr/0343 §3).
@@ -14746,6 +14833,46 @@ class ColumnsCreated(_Model):
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnsDistances(_Model):
+    """Output of `cad.columns.distances` v1 (its plan's too)."""
+    columns: list[ColumnGaps]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnsDistances:
+        return cls(
+            columns=[ColumnGaps.from_json(e0) for e0 in data["columns"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnsDistancesInput(_Model):
+    """Input of `cad.columns.distances` v1 (docs/adr/0712): the columns measured.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_column`.
+    """
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnsDistancesInput:
+        return cls(
+            uids=list(data["uids"]),
         )
 
 
@@ -62266,6 +62393,32 @@ class DetachArchOperation(ArchOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class DistanceArchOperation(ArchOperation):
+    """Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,
+    1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.
+    Attributes:
+        side: Unit: index.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "distance"
+    side: int
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "distance"}
+        out["side"] = self.side
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistanceArchOperation:
+        return cls(
+            side=data["side"],
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnionAreaWork(AreaWork):
     """Alan birleştir: the areas go, their union comes from the first (its layer, colour and data); areas that do not
     touch stay apart, or with `single` make one multi-part area. A multi-part area takes part whole.
@@ -77891,7 +78044,7 @@ _ADJUST_WORK: dict[str, type[AdjustWork]] = {"horizontal": HorizontalAdjustWork,
 _ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork, "dimensions": DimensionsAnnotationWork, "labels": LabelsAnnotationWork}
 
 
-_ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
+_ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation, "distance": DistanceArchOperation}
 
 
 _AREA_WORK: dict[str, type[AreaWork]] = {"union": UnionAreaWork, "intersect": IntersectAreaWork, "subtract": SubtractAreaWork, "split": SplitAreaWork, "toArea": ToAreaAreaWork, "toPolyline": ToPolylineAreaWork, "partsJoin": PartsJoinAreaWork, "partsSplit": PartsSplitAreaWork, "holeAdd": HoleAddAreaWork, "holeRemove": HoleRemoveAreaWork, "holeFill": HoleFillAreaWork}
@@ -78598,11 +78751,17 @@ __all__ = [
     "ColumnBreakName",
     "ColumnCrossings",
     "ColumnEntity",
+    "ColumnGap",
+    "ColumnGapTarget",
+    "ColumnGapTargetName",
+    "ColumnGaps",
     "ColumnShape",
     "ColumnShapeName",
     "ColumnWidthTableEdit",
     "ColumnsCreate",
     "ColumnsCreated",
+    "ColumnsDistances",
+    "ColumnsDistancesInput",
     "ColumnsPlan",
     "Combination",
     "CombineTextEdit",
@@ -78789,6 +78948,7 @@ __all__ = [
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
     "DirectionSpaceNumberOrder",
+    "DistanceArchOperation",
     "DistanceAxis",
     "DistanceAxisName",
     "DistanceConstraintRule",
