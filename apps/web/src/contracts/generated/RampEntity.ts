@@ -4,6 +4,7 @@ import type { Attachment } from "./Attachment";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { Railings } from "./Railings";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -92,4 +93,8 @@ base?: number,
 /**
  * A landing's length at a turn; absent: the width.
  */
-landing?: number, arch?: ArchInfo, };
+landing?: number, 
+/**
+ * Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
+ */
+railings?: Railings, arch?: ArchInfo, };

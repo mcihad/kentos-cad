@@ -75,7 +75,7 @@ use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_normalize,
-    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, array, blocks_define,
+    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, casework_run, array, blocks_define,
     blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
     entities_fillet, entities_order, entities_pick, entities_relate, entities_select, entities_trim,
@@ -1328,6 +1328,22 @@ impl Input for kentos_commands::OpeningsEdit {
 impl Input for kentos_commands::OpeningsDistancesInput {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_commands::CaseworkRun {
+    /// `from.x` and `.y`, `to.x` and `.y`, `module`, `depth`, `lineWeight` (docs/adr/0706).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "from.x" => Some(&mut self.from.x),
+            "from.y" => Some(&mut self.from.y),
+            "to.x" => Some(&mut self.to.x),
+            "to.y" => Some(&mut self.to.y),
+            "module" => self.module.as_mut(),
+            "depth" => self.depth.as_mut(),
+            "lineWeight" => self.line_weight.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -3867,6 +3883,9 @@ fn run_op(
         }
         kentos_commands::CAD_ARCH_AUDIT => {
             run!(arch_audit, kentos_commands::ArchAudit)
+        }
+        kentos_commands::CAD_CASEWORK_RUN => {
+            run!(casework_run, kentos_commands::CaseworkRun)
         }
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)

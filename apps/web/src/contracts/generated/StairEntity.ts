@@ -4,6 +4,7 @@ import type { Attachment } from "./Attachment";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { Railings } from "./Railings";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -88,4 +89,8 @@ landing?: number,
 /**
  * The riser its cut line stands at; absent: none.
  */
-cut?: number, numbering?: boolean, arch?: ArchInfo, };
+cut?: number, numbering?: boolean, 
+/**
+ * Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
+ */
+railings?: Railings, arch?: ArchInfo, };

@@ -1830,6 +1830,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.casework.run",
+        refusals: &[&["not_finite", "invalid_casework", "invalid_line_weight"], REVISION, LAYER],
+        warnings: &["layer_hidden", "casework_filler"],
+        targets: none,
+    },
+    Entry {
         id: "cad.openings.distances",
         refusals: &[
             &["no_entities", "invalid_uid", "entity_not_found"],

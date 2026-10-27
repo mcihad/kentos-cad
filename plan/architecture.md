@@ -809,7 +809,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: m/mm proje, dış DWG bloğu, iç içe INSERT, aynalı yerleşim, gerçek
   ölçüm, blok özellikleri, kaydet/aç ve DXF görünüşü.
 
-### ARCH-LIB-02 — Mutfak/dolap dizisi ve tezgâh [ ]
+### ARCH-LIB-02 — Mutfak/dolap dizisi ve tezgâh [~]
+
+- [x] Düz dizi dilimi [ADR0706](../docs/adr/0706-kitchen-casework-runs.md):
+  `cad.casework.run` çizgi boyunca modül enli dolaplar, 0,90 m evye modülü,
+  ocak, isteğe bağlı üst dolap, kalan için görünür dolgu ve uyarı, tezgâh alanı;
+  tek geri alma adımı, kitaplık blokları gerekirse aynı adımda. Araç başı, sonu
+  ve tarafı tıklatır; Otomatik evye/ocak seçtiği modülü gösterir. 36 ortak durum
+  bağımsız başvurudan (dolgu, sol/sağ, eğik, modül/derinlik retleri, çizimin
+  kendi bloğu), araç testleri, Python/MCP, gerçek GUI resimleri
+  (`.run/shots/arac-mutfak-*`). Köşe/L-U tek komut, cihaz modülleri, tezgâh
+  deliği ve duvar izleme açık.
 
 - Düz/L/U dizi; modül eni/adet, köşe çözümü, tezgâh derinliği; evye/ocak boşluğu,
   dolap açılma yönü ve yerleşim duvarına göre konum.
@@ -1058,3 +1068,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |

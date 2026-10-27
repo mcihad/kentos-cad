@@ -739,6 +739,10 @@ pub struct Memory {
     pub wall_dimensions_centers: bool,
     /// Kenarlar → Bütün kenarlar (docs/adr/0700).
     pub wall_dimensions_around: bool,
+    /// Mutfak dizisi's module width, countertop depth (metres) and wall cabinets (docs/adr/0706).
+    pub casework_module: f64,
+    pub casework_depth: f64,
+    pub casework_upper: bool,
     /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
     /// style) (docs/adr/0339 §6).
     pub wall_width: f64,
@@ -1151,6 +1155,9 @@ impl Default for Memory {
             wall_dimensions_rows: 3,
             wall_dimensions_centers: false,
             wall_dimensions_around: false,
+            casework_module: kentos_commands::DEFAULT_CASEWORK_MODULE,
+            casework_depth: kentos_commands::DEFAULT_CASEWORK_DEPTH,
+            casework_upper: false,
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,

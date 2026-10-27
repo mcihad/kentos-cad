@@ -1390,6 +1390,10 @@
        {
         "command": "tool.ramp",
         "size": "small"
+       },
+       {
+        "command": "tool.casework",
+        "size": "small"
        }
       ]
      },

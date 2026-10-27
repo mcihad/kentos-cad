@@ -84,6 +84,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-STAIR-02 / ADR0705: rampanın `fit`'i, merdiven/rampa `railings`
   (KCAD 115). Web'in Rampa ve Merdiven araçları ile Öznitelikler'i korkuluğu ve
   eğime göre biten kolu sunmalı; `cad.ramps.create.design.json` ile sınanmalı.
+- ARCH-LIB-02 / ADR0706: `cad.casework.run` (düz mutfak dizisi). Web'in
+  işleyicisi ve Mutfak dizisi aracı (baş, son, taraf; Otomatik evye/ocak;
+  blokların Genişlik'iyle açılmış önizleme) `cad.casework.run.json` ile
+  sınanmalı.
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı

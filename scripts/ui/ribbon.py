@@ -226,7 +226,7 @@ CAD = [
         P("Çiz", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"),
             S("tool.wallFromLines"), S("tool.space"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), S("tool.opening"),
-            S("tool.column"), S("tool.grid"), S("tool.stair"), S("tool.ramp")]),
+            S("tool.column"), S("tool.grid"), S("tool.stair"), S("tool.ramp"), S("tool.casework")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",

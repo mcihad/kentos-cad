@@ -1694,6 +1694,10 @@ codes! {
     STAIR_RISE_LEVEL = "stair_rise_level", Warning, false, "Rıht sayısı × rıht yüksekliği katın yüksekliğini tutmuyor.";
     /// Given risers above the given highest riser (docs/adr/0704 §1).
     STAIR_RISER_HIGH = "stair_riser_high", Warning, false, "Verilen rıht sayısıyla rıht, verilen en yüksek rıhttan yüksek; rıht sayısını artırın ya da hesaplatın.";
+    /// A kitchen run's fields that do not make one (docs/adr/0706 §1).
+    INVALID_CASEWORK = "invalid_casework", Failed, false, "Mutfak dizisinin alanları bir dizi tanımlamıyor: uzunluğu olan çizgi, kitaplığın modül eni, 0,30–1,20 m tezgâh derinliği, dizinin içinde ayrı evye ve ocak modülü.";
+    /// What is left at a kitchen run's end after its modules (docs/adr/0706 §1).
+    CASEWORK_FILLER = "casework_filler", Warning, false, "Modüllerden sonra dizinin sonunda dolgu kalıyor; modül enini ya da dizinin boyunu değiştirerek kapatılabilir.";
     /// A ramp's given slope not its rise over its sloped length.
     RAMP_SLOPE_MISMATCH = "ramp_slope_mismatch", Warning, false, "Rampanın verilen eğimi yüksekliğinin eğimli uzunluğuna oranından 0,1 puandan çok farklı.";
     /// A ramp whose landings take its whole length.

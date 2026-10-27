@@ -753,6 +753,27 @@ CalloutKindName = Literal["straight", "manhattan"]
 """The names of :class:`CalloutKind`, for a plain string."""
 
 
+class CaseworkModuleKind(_StrEnum):
+    """What a module of the run is."""
+    BASE = "base"
+    SINK = "sink"
+    COOKTOP = "cooktop"
+
+
+CaseworkModuleKindName = Literal["base", "sink", "cooktop"]
+"""The names of :class:`CaseworkModuleKind`, for a plain string."""
+
+
+class CaseworkSide(_StrEnum):
+    """Which side of its line `from`→`to` a run stands on, as one walks from `from` (the room's side)."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+CaseworkSideName = Literal["left", "right"]
+"""The names of :class:`CaseworkSide`, for a plain string."""
+
+
 class CheckMoment(_StrEnum):
     """When a check is asked (docs/adr/0438 §2).
 
@@ -12854,6 +12875,184 @@ class CadParameter(_Model):
             expression=data.get("expression", UNSET),
             max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
             min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkBuilt(_Model):
+    """Output of `cad.casework.run`: the objects written, in the plan's order.
+    Attributes:
+        ids: Unit: id.
+        filler: Unit: length.
+    """
+    uids: list[str]
+    ids: list[int]
+    blocks: list[str]
+    modules: list[CaseworkModule]
+    filler: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["blocks"] = list(self.blocks)
+        out["modules"] = [e0.to_json() for e0 in self.modules]
+        out["filler"] = float(self.filler)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkBuilt:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            blocks=list(data["blocks"]),
+            modules=[CaseworkModule.from_json(e0) for e0 in data["modules"]],
+            filler=float(data["filler"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkModule(_Model):
+    """One module of a run, along its line from `from`.
+    Attributes:
+        start: Where it starts along the line. Unit: length.
+        width: Unit: length.
+    """
+    kind: CaseworkModuleKind | CaseworkModuleKindName
+    start: float
+    width: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["start"] = float(self.start)
+        out["width"] = float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkModule:
+        return cls(
+            kind=_enum_in(CaseworkModuleKind, data["kind"]),
+            start=float(data["start"]),
+            width=float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkPlan(_Model):
+    """Plan of `cad.casework.run`: the objects it would write (`id` 0), the library blocks it would bring by name, its
+    modules and the filler at its end (0: none).
+    Attributes:
+        filler: Unit: length.
+    """
+    entities: list[Entity]
+    blocks: list[str]
+    modules: list[CaseworkModule]
+    filler: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        out["blocks"] = list(self.blocks)
+        out["modules"] = [e0.to_json() for e0 in self.modules]
+        out["filler"] = float(self.filler)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkPlan:
+        return cls(
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            blocks=list(data["blocks"]),
+            modules=[CaseworkModule.from_json(e0) for e0 in data["modules"]],
+            filler=float(data["filler"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkRun(_Model):
+    """Input of `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706): base cabinets of `module` width from `from`
+    toward `to` along the line where their backs stand (a wall's face), on its `side`; the sink's module (`sink`,
+    1-based) 0.90 m wide, the cooktop's (`cooktop`) the run's width; what is left at its end a filler. The countertop
+    covers the whole line, `depth` deep; `upper` adds wall cabinets over the modules. KentOS's library blocks (Alt
+    dolap, Evye, Ocak, Üst dolap) are brought in the same step when the drawing has none of their names; a block of
+    the drawing by that name is used as it is, its width parameter “Genişlik” set.
+
+    Refusals, in this order: `not_finite`, `invalid_casework` (a run with no length, a module or depth out of their
+    ranges, a run shorter than a module, a sink or cooktop module outside the run or both in one, a block without
+    its width parameter), `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
+    `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warnings: `layer_hidden`,
+    `casework_filler`.
+    Attributes:
+        layer_id: The layer the run goes on, a layer's id.
+        from_: Where the run starts, on the line its backs stand on. Unit: length.
+        to: Where the line ends: the run is at most this long. Unit: length.
+        cooktop: The cooktop's module; absent: none. Unit: index.
+        depth: The countertop's depth, from 0.30 to 1.20 m; absent: 0.60. Unit: length.
+        line_weight: Unit: paper-mm.
+        module: A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60. Unit: length.
+        side: The side it stands on; absent: left.
+        sink: The sink's module, counted from `from` (1 the first); absent: none. Unit: index.
+        upper: Wall cabinets over the modules.
+    """
+    layer_id: str
+    from_: Vec2
+    to: Vec2
+    color: str | None | Unset = UNSET
+    cooktop: int | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    module: float | None | Unset = UNSET
+    side: CaseworkSide | CaseworkSideName | None | Unset = UNSET
+    sink: int | None | Unset = UNSET
+    upper: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.cooktop is not UNSET:
+            out["cooktop"] = self.cooktop
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.module is not UNSET:
+            out["module"] = None if self.module is None else float(self.module)
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.sink is not UNSET:
+            out["sink"] = self.sink
+        if self.upper is not UNSET:
+            out["upper"] = self.upper
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkRun:
+        return cls(
+            layer_id=data["layerId"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            color=data.get("color", UNSET),
+            cooktop=data.get("cooktop", UNSET),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            module=UNSET if "module" not in data else None if data["module"] is None else float(data["module"]),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(CaseworkSide, data["side"]),
+            sink=data.get("sink", UNSET),
+            upper=data.get("upper", UNSET),
         )
 
 
@@ -77827,6 +78026,14 @@ __all__ = [
     "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",
+    "CaseworkBuilt",
+    "CaseworkModule",
+    "CaseworkModuleKind",
+    "CaseworkModuleKindName",
+    "CaseworkPlan",
+    "CaseworkRun",
+    "CaseworkSide",
+    "CaseworkSideName",
     "Cell",
     "CellField",
     "CellFormula",

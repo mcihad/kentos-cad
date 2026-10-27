@@ -9554,6 +9554,22 @@
    "tests": 1
   },
   {
+   "id": "tool.casework",
+   "kind": "command",
+   "title": "Mutfak dizisi",
+   "level": "semantic",
+   "via": [
+    "cad.casework.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.casework.run",
+   "mcp": "cad.casework.run",
+   "note": "Çizginin başı ve sonu, yan, modül eni, derinlik, evye ve ocak modülü ve üst dolap komuta verilir; modüller, dolgu, tezgâh ve kitaplık blokları komutun hesabı, önizleme aynı planı okur (ADR 0706).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.centerMark",
    "kind": "command",
    "title": "Merkez işareti",

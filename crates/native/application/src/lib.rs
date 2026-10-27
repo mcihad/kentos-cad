@@ -274,6 +274,7 @@ pub mod spaces_separators;
 pub mod spaces_number;
 pub mod arch_elements;
 pub mod arch_edit;
+pub mod casework_run;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
 pub mod schedules;
@@ -809,6 +810,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ARCH_AUDIT,
         kentos_commands::CAD_ARCH_AUDIT_VERSION,
+    ),
+    // Mutfak dizisi ([`casework_run`], docs/adr/0706).
+    (
+        kentos_commands::CAD_CASEWORK_RUN,
+        kentos_commands::CAD_CASEWORK_RUN_VERSION,
     ),
     // Duvar, Çizgiden duvar, Duvarı düzenle and Duvar birleşimleri ([`walls_create`], [`walls_from_lines`], [`walls_edit`],
     // [`walls_joins`], docs/adr/0339, 0340).

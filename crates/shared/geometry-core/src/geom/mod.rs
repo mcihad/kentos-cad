@@ -36,6 +36,7 @@ pub mod opening;
 pub mod space;
 pub mod space_index;
 pub mod arch;
+pub mod casework;
 pub mod tag;
 pub mod viewmark;
 pub mod wall;

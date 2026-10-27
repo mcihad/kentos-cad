@@ -3940,6 +3940,48 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_CASEWORK_RUN.into(),
+            version: crate::CAD_CASEWORK_RUN_VERSION,
+            title: "Mutfak dizisi".into(),
+            summary: "Düz mutfak dizisi yazar (docs/adr/0706); tek geri alma adımı “Mutfak dizisi”. from→to dolapların sırtının dayandığı çizgidir (duvarın yüzü), side çizginin hangi yanında durdukları (left, right; yok: left).                       Alt dolaplar module eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) baştan dizilir; sink (1'den başlayan modül sırası) evye modülüdür, 0.90 m, üstünde Evye; cooktop modülün üstünde Ocak. Çizgiden artan kısım sonda dolgu olur (casework_filler).                       Tezgâh (alan) bütün çizgiyi depth derinliğinde (0.30–1.20 m; yok: 0.60) örter; upper true üst dolapları ekler. Çizimde adı olan blok olduğu gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks); dolabın eni Genişlik parametresidir.                       Plan yazacaklarını, modülleri ve dolguyu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CaseworkRun>(),
+            output: schema::<crate::CaseworkBuilt>(),
+            plan: Some(schema::<crate::CaseworkPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "3,20 m duvar boyunca: evye ikinci, ocak dördüncü modülde".into(),
+                input: json!({
+                    "layerId": "mutfak",
+                    "from": { "x": 0.0, "y": 0.0 },
+                    "to": { "x": 3.2, "y": 0.0 },
+                    "sink": 2,
+                    "cooktop": 4
+                }),
+                output: Some(json!({
+                    "uids": ["0192f5a1-7040-7000-8000-000000000001"],
+                    "ids": [1],
+                    "blocks": ["Alt dolap", "Evye", "Ocak"],
+                    "modules": [
+                        { "kind": "base", "start": 0.0, "width": 0.6 },
+                        { "kind": "sink", "start": 0.6, "width": 0.9 },
+                        { "kind": "base", "start": 1.5, "width": 0.6 },
+                        { "kind": "cooktop", "start": 2.1, "width": 0.6 }
+                    ],
+                    "filler": 0.5,
+                    "revision": "3"
+                })),
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_DIMENSIONS_REASSOCIATE.into(),
             version: crate::CAD_DIMENSIONS_REASSOCIATE_VERSION,
             title: "Ölçüyü yeniden bağla".into(),
@@ -10702,6 +10744,9 @@ mod tests {
                     crate::CAD_ARCH_AUDIT => {
                         serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_CASEWORK_RUN => {
+                        serde_json::from_value::<crate::CaseworkRun>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -11751,6 +11796,10 @@ mod tests {
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_CASEWORK_RUN => {
+                            serde_json::from_value::<crate::CaseworkBuilt>(output.clone())
+                                .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Düz mutfak dizisi (27 Ekim 2026; [ADR0706](docs/adr/0706-kitchen-casework-runs.md)).**
+  Yeni `cad.casework.run`: çizgi boyunca modül enli Alt dolaplar (sağ yanda
+  aynalı), 0,90 m evye modülü, ocak, isteğe bağlı üst dolap, kalan için dolgu
+  (uyarıyla) ve tezgâh alanı tek geri alma adımında; çizimde aynı adlı blok
+  yoksa KentOS kitaplığınınki aynı adımda gelir. Mutfak dizisi aracı başı, sonu
+  ve tarafı tıklatır, planı bloklarıyla önizler; Evye/Ocak Otomatik görünür.
+  36 ortak durum bağımsız başvurudan, 3+1 araç testi, Python/MCP, gerçek GUI
+  resimleri. ARCH-LIB-02 [~]: köşe/L-U tek komut, cihaz modülleri, duvar izleme açık.
+
 - **Eğimden rampa ve korkuluk (27 Ekim 2026; [ADR0705](docs/adr/0705-ramps-by-slope-and-railings.md)).**
   `cad.ramps.create`'in `fit`'i son kolu |kot farkı| ÷ eğim uzunluğunda bitirir
   (eğimsiz, kot farkı sıfır ya da sığmayan rampa ret); üst üste sahanlık bir

@@ -2187,7 +2187,7 @@
       "id": "tool.stair",
       "title": "Merdiven",
       "icon": "stair",
-      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Genişlik (G), Rıht sayısı (S), Rıht (R), Basamak (D), Sahanlık (H). Basamaklar yola sığmazsa, yol uzunsa, 2 × rıht + basamak 0,60–0,65 m dışındaysa ya da katın yüksekliğini tutmazsa söylenir; yönetmelik denetimi değildir.",
+      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Yükseklik (Y) ve En fazla rıht (R) rıht sayısını verir (S ile elle de); Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar (N), Korkuluk (O); Son kol (U) son rıhtta ya da tıklanan yerde biter. Kesmenin üstü kesikli çizilir; 2 × rıht + basamak 0,60–0,65 m dışındaysa söylenir, yönetmelik denetimi değildir.",
       "aliases": [
         "MERDIVEN",
         "STAIR"
@@ -2200,11 +2200,27 @@
       "id": "tool.ramp",
       "title": "Rampa",
       "icon": "ramp",
-      "description": "Orta çizginin noktaları (2–4), Enter yazar. Genişlik (G), Yükseklik (Y), Eğim (E, yüzde; yoksa hesaplanır), Sahanlık (H). Uçlarında kot yazısı; verilen eğim uymazsa söylenir.",
+      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik (Y), Eğim (E, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (G), Sahanlık (H), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; eğim KentOS'un öntanımlısıdır, erişilebilirlik denetimi değildir.",
       "aliases": [
         "RAMP",
         "RAMPACIZ",
         "RAMPAÇİZ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.casework",
+      "title": "Mutfak dizisi",
+      "short": "Mutfak",
+      "icon": "casework",
+      "description": "Dolapların sırtının dayandığı çizgi boyunca düz bir mutfak dizisi: başına ve sonuna tıklayın (ya da boyunu yazın), sonra dolapların duracağı tarafa tıklayın. Modül eni (M, 30–120 cm), tezgâh derinliği (D), evye (E, 90 cm modül) ve ocak (O) modülü, üst dolap (U) ve yan (Y) görünür ayarlardadır; evye ve ocak Otomatik başlar. Alt dolaplar, evye, ocak, tezgâh ve kalan dolgu tek geri alma adımında yazılır; KentOS kitaplığının blokları gerekirse aynı adımda gelir. Ölçüler KentOS'un değerleridir.",
+      "aliases": [
+        "MUTFAK",
+        "MUTFAKDIZISI",
+        "MUTFAKDİZİSİ",
+        "CASEWORK"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3387,7 +3403,8 @@
     "viewSplitAdd": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4v12M2.5 10H10\"/><path d=\"M13.75 8v4M11.75 10h4\" stroke-width=\"1.3\"/>",
     "qaMask": "<rect x=\"2.5\" y=\"8.5\" width=\"10\" height=\"9\" rx=\"1\"/><path d=\"M5.8 8.5v9M9.2 8.5v9M2.5 11.5h10M2.5 14.5h10\" stroke-width=\".9\" opacity=\".6\"/><path d=\"M10.8 10.5H17.6a2.4 2.4 0 0 0 .3-4.8 3.9 3.9 0 0 0-7.3-1.4 2.9 2.9 0 0 0 .2 6.2z\" fill=\"currentColor\" fill-opacity=\".25\"/>",
     "sensorReading": "<path d=\"M4 17V9\" stroke-width=\"1.2\"/><circle cx=\"4\" cy=\"7\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M7 4.6a3.4 3.4 0 0 1 0 4.8M9.3 2.8a6 6 0 0 1 0 8.4\" stroke-width=\"1.1\"/><path d=\"M8 17l2.5-3 2.5 2 3.5-4.5\" stroke-width=\"1.2\"/>",
-    "archAudit": "<path d=\"M9 16H2.5V3.5H15v5\"/><path d=\"M2.5 9.5h4M9 9.5V3.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\"/><path d=\"M15.8 15.8 18.2 18.2\"/>"
+    "archAudit": "<path d=\"M9 16H2.5V3.5H15v5\"/><path d=\"M2.5 9.5h4M9 9.5V3.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\"/><path d=\"M15.8 15.8 18.2 18.2\"/>",
+    "casework": "<path d=\"M1.5 3h17\"/><path d=\"M2 5v10.5h16V5z\"/><path d=\"M7.5 5v10.5M12.5 5v10.5\"/><rect x=\"8.6\" y=\"7.2\" width=\"2.8\" height=\"6\" rx=\"1\"/><circle cx=\"15.2\" cy=\"8.3\" r=\"1.25\"/><circle cx=\"15.2\" cy=\"12.3\" r=\"1.25\"/>"
   },
   "tabs": [
     {

@@ -6,6 +6,14 @@
 //! KENTOS_SHOTS_ONLY=mobilya-daire,mobilya-kartlar,mobilya-duvara-hizala cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0706's Mutfak dizisi in a 4.20 × 3.00 m kitchen with no cabinet block of its own: the run along the top
+//! wall under the cursor, its side chosen below the line (Otomatik evye and ocak, the tool's settings beside); an L of
+//! two runs written with wall cabinets; a run too short for one module, said in red; the Mimari tab with the tool:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=mutfak-dizisi,mutfak-l-yazildi,mutfak-kisa,mutfak-serit cargo test -p kentos-desktop tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use std::f64::consts::{FRAC_PI_2, PI};
@@ -14,7 +22,7 @@ use serde_json::{Value, json};
 
 use crate::app::{App, Message};
 use crate::files_testing::make_cad;
-use crate::tools_scenes::{E, N, Objects, hover, layer, open_edited, run, typed};
+use crate::tools_scenes::{E, N, Objects, click, hover, layer, open_edited, run, typed};
 use crate::tools_screens::Scene;
 
 const LIBRARY: &str = include_str!("../../../catalog/v1/blocks/kentos-temel.kblok");
@@ -146,10 +154,94 @@ fn to_wall(app: &mut App) {
     hover(app, [0.2, 5.6]);
 }
 
+/// The kitchen: one closed wall whose inner faces are 0–4.20 × 0–3.00, no block in the drawing; the view on it.
+fn kitchen(app: &mut App) {
+    let mut o = Objects::new();
+    wall(
+        &mut o,
+        &[(-0.125, -0.125), (4.325, -0.125), (4.325, 3.125), (-0.125, 3.125)],
+        0.25,
+        true,
+    );
+    o.text("cizim", [1.4, 1.1], "MUTFAK", 0.16, 0.0);
+    open_edited(app, o, |d| {
+        d["layers"] = json!([
+            layer("cizim", "Çizim", "fg", 0.25),
+            layer("duvar", "Duvar", "fg", 0.5),
+            layer("mutfak", "Mutfak", "#C8A165", 0.25),
+        ]);
+        d["settings"]["plotScale"] = json!(50);
+    });
+    make_cad(app);
+    if let Some(doc) = app.document.as_mut() {
+        doc.model.set_active_layer("mutfak");
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 0.6,
+            min_y: N - 0.9,
+            max_x: E + 4.8,
+            max_y: N + 3.6,
+        },
+        24.0,
+    );
+}
+
+/// docs/adr/0706: Mutfak dizisi along the top wall's inner face, start and end clicked, the cursor below the line: six
+/// modules, the sink in the second, the cooktop in the fifth, a 0.30 m filler; the tool's settings beside.
+fn kitchen_run(app: &mut App) {
+    kitchen(app);
+    app.command_expanded = true;
+    run(app, "tool.casework");
+    click(app, [0.0, 3.0]);
+    click(app, [4.2, 3.0]);
+    hover(app, [2.0, 1.9]);
+}
+
+/// An L kitchen written by two runs with wall cabinets: the top run's sink and cooktop, then down the right wall from
+/// under its countertop, without them.
+fn kitchen_l(app: &mut App) {
+    kitchen(app);
+    app.command_expanded = true;
+    run(app, "tool.casework");
+    typed(app, "U");
+    click(app, [0.0, 3.0]);
+    click(app, [4.2, 3.0]);
+    click(app, [2.0, 1.9]);
+    typed(app, "E");
+    typed(app, "Yok");
+    typed(app, "O");
+    typed(app, "Yok");
+    click(app, [4.2, 2.4]);
+    click(app, [4.2, 0.0]);
+    click(app, [3.0, 1.2]);
+    hover(app, [1.2, 0.5]);
+}
+
+/// The L kitchen on CAD's Mimari tab: Mutfak dizisi with the stair and the ramp under Yerleştir.
+fn kitchen_ribbon(app: &mut App) {
+    kitchen_l(app);
+    app.tab = "arch";
+}
+
+/// A run of 0.40 m: shorter than a 60 cm module; the tag says why in red and nothing is written.
+fn kitchen_short(app: &mut App) {
+    kitchen(app);
+    app.command_expanded = true;
+    run(app, "tool.casework");
+    click(app, [0.0, 3.0]);
+    click(app, [0.4, 3.0]);
+    hover(app, [0.6, 2.2]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("mobilya-daire", flat),
         ("mobilya-kartlar", cards),
         ("mobilya-duvara-hizala", to_wall),
+        ("mutfak-dizisi", kitchen_run),
+        ("mutfak-l-yazildi", kitchen_l),
+        ("mutfak-kisa", kitchen_short),
+        ("mutfak-serit", kitchen_ribbon),
     ]
 }
