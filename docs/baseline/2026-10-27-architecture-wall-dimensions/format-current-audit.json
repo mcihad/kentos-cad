@@ -643,7 +643,7 @@
     },
     {
       "path": "crates/native/application/src/walls.rs",
-      "currentSha256": "e03842a57be1fab59c2f69ce823723b7d2c98fa4978dff408a6d4b4ff45a3f41",
+      "currentSha256": "c78afabde97272007a39c95cd7b6a55893e8164901a0d583b23036f82be51380",
       "newFile": false,
       "currentStrictFormatted": true,
       "currentFormatHunks": 0,

@@ -2444,8 +2444,8 @@
   ],
   "testRunSummary": {
     "path": "test-runs.json",
-    "bytes": 141416,
-    "sha256": "d863a184c8fe6c70ef8cd435ab1707ac8f6b69300497f8cb61206d2b98fd97ab"
+    "bytes": 145578,
+    "sha256": "fdf7a2c532850c5e3ff58b4e1d24bf4b2c6ac590e063429f0be63ea7b8dfffaf"
   },
   "testLogs": [
     {
@@ -2605,6 +2605,33 @@
       "exitCode": 101,
       "classification": "failed-check-stage",
       "acceptanceEligible": false
+    },
+    {
+      "path": "clippy-20261027T034712Z.log",
+      "bytes": 7098,
+      "sha256": "ee5b966f5802e349d0b16be6bb7cd3134b2699be6b6b42712156edbe92714c7f",
+      "stage": "clippy-20261027T034712Z",
+      "exitCode": 101,
+      "classification": "failed-check-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "clippy-20261027T041243Z.log",
+      "bytes": 4685,
+      "sha256": "b7caba58166ea72f09d215e9f4f186ee6ea7e7b6ad54f96f080bd72dce7ee2c3",
+      "stage": "clippy-20261027T041243Z",
+      "exitCode": 0,
+      "classification": "passed-check-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "domain-final-20261027T042617Z.log",
+      "bytes": 10347,
+      "sha256": "52eb387bdceee786689c2c0f410c86017d4de0ae7226d87e6ed687fd540dbd6b",
+      "stage": "domain-final-20261027T042617Z",
+      "exitCode": 0,
+      "classification": "passed-check-stage",
+      "acceptanceEligible": true
     }
   ],
   "testInfrastructure": {
@@ -2624,7 +2651,7 @@
   "formatAudit": {
     "path": "format-scope.json",
     "bytes": 13482,
-    "sha256": "6cbdbd54dd18fbf96968b14aa7a4ac6048cd6be5e020d2593010223b62b87dda",
+    "sha256": "e6e64f9a7cb82c6a0b4a1ebc2938eeb6aa6321765977587682aa9e063f62642b",
     "globalRustfmtPassed": false
   },
   "observations": [

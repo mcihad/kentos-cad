@@ -197,7 +197,7 @@
   "latestReadOnlyAudit": {
     "path": "format-current-audit.json",
     "bytes": 88888,
-    "sha256": "881428d4d14db528f68edad3c87edb5018a86d5b64f964869ec84c8b85cbfdfc",
+    "sha256": "f9c01a1a36db496f367afe59b43b6d2755b204466b43f26582a3b79d191bbc62",
     "counts": {
       "touchedRustFiles": 165,
       "newFiles": 21,

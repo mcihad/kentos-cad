@@ -334,96 +334,6 @@ pub fn screen_view(
     view
 }
 
-#[cfg(test)]
-mod screen_view_tests {
-    use super::*;
-    use kentos_commands::{DocumentSnapshotV1, WallDetail};
-    use kentos_geometry_core::geom::wall::Detail;
-
-    fn settings(plot: f64) -> kentos_commands::ProjectSettings {
-        let mut settings = DocumentSnapshotV1::from_json(include_str!(
-            "../../../../fixtures/interaction/v1/empty.kcad"
-        ))
-        .unwrap()
-        .settings;
-        settings.plot_scale = plot;
-        settings.arch = None;
-        settings
-    }
-
-    #[test]
-    fn model_zoom_changes_detail_but_never_pattern_or_plot_scale() {
-        for plot in [100., 200.] {
-            let settings = settings(plot);
-            for (screen, want) in [
-                (200., Detail::Schematic),
-                (50., Detail::Standard),
-                (20., Detail::Detailed),
-            ] {
-                let view = screen_view(&settings, screen, None);
-                assert_eq!(view.detail, want);
-                assert_eq!(view.scale, plot, "hatches use project paper units");
-                assert_eq!(
-                    view_at(&settings, plot).detail,
-                    Detail::Schematic,
-                    "paper output remains scale-based"
-                );
-                assert_eq!(settings.plot_scale, plot);
-            }
-        }
-    }
-
-    #[test]
-    fn explicit_detail_and_invalid_camera_values_preserve_existing_rules() {
-        let mut settings = settings(200.);
-        settings.arch.get_or_insert_with(Default::default).detail = Some(WallDetail::Standard);
-        for scale in [1., 20., 50., 500., f64::NAN, f64::INFINITY, 0.] {
-            assert_eq!(screen_view(&settings, scale, None), view_of(&settings));
-        }
-        settings.arch = None;
-        for scale in [f64::NAN, f64::INFINITY, 0., -1.] {
-            assert_eq!(screen_view(&settings, scale, None), view_of(&settings));
-        }
-    }
-
-    #[test]
-    fn threshold_dead_bands_prevent_detail_chatter_after_small_zoom_reversals() {
-        let settings = settings(100.);
-        assert_eq!(
-            screen_view(&settings, 31., Some(Detail::Detailed)).detail,
-            Detail::Detailed
-        );
-        assert_eq!(
-            screen_view(&settings, 34., Some(Detail::Detailed)).detail,
-            Detail::Standard
-        );
-        assert_eq!(
-            screen_view(&settings, 29., Some(Detail::Standard)).detail,
-            Detail::Standard
-        );
-        assert_eq!(
-            screen_view(&settings, 26., Some(Detail::Standard)).detail,
-            Detail::Detailed
-        );
-        assert_eq!(
-            screen_view(&settings, 74., Some(Detail::Schematic)).detail,
-            Detail::Schematic
-        );
-        assert_eq!(
-            screen_view(&settings, 66., Some(Detail::Schematic)).detail,
-            Detail::Standard
-        );
-        assert_eq!(
-            screen_view(&settings, 80., Some(Detail::Standard)).detail,
-            Detail::Standard
-        );
-        assert_eq!(
-            screen_view(&settings, 83., Some(Detail::Standard)).detail,
-            Detail::Schematic
-        );
-    }
-}
-
 /// A wall as the joins take it: its core shape.
 pub(crate) fn core_shape(w: &kentos_commands::WallEntity) -> kentos_geometry_core::entity::Shape {
     kentos_formats::walls::core_wall(&w.wall)
@@ -571,4 +481,94 @@ pub(crate) fn joined_pieces(
         wall,
         view_of(doc.settings()),
     ))
+}
+
+#[cfg(test)]
+mod screen_view_tests {
+    use super::*;
+    use kentos_commands::{DocumentSnapshotV1, WallDetail};
+    use kentos_geometry_core::geom::wall::Detail;
+
+    fn settings(plot: f64) -> kentos_commands::ProjectSettings {
+        let mut settings = DocumentSnapshotV1::from_json(include_str!(
+            "../../../../fixtures/interaction/v1/empty.kcad"
+        ))
+        .unwrap()
+        .settings;
+        settings.plot_scale = plot;
+        settings.arch = None;
+        settings
+    }
+
+    #[test]
+    fn model_zoom_changes_detail_but_never_pattern_or_plot_scale() {
+        for plot in [100., 200.] {
+            let settings = settings(plot);
+            for (screen, want) in [
+                (200., Detail::Schematic),
+                (50., Detail::Standard),
+                (20., Detail::Detailed),
+            ] {
+                let view = screen_view(&settings, screen, None);
+                assert_eq!(view.detail, want);
+                assert_eq!(view.scale, plot, "hatches use project paper units");
+                assert_eq!(
+                    view_at(&settings, plot).detail,
+                    Detail::Schematic,
+                    "paper output remains scale-based"
+                );
+                assert_eq!(settings.plot_scale, plot);
+            }
+        }
+    }
+
+    #[test]
+    fn explicit_detail_and_invalid_camera_values_preserve_existing_rules() {
+        let mut settings = settings(200.);
+        settings.arch.get_or_insert_with(Default::default).detail = Some(WallDetail::Standard);
+        for scale in [1., 20., 50., 500., f64::NAN, f64::INFINITY, 0.] {
+            assert_eq!(screen_view(&settings, scale, None), view_of(&settings));
+        }
+        settings.arch = None;
+        for scale in [f64::NAN, f64::INFINITY, 0., -1.] {
+            assert_eq!(screen_view(&settings, scale, None), view_of(&settings));
+        }
+    }
+
+    #[test]
+    fn threshold_dead_bands_prevent_detail_chatter_after_small_zoom_reversals() {
+        let settings = settings(100.);
+        assert_eq!(
+            screen_view(&settings, 31., Some(Detail::Detailed)).detail,
+            Detail::Detailed
+        );
+        assert_eq!(
+            screen_view(&settings, 34., Some(Detail::Detailed)).detail,
+            Detail::Standard
+        );
+        assert_eq!(
+            screen_view(&settings, 29., Some(Detail::Standard)).detail,
+            Detail::Standard
+        );
+        assert_eq!(
+            screen_view(&settings, 26., Some(Detail::Standard)).detail,
+            Detail::Detailed
+        );
+        assert_eq!(
+            screen_view(&settings, 74., Some(Detail::Schematic)).detail,
+            Detail::Schematic
+        );
+        assert_eq!(
+            screen_view(&settings, 66., Some(Detail::Schematic)).detail,
+            Detail::Standard
+        );
+        assert_eq!(
+            screen_view(&settings, 80., Some(Detail::Standard)).detail,
+            Detail::Standard
+        );
+        assert_eq!(
+            screen_view(&settings, 83., Some(Detail::Standard)).detail,
+            Detail::Schematic
+        );
+    }
 }
