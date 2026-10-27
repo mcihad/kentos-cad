@@ -442,6 +442,8 @@ pub enum Message {
     History(crate::history::Event),
     /// The Topoloji tab (topology/, docs/adr/0202 §5).
     Topology(crate::topology::Event),
+    /// The Denetim tab (arch_audit.rs, docs/adr/0703).
+    ArchAudit(crate::arch_audit::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
     /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
@@ -858,6 +860,9 @@ pub struct App {
     pub(crate) search: crate::search::SearchPanel,
     /// The bottom panel's Topoloji tab: the last check, the chosen rows and the filter (topology/, docs/adr/0202 §5).
     pub(crate) topology: crate::topology::TopologyPanel,
+    /// The bottom panel's Denetim tab: the last architectural audit, the chosen finding, the group and the
+    /// thresholds (arch_audit.rs, docs/adr/0703).
+    pub(crate) arch_audit: crate::arch_audit::ArchAuditPanel,
     /// Topoloji kuralları, while it is open (topology/rules.rs, docs/adr/0202 §6).
     pub(crate) topology_rules: Option<crate::topology::rules::Window>,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
@@ -1316,6 +1321,7 @@ impl App {
             layer_fields: None,
             search: Default::default(),
             topology: Default::default(),
+            arch_audit: Default::default(),
             topology_rules: None,
             vertices: Default::default(),
             label_spots: Default::default(),
@@ -1916,6 +1922,7 @@ impl App {
             Message::Search(event) => return self.data_event(event),
             Message::History(event) => return self.calls_event(event),
             Message::Topology(event) => return self.topology_event(event),
+            Message::ArchAudit(event) => return self.arch_audit_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
             Message::Address(event) => return self.address_event(event),
@@ -2828,6 +2835,8 @@ impl App {
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
             "topology.check" => return self.open_topology_check(),
+            // Mimari denetim (arch_audit.rs, docs/adr/0703).
+            "arch.audit" => return self.open_arch_audit(),
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),

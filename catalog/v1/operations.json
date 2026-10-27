@@ -1709,6 +1709,13 @@
       ],
       "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
     },
+    "tool.wallDimensions": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensionsets.create"
+      ],
+      "note": "Duvar, kenar (edge) ya da Bütün kenarlar (around), yüz, sıralar, açıklık uç/merkez seçimi, katman, stil ve kağıt mm aralığı komuta gider; ölçüleri ve üyeliği komut üretir, önizleme aynı planı okur (ADR 0695, 0700)."
+    },
     "tool.wallPartition": {
       "level": "semantic",
       "via": [
@@ -1925,6 +1932,13 @@
         "cad.tags.check"
       ],
       "note": "Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2)."
+    },
+    "arch.audit": {
+      "level": "query",
+      "via": [
+        "cad.arch.audit"
+      ],
+      "note": "Bulgular cad.arch.audit'ten; satır nesnelere gider, Düzelt bulgunun fix.step'ini çalıştırır (ADR 0703)."
     },
     "tool.scheduleOpenings": {
       "level": "semantic",

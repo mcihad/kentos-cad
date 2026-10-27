@@ -22,6 +22,7 @@ fn fixture() -> (Document, String, String) {
     doc.add_dimension_set(DimensionSet {
         id: SET,
         wall: EntityId(doc.uid(Slot(1)).unwrap().into_bytes()),
+        edge: None,
         face: DimensionSetFace::Left,
         rows: vec![DimensionSetRow::Openings, DimensionSetRow::Overall],
         openings: DimensionSetOpenings::Ends,

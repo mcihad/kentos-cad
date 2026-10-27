@@ -1501,6 +1501,10 @@
       "icon": "archSettings",
       "items": [
        {
+        "command": "arch.audit",
+        "size": "small"
+       },
+       {
         "command": "arch.settings",
         "size": "small"
        },

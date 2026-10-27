@@ -127,7 +127,7 @@ def create_cases():
         out.append(case(f'Ret: {key}={value}',d,step('execute',inp,error('invalid_dimension_set',message,'operation'),state(d,metadata=[]))))
     for target,code,message in [('missing','layer_not_found','“missing” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.'),('locked','layer_locked','“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.'),('group','not_a_layer','“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.')]:
         d=fresh();out.append(case('Ret: hedef '+target,d,step('validate',dict(layerId=target,wall=WALL,at=point(4,1)),error(code,message,'layerId'),state(d))))
-    for host,message in [(OTHER,'Kaynak duvar bulunamadı. Başka bir duvar seçin.'),(OPEN,'Bu araç şu anda iki uçlu düz duvarı ölçer. Kapalı, çok parçalı veya yaylı duvar desteklenmiyor.')]:
+    for host,message in [(OTHER,'Kaynak duvar bulunamadı. Başka bir duvar seçin.'),(OPEN,'Kaynak bir duvar değil. Ölçülecek duvarı seçin.')]:
         d=fresh();out.append(case('Ret: kaynak '+host,d,step('plan',dict(layerId='0',wall=host,at=point(4,1)),error('invalid_dimension_set',message,'wall'),state(d))))
     d=fresh();inp=dict(layerId='hidden',wall=WALL,at=point(4,1));out.append(case('Gizli hedef planında görünür uyarı',d,step('plan',inp,completed(plan_output(d,inp),[hidden()]),state(d))))
     for key,value in [('dimensionStyle','Kayıp'),('expectedRevision','07'),('expectedRevision','999')]:
@@ -243,9 +243,156 @@ def query_cases():
     add('Büyük koordinatlı yerleştirme tam hassasiyetle korunur',d,{},d['dimensionSets'])
     return out
 
+# ADR0700: closed and multi-edge walls. Face polygons are mitered offsets of the
+# path, built here by intersecting offset lines (no KentOS code); a face vertex
+# i belongs to path vertex i, an edge k runs from vertex k to k+1 (closed: wraps).
+ROOM='0192f5a1-6000-7000-8000-000000000101'
+DOOR='0192f5a1-6000-7000-8000-000000000102'
+WINDOW='0192f5a1-6000-7000-8000-000000000103'
+
+def unit(a,b):
+    dx=b['x']-a['x'];dy=b['y']-a['y'];l=math.hypot(dx,dy);return (dx/l,dy/l),l
+
+def face_polygon(pts,closed,h):
+    """The face h to the left (h<0: right) of the path, its corners mitered."""
+    n=len(pts);edges=n if closed else n-1;out=[]
+    def offset_line(k):
+        (ux,uy),_=unit(pts[k],pts[(k+1)%n]);nx,ny=-uy,ux
+        return (pts[k]['x']+nx*h,pts[k]['y']+ny*h),(ux,uy)
+    for i in range(n):
+        if not closed and i==0:
+            (px,py),_=offset_line(0);out.append(point(px,py));continue
+        if not closed and i==n-1:
+            (px,py),(ux,uy)=offset_line(n-2);_,l=unit(pts[n-2],pts[n-1]);out.append(point(px+ux*l,py+uy*l));continue
+        (p1,u1),(p2,u2)=offset_line((i-1)%n),offset_line(i%edges)
+        # p1 + t*u1 = p2 + s*u2
+        det=u1[0]*(-u2[1])-u1[1]*(-u2[0]);rx=p2[0]-p1[0];ry=p2[1]-p1[1]
+        t=(rx*(-u2[1])-ry*(-u2[0]))/det;out.append(point(p1[0]+u1[0]*t,p1[1]+u1[1]*t))
+    return out
+
+def ccw(pts):
+    a=sum(pts[i]['x']*pts[(i+1)%len(pts)]['y']-pts[(i+1)%len(pts)]['x']*pts[i]['y'] for i in range(len(pts)));return a>0
+
+def walled(pts,closed=True,width=.25,openings=(),bulges=None):
+    """A drawing of one wall `pts` and its openings, each (edge, centre from the edge's start, width, uid, form)."""
+    d=cp(SEED);d.pop('dimensionSets',None);d['entities']=d['entities'][:1];d['uids']=[ROOM]
+    d['origin']=cp(pts[0]);d['entities'][0].update(pts=cp(pts),width=width,justify='center')
+    if closed:d['entities'][0]['closed']=True
+    if bulges:d['entities'][0]['bulges']=bulges
+    d['layers'] += [layer('hidden','Gizli',False),layer('locked','Kilitli',True,True),layer('group','Grup',kind='group')]
+    n=len(pts);start=[0.]
+    for k in range(n if closed else n-1):start.append(start[-1]+unit(pts[k],pts[(k+1)%n])[1])
+    for i,(edge,c,ow,uid,form) in enumerate(openings):
+        (ux,uy),_=unit(pts[edge],pts[(edge+1)%n]);nx,ny=-uy,ux;v=pts[edge];t=width/2
+        place=[point(v['x']+ux*a+nx*o,v['y']+uy*a+ny*o) for a,o in [(c-ow/2,t),(c-ow/2,-t),(c+ow/2,t),(c+ow/2,-t)]]
+        d['entities'].append(dict(kind='opening',id=2+i,layerId='0',attrs={},host=ROOM,at=start[edge]+c,width=ow,form=form,place=place))
+        d['uids'].append(uid)
+    return d
+
+def edge_geometry(d,edge,face,at,*,rows=('openings','overall'),mode='ends',gap_mm=7.5):
+    """One set's dimensions on `edge`, `face` ('left'/'right'), first row through `at`: entities and spans."""
+    w=d['entities'][0];pts=w['pts'];closed=w.get('closed',False);n=len(pts);t=w['width']/2
+    poly=face_polygon(pts,closed,t if face=='left' else -t);part=0 if face=='left' else 1
+    a,b=poly[edge],poly[(edge+1)%n];(ux,uy),length=unit(a,b);nx,ny=-uy,ux
+    along=lambda p:(p['x']-a['x'])*ux+(p['y']-a['y'])*uy
+    ends=[(0.,a,ref(ROOM,edge,part)),(length,b,ref(ROOM,(edge+1)%n,part))];nodes=ends.copy()
+    for uid,e in zip(d['uids'],d['entities']):
+        if e['kind']!='opening':continue
+        mid=point(sum(q['x'] for q in e['place'])/4,sum(q['y'] for q in e['place'])/4)
+        if not -1e-9<=along(mid)<=length+1e-9 or abs((mid['x']-a['x'])*nx+(mid['y']-a['y'])*ny)>t+1e-9:continue
+        if mode=='centers':nodes.append((along(mid),mid,center(uid)))
+        else:
+            for i in ([0,2] if face=='left' else [1,3]):nodes.append((along(e['place'][i]),cp(e['place'][i]),ref(uid,i)))
+    nodes.sort(key=lambda v:v[0])
+    off=(at['x']-a['x'])*nx+(at['y']-a['y'])*ny;side=-1 if off<0 else 1;gap=float(D(str(gap_mm))*D(str(d['settings']['plotScale']))/D(1000))
+    height=float(D('2.5')*D(str(d['settings']['plotScale']))/D(1000));entities=[];spans=[]
+    for i,row in enumerate(rows):
+        row_at=point(at['x']+nx*side*gap*i,at['y']+ny*side*gap*i);chosen=ends if row=='overall' else nodes
+        for first,last in zip(chosen,chosen[1:]):
+            entities.append(dict(kind='dimension',id=0,layerId='0',attrs={},height=height,a=cp(first[1]),b=cp(last[1]),
+                offset=(row_at['x']-first[1]['x'])*nx+(row_at['y']-first[1]['y'])*ny,style='linear',angle=math.degrees(math.atan2(uy,ux)),
+                refs=dict(a=cp(first[2]),b=cp(last[2]))))
+            spans.append(dict(row=row,a=first[2],b=last[2]))
+    return entities,spans,(a,b,(nx,ny),length)
+
+def around_geometry(d,distance,face=None,**kw):
+    """Every straight edge, on the outer face of a closed wall (by the path's turn) or the given one of an open
+    wall, the first row `distance` out from the face."""
+    w=d['entities'][0];pts=w['pts'];n=len(pts);closed=w.get('closed',False);bulges=w.get('bulges') or [0.]*n
+    if closed:face='right' if ccw(pts) else 'left'
+    out=[]
+    for k in range(n if closed else n-1):
+        if bulges[k]!=0:continue
+        t=w['width']/2;poly=face_polygon(pts,closed,t if face=='left' else -t);a,b=poly[k],poly[(k+1)%n];(ux,uy),_=unit(a,b);nx,ny=-uy,ux
+        out_n=(-nx,-ny) if face=='right' else (nx,ny);mid=point((a['x']+b['x'])/2+out_n[0]*distance,(a['y']+b['y'])/2+out_n[1]*distance)
+        out.append((k,face,mid)+edge_geometry(d,k,face,mid,**kw)[:2])
+    return out
+
+def edge_cases():
+    out=[]
+    room=[point(0,0),point(8,0),point(8,6),point(0,6)]
+    openings=((0,2.,1.,DOOR,'door'),(1,3.,1.2,WINDOW,'window'))
+    def plan_case(name,d,inp,edge,face,mode='ends',rows=('openings','overall')):
+        e,sp,_=edge_geometry(d,edge,face,inp['at'],rows=rows,mode=mode,gap_mm=inp.get('gapMm',7.5))
+        out.append(case('Kenar: '+name,d,step('plan',inp,completed(dict(entities=e,spans=sp,removed=[],uids=[],revision='$current')),state(d,metadata=[]))))
+    d=walled(room,openings=openings)
+    plan_case('dikdörtgen duvarın alt kenarı, dış yüz, kapı aralıkları',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=point(4,-1)),0,'right')
+    plan_case('dikdörtgen duvarın alt kenarı, iç yüz',d,dict(layerId='0',wall=ROOM,edge=0,face='left',at=point(4,1)),0,'left')
+    plan_case('sağ kenar, dış yüz, pencere',d,dict(layerId='0',wall=ROOM,edge=1,face='right',at=point(9,3)),1,'right')
+    plan_case('üst kenar batıya gider, dış yüz',d,dict(layerId='0',wall=ROOM,edge=2,face='right',at=point(4,7)),2,'right')
+    plan_case('sol kenar güneye gider, kapanış kenarı',d,dict(layerId='0',wall=ROOM,edge=3,face='right',at=point(-1,3)),3,'right')
+    plan_case('pencere merkezleri, yalnız açıklık sırası',d,dict(layerId='0',wall=ROOM,edge=1,face='right',at=point(9,3),openings='centers',rows=['openings']),1,'right',mode='centers',rows=('openings',))
+    plan_case('yalnız toplam: dış boy kalınlıkla 8.25 m',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=point(4,-1),rows=['overall']),0,'right',rows=('overall',))
+    plan_case('kâğıt aralığı 10 mm',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=point(4,-1),gapMm=10.),0,'right')
+    far=[point(500000+p['x'],4400000+p['y']) for p in room]
+    d=walled(far,openings=openings)
+    plan_case('büyük koordinatlarda dış yüz',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=point(500004,4399999)),0,'right')
+    rot=[point(math.cos(math.radians(30))*p['x']-math.sin(math.radians(30))*p['y'],math.sin(math.radians(30))*p['x']+math.cos(math.radians(30))*p['y']) for p in room]
+    d=walled(rot,openings=openings)
+    mid=point((rot[0]['x']+rot[1]['x'])/2+math.sin(math.radians(30))*1.,(rot[0]['y']+rot[1]['y'])/2-math.cos(math.radians(30))*1.)
+    plan_case('30° dönük oda',d,dict(layerId='0',wall=ROOM,edge=0,face='right',at=mid),0,'right')
+    cw=[room[0],room[3],room[2],room[1]]
+    d=walled(cw,openings=((3,6.,1.,DOOR,'door'),))
+    plan_case('saat yönünde çizilmiş oda: dış yüz solda',d,dict(layerId='0',wall=ROOM,edge=3,face='left',at=point(2,-1)),3,'left')
+    ell=[point(0,0),point(6,0),point(6,4)]
+    d=walled(ell,closed=False,openings=((1,2.,.9,DOOR,'door'),))
+    plan_case('açık L duvarın ikinci kenarı, gönyeli köşeden',d,dict(layerId='0',wall=ROOM,edge=1,face='right',at=point(7,2)),1,'right')
+    plan_case('açık L duvarın ilk kenarı, iç köşeye kadar',d,dict(layerId='0',wall=ROOM,edge=0,face='left',at=point(3,1)),0,'left')
+    # Refusals: which edge, an edge not there, an arc edge.
+    d=walled(room,openings=openings)
+    out.append(case('Ret: çok kenarlı duvarda kenar verilmedi',d,step('plan',dict(layerId='0',wall=ROOM,at=point(4,-1)),error('invalid_dimension_set','Duvarın 4 kenarı var; ölçülecek kenarı (edge) verin ya da bütün kenarları (around) seçin.','edge'),state(d))))
+    out.append(case('Ret: duvarda olmayan kenar',d,step('plan',dict(layerId='0',wall=ROOM,edge=4,at=point(4,-1)),error('invalid_dimension_set','Duvarda 4 numaralı kenar yok; kenarlar 0 ile 3 arasında.','edge'),state(d))))
+    arc=walled(room,bulges=[0.,0.,.25,0.])
+    out.append(case('Ret: yay kenar',arc,step('plan',dict(layerId='0',wall=ROOM,edge=2,at=point(4,7)),error('invalid_dimension_set','2 numaralı kenar yay; ölçü dizisi yalnız düz kenarı ölçer.','edge'),state(arc))))
+    d=fresh()
+    out.append(case('Ret: iki uçlu duvarda 1 numaralı kenar',d,step('plan',dict(layerId='0',wall=WALL,edge=1,at=point(4,1)),error('invalid_dimension_set','Duvarda 1 numaralı kenar yok; kenarlar 0 ile 0 arasında.','edge'),state(d))))
+    e,sp,_=row_geometry(d,dict(layerId='0',wall=WALL,at=point(4,1)))
+    out.append(case('İki uçlu duvarda edge 0 eskisiyle aynı plan',d,step('plan',dict(layerId='0',wall=WALL,edge=0,at=point(4,1)),completed(dict(entities=e,spans=sp,removed=[],uids=[],revision='$current')),state(d,metadata=[]))))
+    # Around: every straight edge on the outer face, one step.
+    def around_case(name,d,inp,distance,undo=True):
+        planned=around_geometry(d,distance,face=inp.get('face','left'),gap_mm=inp.get('gapMm',7.5))
+        entities=[e for g in planned for e in g[3]];spans=[s for g in planned for s in g[4]]
+        out.append(case('Bütün kenarlar plan: '+name,d,step('plan',inp,completed(dict(entities=entities,spans=spans,removed=[],uids=[],revision='$current')),state(d,metadata=[]))))
+        base=len(d['entities']);ids=list(range(base+1,base+1+len(entities)))
+        fields={str(i):{k:v for k,v in ent.items() if k in ('a','b','height','offset','refs','style','angle')} for i,ent in zip(ids,entities)}
+        result=completed(dict(set='$any',sets=['$any']*len(planned),uids=['$any']*len(entities),created=['$any']*len(entities),removed=[],changed=[],revision='$current'))
+        steps=[step('execute',inp,result,dict(ids=list(range(1,base+1))+ids,fields=fields,canUndo=True,dirty=True,revision='changed'))]
+        if undo:
+            steps.append(dict(op='undo',expect=dict(ids=list(range(1,base+1)),dimensionSets=[],canUndo=False,canRedo=True)))
+            steps.append(dict(op='redo',expect=dict(ids=list(range(1,base+1))+ids,fields=fields,canUndo=True)))
+        out.append(case('Bütün kenarlar: '+name,d,*steps))
+    d=walled(room,openings=openings)
+    around_case('dikdörtgen oda, kapı ve pencere, dört dış zincir tek adımda',d,dict(layerId='0',wall=ROOM,around=True,edge=0,at=point(4,-1.125)),1.)
+    around_case('ilk sıranın uzaklığı başka kenarın yüzünden',d,dict(layerId='0',wall=ROOM,around=True,edge=1,at=point(9.625,3)),1.5,undo=False)
+    d=walled(cw,openings=((3,6.,1.,DOOR,'door'),))
+    around_case('saat yönünde oda: dış yüz yine dışarıda',d,dict(layerId='0',wall=ROOM,around=True,edge=3,at=point(4,-1.125)),1.,undo=False)
+    d=walled(ell,closed=False,openings=((1,2.,.9,DOOR,'door'),))
+    around_case('açık L duvar: verilen yüz iki kenarda',d,dict(layerId='0',wall=ROOM,around=True,face='right',edge=0,at=point(3,-1.125)),1.,undo=False)
+    return out
+
 def build():
     out={}
-    for suffix,cases in [('create',create_cases()),('edit',edit_cases()),('query',query_cases())]:
+    for suffix,cases in [('create',create_cases()+edge_cases()),('edit',edit_cases()),('query',query_cases())]:
         assert len(cases)>=20
         common=cp(cases[0]['setup'])
         for case in cases:

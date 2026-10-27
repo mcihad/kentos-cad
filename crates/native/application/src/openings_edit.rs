@@ -9,7 +9,7 @@
 
 use kentos_commands::{
     CommandResult, Entity, OpeningChange, OpeningEntity, OpeningFields, OpeningFlip, OpeningsEdit,
-    OpeningsEdited, OpeningsOperation,
+    OpeningsEdited, OpeningsOperation, WallEnd,
 };
 use kentos_domain::opening_follow;
 use kentos_domain::{Document, Slot};
@@ -202,6 +202,54 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             for (at, slot, o) in &list {
                 let mut f = o.opening.clone();
                 f.at = to.unwrap_or(f.at) + by.unwrap_or(0.0);
+                next.push((*at, *slot, o, f, true));
+            }
+        }
+        OpeningsOperation::Distance {
+            side,
+            face,
+            distance,
+        } => {
+            checks::finite(*distance, "Mesafe", "Sonlu bir sayı verin.", "operation.distance")?;
+            if *distance < 0.0 {
+                return Err(fail(
+                    codes::INVALID_OPENING,
+                    format!("Mesafe {distance} m; sıfır ya da daha büyük olmalı."),
+                    "operation.distance",
+                ));
+            }
+            let start = matches!(side, WallEnd::Start);
+            for (at, slot, o) in &list {
+                let path = format!("uids[{at}]");
+                let m = crate::opening_distances::measure(doc, *slot, &o.opening, *face, &path)?;
+                let Some(now) = m.distance(start) else {
+                    return Err(fail(
+                        codes::INVALID_OPENING,
+                        format!(
+                            "Açıklığın {} bu yüzde referans yok: yüzün ucu açıklığın gerisinde kalıyor. Öbür yüzü ya da yanı seçin.",
+                            if start { "başında" } else { "sonunda" }
+                        ),
+                        &path,
+                    ));
+                };
+                // The reference stays: the jamb goes to it plus (start) or less (end) the distance.
+                let mut f = o.opening.clone();
+                f.at += if start { distance - now } else { now - distance };
+                // It stays on its edge: the reference was there.
+                let line = host_line(doc, &f, &path)?;
+                let p = &line.path;
+                let (lo, hi) = (p.cum[m.edge], p.cum[m.edge] + kentos_geometry_core::ops::edges::edge_length(&p.edges[m.edge]));
+                let (s0, s1) = opening_follow::span(&f);
+                let tol = 1e-9 * p.length.max(1.0);
+                if s0 < lo - tol || s1 > hi + tol {
+                    return Err(fail(
+                        codes::OPENING_OFF_WALL,
+                        format!(
+                            "Açıklık bu mesafeyle bulunduğu duvar kenarının dışına taşıyor: duvar boyunca {s0:.3}–{s1:.3} m'de, kenar {lo:.3}–{hi:.3} m. Daha küçük bir mesafe verin."
+                        ),
+                        &path,
+                    ));
+                }
                 next.push((*at, *slot, o, f, true));
             }
         }

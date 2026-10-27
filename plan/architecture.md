@@ -204,7 +204,13 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [ ] Diğer giriş bileşenlerinin bütün araç/alan odağı klavye matrisi ve
   §10'daki tam boyut/font/tema kabulü. Tab sırası bu dilimde yeniden
   tasarlanmadı; kusurun ilk hangi commit'te başladığı araştırılmadı.
-- [ ] Duvar stili kaydı tabloyu ve izleyen duvar/açıklık/etiket/çizelge/ölçüleri
+- [x] Duvar stili kaydı tabloyu ve izleyen duvar/açıklık/etiket/çizelge/ölçüleri
+  tek geri alınabilir adımda tutar: [ADR0699](../docs/adr/0699-style-tables-in-undo.md)
+  ile `cad.styles.edit` stil stil (kimlikle) aynı adımda yazar, yalnız ad değişimi de
+  adımdır; 61 ortak durum (`cad.styles.edit.json`) ve gerçek GUI'de ad kaydı/tek
+  Geri al resimleri (`.run/shots/arac-duvar-stili-*`). Aşağıdaki eski not
+  kusurun bulunduğu kaydı anlatır.
+- Eski kayıt: Duvar stili kaydı tabloyu ve izleyen duvar/açıklık/etiket/çizelge/ölçüleri
   tek geri alınabilir adımda tutmalı. 27 Ekim gerçek GUI 130'da ad kaydı doğru,
   131–135'te yalnız ad değişiminin geri alınması başarısızdır; bu mevcut kusur
   menü/form kaydırma kabulünden ayrı açık tutulur. Stil kimliği bazında geri
@@ -742,6 +748,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   cinsinden sıra aralığı mevcut çizim ölçeğiyle dönüştürülmeli; kaynak model
   veya proje birimi sırf ölçü yerleştirmek için değiştirilmemeli. Yazı sığma
   denetimi mevcut belge yazı tipi/ölçü stiliyle yapılmalı.
+- [x] Kapalı ve çok kenarlı duvarın her düz kenarı: tarifin `edge`'i ve
+  `around` ile bütün kenarlara tek adımda dizi; kenar köşe ekleme/silmede izlenir,
+  izlenemezse dizi kopar (KCAD şema 114). [ADR0700](../docs/adr/0700-dimension-sets-on-wall-edges.md);
+  `cad.dimensionsets.*` ortak durumları ve Kenarlar: Bu kenar / Bütün kenarlar,
+  tek Enter, tek Geri al resimleri (`.run/shots/arac-olcu-*`). Yay kenar ve pahlı
+  köşe açıklamalı rettir.
 - [ ] İlk otomatik üretimin desteklediği geometri açıkça daraltılmalı:
   doğrusal kaynak/yaylı kaynak ve kiriş/host boyunca mesafe aynı şey değildir.
   Desteklenmeyen yüz/kat/karma kaynağa tek işlemden önce açıklamalı ret verilmeli;
@@ -756,7 +768,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: kapı eni ve konumu değişir, duvar uzar/bölünür/silinir; ölçü güncellenir
   veya kopuk bağ açık gösterilir. Toplam ile parçaların yuvarlama kuralı belirli.
 
-### ARCH-EDIT-01 — Geçici ölçüyle doğrudan düzenleme [ ]
+### ARCH-EDIT-01 — Geçici ölçüyle doğrudan düzenleme [~]
+
+- [x] Açıklık dilimi [ADR0701](../docs/adr/0701-opening-temporary-dimensions.md):
+  seçili tek kapı/pencere/boşluğun imlecin yakın olduğu yüzde en yakın
+  referanslara (yüz ucu, aynı kenardaki açıklık, kesen duvar yüzü) mesafeleri;
+  sayıya basınca yazı kutusu, Enter `cad.openings.edit` `distance` ile taşır,
+  referans sabit, Esc vazgeçer, tek Geri al. Salt okunur
+  `cad.openings.distances` Python/MCP'de; 24+24 ortak durum bağımsız
+  başvurudan; resimler `.run/shots/arac-gecici-olcu-*`. Duvar ve kolonun geçici
+  ölçüsü, kilitli referans ve UCS kabulü açık.
 
 - Seçili kapı/duvar/kolonun yakındaki referansa mesafesini göster; sayıya basıp
   hedef mesafe yazılabilsin. Sabit kalan taraf/ankraj açık olsun.
@@ -767,7 +788,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ## 7. P1/P2 — eksik mimari eleman ve donatı araçları
 
-### ARCH-LIB-01 — Mobilya ve vitrifiye galerisi [ ]
+### ARCH-LIB-01 — Mobilya ve vitrifiye galerisi [~]
+
+- [x] İçerik dilimi [ADR0702](../docs/adr/0702-furniture-and-fixture-library.md):
+  KentOS kitaplığına gerçek boylu 21 blok (yatak, komodin, koltuk, kanepe, masalar,
+  depolama, asma klozet, pisuvar, köşe duş, dolaplı lavabo, beyaz eşya, mutfak
+  dolapları), vitrifiyelerde boşluk zarfı görünürlüğü (mevzuat iddiası değil),
+  boyut parametreleri; Blok ekle'de Duvara hizala (H, yalnız duvarlı çizimde):
+  taban yüzde, ön odaya dönük, dönüş “duvara göre”. Resimler
+  `.run/shots/arac-mobilya-*`. DWG blok kategorisi, önizlemede en/boy etiketi
+  ve m/mm/DXF kabul matrisi açık.
 
 - Yatak, masa, sandalye, koltuk, dolap; klozet, lavabo, duş/küvet; evye, ocak,
   buzdolabı, çamaşır makinesi için gerçek boylu 2B kitaplık.
@@ -862,7 +892,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: duvar/kapı/mahal düzenleme, birim/yuvarlama, boş veri, çoklu kat,
   kilitli kaynak ve CSV/XLSX/PDF dışa verme.
 
-### ARCH-DOC-03 — Mimari proje denetimi [ ]
+### ARCH-DOC-03 — Mimari proje denetimi [~]
+
+- [x] İlk dilim [ADR0703](../docs/adr/0703-architectural-project-audit.md):
+  salt okunur `cad.arch.audit` ve alt panelin Denetim sekmesi; birleşmeyen
+  duvarlar, öbür duvara/uca birkaç santim kala biten uçlar (kat kat), kopuk
+  açıklık/mahal/ölçü/dizi/kolon/işaret, çok küçük/dar mahal, yinelenen numara,
+  katsız nesne. Düzeltmesi açık bulgu var olan komutun çağrısını taşır;
+  satıra bas-yakınlaş-Düzelt-yeniden denetle-Geri al gerçek GUI resimleriyle
+  (`.run/shots/arac-denetim-*`), 35 ortak durum bağımsız başvurudan, aynı
+  rapor Python/MCP'de. Revit Review Warnings ve Archicad Update Zones
+  araştırıldı. Kalıcı istisna, kat/seçim kapsamı ve merdiven denetimi açık.
 
 - Açık duvar sınırı, çakışan açıklık, kopuk host/ölçü/etiket, yinelenen numara,
   eksik tip/kat, sıfır alan ve çok küçük artık parça için odaklanılabilir liste.

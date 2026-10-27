@@ -44,6 +44,7 @@ pub mod lrs;
 pub mod network;
 pub mod nurbs_cuts;
 pub mod offset;
+pub mod opening_distance;
 pub mod order;
 pub mod overkill;
 pub mod parts;

@@ -1,0 +1,3716 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.openings.edit",
+  "commandVersion": 1,
+  "title": "Açıklığı mesafeyle taşı: referans sabit, tek adım; retler",
+  "note": "ADR 0701. Bağımsız yüz/pervaz hesabı (scripts/fixtures/opening_distance_cases.py); KentOS kodu çalıştırılmaz.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Açıklıkların mesafeleri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 6.0
+          },
+          {
+            "x": 0.0,
+            "y": 6.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "closed": true
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 3.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center"
+      },
+      {
+        "kind": "opening",
+        "id": 3,
+        "layerId": "0",
+        "attrs": {},
+        "host": "0192f5a1-6000-7000-8000-000000000201",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 1.5500000000000007,
+            "y": 0.125
+          },
+          {
+            "x": 1.5500000000000007,
+            "y": -0.125
+          },
+          {
+            "x": 2.4499999999999993,
+            "y": 0.125
+          },
+          {
+            "x": 2.4499999999999993,
+            "y": -0.125
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "host": "0192f5a1-6000-7000-8000-000000000201",
+        "at": 6.0,
+        "width": 1.2,
+        "form": "window",
+        "place": [
+          {
+            "x": 5.399999999999999,
+            "y": 0.125
+          },
+          {
+            "x": 5.399999999999999,
+            "y": -0.125
+          },
+          {
+            "x": 6.600000000000001,
+            "y": 0.125
+          },
+          {
+            "x": 6.600000000000001,
+            "y": -0.125
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "host": "0192f5a1-6000-7000-8000-000000000201",
+        "at": 11.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 7.875,
+            "y": 2.549999999999997
+          },
+          {
+            "x": 8.125,
+            "y": 2.549999999999997
+          },
+          {
+            "x": 7.875,
+            "y": 3.450000000000003
+          },
+          {
+            "x": 8.125,
+            "y": 3.450000000000003
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -3.0
+        },
+        "b": {
+          "x": 8.0,
+          "y": -3.0
+        }
+      }
+    ],
+    "uids": [
+      "0192f5a1-6000-7000-8000-000000000201",
+      "0192f5a1-6000-7000-8000-000000000202",
+      "0192f5a1-6000-7000-8000-000000000203",
+      "0192f5a1-6000-7000-8000-000000000204",
+      "0192f5a1-6000-7000-8000-000000000205",
+      "0192f5a1-6000-7000-8000-000000000207"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Kapı iç köşeden 1 m, tek geri al ve yinele",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.5749999999999993,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 1.125,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 1.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.5749999999999993,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.125,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.125,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.5500000000000007,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.5500000000000007,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 2.4499999999999993,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.4499999999999993,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.5749999999999993,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.125,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.125,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı ara duvarın yüzüne 50 cm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "end",
+              "face": "left",
+              "distance": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 3.000000000000001,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 2.5500000000000007,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 2.5500000000000007,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 3.450000000000003,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 3.450000000000003,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 3.000000000000001,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 2.5500000000000007,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.5500000000000007,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 3.450000000000003,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 3.450000000000003,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı dış köşeden 2 m (dış yüz)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "right",
+              "distance": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 2.3249999999999993,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 1.875,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 1.875,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 2.7749999999999986,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 2.7749999999999986,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 2.3249999999999993,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.875,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.875,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 2.7749999999999986,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.7749999999999986,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı pencereye 30 cm (dış yüz)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "end",
+              "face": "right",
+              "distance": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 4.6499999999999995,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 4.200000000000003,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 4.200000000000003,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 5.100000000000001,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.100000000000001,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 4.6499999999999995,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 4.200000000000003,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 4.200000000000003,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 5.100000000000001,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 5.100000000000001,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pencere ara duvardan 60 cm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000204"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 0.6
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 4,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 5.250000000000001,
+                  "width": 1.2,
+                  "form": "window",
+                  "place": [
+                    {
+                      "x": 4.649999999999999,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 4.649999999999999,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 5.850000000000001,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.850000000000001,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "4": {
+                "kind": "opening",
+                "id": 4,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 5.250000000000001,
+                "width": 1.2,
+                "form": "window",
+                "place": [
+                  {
+                    "x": 4.649999999999999,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 4.649999999999999,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 5.850000000000001,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 5.850000000000001,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pencere köşeye 1 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000204"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "end",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 4,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 6.274999999999999,
+                  "width": 1.2,
+                  "form": "window",
+                  "place": [
+                    {
+                      "x": 5.674999999999997,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.674999999999997,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 6.875,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.875,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "4": {
+                "kind": "opening",
+                "id": 4,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 6.274999999999999,
+                "width": 1.2,
+                "form": "window",
+                "place": [
+                  {
+                    "x": 5.674999999999997,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 5.674999999999997,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 6.875,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 6.875,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sağ kenardaki kapı köşeden 40 cm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000205"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 0.4
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 5,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 8.975000000000003,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 7.875,
+                      "y": 0.5250000000000057
+                    },
+                    {
+                      "x": 8.125,
+                      "y": 0.5250000000000057
+                    },
+                    {
+                      "x": 7.875,
+                      "y": 1.4250000000000043
+                    },
+                    {
+                      "x": 8.125,
+                      "y": 1.4250000000000043
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "5": {
+                "kind": "opening",
+                "id": 5,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 8.975000000000003,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 7.875,
+                    "y": 0.5250000000000057
+                  },
+                  {
+                    "x": 8.125,
+                    "y": 0.5250000000000057
+                  },
+                  {
+                    "x": 7.875,
+                    "y": 1.4250000000000043
+                  },
+                  {
+                    "x": 8.125,
+                    "y": 1.4250000000000043
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıfır mesafe: pervaz köşeye değer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 0.5749999999999993,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 0.125,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 0.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 1.0249999999999986,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 1.0249999999999986,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 0.5749999999999993,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 0.125,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 0.125,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 1.0249999999999986,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.0249999999999986,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pervazlar değebilir: kapı pencereye sıfır (dış yüz)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "end",
+              "face": "right",
+              "distance": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 4.949999999999999,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 4.5,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 4.5,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 5.399999999999999,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.399999999999999,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 4.949999999999999,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 4.5,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 5.399999999999999,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 5.399999999999999,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmadan yeni yeri gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.5749999999999993,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 1.125,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 1.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "30° dönük oda: kapı iç köşeden 1 m",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.92820323027551,
+                "y": 3.9999999999999996
+              },
+              {
+                "x": 3.92820323027551,
+                "y": 9.196152422706632
+              },
+              {
+                "x": -2.9999999999999996,
+                "y": 5.196152422706632
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 3.464101615137755,
+                "y": 1.9999999999999998
+              },
+              {
+                "x": 1.964101615137755,
+                "y": 4.598076211353316
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.2798393758658806,
+                "y": 0.883253175473055
+              },
+              {
+                "x": 1.4048393758658806,
+                "y": 0.6667468245269454
+              },
+              {
+                "x": 2.0592622392718742,
+                "y": 1.3332531754730543
+              },
+              {
+                "x": 2.1842622392718742,
+                "y": 1.1167468245269445
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 4.614037180435968,
+                "y": 2.8082531754730535
+              },
+              {
+                "x": 4.739037180435968,
+                "y": 2.591746824526944
+              },
+              {
+                "x": 5.653267664977297,
+                "y": 3.408253175473055
+              },
+              {
+                "x": 5.778267664977297,
+                "y": 3.1917468245269456
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 5.544950054802456,
+                "y": 6.145864779650315
+              },
+              {
+                "x": 5.761456405748566,
+                "y": 6.270864779650315
+              },
+              {
+                "x": 5.094950054802453,
+                "y": 6.925287643056316
+              },
+              {
+                "x": 5.311456405748563,
+                "y": 7.050287643056316
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 1.4999999999999998,
+              "y": -2.598076211353316
+            },
+            "b": {
+              "x": 8.428203230275509,
+              "y": 1.4019237886466835
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.5749999999999988,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 0.9117785792574935,
+                      "y": 0.6707531754730547
+                    },
+                    {
+                      "x": 1.0367785792574935,
+                      "y": 0.45424682452694504
+                    },
+                    {
+                      "x": 1.6912014426634872,
+                      "y": 1.120753175473054
+                    },
+                    {
+                      "x": 1.8162014426634872,
+                      "y": 0.9042468245269443
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.5749999999999988,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 0.9117785792574935,
+                    "y": 0.6707531754730547
+                  },
+                  {
+                    "x": 1.0367785792574935,
+                    "y": 0.45424682452694504
+                  },
+                  {
+                    "x": 1.6912014426634872,
+                    "y": 1.120753175473054
+                  },
+                  {
+                    "x": 1.8162014426634872,
+                    "y": 0.9042468245269443
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük koordinatlarda oda: kapı iç köşeden 1 m",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000.0,
+                "y": 4400000.0
+              },
+              {
+                "x": 500008.0,
+                "y": 4400000.0
+              },
+              {
+                "x": 500008.0,
+                "y": 4400006.0
+              },
+              {
+                "x": 500000.0,
+                "y": 4400006.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500004.0,
+                "y": 4400000.0
+              },
+              {
+                "x": 500004.0,
+                "y": 4400003.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 500001.55,
+                "y": 4400000.125
+              },
+              {
+                "x": 500001.55,
+                "y": 4399999.875
+              },
+              {
+                "x": 500002.45,
+                "y": 4400000.125
+              },
+              {
+                "x": 500002.45,
+                "y": 4399999.875
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 500005.4,
+                "y": 4400000.125
+              },
+              {
+                "x": 500005.4,
+                "y": 4399999.875
+              },
+              {
+                "x": 500006.6,
+                "y": 4400000.125
+              },
+              {
+                "x": 500006.6,
+                "y": 4399999.875
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 500007.875,
+                "y": 4400002.55
+              },
+              {
+                "x": 500008.125,
+                "y": 4400002.55
+              },
+              {
+                "x": 500007.875,
+                "y": 4400003.45
+              },
+              {
+                "x": 500008.125,
+                "y": 4400003.45
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 500000.0,
+              "y": 4399997.0
+            },
+            "b": {
+              "x": 500008.0,
+              "y": 4399997.0
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.5750000000116415,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 500001.125,
+                      "y": 4400000.125
+                    },
+                    {
+                      "x": 500001.125,
+                      "y": 4399999.875
+                    },
+                    {
+                      "x": 500002.025,
+                      "y": 4400000.125
+                    },
+                    {
+                      "x": 500002.025,
+                      "y": 4399999.875
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.5750000000116415,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 500001.125,
+                    "y": 4400000.125
+                  },
+                  {
+                    "x": 500001.125,
+                    "y": 4399999.875
+                  },
+                  {
+                    "x": 500002.025,
+                    "y": 4400000.125
+                  },
+                  {
+                    "x": 500002.025,
+                    "y": 4399999.875
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açık duvar: pencere duvar ucundan 50 cm",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 3.0,
+            "width": 1.0,
+            "form": "window",
+            "place": [
+              {
+                "x": 2.5,
+                "y": 0.1
+              },
+              {
+                "x": 2.5,
+                "y": -0.1
+              },
+              {
+                "x": 3.5,
+                "y": 0.1
+              },
+              {
+                "x": 3.5,
+                "y": -0.1
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.5,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 6.05,
+                "y": 0.1
+              },
+              {
+                "x": 6.05,
+                "y": -0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": 0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": -0.1
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000203"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000204"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 2,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.0,
+                  "width": 1.0,
+                  "form": "window",
+                  "place": [
+                    {
+                      "x": 0.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 0.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "2": {
+                "kind": "opening",
+                "id": 2,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.0,
+                "width": 1.0,
+                "form": "window",
+                "place": [
+                  {
+                    "x": 0.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 0.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açık duvar: kapı pencereye 1 m (sağ yüz)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 3.0,
+            "width": 1.0,
+            "form": "window",
+            "place": [
+              {
+                "x": 2.5,
+                "y": 0.1
+              },
+              {
+                "x": 2.5,
+                "y": -0.1
+              },
+              {
+                "x": 3.5,
+                "y": 0.1
+              },
+              {
+                "x": 3.5,
+                "y": -0.1
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.5,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 6.05,
+                "y": 0.1
+              },
+              {
+                "x": 6.05,
+                "y": -0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": 0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": -0.1
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000203"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "right",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 4.95,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 4.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 4.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 5.4,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.4,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 4.95,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 4.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 4.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 5.4,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.4,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: pencereye binen kapı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 4.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "openings_overlap",
+              "message": "Açıklık (4.625–5.525 m) aynı duvardaki başka bir açıklığa (5.400–6.600 m) biniyor. Açıklığı kaydırın ya da daraltın.",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: köşeyi aşıp öbür kenara geçecek kapı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000205"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "end",
+              "face": "left",
+              "distance": 6.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_off_wall",
+              "message": "Açıklık bu mesafeyle bulunduğu duvar kenarının dışına taşıyor: duvar boyunca 6.975–7.875 m'de, kenar 8.000–14.000 m. Daha küçük bir mesafe verin.",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: duvar ucunu aşan pencere",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 3.0,
+            "width": 1.0,
+            "form": "window",
+            "place": [
+              {
+                "x": 2.5,
+                "y": 0.1
+              },
+              {
+                "x": 2.5,
+                "y": -0.1
+              },
+              {
+                "x": 3.5,
+                "y": 0.1
+              },
+              {
+                "x": 3.5,
+                "y": -0.1
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.5,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 6.05,
+                "y": 0.1
+              },
+              {
+                "x": 6.05,
+                "y": -0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": 0.1
+              },
+              {
+                "x": 6.950000000000001,
+                "y": -0.1
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000203"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000204"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 9.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_off_wall",
+              "message": "Açıklık bu mesafeyle bulunduğu duvar kenarının dışına taşıyor: duvar boyunca 9.500–10.500 m'de, kenar 0.000–10.000 m. Daha küçük bir mesafe verin.",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: negatif mesafe",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": -0.1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "Mesafe -0.1 m; sıfır ya da daha büyük olmalı.",
+              "path": "operation.distance"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: sonsuz mesafe",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Mesafe sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.distance"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          },
+          "nonFinite": {
+            "operation.distance": "Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: yay kenardaki açıklık",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true,
+            "bulges": [
+              0.0,
+              0.0,
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 4.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.0,
+                "y": 3.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.5500000000000007,
+                "y": 0.125
+              },
+              {
+                "x": 1.5500000000000007,
+                "y": -0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": 0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.399999999999999,
+                "y": 0.125
+              },
+              {
+                "x": 5.399999999999999,
+                "y": -0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": 0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 7.875,
+                "y": 2.5500000000000043
+              },
+              {
+                "x": 8.125,
+                "y": 2.5500000000000043
+              },
+              {
+                "x": 7.875,
+                "y": 3.4499999999999957
+              },
+              {
+                "x": 8.125,
+                "y": 3.4499999999999957
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -3.0
+            },
+            "b": {
+              "x": 8.0,
+              "y": -3.0
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 7,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 18.0,
+            "width": 0.9,
+            "form": "window",
+            "place": [
+              {
+                "x": 4.6050708713354656,
+                "y": 6.853114044514259
+              },
+              {
+                "x": 4.623132688390256,
+                "y": 7.102460732410206
+              },
+              {
+                "x": 3.7188865972365175,
+                "y": 6.870280775146478
+              },
+              {
+                "x": 3.7104951523779057,
+                "y": 7.120139902762791
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207",
+          "0192f5a1-6000-7000-8000-000000000206"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000206"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "Açıklık duvarın yay kenarında; geçici ölçü yalnız düz kenarda ölçülür.",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay duvarın düz kenarındaki kapı taşınır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true,
+            "bulges": [
+              0.0,
+              0.0,
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 4.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.0,
+                "y": 3.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.5500000000000007,
+                "y": 0.125
+              },
+              {
+                "x": 1.5500000000000007,
+                "y": -0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": 0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.399999999999999,
+                "y": 0.125
+              },
+              {
+                "x": 5.399999999999999,
+                "y": -0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": 0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 7.875,
+                "y": 2.5500000000000043
+              },
+              {
+                "x": 8.125,
+                "y": 2.5500000000000043
+              },
+              {
+                "x": 7.875,
+                "y": 3.4499999999999957
+              },
+              {
+                "x": 8.125,
+                "y": 3.4499999999999957
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -3.0
+            },
+            "b": {
+              "x": 8.0,
+              "y": -3.0
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 7,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 18.0,
+            "width": 0.9,
+            "form": "window",
+            "place": [
+              {
+                "x": 4.6050708713354656,
+                "y": 6.853114044514259
+              },
+              {
+                "x": 4.623132688390256,
+                "y": 7.102460732410206
+              },
+              {
+                "x": 3.7188865972365175,
+                "y": 6.870280775146478
+              },
+              {
+                "x": 3.7104951523779057,
+                "y": 7.120139902762791
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207",
+          "0192f5a1-6000-7000-8000-000000000206"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 3,
+                  "layerId": "0",
+                  "attrs": {},
+                  "host": "0192f5a1-6000-7000-8000-000000000201",
+                  "at": 1.5749999999999993,
+                  "width": 0.9,
+                  "form": "door",
+                  "place": [
+                    {
+                      "x": 1.125,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 1.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 2.0249999999999986,
+                      "y": -0.125
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "3": {
+                "kind": "opening",
+                "id": 3,
+                "layerId": "0",
+                "attrs": {},
+                "host": "0192f5a1-6000-7000-8000-000000000201",
+                "at": 1.5749999999999993,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.125,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 1.125,
+                    "y": -0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": 0.125
+                  },
+                  {
+                    "x": 2.0249999999999986,
+                    "y": -0.125
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kilitli katmandaki açıklık",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 4.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.0,
+                "y": 3.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.5500000000000007,
+                "y": 0.125
+              },
+              {
+                "x": 1.5500000000000007,
+                "y": -0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": 0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.399999999999999,
+                "y": 0.125
+              },
+              {
+                "x": 5.399999999999999,
+                "y": -0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": 0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 7.875,
+                "y": 2.549999999999997
+              },
+              {
+                "x": 8.125,
+                "y": 2.549999999999997
+              },
+              {
+                "x": 7.875,
+                "y": 3.450000000000003
+              },
+              {
+                "x": 8.125,
+                "y": 3.450000000000003
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -3.0
+            },
+            "b": {
+              "x": 8.0,
+              "y": -3.0
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“0” katmanı kilitli; üzerindeki açıklık düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: duvarı olmayan açıklık taşınmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açıklıkların mesafeleri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 6.0
+              },
+              {
+                "x": 0.0,
+                "y": 6.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "closed": true
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 4.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.0,
+                "y": 3.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.5500000000000007,
+                "y": 0.125
+              },
+              {
+                "x": 1.5500000000000007,
+                "y": -0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": 0.125
+              },
+              {
+                "x": 2.4499999999999993,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 4,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.399999999999999,
+                "y": 0.125
+              },
+              {
+                "x": 5.399999999999999,
+                "y": -0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": 0.125
+              },
+              {
+                "x": 6.600000000000001,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000201",
+            "at": 11.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 7.875,
+                "y": 2.549999999999997
+              },
+              {
+                "x": 8.125,
+                "y": 2.549999999999997
+              },
+              {
+                "x": 7.875,
+                "y": 3.450000000000003
+              },
+              {
+                "x": 8.125,
+                "y": 3.450000000000003
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -3.0
+            },
+            "b": {
+              "x": 8.0,
+              "y": -3.0
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 7,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-0000000002ff",
+            "at": 26.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 0.125,
+                "y": 2.450000000000003
+              },
+              {
+                "x": -0.125,
+                "y": 2.450000000000003
+              },
+              {
+                "x": 0.125,
+                "y": 1.5499999999999972
+              },
+              {
+                "x": -0.125,
+                "y": 1.5499999999999972
+              }
+            ],
+            "broken": "hostGone"
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000201",
+          "0192f5a1-6000-7000-8000-000000000202",
+          "0192f5a1-6000-7000-8000-000000000203",
+          "0192f5a1-6000-7000-8000-000000000204",
+          "0192f5a1-6000-7000-8000-000000000205",
+          "0192f5a1-6000-7000-8000-000000000207",
+          "0192f5a1-6000-7000-8000-000000000208"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000208"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "start",
+              "face": "left",
+              "distance": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_host_gone",
+              "message": "Açıklığın duvarı yok; geçici ölçü duvarın yüzünde ölçülür. Önce bir duvara taşıyın (Başka duvara).",
+              "path": "uids[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

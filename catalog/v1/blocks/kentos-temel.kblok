@@ -1659,6 +1659,2204 @@
      "rotation": 0.0
     }
    ]
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000011",
+   "name": "Tek kişilik yatak",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 2.0
+      },
+      {
+       "x": 0.0,
+       "y": 2.0
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.1,
+       "y": 0.08
+      },
+      {
+       "x": 0.8,
+       "y": 0.08
+      },
+      {
+       "x": 0.8,
+       "y": 0.4
+      },
+      {
+       "x": 0.1,
+       "y": 0.4
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.65
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.65
+     }
+    }
+   ],
+   "description": "Tek kişilik yatak 90 × 200 cm; taban noktası başucu sol köşe, yatak +y yönünde. En 80–140 cm; Boyut tablosu 90/100/120.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Yatak",
+    "tags": [
+     "yatak",
+     "tek",
+     "genç"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "En",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.9,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.8,
+       "max": 1.4,
+       "step": 0.1
+      }
+     },
+     {
+      "kind": "lookup",
+      "name": "Boyut",
+      "rows": [
+       {
+        "label": "Tek 90 × 200",
+        "values": {
+         "En": 0.9
+        }
+       },
+       {
+        "label": "Tek 100 × 200",
+        "values": {
+         "En": 1.0
+        }
+       },
+       {
+        "label": "Genç 120 × 200",
+        "values": {
+         "En": 1.2
+        }
+       }
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "En",
+      "pieces": [
+       1,
+       2,
+       3
+      ],
+      "min": {
+       "x": 0.75,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.0,
+       "y": 2.1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000012",
+   "name": "Komodin",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.5,
+       "y": 0.0
+      },
+      {
+       "x": 0.5,
+       "y": 0.4
+      },
+      {
+       "x": 0.0,
+       "y": 0.4
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.25,
+      "y": 0.2
+     },
+     "r": 0.1
+    }
+   ],
+   "description": "Başucu komodini 50 × 40 cm, lambasıyla; taban noktası arka sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Yatak",
+    "tags": [
+     "komodin",
+     "başucu"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000013",
+   "name": "Koltuk",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.425,
+       "y": 0.0
+      },
+      {
+       "x": 0.425,
+       "y": 0.0
+      },
+      {
+       "x": 0.425,
+       "y": 0.85
+      },
+      {
+       "x": -0.425,
+       "y": 0.85
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.275,
+      "y": 0.2
+     },
+     "b": {
+      "x": 0.275,
+      "y": 0.2
+     }
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.425,
+       "y": 0.2
+      },
+      {
+       "x": -0.275,
+       "y": 0.2
+      },
+      {
+       "x": -0.275,
+       "y": 0.85
+      },
+      {
+       "x": -0.425,
+       "y": 0.85
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.275,
+       "y": 0.2
+      },
+      {
+       "x": 0.425,
+       "y": 0.2
+      },
+      {
+       "x": 0.425,
+       "y": 0.85
+      },
+      {
+       "x": 0.275,
+       "y": 0.85
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Tekli koltuk 85 × 85 cm; taban noktası arkasının ortası, oturağı +y yönünde.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Oturma",
+    "tags": [
+     "koltuk",
+     "berjer",
+     "tekli"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000014",
+   "name": "İkili kanepe",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.85
+      },
+      {
+       "x": 0.0,
+       "y": 0.85
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.15,
+      "y": 0.2
+     },
+     "b": {
+      "x": 1.35,
+      "y": 0.2
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.15,
+      "y": 0.2
+     },
+     "b": {
+      "x": 0.15,
+      "y": 0.85
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.35,
+      "y": 0.2
+     },
+     "b": {
+      "x": 1.35,
+      "y": 0.85
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.75,
+      "y": 0.2
+     },
+     "b": {
+      "x": 0.75,
+      "y": 0.85
+     }
+    }
+   ],
+   "description": "İkili kanepe 150 × 85 cm; taban noktası arka sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Oturma",
+    "tags": [
+     "kanepe",
+     "ikili"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000015",
+   "name": "Yuvarlak masa",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.5
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.62,
+       "y": -0.21
+      },
+      {
+       "x": 0.62,
+       "y": 0.21
+      },
+      {
+       "x": 1.04,
+       "y": 0.21
+      },
+      {
+       "x": 1.04,
+       "y": -0.21
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.21,
+       "y": 0.62
+      },
+      {
+       "x": -0.21,
+       "y": 0.62
+      },
+      {
+       "x": -0.21,
+       "y": 1.04
+      },
+      {
+       "x": 0.21,
+       "y": 1.04
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.62,
+       "y": 0.21
+      },
+      {
+       "x": -0.62,
+       "y": -0.21
+      },
+      {
+       "x": -1.04,
+       "y": -0.21
+      },
+      {
+       "x": -1.04,
+       "y": 0.21
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.21,
+       "y": -0.62
+      },
+      {
+       "x": 0.21,
+       "y": -0.62
+      },
+      {
+       "x": 0.21,
+       "y": -1.04
+      },
+      {
+       "x": -0.21,
+       "y": -1.04
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Yuvarlak masa Ø100 cm, dört sandalyesiyle; taban noktası masanın merkezi. Görünüş: Sandalyeli / Yalnız masa.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Masalar",
+    "tags": [
+     "masa",
+     "yuvarlak",
+     "yemek"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Sandalyeli"
+       },
+       {
+        "name": "Yalnız masa",
+        "hidden": [
+         2,
+         3,
+         4,
+         5
+        ]
+       }
+      ]
+     }
+    ],
+    "actions": []
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000016",
+   "name": "Çalışma masası",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.6
+      },
+      {
+       "x": 0.0,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Çalışma masası 120 × 60 cm; uzunluk 100–180 cm. Taban noktası arka sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Masalar",
+    "tags": [
+     "masa",
+     "çalışma",
+     "ofis"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Uzunluk",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 1.2,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 1.0,
+       "max": 1.8,
+       "step": 0.2
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Uzunluk",
+      "pieces": [
+       1
+      ],
+      "min": {
+       "x": 1.1,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.3,
+       "y": 0.7
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000017",
+   "name": "TV ünitesi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.8,
+       "y": 0.0
+      },
+      {
+       "x": 1.8,
+       "y": 0.45
+      },
+      {
+       "x": 0.0,
+       "y": 0.45
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.3,
+      "y": 0.06
+     },
+     "b": {
+      "x": 1.5,
+      "y": 0.06
+     }
+    }
+   ],
+   "description": "TV ünitesi 180 × 45 cm; uzunluk 120–240 cm. Taban noktası arka sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Depolama",
+    "tags": [
+     "tv",
+     "ünite",
+     "salon"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Uzunluk",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 1.8,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 1.2,
+       "max": 2.4,
+       "step": 0.3
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Uzunluk",
+      "pieces": [
+       1,
+       2
+      ],
+      "min": {
+       "x": 1.4,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.9,
+       "y": 0.55
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000018",
+   "name": "Kitaplık",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.35
+      },
+      {
+       "x": 0.0,
+       "y": 0.35
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.03
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.03
+     }
+    }
+   ],
+   "description": "Kitaplık 90 × 35 cm; genişlik 60–240 cm, 30 cm adımla. Taban noktası arka sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Depolama",
+    "tags": [
+     "kitaplık",
+     "raf"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.9,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.6,
+       "max": 2.4,
+       "step": 0.3
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2
+      ],
+      "min": {
+       "x": 0.8,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.0,
+       "y": 0.45
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000019",
+   "name": "Asma klozet",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.25,
+       "y": 0.0
+      },
+      {
+       "x": 0.25,
+       "y": 0.0
+      },
+      {
+       "x": 0.25,
+       "y": 0.08
+      },
+      {
+       "x": -0.25,
+       "y": 0.08
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "ellipse",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.31
+     },
+     "major": {
+      "x": 0.0,
+      "y": 0.23
+     },
+     "ratio": 0.8,
+     "t0": 0.0,
+     "t1": 0.0
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.4,
+       "y": 0.54
+      },
+      {
+       "x": 0.4,
+       "y": 0.54
+      },
+      {
+       "x": 0.4,
+       "y": 1.14
+      },
+      {
+       "x": -0.4,
+       "y": 1.14
+      }
+     ],
+     "closed": true,
+     "lineType": "dashed"
+    }
+   ],
+   "description": "Asma klozet 37 × 54 cm, gömme rezervuarlı; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 60 cm.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/WC",
+    "tags": [
+     "klozet",
+     "asma",
+     "wc",
+     "banyo"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Sade",
+        "hidden": [
+         3
+        ]
+       },
+       {
+        "name": "Boşluk zarfı"
+       }
+      ]
+     }
+    ],
+    "actions": []
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001a",
+   "name": "Pisuvar",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.18,
+       "y": 0.0
+      },
+      {
+       "x": 0.18,
+       "y": 0.0
+      },
+      {
+       "x": 0.18,
+       "y": 0.2
+      },
+      {
+       "x": 0.12,
+       "y": 0.35
+      },
+      {
+       "x": -0.12,
+       "y": 0.35
+      },
+      {
+       "x": -0.18,
+       "y": 0.2
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.15
+     },
+     "r": 0.03
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.4,
+       "y": 0.35
+      },
+      {
+       "x": 0.4,
+       "y": 0.35
+      },
+      {
+       "x": 0.4,
+       "y": 0.95
+      },
+      {
+       "x": -0.4,
+       "y": 0.95
+      }
+     ],
+     "closed": true,
+     "lineType": "dashed"
+    }
+   ],
+   "description": "Pisuvar 36 × 35 cm; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 60 cm.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/WC",
+    "tags": [
+     "pisuvar",
+     "wc"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Sade",
+        "hidden": [
+         3
+        ]
+       },
+       {
+        "name": "Boşluk zarfı"
+       }
+      ]
+     }
+    ],
+    "actions": []
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001b",
+   "name": "Köşe duş",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.35
+      }
+     ]
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.35,
+      "y": 0.35
+     },
+     "r": 0.55,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.35,
+       "y": 0.9
+      },
+      {
+       "x": 0.0,
+       "y": 0.9
+      },
+      {
+       "x": 0.0,
+       "y": 0.0
+      }
+     ]
+    },
+    {
+     "kind": "circle",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.25,
+      "y": 0.25
+     },
+     "r": 0.04
+    },
+    {
+     "kind": "polyline",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.55,
+       "y": 0.55
+      },
+      {
+       "x": 1.35,
+       "y": 0.55
+      },
+      {
+       "x": 1.35,
+       "y": 1.35
+      },
+      {
+       "x": 0.55,
+       "y": 1.35
+      }
+     ],
+     "closed": true,
+     "lineType": "dashed"
+    }
+   ],
+   "description": "Oval köşe duşakabin 90 × 90 cm; taban noktası köşe, iki duvar x ve y boyunca. Boşluk zarfı girişin önünde.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Duş",
+    "tags": [
+     "duş",
+     "köşe",
+     "oval",
+     "banyo"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Sade",
+        "hidden": [
+         5
+        ]
+       },
+       {
+        "name": "Boşluk zarfı"
+       }
+      ]
+     }
+    ],
+    "actions": []
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001c",
+   "name": "Dolaplı lavabo",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.4,
+       "y": 0.0
+      },
+      {
+       "x": 0.4,
+       "y": 0.0
+      },
+      {
+       "x": 0.4,
+       "y": 0.46
+      },
+      {
+       "x": -0.4,
+       "y": 0.46
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "ellipse",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.25
+     },
+     "major": {
+      "x": 0.22,
+      "y": 0.0
+     },
+     "ratio": 0.6,
+     "t0": 0.0,
+     "t1": 0.0
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.06
+     },
+     "r": 0.02
+    },
+    {
+     "kind": "polyline",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.4,
+       "y": 0.46
+      },
+      {
+       "x": 0.4,
+       "y": 0.46
+      },
+      {
+       "x": 0.4,
+       "y": 1.16
+      },
+      {
+       "x": -0.4,
+       "y": 1.16
+      }
+     ],
+     "closed": true,
+     "lineType": "dashed"
+    }
+   ],
+   "description": "Banyo dolabı ve lavabo 80 × 46 cm; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 70 cm.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Lavabo",
+    "tags": [
+     "lavabo",
+     "dolap",
+     "banyo"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Sade",
+        "hidden": [
+         4
+        ]
+       },
+       {
+        "name": "Boşluk zarfı"
+       }
+      ]
+     }
+    ],
+    "actions": []
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001d",
+   "name": "Çamaşır makinesi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      },
+      {
+       "x": -0.3,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.3,
+      "y": 0.5599999999999999
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.5599999999999999
+     }
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.25
+     },
+     "text": "ÇM",
+     "height": 0.1,
+     "rotation": 0.0
+    },
+    {
+     "kind": "circle",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.3
+     },
+     "r": 0.18
+    }
+   ],
+   "description": "Çamaşır makinesi 60 × 60 cm; taban noktası duvarda ortası. Kapağı önde.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Beyaz eşya",
+    "tags": [
+     "çamaşır",
+     "makine",
+     "beyaz eşya"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001e",
+   "name": "Kurutma makinesi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      },
+      {
+       "x": -0.3,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.3,
+      "y": 0.5599999999999999
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.5599999999999999
+     }
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.25
+     },
+     "text": "KM",
+     "height": 0.1,
+     "rotation": 0.0
+    }
+   ],
+   "description": "Kurutma makinesi 60 × 60 cm; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Beyaz eşya",
+    "tags": [
+     "kurutma",
+     "makine",
+     "beyaz eşya"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000001f",
+   "name": "Evye",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.8,
+       "y": 0.0
+      },
+      {
+       "x": 0.8,
+       "y": 0.5
+      },
+      {
+       "x": 0.0,
+       "y": 0.5
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.38,
+       "y": 0.07
+      },
+      {
+       "x": 0.76,
+       "y": 0.07
+      },
+      {
+       "x": 0.76,
+       "y": 0.43
+      },
+      {
+       "x": 0.38,
+       "y": 0.43
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.57,
+      "y": 0.25
+     },
+     "r": 0.03
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.06,
+      "y": 0.1
+     },
+     "b": {
+      "x": 0.06,
+      "y": 0.4
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.12,
+      "y": 0.1
+     },
+     "b": {
+      "x": 0.12,
+      "y": 0.4
+     }
+    },
+    {
+     "kind": "line",
+     "id": 6,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.18,
+      "y": 0.1
+     },
+     "b": {
+      "x": 0.18,
+      "y": 0.4
+     }
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.24,
+      "y": 0.1
+     },
+     "b": {
+      "x": 0.24,
+      "y": 0.4
+     }
+    },
+    {
+     "kind": "line",
+     "id": 8,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.3,
+      "y": 0.1
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.4
+     }
+    },
+    {
+     "kind": "circle",
+     "id": 9,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.57,
+      "y": 0.035
+     },
+     "r": 0.02
+    }
+   ],
+   "description": "Tek hazneli, süzgeçli evye 80 × 50 cm, tezgâha gömme; taban noktası duvarda sol köşe. Süzgeç solda çevrilir.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Evye",
+    "tags": [
+     "evye",
+     "eviye",
+     "mutfak"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "flip",
+      "name": "Süzgeç sağda",
+      "a": {
+       "x": 0.4,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.4,
+       "y": 1.0
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "flip",
+      "parameter": "Süzgeç sağda",
+      "pieces": [
+       2,
+       3,
+       9,
+       4,
+       5,
+       6,
+       7,
+       8
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000020",
+   "name": "Ocak",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.52
+      },
+      {
+       "x": -0.3,
+       "y": 0.52
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": -0.14,
+      "y": 0.14
+     },
+     "r": 0.09
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.14,
+      "y": 0.14
+     },
+     "r": 0.07
+    },
+    {
+     "kind": "circle",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": -0.14,
+      "y": 0.37
+     },
+     "r": 0.07
+    },
+    {
+     "kind": "circle",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.14,
+      "y": 0.37
+     },
+     "r": 0.09
+    }
+   ],
+   "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Pişirme",
+    "tags": [
+     "ocak",
+     "mutfak"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000021",
+   "name": "Buzdolabı",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.65
+      },
+      {
+       "x": -0.3,
+       "y": 0.65
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.3,
+      "y": 0.61
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.61
+     }
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.275
+     },
+     "text": "BZ",
+     "height": 0.1,
+     "rotation": 0.0
+    },
+    {
+     "kind": "arc",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": -0.3,
+      "y": 0.65
+     },
+     "r": 0.6,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "description": "Buzdolabı 60 × 65 cm; taban noktası duvarda ortası. Kapı açılımı önünde.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Beyaz eşya",
+    "tags": [
+     "buzdolabı",
+     "beyaz eşya",
+     "mutfak"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000022",
+   "name": "Bulaşık makinesi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      },
+      {
+       "x": -0.3,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.3,
+      "y": 0.5599999999999999
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.5599999999999999
+     }
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.25
+     },
+     "text": "BM",
+     "height": 0.1,
+     "rotation": 0.0
+    }
+   ],
+   "description": "Ankastre bulaşık makinesi 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Beyaz eşya",
+    "tags": [
+     "bulaşık",
+     "makine",
+     "beyaz eşya",
+     "mutfak"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000023",
+   "name": "Fırın",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.0
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      },
+      {
+       "x": -0.3,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.3,
+      "y": 0.5599999999999999
+     },
+     "b": {
+      "x": 0.3,
+      "y": 0.5599999999999999
+     }
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.25
+     },
+     "text": "F",
+     "height": 0.1,
+     "rotation": 0.0
+    }
+   ],
+   "description": "Ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Pişirme",
+    "tags": [
+     "fırın",
+     "ankastre",
+     "mutfak"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000024",
+   "name": "Alt dolap",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.6,
+       "y": 0.0
+      },
+      {
+       "x": 0.6,
+       "y": 0.6
+      },
+      {
+       "x": 0.0,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.56
+     },
+     "b": {
+      "x": 0.6,
+      "y": 0.56
+     }
+    }
+   ],
+   "description": "Mutfak alt dolabı ve tezgâh, 60 cm derin; genişlik 30–120 cm. Taban noktası duvarda sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Dolap",
+    "tags": [
+     "dolap",
+     "tezgâh",
+     "mutfak"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.6,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.3,
+       "max": 1.2,
+       "step": 0.15
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2
+      ],
+      "min": {
+       "x": 0.5,
+       "y": -0.1
+      },
+      "max": {
+       "x": 0.7,
+       "y": 0.7
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000025",
+   "name": "Üst dolap",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.6,
+       "y": 0.0
+      },
+      {
+       "x": 0.6,
+       "y": 0.35
+      },
+      {
+       "x": 0.0,
+       "y": 0.35
+      }
+     ],
+     "closed": true,
+     "lineType": "dashed"
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.6,
+      "y": 0.35
+     },
+     "lineType": "dashed"
+    }
+   ],
+   "description": "Mutfak üst dolabı 35 cm derin, planda kesikli; genişlik 30–120 cm. Taban noktası duvarda sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mutfak/Dolap",
+    "tags": [
+     "dolap",
+     "üst",
+     "mutfak"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.6,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.3,
+       "max": 1.2,
+       "step": 0.15
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2
+      ],
+      "min": {
+       "x": 0.5,
+       "y": -0.1
+      },
+      "max": {
+       "x": 0.7,
+       "y": 0.45
+      }
+     }
+    ]
+   }
   }
  ]
 }

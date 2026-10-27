@@ -154,6 +154,22 @@
    "tests": 0
   },
   {
+   "id": "arch.audit",
+   "kind": "command",
+   "title": "Mimari denetim",
+   "level": "query",
+   "via": [
+    "cad.arch.audit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.audit",
+   "mcp": "cad.arch.audit",
+   "note": "Bulgular cad.arch.audit'ten; satır nesnelere gider, Düzelt bulgunun fix.step'ini çalıştırır (ADR 0703).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.phase.all",
    "kind": "command",
    "title": "Evre: Tümü",
@@ -12836,6 +12852,22 @@
    "python": "kentos.cad.walls.create",
    "mcp": "cad.walls.create",
    "note": "Yol, genişlik, hiza, öteleme ve stil komuta verilir; yüzler ve bileşenler komutun hesabıdır, önizleme planından (ADR 0339 §5, §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallDimensions",
+   "kind": "command",
+   "title": "Duvar ölçüleri",
+   "level": "semantic",
+   "via": [
+    "cad.dimensionsets.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensionsets.create",
+   "mcp": "cad.dimensionsets.create",
+   "note": "Duvar, kenar (edge) ya da Bütün kenarlar (around), yüz, sıralar, açıklık uç/merkez seçimi, katman, stil ve kağıt mm aralığı komuta gider; ölçüleri ve üyeliği komut üretir, önizleme aynı planı okur (ADR 0695, 0700).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

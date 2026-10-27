@@ -28,6 +28,7 @@ mod annotative;
 mod annotation_styles;
 mod wall_joins;
 mod tags_check;
+mod arch_audit;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
@@ -72,6 +73,10 @@ mod block_attributes;
 mod block_card;
 #[cfg(test)]
 mod block_dynamic_scenes;
+#[cfg(test)]
+mod furniture_scenes;
+#[cfg(test)]
+mod arch_audit_scenes;
 mod block_editor;
 #[cfg(test)]
 mod block_scenes;

@@ -40,6 +40,7 @@ fn recipe(doc: &Document, wall: Slot, origin: Vec2) -> DimensionSet {
     DimensionSet {
         id: SET,
         wall: EntityId(doc.uid(wall).unwrap().into_bytes()),
+        edge: None,
         face: DimensionSetFace::Left,
         rows: vec![DimensionSetRow::Openings, DimensionSetRow::Overall],
         openings: DimensionSetOpenings::Ends,
@@ -699,4 +700,52 @@ fn member_delete_and_group_edit_in_one_transaction_refuse_in_both_orders() {
     doc.update_dimension_set(set).unwrap();
     assert_eq!(doc.dimension_set(SET).unwrap().members.len(), 4);
     assert_ne!(doc.dimension_set(SET).unwrap().members[1].uid, victim);
+}
+
+/// docs/adr/0700: a closed room's measured edge goes with its two ends: a vertex inserted before it renumbers it,
+/// one of its ends removed breaks the set (its last geometry kept) instead of measuring another edge.
+#[test]
+fn an_edge_follows_its_two_ends_and_breaks_when_one_goes() {
+    let origin = Vec2 { x: 0., y: 0. };
+    let (mut doc, wall, _) = fixture(origin);
+    let corners = |pts: &[(f64, f64)]| pts.iter().map(|&(x, y)| Vec2 { x, y }).collect::<Vec<_>>();
+    let mut room = doc.get(wall).unwrap().clone();
+    if let Entity::Wall(w) = &mut room {
+        w.wall.pts = corners(&[(0., 0.), (10., 0.), (10., 6.), (0., 6.)]);
+        w.wall.closed = true;
+    }
+    checked_update(&mut doc, wall, room).unwrap();
+    let mut set = recipe(&doc, wall, origin);
+    set.edge = Some(2);
+    set.face = DimensionSetFace::Right;
+    set.at = Vec2 { x: 5., y: 7. };
+    doc.add_dimension_set(set).unwrap();
+    // The top edge's outer face, mitred at both corners; the bottom edge's window is not on it.
+    let measured = lengths(&doc);
+    assert_eq!(measured.len(), 2);
+    for length in measured {
+        close(length, 10.2);
+    }
+    let mut more = doc.get(wall).unwrap().clone();
+    if let Entity::Wall(w) = &mut more {
+        w.wall.pts.insert(1, Vec2 { x: 5., y: 0. });
+    }
+    checked_update(&mut doc, wall, more).unwrap();
+    let followed = doc.dimension_set(SET).unwrap();
+    assert_eq!(followed.edge, Some(3));
+    assert_eq!(followed.broken, None);
+    for length in lengths(&doc) {
+        close(length, 10.2);
+    }
+    let mut fewer = doc.get(wall).unwrap().clone();
+    if let Entity::Wall(w) = &mut fewer {
+        w.wall.pts.remove(3); // (10, 6), the top edge's start
+    }
+    checked_update(&mut doc, wall, fewer).unwrap();
+    let broken = doc.dimension_set(SET).unwrap();
+    assert_eq!(broken.broken, Some(DimensionSetBreak::UnsupportedWall));
+    assert_eq!(broken.members.len(), 2, "the last geometry stays for repair");
+    doc.undo().unwrap();
+    let back = doc.dimension_set(SET).unwrap();
+    assert_eq!((back.edge, back.broken), (Some(3), None));
 }

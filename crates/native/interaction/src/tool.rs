@@ -737,6 +737,8 @@ pub struct Memory {
     pub wall_dimensions_gap_mm: f64,
     pub wall_dimensions_rows: u8,
     pub wall_dimensions_centers: bool,
+    /// Kenarlar → Bütün kenarlar (docs/adr/0700).
+    pub wall_dimensions_around: bool,
     /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
     /// style) (docs/adr/0339 §6).
     pub wall_width: f64,
@@ -832,6 +834,8 @@ pub struct Memory {
     pub block_y_scale: Option<f64>,
     pub block_rotation: f64,
     pub block_mirror: bool,
+    /// Blok ekle's Duvara hizala (docs/adr/0702): near a wall's face the block stands on it, its x along it.
+    pub block_to_wall: bool,
     /// Topolojik temizlik's tolerance, metres, and its four works
     /// (`TopologyTool.tolerance`, `.works`; docs/adr/0148 §3).
     pub topology_tolerance: f64,
@@ -1146,6 +1150,7 @@ impl Default for Memory {
             wall_dimensions_gap_mm: 7.5,
             wall_dimensions_rows: 3,
             wall_dimensions_centers: false,
+            wall_dimensions_around: false,
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
@@ -1198,6 +1203,7 @@ impl Default for Memory {
             block_y_scale: None,
             block_rotation: 0.0,
             block_mirror: false,
+            block_to_wall: false,
             topology_tolerance: crate::topology::FIRST_TOLERANCE,
             topology_works: crate::topology::FIRST_WORKS,
             polygonize_islands: true,

@@ -8,7 +8,7 @@ use kentos_contracts::{
     DimensionEntity, DimensionRefs, DimensionSet, DimensionSetBreak, DimensionSetFace,
     DimensionSetId, DimensionSetMember, DimensionSetOpenings, DimensionSetRow,
     DimensionSetRowPlace, DimensionSetSegment, DimensionStyle, Entity, EntityBase, EntityId,
-    SubRef, Vec2, dimension_sets_problem,
+    SubRef, Vec2, WallFields, dimension_sets_problem,
 };
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::Entity as CoreEntity;
@@ -38,12 +38,54 @@ pub struct PlannedDimensionSetMember {
     pub dimension: DimensionEntity,
 }
 
+/// The face edge a recipe measures: its two ends, the face line's number and the ends' vertex numbers, and how
+/// far from the face an opening of this edge may lie (the wall's width).
+#[derive(Clone, Copy, Debug)]
+struct FaceEdge {
+    line: [CoreVec2; 2],
+    part: usize,
+    ends: [usize; 2],
+    reach: f64,
+}
+
+/// A wall's edges as the dimension tool and command need them (docs/adr/0700).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WallEdges {
+    /// The straight edges' numbers, in order.
+    pub straight: Vec<u32>,
+    /// All its edges.
+    pub count: usize,
+    pub closed: bool,
+    /// The path turns counter-clockwise: a closed wall's left face is its inside.
+    pub counter_clockwise: bool,
+}
+
 fn p(v: Vec2) -> CoreVec2 {
     CoreVec2::new(v.x, v.y)
 }
 fn v(p: CoreVec2) -> Vec2 {
     Vec2 { x: p.x, y: p.y }
 }
+/// The edge's number on the wall's new path (docs/adr/0700): the same number while the path keeps its vertex count
+/// and closedness; else the edge whose two ends are, bit for bit, the old edge's. None: the edge is gone. An open
+/// two-point wall's only edge is kept as no number, as an old recipe has it.
+fn follow_edge(before: &WallFields, after: &WallFields, edge: Option<u32>) -> Option<Option<u32>> {
+    let (p0, p1) = (&before.pts, &after.pts);
+    if p0.len() == p1.len() && before.closed == after.closed {
+        return Some(edge);
+    }
+    let (n0, n1) = (p0.len(), p1.len());
+    let k = edge.unwrap_or(0) as usize;
+    if n0 < 2 || n1 < 2 || (!before.closed && k + 1 >= n0) || k >= n0 {
+        return None;
+    }
+    let (a, b) = (p0[k], p0[(k + 1) % n0]);
+    let same = |u: Vec2, w: Vec2| u.x.to_bits() == w.x.to_bits() && u.y.to_bits() == w.y.to_bits();
+    let edges = if after.closed { n1 } else { n1 - 1 };
+    let j = (0..edges).find(|&j| same(p1[j], a) && same(p1[(j + 1) % n1], b))?;
+    Some((after.closed || n1 > 2).then_some(j as u32))
+}
+
 fn row(r: DimensionSetRow) -> core::Row {
     match r {
         DimensionSetRow::Openings => core::Row::Openings,
@@ -309,27 +351,54 @@ impl Document {
     }
 
     /// The real chosen face, from stable wall subplaces, never render tessellation.
-    fn dimension_set_face(
-        &self,
-        set: &DimensionSet,
-    ) -> Result<([CoreVec2; 2], usize), DimensionSetBreak> {
-        self.dimension_set_face_of(set.wall, set.face)
+    fn dimension_set_face(&self, set: &DimensionSet) -> Result<FaceEdge, DimensionSetBreak> {
+        self.dimension_set_face_of(set.wall, set.face, set.edge)
     }
 
+    /// The face edge a recipe on `wall` measures (docs/adr/0700): `edge` of a wall with more than one edge, the only
+    /// edge of a two-point wall when none.
     pub fn dimension_set_wall_face(
         &self,
         wall: Uuid,
         face: DimensionSetFace,
+        edge: Option<u32>,
     ) -> Result<[Vec2; 2], DimensionSetBreak> {
-        self.dimension_set_face_of(EntityId(wall.into_bytes()), face)
-            .map(|(line, _)| line.map(v))
+        self.dimension_set_face_of(EntityId(wall.into_bytes()), face, edge)
+            .map(|f| f.line.map(v))
+    }
+
+    /// A wall's straight edges and whether its path is closed and counter-clockwise (its left face inside); none
+    /// for another object or a wall the core cannot draw.
+    pub fn dimension_set_wall_edges(&self, wall: Uuid) -> Option<WallEdges> {
+        let e = self.slot_of(wall).and_then(|slot| self.get(slot))?;
+        let Entity::Wall(w) = e else {
+            return None;
+        };
+        let n = w.wall.pts.len();
+        let bulges = w.wall.bulges.clone().unwrap_or_else(|| vec![0.0; n]);
+        let area: f64 = (0..n)
+            .map(|i| {
+                let (a, b) = (w.wall.pts[i], w.wall.pts[(i + 1) % n]);
+                a.x * b.y - b.x * a.y
+            })
+            .sum();
+        Some(WallEdges {
+            straight: core::straight_edges(n, &bulges, w.wall.closed)
+                .into_iter()
+                .map(|k| k as u32)
+                .collect(),
+            count: if w.wall.closed { n } else { n.saturating_sub(1) },
+            closed: w.wall.closed,
+            counter_clockwise: area > 0.0,
+        })
     }
 
     fn dimension_set_face_of(
         &self,
         wall_id: EntityId,
         face: DimensionSetFace,
-    ) -> Result<([CoreVec2; 2], usize), DimensionSetBreak> {
+        edge: Option<u32>,
+    ) -> Result<FaceEdge, DimensionSetBreak> {
         let e = self
             .slot_of(Uuid::from_bytes(wall_id.0))
             .and_then(|slot| self.get(slot))
@@ -337,28 +406,38 @@ impl Document {
         let Entity::Wall(w) = e else {
             return Err(DimensionSetBreak::UnsupportedWall);
         };
-        if w.wall.closed
-            || w.wall.pts.len() != 2
-            || w.wall
-                .bulges
-                .as_ref()
-                .is_some_and(|b| b.iter().any(|b| *b != 0.0))
-        {
-            return Err(DimensionSetBreak::UnsupportedWall);
-        }
-        let wall = crate::opening_follow::wall_line(e).ok_or(DimensionSetBreak::UnsupportedWall)?;
-        let part = match face {
-            DimensionSetFace::Left => 0,
-            DimensionSetFace::Right => kentos_geometry_core::geom::wall::boundaries(&wall.spec)
-                .len()
-                .checked_sub(1)
-                .ok_or(DimensionSetBreak::UnsupportedWall)?,
+        let n = w.wall.pts.len();
+        let edge = match edge {
+            Some(k) => k as usize,
+            None if !w.wall.closed && n == 2 => 0,
+            None => return Err(DimensionSetBreak::UnsupportedWall),
         };
         let text = serde_json::to_string(e).map_err(|_| DimensionSetBreak::UnsupportedWall)?;
         let shape = CoreEntity::from_json(
             &Json::parse(&text).map_err(|_| DimensionSetBreak::UnsupportedWall)?,
         )
         .map_err(|_| DimensionSetBreak::UnsupportedWall)?;
+        let kentos_geometry_core::entity::Shape::Wall { pts, bulges, wall } = &shape.shape else {
+            return Err(DimensionSetBreak::UnsupportedWall);
+        };
+        let lines = kentos_geometry_core::geom::wall::lines(pts, bulges.as_deref(), wall)
+            .map_err(|_| DimensionSetBreak::UnsupportedWall)?;
+        let part = match face {
+            DimensionSetFace::Left => 0,
+            DimensionSetFace::Right => lines
+                .len()
+                .checked_sub(1)
+                .ok_or(DimensionSetBreak::UnsupportedWall)?,
+        };
+        let line = lines.get(part).ok_or(DimensionSetBreak::UnsupportedWall)?;
+        // A bevelled or cleaned corner leaves no face vertex per path vertex: its places are not the path's.
+        if line.pts.len() != n {
+            return Err(DimensionSetBreak::UnsupportedWall);
+        }
+        let path_bulges = bulges.clone().unwrap_or_else(|| vec![0.0; n]);
+        let (_, ends) = core::edge_face(&line.pts, &path_bulges, wall.closed, edge)
+            .ok_or(DimensionSetBreak::UnsupportedWall)?;
+        // The places as every other reader of a wall's places finds them (ADR0694's subrefs).
         let at = |index| {
             point(
                 &shape,
@@ -370,7 +449,12 @@ impl Document {
             )
             .ok_or(DimensionSetBreak::UnsupportedWall)
         };
-        Ok(([at(0)?, at(1)?], part))
+        Ok(FaceEdge {
+            line: [at(ends[0])?, at(ends[1])?],
+            part,
+            ends,
+            reach: wall.width,
+        })
     }
 
     /// Row offset is relative to the selected physical wall face, not a centre-reference member.
@@ -379,7 +463,7 @@ impl Document {
         set: &DimensionSet,
         which: DimensionSetRow,
     ) -> Result<f64, DimensionSetBreak> {
-        let (line, _) = self.dimension_set_face(set)?;
+        let line = self.dimension_set_face(set)?.line;
         let frame = core::Frame::new(line).map_err(fault)?;
         let at = self.dimension_set_row_at(set, which, frame)?;
         Ok(frame.offset(at))
@@ -416,7 +500,7 @@ impl Document {
         if !offset.is_finite() {
             return Err(DimensionSetBreak::UnsupportedWall);
         }
-        let (line, _) = self.dimension_set_face(set)?;
+        let line = self.dimension_set_face(set)?.line;
         let frame = core::Frame::new(line).map_err(fault)?;
         let at = v(frame.at_offset(self.dimension_set_row_at(set, which, frame)?, offset));
         match set.row_places.iter_mut().find(|r| r.row == which) {
@@ -431,7 +515,12 @@ impl Document {
         &self,
         set: &DimensionSet,
     ) -> Result<Vec<PlannedDimensionSetMember>, DimensionSetBreak> {
-        let (line, part) = self.dimension_set_face(set)?;
+        let FaceEdge {
+            line,
+            part,
+            ends,
+            reach,
+        } = self.dimension_set_face(set)?;
         let mut sources = vec![set.wall];
         let mut openings = Vec::new();
         if set.rows.contains(&DimensionSetRow::Openings) {
@@ -439,22 +528,28 @@ impl Document {
                 if opening.broken.is_some() || opening.place.len() != 4 {
                     return Err(DimensionSetBreak::OpeningUnplaced);
                 }
+                let jambs = [
+                    p(opening.place[0]),
+                    p(opening.place[1]),
+                    p(opening.place[2]),
+                    p(opening.place[3]),
+                ];
+                // Another edge's opening belongs to that edge's chain (docs/adr/0700).
+                if !core::on_edge(line, &jambs, reach) {
+                    continue;
+                }
                 let uid = self.uid(slot).ok_or(DimensionSetBreak::OpeningUnplaced)?;
                 sources.push(EntityId(uid.into_bytes()));
                 openings.push(core::Opening {
                     source: sources.len() - 1,
-                    jambs: [
-                        p(opening.place[0]),
-                        p(opening.place[1]),
-                        p(opening.place[2]),
-                        p(opening.place[3]),
-                    ],
+                    jambs,
                 });
             }
         }
         let spans = core::plan(
             line,
             part,
+            ends,
             match set.face {
                 DimensionSetFace::Left => core::Face::Left,
                 DimensionSetFace::Right => core::Face::Right,
@@ -780,6 +875,18 @@ impl Document {
             .flatten()
             .map(|(uid, b, a)| (*uid, Arc::as_ptr(b), Arc::as_ptr(a)))
             .collect();
+        // Each changed wall's path before the step's first write and after its last (docs/adr/0700).
+        let mut walls: HashMap<EntityId, (WallFields, WallFields)> = HashMap::new();
+        for op in ops {
+            if let Op::Update { before, after } = op
+                && let (Entity::Wall(b), Entity::Wall(a)) = (&*before.entity, &*after.entity)
+            {
+                walls
+                    .entry(EntityId(after.uid.into_bytes()))
+                    .and_modify(|(_, last)| *last = a.wall.clone())
+                    .or_insert_with(|| (b.wall.clone(), a.wall.clone()));
+            }
+        }
         let owners: HashMap<Uuid, DimensionSetId> = self
             .dimension_sets
             .iter()
@@ -867,7 +974,20 @@ impl Document {
                     next.members.retain(|member| member.uid != m.uid);
                 }
             }
-            let mut derived = match self.dimension_set_plan(&next) {
+            // The measured edge goes with its two ends when the wall gains or loses a vertex; gone, the set breaks
+            // rather than measure another edge.
+            let edge = match walls.get(&next.wall) {
+                Some((b, a)) => follow_edge(b, a, next.edge),
+                None => Some(next.edge),
+            };
+            let planned = match edge {
+                Some(edge) => {
+                    next.edge = edge;
+                    self.dimension_set_plan(&next)
+                }
+                None => Err(DimensionSetBreak::UnsupportedWall),
+            };
+            let mut derived = match planned {
                 Ok(plan) => match self.dimension_set_ops(&mut next, plan) {
                     Ok(ops) => ops,
                     Err(_) => continue, // The seal's completeness check returns an atomic capacity refusal.
@@ -999,7 +1119,9 @@ impl Document {
                 || changed.contains(&set.wall)
                 || hosts.contains(&set.wall)
                 || set.members.iter().any(|m| changed.contains(&m.uid));
-            if !touched {
+            // A broken set keeps its last members on purpose (docs/adr/0700): its edge may now name another edge
+            // the plan would measure, which is no capacity shortfall.
+            if !touched || set.broken.is_some() {
                 continue;
             }
             if let Ok(plan) = self.dimension_set_plan(set) {

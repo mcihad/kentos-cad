@@ -247,6 +247,8 @@ pub(crate) enum Op {
     DimensionSetViolation {
         uid: Uuid,
     },
+    /// The style tables a `cad.styles.edit` changed, style by style (docs/adr/0699).
+    StyleTables(Box<crate::style_tables::StyleTables>),
     /// Only the metadata installed by an explicit architectural package (ADR 0659).
     TemplateSettings {
         before: Box<crate::template_settings::TemplateSettings>,
@@ -510,6 +512,7 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::StyleTables(tables) => Op::StyleTables(Box::new(tables.inverse())),
             Op::TemplateSettings { before, after } => Op::TemplateSettings {
                 before: after.clone(),
                 after: before.clone(),
@@ -1125,6 +1128,7 @@ impl Document {
                 | Op::DimensionSetUpdate { .. }
                 | Op::ImportMetadata { .. }
                 | Op::TemplateSettings { .. }
+                | Op::StyleTables(_)
                 | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
@@ -1360,6 +1364,10 @@ impl Document {
             }
             Op::TemplateSettings { before, after } => {
                 after.apply_from(before, self);
+                return;
+            }
+            Op::StyleTables(tables) => {
+                tables.apply_to(&mut self.settings);
                 return;
             }
             Op::ImportMetadata { before, after } => {

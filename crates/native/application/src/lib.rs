@@ -263,6 +263,10 @@ pub(crate) mod openings;
 pub mod openings_create;
 pub mod opening_placement;
 pub mod openings_edit;
+pub mod opening_distances;
+// Mimari denetim (docs/adr/0703).
+pub mod arch_audit;
+pub use opening_distances::distances as openings_distances;
 pub mod spaces;
 pub mod spaces_create;
 pub mod spaces_discover;
@@ -795,6 +799,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_OPENINGS_EDIT,
         kentos_commands::CAD_OPENINGS_EDIT_VERSION,
+    ),
+    // Açıklığın geçici ölçüleri ([`opening_distances`], docs/adr/0701).
+    (
+        kentos_commands::CAD_OPENINGS_DISTANCES,
+        kentos_commands::CAD_OPENINGS_DISTANCES_VERSION,
+    ),
+    // Mimari denetim ([`arch_audit`], docs/adr/0703).
+    (
+        kentos_commands::CAD_ARCH_AUDIT,
+        kentos_commands::CAD_ARCH_AUDIT_VERSION,
     ),
     // Duvar, Çizgiden duvar, Duvarı düzenle and Duvar birleşimleri ([`walls_create`], [`walls_from_lines`], [`walls_edit`],
     // [`walls_joins`], docs/adr/0339, 0340).

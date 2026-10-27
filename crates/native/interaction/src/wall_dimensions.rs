@@ -1,8 +1,11 @@
-//! A wall's live opening and overall dimensions: choose a source, review, place once.
+//! A wall's live opening and overall dimensions: choose a source, review, place once. On a wall of more than one
+//! edge (a closed room, a polyline wall) the straight edge nearest the pointer is measured, or every straight edge
+//! at once (docs/adr/0700).
 use kentos_commands::{
     CommandResult, DimensionSetFace, DimensionSetOpenings, DimensionSetRow,
     DimensionSetsCreateInput, Entity, STANDARD_STYLE, TextFace,
 };
+use kentos_domain::dimension_sets::WallEdges;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{ExecutionContext, dimension_sets_create, geometry::shape};
 
@@ -19,6 +22,13 @@ pub const LABEL: &str = "Duvar ölçüleri";
 
 pub struct WallDimensions {
     wall: Option<Uuid>,
+    /// The chosen wall's edges; none before a wall is chosen.
+    edges: Option<WallEdges>,
+    /// The straight edge measured: the one nearest the pointer on a wall of more than one edge; none on a two-point
+    /// wall, whose only edge a recipe keeps without a number.
+    edge: Option<u32>,
+    /// Kenarlar → Bütün kenarlar: a chain on every straight edge, in one step.
+    around: bool,
     source: String,
     at: Option<Vec2>,
     /// An entered distance stays authoritative while the pointer visits controls or menus.
@@ -47,6 +57,9 @@ impl Default for WallDimensions {
     fn default() -> Self {
         Self {
             wall: None,
+            edges: None,
+            edge: None,
+            around: false,
             source: "Duvar seçin".into(),
             at: None,
             fixed_distance: None,
@@ -72,21 +85,17 @@ impl Default for WallDimensions {
     }
 }
 
-fn basis(doc: &Document, uid: Uuid) -> Option<(Vec2, Vec2, f64)> {
+/// A wall path's edge `edge`: its start, its left normal and its length; none for a wall without that edge.
+fn edge_basis(doc: &Document, uid: Uuid, edge: u32) -> Option<(Vec2, Vec2, f64)> {
     let Entity::Wall(w) = doc.get(doc.slot_of(uid)?)? else {
         return None;
     };
-    if w.wall.closed
-        || w.wall.pts.len() != 2
-        || w.wall
-            .bulges
-            .as_ref()
-            .is_some_and(|v| v.iter().any(|&b| b != 0.0))
-    {
+    let (n, k) = (w.wall.pts.len(), edge as usize);
+    if k >= n || (!w.wall.closed && k + 1 >= n) {
         return None;
     }
-    let a = Vec2::new(w.wall.pts[0].x, w.wall.pts[0].y);
-    let b = Vec2::new(w.wall.pts[1].x, w.wall.pts[1].y);
+    let a = Vec2::new(w.wall.pts[k].x, w.wall.pts[k].y);
+    let b = Vec2::new(w.wall.pts[(k + 1) % n].x, w.wall.pts[(k + 1) % n].y);
     let length = (b.x - a.x).hypot(b.y - a.y);
     if !length.is_finite() || length <= 0.0 {
         return None;
@@ -96,6 +105,25 @@ fn basis(doc: &Document, uid: Uuid) -> Option<(Vec2, Vec2, f64)> {
         Vec2::new(-(b.y - a.y) / length, (b.x - a.x) / length),
         length,
     ))
+}
+
+/// The wall's straight edge nearest `p` along its path, the lower number on a tie.
+fn nearest_edge(doc: &Document, uid: Uuid, edges: &WallEdges, p: Vec2) -> Option<u32> {
+    edges
+        .straight
+        .iter()
+        .filter_map(|&k| {
+            let (a, n, length) = edge_basis(doc, uid, k)?;
+            let b = Vec2::new(a.x + n.y * length, a.y - n.x * length);
+            Some((k, kentos_geometry_core::geometry::dist_to_segment(p, a, b)))
+        })
+        .min_by(|x, y| x.1.total_cmp(&y.1))
+        .map(|(k, _)| k)
+}
+
+/// A wall with more than one edge needs one named (docs/adr/0700).
+fn many(edges: &WallEdges) -> bool {
+    edges.closed || edges.count > 1
 }
 
 pub(crate) fn wrapped(text: &str) -> Vec<String> {
@@ -122,7 +150,7 @@ impl WallDimensions {
         let (Some(uid), Some(at)) = (self.wall, self.at) else {
             return false;
         };
-        let Some((a, n)) = self.face_basis(doc, uid) else {
+        let Some((a, n, _)) = self.face_basis(doc, uid) else {
             return false;
         };
         let old = (at.x - a.x) * n.x + (at.y - a.y) * n.y;
@@ -134,22 +162,44 @@ impl WallDimensions {
         true
     }
 
-    fn face_basis(&self, doc: &Document, uid: Uuid) -> Option<(Vec2, Vec2)> {
-        let points = doc
-            .dimension_set_wall_face(
-                uid,
-                if self.left {
-                    DimensionSetFace::Left
-                } else {
-                    DimensionSetFace::Right
-                },
-            )
-            .ok()?;
+    fn face(&self) -> DimensionSetFace {
+        if self.left {
+            DimensionSetFace::Left
+        } else {
+            DimensionSetFace::Right
+        }
+    }
+
+    /// The measured face edge: its start, its left normal and its length.
+    fn face_basis(&self, doc: &Document, uid: Uuid) -> Option<(Vec2, Vec2, f64)> {
+        Self::face_edge(doc, uid, self.face(), self.edge)
+    }
+
+    fn face_edge(
+        doc: &Document,
+        uid: Uuid,
+        face: DimensionSetFace,
+        edge: Option<u32>,
+    ) -> Option<(Vec2, Vec2, f64)> {
+        let points = doc.dimension_set_wall_face(uid, face, edge).ok()?;
         let a = Vec2::new(points[0].x, points[0].y);
         let b = Vec2::new(points[1].x, points[1].y);
         let length = (b.x - a.x).hypot(b.y - a.y);
-        (length.is_finite() && length > 0.0)
-            .then(|| (a, Vec2::new(-(b.y - a.y) / length, (b.x - a.x) / length)))
+        (length.is_finite() && length > 0.0).then(|| {
+            (
+                a,
+                Vec2::new(-(b.y - a.y) / length, (b.x - a.x) / length),
+                length,
+            )
+        })
+    }
+
+    /// The closed wall's outer face is the left one: on a clockwise path; none for an open wall.
+    fn outer_left(&self) -> Option<bool> {
+        self.edges
+            .as_ref()
+            .filter(|e| e.closed)
+            .map(|e| !e.counter_clockwise)
     }
     fn request(&self, expected: bool) -> Option<DimensionSetsCreateInput> {
         let wall = self.wall?;
@@ -165,11 +215,9 @@ impl WallDimensions {
             wall: wall.to_string(),
             layer_id: self.layer.clone(),
             at: kentos_commands::Vec2 { x: at.x, y: at.y },
-            face: if self.left {
-                DimensionSetFace::Left
-            } else {
-                DimensionSetFace::Right
-            },
+            edge: self.edge,
+            around: self.around,
+            face: self.face(),
             rows,
             openings: if self.centers {
                 DimensionSetOpenings::Centers
@@ -244,7 +292,25 @@ impl WallDimensions {
                     .strokes
                     .extend(Outline::of(&shape(entity), Some([6., 4.]), 2.0, Tone::Snap).strokes);
             }
-            if let (Some((a, n)), Some(at)) = (self.face_basis(cx.doc, uid), self.at) {
+            // The measured face edges, solid over the dashed wall: the one edge, or every straight edge.
+            let measured: Vec<Option<u32>> = match &self.edges {
+                Some(edges) if self.around && many(edges) => {
+                    edges.straight.iter().map(|&k| Some(k)).collect()
+                }
+                _ => vec![self.edge],
+            };
+            for edge in measured {
+                if let Some((a, n, length)) = Self::face_edge(cx.doc, uid, self.face(), edge) {
+                    let mut stroke = Stroke::solid(
+                        vec![a, Vec2::new(a.x + n.y * length, a.y - n.x * length)],
+                        false,
+                    );
+                    stroke.width = 3.0;
+                    stroke.tone = Tone::Snap;
+                    self.drawn.strokes.push(stroke);
+                }
+            }
+            if let (Some((a, n, _)), Some(at)) = (self.face_basis(cx.doc, uid), self.at) {
                 self.distance = cx
                     .format()
                     .length(((at.x - a.x) * n.x + (at.y - a.y) * n.y).abs());
@@ -261,10 +327,19 @@ impl WallDimensions {
                 for entity in &output.entities {
                     self.dimension_ghost(entity, cx);
                 }
+                let edges = self
+                    .edges
+                    .as_ref()
+                    .filter(|e| self.around && many(e))
+                    .map_or(1, |e| e.straight.len());
                 self.drawn.tag = self.at.map(|at| Tag {
                     at,
                     lines: vec![
-                        format!("{} ölçü · tek adım", self.count),
+                        if edges > 1 {
+                            format!("{} ölçü · {edges} kenar · tek adım", self.count)
+                        } else {
+                            format!("{} ölçü · tek adım", self.count)
+                        },
                         if self.fixed_distance.is_some() {
                             "Uzaklık sabit · tıklayın veya Enter ile yerleştirin"
                         } else {
@@ -294,27 +369,43 @@ impl WallDimensions {
         self.drawn.texts.extend(preview.texts);
     }
 
-    fn choose(&mut self, slot: Slot, cx: &mut Context<'_>) {
+    fn choose(&mut self, slot: Slot, near: Option<Vec2>, cx: &mut Context<'_>) {
         let Some(Entity::Wall(w)) = cx.doc.get(slot) else {
             return;
         };
         let Some(uid) = cx.doc.uid(slot) else { return };
-        if basis(cx.doc, uid).is_none() {
-            cx.say(Level::Info,"Bu araç şimdilik tek düz duvarı ölçülendirir. Çok kenarlı veya yaylı duvar yerine bir düz duvar seçin.");
+        let Some(edges) = cx
+            .doc
+            .dimension_set_wall_edges(uid)
+            .filter(|e| !e.straight.is_empty())
+        else {
+            cx.say(
+                Level::Info,
+                "Bu duvarın düz kenarı yok; ölçü dizisi yalnız düz kenarı ölçer. Düz kenarlı bir duvar seçin.",
+            );
             return;
+        };
+        let layer = cx
+            .doc
+            .layers()
+            .get(&w.base.layer_id)
+            .map_or(w.base.layer_id.as_str(), |l| l.name.as_str());
+        self.source = if many(&edges) {
+            format!("Duvar · {layer} · {} kenar", edges.count)
+        } else {
+            format!("Duvar · {layer}")
+        };
+        self.edge = many(&edges).then(|| {
+            near.and_then(|p| nearest_edge(cx.doc, uid, &edges, p))
+                .unwrap_or(edges.straight[0])
+        });
+        // A closed wall starts on its outer face.
+        if edges.closed && self.face_override.is_none() {
+            self.left = !edges.counter_clockwise;
         }
         self.wall = Some(uid);
-        self.source = format!(
-            "Duvar · {}",
-            cx.doc
-                .layers()
-                .get(&w.base.layer_id)
-                .map_or(w.base.layer_id.as_str(), |l| l.name.as_str())
-        );
-        if let Some((a, n)) = self.face_basis(cx.doc, uid) {
-            let length = basis(cx.doc, uid)
-                .map(|(_, _, length)| length)
-                .unwrap_or_default();
+        self.edges = Some(edges);
+        if let Some((a, n, length)) = self.face_basis(cx.doc, uid) {
             let distance = 3.0 * styles::standard_dimension_height(cx.doc.settings());
             let side = if self.left { 1.0 } else { -1.0 };
             self.at = Some(Vec2::new(
@@ -368,17 +459,28 @@ impl WallDimensions {
                 {
                     return None;
                 }
+                // The nearest physical centre line: the faces' middle along each edge of the path.
                 let faces =
                     kentos_geometry_core::geom::wall::lines(&pts, bulges.as_deref(), &wall).ok()?;
-                let left = faces.first()?;
-                let right = faces.last()?;
-                let middle = |a: Vec2, b: Vec2| Vec2::new((a.x + b.x) * 0.5, (a.y + b.y) * 0.5);
-                let a = middle(*left.pts.first()?, *right.pts.first()?);
-                let b = middle(*left.pts.last()?, *right.pts.last()?);
-                Some((
-                    slot,
-                    kentos_geometry_core::geometry::dist_to_segment(p.raw, a, b),
-                ))
+                let (left, right) = (faces.first()?, faces.last()?);
+                let n = left.pts.len().min(right.pts.len());
+                let middle = |i: usize| {
+                    Vec2::new(
+                        (left.pts[i].x + right.pts[i].x) * 0.5,
+                        (left.pts[i].y + right.pts[i].y) * 0.5,
+                    )
+                };
+                let edges = if wall.closed { n } else { n.saturating_sub(1) };
+                (0..edges)
+                    .map(|i| {
+                        kentos_geometry_core::geometry::dist_to_segment(
+                            p.raw,
+                            middle(i),
+                            middle((i + 1) % n),
+                        )
+                    })
+                    .min_by(f64::total_cmp)
+                    .map(|d| (slot, d))
             })
             .min_by(|a, b| {
                 a.1.total_cmp(&b.1)
@@ -389,21 +491,32 @@ impl WallDimensions {
 
     fn place_at(&mut self, at: Vec2, cx: &Context<'_>) {
         self.at = Some(at);
-        if let Some(uid) = self.wall
-            && let Some((mut a, n, _)) = basis(cx.doc, uid)
-        {
-            if let (Ok(left), Ok(right)) = (
-                cx.doc.dimension_set_wall_face(uid, DimensionSetFace::Left),
-                cx.doc.dimension_set_wall_face(uid, DimensionSetFace::Right),
-            ) {
-                a = Vec2::new(
-                    (left[0].x + right[0].x) * 0.5,
-                    (left[0].y + right[0].y) * 0.5,
-                );
+        if let Some(uid) = self.wall {
+            // The edge under the pointer, on a wall of more than one.
+            if let Some(edges) = self.edges.as_ref().filter(|e| many(e))
+                && let Some(k) = nearest_edge(cx.doc, uid, edges, at)
+            {
+                self.edge = Some(k);
             }
-            self.left = self
-                .face_override
-                .unwrap_or((at.x - a.x) * n.x + (at.y - a.y) * n.y >= 0.0);
+            if let Some(left) = self.outer_left().filter(|_| self.around) {
+                // Every edge of a closed wall is measured on its outer face.
+                self.left = left;
+            } else if let Some((mut a, n, _)) = edge_basis(cx.doc, uid, self.edge.unwrap_or(0)) {
+                if let (Ok(left), Ok(right)) = (
+                    cx.doc
+                        .dimension_set_wall_face(uid, DimensionSetFace::Left, self.edge),
+                    cx.doc
+                        .dimension_set_wall_face(uid, DimensionSetFace::Right, self.edge),
+                ) {
+                    a = Vec2::new(
+                        (left[0].x + right[0].x) * 0.5,
+                        (left[0].y + right[0].y) * 0.5,
+                    );
+                }
+                self.left = self
+                    .face_override
+                    .unwrap_or((at.x - a.x) * n.x + (at.y - a.y) * n.y >= 0.0);
+            }
         }
         self.see(cx);
     }
@@ -413,7 +526,7 @@ impl WallDimensions {
             cx.say(
                 Level::Warn,
                 self.error.clone().unwrap_or_else(|| {
-                    "Önce bir düz duvar seçin ve ölçü sıralarını kontrol edin.".into()
+                    "Önce bir duvar seçin ve ölçü sıralarını kontrol edin.".into()
                 }),
             );
             return false;
@@ -435,10 +548,18 @@ impl WallDimensions {
                 }
                 cx.say(
                     Level::Success,
-                    format!(
-                        "{} ölçü yerleştirildi; duvarın açıklıkları değişince güncellenir.",
-                        self.count
-                    ),
+                    if output.sets.len() > 1 {
+                        format!(
+                            "{} ölçü {} kenara yerleştirildi; duvar ve açıklıkları değişince güncellenir.",
+                            self.count,
+                            output.sets.len()
+                        )
+                    } else {
+                        format!(
+                            "{} ölçü yerleştirildi; duvarın açıklıkları değişince güncellenir.",
+                            self.count
+                        )
+                    },
                 );
                 self.done = true;
                 true
@@ -568,6 +689,7 @@ impl Tool for WallDimensions {
         self.overall = cx.memory.wall_dimensions_rows & 2 != 0;
         self.centers = cx.memory.wall_dimensions_centers;
         self.gap_mm = cx.memory.wall_dimensions_gap_mm;
+        self.around = cx.memory.wall_dimensions_around;
         self.menus(cx);
         if !self
             .layer_choices
@@ -578,7 +700,7 @@ impl Tool for WallDimensions {
             self.layer = choice.typed.clone();
         }
         if let [slot] = cx.selection.ids() {
-            self.choose(*slot, cx);
+            self.choose(*slot, None, cx);
         } else {
             self.menus(cx);
         }
@@ -592,10 +714,12 @@ impl Tool for WallDimensions {
             LABEL,
             if self.wall.is_some() && self.fixed_distance.is_some() {
                 "girilen uzaklık sabit; tıklayın veya Enter ile yerleştirin"
+            } else if self.edges.as_ref().is_some_and(|e| many(e) && !self.around) {
+                "ölçülecek kenarı ve sıraların yerini imleçle seçin veya uzaklık yazın"
             } else if self.wall.is_some() {
                 "ölçü sıralarının yerini seçin veya uzaklık yazın"
             } else {
-                "ölçülendirilecek düz duvara tıklayın"
+                "ölçülendirilecek duvara tıklayın"
             },
         )
         .option("Başka duvar", "K")
@@ -619,9 +743,9 @@ impl Tool for WallDimensions {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.wall.is_none() {
             if let Some(slot) = Self::source_at(p, cx) {
-                self.choose(slot, cx);
+                self.choose(slot, Some(p.raw), cx);
             } else {
-                cx.say(Level::Info, "Ölçülendirilecek düz duvara tıklayın.");
+                cx.say(Level::Info, "Ölçülendirilecek duvara tıklayın.");
             }
         } else {
             if self.fixed_distance.is_none() {
@@ -637,6 +761,8 @@ impl Tool for WallDimensions {
         let key = upper_tr(text.trim());
         if key == "K" {
             self.wall = None;
+            self.edges = None;
+            self.edge = None;
             self.source = "Duvar seçin".into();
             self.at = None;
             self.fixed_distance = None;
@@ -680,6 +806,8 @@ impl Tool for WallDimensions {
         if self.wall.take().is_none() {
             return false;
         }
+        self.edges = None;
+        self.edge = None;
         self.source = "Duvar seçin".into();
         self.at = None;
         self.fixed_distance = None;
@@ -699,22 +827,28 @@ impl Tool for WallDimensions {
             Some(true) => "left",
             Some(false) => "right",
         };
+        // A closed wall's faces by where they are: the outer one on the right of a counter-clockwise path.
+        let faces = match &self.edges {
+            Some(e) if e.closed && e.counter_clockwise => {
+                [("auto", "İmleç tarafı"), ("right", "Dış yüz"), ("left", "İç yüz")]
+            }
+            Some(e) if e.closed => [("auto", "İmleç tarafı"), ("left", "Dış yüz"), ("right", "İç yüz")],
+            _ => [
+                ("auto", "İmleç tarafı"),
+                ("left", "Duvarın sol yüzü"),
+                ("right", "Duvarın sağ yüzü"),
+            ],
+        };
+        let all_outer = self.around && self.outer_left().is_some();
         let mut rows = vec![
             Setting::text("C", "Kaynak", self.source.clone()).read_only(),
             Setting::choice("L", "Ölçü katmanı", self.layer_choices.clone()),
             Setting::choice("S", "Ölçü stili", self.style_choices.clone()),
-            Setting::choice(
-                "F",
-                "Ölçülen yüz",
-                choices(
-                    &[
-                        ("auto", "İmleç tarafı"),
-                        ("left", "Duvarın sol yüzü"),
-                        ("right", "Duvarın sağ yüzü"),
-                    ],
-                    face,
-                ),
-            ),
+            if all_outer {
+                Setting::text("F", "Ölçülen yüz", "Dış yüz (bütün kenarlar)").read_only()
+            } else {
+                Setting::choice("F", "Ölçülen yüz", choices(&faces, face))
+            },
             Setting::toggle("A", "Açıklık sırası", self.openings),
             Setting::choice(
                 "B",
@@ -748,10 +882,28 @@ impl Tool for WallDimensions {
                 if self.fixed_distance.is_some() {
                     "Girilen uzaklık korunur. Tıklama veya Enter ile yerleştirin. Yeniden fareyle yer seçmek için Yerleşim → İmleçle seçin. Duvarın açıklıkları değişince ölçü dizisi güncellenir."
                 } else {
-                    "Düz duvardaki açıklıkları ve toplam boyu birlikte ölçülendirir. İmleçle yer seçin veya Duvara uzaklık girin; girilen uzaklık sabitlenir. Ölçü stili ve mevcut çizim ölçeği kullanılır."
+                    "Duvarın imlece en yakın düz kenarındaki açıklıkları ve toplam boyu birlikte ölçülendirir; Kenarlar → Bütün kenarlar kapalı duvarın her kenarına dış yüzden zincir koyar. İmleçle yer seçin veya Duvara uzaklık girin; girilen uzaklık sabitlenir. Ölçü stili ve mevcut çizim ölçeği kullanılır."
                 },
             ),
         ];
+        // Kenarlar: shown while it can matter, before a wall or on one with more than one straight edge.
+        if self
+            .edges
+            .as_ref()
+            .is_none_or(|e| e.straight.len() > 1)
+        {
+            rows.insert(
+                4,
+                Setting::choice(
+                    "N",
+                    "Kenarlar",
+                    choices(
+                        &[("one", "Bu kenar"), ("all", "Bütün kenarlar")],
+                        if self.around { "all" } else { "one" },
+                    ),
+                ),
+            );
+        }
         if let Some(why) = &self.error {
             rows.push(Setting::notice("E", "Yerleştirilemiyor", why));
         }
@@ -797,6 +949,10 @@ impl Tool for WallDimensions {
                 self.centers = value == "centers";
                 true
             }
+            "N" if matches!(value, "one" | "all") => {
+                self.around = value == "all";
+                true
+            }
             "R" => match paper_mm(value) {
                 Some(mm) if mm > 0.0 && mm <= 1000.0 => {
                     self.gap_mm = mm;
@@ -811,7 +967,7 @@ impl Tool for WallDimensions {
                 }
                 "fixed" => {
                     if let (Some(uid), Some(at)) = (self.wall, self.at)
-                        && let Some((a, n)) = self.face_basis(cx.doc, uid)
+                        && let Some((a, n, _)) = self.face_basis(cx.doc, uid)
                     {
                         self.fixed_distance = Some(((at.x - a.x) * n.x + (at.y - a.y) * n.y).abs());
                         true
@@ -836,8 +992,8 @@ impl Tool for WallDimensions {
             cx.memory.wall_dimensions_rows = u8::from(self.openings) | (u8::from(self.overall) * 2);
             cx.memory.wall_dimensions_centers = self.centers;
             cx.memory.wall_dimensions_gap_mm = self.gap_mm;
-            if key == "F"
-                && self.face_override.is_none()
+            cx.memory.wall_dimensions_around = self.around;
+            if (key == "N" || key == "F" && self.face_override.is_none())
                 && self.fixed_distance.is_none()
                 && let Some(at) = self.at
             {
@@ -851,7 +1007,7 @@ impl Tool for WallDimensions {
                 if key == "R" {
                     "Kağıt üzerinde 0'dan büyük, en çok 1000 mm bir aralık girin; örneğin 7.5 mm."
                 } else if key == "P" && self.wall.is_none() {
-                    "Önce ölçülendirilecek düz duvarı seçin."
+                    "Önce ölçülendirilecek duvarı seçin."
                 } else {
                     "Geçerli bir değer seçin; uzaklığı 40 cm veya 0.4 m gibi yazabilirsiniz."
                 },

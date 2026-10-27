@@ -2189,7 +2189,9 @@ def document(d):
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
     assert d.get("constraints", {None: None}), "boş kısıt kümesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, bool(d.get("dimensionSets")))))
+    sets = d.get("dimensionSets") or []
+    has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)))
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False, has_constraints=False, has_dimension_sets=False):
@@ -2224,6 +2226,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if has_dimension_sets == 114:
+        # A recipe's edge (docs/adr/0700).
+        return 114
     if has_dimension_sets:
         return 113
     if any((settings or {}).get("arch", {}).get(key) for key in ("spaceNames", "spaceUsages", "spaceNumberPrefixes")):
@@ -2848,7 +2853,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-114.kcad"] = container(root(cmap(parts), version=uint(114)))
+    files["schema-version-115.kcad"] = container(root(cmap(parts), version=uint(115)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4858,6 +4863,12 @@ def build():
     dim_bad("member-twice", lambda sets: sets[0]["members"].append(copy.deepcopy(sets[0]["members"][0])))
     dim_bad("source-path", lambda sets: sets[0]["members"][0]["a"].update(path=[0]))
     dim_bad("unknown", lambda sets: sets[0].update(unknown=True))
+    # Schema 114 (docs/adr/0700): a recipe on one edge of a closed wall.
+    edges = load("dimension-set-edges.json")
+    ep = document(edges)
+    assert ep.count(b"\x67version\x18\x72") == 1
+    out["dimension-set-edges.kcad"] = container(ep)
+    out["broken/dimension-set-edges-in-schema-113.kcad"] = container(ep.replace(b"\x67version\x18\x72", b"\x67version\x18\x71"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

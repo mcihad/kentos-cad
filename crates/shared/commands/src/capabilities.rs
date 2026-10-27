@@ -1823,6 +1823,29 @@ const ENTRIES: &[Entry] = &[
             )]
         },
     },
+    Entry {
+        id: "cad.arch.audit",
+        refusals: &[&["not_finite", "invalid_arch_audit"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.openings.distances",
+        refusals: &[
+            &["no_entities", "invalid_uid", "entity_not_found"],
+            &["not_an_opening", "opening_host_gone", "invalid_opening"],
+        ],
+        warnings: &[],
+        targets: || {
+            vec![target(
+                None,
+                &["opening"],
+                &[],
+                Some("not_an_opening"),
+                None,
+            )]
+        },
+    },
     // Grids, columns, stairs and ramps (docs/adr/0343 §4).
     Entry {
         id: "cad.grids.create",

@@ -237,7 +237,7 @@ CAD = [
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
             ]}, S("tool.viewSection"), S("tool.viewElevation")],
           overflow=["tool.tagAll", "tool.viewDetail", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
-        P("Proje", "archSettings", [S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
+        P("Proje", "archSettings", [S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           overflow=["arch.sheetSet"]),
     ]),

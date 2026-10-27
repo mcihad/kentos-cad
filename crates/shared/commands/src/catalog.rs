@@ -3817,7 +3817,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_OPENINGS_EDIT_VERSION,
             title: "Açıklığı düzenle".into(),
             summary: "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). \
+                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), distance (docs/adr/0701: side start/end, face left/right, distance metre: pervazın o yöndeki en yakın referansa — yüzün köşesi ya da ucu, aynı kenardaki başka açıklığın pervazı, yüzü kesen başka duvar — net mesafesi bu olur; referans sabit, açıklık kenarında kalır; mesafeyi önce cad.openings.distances okur), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). \
                       Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -3863,6 +3863,82 @@ pub fn catalog() -> CommandCatalog {
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
+        CommandDescriptor {
+            id: crate::CAD_OPENINGS_DISTANCES.into(),
+            version: crate::CAD_OPENINGS_DISTANCES_VERSION,
+            title: "Açıklığın mesafeleri".into(),
+            summary: "Kalıcı kimlikleri verilen kapı, pencere ve boşlukların geçici ölçülerini okur (docs/adr/0701): duvar kenarının seçilen yüzünde (face: left, varsayılan, ya da right; yolun yönüne göre) pervazlardan önceki (start) ve sonraki (end) en yakın referansa net mesafe. Referans yüzün köşesi ya da ucu (end), aynı kenardaki başka açıklığın pervazı (opening) ya da yüzü kesen başka duvarın yüzü (wall); from pervazın, to referansın yüzdeki noktası, metre. Yay kenardaki açıklık reddedilir (invalid_opening). Belgeye yazmaz; mesafeyi değiştirmek için cad.openings.edit'in distance işlemi."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OpeningsDistancesInput>(),
+            output: schema::<crate::OpeningsDistances>(),
+            plan: Some(schema::<crate::OpeningsDistances>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kapının iç yüzdeki mesafeleri".into(),
+                input: json!({ "uids": ["0192f5a1-6000-7000-8000-000000000203"], "face": "left" }),
+                output: Some(json!({
+                    "openings": [{
+                        "uid": "0192f5a1-6000-7000-8000-000000000203", "edge": 0, "face": "left",
+                        "start": { "distance": 1.425, "from": { "x": 1.55, "y": 0.125 }, "to": { "x": 0.125, "y": 0.125 },
+                                   "reference": { "kind": "end" } },
+                        "end": { "distance": 1.5, "from": { "x": 2.45, "y": 0.125 }, "to": { "x": 3.95, "y": 0.125 },
+                                 "reference": { "kind": "wall", "uid": "0192f5a1-6000-7000-8000-000000000202" } }
+                    }],
+                    "revision": "12"
+                })),
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ARCH_AUDIT.into(),
+            version: crate::CAD_ARCH_AUDIT_VERSION,
+            title: "Mimari denetim".into(),
+            summary: "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchAudit>(),
+            output: schema::<crate::ArchAudited>(),
+            plan: Some(schema::<crate::ArchAudited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Duvarlar: öbür duvara 4 cm kala biten uç".into(),
+                input: json!({ "checks": ["walls"] }),
+                output: Some(json!({
+                    "findings": [{
+                        "check": "walls", "code": "arch_wall_end_gap",
+                        "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                        "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                        "uids": ["0192f5a1-7030-7000-8000-000000000003", "0192f5a1-7030-7000-8000-000000000002"],
+                        "at": { "x": 5.0, "y": 4.14 },
+                        "fix": {
+                            "label": "Bitiş ucunu öbür duvara uzat",
+                            "step": {
+                                "command": "cad.walls.edit",
+                                "input": {
+                                    "uids": ["0192f5a1-7030-7000-8000-000000000003"],
+                                    "operation": { "kind": "extend", "to": "0192f5a1-7030-7000-8000-000000000002", "end": "end" }
+                                }
+                            }
+                        }
+                    }],
+                    "revision": "7"
+                })),
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_DIMENSIONS_REASSOCIATE.into(),
             version: crate::CAD_DIMENSIONS_REASSOCIATE_VERSION,
@@ -8352,7 +8428,7 @@ pub fn catalog() -> CommandCatalog {
     commands.push(live_changes);
     commands.push(CommandDescriptor {
         id: crate::CAD_DIMENSION_SETS_CREATE.into(), version: crate::CAD_DIMENSION_SETS_VERSION,
-        title: "Duvar ölçüleri oluştur".into(), summary: "Tek iki uçlu düz duvarın gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften ölçer. Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur. Kapalı, çok parçalı ve yaylı duvar işlemden önce reddedilir.".into(), aliases: vec![],
+        title: "Duvar ölçüleri oluştur".into(), summary: "Duvarın bir düz kenarının gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften ölçer. Birden çok kenarlı (kapalı ya da çok köşeli) duvarda edge ölçülecek düz kenarı verir (köşe edge → edge+1); around ise her düz kenara birer dizi koyar, kapalı duvarda dış yüzden, hepsi tek adımda (çıktının sets'i; docs/adr/0700). Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe eklenip silinince kenar uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur. Yay kenar ve pahlanmış yüz işlemden önce reddedilir.".into(), aliases: vec![],
         effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
         requires: vec![CommandRequirement::Document], permissions: vec![],
         undo: CommandUndo::Step, cost: CommandCost::Instant,
@@ -10619,6 +10695,13 @@ mod tests {
                     crate::CAD_OPENINGS_EDIT => {
                         serde_json::from_value::<crate::OpeningsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_OPENINGS_DISTANCES => {
+                        serde_json::from_value::<crate::OpeningsDistancesInput>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_ARCH_AUDIT => {
+                        serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -11661,6 +11744,13 @@ mod tests {
                         crate::CAD_OPENINGS_EDIT => {
                             serde_json::from_value::<crate::OpeningsEdited>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_OPENINGS_DISTANCES => {
+                            serde_json::from_value::<crate::OpeningsDistances>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ARCH_AUDIT => {
+                            serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

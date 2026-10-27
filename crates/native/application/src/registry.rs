@@ -78,7 +78,7 @@ use crate::spaces_separators;
 use crate::spaces_number;
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
-    annotations_write, arc, arch_edit, areas, array, arrays_edit, assets_check, blocks_define,
+    annotations_write, arc, arch_audit, arch_edit, areas, array, arrays_edit, assets_check, blocks_define,
     blocks_edit, changeset, circle, columns_create, constraints_edit, constraints_query,
     constructions, create, crs_transform, curves_construct, curves_edit, delete, dimensions_create,
     dimensions_edit, dimensions_query, dimensions_reassociate, divide, drawing_audit, edit,
@@ -94,7 +94,7 @@ use crate::{
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit,
     library_edit, line, line_types_edit, linearref_define, maplibre, network_define, nurbs,
-    objects_derive, offset, openings_create, openings_edit, parameters_edit, parcels, point,
+    objects_derive, offset, openings_create, openings_distances, openings_edit, parameters_edit, parcels, point,
     points_construct, polygon, polygon_regular, polyline, qml, ramps_create, rasters_georef,
     rasters_mosaic, rasters_reproject, rectangle_create, revcloud_create, roads_edit,
     scenarios_edit, schedules_create, schedules_edit, sector_create, set, settings_set, shape_edits,
@@ -262,6 +262,8 @@ macro_rules! by_command {
             kentos_commands::CAD_WALLS_JOINS => $then!(walls_joins, WallsJoins),
             kentos_commands::CAD_OPENINGS_CREATE => $then!(openings_create, OpeningsCreate),
             kentos_commands::CAD_OPENINGS_EDIT => $then!(openings_edit, OpeningsEdit),
+            kentos_commands::CAD_OPENINGS_DISTANCES => $then!(openings_distances, kentos_commands::OpeningsDistancesInput),
+            kentos_commands::CAD_ARCH_AUDIT => $then!(arch_audit, kentos_commands::ArchAudit),
             kentos_commands::CAD_SPACES_CREATE => $then!(spaces_create, SpacesCreate),
             kentos_commands::CAD_SPACES_DISCOVER => $then!(spaces_discover, kentos_commands::SpacesDiscover),
             kentos_commands::CAD_SPACES_NUMBER => $then!(spaces_number, kentos_commands::SpacesNumber),

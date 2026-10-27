@@ -23,6 +23,7 @@ fn default_gap() -> f64 {
 
 /// Create a live chain on one straight wall face. Wire geometry is metres;
 /// gapMm is paper millimetres and uses the existing project plotScale once.
+/// A wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -34,6 +35,17 @@ pub struct DimensionSetsCreateInput {
     pub wall: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
+    /// The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
+    /// first vertex). Absent: a two-point wall's only edge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub edge: Option<u32>,
+    /// Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
+    /// out from its face as `at` is from `edge`'s (else the first straight edge's).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub around: bool,
     #[serde(default)]
     pub face: DimensionSetFace,
     #[serde(default = "default_rows")]
@@ -166,6 +178,10 @@ pub struct DimensionSetsPlan {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionSetsChanged {
     pub set: DimensionSetId,
+    /// Every set `around` wrote, in edge order (`set` is the first); absent for one set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetId>>", optional))]
+    pub sets: Vec<DimensionSetId>,
     pub uids: Vec<String>,
     pub created: Vec<String>,
     pub removed: Vec<String>,

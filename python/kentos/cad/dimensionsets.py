@@ -33,12 +33,15 @@ if TYPE_CHECKING:
 
 
 class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsChanged, DimensionSetsPlan]):
-    """``cad.dimensionsets.create`` v1. Duvar ölçüleri oluştur: Tek iki uçlu düz duvarın
+    """``cad.dimensionsets.create`` v1. Duvar ölçüleri oluştur: Duvarın bir düz kenarının
     gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften
-    ölçer. Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili
-    kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; aynı kaynak
-    çifti kimliğini ve elle yerleştirilen yazıyı korur. Kapalı, çok parçalı ve yaylı
-    duvar işlemden önce reddedilir.
+    ölçer. Birden çok kenarlı (kapalı ya da çok köşeli) duvarda edge ölçülecek düz
+    kenarı verir (köşe edge → edge+1); around ise her düz kenara birer dizi koyar,
+    kapalı duvarda dış yüzden, hepsi tek adımda (çıktının sets'i; docs/adr/0700).
+    Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır.
+    Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe eklenip silinince
+    kenar uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı
+    korur. Yay kenar ve pahlanmış yüz işlemden önce reddedilir.
     """
     __slots__ = ()
     id = "cad.dimensionsets.create"
@@ -57,7 +60,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         layer_id: str,
         wall: str,
         at: Vec2Like,
+        around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
@@ -66,18 +71,26 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DimensionSetsChanged:
-        """Duvar ölçüleri oluştur: Tek iki uçlu düz duvarın gerçek sol/sağ yüzünü ve açıklık
-        uçlarını veya merkezlerini kalıcı bir tariften ölçer. Sıralar openings/overall;
-        gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak
-        değişince üyelik güncellenir; aynı kaynak çifti kimliğini ve elle yerleştirilen
-        yazıyı korur. Kapalı, çok parçalı ve yaylı duvar işlemden önce reddedilir.
+        """Duvar ölçüleri oluştur: Duvarın bir düz kenarının gerçek sol/sağ yüzünü ve açıklık
+        uçlarını veya merkezlerini kalıcı bir tariften ölçer. Birden çok kenarlı (kapalı ya
+        da çok köşeli) duvarda edge ölçülecek düz kenarı verir (köşe edge → edge+1); around
+        ise her düz kenara birer dizi koyar, kapalı duvarda dış yüzden, hepsi tek adımda
+        (çıktının sets'i; docs/adr/0700). Sıralar openings/overall; gapMm kağıt mm, geometri
+        metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik
+        güncellenir; köşe eklenip silinince kenar uçlarıyla izlenir; aynı kaynak çifti
+        kimliğini ve elle yerleştirilen yazıyı korur. Yay kenar ve pahlanmış yüz işlemden
+        önce reddedilir.
 
         Args:
             doc: The drawing it works on.
             layer_id:
             wall:
             at: Unit: length.
+            around: Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
+                out from its face as `at` is from `edge`'s (else the first straight edge's).
             dimension_style: Existing project style name; absent means Standart.
+            edge: The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
+                first vertex). Absent: a two-point wall's only edge. Unit: count.
             expected_revision:
             face:
             gap_mm: Unit: paper-mm.
@@ -99,7 +112,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             layer_id=layer_id,
             wall=wall,
             at=Vec2.of(at),
+            around=around,
             dimension_style=dimension_style,
+            edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
@@ -115,7 +130,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         layer_id: str,
         wall: str,
         at: Vec2Like,
+        around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
@@ -129,7 +146,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             layer_id=layer_id,
             wall=wall,
             at=Vec2.of(at),
+            around=around,
             dimension_style=dimension_style,
+            edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
@@ -145,7 +164,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         layer_id: str,
         wall: str,
         at: Vec2Like,
+        around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
@@ -159,7 +180,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             layer_id=layer_id,
             wall=wall,
             at=Vec2.of(at),
+            around=around,
             dimension_style=dimension_style,
+            edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
@@ -175,7 +198,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         layer_id: str,
         wall: str,
         at: Vec2Like,
+        around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
@@ -194,7 +219,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             layer_id=layer_id,
             wall=wall,
             at=Vec2.of(at),
+            around=around,
             dimension_style=dimension_style,
+            edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,

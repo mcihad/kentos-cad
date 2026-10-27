@@ -75,7 +75,7 @@ use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_normalize,
-    adjoin_cmd, annotations_scales, annotations_write, arc, areas, array, blocks_define,
+    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, array, blocks_define,
     blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
     entities_fillet, entities_order, entities_pick, entities_relate, entities_select, entities_trim,
@@ -83,7 +83,7 @@ use kentos_native_application::{
     labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_edit,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
     sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
@@ -1315,6 +1315,25 @@ impl Input for kentos_commands::OpeningsEdit {
                 _ => None,
             },
             Op::Copy { offsets } => list_number(offsets, "operation.offsets", path),
+            // Mesafeyle taşı's `operation.distance` (docs/adr/0701).
+            Op::Distance { distance, .. } => (path == "operation.distance").then_some(distance),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::OpeningsDistancesInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ArchAudit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "maxGap" => self.max_gap.as_mut(),
+            "minArea" => self.min_area.as_mut(),
+            "minWidth" => self.min_width.as_mut(),
             _ => None,
         }
     }
@@ -3839,6 +3858,12 @@ fn run_op(
         }
         kentos_commands::CAD_OPENINGS_EDIT => {
             run!(openings_edit, kentos_commands::OpeningsEdit)
+        }
+        kentos_commands::CAD_OPENINGS_DISTANCES => {
+            run!(openings_distances, kentos_commands::OpeningsDistancesInput)
+        }
+        kentos_commands::CAD_ARCH_AUDIT => {
+            run!(arch_audit, kentos_commands::ArchAudit)
         }
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)

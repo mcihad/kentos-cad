@@ -556,9 +556,19 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: StylesEdit) -> CommandRes
     }
 }
 
+/// The table and the objects that follow it, in one undo step: the table's change is recorded with them, so
+/// undo gives back a renamed style too (docs/adr/0699).
 fn write(doc: &mut Document, planned: Planned) -> StylesEdited {
     let before = doc.revision();
-    let (changed, locked) = match planned.table {
+    let table = planned.table;
+    let label = match &table {
+        Some(Table::Text(_)) => "Yazı stili",
+        Some(Table::Dimension(_)) => "Ölçü stili",
+        Some(Table::Leader(_)) => "Kılavuz stili",
+        Some(Table::Wall(_)) => "Duvar stili",
+        None => "",
+    };
+    let (changed, locked) = doc.with_style_tables(label, |doc| match table {
         Some(Table::Text(t)) => {
             let saved = style_tables::save_text_styles(doc, t);
             (saved.changed, saved.locked)
@@ -576,7 +586,7 @@ fn write(doc: &mut Document, planned: Planned) -> StylesEdited {
             (saved.changed, saved.locked)
         }
         None => (0, 0),
-    };
+    });
     StylesEdited {
         style: planned.style,
         changed: doc.revision() != before,

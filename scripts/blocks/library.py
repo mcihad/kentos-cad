@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """KentOS's own block library (docs/adr/0318 §4; plan/cad.md CAD-BLOCK-13): doors, windows, furniture, wet rooms,
 drawing marks and a title block, drawn here from plain measurements, so KentOS may give them out with no one else's
-rights on them.
+rights on them. ARCH-LIB-01 (docs/adr/0702) adds real-size beds, seats, tables, storage, wet-room fixtures with an
+optional clearance outline, white goods and kitchen units.
 
     python3 scripts/blocks/library.py           # writes catalog/v1/blocks/kentos-temel.kblok
     python3 scripts/blocks/library.py --check   # writes nothing; compares
@@ -219,8 +220,247 @@ for y, (tag, prompt, value) in zip((42, 32, 22, 12, 2), (("PROJE", "Proje adı",
     title.attribute(tag, (42 * k, y * k), 3.5 * k, value=value, prompt=prompt)
 blocks.append(title)
 
+# ── ARCH-LIB-01 (docs/adr/0702): real-size furniture, wet-room and kitchen symbols. Wall-standing ones have their
+# insertion point at the middle of their back on the wall, their front toward +y; the rest at their back's left corner.
+# A fixture's clearance is a dashed outline shown in the visibility state “Boşluk zarfı”; it is a drawing aid, not a
+# regulation's check. ──
+
+
+def dashed(block, eid):
+    block.data["entities"][eid - 1]["lineType"] = "dashed"
+    return eid
+
+
+def clearance(block, x0, y0, x1, y1):
+    """The dashed clearance outline and the visibility parameter that hides it by default."""
+    env = dashed(block, block.rect(x0, y0, x1, y1))
+    return env, {"kind": "visibility", "name": "Görünüş",
+                 "states": [{"name": "Sade", "hidden": [env]}, {"name": "Boşluk zarfı"}]}
+
+
+single = Block(17, "Tek kişilik yatak", "Mobilya/Yatak", ["yatak", "tek", "genç"],
+               "Tek kişilik yatak 90 × 200 cm; taban noktası başucu sol köşe, yatak +y yönünde. En 80–140 cm; Boyut tablosu 90/100/120.")
+frame = single.rect(0, 0, 0.9, 2.0)
+pillow = single.rect(0.1, 0.08, 0.8, 0.4)
+cover = single.line((0, 0.65), (0.9, 0.65))
+single.dynamic(
+    [{"kind": "linear", "name": "En", "from": P(0, 0), "to": P(0.9, 0), "rule": {"min": 0.8, "max": 1.4, "step": 0.1}},
+     {"kind": "lookup", "name": "Boyut", "rows": [{"label": "Tek 90 × 200", "values": {"En": 0.9}},
+                                                 {"label": "Tek 100 × 200", "values": {"En": 1.0}},
+                                                 {"label": "Genç 120 × 200", "values": {"En": 1.2}}]}],
+    [{"kind": "stretch", "parameter": "En", "pieces": [frame, pillow, cover], "min": P(0.75, -0.1), "max": P(1.0, 2.1)}])
+blocks.append(single)
+
+nightstand = Block(18, "Komodin", "Mobilya/Yatak", ["komodin", "başucu"], "Başucu komodini 50 × 40 cm, lambasıyla; taban noktası arka sol köşe.")
+nightstand.rect(0, 0, 0.5, 0.4)
+nightstand.circle((0.25, 0.2), 0.1)
+blocks.append(nightstand)
+
+armchair = Block(19, "Koltuk", "Mobilya/Oturma", ["koltuk", "berjer", "tekli"], "Tekli koltuk 85 × 85 cm; taban noktası arkasının ortası, oturağı +y yönünde.")
+armchair.rect(-0.425, 0, 0.425, 0.85)
+armchair.line((-0.275, 0.2), (0.275, 0.2))
+armchair.rect(-0.425, 0.2, -0.275, 0.85)
+armchair.rect(0.275, 0.2, 0.425, 0.85)
+blocks.append(armchair)
+
+loveseat = Block(20, "İkili kanepe", "Mobilya/Oturma", ["kanepe", "ikili"], "İkili kanepe 150 × 85 cm; taban noktası arka sol köşe.")
+loveseat.rect(0, 0, 1.5, 0.85)
+loveseat.line((0.15, 0.2), (1.35, 0.2))
+loveseat.line((0.15, 0.2), (0.15, 0.85))
+loveseat.line((1.35, 0.2), (1.35, 0.85))
+loveseat.line((0.75, 0.2), (0.75, 0.85))
+blocks.append(loveseat)
+
+round_table = Block(21, "Yuvarlak masa", "Mobilya/Masalar", ["masa", "yuvarlak", "yemek"],
+                    "Yuvarlak masa Ø100 cm, dört sandalyesiyle; taban noktası masanın merkezi. Görünüş: Sandalyeli / Yalnız masa.")
+round_table.circle((0, 0), 0.5)
+seats = []
+for k in range(4):
+    a = k * Q
+    cx, cy = math.cos(a) * 0.62, math.sin(a) * 0.62
+    ux, uy = math.cos(a), math.sin(a)
+    vx, vy = -uy, ux
+    corners = [(cx - ux * 0.0 + vx * sx * 0.21 + ux * sy, cy - uy * 0.0 + vy * sx * 0.21 + uy * sy)
+               for sx, sy in ((-1, 0), (1, 0), (1, 0.42), (-1, 0.42))]
+    seats.append(round_table.path([(round(x, 12), round(y, 12)) for x, y in corners], closed=True))
+round_table.dynamic(
+    [{"kind": "visibility", "name": "Görünüş", "states": [{"name": "Sandalyeli"}, {"name": "Yalnız masa", "hidden": seats}]}], [])
+blocks.append(round_table)
+
+desk = Block(22, "Çalışma masası", "Mobilya/Masalar", ["masa", "çalışma", "ofis"], "Çalışma masası 120 × 60 cm; uzunluk 100–180 cm. Taban noktası arka sol köşe.")
+desk_top = desk.rect(0, 0, 1.2, 0.6)
+desk.dynamic(
+    [{"kind": "linear", "name": "Uzunluk", "from": P(0, 0), "to": P(1.2, 0), "rule": {"min": 1.0, "max": 1.8, "step": 0.2}}],
+    [{"kind": "stretch", "parameter": "Uzunluk", "pieces": [desk_top], "min": P(1.1, -0.1), "max": P(1.3, 0.7)}])
+blocks.append(desk)
+
+tv = Block(23, "TV ünitesi", "Mobilya/Depolama", ["tv", "ünite", "salon"], "TV ünitesi 180 × 45 cm; uzunluk 120–240 cm. Taban noktası arka sol köşe.")
+tv_body = tv.rect(0, 0, 1.8, 0.45)
+tv_screen = tv.line((0.3, 0.06), (1.5, 0.06))
+tv.dynamic(
+    [{"kind": "linear", "name": "Uzunluk", "from": P(0, 0), "to": P(1.8, 0), "rule": {"min": 1.2, "max": 2.4, "step": 0.3}}],
+    [{"kind": "stretch", "parameter": "Uzunluk", "pieces": [tv_body, tv_screen], "min": P(1.4, -0.1), "max": P(1.9, 0.55)}])
+blocks.append(tv)
+
+shelf = Block(24, "Kitaplık", "Mobilya/Depolama", ["kitaplık", "raf"], "Kitaplık 90 × 35 cm; genişlik 60–240 cm, 30 cm adımla. Taban noktası arka sol köşe.")
+shelf_body = shelf.rect(0, 0, 0.9, 0.35)
+shelf_back = shelf.line((0, 0.03), (0.9, 0.03))
+shelf.dynamic(
+    [{"kind": "linear", "name": "Genişlik", "from": P(0, 0), "to": P(0.9, 0), "rule": {"min": 0.6, "max": 2.4, "step": 0.3}}],
+    [{"kind": "stretch", "parameter": "Genişlik", "pieces": [shelf_body, shelf_back], "min": P(0.8, -0.1), "max": P(1.0, 0.45)}])
+blocks.append(shelf)
+
+hung = Block(25, "Asma klozet", "Islak hacim/WC", ["klozet", "asma", "wc", "banyo"],
+             "Asma klozet 37 × 54 cm, gömme rezervuarlı; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 60 cm.")
+hung.rect(-0.25, 0, 0.25, 0.08)
+hung.ellipse((0, 0.31), (0, 0.23), 0.8)
+_, look = clearance(hung, -0.4, 0.54, 0.4, 1.14)
+hung.dynamic([look], [])
+blocks.append(hung)
+
+urinal = Block(26, "Pisuvar", "Islak hacim/WC", ["pisuvar", "wc"], "Pisuvar 36 × 35 cm; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 60 cm.")
+urinal.path([(-0.18, 0), (0.18, 0), (0.18, 0.2), (0.12, 0.35), (-0.12, 0.35), (-0.18, 0.2)], closed=True)
+urinal.circle((0, 0.15), 0.03)
+_, look = clearance(urinal, -0.4, 0.35, 0.4, 0.95)
+urinal.dynamic([look], [])
+blocks.append(urinal)
+
+corner = Block(27, "Köşe duş", "Islak hacim/Duş", ["duş", "köşe", "oval", "banyo"],
+               "Oval köşe duşakabin 90 × 90 cm; taban noktası köşe, iki duvar x ve y boyunca. Boşluk zarfı girişin önünde.")
+corner.path([(0, 0), (0.9, 0), (0.9, 0.35)])
+corner.arc((0.35, 0.35), 0.55, 0, Q)
+corner.path([(0.35, 0.9), (0, 0.9), (0, 0)])
+corner.circle((0.25, 0.25), 0.04)
+_, look = clearance(corner, 0.55, 0.55, 1.35, 1.35)
+corner.dynamic([look], [])
+blocks.append(corner)
+
+vanity = Block(28, "Dolaplı lavabo", "Islak hacim/Lavabo", ["lavabo", "dolap", "banyo"],
+               "Banyo dolabı ve lavabo 80 × 46 cm; taban noktası duvarda ortası. Boşluk zarfı önünde 80 × 70 cm.")
+vanity.rect(-0.4, 0, 0.4, 0.46)
+vanity.ellipse((0, 0.25), (0.22, 0), 0.6)
+vanity.circle((0, 0.06), 0.02)
+_, look = clearance(vanity, -0.4, 0.46, 0.4, 1.16)
+vanity.dynamic([look], [])
+blocks.append(vanity)
+
+
+def appliance(n, name, category, tags, description, label, width=0.6, depth=0.6):
+    """A white good under or beside the counter: its box, its front, its label."""
+    b = Block(n, name, category, tags, description)
+    b.rect(-width / 2, 0, width / 2, depth)
+    b.line((-width / 2, depth - 0.04), (width / 2, depth - 0.04))
+    b.text((-0.08, depth / 2 - 0.05), label, 0.1)
+    return b
+
+
+washer = appliance(29, "Çamaşır makinesi", "Islak hacim/Beyaz eşya", ["çamaşır", "makine", "beyaz eşya"],
+                   "Çamaşır makinesi 60 × 60 cm; taban noktası duvarda ortası. Kapağı önde.", "ÇM")
+washer.circle((0, 0.3), 0.18)
+blocks.append(washer)
+
+dryer = appliance(30, "Kurutma makinesi", "Islak hacim/Beyaz eşya", ["kurutma", "makine", "beyaz eşya"],
+                  "Kurutma makinesi 60 × 60 cm; taban noktası duvarda ortası.", "KM")
+blocks.append(dryer)
+
+sink = Block(31, "Evye", "Mutfak/Evye", ["evye", "eviye", "mutfak"],
+             "Tek hazneli, süzgeçli evye 80 × 50 cm, tezgâha gömme; taban noktası duvarda sol köşe. Süzgeç solda çevrilir.")
+sink.rect(0, 0, 0.8, 0.5)
+bowl = sink.rect(0.38, 0.07, 0.76, 0.43)
+drain = sink.circle((0.57, 0.25), 0.03)
+ribs = [sink.line((0.06 + 0.06 * k, 0.1), (0.06 + 0.06 * k, 0.4)) for k in range(5)]
+tap = sink.circle((0.57, 0.035), 0.02)
+sink.dynamic(
+    [{"kind": "flip", "name": "Süzgeç sağda", "a": P(0.4, 0), "b": P(0.4, 1)}],
+    [{"kind": "flip", "parameter": "Süzgeç sağda", "pieces": [bowl, drain, tap] + ribs}])
+blocks.append(sink)
+
+hob = Block(32, "Ocak", "Mutfak/Pişirme", ["ocak", "mutfak"], "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.")
+hob.rect(-0.3, 0, 0.3, 0.52)
+for (x, y, r) in ((-0.14, 0.14, 0.09), (0.14, 0.14, 0.07), (-0.14, 0.37, 0.07), (0.14, 0.37, 0.09)):
+    hob.circle((x, y), r)
+blocks.append(hob)
+
+fridge = appliance(33, "Buzdolabı", "Mutfak/Beyaz eşya", ["buzdolabı", "beyaz eşya", "mutfak"],
+                   "Buzdolabı 60 × 65 cm; taban noktası duvarda ortası. Kapı açılımı önünde.", "BZ", depth=0.65)
+fridge.arc((-0.3, 0.65), 0.6, 0, Q)
+blocks.append(fridge)
+
+dishwasher = appliance(34, "Bulaşık makinesi", "Mutfak/Beyaz eşya", ["bulaşık", "makine", "beyaz eşya", "mutfak"],
+                       "Ankastre bulaşık makinesi 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.", "BM")
+blocks.append(dishwasher)
+
+oven = appliance(35, "Fırın", "Mutfak/Pişirme", ["fırın", "ankastre", "mutfak"],
+                 "Ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.", "F")
+blocks.append(oven)
+
+base_unit = Block(36, "Alt dolap", "Mutfak/Dolap", ["dolap", "tezgâh", "mutfak"],
+                  "Mutfak alt dolabı ve tezgâh, 60 cm derin; genişlik 30–120 cm. Taban noktası duvarda sol köşe.")
+counter = base_unit.rect(0, 0, 0.6, 0.6)
+front = base_unit.line((0, 0.56), (0.6, 0.56))
+base_unit.dynamic(
+    [{"kind": "linear", "name": "Genişlik", "from": P(0, 0), "to": P(0.6, 0), "rule": {"min": 0.3, "max": 1.2, "step": 0.15}}],
+    [{"kind": "stretch", "parameter": "Genişlik", "pieces": [counter, front], "min": P(0.5, -0.1), "max": P(0.7, 0.7)}])
+blocks.append(base_unit)
+
+wall_unit = Block(37, "Üst dolap", "Mutfak/Dolap", ["dolap", "üst", "mutfak"],
+                  "Mutfak üst dolabı 35 cm derin, planda kesikli; genişlik 30–120 cm. Taban noktası duvarda sol köşe.")
+upper = dashed(wall_unit, wall_unit.rect(0, 0, 0.6, 0.35))
+upper_cross = dashed(wall_unit, wall_unit.line((0, 0), (0.6, 0.35)))
+wall_unit.dynamic(
+    [{"kind": "linear", "name": "Genişlik", "from": P(0, 0), "to": P(0.6, 0), "rule": {"min": 0.3, "max": 1.2, "step": 0.15}}],
+    [{"kind": "stretch", "parameter": "Genişlik", "pieces": [upper, upper_cross], "min": P(0.5, -0.1), "max": P(0.7, 0.45)}])
+blocks.append(wall_unit)
+
 LIBRARY = {"format": "kentos.blocks", "version": 1, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
+
+
+# The real sizes the library's descriptions give (ARCH-LIB-01, docs/adr/0702): the extent of what a block shows in its
+# default state, texts and swing arcs aside, in metres, x then y as drawn.
+SIZES = {
+    "Tek kişilik yatak": (0.9, 2.0), "Komodin": (0.5, 0.4), "Koltuk": (0.85, 0.85), "İkili kanepe": (1.5, 0.85),
+    "Yuvarlak masa": (2.08, 2.08), "Çalışma masası": (1.2, 0.6), "TV ünitesi": (1.8, 0.45), "Kitaplık": (0.9, 0.35),
+    "Asma klozet": (0.5, 0.54), "Pisuvar": (0.36, 0.35), "Köşe duş": (0.9, 0.9), "Dolaplı lavabo": (0.8, 0.46),
+    "Çamaşır makinesi": (0.6, 0.6), "Kurutma makinesi": (0.6, 0.6), "Evye": (0.8, 0.5), "Ocak": (0.6, 0.52),
+    "Buzdolabı": (0.6, 0.65), "Bulaşık makinesi": (0.6, 0.6), "Fırın": (0.6, 0.6), "Alt dolap": (0.6, 0.6),
+    "Üst dolap": (0.6, 0.35),
+}
+
+
+def extent(block):
+    """What a block shows in its default visibility state, texts and arcs aside: its width and depth."""
+    hidden = set()
+    for p in block.get("dynamic", {}).get("parameters", []):
+        if p["kind"] == "visibility":
+            hidden.update(p["states"][0].get("hidden", []))
+    xs, ys = [], []
+    for e in block["entities"]:
+        if e["id"] in hidden or e["kind"] in ("text", "arc"):
+            continue
+        if e["kind"] == "polyline":
+            pts = [(q["x"], q["y"]) for q in e["pts"]]
+        elif e["kind"] == "line":
+            pts = [(e["a"]["x"], e["a"]["y"]), (e["b"]["x"], e["b"]["y"])]
+        elif e["kind"] == "circle":
+            pts = [(e["c"]["x"] + e["r"] * math.cos(t * math.pi / 2), e["c"]["y"] + e["r"] * math.sin(t * math.pi / 2)) for t in range(4)]
+        elif e["kind"] == "ellipse":
+            mx, my = e["major"]["x"], e["major"]["y"]
+            pts = [(e["c"]["x"] + mx * math.cos(t) - my * e["ratio"] * math.sin(t),
+                    e["c"]["y"] + my * math.cos(t) + mx * e["ratio"] * math.sin(t)) for t in (k * math.pi / 180 for k in range(360))]
+        else:
+            raise AssertionError(e["kind"])
+        xs += [q[0] for q in pts]
+        ys += [q[1] for q in pts]
+    return max(xs) - min(xs), max(ys) - min(ys)
+
+
+for b in blocks:
+    if b.data["name"] in SIZES:
+        w, d = extent(b.data)
+        ew, ed = SIZES[b.data["name"]]
+        assert abs(w - ew) < 1e-3 and abs(d - ed) < 1e-3, (b.data["name"], w, d, ew, ed)
+assert set(SIZES) <= {b.data["name"] for b in blocks}
 
 
 def main():

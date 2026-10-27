@@ -14,7 +14,12 @@ import type { Vec2 } from "./Vec2";
 /**
  * A live recipe with stable member identities and separate layout overrides.
  */
-export type DimensionSet = { id: DimensionSetId, wall: EntityId, face: DimensionSetFace, rows: Array<DimensionSetRow>, openings: DimensionSetOpenings, layerId: string, 
+export type DimensionSet = { id: DimensionSetId, wall: EntityId, 
+/**
+ * The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to
+ * its first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).
+ */
+edge?: number, face: DimensionSetFace, rows: Array<DimensionSetRow>, openings: DimensionSetOpenings, layerId: string, 
 /**
  * First row placement in the world plane; never inferred from render lines.
  */

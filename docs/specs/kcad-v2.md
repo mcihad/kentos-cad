@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `113`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-114.kcad`) |
+| `version` | tam sayı | `2`'den `114`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-115.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -479,6 +479,16 @@ Yeni veri gönderen istemci yazmadan önce `/v1/health` yanıtındaki
 bir proje yazılmaz. Dosya içeriği aktarımında proje kabuğu önce tarife sahip
 olmaz; KCAD içe aktarma işlemi tariflerle üyelerini birlikte kurar.
 
+**Şema 114** (docs/adr/0700), ölçü tarifine isteğe bağlı `edge` ekler: tarifin
+ölçtüğü duvar yolunun düz kenarı, `0`'dan başlayan tam sayı (köşe `edge` ile
+`edge + 1` arası; kapalı duvarın son kenarı ilk köşeye döner), 100000'den küçük.
+Yoksa iki uçlu duvarın tek kenarıdır ve tarif şema 113'teki gibidir. Yazıcı
+114'ü yalnız bir tarifte `edge` varken seçer; öteki bütün örneklerin baytları
+aynıdır. 113'te `edge` taşıyan tarif `bad_value` olur (alan JSON biçimli
+bölümün içindedir). Örnek `dimension-set-edges.kcad` (dört kenarlı kapalı duvarın
+sağ kenarı, dış yüz), önceki şema örneği
+`broken/dimension-set-edges-in-schema-113.kcad`.
+
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 
 Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: hedeflerinin sistemi tanımla verilmiş oturtma kaydı olan çizim 100, özetli topoloji istisnası olan proje 99, kaynak sistemi kaydı olan katmanı ya da harita sistemi olan proje 98, olay bağı olan proje 97, günlü ya da saatli kapanması olan proje 96, araç profilli ya da tarihli kapanmalı ağı olan proje 95, cihazının yapılandırması ya da güncel tutan alt ağı olan ağı olan proje 94, terminalli ya da alt ağlı ağı olan proje 93, bağlı katman tabanının alan kaydı olan proje 92, bağlı katman tabanı olan proje 91, kayıt zamanı tutan katmanı olan çizim 90, birleşik görünümü olan proje 89, oturtma kaydı olan rasteri olan çizim 88, dönüşlü, seviyeli ya da zaman profilli ağı olan proje 87, kotlarının ne olduğunu ya da koordinat epokunu anan proje 86, kırpılmış yerleştirmesi ya da PDF altlığı olan çizim 85, dış başvuru arama yolu olan proje 84, dış başvurusu olan çizim 83, bağlı katmanı olan çizim 74, kısıtı ya da parametresi olan çizim 73, formu ya da kimlikli alanı olan çizim 72, projenin tarama deseni, başlangıçlı ya da ölçekli taraması olan çizim 71, düzenli ya da kesirli yazısı olan çizim 65, ölçekli açıklaması olan çizim 64, stilden ayrılan alanı olan çizim 63, çizgi tipi, çizgi tipi ölçeği ya da desen anan katmanı, durumu ya da nesnesi olan çizim 56, dondurulmuş düğümü ya da dondurmayı saklayan katman durumu olan çizim 55, maskeli alanı olan çizim 54, ilişkili dizisi olan çizim 53, adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
@@ -504,7 +514,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | `activeLayer` | metin | evet | etkin katmanın kimliği |
 | `constraints` | harita (§6.15) | | yalnız şema 73: kısıtlar ve parametreler; boş küme yazılmaz (`bad_value`) |
 | `migratedFrom` | harita (§6.8) | | v1 dosyasından göçün kaynağı |
-| `dimensionSets` | dizi: JSON haritası | | yalnız şema 113: mimari ölçü tarifleri, yerleştirmeleri ve kalıcı üye kimlikleri; boş liste yazılmaz |
+| `dimensionSets` | dizi: JSON haritası | | yalnız şema 113: mimari ölçü tarifleri, yerleştirmeleri ve kalıcı üye kimlikleri; boş liste yazılmaz; tarifin `edge`'i şema 114 |
 
 Bilinmeyen bir anahtar `unknown_field`, eksik zorunlu anahtar `missing_field`'dır. Bu kural şemanın **bütün** haritaları için geçerlidir (opak kısımlar hariç, §6.7).
 

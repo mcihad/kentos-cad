@@ -92,11 +92,52 @@ impl Frame {
     }
 }
 
-/// All dimensions share each row's world line even when a centre is not on its face.
+/// The straight edge `edge` of a wall face line (`pts` one per path vertex, `bulges` one per vertex; docs/adr/0700):
+/// its two ends and their vertex numbers; none when the line has no such edge or the edge is an arc.
+pub fn edge_face(
+    pts: &[Vec2],
+    bulges: &[f64],
+    closed: bool,
+    edge: usize,
+) -> Option<([Vec2; 2], [usize; 2])> {
+    let n = pts.len();
+    let edges = if closed { n } else { n.saturating_sub(1) };
+    if edge >= edges || bulges.get(edge).is_some_and(|b| *b != 0.0) {
+        return None;
+    }
+    let next = (edge + 1) % n;
+    Some(([pts[edge], pts[next]], [edge, next]))
+}
+
+/// The straight edges a wall path has, in order; arcs left out.
+pub fn straight_edges(count: usize, bulges: &[f64], closed: bool) -> Vec<usize> {
+    let edges = if closed { count } else { count.saturating_sub(1) };
+    (0..edges)
+        .filter(|&k| bulges.get(k).is_none_or(|b| *b == 0.0))
+        .collect()
+}
+
+/// Whether an opening's jambs belong to the face edge `line`: their middle lies along the edge, within `reach` (the
+/// wall's width) of the face. An opening on another edge of the same wall is left to that edge's chain.
+pub fn on_edge(line: [Vec2; 2], jambs: &[Vec2; 4], reach: f64) -> bool {
+    let Ok(frame) = Frame::new(line) else {
+        return false;
+    };
+    let mid = Vec2::new(
+        (jambs[0].x + jambs[1].x + jambs[2].x + jambs[3].x) * 0.25,
+        (jambs[0].y + jambs[1].y + jambs[2].y + jambs[3].y) * 0.25,
+    );
+    let along = frame.along(mid);
+    along >= -1e-9 && along <= frame.length + 1e-9 && frame.offset(mid).abs() <= reach + 1e-9
+}
+
+/// All dimensions share each row's world line even when a centre is not on its face. `ends` are the face line's
+/// vertex numbers at the edge's two ends (`[0, 1]` for a two-point wall).
 #[allow(clippy::too_many_arguments)]
 pub fn plan(
     line: [Vec2; 2],
     part: usize,
+    ends: [usize; 2],
     face: Face,
     openings: &[Opening],
     mode: Openings,
@@ -114,7 +155,7 @@ pub fn plan(
         place: Place::Vertex {
             part,
             ring: 0,
-            index: 0,
+            index: ends[0],
         },
         at: line[0],
     };
@@ -123,7 +164,7 @@ pub fn plan(
         place: Place::Vertex {
             part,
             ring: 0,
-            index: 1,
+            index: ends[1],
         },
         at: line[1],
     };
@@ -230,6 +271,7 @@ mod tests {
             let spans = plan(
                 [p(0.0, 0.1), p(10.0, 0.1)],
                 0,
+                [0, 1],
                 Face::Left,
                 &openings,
                 Openings::Ends,
@@ -252,6 +294,7 @@ mod tests {
             let centres = plan(
                 [p(0.0, 0.1), p(10.0, 0.1)],
                 0,
+                [0, 1],
                 Face::Left,
                 &openings,
                 Openings::Centers,
@@ -267,6 +310,7 @@ mod tests {
             let manual = plan(
                 [p(0.0, 0.1), p(10.0, 0.1)],
                 0,
+                [0, 1],
                 Face::Left,
                 &openings,
                 Openings::Ends,
@@ -298,6 +342,7 @@ mod tests {
             let spans = plan(
                 [p(0., 0.1), p(10., 0.1)],
                 0,
+                [0, 1],
                 Face::Left,
                 &openings,
                 Openings::Centers,

@@ -5,7 +5,8 @@ their order, the codes, paths and words) and from docs/adr/0183's meaning of a s
 it, through the independent reference of those rules (scripts/fixtures/annotation_style_cases.py: the tables' rule, a
 style's face and look, an object following a changed style), without KentOS code:
 
-- the table is the project's setting: changing it makes the drawing dirty and is no undo step;
+- the table is the project's setting; its change is in the same undo step as the objects that follow it
+  (docs/adr/0699): undo gives back the styles the step changed, a name or a new style alone too;
 - the texts (dimensions) of a changed style take its new values where they still held the old ones, in one undo step
   “Yazı stili” (“Ölçü stili”); those of a removed style keep their look and lose the link; those on a locked layer are
   left as they are and counted; an object that would not change is not written.
@@ -220,15 +221,18 @@ def leader_cases():
     ids = IDS + [7, 8, 9]
     out.append({"name": "Kılavuz stili oluştur", "setup": leader_setup(),
                 "steps": [step("execute", {"kind": "leader", "operation": "create", "leader": ETIKET}, done(ETIKET["id"]),
-                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": False,
-                                "settings": {"leaderStyles": [KILAVUZ, ETIKET]}})]})
+                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": True,
+                                "settings": {"leaderStyles": [KILAVUZ, ETIKET]}}),
+                          step("undo", returns=LEADER_LABEL, expect={"settings": {"leaderStyles": [KILAVUZ]}, "canUndo": False,
+                                                                     "canRedo": True})]})
     new = {**{k: v for k, v in KILAVUZ.items() if k != "arrow"}, "height": 5.0, "arrow": "none"}
     leaders, locked = follow_leaders(KILAVUZ, new)
     out.append({"name": "Kılavuz stilini güncelle: eski değerdeki alanlar yenisini alır, ayrılan ok kalır, kilitli katmandaki sayılır",
                 "setup": leader_setup(),
                 "steps": [step("execute", {"kind": "leader", "operation": "update", "leader": new}, done(KILAVUZ["id"], True, len(leaders), locked),
                                {"ids": ids, "entities": leaders, "settings": {"leaderStyles": [new]}, "canUndo": True, "dirty": True}),
-                          step("undo", returns=LEADER_LABEL, expect={"entities": {str(l["id"]): l for l in LEADERS if str(l["id"]) in leaders}})]})
+                          step("undo", returns=LEADER_LABEL, expect={"entities": {str(l["id"]): l for l in LEADERS if str(l["id"]) in leaders},
+                                                                     "settings": {"leaderStyles": [KILAVUZ]}})]})
     leaders, locked = follow_leaders(KILAVUZ, None)
     out.append({"name": "Kılavuz stilini sil: kılavuzlar görünüşünü korur, bağını yitirir", "setup": leader_setup(),
                 "steps": [step("execute", {"kind": "leader", "operation": "remove", "style": KILAVUZ["id"]}, done(KILAVUZ["id"], True, len(leaders), locked),
@@ -303,8 +307,10 @@ def wall_cases():
     ids = IDS + [10, 11, 12]
     out.append({"name": "Duvar stili oluştur: tablonun sonuna; duvarlar değişmez", "setup": wall_setup(),
                 "steps": [step("execute", {"kind": "wall", "operation": "create", "wall": BOLME}, done(BOLME["id"]),
-                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": False,
-                                "settings": {"wallStyles": [DIS, BOLME]}})]})
+                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": True,
+                                "settings": {"wallStyles": [DIS, BOLME]}}),
+                          step("undo", returns=WALL_LABEL, expect={"settings": {"wallStyles": [DIS]}, "canUndo": False}),
+                          step("redo", returns=WALL_LABEL, expect={"settings": {"wallStyles": [DIS, BOLME]}})]})
     new = copy.deepcopy(DIS)
     new["components"][1]["hatch"]["pattern"] = "BRICK"
     new["fill"] = "#404040"
@@ -313,7 +319,22 @@ def wall_cases():
                 "setup": wall_setup(),
                 "steps": [step("execute", {"kind": "wall", "operation": "update", "wall": new}, done(DIS["id"], True, len(walls), locked),
                                {"ids": ids, "entities": walls, "settings": {"wallStyles": [new]}, "canUndo": True, "dirty": True}),
-                          step("undo", returns=WALL_LABEL, expect={"entities": {"10": WALLS[0]}})]})
+                          step("undo", returns=WALL_LABEL, expect={"entities": {"10": WALLS[0]}, "settings": {"wallStyles": [DIS]}})]})
+    # The defect a real window found (docs/adr/0698, 0699): only the name changes, no wall follows; the step still is one.
+    renamed = dict(DIS, name="Dış duvar 25 QA")
+    out.append({"name": "Duvar stilinin yalnız adı değişir: duvarlar değişmez, ad yine tek adım “Duvar stili”; geri al eski adı, yinele yenisini getirir",
+                "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "update", "wall": renamed}, done(DIS["id"], True, 0, 0),
+                               {"ids": ids, "entities": {"10": WALLS[0]}, "settings": {"wallStyles": [renamed]}, "canUndo": True,
+                                "dirty": True}),
+                          step("undo", returns=WALL_LABEL, expect={"settings": {"wallStyles": [DIS]}, "canUndo": False, "canRedo": True}),
+                          step("redo", returns=WALL_LABEL, expect={"settings": {"wallStyles": [renamed]}, "canUndo": True,
+                                                                   "canRedo": False})]})
+    out.append({"name": "Duvar stilini yeniden adlandır: geri alınır",
+                "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "rename", "style": DIS["id"], "name": "Dış duvar 25 QA"},
+                               done(DIS["id"]), {"settings": {"wallStyles": [renamed]}, "canUndo": True}),
+                          step("undo", returns=WALL_LABEL, expect={"settings": {"wallStyles": [DIS]}, "canUndo": False})]})
     fixed = copy.deepcopy(DIS)
     fixed["components"][1]["thickness"] = 0.2
     del fixed["width"]
@@ -323,9 +344,10 @@ def wall_cases():
                 "steps": [step("execute", {"kind": "wall", "operation": "update", "wall": fixed}, done(DIS["id"], True, len(walls), locked),
                                {"entities": walls, "settings": {"wallStyles": [fixed]}})]})
     walls, locked = follow_walls(None)
-    out.append({"name": "Duvar stilini sil: duvarlar bileşenlerini korur, bağını yitirir", "setup": wall_setup(),
+    out.append({"name": "Duvar stilini sil: duvarlar bileşenlerini korur, bağını yitirir; geri al stili ve bağı birlikte getirir", "setup": wall_setup(),
                 "steps": [step("execute", {"kind": "wall", "operation": "remove", "style": DIS["id"]}, done(DIS["id"], True, len(walls), locked),
-                               {"entities": walls, "settings": {"wallStyles": None}})]})
+                               {"entities": walls, "settings": {"wallStyles": None}}),
+                          step("undo", returns=WALL_LABEL, expect={"entities": {"10": WALLS[0]}, "settings": {"wallStyles": [DIS]}})]})
     thick = copy.deepcopy(DIS)
     thick["components"][0]["thickness"] = 0.2
     thick["components"][2]["thickness"] = 0.2
@@ -365,10 +387,11 @@ def wall_cases():
 
 def cases():
     out = []
-    flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": False}
-    out.append({"name": "Yazı stili oluştur: tablonun sonuna; tablo proje ayarıdır, geri alma adımı değildir",
+    flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": True}
+    out.append({"name": "Yazı stili oluştur: tablonun sonuna; tek adım “Yazı stili”, geri al stili kaldırır",
                 "steps": [step("execute", {"kind": "text", "operation": "create", "text": NOT}, done(NOT["id"]),
-                               {**flags, "settings": {"textStyles": [ADA, YOL, NOT]}})]})
+                               {**flags, "settings": {"textStyles": [ADA, YOL, NOT]}}),
+                          step("undo", returns=TEXT_LABEL, expect={"settings": {"textStyles": [ADA, YOL]}, "canUndo": False})]})
     out.append({"name": "Ölçü stili oluştur",
                 "steps": [step("execute", {"kind": "dimension", "operation": "create", "dimension": CENTIK}, done(CENTIK["id"]),
                                {**flags, "settings": {"dimensionStyles": [OLCU, CENTIK]}})]})
@@ -377,7 +400,7 @@ def cases():
     out.append({"name": "Yazı stilini güncelle: eski değeri taşıyan yazılar yenisini alır, elle değiştirilen kalır, kilitli katmandaki sayılır; tek adım “Yazı stili”",
                 "steps": [step("execute", {"kind": "text", "operation": "update", "text": new_ada}, done(ADA["id"], True, len(texts), locked),
                                {"ids": IDS, "entities": texts, "settings": {"textStyles": [new_ada, YOL]}, "canUndo": True, "dirty": True}),
-                          step("undo", returns=TEXT_LABEL, expect={"entities": {k: E[k] for k in texts}, "settings": {"textStyles": [new_ada, YOL]}})]})
+                          step("undo", returns=TEXT_LABEL, expect={"entities": {k: E[k] for k in texts}, "settings": {"textStyles": [ADA, YOL]}})]})
     out.append({"name": "Yazı stilini güncelle: aynı tanım bir şey yazmaz",
                 "steps": [step("execute", {"kind": "text", "operation": "update", "text": ADA}, done(ADA["id"], False), {**UNCHANGED, "settings": TABLES})]})
     new_yol = {k: v for k, v in YOL.items() if k != "italic"}
@@ -385,14 +408,15 @@ def cases():
     out.append({"name": "Yazı stilini güncelle: eğik kalkar",
                 "steps": [step("execute", {"kind": "text", "operation": "update", "text": new_yol}, done(YOL["id"], True, len(texts), locked),
                                {"entities": texts, "settings": {"textStyles": [ADA, new_yol]}})]})
-    out.append({"name": "Yeniden adlandır: nesneler stili kimliğiyle anar, değişmez; adım yok",
+    out.append({"name": "Yeniden adlandır: nesneler stili kimliğiyle anar, değişmez; ad tek adım, geri alınır",
                 "steps": [step("execute", {"kind": "text", "operation": "rename", "style": ADA["id"], "name": " Ada numarası "}, done(ADA["id"]),
-                               {**flags, "entities": {"1": E["1"]}, "settings": {"textStyles": [dict(ADA, name="Ada numarası"), YOL]}})]})
+                               {**flags, "entities": {"1": E["1"]}, "settings": {"textStyles": [dict(ADA, name="Ada numarası"), YOL]}}),
+                          step("undo", returns=TEXT_LABEL, expect={"entities": {"1": E["1"]}, "settings": {"textStyles": [ADA, YOL]}})]})
     texts, locked = follow_texts(YOL, None)
-    out.append({"name": "Sil: yazılar görünüşlerini korur, bağlarını yitirir; tek adım",
+    out.append({"name": "Sil: yazılar görünüşlerini korur, bağlarını yitirir; tek adım, geri al stili yerine ve bağı birlikte getirir",
                 "steps": [step("execute", {"kind": "text", "operation": "remove", "style": YOL["id"]}, done(YOL["id"], True, len(texts), locked),
                                {"entities": texts, "settings": {"textStyles": [ADA]}, "canUndo": True}),
-                          step("undo", returns=TEXT_LABEL, expect={"entities": {"4": E["4"]}, "settings": {"textStyles": [ADA]}})]})
+                          step("undo", returns=TEXT_LABEL, expect={"entities": {"4": E["4"]}, "settings": {"textStyles": [ADA, YOL]}})]})
     texts, locked = follow_texts(ADA, None)
     out.append({"name": "Sil: kilitli katmandaki yazı bağını korur ve sayılır",
                 "steps": [step("execute", {"kind": "text", "operation": "remove", "style": ADA["id"]}, done(ADA["id"], True, len(texts), locked),
@@ -402,7 +426,7 @@ def cases():
     out.append({"name": "Ölçü stilini güncelle: ölçü yenisini alır; adım “Ölçü stili”",
                 "steps": [step("execute", {"kind": "dimension", "operation": "update", "dimension": new_olcu}, done(OLCU["id"], True, len(dims)),
                                {"entities": dims, "settings": {"dimensionStyles": [new_olcu]}, "canUndo": True}),
-                          step("undo", returns=DIM_LABEL, expect={"entities": {"5": E["5"]}})]})
+                          step("undo", returns=DIM_LABEL, expect={"entities": {"5": E["5"]}, "settings": {"dimensionStyles": [OLCU]}})]})
     dims = follow_dimensions(OLCU, None)
     out.append({"name": "Ölçü stilini sil: ölçü bağını yitirir",
                 "steps": [step("execute", {"kind": "dimension", "operation": "remove", "style": OLCU["id"]}, done(OLCU["id"], True, len(dims)),
@@ -587,8 +611,8 @@ def transfer_cases():
     out.append(refused("Dışa aktar: projede olmayan stil", {"kind": "text", "operation": "export", "styles": [ADA["id"], NOT["id"]]},
                        "style_not_found", f"“{NOT['id']}” kimlikli yazı stili projede yok.", "styles[1]"))
     file = library("text", [NOT, dict(ADA, name="ADA NO", font="overpass")])
-    flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": False}
-    out.append({"name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; adım yok",
+    flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": True}
+    out.append({"name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; tek adım",
                 "steps": [step("execute", {"kind": "text", "operation": "import", "library": file},
                                done(NOT["id"], True, added=[NOT["id"]], skipped=["ADA NO"]),
                                {**flags, "settings": {"textStyles": [ADA, YOL, NOT]}})]})

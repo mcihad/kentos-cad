@@ -1729,6 +1729,32 @@ codes! {
     /// An opening or space without a tag (Etiketleri denetle).
     TAG_UNTAGGED = "tag_untagged", Warning, false, "Açıklığın ya da mahalin etiketi yok.";
 
+    // ── Mimari denetim (docs/adr/0703) ─────────────────────────────────
+    /// A free wall end that stops short of another wall's body.
+    ARCH_WALL_END_GAP = "arch_wall_end_gap", Warning, false, "Duvarın ucu öbür duvara birkaç santim kala bitiyor; birleşmiyor. Ucu öbür duvara uzatın.";
+    /// Two free wall ends near each other that do not meet.
+    ARCH_WALL_ENDS_APART = "arch_wall_ends_apart", Warning, false, "İki duvar ucu birbirine çok yakın ama buluşmuyor.";
+    /// An opening whose wall link broke.
+    ARCH_OPENING_BROKEN = "arch_opening_broken", Warning, false, "Açıklığın duvarla bağı kopuk: duvarı yok, duvarından taşıyor ya da başka açıklığa biniyor.";
+    /// A space whose boundary its sources no longer give.
+    ARCH_SPACE_BROKEN = "arch_space_broken", Warning, false, "Mahalın sınırı kaynaklarından bulunamıyor; son hâliyle kaldı.";
+    /// A space smaller than the audit's threshold.
+    ARCH_SPACE_SMALL = "arch_space_small", Warning, false, "Mahalın alanı denetim eşiğinden küçük; artık bir parça olabilir.";
+    /// A space whose mean width is less than the audit's threshold.
+    ARCH_SPACE_NARROW = "arch_space_narrow", Warning, false, "Mahalın ortalama eni denetim eşiğinden küçük; dar bir artık parça olabilir.";
+    /// An associative dimension point that lost its object.
+    ARCH_DIMENSION_BROKEN = "arch_dimension_broken", Warning, false, "İlişkili ölçünün bir noktası izlediği nesneyi kaybetti.";
+    /// A dimension set whose source broke.
+    ARCH_DIMENSION_SET_BROKEN = "arch_dimension_set_broken", Warning, false, "Ölçü dizisinin kaynağı kopuk; ölçüler son yerlerinde duruyor.";
+    /// A column whose grids are gone or no longer cross.
+    ARCH_COLUMN_GRID_GONE = "arch_column_grid_gone", Warning, false, "Kolonun aksı yok ya da akslar kesişmiyor.";
+    /// A view mark whose target is gone.
+    ARCH_VIEWMARK_TARGET_GONE = "arch_viewmark_target_gone", Warning, false, "Görünüm işaretinin hedefi yok.";
+    /// An object without a level, or with one the project lacks, while the project has levels.
+    ARCH_LEVEL_MISSING = "arch_level_missing", Warning, false, "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat.";
+    /// An audit threshold below zero.
+    INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı.";
+
     // ── View marks and finishes (docs/adr/0345) ─────────────────────────
     /// A view mark's fields that make none.
     INVALID_VIEWMARK = "invalid_viewmark", Failed, false, "İşaretin alanları bir görünüm işareti tanımlamıyor: kesit 2–32 nokta, görünüş ve detay tek nokta, detayın yarıçapı, en çok 16 harfli numara, 0–50 mm yazı yüksekliği.";

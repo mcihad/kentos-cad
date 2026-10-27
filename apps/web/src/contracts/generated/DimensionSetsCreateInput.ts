@@ -7,8 +7,19 @@ import type { Vec2 } from "./Vec2";
 /**
  * Create a live chain on one straight wall face. Wire geometry is metres;
  * gapMm is paper millimetres and uses the existing project plotScale once.
+ * A wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).
  */
-export type DimensionSetsCreateInput = { layerId: string, wall: string, at: Vec2, face: DimensionSetFace, rows: Array<DimensionSetRow>, openings: DimensionSetOpenings, gapMm: number, 
+export type DimensionSetsCreateInput = { layerId: string, wall: string, at: Vec2, 
+/**
+ * The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
+ * first vertex). Absent: a two-point wall's only edge.
+ */
+edge?: number, 
+/**
+ * Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
+ * out from its face as `at` is from `edge`'s (else the first straight edge's).
+ */
+around?: boolean, face: DimensionSetFace, rows: Array<DimensionSetRow>, openings: DimensionSetOpenings, gapMm: number, 
 /**
  * Existing project style name; absent means Standart.
  */

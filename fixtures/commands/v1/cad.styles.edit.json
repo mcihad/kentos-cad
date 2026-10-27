@@ -215,7 +215,7 @@
   },
   "cases": [
     {
-      "name": "Yazı stili oluştur: tablonun sonuna; tablo proje ayarıdır, geri alma adımı değildir",
+      "name": "Yazı stili oluştur: tablonun sonuna; tek adım “Yazı stili”, geri al stili kaldırır",
       "steps": [
         {
           "op": "execute",
@@ -250,7 +250,7 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "settings": {
               "textStyles": [
                 {
@@ -275,6 +275,32 @@
                 }
               ]
             }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yazı stili",
+          "expect": {
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            },
+            "canUndo": false
           }
         }
       ]
@@ -317,7 +343,7 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "settings": {
               "dimensionStyles": [
                 {
@@ -484,9 +510,9 @@
                 {
                   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
                   "name": "Ada no",
-                  "font": "overpass",
+                  "font": "arimo",
                   "bold": true,
-                  "height": 5.0
+                  "height": 3.5
                 },
                 {
                   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
@@ -652,7 +678,7 @@
       ]
     },
     {
-      "name": "Yeniden adlandır: nesneler stili kimliğiyle anar, değişmez; adım yok",
+      "name": "Yeniden adlandır: nesneler stili kimliğiyle anar, değişmez; ad tek adım, geri alınır",
       "steps": [
         {
           "op": "execute",
@@ -684,7 +710,7 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "entities": {
               "1": {
                 "kind": "text",
@@ -723,11 +749,54 @@
               ]
             }
           }
+        },
+        {
+          "op": "undo",
+          "returns": "Yazı stili",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "Sil: yazılar görünüşlerini korur, bağlarını yitirir; tek adım",
+      "name": "Sil: yazılar görünüşlerini korur, bağlarını yitirir; tek adım, geri al stili yerine ve bağı birlikte getirir",
       "steps": [
         {
           "op": "execute",
@@ -813,6 +882,14 @@
                   "font": "arimo",
                   "bold": true,
                   "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
                 }
               ]
             }
@@ -1023,6 +1100,25 @@
                 "suffix": " cm",
                 "font": "arimo"
               }
+            },
+            "settings": {
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
             }
           }
         }
@@ -2493,7 +2589,7 @@
       ]
     },
     {
-      "name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; adım yok",
+      "name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; tek adım",
       "steps": [
         {
           "op": "execute",
@@ -2530,7 +2626,7 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "settings": {
               "textStyles": [
                 {
@@ -4440,7 +4536,7 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
             "settings": {
               "leaderStyles": [
                 {
@@ -4458,6 +4554,25 @@
                 }
               ]
             }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kılavuz stili",
+          "expect": {
+            "settings": {
+              "leaderStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+                  "name": "Kılavuz",
+                  "height": 2.5,
+                  "arrow": "dot",
+                  "mask": true
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true
           }
         }
       ]
@@ -4894,6 +5009,17 @@
                 "mask": true,
                 "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
               }
+            },
+            "settings": {
+              "leaderStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+                  "name": "Kılavuz",
+                  "height": 2.5,
+                  "arrow": "dot",
+                  "mask": true
+                }
+              ]
             }
           }
         }
@@ -5944,7 +6070,88 @@
             ],
             "dirty": true,
             "revision": "changed",
-            "canUndo": false,
+            "canUndo": true,
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                },
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d002",
+                  "name": "Bölme 10",
+                  "components": [],
+                  "width": 0.1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvar stili",
+          "expect": {
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": false
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Duvar stili",
+          "expect": {
             "settings": {
               "wallStyles": [
                 {
@@ -6506,7 +6713,1026 @@
                 ],
                 "fill": "#5A5A5A"
               }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvar stilinin yalnız adı değişir: duvarlar değişmez, ad yine tek adım “Duvar stili”; geri al eski adı, yinele yenisini getirir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "wallStyles": [
+            {
+              "id": "019a0000-0000-7000-8000-00000000d001",
+              "name": "Dış 30",
+              "components": [
+                {
+                  "name": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "hatch": {
+                    "pattern": "ANSI31",
+                    "scale": 1.0,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Sıva",
+                  "thickness": 0.03,
+                  "detail": "detailed"
+                }
+              ],
+              "fill": "#5A5A5A",
+              "width": 0.3
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "wall",
+            "id": 10,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400100
+              },
+              {
+                "x": 500006,
+                "y": 4400100
+              }
+            ],
+            "width": 0.3,
+            "justify": "center",
+            "style": "019a0000-0000-7000-8000-00000000d001",
+            "components": [
+              {
+                "name": "Sıva",
+                "thickness": 0.02,
+                "detail": "detailed"
+              },
+              {
+                "name": "Tuğla",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "detail": "standard"
+              },
+              {
+                "name": "Sıva",
+                "thickness": 0.03,
+                "detail": "detailed"
+              }
+            ],
+            "fill": "#5A5A5A"
+          },
+          {
+            "kind": "wall",
+            "id": 11,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400105
+              },
+              {
+                "x": 500006,
+                "y": 4400105
+              }
+            ],
+            "width": 0.3,
+            "justify": "center",
+            "style": "019a0000-0000-7000-8000-00000000d001",
+            "components": [
+              {
+                "name": "Sıva",
+                "thickness": 0.02,
+                "detail": "detailed"
+              },
+              {
+                "name": "Tuğla",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "detail": "standard"
+              },
+              {
+                "name": "Sıva",
+                "thickness": 0.03,
+                "detail": "detailed"
+              }
+            ],
+            "fill": "#5A5A5A"
+          },
+          {
+            "kind": "wall",
+            "id": 12,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400110
+              },
+              {
+                "x": 500006,
+                "y": 4400110
+              }
+            ],
+            "width": 0.3,
+            "justify": "center"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "wall",
+            "operation": "update",
+            "wall": {
+              "id": "019a0000-0000-7000-8000-00000000d001",
+              "name": "Dış duvar 25 QA",
+              "components": [
+                {
+                  "name": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "hatch": {
+                    "pattern": "ANSI31",
+                    "scale": 1.0,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Sıva",
+                  "thickness": 0.03,
+                  "detail": "detailed"
+                }
+              ],
+              "fill": "#5A5A5A",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "019a0000-0000-7000-8000-00000000d001",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              10,
+              11,
+              12
+            ],
+            "entities": {
+              "10": {
+                "kind": "wall",
+                "id": 10,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400100
+                  },
+                  {
+                    "x": 500006,
+                    "y": 4400100
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center",
+                "style": "019a0000-0000-7000-8000-00000000d001",
+                "components": [
+                  {
+                    "name": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed"
+                  },
+                  {
+                    "name": "Tuğla",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "detail": "standard"
+                  },
+                  {
+                    "name": "Sıva",
+                    "thickness": 0.03,
+                    "detail": "detailed"
+                  }
+                ],
+                "fill": "#5A5A5A"
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış duvar 25 QA",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvar stili",
+          "expect": {
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Duvar stili",
+          "expect": {
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış duvar 25 QA",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvar stilini yeniden adlandır: geri alınır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "wallStyles": [
+            {
+              "id": "019a0000-0000-7000-8000-00000000d001",
+              "name": "Dış 30",
+              "components": [
+                {
+                  "name": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "hatch": {
+                    "pattern": "ANSI31",
+                    "scale": 1.0,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Sıva",
+                  "thickness": 0.03,
+                  "detail": "detailed"
+                }
+              ],
+              "fill": "#5A5A5A",
+              "width": 0.3
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "wall",
+            "id": 10,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400100
+              },
+              {
+                "x": 500006,
+                "y": 4400100
+              }
+            ],
+            "width": 0.3,
+            "justify": "center",
+            "style": "019a0000-0000-7000-8000-00000000d001",
+            "components": [
+              {
+                "name": "Sıva",
+                "thickness": 0.02,
+                "detail": "detailed"
+              },
+              {
+                "name": "Tuğla",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "detail": "standard"
+              },
+              {
+                "name": "Sıva",
+                "thickness": 0.03,
+                "detail": "detailed"
+              }
+            ],
+            "fill": "#5A5A5A"
+          },
+          {
+            "kind": "wall",
+            "id": 11,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400105
+              },
+              {
+                "x": 500006,
+                "y": 4400105
+              }
+            ],
+            "width": 0.3,
+            "justify": "center",
+            "style": "019a0000-0000-7000-8000-00000000d001",
+            "components": [
+              {
+                "name": "Sıva",
+                "thickness": 0.02,
+                "detail": "detailed"
+              },
+              {
+                "name": "Tuğla",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "detail": "standard"
+              },
+              {
+                "name": "Sıva",
+                "thickness": 0.03,
+                "detail": "detailed"
+              }
+            ],
+            "fill": "#5A5A5A"
+          },
+          {
+            "kind": "wall",
+            "id": 12,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400110
+              },
+              {
+                "x": 500006,
+                "y": 4400110
+              }
+            ],
+            "width": 0.3,
+            "justify": "center"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "wall",
+            "operation": "rename",
+            "style": "019a0000-0000-7000-8000-00000000d001",
+            "name": "Dış duvar 25 QA"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "019a0000-0000-7000-8000-00000000d001",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış duvar 25 QA",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvar stili",
+          "expect": {
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
+            },
+            "canUndo": false
           }
         }
       ]
@@ -6976,7 +8202,7 @@
       ]
     },
     {
-      "name": "Duvar stilini sil: duvarlar bileşenlerini korur, bağını yitirir",
+      "name": "Duvar stilini sil: duvarlar bileşenlerini korur, bağını yitirir; geri al stili ve bağı birlikte getirir",
       "setup": {
         "format": "kentos.document",
         "version": 1,
@@ -7378,6 +8604,86 @@
             },
             "settings": {
               "wallStyles": null
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvar stili",
+          "expect": {
+            "entities": {
+              "10": {
+                "kind": "wall",
+                "id": 10,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400100
+                  },
+                  {
+                    "x": 500006,
+                    "y": 4400100
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center",
+                "style": "019a0000-0000-7000-8000-00000000d001",
+                "components": [
+                  {
+                    "name": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed"
+                  },
+                  {
+                    "name": "Tuğla",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "detail": "standard"
+                  },
+                  {
+                    "name": "Sıva",
+                    "thickness": 0.03,
+                    "detail": "detailed"
+                  }
+                ],
+                "fill": "#5A5A5A"
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "019a0000-0000-7000-8000-00000000d001",
+                  "name": "Dış 30",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.3
+                }
+              ]
             }
           }
         }

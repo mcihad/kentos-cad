@@ -170,6 +170,7 @@ impl App {
             | BottomTab::Search
             | BottomTab::Address
             | BottomTab::Topology
+            | BottomTab::Audit
             | BottomTab::ServiceInfo
             | BottomTab::Python => None,
         }

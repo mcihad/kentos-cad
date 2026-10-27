@@ -147,6 +147,9 @@ pub struct Select {
     marks: Vec<Vec2>,
     /// A transform mode's tag: the angle, the factor, the distance.
     mode_tag: Option<String>,
+    /// The one selected opening's temporary dimensions (docs/adr/0701), and where the pointer last rested.
+    temporary: crate::opening_distance::Overlay,
+    pointer: Option<Vec2>,
 }
 
 /// What the tag of the grip the pointer rests on says: the vertex's
@@ -281,6 +284,9 @@ impl Select {
             return;
         }
         let Some(start) = self.start else {
+            // The selected opening's temporary dimensions on the face the pointer is by (docs/adr/0701).
+            self.pointer = Some(p.raw);
+            self.temporary.see(self.pointer, cx);
             // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
             let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
@@ -410,6 +416,26 @@ impl Select {
     /// Forgets a press in progress (a command started, a drawing opened).
     pub fn reset(&mut self) {
         *self = Self::default();
+    }
+
+    /// The temporary dimensions brought up to date for the selection (docs/adr/0701).
+    pub fn see_temporary(&mut self, cx: &Context<'_>) {
+        if self.grip.is_none() && self.param.is_none() {
+            self.temporary.see(self.pointer, cx);
+        }
+    }
+
+    /// Where the temporary dimensions' numbers stand (docs/adr/0701).
+    pub fn temporary_numbers(&self) -> Vec<Vec2> {
+        self.temporary.sides.iter().map(|s| s.text_at).collect()
+    }
+
+    /// The text field of the temporary dimension whose number is under the pointer, to run (docs/adr/0701).
+    pub fn temporary_at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<crate::opening_distance::OpeningDistance> {
+        if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
+            return None;
+        }
+        self.temporary.at(screen, cx)
     }
 
     /// Whether a grip is being moved: the select tool then takes points,
@@ -759,7 +785,11 @@ impl Select {
         }
         let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
             // Resting on the grip of a vertex: its elevation and its shared corner (docs/adr/0142, 0160).
-            let tag = self.hover_grip?;
+            let Some(tag) = self.hover_grip else {
+                // The selected opening's temporary dimensions (docs/adr/0701).
+                return (!self.temporary.sides.is_empty() && self.start.is_none())
+                    .then(|| self.temporary.preview.clone());
+            };
             let mut lines: Vec<String> = tag
                 .z
                 .map(|z| elevation_line(z, format))

@@ -28,6 +28,61 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mimari proje denetimi (27 Ekim 2026; [ADR0703](docs/adr/0703-architectural-project-audit.md)).**
+  Salt okunur `cad.arch.audit` ve alt panelin Denetim sekmesi: birleşmeyen duvar
+  (`cad.walls.joins`'un bulguları), öbür duvara `maxGap` kala biten ve birbirini
+  ıskalayan uçlar (her kat ayrı), kopuk açıklık/mahal/ölçü/dizi/kolon/işaret,
+  çok küçük ya da dar mahal, yinelenen numara, katsız nesne. Bulgu açık
+  düzeltmesini var olan komutun çağrısı olarak taşır (`fix.step`); Düzelt tek
+  geri alma adımı, denetim yinelenir. Bulgu yokluğu uygunluk değildir.
+  35 ortak durum bağımsız başvurudan; Revit Review Warnings ve Archicad Update
+  Zones araştırıldı. Yeni KCAD/birim/ölçek/render yok; ARCH-DOC-03 [~].
+
+- **Mobilya, vitrifiye ve mutfak kitaplığı (27 Ekim 2026; [ADR0702](docs/adr/0702-furniture-and-fixture-library.md)).**
+  KentOS blok kitaplığına gerçek boylu 21 blok (kimlik 17–37; ilk 16 bayt bayt
+  aynı), vitrifiyelerde boşluk zarfı görünürlüğü (mevzuat iddiası değil), Blok
+  ekle'de Duvara hizala (H): taban yüzde, ön odaya dönük; yazma mevcut
+  `cad.blocks.insert`. ARCH-LIB-01 [~]; DWG blok kategorisi ve önizleme
+  etiketi açık.
+
+- **Açıklığın geçici ölçüleri (27 Ekim 2026; [ADR0701](docs/adr/0701-opening-temporary-dimensions.md)).**
+  Seçili tek açıklığın imlecin yakın olduğu yüzde en yakın referanslara
+  (yüz ucu, aynı kenardaki açıklık, kesen duvar yüzü) mesafeleri; sayıya
+  basınca yazı kutusu, Enter `cad.openings.edit` `distance` ile taşır,
+  referans sabit, tek geri alma. `cad.openings.distances` salt okunur sorgu;
+  24+24 ortak durum. ARCH-EDIT-01 [~]: duvar/kolon geçici ölçüsü açık.
+
+- **Ölçü dizisi duvarın her düz kenarında (27 Ekim 2026; [ADR0700](docs/adr/0700-dimension-sets-on-wall-edges.md)).**
+  Tarifin `edge`'i kapalı ya da çok kenarlı duvarın düz kenarını adlandırır,
+  `around` bütün düz kenarlara tek adımda dizi yazar; kenar köşe ekleme/silmede
+  izlenir, izlenemezse dizi kopar. KCAD şema 114 (opt-in), ARCH-DIM-01 [~].
+
+- **Stil tablosu geri almada (27 Ekim 2026; [ADR0699](docs/adr/0699-style-tables-in-undo.md)).**
+  `cad.styles.edit` stilleri izleyen nesnelerle aynı geri alma adımında yazar;
+  yalnız ad değişikliği de adımdır (Duvar stilleri'nde ad değiştirme geri alınır).
+
+- **Dar pencerede Duvar stilleri (27 Ekim 2026; [ADR0698](docs/adr/0698-scrollable-wall-style-dialog.md)).**
+  1100×682 pencere ve 18 px yazıda sağ form kaydırılır, alt eylemler görünür
+  kalır; iptal taslağı bırakır. Eski ad değişikliğinin geri alınmaması
+  ADR0699 ile kapandı. Nihai özellik kabulü verilmedi.
+
+- **Büyük yazıda uygulama menüsü (27 Ekim 2026; [ADR0697](docs/adr/0697-bounded-application-menu.md)).**
+  KentOS menüsünün komut listesi pencereye sığar ve tekerlekle kaydırılır;
+  sol ve sağ bölme iç içe kaydırılmaz. Nihai özellik kabulü verilmedi.
+
+- **Yakınlaştırmaya göre duvar ayrıntısı (27 Ekim 2026; [ADR0696](docs/adr/0696-model-wall-detail-and-dense-hairlines.md)).**
+  Açık Şematik/Uygulama/Ayrıntılı seçimi korunur; otomatikte model alanı
+  kameranın ekran paydasıyla 1:30/1:75 eşiklerini kullanır. `plotScale`,
+  yazı, ölçü ve geometri değişmez; yoğun sıfır genişlikli GPU taraması
+  düzeltildi. Nihai özellik kabulü verilmedi.
+
+- **Kalıcı ilişkili duvar ölçü dizileri (27 Ekim 2026; [ADR0695](docs/adr/0695-associative-wall-dimension-sets.md)).**
+  `cad.dimensionsets.*`: tek düz duvarın yüzünde açıklık uçları/merkezleri,
+  aralıklar ve toplam sırası; üyeler kalıcı duvar/açıklık yerlerine bağlı,
+  aynı çift aynı ölçü kimliğini korur, kopan dizi görünür `broken` kalır, tek
+  ölçü silmek parçayı bastırır. KCAD şema 113 (opt-in); GUI/Python/MCP aynı
+  komutlar. ARCH-DIM-01'in ilk dilimi; kenar ve bütün kenarlar ADR0700'de.
+
 - **Açıklığın gerçek noktalarına bağlı ölçü (26 Ekim 2026; [ADR0694](docs/adr/0694-opening-dimension-places.md)).**
   Mevcut ölçü kapı/pencere/boşluğun dört jamb köşesi ve açık başlangıç/
   bitiş/merkez başvurusunu okur; kanat/kasa parçasını kaynak saymaz.

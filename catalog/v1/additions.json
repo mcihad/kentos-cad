@@ -2310,6 +2310,20 @@
       "status": "implemented"
     },
     {
+      "id": "arch.audit",
+      "title": "Mimari denetim",
+      "short": "Denetim",
+      "icon": "archAudit",
+      "description": "Birleşmeyen ve öbür duvara birkaç santim kala biten duvarları, kopuk açıklık, mahal, ölçü, kolon ve görünüm işaretlerini, çok küçük ya da dar mahalleri, yinelenen numaraları ve katı olmayan nesneleri alt panelin Denetim sekmesinde listeler; satır nesnelere gider, Düzelt açık düzeltmeyi tek adımda yazar ve yeniden denetler. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "aliases": [
+        "MIMARIDENETIM",
+        "ARCHAUDIT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.scheduleOpenings",
       "title": "Kapı ve pencere çizelgesi",
       "short": "Kapı-pencere",
@@ -3372,7 +3386,8 @@
     "sourceKey": "<circle cx=\"6\" cy=\"10\" r=\"3.3\" stroke-width=\"1.2\"/><circle cx=\"6\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M9.3 10h8.4M14.6 10v3M17.2 10v2.2\" stroke-width=\"1.2\"/>",
     "viewSplitAdd": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4v12M2.5 10H10\"/><path d=\"M13.75 8v4M11.75 10h4\" stroke-width=\"1.3\"/>",
     "qaMask": "<rect x=\"2.5\" y=\"8.5\" width=\"10\" height=\"9\" rx=\"1\"/><path d=\"M5.8 8.5v9M9.2 8.5v9M2.5 11.5h10M2.5 14.5h10\" stroke-width=\".9\" opacity=\".6\"/><path d=\"M10.8 10.5H17.6a2.4 2.4 0 0 0 .3-4.8 3.9 3.9 0 0 0-7.3-1.4 2.9 2.9 0 0 0 .2 6.2z\" fill=\"currentColor\" fill-opacity=\".25\"/>",
-    "sensorReading": "<path d=\"M4 17V9\" stroke-width=\"1.2\"/><circle cx=\"4\" cy=\"7\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M7 4.6a3.4 3.4 0 0 1 0 4.8M9.3 2.8a6 6 0 0 1 0 8.4\" stroke-width=\"1.1\"/><path d=\"M8 17l2.5-3 2.5 2 3.5-4.5\" stroke-width=\"1.2\"/>"
+    "sensorReading": "<path d=\"M4 17V9\" stroke-width=\"1.2\"/><circle cx=\"4\" cy=\"7\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M7 4.6a3.4 3.4 0 0 1 0 4.8M9.3 2.8a6 6 0 0 1 0 8.4\" stroke-width=\"1.1\"/><path d=\"M8 17l2.5-3 2.5 2 3.5-4.5\" stroke-width=\"1.2\"/>",
+    "archAudit": "<path d=\"M9 16H2.5V3.5H15v5\"/><path d=\"M2.5 9.5h4M9 9.5V3.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\"/><path d=\"M15.8 15.8 18.2 18.2\"/>"
   },
   "tabs": [
     {

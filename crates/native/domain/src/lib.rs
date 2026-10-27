@@ -55,6 +55,7 @@ mod hatch_ties;
 mod history;
 mod import_metadata;
 mod template_settings;
+mod style_tables;
 mod identity;
 mod integrity;
 pub mod layer_purge;

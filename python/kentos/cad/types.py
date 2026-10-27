@@ -229,6 +229,34 @@ AnnotativeOperationName = Literal["make", "unmake", "add", "remove", "set", "res
 """The names of :class:`AnnotativeOperation`, for a plain string."""
 
 
+class ArchAuditCheck(_StrEnum):
+    """A group of the audit's checks, in the order its findings come.
+
+    - ``walls``: Joins that are not made, ends that stop short of another wall or of another end.
+    - ``openings``: Openings whose wall link broke, openings without a type.
+    - ``spaces``: Spaces whose boundary broke, very small or very narrow spaces.
+    - ``numbers``: A number on more than one opening or space.
+    - ``tags``: Tags whose object is gone.
+    - ``dimensions``: Associative dimensions and dimension sets whose link broke.
+    - ``columns``: Columns whose grids are gone.
+    - ``viewmarks``: View marks whose target is gone.
+    - ``levels``: Walls, spaces, columns, stairs and ramps without a level while the project has levels.
+    """
+    WALLS = "walls"
+    OPENINGS = "openings"
+    SPACES = "spaces"
+    NUMBERS = "numbers"
+    TAGS = "tags"
+    DIMENSIONS = "dimensions"
+    COLUMNS = "columns"
+    VIEWMARKS = "viewmarks"
+    LEVELS = "levels"
+
+
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels"]
+"""The names of :class:`ArchAuditCheck`, for a plain string."""
+
+
 class ArchDiscipline(_StrEnum):
     """The discipline an architectural object belongs to."""
     ARCHITECTURE = "architecture"
@@ -7237,6 +7265,28 @@ class OpeningArrayLayout(_Union):
         return _variant(_OPENING_ARRAY_LAYOUT, "OpeningArrayLayout", "kind", data).from_json(data)
 
 
+class OpeningReference(_Union):
+    """What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.
+
+    One of:
+
+    - :class:`EndOpeningReference` (``kind: end``)
+    - :class:`OpeningOpeningReference` (``kind: opening``)
+    - :class:`WallOpeningReference` (``kind: wall``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningReference:
+        return _variant(_OPENING_REFERENCE, "OpeningReference", "kind", data).from_json(data)
+
+
 class OpeningsOperation(_Union):
     """What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 
@@ -7250,6 +7300,7 @@ class OpeningsOperation(_Union):
     - :class:`RenumberOpeningsOperation` (``kind: renumber``)
     - :class:`ArrayOpeningsOperation` (``kind: array``)
     - :class:`CopyOpeningsOperation` (``kind: copy``)
+    - :class:`DistanceOpeningsOperation` (``kind: distance``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -9972,6 +10023,140 @@ class ArcPlan(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArcPlan:
         return cls(
             entity=Entity.from_json(data["entity"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAudit(_Model):
+    """Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and
+    the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
+
+    Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
+    zero, in the same order).
+    Attributes:
+        checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
+        max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
+        min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
+        min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
+    """
+    checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
+    max_gap: float | None | Unset = UNSET
+    min_area: float | None | Unset = UNSET
+    min_width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.checks is not UNSET:
+            out["checks"] = [_enum_out(e0) for e0 in self.checks]
+        if self.max_gap is not UNSET:
+            out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
+        if self.min_area is not UNSET:
+            out["minArea"] = None if self.min_area is None else float(self.min_area)
+        if self.min_width is not UNSET:
+            out["minWidth"] = None if self.min_width is None else float(self.min_width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAudit:
+        return cls(
+            checks=[_enum_in(ArchAuditCheck, e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
+            min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
+            min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAuditFinding(_Model):
+    """One thing `cad.arch.audit` found.
+    Attributes:
+        code: `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
+            `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
+            `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
+            `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.
+        message: What is wrong.
+        repair: What resolves it.
+        uids: The objects, by their persistent ids.
+        at: Where to look. Unit: length.
+        fix: The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
+    """
+    check: ArchAuditCheck | ArchAuditCheckName
+    code: str
+    message: str
+    repair: str
+    uids: list[str]
+    at: Vec2
+    fix: ArchAuditFix | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["check"] = _enum_out(self.check)
+        out["code"] = self.code
+        out["message"] = self.message
+        out["repair"] = self.repair
+        out["uids"] = list(self.uids)
+        out["at"] = _vec2_out(self.at)
+        if self.fix is not UNSET:
+            out["fix"] = None if self.fix is None else self.fix.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditFinding:
+        return cls(
+            check=_enum_in(ArchAuditCheck, data["check"]),
+            code=data["code"],
+            message=data["message"],
+            repair=data["repair"],
+            uids=list(data["uids"]),
+            at=Vec2.from_json(data["at"]),
+            fix=UNSET if "fix" not in data else None if data["fix"] is None else ArchAuditFix.from_json(data["fix"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAuditFix(_Model):
+    """What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it
+    is; one undo step).
+    Attributes:
+        label: What the call does, as a button says it (“Bitiş ucunu öbür duvara uzat”).
+    """
+    label: str
+    step: ChangesetStep
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["step"] = self.step.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditFix:
+        return cls(
+            label=data["label"],
+            step=ChangesetStep.from_json(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAudited(_Model):
+    """Output of `cad.arch.audit` v1 (its plan's too).
+    Attributes:
+        findings: By group, then by code within it, then along x and y.
+    """
+    findings: list[ArchAuditFinding]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAudited:
+        return cls(
+            findings=[ArchAuditFinding.from_json(e0) for e0 in data["findings"]],
             revision=data["revision"],
         )
 
@@ -16881,6 +17066,8 @@ class DimensionSet(_Model):
         gap_mm: Paper millimetres; model distance is gapMm * plotScale / 1000. Unit: paper-mm.
         height: Unit: length.
         look: The new members' starting template; existing members retain manual looks.
+        edge: The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to
+            its first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113). Unit: count.
         suppressed: Explicitly removed segments stay removed until the user restores them.
     """
     id: str
@@ -16894,6 +17081,7 @@ class DimensionSet(_Model):
     height: float
     look: DimensionLook
     broken: DimensionSetBreak | DimensionSetBreakName | None | Unset = UNSET
+    edge: int | None | Unset = UNSET
     members: list[DimensionSetMember] | Unset = UNSET
     row_places: list[DimensionSetRowPlace] | Unset = UNSET
     suppressed: list[DimensionSetSegment] | Unset = UNSET
@@ -16912,6 +17100,8 @@ class DimensionSet(_Model):
         out["look"] = self.look.to_json()
         if self.broken is not UNSET:
             out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
         if self.members is not UNSET:
             out["members"] = [e0.to_json() for e0 in self.members]
         if self.row_places is not UNSET:
@@ -16934,6 +17124,7 @@ class DimensionSet(_Model):
             height=float(data["height"]),
             look=DimensionLook.from_json(data["look"]),
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(DimensionSetBreak, data["broken"]),
+            edge=data.get("edge", UNSET),
             members=[DimensionSetMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
             row_places=[DimensionSetRowPlace.from_json(e0) for e0 in data["rowPlaces"]] if "rowPlaces" in data else UNSET,
             suppressed=[DimensionSetSegment.from_json(e0) for e0 in data["suppressed"]] if "suppressed" in data else UNSET,
@@ -17014,12 +17205,17 @@ class DimensionSetSegment(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DimensionSetsChanged(_Model):
+    """
+    Attributes:
+        sets: Every set `around` wrote, in edge order (`set` is the first); absent for one set.
+    """
     set: str
     uids: list[str]
     created: list[str]
     removed: list[str]
     changed: list[str]
     revision: str
+    sets: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17029,6 +17225,8 @@ class DimensionSetsChanged(_Model):
         out["removed"] = list(self.removed)
         out["changed"] = list(self.changed)
         out["revision"] = self.revision
+        if self.sets is not UNSET:
+            out["sets"] = list(self.sets)
         return out
 
     @classmethod
@@ -17040,6 +17238,7 @@ class DimensionSetsChanged(_Model):
             removed=list(data["removed"]),
             changed=list(data["changed"]),
             revision=data["revision"],
+            sets=list(data["sets"]) if "sets" in data else UNSET,
         )
 
 
@@ -17047,15 +17246,22 @@ class DimensionSetsChanged(_Model):
 class DimensionSetsCreateInput(_Model):
     """Create a live chain on one straight wall face. Wire geometry is metres;
     gapMm is paper millimetres and uses the existing project plotScale once.
+    A wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).
     Attributes:
         at: Unit: length.
+        around: Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
+            out from its face as `at` is from `edge`'s (else the first straight edge's).
         dimension_style: Existing project style name; absent means Standart.
+        edge: The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
+            first vertex). Absent: a two-point wall's only edge. Unit: count.
         gap_mm: Unit: paper-mm.
     """
     layer_id: str
     wall: str
     at: Vec2
+    around: bool | Unset = UNSET
     dimension_style: str | None | Unset = UNSET
+    edge: int | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
     gap_mm: float = 7.5
@@ -17067,8 +17273,12 @@ class DimensionSetsCreateInput(_Model):
         out["layerId"] = self.layer_id
         out["wall"] = self.wall
         out["at"] = _vec2_out(self.at)
+        if self.around is not UNSET:
+            out["around"] = self.around
         if self.dimension_style is not UNSET:
             out["dimensionStyle"] = self.dimension_style
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         out["face"] = _enum_out(self.face)
@@ -17083,7 +17293,9 @@ class DimensionSetsCreateInput(_Model):
             layer_id=data["layerId"],
             wall=data["wall"],
             at=Vec2.from_json(data["at"]),
+            around=data.get("around", UNSET),
             dimension_style=data.get("dimensionStyle", UNSET),
+            edge=data.get("edge", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
             gap_mm=float(data["gapMm"]) if "gapMm" in data else 7.5,
@@ -37036,6 +37248,71 @@ class OpeningArrayNumbering(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OpeningDistance(_Model):
+    """One side's distance: net along the face, from the opening's jamb to the reference's point on the face.
+    Attributes:
+        distance: Unit: length.
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    distance: float
+    from_: Vec2
+    to: Vec2
+    reference: OpeningReference
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["reference"] = self.reference.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningDistance:
+        return cls(
+            distance=float(data["distance"]),
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            reference=OpeningReference.from_json(data["reference"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningDistances(_Model):
+    """An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.
+    Attributes:
+        edge: Unit: count.
+    """
+    uid: str
+    edge: int
+    face: DimensionSetFace | DimensionSetFaceName
+    end: OpeningDistance | None | Unset = UNSET
+    start: OpeningDistance | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["edge"] = self.edge
+        out["face"] = _enum_out(self.face)
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else self.end.to_json()
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else self.start.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningDistances:
+        return cls(
+            uid=data["uid"],
+            edge=data["edge"],
+            face=_enum_in(DimensionSetFace, data["face"]),
+            end=UNSET if "end" not in data else None if data["end"] is None else OpeningDistance.from_json(data["end"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else OpeningDistance.from_json(data["start"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningEntity(Entity):
     """An opening in a wall (docs/adr/0341).
     Attributes:
@@ -37339,6 +37616,51 @@ class OpeningsCreated(_Model):
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsDistances(_Model):
+    """Output of `cad.openings.distances` v1."""
+    openings: list[OpeningDistances]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsDistances:
+        return cls(
+            openings=[OpeningDistances.from_json(e0) for e0 in data["openings"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsDistancesInput(_Model):
+    """Input of `cad.openings.distances` v1 (docs/adr/0701): the openings named, measured on their walls' `face` (the
+    path's left, the default, or right). Read-only.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_host_gone`,
+    `invalid_opening` (an arc edge, a bevelled face).
+    """
+    uids: list[str]
+    face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["face"] = _enum_out(self.face)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsDistancesInput:
+        return cls(
+            uids=list(data["uids"]),
+            face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
         )
 
 
@@ -69130,6 +69452,53 @@ class FitOpeningArrayLayout(OpeningArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class EndOpeningReference(OpeningReference):
+    TAG_VALUE: ClassVar[str] = "end"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "end"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EndOpeningReference:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningOpeningReference(OpeningReference):
+    TAG_VALUE: ClassVar[str] = "opening"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "opening"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningOpeningReference:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallOpeningReference(OpeningReference):
+    TAG_VALUE: ClassVar[str] = "wall"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wall"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallOpeningReference:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
@@ -69367,6 +69736,35 @@ class CopyOpeningsOperation(OpeningsOperation):
     def from_json(cls, data: Mapping[str, Any]) -> CopyOpeningsOperation:
         return cls(
             offsets=[float(e0) for e0 in data["offsets"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DistanceOpeningsOperation(OpeningsOperation):
+    """Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`
+    from the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it
+    stays on its edge.
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "distance"
+    side: WallEnd | WallEndName
+    distance: float
+    face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "distance"}
+        out["side"] = _enum_out(self.side)
+        out["distance"] = float(self.distance)
+        out["face"] = _enum_out(self.face)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistanceOpeningsOperation:
+        return cls(
+            side=_enum_in(WallEnd, data["side"]),
+            distance=float(data["distance"]),
+            face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
         )
 
 
@@ -76911,7 +77309,10 @@ _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through"
 _OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": SpacingOpeningArrayLayout, "fit": FitOpeningArrayLayout}
 
 
-_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation}
+_OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference}
+
+
+_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
 
 
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
@@ -77187,6 +77588,12 @@ __all__ = [
     "ArcStartEndDirectionCurveConstruction",
     "ArcStartEndRadiusCurveConstruction",
     "ArcThreePointsCurveConstruction",
+    "ArchAudit",
+    "ArchAuditCheck",
+    "ArchAuditCheckName",
+    "ArchAuditFinding",
+    "ArchAuditFix",
+    "ArchAudited",
     "ArchDiscipline",
     "ArchDisciplineName",
     "ArchEdit",
@@ -77627,6 +78034,7 @@ __all__ = [
     "DistanceAxisName",
     "DistanceConstraintRule",
     "DistanceOffsetBy",
+    "DistanceOpeningsOperation",
     "DistancesMeeting",
     "DistributePaperOp",
     "DivideBlock",
@@ -77691,6 +78099,7 @@ __all__ = [
     "EmptyInput",
     "EmptyResult",
     "EmptyResultName",
+    "EndOpeningReference",
     "EndSubPlace",
     "EnforceFormsOp",
     "EntitiesAdjoin",
@@ -78469,8 +78878,10 @@ __all__ = [
     "OpeningArraySpacingName",
     "OpeningBreak",
     "OpeningBreakName",
+    "OpeningDistance",
     "OpeningDistanceReference",
     "OpeningDistanceReferenceName",
+    "OpeningDistances",
     "OpeningEntity",
     "OpeningFlip",
     "OpeningFlipName",
@@ -78480,13 +78891,17 @@ __all__ = [
     "OpeningFromName",
     "OpeningHand",
     "OpeningHandName",
+    "OpeningOpeningReference",
     "OpeningOperation",
     "OpeningOperationName",
+    "OpeningReference",
     "OpeningRow",
     "OpeningSide",
     "OpeningSideName",
     "OpeningsCreate",
     "OpeningsCreated",
+    "OpeningsDistances",
+    "OpeningsDistancesInput",
     "OpeningsEdit",
     "OpeningsEdited",
     "OpeningsOperation",
@@ -79632,6 +80047,7 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallOpeningReference",
     "WallPartitionPlan",
     "WallRectangleReference",
     "WallRectangleReferenceName",

@@ -69,7 +69,7 @@ fn every_fixture_reads_as_expected_json_says() {
             }
         }
     }
-    assert_eq!((valid, broken), (128, cases.len() - 128));
+    assert_eq!((valid, broken), (129, cases.len() - 129));
 }
 
 #[test]

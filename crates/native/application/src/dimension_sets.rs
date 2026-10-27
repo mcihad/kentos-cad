@@ -2,10 +2,10 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, DimensionSet, DimensionSetBreak, DimensionSetEdit, DimensionSetId,
-    DimensionSetRowPlace, DimensionSetsChanged, DimensionSetsCreateInput, DimensionSetsEditInput,
-    DimensionSetsPlan, DimensionSetsQueried, DimensionSetsQueryInput, Entity, EntityId,
-    dimension_sets_problem,
+    CommandResult, DimensionSet, DimensionSetBreak, DimensionSetEdit, DimensionSetFace,
+    DimensionSetId, DimensionSetRowPlace, DimensionSetsChanged, DimensionSetsCreateInput,
+    DimensionSetsEditInput, DimensionSetsPlan, DimensionSetsQueried, DimensionSetsQueryInput,
+    Entity, EntityId, Vec2, dimension_sets_problem,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -23,7 +23,7 @@ fn source_error(why: DimensionSetBreak) -> Stop {
     let message = match why {
         DimensionSetBreak::HostGone => "Kaynak duvar bulunamadı. Başka bir duvar seçin.",
         DimensionSetBreak::UnsupportedWall => {
-            "Bu araç şu anda iki uçlu düz duvarı ölçer. Kapalı, çok parçalı veya yaylı duvar desteklenmiyor."
+            "Duvarın bu yüzü köşesinde pahlandığı ya da kenarı kalmadığı için ölçülemiyor. Başka bir kenar ya da yüz seçin."
         }
         DimensionSetBreak::OpeningUnplaced => {
             "Duvarın bir açıklığı yerleştirilemedi. Önce açıklığın kaynak bağını düzeltin."
@@ -39,7 +39,104 @@ fn recipe_ok(set: &DimensionSet) -> Result<(), Stop> {
     }
     Ok(())
 }
-fn create_recipe(doc: &Document, input: &DimensionSetsCreateInput) -> Result<DimensionSet, Stop> {
+/// The edges a create measures, each with its face and its first row's place (docs/adr/0700): the given edge, or
+/// with `around` every straight edge, a closed wall's outer face, each row as far out as `at` is from its edge.
+fn measured_edges(
+    doc: &Document,
+    wall: Uuid,
+    input: &DimensionSetsCreateInput,
+) -> Result<Vec<(Option<u32>, DimensionSetFace, Vec2)>, Stop> {
+    let Some(entity) = doc.slot_of(wall).and_then(|slot| doc.get(slot)) else {
+        return Err(source_error(DimensionSetBreak::HostGone));
+    };
+    let Entity::Wall(w) = entity else {
+        return Err(fail("Kaynak bir duvar değil. Ölçülecek duvarı seçin.", "wall"));
+    };
+    let edges = doc
+        .dimension_set_wall_edges(wall)
+        .ok_or_else(|| source_error(DimensionSetBreak::UnsupportedWall))?;
+    // An open two-point wall's only edge keeps no number, as recipes before edges have it.
+    let stored = |k: u32| (w.wall.closed || w.wall.pts.len() > 2).then_some(k);
+    if let Some(k) = input.edge {
+        if k as usize >= edges.count {
+            return Err(fail(
+                format!(
+                    "Duvarda {k} numaralı kenar yok; kenarlar 0 ile {} arasında.",
+                    edges.count.saturating_sub(1)
+                ),
+                "edge",
+            ));
+        }
+        if !edges.straight.contains(&k) {
+            return Err(fail(
+                format!("{k} numaralı kenar yay; ölçü dizisi yalnız düz kenarı ölçer."),
+                "edge",
+            ));
+        }
+    }
+    if !input.around {
+        let edge = match input.edge {
+            Some(k) => stored(k),
+            None if edges.count > 1 || w.wall.closed => {
+                return Err(fail(
+                    format!(
+                        "Duvarın {} kenarı var; ölçülecek kenarı (edge) verin ya da bütün kenarları (around) seçin.",
+                        edges.count
+                    ),
+                    "edge",
+                ));
+            }
+            None => None,
+        };
+        return Ok(vec![(edge, input.face, input.at)]);
+    }
+    let Some(&first) = edges.straight.first() else {
+        return Err(fail(
+            "Duvarın düz kenarı yok; ölçü dizisi yalnız düz kenarı ölçer.",
+            "around",
+        ));
+    };
+    // A closed wall's outer face is on the right of a counter-clockwise path.
+    let face = match (w.wall.closed, edges.counter_clockwise) {
+        (true, true) => DimensionSetFace::Right,
+        (true, false) => DimensionSetFace::Left,
+        (false, _) => input.face,
+    };
+    let line = |k: u32| {
+        doc.dimension_set_wall_face(wall, face, stored(k))
+            .map_err(source_error)
+    };
+    // Outward from the face: its left normal on the left face, the right one on the right.
+    let outward = |[a, b]: [Vec2; 2]| {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let l = dx.hypot(dy);
+        let n = (-dy / l, dx / l);
+        match face {
+            DimensionSetFace::Left => n,
+            DimensionSetFace::Right => (-n.0, -n.1),
+        }
+    };
+    let base = line(input.edge.unwrap_or(first))?;
+    let n = outward(base);
+    let distance = ((input.at.x - base[0].x) * n.0 + (input.at.y - base[0].y) * n.1).abs();
+    edges
+        .straight
+        .iter()
+        .map(|&k| {
+            let [a, b] = line(k)?;
+            let n = outward([a, b]);
+            let at = Vec2 {
+                x: (a.x + b.x) / 2.0 + n.0 * distance,
+                y: (a.y + b.y) / 2.0 + n.1 * distance,
+            };
+            Ok((stored(k), face, at))
+        })
+        .collect()
+}
+fn create_recipes(
+    doc: &Document,
+    input: &DimensionSetsCreateInput,
+) -> Result<Vec<DimensionSet>, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::point(input.at, "Ölçü sırasının yeri", "at")?;
     checks::layer(doc, &input.layer_id)?;
@@ -48,25 +145,31 @@ fn create_recipe(doc: &Document, input: &DimensionSetsCreateInput) -> Result<Dim
     }
     let wall = Uuid::parse_str(&input.wall).map_err(|_| fail("Duvar kimliği geçersiz.", "wall"))?;
     let (look, height) = crate::dimension_create::style_of(doc, input.dimension_style.as_deref())?;
-    let set = DimensionSet {
-        id: DimensionSetId([1; 16]), // internal proposal only; a plan allocates no identity
-        wall: EntityId(wall.into_bytes()),
-        face: input.face,
-        rows: input.rows.clone(),
-        openings: input.openings,
-        layer_id: input.layer_id.clone(),
-        at: input.at,
-        gap_mm: input.gap_mm,
-        height,
-        look,
-        row_places: Vec::new(),
-        members: Vec::new(),
-        suppressed: Vec::new(),
-        broken: None,
-    };
-    recipe_ok(&set)?;
-    doc.dimension_set_plan(&set).map_err(source_error)?;
-    Ok(set)
+    measured_edges(doc, wall, input)?
+        .into_iter()
+        .map(|(edge, face, at)| {
+            let set = DimensionSet {
+                id: DimensionSetId([1; 16]), // internal proposal only; a plan allocates no identity
+                wall: EntityId(wall.into_bytes()),
+                edge,
+                face,
+                rows: input.rows.clone(),
+                openings: input.openings,
+                layer_id: input.layer_id.clone(),
+                at,
+                gap_mm: input.gap_mm,
+                height,
+                look: look.clone(),
+                row_places: Vec::new(),
+                members: Vec::new(),
+                suppressed: Vec::new(),
+                broken: None,
+            };
+            recipe_ok(&set)?;
+            doc.dimension_set_plan(&set).map_err(source_error)?;
+            Ok(set)
+        })
+        .collect()
 }
 fn member_entities(doc: &Document, set: &DimensionSet) -> BTreeMap<String, Entity> {
     set.members
@@ -221,8 +324,8 @@ pub mod create {
         cx: &ExecutionContext<'_>,
         input: &DimensionSetsCreateInput,
     ) -> CommandResult<()> {
-        match create_recipe(cx.doc, input) {
-            Ok(s) => visible_result(cx.doc, &s.layer_id, ()),
+        match create_recipes(cx.doc, input) {
+            Ok(_) => visible_result(cx.doc, &input.layer_id, ()),
             Err(e) => e.into(),
         }
     }
@@ -236,8 +339,28 @@ pub mod create {
         doc: &Document,
         input: &DimensionSetsCreateInput,
     ) -> CommandResult<DimensionSetsPlan> {
-        match create_recipe(doc, input).and_then(|s| planned(doc, &s, false)) {
-            Ok(out) => visible_result(doc, &input.layer_id, out),
+        let plans = create_recipes(doc, input).and_then(|sets| {
+            sets.iter()
+                .map(|s| planned(doc, s, false))
+                .collect::<Result<Vec<_>, _>>()
+        });
+        match plans {
+            // Every edge's chain, in edge order (docs/adr/0700).
+            Ok(plans) => {
+                let mut out = DimensionSetsPlan {
+                    set: None,
+                    entities: Vec::new(),
+                    spans: Vec::new(),
+                    removed: Vec::new(),
+                    uids: Vec::new(),
+                    revision: doc.revision().to_string(),
+                };
+                for plan in plans {
+                    out.entities.extend(plan.entities);
+                    out.spans.extend(plan.spans);
+                }
+                visible_result(doc, &input.layer_id, out)
+            }
             Err(e) => e.into(),
         }
     }
@@ -257,30 +380,41 @@ pub mod create {
         cx: &mut ExecutionContext<'_>,
         input: DimensionSetsCreateInput,
     ) -> CommandResult<DimensionSetsChanged> {
-        let mut set = match create_recipe(cx.doc, &input) {
+        let sets = match create_recipes(cx.doc, &input) {
             Ok(s) => s,
             Err(e) => return e.into(),
         };
-        set.id = DimensionSetId(Uuid::now_v7().into_bytes());
-        let id = set.id;
-        if let Err(why) = cx.doc.add_dimension_set(set) {
-            return written_error(why.to_string()).into();
-        }
-        let uids = cx
+        // Every set in one undo step: all written, or none (docs/adr/0700).
+        let written = cx
             .doc
-            .dimension_set(id)
-            .map(|s| {
-                s.members
-                    .iter()
-                    .map(|m| m.uid.to_string())
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+            .transact(kentos_domain::dimension_sets::labels::ADD, |doc| {
+                sets.into_iter()
+                    .map(|mut set| {
+                        set.id = DimensionSetId(Uuid::now_v7().into_bytes());
+                        let id = set.id;
+                        doc.add_dimension_set(set).map(|()| id)
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            });
+        let ids = match written {
+            Ok(ids) => ids,
+            Err(why) => return written_error(why.to_string()).into(),
+        };
+        let uids: Vec<String> = ids
+            .iter()
+            .filter_map(|id| cx.doc.dimension_set(*id))
+            .flat_map(|s| s.members.iter().map(|m| m.uid.to_string()))
+            .collect();
         visible_result(
             cx.doc,
             &input.layer_id,
             DimensionSetsChanged {
-                set: id,
+                set: ids[0],
+                sets: if ids.len() > 1 || input.around {
+                    ids
+                } else {
+                    Vec::new()
+                },
                 created: uids.clone(),
                 uids,
                 changed: Vec::new(),
@@ -478,6 +612,7 @@ pub mod edit {
             &result_layer,
             DimensionSetsChanged {
                 set: input.id,
+                sets: Vec::new(),
                 uids,
                 created,
                 removed,

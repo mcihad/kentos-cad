@@ -17,6 +17,20 @@
 //! KENTOS_SHOTS_ONLY=duvar-birlesim,duvar-birlesim-ayrintili,duvar-birlesim-x,duvar-duzenle-serit,duvar-birlesim-araci,duvar-birlesim-denetle,duvar-birlesim-oznitelikler,duvar-bol cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0700's and 0699's: Duvar ölçüleri on one closed wall, the edge under the pointer, every edge at once,
+//! written and taken back with one Geri al; a wall style renamed and its name given back by Geri al:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=olcu-kenar,olcu-butun-kenarlar,olcu-butun-kenarlar-yazildi,olcu-butun-kenarlar-geri-alindi,duvar-stili-adi-kaydedildi,duvar-stili-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
+//! And docs/adr/0701's: the room's door selected, its temporary distances on the inner and the outer face, the text
+//! field over a number, the door moved by it and taken back:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -288,8 +302,169 @@ fn rectangle_large_text(app: &mut App) {
     rectangle_dimensions(app);
 }
 
+/// docs/adr/0700: one closed wall drawn with Dikdörtgen duvar, 8 × 6 m inside, 25 cm, a door on its bottom edge and a
+/// window on its right, at 1:100; the camera far enough out for the dimension rows outside it.
+fn closed_room(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 3.5,
+            min_y: N - 3.5,
+            max_x: E + 11.5,
+            max_y: N + 9.5,
+        },
+        24.0,
+    );
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallRectangle");
+    typed(app, "E");
+    typed(app, "0.25m");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 6.0]);
+    typed(app, "");
+    run(app, "tool.door");
+    click(app, [2.5, -0.1]);
+    typed(app, "");
+    run(app, "tool.window");
+    click(app, [8.1, 3.5]);
+    typed(app, "");
+    app.selection.clear();
+}
+
+/// docs/adr/0701: the closed room with a 15 cm wall teeing into its bottom edge at 4 m.
+fn room_with_partition(app: &mut App) {
+    closed_room(app);
+    wall_tool(app, "İç duvar 15");
+    click(app, [4.0, 0.0]);
+    click(app, [4.0, 3.0]);
+    typed(app, "");
+    typed(app, "");
+    app.selection.clear();
+}
+
+/// The room's door: its slot.
+fn the_door(app: &App) -> Slot {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.entities_with_uids()
+        .find_map(|(uid, e)| match e {
+            kentos_commands::Entity::Opening(o)
+                if o.opening.form == kentos_commands::OpeningForm::Door =>
+            {
+                doc.slot_of(uid)
+            }
+            _ => None,
+        })
+        .expect("a door")
+}
+
+/// The door selected, the pointer in the room: its temporary distances on the inner face, to the corner and to the
+/// tee's face.
+fn opening_distances(app: &mut App) {
+    room_with_partition(app);
+    let door = the_door(app);
+    app.selection.set([door]);
+    hover(app, [2.0, 1.2]);
+}
+
+/// The pointer outside: the outer face's distances, to the corner and to the window.
+fn opening_distances_outer(app: &mut App) {
+    room_with_partition(app);
+    let door = the_door(app);
+    app.selection.set([door]);
+    hover(app, [2.0, -1.4]);
+}
+
+/// A click on the corner's number: its text field, the value ready.
+fn opening_distance_field(app: &mut App) {
+    opening_distances(app);
+    let n = app.session.temporary_numbers();
+    click(app, [n[0].x - E, n[0].y - N]);
+}
+
+/// 1 m typed, Enter: the door moved, the corner fixed; its new distances.
+fn opening_distance_written(app: &mut App) {
+    opening_distance_field(app);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input("1 m".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
+    hover(app, [2.0, 1.2]);
+}
+
+/// One Geri al: the door back where it was.
+fn opening_distance_undone(app: &mut App) {
+    opening_distance_written(app);
+    run(app, "edit.undo");
+    hover(app, [2.0, 1.25]);
+}
+
+/// Duvar ölçüleri on the closed room: the right edge under the pointer, its outer face, the window's jambs.
+fn dimensions_edge(app: &mut App) {
+    closed_room(app);
+    run(app, "tool.wallDimensions");
+    click(app, [8.1, 1.0]);
+    hover(app, [10.0, 2.0]);
+}
+
+/// Kenarlar → Bütün kenarlar: a chain on each of the four edges, on the outer faces, still a preview.
+fn dimensions_around(app: &mut App) {
+    closed_room(app);
+    run(app, "tool.wallDimensions");
+    click(app, [8.1, 1.0]);
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallDimensions",
+        key: "N",
+        value: "all".into(),
+    });
+    hover(app, [4.0, -1.4]);
+}
+
+/// The four chains written with one Enter, selected.
+fn dimensions_around_written(app: &mut App) {
+    dimensions_around(app);
+    typed(app, "");
+    hover(app, [11.0, 8.5]);
+}
+
+/// One Geri al takes all four chains back.
+fn dimensions_around_undone(app: &mut App) {
+    dimensions_around_written(app);
+    run(app, "edit.undo");
+}
+
+/// docs/adr/0699: the room's style renamed in Duvar stilleri and saved; the wall selected shows the new name.
+fn style_renamed(app: &mut App) {
+    room(app, 50.0);
+    run(app, "arch.wallStyles");
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Choose(Some(
+        "kentos-dis-duvar-25".into(),
+    ))));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Name(
+        "Dış duvar 25 QA".into(),
+    )));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Save));
+    app.selection.set([Slot(1)]);
+}
+
+/// One Geri al gives the old name back: the style table is in the step.
+fn style_rename_undone(app: &mut App) {
+    style_renamed(app);
+    run(app, "edit.undo");
+    app.selection.set([Slot(1)]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("gecici-olcu", opening_distances),
+        ("gecici-olcu-dis", opening_distances_outer),
+        ("gecici-olcu-yazi-kutusu", opening_distance_field),
+        ("gecici-olcu-tasindi", opening_distance_written),
+        ("gecici-olcu-geri-alindi", opening_distance_undone),
+        ("olcu-kenar", dimensions_edge),
+        ("olcu-butun-kenarlar", dimensions_around),
+        ("olcu-butun-kenarlar-yazildi", dimensions_around_written),
+        ("olcu-butun-kenarlar-geri-alindi", dimensions_around_undone),
+        ("duvar-stili-adi-kaydedildi", style_renamed),
+        ("duvar-stili-geri-alindi", style_rename_undone),
         ("mimari-serit-13", architecture_ribbon),
         ("mimari-serit-18", architecture_ribbon_large),
         ("mimari-duvar-baglam-18", architecture_wall_context),

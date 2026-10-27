@@ -63,6 +63,8 @@ pub enum BottomTab {
     Address,
     /// Topoloji kuralları' findings (topology/, docs/adr/0202 §5).
     Topology,
+    /// Mimari denetim's findings (arch_audit.rs, docs/adr/0703).
+    Audit,
     /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
     ServiceInfo,
     Messages,
@@ -70,7 +72,7 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 12] = [
+    const ALL: [BottomTab; 13] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -80,6 +82,7 @@ impl BottomTab {
         BottomTab::Search,
         BottomTab::Address,
         BottomTab::Topology,
+        BottomTab::Audit,
         BottomTab::ServiceInfo,
         BottomTab::Messages,
         BottomTab::Python,
@@ -166,6 +169,9 @@ impl App {
                 Tab::new(plan::TAB_TOPOLOGY)
                     .icon(from_web(Some("topologyCheck")))
                     .closable(false),
+                Tab::new(crate::arch_audit::TAB)
+                    .icon(from_web(Some("archAudit")))
+                    .closable(false),
                 Tab::new(plan::TAB_SERVICE_INFO)
                     .icon(from_web(Some("serviceInfo")))
                     .closable(false),
@@ -203,6 +209,7 @@ impl App {
             BottomTab::Search => self.data_tab(),
             BottomTab::Address => self.address_tab(),
             BottomTab::Topology => self.topology_tab(),
+            BottomTab::Audit => self.arch_audit_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
@@ -236,6 +243,7 @@ impl App {
             BottomTab::Search => plan::TAB_SEARCH,
             BottomTab::Address => plan::TAB_ADDRESS,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
+            BottomTab::Audit => crate::arch_audit::TAB,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",

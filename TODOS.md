@@ -51,6 +51,32 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-DIM-01 / ADR0700: ölçü tarifinin `edge`'i (kapalı ya da çok kenarlı
+  duvarın düz kenarı) ve `cad.dimensionsets.create`'in `edge`/`around`
+  girdileri, çıktının `sets`'i; KCAD şema 114. Web dönüşünde komutun
+  işleyicisi, kenar seçen araç (imlece en yakın düz kenar, Dış/İç yüz,
+  Kenarlar: Bu kenar / Bütün kenarlar), kenarın köşe ekleme/silmede bit bit
+  izlenmesi ve kopma, tek adım/tek geri al aynı ortak durumlarla
+  (`cad.dimensionsets.create.json`'un “Kenar:”/“Bütün kenarlar” durumları)
+  sınanmalı. TS türleri üretildi; web kodu yok.
+- ARCH-BASE-01 / ADR0699: `cad.styles.edit` stil tablosunu izleyen
+  nesnelerle aynı geri alma adımında stil stil (kimlikle) yazar; yalnız ad
+  değişikliği de adımdır. Web'in `styles.edit` akışı ve geri alma geçmişi bu
+  kurala (`cad.styles.edit.json`'un 61 durumu) getirilmeli.
+- ARCH-EDIT-01 / ADR0701: `cad.openings.distances` (açıklığın yüz boyunca
+  geçici ölçüleri) ve `cad.openings.edit`'in `distance` işlemi. Web dönüşünde
+  seçili tek açıklığın geçici ölçüleri, sayıya basınca yazı kutusu ve Enter
+  ile taşıma, imlecin yakın olduğu yüz aynı ortak durumlarla
+  (`cad.openings.distances.json`, `cad.openings.edit.distance.json`) sınanmalı.
+- ARCH-LIB-01 / ADR0702: KentOS blok kitaplığının 37 bloğu (yeni 21 mobilya,
+  vitrifiye ve mutfak bloğu, boşluk zarfı görünürlüğü) ve Blok ekle'nin Duvara
+  hizala (H) seçeneği. Web'in Bloklar paneli kategorileri ve yerleştirmede
+  duvara hizalama getirilmeli; kitaplık dosyası ortak.
+- ARCH-DOC-03 / ADR0703: `cad.arch.audit` (Mimari denetim) ve alt panelin
+  Denetim sekmesi. Web dönüşünde sekme (grup, eşikler, satıra basınca seç ve
+  yakınlaş, Düzelt ile bulgunun `fix.step`'i, yeniden denetim) aynı ortak
+  durumlarla (`cad.arch.audit.json`) sınanmalı.
+
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı
   kaynak saymaz. Ortak best/all Endpoint aynı host'un gerçek jamb sahibini

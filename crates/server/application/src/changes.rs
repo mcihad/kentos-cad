@@ -585,38 +585,34 @@ async fn check_dimension_rows(
             continue;
         };
         let w = &entity.wall;
-        if w.closed
-            || w.pts.len() != 2
-            || w.bulges
-                .as_ref()
-                .is_some_and(|b| b.iter().any(|b| *b != 0.))
-        {
-            continue; // An actually unsupported source retains its last geometry.
-        }
+        let n = w.pts.len();
+        // The measured straight edge (docs/adr/0700); a source without one retains its last geometry.
+        let edge = match set.edge {
+            Some(edge) => edge as usize,
+            None if !w.closed && n == 2 => 0,
+            None => continue,
+        };
+        let pts: Vec<Vec2> = w.pts.iter().copied().map(p).collect();
+        let bulges = w.bulges.clone().unwrap_or_else(|| vec![0.; n]);
         let spec = kentos_formats::walls::spec(w);
-        let Ok(lines) = wall::lines(
-            &w.pts.iter().copied().map(p).collect::<Vec<_>>(),
-            w.bulges.as_deref(),
-            &spec,
-        ) else {
+        let Ok(lines) = wall::lines(&pts, w.bulges.as_deref(), &spec) else {
             continue;
         };
         let part = match set.face {
             DimensionSetFace::Left => 0,
             DimensionSetFace::Right => lines.len().saturating_sub(1),
         };
-        let Some(face) = lines.get(part).filter(|line| line.pts.len() == 2) else {
+        // A bevelled face has no vertex per path vertex: its places are not the path's.
+        let Some(face) = lines.get(part).filter(|line| line.pts.len() == n) else {
             continue;
         };
-        let line = [face.pts[0], face.pts[1]];
+        let Some((line, ends)) = core::edge_face(&face.pts, &bulges, w.closed, edge) else {
+            continue;
+        };
         if Frame::new(line).is_err() {
             continue;
         }
-        let path = opening::wall_path(
-            &w.pts.iter().copied().map(p).collect::<Vec<_>>(),
-            w.bulges.as_deref(),
-            false,
-        );
+        let path = opening::wall_path(&pts, w.bulges.as_deref(), w.closed);
         let mut openings = Vec::new();
         let mut jambs_by_uid = HashMap::new();
         let mut frozen = false;
@@ -665,6 +661,10 @@ async fn check_dimension_rows(
                 {
                     stale_source = true;
                 }
+                // Another edge's opening belongs to that edge's chain.
+                if !core::on_edge(line, &jambs, spec.width) {
+                    continue;
+                }
                 jambs_by_uid.insert(*uid, jambs);
                 openings.push(core::Opening {
                     source: openings.len() + 1,
@@ -678,6 +678,7 @@ async fn check_dimension_rows(
         let Ok(spans) = core::plan(
             line,
             part,
+            ends,
             match set.face {
                 DimensionSetFace::Left => core::Face::Left,
                 DimensionSetFace::Right => core::Face::Right,
@@ -710,7 +711,9 @@ async fn check_dimension_rows(
                         part: q,
                         ring: 0,
                         index,
-                    } if q as usize == part && index < 2 => Some(line[index as usize]),
+                    } if q as usize == part && ends.contains(&(index as usize)) => {
+                        Some(line[usize::from(index as usize == ends[1])])
+                    }
                     _ => None,
                 };
             }

@@ -4700,6 +4700,16 @@
                   }
                 ]
               },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -33407,6 +33417,16 @@
                   }
                 ]
               },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -46095,6 +46115,16 @@
                     "type": "null"
                   }
                 ]
+              },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
               },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
@@ -706512,7 +706542,7 @@
       "id": "cad.openings.edit",
       "version": 1,
       "title": "Açıklığı düzenle",
-      "summary": "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), distance (docs/adr/0701: side start/end, face left/right, distance metre: pervazın o yöndeki en yakın referansa — yüzün köşesi ya da ucu, aynı kenardaki başka açıklığın pervazı, yüzü kesen başka duvar — net mesafesi bu olur; referans sabit, açıklık kenarında kalır; mesafeyi önce cad.openings.distances okur), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -706527,6 +706557,14 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
           "OpeningArrayLayout": {
             "description": "Placement of NEW copies; the source remains unchanged and is not counted.\nAll distances are metres along the whole host's analytic path. Every copy\nmust still fit on one edge; crossing a corner refuses the whole operation.",
             "oneOf": [
@@ -707022,6 +707060,33 @@
                 "required": [
                   "kind",
                   "offsets"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`\nfrom the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it\nstays on its edge.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "face": {
+                    "$ref": "#/$defs/DimensionSetFace",
+                    "default": "left"
+                  },
+                  "kind": {
+                    "const": "distance",
+                    "type": "string"
+                  },
+                  "side": {
+                    "$ref": "#/$defs/WallEnd"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "side",
+                  "distance"
                 ],
                 "type": "object"
               }
@@ -727801,6 +727866,1021 @@
               "prefix": "K",
               "start": 1
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.openings.distances",
+      "version": 1,
+      "title": "Açıklığın mesafeleri",
+      "summary": "Kalıcı kimlikleri verilen kapı, pencere ve boşlukların geçici ölçülerini okur (docs/adr/0701): duvar kenarının seçilen yüzünde (face: left, varsayılan, ya da right; yolun yönüne göre) pervazlardan önceki (start) ve sonraki (end) en yakın referansa net mesafe. Referans yüzün köşesi ya da ucu (end), aynı kenardaki başka açıklığın pervazı (opening) ya da yüzü kesen başka duvarın yüzü (wall); from pervazın, to referansın yüzdeki noktası, metre. Yay kenardaki açıklık reddedilir (invalid_opening). Belgeye yazmaz; mesafeyi değiştirmek için cad.openings.edit'in distance işlemi.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.openings.distances` v1 (docs/adr/0701): the openings named, measured on their walls' `face` (the\npath's left, the default, or right). Read-only.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_host_gone`,\n`invalid_opening` (an arc edge, a bevelled face).",
+        "properties": {
+          "face": {
+            "$ref": "#/$defs/DimensionSetFace",
+            "default": "left"
+          },
+          "uids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "OpeningsDistancesInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "OpeningDistance": {
+            "description": "One side's distance: net along the face, from the opening's jamb to the reference's point on the face.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "reference": {
+                "$ref": "#/$defs/OpeningReference"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "distance",
+              "from",
+              "to",
+              "reference"
+            ],
+            "type": "object"
+          },
+          "OpeningDistances": {
+            "description": "An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.",
+            "properties": {
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "end": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "face": {
+                "$ref": "#/$defs/DimensionSetFace"
+              },
+              "start": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "edge",
+              "face"
+            ],
+            "type": "object"
+          },
+          "OpeningReference": {
+            "description": "What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.",
+            "oneOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "const": "opening",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "const": "wall",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openings.distances` v1.",
+        "properties": {
+          "openings": {
+            "items": {
+              "$ref": "#/$defs/OpeningDistances"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "openings",
+          "revision"
+        ],
+        "title": "OpeningsDistances",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "OpeningDistance": {
+            "description": "One side's distance: net along the face, from the opening's jamb to the reference's point on the face.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "reference": {
+                "$ref": "#/$defs/OpeningReference"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "distance",
+              "from",
+              "to",
+              "reference"
+            ],
+            "type": "object"
+          },
+          "OpeningDistances": {
+            "description": "An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.",
+            "properties": {
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "end": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "face": {
+                "$ref": "#/$defs/DimensionSetFace"
+              },
+              "start": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "edge",
+              "face"
+            ],
+            "type": "object"
+          },
+          "OpeningReference": {
+            "description": "What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.",
+            "oneOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "const": "opening",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "const": "wall",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openings.distances` v1.",
+        "properties": {
+          "openings": {
+            "items": {
+              "$ref": "#/$defs/OpeningDistances"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "openings",
+          "revision"
+        ],
+        "title": "OpeningsDistances",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "opening"
+            ],
+            "refusedWith": "not_an_opening"
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_an_opening",
+          "opening_host_gone",
+          "invalid_opening"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kapının iç yüzdeki mesafeleri",
+          "input": {
+            "face": "left",
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000203"
+            ]
+          },
+          "output": {
+            "openings": [
+              {
+                "edge": 0,
+                "end": {
+                  "distance": 1.5,
+                  "from": {
+                    "x": 2.45,
+                    "y": 0.125
+                  },
+                  "reference": {
+                    "kind": "wall",
+                    "uid": "0192f5a1-6000-7000-8000-000000000202"
+                  },
+                  "to": {
+                    "x": 3.95,
+                    "y": 0.125
+                  }
+                },
+                "face": "left",
+                "start": {
+                  "distance": 1.425,
+                  "from": {
+                    "x": 1.55,
+                    "y": 0.125
+                  },
+                  "reference": {
+                    "kind": "end"
+                  },
+                  "to": {
+                    "x": 0.125,
+                    "y": 0.125
+                  }
+                },
+                "uid": "0192f5a1-6000-7000-8000-000000000203"
+              }
+            ],
+            "revision": "12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arch.audit",
+      "version": 1,
+      "title": "Mimari denetim",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ArchAuditCheck": {
+            "description": "A group of the audit's checks, in the order its findings come.",
+            "oneOf": [
+              {
+                "const": "walls",
+                "description": "Joins that are not made, ends that stop short of another wall or of another end.",
+                "type": "string"
+              },
+              {
+                "const": "openings",
+                "description": "Openings whose wall link broke, openings without a type.",
+                "type": "string"
+              },
+              {
+                "const": "spaces",
+                "description": "Spaces whose boundary broke, very small or very narrow spaces.",
+                "type": "string"
+              },
+              {
+                "const": "numbers",
+                "description": "A number on more than one opening or space.",
+                "type": "string"
+              },
+              {
+                "const": "tags",
+                "description": "Tags whose object is gone.",
+                "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "Associative dimensions and dimension sets whose link broke.",
+                "type": "string"
+              },
+              {
+                "const": "columns",
+                "description": "Columns whose grids are gone.",
+                "type": "string"
+              },
+              {
+                "const": "viewmarks",
+                "description": "View marks whose target is gone.",
+                "type": "string"
+              },
+              {
+                "const": "levels",
+                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order).",
+        "properties": {
+          "checks": {
+            "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
+            "items": {
+              "$ref": "#/$defs/ArchAuditCheck"
+            },
+            "type": "array"
+          },
+          "maxGap": {
+            "description": "A free wall end this near another wall's body, or another free end, is said; metres, at least 0.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "minArea": {
+            "description": "A space smaller than this is said; square metres, at least 0.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "minWidth": {
+            "description": "A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "title": "ArchAudit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ArchAuditCheck": {
+            "description": "A group of the audit's checks, in the order its findings come.",
+            "oneOf": [
+              {
+                "const": "walls",
+                "description": "Joins that are not made, ends that stop short of another wall or of another end.",
+                "type": "string"
+              },
+              {
+                "const": "openings",
+                "description": "Openings whose wall link broke, openings without a type.",
+                "type": "string"
+              },
+              {
+                "const": "spaces",
+                "description": "Spaces whose boundary broke, very small or very narrow spaces.",
+                "type": "string"
+              },
+              {
+                "const": "numbers",
+                "description": "A number on more than one opening or space.",
+                "type": "string"
+              },
+              {
+                "const": "tags",
+                "description": "Tags whose object is gone.",
+                "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "Associative dimensions and dimension sets whose link broke.",
+                "type": "string"
+              },
+              {
+                "const": "columns",
+                "description": "Columns whose grids are gone.",
+                "type": "string"
+              },
+              {
+                "const": "viewmarks",
+                "description": "View marks whose target is gone.",
+                "type": "string"
+              },
+              {
+                "const": "levels",
+                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "type": "string"
+              }
+            ]
+          },
+          "ArchAuditFinding": {
+            "description": "One thing `cad.arch.audit` found.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where to look.",
+                "x-unit": "length"
+              },
+              "check": {
+                "$ref": "#/$defs/ArchAuditCheck"
+              },
+              "code": {
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.",
+                "type": "string"
+              },
+              "fix": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchAuditFix"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The call that resolves it, when one plainly does and the object it writes is on an unlocked layer."
+              },
+              "message": {
+                "description": "What is wrong.",
+                "type": "string"
+              },
+              "repair": {
+                "description": "What resolves it.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "The objects, by their persistent ids.",
+                "items": {
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "check",
+              "code",
+              "message",
+              "repair",
+              "uids",
+              "at"
+            ],
+            "type": "object"
+          },
+          "ArchAuditFix": {
+            "description": "What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it\nis; one undo step).",
+            "properties": {
+              "label": {
+                "description": "What the call does, as a button says it (“Bitiş ucunu öbür duvara uzat”).",
+                "type": "string"
+              },
+              "step": {
+                "$ref": "#/$defs/ChangesetStep"
+              }
+            },
+            "required": [
+              "label",
+              "step"
+            ],
+            "type": "object"
+          },
+          "ChangesetStep": {
+            "description": "A step of a change set.",
+            "properties": {
+              "as": {
+                "description": "The name later steps refer to its output by: a letter or `_`, then\nletters, digits and `_`; each once.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "command": {
+                "description": "The command's id (`cad.polygon.create`).",
+                "type": "string"
+              },
+              "input": {
+                "description": "Its input, its catalog's schema, with references to earlier steps."
+              },
+              "version": {
+                "description": "Its version; the host's when absent.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "command",
+              "input"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.audit` v1 (its plan's too).",
+        "properties": {
+          "findings": {
+            "description": "By group, then by code within it, then along x and y.",
+            "items": {
+              "$ref": "#/$defs/ArchAuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "findings",
+          "revision"
+        ],
+        "title": "ArchAudited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ArchAuditCheck": {
+            "description": "A group of the audit's checks, in the order its findings come.",
+            "oneOf": [
+              {
+                "const": "walls",
+                "description": "Joins that are not made, ends that stop short of another wall or of another end.",
+                "type": "string"
+              },
+              {
+                "const": "openings",
+                "description": "Openings whose wall link broke, openings without a type.",
+                "type": "string"
+              },
+              {
+                "const": "spaces",
+                "description": "Spaces whose boundary broke, very small or very narrow spaces.",
+                "type": "string"
+              },
+              {
+                "const": "numbers",
+                "description": "A number on more than one opening or space.",
+                "type": "string"
+              },
+              {
+                "const": "tags",
+                "description": "Tags whose object is gone.",
+                "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "Associative dimensions and dimension sets whose link broke.",
+                "type": "string"
+              },
+              {
+                "const": "columns",
+                "description": "Columns whose grids are gone.",
+                "type": "string"
+              },
+              {
+                "const": "viewmarks",
+                "description": "View marks whose target is gone.",
+                "type": "string"
+              },
+              {
+                "const": "levels",
+                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "type": "string"
+              }
+            ]
+          },
+          "ArchAuditFinding": {
+            "description": "One thing `cad.arch.audit` found.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where to look.",
+                "x-unit": "length"
+              },
+              "check": {
+                "$ref": "#/$defs/ArchAuditCheck"
+              },
+              "code": {
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.",
+                "type": "string"
+              },
+              "fix": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchAuditFix"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The call that resolves it, when one plainly does and the object it writes is on an unlocked layer."
+              },
+              "message": {
+                "description": "What is wrong.",
+                "type": "string"
+              },
+              "repair": {
+                "description": "What resolves it.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "The objects, by their persistent ids.",
+                "items": {
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "check",
+              "code",
+              "message",
+              "repair",
+              "uids",
+              "at"
+            ],
+            "type": "object"
+          },
+          "ArchAuditFix": {
+            "description": "What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it\nis; one undo step).",
+            "properties": {
+              "label": {
+                "description": "What the call does, as a button says it (“Bitiş ucunu öbür duvara uzat”).",
+                "type": "string"
+              },
+              "step": {
+                "$ref": "#/$defs/ChangesetStep"
+              }
+            },
+            "required": [
+              "label",
+              "step"
+            ],
+            "type": "object"
+          },
+          "ChangesetStep": {
+            "description": "A step of a change set.",
+            "properties": {
+              "as": {
+                "description": "The name later steps refer to its output by: a letter or `_`, then\nletters, digits and `_`; each once.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "command": {
+                "description": "The command's id (`cad.polygon.create`).",
+                "type": "string"
+              },
+              "input": {
+                "description": "Its input, its catalog's schema, with references to earlier steps."
+              },
+              "version": {
+                "description": "Its version; the host's when absent.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "command",
+              "input"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.audit` v1 (its plan's too).",
+        "properties": {
+          "findings": {
+            "description": "By group, then by code within it, then along x and y.",
+            "items": {
+              "$ref": "#/$defs/ArchAuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "findings",
+          "revision"
+        ],
+        "title": "ArchAudited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_arch_audit"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Duvarlar: öbür duvara 4 cm kala biten uç",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "output": {
+            "findings": [
+              {
+                "at": {
+                  "x": 5.0,
+                  "y": 4.14
+                },
+                "check": "walls",
+                "code": "arch_wall_end_gap",
+                "fix": {
+                  "label": "Bitiş ucunu öbür duvara uzat",
+                  "step": {
+                    "command": "cad.walls.edit",
+                    "input": {
+                      "operation": {
+                        "end": "end",
+                        "kind": "extend",
+                        "to": "0192f5a1-7030-7000-8000-000000000002"
+                      },
+                      "uids": [
+                        "0192f5a1-7030-7000-8000-000000000003"
+                      ]
+                    }
+                  }
+                },
+                "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                "uids": [
+                  "0192f5a1-7030-7000-8000-000000000003",
+                  "0192f5a1-7030-7000-8000-000000000002"
+                ]
+              }
+            ],
+            "revision": "7"
           }
         }
       ]
@@ -1154865,6 +1155945,16 @@
                   }
                 ]
               },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -1181066,7 +1182156,7 @@
       "id": "cad.dimensionsets.create",
       "version": 1,
       "title": "Duvar ölçüleri oluştur",
-      "summary": "Tek iki uçlu düz duvarın gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften ölçer. Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur. Kapalı, çok parçalı ve yaylı duvar işlemden önce reddedilir.",
+      "summary": "Duvarın bir düz kenarının gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften ölçer. Birden çok kenarlı (kapalı ya da çok köşeli) duvarda edge ölçülecek düz kenarı verir (köşe edge → edge+1); around ise her düz kenara birer dizi koyar, kapalı duvarda dış yüzden, hepsi tek adımda (çıktının sets'i; docs/adr/0700). Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe eklenip silinince kenar uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur. Yay kenar ve pahlanmış yüz işlemden önce reddedilir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -1181126,8 +1182216,12 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Create a live chain on one straight wall face. Wire geometry is metres;\ngapMm is paper millimetres and uses the existing project plotScale once.",
+        "description": "Create a live chain on one straight wall face. Wire geometry is metres;\ngapMm is paper millimetres and uses the existing project plotScale once.\nA wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).",
         "properties": {
+          "around": {
+            "description": "Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far\nout from its face as `at` is from `edge`'s (else the first straight edge's).",
+            "type": "boolean"
+          },
           "at": {
             "$ref": "#/$defs/Vec2",
             "x-unit": "length"
@@ -1181138,6 +1182232,16 @@
               "string",
               "null"
             ]
+          },
+          "edge": {
+            "description": "The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the\nfirst vertex). Absent: a two-point wall's only edge.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -1181219,6 +1182323,13 @@
           },
           "set": {
             "$ref": "#/$defs/DimensionSetId"
+          },
+          "sets": {
+            "description": "Every set `around` wrote, in edge order (`set` is the first); absent for one set.",
+            "items": {
+              "$ref": "#/$defs/DimensionSetId"
+            },
+            "type": "array"
           },
           "uids": {
             "items": {
@@ -1191945,6 +1193056,13 @@
           },
           "set": {
             "$ref": "#/$defs/DimensionSetId"
+          },
+          "sets": {
+            "description": "Every set `around` wrote, in edge order (`set` is the first); absent for one set.",
+            "items": {
+              "$ref": "#/$defs/DimensionSetId"
+            },
+            "type": "array"
           },
           "uids": {
             "items": {
@@ -1202752,6 +1203870,16 @@
                   }
                 ]
               },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -1203684,6 +1204812,16 @@
                     "type": "null"
                   }
                 ]
+              },
+              "edge": {
+                "description": "The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to\nits first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
               },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
@@ -1426602,6 +1427740,78 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Açıklığın ya da mahalin etiketi yok."
+    },
+    {
+      "code": "arch_wall_end_gap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Duvarın ucu öbür duvara birkaç santim kala bitiyor; birleşmiyor. Ucu öbür duvara uzatın."
+    },
+    {
+      "code": "arch_wall_ends_apart",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İki duvar ucu birbirine çok yakın ama buluşmuyor."
+    },
+    {
+      "code": "arch_opening_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Açıklığın duvarla bağı kopuk: duvarı yok, duvarından taşıyor ya da başka açıklığa biniyor."
+    },
+    {
+      "code": "arch_space_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın sınırı kaynaklarından bulunamıyor; son hâliyle kaldı."
+    },
+    {
+      "code": "arch_space_small",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın alanı denetim eşiğinden küçük; artık bir parça olabilir."
+    },
+    {
+      "code": "arch_space_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın ortalama eni denetim eşiğinden küçük; dar bir artık parça olabilir."
+    },
+    {
+      "code": "arch_dimension_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İlişkili ölçünün bir noktası izlediği nesneyi kaybetti."
+    },
+    {
+      "code": "arch_dimension_set_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ölçü dizisinin kaynağı kopuk; ölçüler son yerlerinde duruyor."
+    },
+    {
+      "code": "arch_column_grid_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kolonun aksı yok ya da akslar kesişmiyor."
+    },
+    {
+      "code": "arch_viewmark_target_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Görünüm işaretinin hedefi yok."
+    },
+    {
+      "code": "arch_level_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat."
+    },
+    {
+      "code": "invalid_arch_audit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı."
     },
     {
       "code": "invalid_viewmark",

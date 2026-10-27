@@ -9,6 +9,8 @@ use crate::{DimensionLook, DimensionSetId, EntityId, SubRef, Vec2};
 
 pub const DIMENSION_SET_MEMBERS_MAX: usize = 10_000;
 pub const DIMENSION_SETS_MAX: usize = 10_000;
+/// The most edges a measured wall path may have (docs/adr/0700).
+pub const DIMENSION_SET_EDGES_MAX: usize = 100_000;
 
 /// A real wall face, relative to the direction of its source path.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -131,6 +133,12 @@ impl DimensionSetMember {
 pub struct DimensionSet {
     pub id: DimensionSetId,
     pub wall: EntityId,
+    /// The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to
+    /// its first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub edge: Option<u32>,
     pub face: DimensionSetFace,
     pub rows: Vec<DimensionSetRow>,
     pub openings: DimensionSetOpenings,
@@ -175,6 +183,9 @@ pub fn dimension_sets_problem(sets: &[DimensionSet]) -> Option<(usize, String)> 
         }
         if set.wall.is_nil() {
             return fail("Ölçü dizisinin kaynak duvar kimliği boş.");
+        }
+        if set.edge.is_some_and(|edge| edge as usize >= DIMENSION_SET_EDGES_MAX) {
+            return fail("Ölçü dizisinin kenar numarası duvarın kenar sınırını aşıyor.");
         }
         if set.layer_id.is_empty() {
             return fail("Ölçü dizisinin hedef katmanı boş.");

@@ -20,6 +20,8 @@ pub const CAD_OPENINGS_CREATE: &str = "cad.openings.create";
 pub const CAD_OPENINGS_CREATE_VERSION: u32 = 1;
 pub const CAD_OPENINGS_EDIT: &str = "cad.openings.edit";
 pub const CAD_OPENINGS_EDIT_VERSION: u32 = 1;
+pub const CAD_OPENINGS_DISTANCES: &str = "cad.openings.distances";
+pub const CAD_OPENINGS_DISTANCES_VERSION: u32 = 1;
 /// The most openings one call writes.
 pub const MAX_OPENINGS: usize = 10_000;
 
@@ -436,6 +438,16 @@ pub enum OpeningsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         offsets: Vec<f64>,
     },
+    /// Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`
+    /// from the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it
+    /// stays on its edge.
+    Distance {
+        side: WallEnd,
+        #[serde(default)]
+        face: crate::DimensionSetFace,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: f64,
+    },
 }
 
 fn first_number() -> u32 {
@@ -508,4 +520,79 @@ pub fn wall_end_of(from: OpeningFrom, s: f64, l: f64) -> WallEnd {
             }
         }
     }
+}
+
+/// Input of `cad.openings.distances` v1 (docs/adr/0701): the openings named, measured on their walls' `face` (the
+/// path's left, the default, or right). Read-only.
+///
+/// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_host_gone`,
+/// `invalid_opening` (an arc edge, a bevelled face).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningsDistancesInput {
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+    #[serde(default)]
+    pub face: crate::DimensionSetFace,
+}
+
+/// What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum OpeningReference {
+    End,
+    Opening { uid: String },
+    Wall { uid: String },
+}
+
+/// One side's distance: net along the face, from the opening's jamb to the reference's point on the face.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningDistance {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+    pub reference: OpeningReference,
+}
+
+/// An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningDistances {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub edge: u32,
+    pub face: crate::DimensionSetFace,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start: Option<OpeningDistance>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end: Option<OpeningDistance>,
+}
+
+/// Output of `cad.openings.distances` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningsDistances {
+    pub openings: Vec<OpeningDistances>,
+    pub revision: String,
 }

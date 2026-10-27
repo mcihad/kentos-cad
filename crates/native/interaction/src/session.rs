@@ -1363,6 +1363,16 @@ impl Session {
             return;
         }
         let depth = self.parents.len();
+        // A click on a temporary dimension's number opens its text field (docs/adr/0701).
+        if self.tool.is_none()
+            && !p.shift
+            && let Some(field) = self.select.temporary_at(p.screen, cx)
+        {
+            self.run(Box::new(field));
+            self.activate(cx);
+            self.pick_pressed = true;
+            return;
+        }
         match &mut self.tool {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p, cx),
@@ -1764,6 +1774,9 @@ impl Session {
                 self.tool = None;
             }
         }
+        if self.tool.is_none() {
+            self.select.see_temporary(cx);
+        }
         self.follow_locks(cx);
     }
 
@@ -1799,6 +1812,14 @@ impl Session {
     /// had none (or no tool runs): the drawing is undone then (ADR 0018).
     pub fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         self.tool.as_mut().is_some_and(|t| t.undo_step(cx))
+    }
+
+    /// Where the selected opening's temporary dimensions show their numbers, while no tool runs (docs/adr/0701).
+    pub fn temporary_numbers(&self) -> Vec<Vec2> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.temporary_numbers()
     }
 
     /// What to draw over the drawing while a tool runs, or a grip moves.

@@ -97,13 +97,18 @@ fn pointer_placement_needs_one_click_after_source_choice_and_escape_writes_nothi
 }
 
 #[test]
-fn invalid_paper_units_and_closed_wall_do_not_make_partial_dimensions() {
-    let (mut b, wall) = source();
+fn invalid_paper_units_make_no_partial_dimensions() {
+    let (mut b, _) = source();
     let before = b.doc.to_snapshot_v2();
     for value in ["10 cm", "1 m", "0 mm", "-4 mm", "1001", "NaN"] {
         assert!(!configure(&mut b, "R", value));
     }
     assert_eq!(b.doc.to_snapshot_v2(), before);
+}
+
+/// The source wall made a closed 20 × 10 room, counter-clockwise: its left face is inside.
+fn room() -> (Bench, Slot) {
+    let (mut b, wall) = source();
     b.run(|session, cx| session.cancel(cx));
     let mut source = b.doc.get(wall).unwrap().clone();
     let Entity::Wall(w) = &mut source else {
@@ -123,14 +128,72 @@ fn invalid_paper_units_and_closed_wall_do_not_make_partial_dimensions() {
     ]);
     w.wall.closed = true;
     b.doc.update_many(vec![(wall, source)], "closed wall");
-    let changed = b.doc.to_snapshot_v2();
+    b.selection.clear();
+    (b, wall)
+}
+
+/// docs/adr/0700: on a closed wall the edge under the pointer is measured, its outer face by the pointer's side.
+#[test]
+fn a_closed_wall_measures_the_edge_under_the_pointer() {
+    let (mut b, _) = room();
+    b.start("wallDimensions");
+    let before = b.doc.to_snapshot_v2();
+    b.click(20., 5.);
+    assert_eq!(b.points(), 1, "the wall is chosen");
+    let settings = b.session.settings(&Default::default());
+    assert!(
+        settings
+            .iter()
+            .any(|s| s.key == "F" && s.choices.iter().any(|c| c.label == "Dış yüz"))
+    );
+    assert!(settings.iter().any(|s| s.key == "N"));
+    b.move_to(22., 5.);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
+    b.click(22., 5.);
+    assert!(!b.session.is_running());
+    let set = &b.doc.dimension_sets()[0];
+    assert_eq!(set.edge, Some(1));
+    assert_eq!(set.face, kentos_commands::DimensionSetFace::Right);
+    assert_eq!(set.members.len(), 2);
+    b.doc.undo().unwrap();
+    assert!(b.doc.dimension_sets().is_empty());
+}
+
+/// Kenarlar → Bütün kenarlar: a chain on each edge, on the outer face, one confirmation and one undo step.
+#[test]
+fn every_edge_of_a_closed_wall_in_one_step() {
+    let (mut b, wall) = room();
     b.selection.set([wall]);
     b.start("wallDimensions");
+    assert!(configure(&mut b, "N", "all"));
+    // Inside the room, the rows still go out from the outer faces.
+    b.move_to(10., 1.);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert_eq!(preview.texts.len(), 8, "four edges, two rows each");
+    assert!(
+        preview
+            .tag
+            .as_ref()
+            .is_some_and(|tag| tag.lines[0].contains("4 kenar"))
+    );
+    let before = b.doc.to_snapshot_v2();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
     b.confirm();
-    assert_eq!(b.doc.to_snapshot_v2(), changed);
-    assert_eq!(b.points(), 0);
+    assert!(!b.session.is_running());
+    let sets = b.doc.dimension_sets();
+    assert_eq!(sets.len(), 4);
+    assert_eq!(
+        sets.iter().map(|s| s.edge).collect::<Vec<_>>(),
+        [Some(0), Some(1), Some(2), Some(3)]
+    );
+    assert!(
+        sets.iter()
+            .all(|s| s.face == kentos_commands::DimensionSetFace::Right)
+    );
+    assert_eq!(b.selection.len(), 8);
+    b.doc.undo().unwrap();
     assert!(b.doc.dimension_sets().is_empty());
-    assert!(b.log.iter().any(|line| line.text.contains("tek düz duvar")));
+    assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
 }
 
 #[test]

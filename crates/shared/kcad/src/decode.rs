@@ -323,7 +323,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "constraints" if has.constraints => constraints_ = Some(constraints(r)?),
-            "dimensionSets" if has.dimension_sets => dimension_sets_ = Some(dimension_sets(r)?),
+            "dimensionSets" if has.dimension_sets => dimension_sets_ = Some(dimension_sets(r, has)?),
             "migratedFrom" => migrated_from = Some(source(r)?),
             _ => return Err(unknown(r)),
         }
@@ -384,7 +384,10 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     })
 }
 
-fn dimension_sets(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::DimensionSet>, KcadError> {
+fn dimension_sets(
+    r: &mut Reader<'_>,
+    has: Features,
+) -> Result<Vec<kentos_contracts::DimensionSet>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
     let sets: Vec<kentos_contracts::DimensionSet> =
@@ -407,6 +410,15 @@ fn dimension_sets(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::DimensionS
             Code::BadValue,
             at,
             &format!("dimensionSets[{index}]: {why}"),
+        ));
+    }
+    if !has.dimension_set_edges
+        && let Some(index) = sets.iter().position(|s| s.edge.is_some())
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("dimensionSets[{index}]: kenar (edge) şema 114 ister"),
         ));
     }
     Ok(sets)

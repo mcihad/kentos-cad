@@ -1,0 +1,6012 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arch.audit",
+  "commandVersion": 1,
+  "title": "Mimari denetim: duvar birleşimleri, uç boşlukları, kopuk açıklık, mahal, ölçü, kolon ve işaret, yinelenen numara, katsız nesne; eşikler, düzeltmeler ve retler",
+  "note": "ADR 0703. Beklenenler scripts/fixtures/arch_audit_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvar birleşimleri ve yüzler scripts/fixtures/wall_join_cases.py'nin kesirli çözücüsünden.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Mimari denetim",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mimari",
+        "name": "Mimari",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "duvar",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 8.0
+          },
+          {
+            "x": 0.0,
+            "y": 8.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "closed": true,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4.0
+          },
+          {
+            "x": 6.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 8.0
+          },
+          {
+            "x": 5.0,
+            "y": 4.14
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 7.0,
+            "y": 2.0
+          },
+          {
+            "x": 8.5,
+            "y": 2.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.53,
+            "y": 2.04
+          },
+          {
+            "x": 8.53,
+            "y": 3.5
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 6,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 24.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 7,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 24.0,
+            "y": 0.0
+          },
+          {
+            "x": 19.0,
+            "y": 1.125
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 8,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 14.0,
+            "y": 6.0
+          },
+          {
+            "x": 10.14,
+            "y": 6.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "mimari",
+        "attrs": {},
+        "host": "0192f5a1-7030-7000-8000-000000000001",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 1.55,
+            "y": 0.1
+          },
+          {
+            "x": 1.55,
+            "y": -0.1
+          },
+          {
+            "x": 2.45,
+            "y": 0.1
+          },
+          {
+            "x": 2.45,
+            "y": -0.1
+          }
+        ],
+        "style": "kentos-kapi-90",
+        "number": "K01"
+      },
+      {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "mimari",
+        "attrs": {},
+        "host": "0192f5a1-7030-7000-8000-000000000001",
+        "at": 6.0,
+        "width": 1.2,
+        "form": "window",
+        "place": [
+          {
+            "x": 5.4,
+            "y": 0.1
+          },
+          {
+            "x": 5.4,
+            "y": -0.1
+          },
+          {
+            "x": 6.6,
+            "y": 0.1
+          },
+          {
+            "x": 6.6,
+            "y": -0.1
+          }
+        ],
+        "number": "P01"
+      },
+      {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "mimari",
+        "attrs": {},
+        "host": "0192f5a1-7030-7000-8000-00000000ff01",
+        "at": 8.5,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 8.05,
+            "y": 0.1
+          },
+          {
+            "x": 8.05,
+            "y": -0.1
+          },
+          {
+            "x": 8.95,
+            "y": 0.1
+          },
+          {
+            "x": 8.95,
+            "y": -0.1
+          }
+        ],
+        "style": "kentos-kapi-90",
+        "number": "K02",
+        "broken": "hostGone"
+      },
+      {
+        "kind": "opening",
+        "id": 12,
+        "layerId": "mimari",
+        "attrs": {},
+        "host": "0192f5a1-7030-7000-8000-000000000001",
+        "at": 12.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 9.9,
+            "y": 1.5500000000000007
+          },
+          {
+            "x": 10.1,
+            "y": 1.5500000000000007
+          },
+          {
+            "x": 9.9,
+            "y": 2.4499999999999993
+          },
+          {
+            "x": 10.1,
+            "y": 2.4499999999999993
+          }
+        ],
+        "style": "kentos-kapi-90",
+        "number": "K01"
+      },
+      {
+        "kind": "space",
+        "id": 13,
+        "layerId": "mimari",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.1,
+                  "y": 0.1
+                },
+                {
+                  "x": 9.9,
+                  "y": 0.1
+                },
+                {
+                  "x": 9.9,
+                  "y": 3.9
+                },
+                {
+                  "x": 0.1,
+                  "y": 3.9
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 14,
+        "layerId": "mimari",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.1,
+                  "y": 4.1
+                },
+                {
+                  "x": 4.95,
+                  "y": 4.1
+                },
+                {
+                  "x": 4.95,
+                  "y": 7.9
+                },
+                {
+                  "x": 0.1,
+                  "y": 7.9
+                }
+              ]
+            }
+          }
+        ],
+        "number": "102",
+        "name": "Yatak odası",
+        "arch": {
+          "level": "zemin"
+        },
+        "broken": "lostEnclosure"
+      },
+      {
+        "kind": "space",
+        "id": 15,
+        "layerId": "mimari",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 1.0,
+                  "y": 10.0
+                },
+                {
+                  "x": 6.0,
+                  "y": 10.0
+                },
+                {
+                  "x": 6.0,
+                  "y": 10.05
+                },
+                {
+                  "x": 1.0,
+                  "y": 10.05
+                }
+              ]
+            }
+          }
+        ],
+        "number": "103",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 16,
+        "layerId": "gizli",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 12.0,
+                  "y": 10.0
+                },
+                {
+                  "x": 12.3,
+                  "y": 10.0
+                },
+                {
+                  "x": 12.3,
+                  "y": 10.25
+                },
+                {
+                  "x": 12.0,
+                  "y": 10.25
+                }
+              ]
+            }
+          }
+        ],
+        "number": "104",
+        "name": "Şaft",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 17,
+        "layerId": "mimari",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 20.0,
+                  "y": 10.0
+                },
+                {
+                  "x": 23.0,
+                  "y": 10.0
+                },
+                {
+                  "x": 23.0,
+                  "y": 13.0
+                },
+                {
+                  "x": 20.0,
+                  "y": 13.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Depo"
+      },
+      {
+        "kind": "tag",
+        "id": 18,
+        "layerId": "mimari",
+        "attrs": {},
+        "of": "0192f5a1-7030-7000-8000-000000000008",
+        "at": {
+          "x": 2.0,
+          "y": -0.6
+        },
+        "text": "K01"
+      },
+      {
+        "kind": "tag",
+        "id": 19,
+        "layerId": "kilitli",
+        "attrs": {},
+        "of": "0192f5a1-7030-7000-8000-00000000ff02",
+        "at": {
+          "x": 6.0,
+          "y": -1.5
+        },
+        "text": "K09",
+        "broken": "targetGone"
+      },
+      {
+        "kind": "tag",
+        "id": 20,
+        "layerId": "mimari",
+        "attrs": {},
+        "of": "0192f5a1-7030-7000-8000-00000000ff03",
+        "at": {
+          "x": 31.0,
+          "y": -1.0
+        },
+        "text": "K10",
+        "broken": "targetGone"
+      },
+      {
+        "kind": "dimension",
+        "id": 21,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -1.0
+        },
+        "b": {
+          "x": 10.0,
+          "y": -1.0
+        },
+        "height": 0.125,
+        "offset": -0.5,
+        "style": "linear",
+        "angle": 0.0,
+        "refs": {
+          "a": {
+            "uid": "0192f5a1-7030-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "broken": "vertex_gone"
+          },
+          "b": {
+            "uid": "0192f5a1-7030-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          }
+        }
+      },
+      {
+        "kind": "dimension",
+        "id": 22,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 20.0,
+          "y": -2.0
+        },
+        "b": {
+          "x": 24.0,
+          "y": -2.0
+        },
+        "height": 0.125,
+        "offset": -0.5,
+        "style": "linear",
+        "angle": 0.0,
+        "refs": {
+          "a": {
+            "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "broken": "object_gone"
+          },
+          "b": {
+            "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "broken": "object_gone"
+          }
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 23,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": -2.0
+          },
+          {
+            "x": 30.0,
+            "y": 6.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "column",
+        "id": 24,
+        "layerId": "mimari",
+        "attrs": {},
+        "at": {
+          "x": 30.0,
+          "y": 0.0
+        },
+        "width": 0.4,
+        "depth": 0.4,
+        "grids": [
+          "0192f5a1-7030-7000-8000-000000000016",
+          "0192f5a1-7030-7000-8000-00000000ff05"
+        ],
+        "arch": {
+          "level": "zemin"
+        },
+        "broken": "gridGone"
+      },
+      {
+        "kind": "column",
+        "id": 25,
+        "layerId": "mimari",
+        "attrs": {},
+        "at": {
+          "x": 34.0,
+          "y": 0.0
+        },
+        "width": 0.4,
+        "depth": 0.4
+      },
+      {
+        "kind": "viewmark",
+        "id": 26,
+        "layerId": "mimari",
+        "attrs": {},
+        "form": "section",
+        "points": [
+          {
+            "x": 0.0,
+            "y": -3.0
+          },
+          {
+            "x": 10.0,
+            "y": -3.0
+          }
+        ],
+        "mark": "A",
+        "target": {
+          "view": "kesit-a"
+        },
+        "broken": "targetGone"
+      },
+      {
+        "kind": "stair",
+        "id": 27,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 0.0
+          },
+          {
+            "x": 43.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 28,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 5.0
+          },
+          {
+            "x": 50.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0,
+        "arch": {
+          "level": "kat-9"
+        }
+      }
+    ],
+    "uids": [
+      "0192f5a1-7030-7000-8000-000000000001",
+      "0192f5a1-7030-7000-8000-000000000002",
+      "0192f5a1-7030-7000-8000-000000000003",
+      "0192f5a1-7030-7000-8000-000000000004",
+      "0192f5a1-7030-7000-8000-000000000005",
+      "0192f5a1-7030-7000-8000-000000000006",
+      "0192f5a1-7030-7000-8000-000000000007",
+      "0192f5a1-7030-7000-8000-00000000001c",
+      "0192f5a1-7030-7000-8000-000000000008",
+      "0192f5a1-7030-7000-8000-000000000009",
+      "0192f5a1-7030-7000-8000-00000000000a",
+      "0192f5a1-7030-7000-8000-00000000000b",
+      "0192f5a1-7030-7000-8000-00000000000c",
+      "0192f5a1-7030-7000-8000-00000000000d",
+      "0192f5a1-7030-7000-8000-00000000000e",
+      "0192f5a1-7030-7000-8000-00000000000f",
+      "0192f5a1-7030-7000-8000-000000000010",
+      "0192f5a1-7030-7000-8000-000000000011",
+      "0192f5a1-7030-7000-8000-000000000012",
+      "0192f5a1-7030-7000-8000-000000000013",
+      "0192f5a1-7030-7000-8000-000000000014",
+      "0192f5a1-7030-7000-8000-000000000015",
+      "0192f5a1-7030-7000-8000-000000000016",
+      "0192f5a1-7030-7000-8000-000000000017",
+      "0192f5a1-7030-7000-8000-000000000018",
+      "0192f5a1-7030-7000-8000-000000000019",
+      "0192f5a1-7030-7000-8000-00000000001a",
+      "0192f5a1-7030-7000-8000-00000000001b"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "dimensionSets": [
+      {
+        "id": "0192f5a1-7030-7000-8000-000000000500",
+        "wall": "0192f5a1-7030-7000-8000-00000000ff01",
+        "face": "left",
+        "rows": [
+          "overall"
+        ],
+        "openings": "ends",
+        "layerId": "olcu",
+        "at": {
+          "x": 20.0,
+          "y": -2.5
+        },
+        "gapMm": 7.0,
+        "height": 0.125,
+        "look": {},
+        "members": [
+          {
+            "uid": "0192f5a1-7030-7000-8000-000000000015",
+            "row": "overall",
+            "a": {
+              "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 0
+              }
+            },
+            "b": {
+              "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 1
+              }
+            }
+          }
+        ],
+        "broken": "hostGone"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Bütün denetimler, varsayılan eşikler: her grubun bulguları sırasıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "arch_opening_broken",
+                  "message": "Açıklığın duvarı yok (K02).",
+                  "repair": "Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000a"
+                  ],
+                  "at": {
+                    "x": 8.5,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "tag_missing_type",
+                  "message": "“P01” açıklığının türü yok.",
+                  "repair": "Öznitelikler'de açıklığın Tür'ünü seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000009"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_narrow",
+                  "message": "103: ortalama eni 0.050 m; çok dar bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000008",
+                    "0192f5a1-7030-7000-8000-00000000000b"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“101” numarası 2 mahalde.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000c",
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 2.0
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan aynı cevabı verir, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "arch_opening_broken",
+                  "message": "Açıklığın duvarı yok (K02).",
+                  "repair": "Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000a"
+                  ],
+                  "at": {
+                    "x": 8.5,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "tag_missing_type",
+                  "message": "“P01” açıklığının türü yok.",
+                  "repair": "Öznitelikler'de açıklığın Tür'ünü seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000009"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_narrow",
+                  "message": "103: ortalama eni 0.050 m; çok dar bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000008",
+                    "0192f5a1-7030-7000-8000-00000000000b"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“101” numarası 2 mahalde.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000c",
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 2.0
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama: girdi geçerli",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız walls",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız openings",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "openings"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "openings",
+                  "code": "arch_opening_broken",
+                  "message": "Açıklığın duvarı yok (K02).",
+                  "repair": "Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000a"
+                  ],
+                  "at": {
+                    "x": 8.5,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "tag_missing_type",
+                  "message": "“P01” açıklığının türü yok.",
+                  "repair": "Öznitelikler'de açıklığın Tür'ünü seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000009"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız spaces",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "spaces"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_narrow",
+                  "message": "103: ortalama eni 0.050 m; çok dar bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız numbers",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "numbers"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000008",
+                    "0192f5a1-7030-7000-8000-00000000000b"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“101” numarası 2 mahalde.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000c",
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız tags",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "tags"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız dimensions",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız columns",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "columns"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız viewmarks",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "viewmarks"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız levels",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grupların sırası girdinin sırası değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels",
+              "walls",
+              "tags"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş grup listesi: hepsi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "arch_opening_broken",
+                  "message": "Açıklığın duvarı yok (K02).",
+                  "repair": "Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000a"
+                  ],
+                  "at": {
+                    "x": 8.5,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "openings",
+                  "code": "tag_missing_type",
+                  "message": "“P01” açıklığının türü yok.",
+                  "repair": "Öznitelikler'de açıklığın Tür'ünü seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000009"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_narrow",
+                  "message": "103: ortalama eni 0.050 m; çok dar bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000008",
+                    "0192f5a1-7030-7000-8000-00000000000b"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“101” numarası 2 mahalde.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000c",
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 2.0
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluk eşiği 3 cm: 4 cm'lik uç boşluğu ve 5 cm'lik uç aralığı bulgu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ],
+            "maxGap": 0.03
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluk eşiği 4,5 cm: uç boşluğu bulgu, 5 cm'lik aralık değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ],
+            "maxGap": 0.045
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluk eşiği sıfır: boşluk bulgusu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ],
+            "maxGap": 0.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Küçük mahal eşiği 0,3 m²: şerit artık küçük sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "spaces"
+            ],
+            "minArea": 0.3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "103: alanı 0.250 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dar mahal eşiği sıfır: dar bulgusu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "spaces"
+            ],
+            "minWidth": 0.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal eşikleri sıfır: yalnız kopuk mahal",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "spaces"
+            ],
+            "minArea": 0.0,
+            "minWidth": 0.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi maxGap reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": -0.01
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "Boşluk eşiği -0.01 m; sıfır ya da daha büyük olmalı.",
+              "path": "maxGap"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi minArea reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "minArea": -0.01
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "Küçük mahal eşiği -0.01 m²; sıfır ya da daha büyük olmalı.",
+              "path": "minArea"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi minWidth reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "minWidth": -0.01
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "Dar mahal eşiği -0.01 m; sıfır ya da daha büyük olmalı.",
+              "path": "minWidth"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan maxGap reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "maxGap": 0.1
+          },
+          "nonFinite": {
+            "maxGap": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Boşluk eşiği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "maxGap"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan minArea reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "minArea": 0.1
+          },
+          "nonFinite": {
+            "minArea": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Küçük mahal eşiği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "minArea"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan minWidth reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "minWidth": 0.1
+          },
+          "nonFinite": {
+            "minWidth": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Dar mahal eşiği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "minWidth"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projede kat yok: kat denetimi bulgu vermez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Mimari denetim",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "closed": true,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 4.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 8.0
+              },
+              {
+                "x": 5.0,
+                "y": 4.14
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 7.0,
+                "y": 2.0
+              },
+              {
+                "x": 8.5,
+                "y": 2.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 8.53,
+                "y": 2.04
+              },
+              {
+                "x": 8.53,
+                "y": 3.5
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 6,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 20.0,
+                "y": 0.0
+              },
+              {
+                "x": 24.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 7,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 24.0,
+                "y": 0.0
+              },
+              {
+                "x": 19.0,
+                "y": 1.125
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 8,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 14.0,
+                "y": 6.0
+              },
+              {
+                "x": 10.14,
+                "y": 6.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 9,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.55,
+                "y": 0.1
+              },
+              {
+                "x": 1.55,
+                "y": -0.1
+              },
+              {
+                "x": 2.45,
+                "y": 0.1
+              },
+              {
+                "x": 2.45,
+                "y": -0.1
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K01"
+          },
+          {
+            "kind": "opening",
+            "id": 10,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.4,
+                "y": 0.1
+              },
+              {
+                "x": 5.4,
+                "y": -0.1
+              },
+              {
+                "x": 6.6,
+                "y": 0.1
+              },
+              {
+                "x": 6.6,
+                "y": -0.1
+              }
+            ],
+            "number": "P01"
+          },
+          {
+            "kind": "opening",
+            "id": 11,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-00000000ff01",
+            "at": 8.5,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 8.05,
+                "y": 0.1
+              },
+              {
+                "x": 8.05,
+                "y": -0.1
+              },
+              {
+                "x": 8.95,
+                "y": 0.1
+              },
+              {
+                "x": 8.95,
+                "y": -0.1
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K02",
+            "broken": "hostGone"
+          },
+          {
+            "kind": "opening",
+            "id": 12,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 12.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 9.9,
+                "y": 1.5500000000000007
+              },
+              {
+                "x": 10.1,
+                "y": 1.5500000000000007
+              },
+              {
+                "x": 9.9,
+                "y": 2.4499999999999993
+              },
+              {
+                "x": 10.1,
+                "y": 2.4499999999999993
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K01"
+          },
+          {
+            "kind": "space",
+            "id": 13,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 3.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 3.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "101",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 14,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 4.1
+                    },
+                    {
+                      "x": 4.95,
+                      "y": 4.1
+                    },
+                    {
+                      "x": 4.95,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "102",
+            "name": "Yatak odası",
+            "arch": {
+              "level": "zemin"
+            },
+            "broken": "lostEnclosure"
+          },
+          {
+            "kind": "space",
+            "id": 15,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 1.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 10.05
+                    },
+                    {
+                      "x": 1.0,
+                      "y": 10.05
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "103",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 16,
+            "layerId": "gizli",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 12.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 12.3,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 12.3,
+                      "y": 10.25
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 10.25
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "104",
+            "name": "Şaft",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 17,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 23.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 23.0,
+                      "y": 13.0
+                    },
+                    {
+                      "x": 20.0,
+                      "y": 13.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "101",
+            "name": "Depo"
+          },
+          {
+            "kind": "tag",
+            "id": 18,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-000000000008",
+            "at": {
+              "x": 2.0,
+              "y": -0.6
+            },
+            "text": "K01"
+          },
+          {
+            "kind": "tag",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-00000000ff02",
+            "at": {
+              "x": 6.0,
+              "y": -1.5
+            },
+            "text": "K09",
+            "broken": "targetGone"
+          },
+          {
+            "kind": "tag",
+            "id": 20,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-00000000ff03",
+            "at": {
+              "x": 31.0,
+              "y": -1.0
+            },
+            "text": "K10",
+            "broken": "targetGone"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -1.0
+            },
+            "b": {
+              "x": 10.0,
+              "y": -1.0
+            },
+            "height": 0.125,
+            "offset": -0.5,
+            "style": "linear",
+            "angle": 0.0,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-7030-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                },
+                "broken": "vertex_gone"
+              },
+              "b": {
+                "uid": "0192f5a1-7030-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 22,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 20.0,
+              "y": -2.0
+            },
+            "b": {
+              "x": 24.0,
+              "y": -2.0
+            },
+            "height": 0.125,
+            "offset": -0.5,
+            "style": "linear",
+            "angle": 0.0,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                },
+                "broken": "object_gone"
+              },
+              "b": {
+                "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                },
+                "broken": "object_gone"
+              }
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 23,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": -2.0
+              },
+              {
+                "x": 30.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "column",
+            "id": 24,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "grids": [
+              "0192f5a1-7030-7000-8000-000000000016",
+              "0192f5a1-7030-7000-8000-00000000ff05"
+            ],
+            "arch": {
+              "level": "zemin"
+            },
+            "broken": "gridGone"
+          },
+          {
+            "kind": "column",
+            "id": 25,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 34.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4
+          },
+          {
+            "kind": "viewmark",
+            "id": 26,
+            "layerId": "mimari",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": 0.0,
+                "y": -3.0
+              },
+              {
+                "x": 10.0,
+                "y": -3.0
+              }
+            ],
+            "mark": "A",
+            "target": {
+              "view": "kesit-a"
+            },
+            "broken": "targetGone"
+          },
+          {
+            "kind": "stair",
+            "id": 27,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 43.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "ramp",
+            "id": 28,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 5.0
+              },
+              {
+                "x": 50.0,
+                "y": 5.0
+              }
+            ],
+            "width": 1.5,
+            "rise": 0.5,
+            "slope": 5.0,
+            "arch": {
+              "level": "kat-9"
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-7030-7000-8000-000000000001",
+          "0192f5a1-7030-7000-8000-000000000002",
+          "0192f5a1-7030-7000-8000-000000000003",
+          "0192f5a1-7030-7000-8000-000000000004",
+          "0192f5a1-7030-7000-8000-000000000005",
+          "0192f5a1-7030-7000-8000-000000000006",
+          "0192f5a1-7030-7000-8000-000000000007",
+          "0192f5a1-7030-7000-8000-00000000001c",
+          "0192f5a1-7030-7000-8000-000000000008",
+          "0192f5a1-7030-7000-8000-000000000009",
+          "0192f5a1-7030-7000-8000-00000000000a",
+          "0192f5a1-7030-7000-8000-00000000000b",
+          "0192f5a1-7030-7000-8000-00000000000c",
+          "0192f5a1-7030-7000-8000-00000000000d",
+          "0192f5a1-7030-7000-8000-00000000000e",
+          "0192f5a1-7030-7000-8000-00000000000f",
+          "0192f5a1-7030-7000-8000-000000000010",
+          "0192f5a1-7030-7000-8000-000000000011",
+          "0192f5a1-7030-7000-8000-000000000012",
+          "0192f5a1-7030-7000-8000-000000000013",
+          "0192f5a1-7030-7000-8000-000000000014",
+          "0192f5a1-7030-7000-8000-000000000015",
+          "0192f5a1-7030-7000-8000-000000000016",
+          "0192f5a1-7030-7000-8000-000000000017",
+          "0192f5a1-7030-7000-8000-000000000018",
+          "0192f5a1-7030-7000-8000-000000000019",
+          "0192f5a1-7030-7000-8000-00000000001a",
+          "0192f5a1-7030-7000-8000-00000000001b"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-7030-7000-8000-000000000500",
+            "wall": "0192f5a1-7030-7000-8000-00000000ff01",
+            "face": "left",
+            "rows": [
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "olcu",
+            "at": {
+              "x": 20.0,
+              "y": -2.5
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {},
+            "members": [
+              {
+                "uid": "0192f5a1-7030-7000-8000-000000000015",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "broken": "hostGone"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Boş çizim: bulgu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Mimari denetim",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat-1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: wall_join_acute",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "joins",
+              "end": "butt"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_wall_end_gap",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-000000000003"
+            ],
+            "operation": {
+              "kind": "extend",
+              "to": "0192f5a1-7030-7000-8000-000000000002",
+              "end": "end"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "walls"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: tag_target_gone",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "tags"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-000000000013"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "tags"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "tags"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_dimension_set_broken",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.dimensionsets.edit",
+          "input": {
+            "id": "0192f5a1-7030-7000-8000-000000000500",
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a, b); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000015",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          },
+                          {
+                            "point": "b",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_dimension_broken",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.dimensions.reassociate",
+          "input": {
+            "uid": "0192f5a1-7030-7000-8000-000000000014",
+            "points": [
+              {
+                "point": "a",
+                "to": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "dimensions"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları son yerlerinde duruyor.",
+                  "repair": "Yeniden bağla ile noktaları bir nesneye bağlayın ya da serbest bırakın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Kopan noktaları serbest bırak",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_column_grid_gone",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "columns"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-000000000017"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "columns"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "columns"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_viewmark_target_gone",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "viewmarks"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-000000000019"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "viewmarks"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "viewmarks"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}
