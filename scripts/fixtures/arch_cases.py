@@ -13,7 +13,11 @@ so every length is an exact fraction; a turn's angle is checked as floats within
   between them are one (docs/adr/0704 §2). Checks: stair_short (risers not fitting), stair_long (length past the last
   riser), stair_step_rule (2 × riser + tread outside 0.60–0.65 m). Fitted (ADR 0704 §1): the last point moved along
   the last segment to the last riser of a line long enough for all, none when that riser is not past the last turn.
-  Past its cut riser a stair's risers are drawn dashed (ADR 0704 §3).
+  Past its cut riser a stair's risers are drawn dashed (ADR 0704 §3). Railings (ADR 0705 §2): each chosen side's
+  line 5 cm inside its band's side, mitred; a stair's cut at the cut riser on the left and a tread further on the
+  right, the part past it apart. A ramp's landings overlapping are one (ADR 0705 §1); fitted, its last point along its
+  last segment so that its sloped length is its rise over its slope, none without both or when that length is used up
+  before the last landing ends.
 - A ramp's sloped run: its length less its landings; its slope rise / run × 100; ramp_slope_mismatch beyond 0.1 points;
   its levels “+base” and “+base+rise” with two decimals.
 """
@@ -164,7 +168,63 @@ def fit_end(pts, width, count, tread, land):
     return (prev[0] + d[0] * t, prev[1] + d[1] * t)
 
 
-def stair_case(name, pts, width, count, riser, tread, land=None, cut=None):
+INSET = F(1, 20)
+
+
+def railing_line(pts, half, left):
+    """A railing's line on one side: the band's side 5 cm inside, from the start to the end."""
+    b = band(pts, max(half - INSET, F(0)))
+    n = len(pts)
+    return b[:n] if left else list(reversed(b[n:]))
+
+
+def point_on(pts, at, s):
+    """The walking line's point at `s` and its segment's direction (at a turn, the segment it ends)."""
+    n, k = len(pts), 0
+    while k + 2 < n and s > at[k + 1]:
+        k += 1
+    a, b = pts[k], pts[k + 1]
+    t = (s - at[k]) / (at[k + 1] - at[k])
+    return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t), unit(a, b)
+
+
+def split(pts, at, line, half, is_left, s):
+    for k, a in enumerate(at):
+        if abs(a - s) <= EPS:
+            return line[:k + 1], line[k:]
+    off = max(half - INSET, F(0)) * (1 if is_left else -1)
+    p, d = point_on(pts, at, s)
+    n = left(d)
+    x = (p[0] + n[0] * off, p[1] + n[1] * off)
+    return [v for k, v in enumerate(line) if at[k] < s] + [x], [x] + [v for k, v in enumerate(line) if not at[k] < s]
+
+
+def railings_of(pts, half, sides, cut_at):
+    """Each chosen side's line (left, then right), the part past the cut apart and marked."""
+    out = []
+    if sides is None:
+        return out
+    at = walk(pts)
+    for is_left, on in ((True, sides in ("left", "both")), (False, sides in ("right", "both"))):
+        if not on:
+            continue
+        line = railing_line(pts, half, is_left)
+        if cut_at is None:
+            out.append((line, False))
+            continue
+        before, after = split(pts, at, line, half, is_left, cut_at[0] if is_left else cut_at[1])
+        if len(before) >= 2:
+            out.append((before, False))
+        if len(after) >= 2:
+            out.append((after, True))
+    return out
+
+
+def rails(lines):
+    return [{"pts": [fl(p) for p in line], "over": over} for line, over in lines]
+
+
+def stair_case(name, pts, width, count, riser, tread, land=None, cut=None, sides=None):
     land_len = land if land is not None else width
     st, missing, at = risers(pts, width, count, tread, land_len)
     codes = []
@@ -181,13 +241,22 @@ def stair_case(name, pts, width, count, riser, tread, land=None, cut=None):
         shape["landing"] = float(land)
     if cut is not None:
         shape["cut"] = cut
+    if sides is not None:
+        shape["railings"] = sides
     fit = fit_end(pts, width, count, tread, land_len)
     shown = len(st) if cut is None else min(max(cut, 1), len(st))
+    cut_at = None
+    if cut is not None and st:
+        c = st[min(max(cut, 1), len(st)) - 1]
+        cut_at = (c, min(c + tread, at[-1]))
+    lines = railings_of(pts, width / 2, sides, cut_at)
     return {"name": name, "shape": shape, "scale": 50.0,
             "expect": {"stations": [float(s) for s in st], "missing": missing, "codes": codes,
                        "band": [fl(p) for p in band(pts, width / 2)],
                        "landings": [[float(a), float(b)] for a, b in stair_landings(pts, at, land_len, tread)],
-                       "fit": fl(fit) if fit else None, "dashed": len(st) - shown}}
+                       "fit": fl(fit) if fit else None,
+                       "dashed": len(st) - shown + sum(1 for _, over in lines if over),
+                       "railings": rails(lines)}}
 
 
 def level(v):
@@ -195,10 +264,40 @@ def level(v):
     return f"-{t}" if v < 0 and t != "0.00" else f"+{t}"
 
 
-def ramp_case(name, pts, width, rise, slope=None, base=None, land=None):
+def ramp_landings(pts, at, land):
+    """A ramp's: overlapping landings make one, counted once."""
+    out = []
+    for a, b in landings(pts, at, land):
+        if out and a < out[-1][1] + EPS:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
+def ramp_fit(pts, rise, slope, land):
+    """The last point moved along the last segment so that the sloped length is the rise over the slope."""
+    if slope is None or slope <= 0 or rise == 0:
+        return None
+    run = abs(rise) / (F(slope) / 100)
+    prev = pts[-2]
+    d = unit(prev, pts[-1])
+    start = walk(pts[:-1])[-1]
+    reach = run + len(pts) * land + start
+    far = pts[:-1] + [(prev[0] + d[0] * reach, prev[1] + d[1] * reach)]
+    lands = ramp_landings(far, walk(far), land)
+    total = run + sum(b - a for a, b in lands)
+    past = lands[-1][1] if lands else F(0)
+    if total - start <= EPS or total < past - EPS:
+        return None
+    t = total - start
+    return (prev[0] + d[0] * t, prev[1] + d[1] * t)
+
+
+def ramp_case(name, pts, width, rise, slope=None, base=None, land=None, sides=None):
     at = walk(pts)
     land_len = land if land is not None else width
-    run = at[-1] - sum(b - a for a, b in landings(pts, at, land_len))
+    run = at[-1] - sum(b - a for a, b in ramp_landings(pts, at, land_len))
     actual = rise / run * 100
     codes = []
     if slope is not None and abs(F(slope) - actual) > F(1, 10):
@@ -212,10 +311,15 @@ def ramp_case(name, pts, width, rise, slope=None, base=None, land=None):
         shape["base"] = float(base)
     if land is not None:
         shape["landing"] = float(land)
+    if sides is not None:
+        shape["railings"] = sides
+    fit = ramp_fit(pts, rise, slope, land_len)
     return {"name": name, "shape": shape, "scale": 50.0,
             "expect": {"run": float(run), "slope": float(actual), "codes": codes,
                        "levels": [level(float(b0)), level(float(b0 + rise))],
-                       "band": [fl(p) for p in band(pts, width / 2)]}}
+                       "band": [fl(p) for p in band(pts, width / 2)],
+                       "fit": fl(fit) if fit else None,
+                       "railings": rails(railings_of(pts, width / 2, sides, None))}}
 
 
 def P(x, y):
@@ -254,11 +358,34 @@ def cases():
                    F(1, 6), F(7, 25)),
         stair_case("Eğik (3-4-5) düz merdiven, uzun yol", [P(0, 0), P(F(24, 5), F(32, 5))], F(1), 10, F(17, 100),
                    F(3, 10)),
+        # ADR 0705: railings, 5 cm inside; a stair's cut on the left at the cut riser, a tread on on the right.
+        stair_case("U merdiven, iki yan korkuluk, kesmede kesikli", [P(0, 0), P(0, 3), P(F(5, 4), 3), P(F(5, 4), F(1, 2))],
+                   F(6, 5), 18, F(1, 6), F(7, 25), cut=6, sides="both"),
+        stair_case("L merdiven, sol korkuluk, kesmesiz", [P(0, 0), P(3, 0), P(3, 3)], F(1), 18, F(1, 6), F(7, 25),
+                   sides="left"),
+        stair_case("Düz merdiven, sağ korkuluk, kesme son rıhtta", [P(0, 0), P(F(119, 25), 0)], F(6, 5), 18, F(1, 6),
+                   F(7, 25), cut=18, sides="right"),
+        stair_case("Eğik (3-4-5) merdiven, iki yan korkuluk, kesme ortada", [P(0, 0), P(F(12, 5), F(16, 5))], F(1), 13,
+                   F(17, 100), F(3, 10), cut=5, sides="both"),
         ramp_case("Düz rampa, eğim verilmiş ve uyuyor", [P(0, 0), P(10, 0)], F(3, 2), F(1, 2), slope=5),
         ramp_case("Düz rampa, eğimsiz", [P(0, 0), P(8, 0)], F(3, 2), F(2, 5)),
         ramp_case("L rampa, eğim uymuyor", [P(0, 0), P(6, 0), P(6, 6)], F(3, 2), F(3, 5), slope=6),
         ramp_case("Başlangıç kotu eksi, inen rampa", [P(0, 0), P(0, 10)], F(6, 5), F(-1, 2), base=F(-3, 10)),
         ramp_case("U rampa, kısa sahanlık", [P(0, 0), P(5, 0), P(5, 3), P(0, 3)], F(3, 2), F(1, 2), land=F(1)),
+        # ADR 0705: overlapping landings once; the fit; railings.
+        ramp_case("U rampa, 2 m sahanlıklar üst üste: bir kez sayılır", [P(0, 0), P(6, 0), P(6, F(8, 5)), P(0, F(8, 5))],
+                  F(3, 2), F(1, 2), slope=F(25, 4), land=F(2)),
+        ramp_case("Düz rampa, %6,25 eğimle sığar, iki yan korkuluk", [P(0, 0), P(5, 0)], F(3, 2), F(1, 2),
+                  slope=F(25, 4), sides="both"),
+        ramp_case("L rampa, son kol eğime göre, sol korkuluk", [P(0, 0), P(4, 0), P(4, 2)], F(3, 2), F(1, 2),
+                  slope=F(25, 4), sides="left"),
+        ramp_case("İnen rampa, eksi kot farkı da sığar", [P(0, 0), P(0, -3)], F(6, 5), F(-3, 10), slope=5,
+                  base=F(3, 10)),
+        ramp_case("L rampa, eğimli uzunluk dönüşten önce biter: sığmaz", [P(0, 0), P(12, 0), P(12, 3)], F(3, 2),
+                  F(1, 2), slope=F(25, 4)),
+        ramp_case("Kot farkı sıfır: sığdırılmaz", [P(0, 0), P(6, 0)], F(3, 2), F(0), slope=5),
+        ramp_case("Eğik (3-4-5) rampa, sağ korkuluk", [P(0, 0), P(F(24, 5), F(32, 5))], F(6, 5), F(1, 2), slope=8,
+                  sides="right"),
     ]
     return c
 

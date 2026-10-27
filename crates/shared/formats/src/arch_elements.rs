@@ -58,7 +58,18 @@ pub fn core_stair(s: &StairFields) -> Shape {
             landing: s.landing,
             cut: s.cut.map(f64::from),
             numbering: s.numbering,
+            railings: s.railings.map(railings),
         },
+    }
+}
+
+/// A stair's or ramp's railings as the core's (docs/adr/0705 §2).
+fn railings(r: kentos_contracts::Railings) -> kentos_geometry_core::geom::arch::Railings {
+    use kentos_geometry_core::geom::arch::Railings as Core;
+    match r {
+        kentos_contracts::Railings::Left => Core::Left,
+        kentos_contracts::Railings::Right => Core::Right,
+        kentos_contracts::Railings::Both => Core::Both,
     }
 }
 
@@ -72,6 +83,7 @@ pub fn core_ramp(r: &RampFields) -> Shape {
             slope: r.slope,
             base: r.base,
             landing: r.landing,
+            railings: r.railings.map(railings),
         },
     }
 }

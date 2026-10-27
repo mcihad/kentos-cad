@@ -1,0 +1,95 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Korkuluklu merdiven ve rampa",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "stair",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 0.0,
+          "y": 3.0
+        },
+        {
+          "x": 1.25,
+          "y": 3.0
+        },
+        {
+          "x": 1.25,
+          "y": 0.5
+        }
+      ],
+      "width": 1.2,
+      "risers": 18,
+      "riserHeight": 0.1666666666666666,
+      "tread": 0.28,
+      "cut": 6,
+      "railings": "both"
+    },
+    {
+      "kind": "ramp",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        }
+      ],
+      "width": 1.5,
+      "rise": 0.5,
+      "slope": 6.25,
+      "railings": "left"
+    }
+  ],
+  "uids": [
+    "0192f5a1-6100-7000-8000-000000000001",
+    "0192f5a1-6100-7000-8000-000000000002"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

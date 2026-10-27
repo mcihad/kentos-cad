@@ -4240,6 +4240,19 @@ QueryScopeName = Literal["loaded", "source"]
 """The names of :class:`QueryScope`, for a plain string."""
 
 
+class Railings(_StrEnum):
+    """Which sides of a stair or a ramp carry a railing, left and right as one walks up it from its first point
+    (docs/adr/0705 §2). Absent on the object: none.
+    """
+    LEFT = "left"
+    RIGHT = "right"
+    BOTH = "both"
+
+
+RailingsName = Literal["left", "right", "both"]
+"""The names of :class:`Railings`, for a plain string."""
+
+
 class RasterRender(_StrEnum):
     """How the bands are drawn (docs/adr/0204 §4).
 
@@ -36315,7 +36328,10 @@ class NewRamp(_Model):
         width: Unit: length.
         rise: How much higher its end is than its start. Unit: elevation.
         base: Its start's elevation; absent: 0. Unit: elevation.
+        fit: True: its last point moves along its last segment so that its sloped length is its rise over its slope
+            (docs/adr/0705 §1); needs a slope and a rise.
         landing: A landing's length at a turn; absent: the width. Unit: length.
+        railings: Its railings' sides; absent: none (docs/adr/0705 §2).
         slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
     """
     pts: list[Vec2]
@@ -36324,7 +36340,9 @@ class NewRamp(_Model):
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     base: float | None | Unset = UNSET
+    fit: bool | None | Unset = UNSET
     landing: float | None | Unset = UNSET
+    railings: Railings | RailingsName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -36338,8 +36356,12 @@ class NewRamp(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.fit is not UNSET:
+            out["fit"] = self.fit
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
+        if self.railings is not UNSET:
+            out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.slope is not UNSET:
             out["slope"] = None if self.slope is None else float(self.slope)
         return out
@@ -36353,7 +36375,9 @@ class NewRamp(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            fit=data.get("fit", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
         )
 
@@ -36479,6 +36503,7 @@ class NewStair(_Model):
         height: Its whole rise, the risers drawn from it (docs/adr/0704 §1). Unit: length.
         landing: A landing's length at a turn; absent: the width. Unit: length.
         max_riser: The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`. Unit: length.
+        railings: Its railings' sides; absent: none (docs/adr/0705 §2).
         riser_height: A riser's height; 0 or absent with `height` (which gives it: `height / risers`). Unit: length.
         risers: Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`. Unit: count.
     """
@@ -36494,6 +36519,7 @@ class NewStair(_Model):
     landing: float | None | Unset = UNSET
     max_riser: float | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
+    railings: Railings | RailingsName | None | Unset = UNSET
     riser_height: float = 0.0
     risers: int = 0
 
@@ -36520,6 +36546,8 @@ class NewStair(_Model):
             out["maxRiser"] = None if self.max_riser is None else float(self.max_riser)
         if self.numbering is not UNSET:
             out["numbering"] = self.numbering
+        if self.railings is not UNSET:
+            out["railings"] = None if self.railings is None else _enum_out(self.railings)
         out["riserHeight"] = float(self.riser_height)
         out["risers"] = self.risers
         return out
@@ -36539,6 +36567,7 @@ class NewStair(_Model):
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
             max_riser=UNSET if "maxRiser" not in data else None if data["maxRiser"] is None else float(data["maxRiser"]),
             numbering=data.get("numbering", UNSET),
+            railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             riser_height=float(data["riserHeight"]) if "riserHeight" in data else 0.0,
             risers=data["risers"] if "risers" in data else 0,
         )
@@ -45702,6 +45731,7 @@ class RampEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        railings: Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
         slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -45728,6 +45758,7 @@ class RampEntity(Entity):
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    railings: Railings | RailingsName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -45767,6 +45798,8 @@ class RampEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.railings is not UNSET:
+            out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.slope is not UNSET:
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.symbol is not UNSET:
@@ -45799,6 +45832,7 @@ class RampEntity(Entity):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             order=data.get("order", UNSET),
+            railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
@@ -45811,7 +45845,8 @@ class RampsCreate(_Model):
     """Input of `cad.ramps.create` v1 (“Rampa”): ramps on a named layer, as one undo step. A slope that does not fit
     (`ramp_slope_mismatch`) and landings with no sloped run left (`ramp_no_run`) are warnings.
 
-    Refusals, in this order: `no_objects`, `not_finite`, `invalid_ramp`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_ramp` (the fields, then the fit),
+    `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
     `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
     Warnings: `layer_hidden`, `ramp_slope_mismatch`, `ramp_no_run`.
     Attributes:
@@ -54183,6 +54218,7 @@ class StairEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        railings: Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -54211,6 +54247,7 @@ class StairEntity(Entity):
     line_weight: float | None | Unset = UNSET
     numbering: bool | Unset = UNSET
     order: int | None | Unset = UNSET
+    railings: Railings | RailingsName | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -54253,6 +54290,8 @@ class StairEntity(Entity):
             out["numbering"] = self.numbering
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.railings is not UNSET:
+            out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -54286,6 +54325,7 @@ class StairEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             numbering=data.get("numbering", UNSET),
             order=data.get("order", UNSET),
+            railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
@@ -61445,6 +61485,7 @@ class SetArchOperation(ArchOperation):
         level: Any kind's.
         numbering: A stair's.
         phase: Any kind's.
+        railings: A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
         rise: A ramp's. Unit: elevation.
         riser_height: A stair's. Unit: length.
         risers: A stair's. Unit: count.
@@ -61468,6 +61509,7 @@ class SetArchOperation(ArchOperation):
     level: str | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    railings: Railings | RailingsName | None | Unset = UNSET
     rise: float | None | Unset = UNSET
     riser_height: float | None | Unset = UNSET
     risers: int | None | Unset = UNSET
@@ -61503,6 +61545,8 @@ class SetArchOperation(ArchOperation):
             out["numbering"] = self.numbering
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.railings is not UNSET:
+            out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.rise is not UNSET:
             out["rise"] = None if self.rise is None else float(self.rise)
         if self.riser_height is not UNSET:
@@ -61539,6 +61583,7 @@ class SetArchOperation(ArchOperation):
             level=data.get("level", UNSET),
             numbering=data.get("numbering", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
             riser_height=UNSET if "riserHeight" not in data else None if data["riserHeight"] is None else float(data["riserHeight"]),
             risers=data.get("risers", UNSET),
@@ -79343,6 +79388,8 @@ __all__ = [
     "QueryTime",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
+    "Railings",
+    "RailingsName",
     "RaiseShapeElevation",
     "RampEntity",
     "RampsCreate",

@@ -38,6 +38,42 @@ fn select(text: String, items: Vec<Choice>) -> Editor {
     }
 }
 
+/// Korkuluk (docs/adr/0705 §2): none, left, right or both, written by `cad.arch.edit`.
+fn railings_row(
+    slot: Slot,
+    on: Option<kentos_commands::Railings>,
+    edit: &dyn Fn(Editor) -> Option<Editor>,
+) -> Row {
+    let words = on.map_or("Yok", kentos_commands::Railings::words);
+    let mut items = vec![pick(
+        "Yok".to_owned(),
+        on.is_none(),
+        set(
+            slot,
+            ArchChange {
+                railings: Some(None),
+                ..Default::default()
+            },
+        ),
+        None,
+    )];
+    items.extend(kentos_commands::Railings::ALL.iter().map(|&r| {
+        pick(
+            r.words().to_owned(),
+            on == Some(r),
+            set(
+                slot,
+                ArchChange {
+                    railings: Some(Some(r)),
+                    ..Default::default()
+                },
+            ),
+            None,
+        )
+    }));
+    Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
+}
+
 /// Kat and Evre, as a wall's and a space's.
 pub(super) fn arch_rows(
     doc: &Document,
@@ -325,6 +361,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(length("Rıht", x.riser_height, ArchField::RiserHeight));
             out.push(length("Basamak", x.tread, ArchField::Tread));
             out.push(length("Sahanlık", x.landing(), ArchField::Landing));
+            out.push(railings_row(slot, x.railings, &edit));
             out.push(
                 Row::figure(
                     "Toplam yükseklik",
@@ -356,6 +393,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 ArchField::Base,
             ));
             out.push(length("Sahanlık", x.landing(), ArchField::Landing));
+            out.push(railings_row(slot, x.railings, &edit));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
             out.extend(checks(
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),

@@ -24,7 +24,10 @@ run are the drawing reference's (`arch_cases.py`). The rules, as the ADR gives t
   ⌈height / maxRiser − 10⁻⁹⌉ (maxRiser 0.175 unless given), each height / risers; a cut height with a cut refused,
   else its cut ⌊cutHeight / riser + 10⁻⁹⌋ within 1 and the risers; fitted, its last point along its last segment to
   its last riser of a line long enough for all (the drawing reference's `fit_end`, exact), refused when that riser is
-  not past the last turn; given risers over a given maxRiser `stair_riser_high`;
+  not past the last turn; given risers over a given maxRiser `stair_riser_high`; railings left, right or both kept
+  (docs/adr/0705 §2); a ramp fitted (ADR 0705 §1): without a slope or with no rise refused, else its last point along
+  its last segment so that its sloped length (overlapping landings once) is its rise over its slope (the drawing
+  reference's `ramp_fit`, exact), refused when that length is used up before its last landing ends;
 - `cad.arch.edit`: the ids, these kinds only, the operation's fields (each for its kinds: `field_not_for_kind`), their
   numbers, each object's fields again; Numarala one kind of grids or columns; Akslara bağla and Bağı kopar columns only;
   the revision; a locked layer refusing all;
@@ -432,7 +435,7 @@ def ramp_warnings(r, path):
     width = F(r["width"])
     land = F(r["landing"]) if r.get("landing") is not None else width
     at = ac.walk(pts)
-    run = at[-1] - sum(b - a for a, b in ac.landings(pts, at, land))
+    run = at[-1] - sum(b - a for a, b in ac.ramp_landings(pts, at, land))
     if run <= F(1, 10**9):
         return [{"code": "ramp_no_run", "message": "Sahanlıklardan sonra rampanın eğimli kolu kalmıyor; yolu uzatın ya da sahanlığı kısaltın.", "path": path}]
     actual = r["rise"] / float(run) * 100
@@ -655,6 +658,8 @@ def stair_fields(n, risers=None, riser=None):
             s[k] = n[k]
     if n.get("numbering"):
         s["numbering"] = True
+    if n.get("railings") is not None:
+        s["railings"] = n["railings"]
     return s
 
 
@@ -805,10 +810,63 @@ def stairs_create(d, inp, conflict=False):
 
 def ramp_fields(n):
     r = {"pts": n["pts"], "width": n["width"], "rise": n["rise"]}
-    for k in ("slope", "base", "landing", "arch"):
+    for k in ("slope", "base", "landing", "railings", "arch"):
         if n.get(k) is not None:
             r[k] = n[k]
     return r
+
+
+def float_ramp_fit(pts, rise, slope, land):
+    """The fitted ramp end in the core's floating-point steps (geom::arch::ramp_fit_end), so that the stored points
+    are the document's bit for bit; `ramp_fit` in the drawing reference gives the exact point it lies within 1e-9 of."""
+    eps = 1e-9
+    n = len(pts)
+    run = abs(rise) / (slope / 100.0)
+    (px, py), (lx, ly) = pts[-2], pts[-1]
+    length = js_hypot(lx - px, ly - py)
+    ux, uy = (lx - px) / length, (ly - py) / length
+    start = 0.0
+    for (ax, ay), (bx, by) in zip(pts[:-2], pts[1:-1]):
+        start += js_hypot(bx - ax, by - ay)
+    reach = run + float(n) * land + start
+    far = pts[:-1] + [(px + ux * reach, py + uy * reach)]
+    at = [0.0]
+    for (ax, ay), (bx, by) in zip(far, far[1:]):
+        at.append(at[-1] + js_hypot(bx - ax, by - ay))
+    total_far = at[-1]
+    lands = []
+    for k in range(1, n - 1):
+        a, b = max(at[k] - land / 2.0, 0.0), min(at[k] + land / 2.0, total_far)
+        if lands and a < lands[-1][1] + eps:
+            lands[-1] = (lands[-1][0], max(lands[-1][1], b))
+        else:
+            lands.append((a, b))
+    landed = 0.0
+    for a, b in lands:
+        landed += b - a
+    total = run + landed
+    past = lands[-1][1] if lands else 0.0
+    if total - start <= eps or total < past - eps:
+        return None
+    t = total - start
+    return (px + ux * t, py + uy * t)
+
+
+def ramp_fitted(r, at):
+    code, path = "invalid_ramp", f"{at}.fit"
+    if r.get("slope") is None:
+        return refusal(code, "Eğim verilmedi; son kol eğime göre bitirilemez. Eğimi verin ya da son kolu tıklanan yerde bitirin.", path)
+    if r["rise"] == 0.0:
+        return refusal(code, "Kot farkı sıfır; eğimli uzunluk yok, son kol eğime göre bitirilemez. Kot farkını verin ya da son kolu tıklanan yerde bitirin.", path)
+    pts = [(p["x"], p["y"]) for p in r["pts"]]
+    land = r.get("landing", r["width"])
+    got = float_ramp_fit(pts, r["rise"], r["slope"], land)
+    exact = ac.ramp_fit(fpts(r["pts"]), F(r["rise"]), F(r["slope"]), F(land))
+    assert (got is None) == (exact is None), (got, exact)
+    if got is None:
+        return refusal(code, "Son kol eğime göre bitirilemiyor: eğimli uzunluk son kolun sahanlığı bitmeden doluyor. Son dönüşü başa yaklaştırın ya da son kolu tıklanan yerde bitirin.", path)
+    assert abs(got[0] - float(exact[0])) <= 1e-9 and abs(got[1] - float(exact[1])) <= 1e-9, (got, exact)
+    return r["pts"][:-1] + [{"x": got[0], "y": got[1]}], r["pts"][:-1] + [{"x": exact[0], "y": exact[1]}]
 
 
 def ramps_create(d, inp, conflict=False):
@@ -823,10 +881,23 @@ def ramps_create(d, inp, conflict=False):
         if r:
             return r, None
         f = ramp_fields(n)
-        r = ramp_problem(f, at) or level_check(f.get("arch"), f"{at}.arch.level")
+        r = ramp_problem(f, at)
         if r:
             return r, None
-        warnings += ramp_warnings(f, at)
+        exact = f
+        if n.get("fit") is True:
+            pts = ramp_fitted(f, at)
+            if isinstance(pts, dict):
+                return pts, None
+            f["pts"] = pts[0]
+            exact = {**f, "pts": pts[1]}
+            r = ramp_problem(f, at)
+            if r:
+                return r, None
+        r = level_check(f.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        warnings += ramp_warnings(exact, at)
         made.append(f)
     return finish(inp, conflict, made, warnings)
 
@@ -1086,6 +1157,9 @@ def design_cases():
         ("eğik (3-4-5) merdiven yola sığar", design(pts=[P(0, 30), P(0.75, 31)])),
         ("sığdırmasız kısa yol stair_short uyarısıyla yazılır", design(pts=[P(0, 30), P(2, 30)], fit=None)),
         ("zemin kattan 3,06 m: 18 × 17 cm, stair_rise_level yok", design(height=3.06, arch={"level": "zemin"})),
+        ("iki yan korkuluklu U merdiven (ADR 0705)", design(pts=[P(0, 30), P(3, 30), P(3, 31.3), P(0, 31.3)], railings="both", cutHeight=1.1)),
+        ("sol korkuluklu düz merdiven", design(railings="left")),
+        ("verilen rıhtlarla sağ korkuluk (eski girdi)", stair(railings="right")),
     ]:
         c.add(name, [create_step(Drawing(), STAIRS, "execute", inp)])
     c.add("plan yükseklikten hesaplanan merdiveni gösterir", [create_step(Drawing(), STAIRS, "plan", design(cutHeight=1.1))])
@@ -1101,6 +1175,44 @@ def design_cases():
         ("sonsuz yükseklik reddedilir", design(), {"non_finite": {"stairs[0].height": "NaN"}}),
         ("sonsuz kesme yüksekliği reddedilir", design(cutHeight=1.1), {"non_finite": {"stairs[0].cutHeight": "Infinity"}}),
         ("rıhtı da yüksekliği de olmayan merdiven reddedilir", design(height=None), {}),
+    ])
+    return c.cases
+
+
+def rdesign(**kw):
+    """docs/adr/0705: a ramp fitted to its rise over its slope."""
+    r = {"pts": [P(0, 40), P(5, 40)], "width": 1.5, "rise": 0.5, "slope": 6.25, "fit": True}
+    r.update(kw)
+    for k in [k for k, v in r.items() if v is None]:
+        del r[k]
+    return {"layerId": "merdiven", "ramps": [r]}
+
+
+def ramp_design_cases():
+    c = Cases()
+    life(c, RAMPS, rdesign(), "Eğimden düz rampa, son kol eğime göre")
+    for name, inp in [
+        ("L rampa: son kol eğime göre biter", rdesign(pts=[P(0, 40), P(4, 40), P(4, 42)])),
+        ("U rampa, 2 m sahanlıklar üst üste: bir kez sayılır", rdesign(pts=[P(0, 40), P(6, 40), P(6, 41.6), P(0, 41.6)], landing=2.0)),
+        ("inen rampa: eksi kot farkı da eğime göre biter", rdesign(pts=[P(0, 40), P(0, 37)], rise=-0.3, slope=5.0, base=0.3)),
+        ("eğik (3-4-5) rampa eğime göre biter", rdesign(pts=[P(0, 40), P(0.75, 41)], slope=8.0)),
+        ("ters yöne çizilen rampa", rdesign(pts=[P(10, 40), P(9, 40)])),
+        ("kısa yol eğime göre uzar", rdesign(pts=[P(0, 40), P(2, 40)])),
+        ("uzun yol eğime göre kısalır", rdesign(pts=[P(0, 40), P(20, 40)])),
+        ("başlangıç kotlu rampa: +0.30'dan +0.80'e", rdesign(base=0.3)),
+        ("sığdırmasız uzun yol ramp_slope_mismatch uyarısıyla", rdesign(pts=[P(0, 40), P(20, 40)], fit=None)),
+        ("iki yan korkuluklu rampa", rdesign(railings="both")),
+        ("sol korkuluklu L rampa", rdesign(pts=[P(0, 40), P(4, 40), P(4, 42)], railings="left")),
+        ("katlı rampa eğime göre biter", rdesign(arch={"level": "zemin"})),
+    ]:
+        c.add(name, [create_step(Drawing(), RAMPS, "execute", inp)])
+    c.add("plan eğime göre biten rampayı gösterir", [create_step(Drawing(), RAMPS, "plan", rdesign(railings="right"))])
+    refusals(c, RAMPS, [
+        ("eğimsiz rampa eğime göre bitirilemez", rdesign(slope=None), {}),
+        ("kot farkı sıfırken eğime göre bitirilemez", rdesign(rise=0.0), {}),
+        ("eğimli uzunluk dönüşten önce biterse reddedilir", rdesign(pts=[P(0, 40), P(12, 40), P(12, 43)]), {}),
+        ("sonsuz kot farkı önce reddedilir", rdesign(), {"non_finite": {"ramps[0].rise": "NaN"}}),
+        ("sıfır genişlik sığdırmadan önce reddedilir", rdesign(width=0.0), {}),
     ])
     return c.cases
 
@@ -1151,6 +1263,7 @@ FIELDS = [  # wire name, kinds, nullable
     ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column",), True), ("fill", ("column",), False),
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
+    ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True),
     ("level", ("grid", "column", "stair", "ramp"), True), ("phase", ("grid", "column", "stair", "ramp"), True),
 ]
@@ -1353,6 +1466,13 @@ def edit_cases():
     d = Drawing()
     c.add("Değiştir: genişlik merdivene ve rampaya birlikte", [one(d, [uid_of(8), uid_of(9)], {"kind": "set", "width": 1.4})])
     d = Drawing()
+    c.add("Değiştir: merdivene ve rampaya iki yan korkuluk (ADR 0705)", [one(d, [uid_of(8), uid_of(9)], {"kind": "set", "railings": "both"})])
+    d = Drawing()
+    c.add("Değiştir: korkuluk yanı sola, sonra null kaldırır", [one(d, [uid_of(8)], {"kind": "set", "railings": "left"}),
+                                                              one(d, [uid_of(8)], {"kind": "set", "railings": None})])
+    d = Drawing()
+    c.add("Değiştir: aksa korkuluk reddedilir", [one(d, [uid_of(1)], {"kind": "set", "railings": "right"})])
+    d = Drawing()
     c.add("Değiştir: kat ve evre her türde, null kaldırır", [one(d, [uid_of(1), uid_of(8)], {"kind": "set", "level": "kat-1", "phase": "new"}),
                                                              one(d, [uid_of(1)], {"kind": "set", "level": None})])
     d = Drawing()
@@ -1434,6 +1554,7 @@ def files():
         "cad.stairs.create.json": document(STAIRS, "Merdiven: düz, L, U; sahanlık, kesme, numaralar; denetimlerin uyarıları; retler", stair_cases()),
         "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
+        "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }
 

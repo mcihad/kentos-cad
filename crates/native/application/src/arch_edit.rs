@@ -68,6 +68,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.landing.is_some(), "landing", FLIGHT);
     add(c.cut.is_some(), "cut", STAIR);
     add(c.numbering.is_some(), "numbering", STAIR);
+    add(c.railings.is_some(), "railings", FLIGHT);
     add(c.rise.is_some(), "rise", RAMP);
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
@@ -175,6 +176,9 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = c.numbering {
                 f.numbering = v;
             }
+            if let Some(v) = c.railings {
+                f.railings = v;
+            }
         }
         Entity::Ramp(r) => {
             let f = &mut r.ramp;
@@ -192,6 +196,9 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = c.landing {
                 f.landing = v;
+            }
+            if let Some(v) = c.railings {
+                f.railings = v;
             }
         }
         _ => {}

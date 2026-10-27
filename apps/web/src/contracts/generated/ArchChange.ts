@@ -2,6 +2,7 @@
 import type { ArchPhase } from "./ArchPhase";
 import type { ColumnShape } from "./ColumnShape";
 import type { GridBubbles } from "./GridBubbles";
+import type { Railings } from "./Railings";
 
 /**
  * The fields of a grid, column, stair or ramp to change; absent ones stay, a nullable one's null takes it away. A field
@@ -72,6 +73,10 @@ cut?: number | null,
  * A stair's.
  */
 numbering?: boolean, 
+/**
+ * A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
+ */
+railings?: Railings | null, 
 /**
  * A ramp's.
  */

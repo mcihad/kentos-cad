@@ -14,6 +14,49 @@ pub const MAX_FLIGHT_POINTS: usize = 4;
 /// The most risers a stair has.
 pub const MAX_RISERS: u32 = 400;
 
+/// Which sides of a stair or a ramp carry a railing, left and right as one walks up it from its first point
+/// (docs/adr/0705 §2). Absent on the object: none.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum Railings {
+    Left,
+    Right,
+    Both,
+}
+
+impl Railings {
+    pub const ALL: [Railings; 3] = [Railings::Left, Railings::Right, Railings::Both];
+
+    /// Its name on the wire.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Railings::Left => "left",
+            Railings::Right => "right",
+            Railings::Both => "both",
+        }
+    }
+
+    /// Its words in the interface.
+    pub fn words(self) -> &'static str {
+        match self {
+            Railings::Left => "Sol",
+            Railings::Right => "Sağ",
+            Railings::Both => "İki yan",
+        }
+    }
+
+    pub fn left(self) -> bool {
+        matches!(self, Railings::Left | Railings::Both)
+    }
+
+    pub fn right(self) -> bool {
+        matches!(self, Railings::Right | Railings::Both)
+    }
+}
+
 /// Which ends of a grid carry a bubble.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -266,6 +309,10 @@ pub struct StairFields {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub numbering: bool,
+    /// Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub railings: Option<Railings>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -316,6 +363,10 @@ pub struct RampFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub landing: Option<f64>,
+    /// Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub railings: Option<Railings>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,

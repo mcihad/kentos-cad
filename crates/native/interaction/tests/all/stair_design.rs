@@ -1,6 +1,7 @@
 //! Merdiven from its height (docs/adr/0704): one click and Enter draw a stair whose risers come from the height and
 //! the highest riser, its last flight ending at its last riser however far the second point is; one undo takes it
-//! back. Tıklanan yerde keeps the clicked point; the preview is the command's plan and writes nothing.
+//! back. Tıklanan yerde keeps the clicked point; the preview is the command's plan and writes nothing. Rampa ends where
+//! its slope says; Korkuluk goes with both (docs/adr/0705).
 
 use crate::common::{Bench, E, N};
 use kentos_commands::{DrawingUnit, Entity, Workspace};
@@ -70,4 +71,37 @@ fn risers_ending_before_the_last_flight_say_why_and_write_nothing() {
     b.click(8., 3.);
     b.confirm();
     assert!(!b.doc.entities().any(|e| matches!(e, Entity::Stair(_))));
+}
+
+#[test]
+fn a_ramp_ends_where_its_slope_says_and_railings_go_with_it() {
+    let mut b = Bench::new("ramp");
+    let mut settings = b.doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::M);
+    b.doc.set_settings(settings);
+    b.start("ramp");
+    assert!(b.run(|session, cx| session.configure("O", "İki yan", cx)));
+    b.click(0., 0.);
+    b.click(2., 0.);
+    b.confirm();
+    let r = match b.newest() {
+        Entity::Ramp(r) => r.ramp.clone(),
+        other => panic!("a ramp, not {other:?}"),
+    };
+    let end = r.pts.last().copied().expect("its end");
+    assert!((end.x - (E + 0.5 / 0.06)).abs() < 1e-9, "0.50 m at 6 %: 8.333 m, {end:?}");
+    assert_eq!(r.railings, Some(kentos_commands::Railings::Both));
+    assert_eq!(r.slope, Some(6.0));
+}
+
+#[test]
+fn a_stair_s_railings_are_chosen_in_its_settings() {
+    let mut b = bench();
+    assert!(b.run(|session, cx| session.configure("O", "Sol", cx)));
+    b.click(0., 0.);
+    b.click(0., 6.);
+    b.confirm();
+    assert_eq!(stair(&b).railings, Some(kentos_commands::Railings::Left));
 }

@@ -865,7 +865,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: sayı/gerçek geometri tutarlılığı, başlangıç/bitiş yönü, aynala,
   sahanlık çakışması, pafta gösterimi ve 2B ölçülebilir çıktı.
 
-### ARCH-STAIR-02 — Rampa ve korkuluk [ ]
+### ARCH-STAIR-02 — Rampa ve korkuluk [~]
+
+- [x] Eğim ve korkuluk dilimi [ADR0705](../docs/adr/0705-ramps-by-slope-and-railings.md):
+  rampa eğimden tasarlanır (`fit`: son kol |kot farkı| ÷ eğim uzunluğunda biter,
+  inen rampa da), üst üste binen sahanlıklar bir kez sayılır; merdiven ve rampa
+  sol/sağ/iki yan korkuluk taşır (KCAD şema 115, opt-in), merdivende kesmenin
+  üstü kesikli, iç korkuluk boşluğu dolanır. Araçlarda ve Öznitelikler'de
+  görünür. 38 çekirdek, 22+6 komut durumu bağımsız başvurudan; KCAD/Python/
+  araç testleri; gerçek GUI resimleri (`.run/shots/arac-rampa-*`). Kendiliğinden
+  ara sahanlık, kaynak kot izleme, metraj/pafta kabulü ve erişilebilirlik
+  profili açık.
 
 - Eğim, uzunluk, kot farkı ve sahanlık arasından açık sürücü parametreler;
   çıkış yönü, kot etiketi ve korkuluk kenarı.
@@ -1040,3 +1050,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-26 | ARCH-SPACE-02 / ADR0691 | Toplu etiket Koru/Yenile, elle yer/kimlik korunumu ve karma yeni+yenile tek undo; Python/MCP. Gerçek GUI açıklama yerleşimini ve klavye hedef katmanı açığını yakaladı; son ikiliyle tekrar, 35 ham ekran/24 tam model +bir tanısal disk, 31 yeni bağımsız durum/ilgili264, 335 Python. Eski107 durum ve1756 KCAD baytı aynı; clippy/build/WASM/SDK geçti. | [~] Koru/Yenile alt maddesi doğrulandı; çoklu kat/görünüş/pafta ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-refresh/README.md) |
 | 2026-10-26 | ARCH-SPACE-02 / ADR0692 | Toplu etikette açık kaynak katı, host mirası/bilinmeyen ayrımı; Koru/Yenile/önizleme ve tek undo. 26 yeni bağımsız durum/ilgili290, 340 Python/75 MCP; gerçek iki dolu kat ve atanmamış, tek Enter/sağ tuş Onayla/ret/Escape/undo/redo/yeni süreçte açma. GUI seçili değer kesilmesini düzeltti; 43 ham ekran (tanısallar dahil)/27 tam bağımsız model, eski1781 KCAD aynı. | [~] Kaynak katı alt maddesi doğrulandı; çoklu görünüş/pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-tag-levels/README.md) |
 | 2026-10-26 | ARCH-DIM-01 ilk altyapı / ADR0694 | Açıklığın gerçek jamb/başlangıç/bitiş/merkez başvuruları; GUI'de bulunan kesilmiş duvar ucu sahipliği düzeltildi. Gerçek tek onay/undo/redo/genişlik/konum/kalınlık/kopuk bağ/Esc/yeni süreçte açma; 36 ham ekran/21 tam model+dört tanısal kopya, önceki1828 KCAD aynı. 342 Python/76 MCP/809 commands, native takımlar/build/clippy/WASM/SDK geçti. | [~] Nokta/izleme alt maddesi doğrulandı; otomatik sıra üretimi/üyelik/çoklu pafta ve tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-opening-dimensions/README.md) |
+| 2026-10-27 | ARCH-DIM-01 ve GUI düzeltmeleri / ADR0695–0698 | Başka ajanın dilimleri: kalıcı ilişkili duvar ölçü dizisi (KCAD 113), yakınlaştırmaya göre duvar ayrıntısı, pencereye sığan uygulama menüsü, dar pencerede Duvar stilleri. İnceleme: CLAUDE.md özetleri eksikti (eklendi); stil adının geri alınmaması ADR0699'da kapandı. | [~] Nihai kabul ADR'lerinde açık |
+| 2026-10-27 | ARCH-BASE-01 / ADR0699 | Stil tablosu izleyen nesnelerle aynı geri alma adımında; yalnız ad değişimi de adım. 61 ortak durum, gerçek GUI ad kaydı ve tek Geri al resimleri. | [x] Stil geri alma alt maddesi |
+| 2026-10-27 | ARCH-DIM-01 / ADR0700 | Kapalı/çok kenarlı duvarın her düz kenarına ölçü dizisi (`edge`, `around`), kenar köşe değişiminde izlenir; KCAD 114. Ortak durumlar ve Bu kenar/Bütün kenarlar resimleri. | [x] Kenar alt maddesi; yay kenar açık |
+| 2026-10-27 | ARCH-EDIT-01 / ADR0701 | Seçili açıklığın geçici ölçüleri; sayıya bas-yaz-Enter tek adım, referans sabit. `cad.openings.distances` + 24+24 ortak durum, resimler. | [~] Açıklık dilimi; duvar/kolon açık |
+| 2026-10-27 | ARCH-LIB-01 / ADR0702 | 21 gerçek boylu mobilya/vitrifiye/mutfak bloğu, boşluk zarfı, Blok ekle'de Duvara hizala (H). Kitaplık denetimi ve resimler. | [~] İçerik dilimi; DWG kategori ve etiket açık |
+| 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
+| 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
+| 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |

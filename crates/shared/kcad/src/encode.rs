@@ -1976,6 +1976,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if objs.iter().any(|e| match e {
+        Entity::Stair(s) => s.stair.railings.is_some(),
+        Entity::Ramp(r) => r.ramp.railings.is_some(),
+        _ => false,
+    }) {
+        return crate::SCHEMA_WITH_RAILINGS;
+    }
     if doc.dimension_sets.iter().any(|s| s.edge.is_some()) {
         return crate::SCHEMA_WITH_DIMENSION_SET_EDGES;
     }

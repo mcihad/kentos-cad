@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Eğimden rampa ve korkuluk (27 Ekim 2026; [ADR0705](docs/adr/0705-ramps-by-slope-and-railings.md)).**
+  `cad.ramps.create`'in `fit`'i son kolu |kot farkı| ÷ eğim uzunluğunda bitirir
+  (eğimsiz, kot farkı sıfır ya da sığmayan rampa ret); üst üste sahanlık bir
+  kez sayılır. Merdiven/rampa `railings` (sol/sağ/iki yan) KCAD şema 115
+  opt-in; merdivende kesmenin üstü kesikli. Araç ve Öznitelikler'de görünür.
+  ARCH-STAIR-02 [~]; ara sahanlık, kot izleme ve erişilebilirlik profili açık.
+
 - **Yükseklikten 2B merdiven (27 Ekim 2026; [ADR0704](docs/adr/0704-stairs-from-height.md)).**
   `cad.stairs.create` isteğe bağlı `height`/`maxRiser` (rıht sayısı ⌈H/Rmax⌉,
   öntanımlı 0,175 m), `cutHeight` ve `fit` (son kol son rıhtta biter) alır;

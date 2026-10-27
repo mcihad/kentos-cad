@@ -305,6 +305,7 @@ impl Document {
                                 slope: x.slope,
                                 base: x.base,
                                 landing: x.landing,
+                                railings: None,
                             };
                             let run = kentos_geometry_core::geom::arch::ramp_run(
                                 &kentos_geometry_core::geom::arch::Walk::of(&pts),

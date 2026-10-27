@@ -9,6 +9,7 @@
 //! ```text
 //! KENTOS_SHOTS_ONLY=aks-serit,aks-sistem,aks-arac,kolon-arac,kolon-oznitelikler,merdiven-arac,merdiven-denetim,rampa,aks-numarala,aks-izleme cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! KENTOS_SHOTS_ONLY=merdiven-yukseklik,merdiven-l,merdiven-u,merdiven-u-yazildi,merdiven-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0704
+//! KENTOS_SHOTS_ONLY=rampa-egim,rampa-l-korkuluk,merdiven-korkuluk,rampa-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0705
 //! ```
 //!
 //! Test code only.
@@ -222,6 +223,60 @@ fn stair_no_fit(app: &mut App) {
     hover(app, [8.6, 3.8]);
 }
 
+/// docs/adr/0705: Rampa from its slope: one click, the cursor past where it ends. 0.50 m at 6 % ends 8.33 m on, its
+/// levels at its ends; both railings; the tool's settings beside.
+fn ramp_slope(app: &mut App) {
+    grids(app);
+    run(app, "tool.ramp");
+    typed(app, "O");
+    typed(app, "O");
+    typed(app, "O");
+    click(app, [1.0, 2.5]);
+    close_on(app, [-0.5, -0.6], [11.5, 6.4]);
+    hover(app, [10.8, 2.5]);
+}
+
+/// An L ramp written with its left railing, selected: its Korkuluk row.
+fn ramp_l_railing(app: &mut App) {
+    grids(app);
+    run(app, "tool.ramp");
+    typed(app, "O");
+    click(app, [1.0, 1.0]);
+    click(app, [6.0, 1.0]);
+    click(app, [6.0, 3.0]);
+    typed(app, "");
+    typed(app, "");
+    app.selection.set([Slot(8)]);
+    close_on(app, [-0.5, -0.8], [9.5, 6.8]);
+    hover(app, [9.0, 6.5]);
+}
+
+/// The U stair written with railings on both sides: the railings past its cut dashed with its risers.
+fn stair_railings(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    typed(app, "O");
+    typed(app, "O");
+    typed(app, "O");
+    for p in [[13.0, 0.6], [13.0, 3.6], [14.3, 3.6], [14.3, 0.2]] {
+        click(app, p);
+    }
+    typed(app, "");
+    app.selection.set([Slot(8)]);
+    close_on(app, [11.4, -0.6], [15.9, 4.8]);
+    hover(app, [16.6, -0.4]);
+}
+
+/// An L ramp whose first flight takes its whole sloped length: the tag says why in red; nothing is written.
+fn ramp_no_fit(app: &mut App) {
+    grids(app);
+    run(app, "tool.ramp");
+    click(app, [0.6, 1.0]);
+    click(app, [11.0, 1.0]);
+    close_on(app, [-0.6, -1.0], [14.4, 6.0]);
+    hover(app, [11.0, 3.6]);
+}
+
 /// Rampa: 0.6 m up an L, 8 % given; the cursor at its end.
 fn ramp_tool(app: &mut App) {
     grids(app);
@@ -280,6 +335,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("merdiven-u", stair_u),
         ("merdiven-u-yazildi", stair_u_written),
         ("merdiven-sigmaz", stair_no_fit),
+        ("rampa-egim", ramp_slope),
+        ("rampa-l-korkuluk", ramp_l_railing),
+        ("merdiven-korkuluk", stair_railings),
+        ("rampa-sigmaz", ramp_no_fit),
         ("rampa", ramp_tool),
         ("aks-numarala", numbering),
         ("aks-izleme", following),

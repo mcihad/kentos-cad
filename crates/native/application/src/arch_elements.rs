@@ -576,6 +576,7 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
             landing: n.landing,
             cut: n.cut,
             numbering: n.numbering.unwrap_or(false),
+            railings: n.railings,
             arch: n.arch.clone().unwrap_or_default(),
         };
         stair_valid(&s, &at)?;
@@ -699,6 +700,30 @@ fn fitted(s: &StairFields, at: &str) -> Result<Vec<Vec2>, Stop> {
     Ok(out)
 }
 
+/// The ramp's line ending where its sloped length is its rise over its slope (docs/adr/0705 §1), its last point moved
+/// along its last segment.
+fn ramp_fitted(r: &RampFields, at: &str) -> Result<Vec<Vec2>, Stop> {
+    let refuse = |words: &str| Err(fail(codes::INVALID_RAMP, words.into(), &format!("{at}.fit")));
+    if r.slope.is_none() {
+        return refuse("Eğim verilmedi; son kol eğime göre bitirilemez. Eğimi verin ya da son kolu tıklanan yerde bitirin.");
+    }
+    if r.rise == 0.0 {
+        return refuse("Kot farkı sıfır; eğimli uzunluk yok, son kol eğime göre bitirilemez. Kot farkını verin ya da son kolu tıklanan yerde bitirin.");
+    }
+    let shape = kentos_formats::arch_elements::core_ramp(r);
+    let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else {
+        unreachable!("core_ramp makes a ramp");
+    };
+    let Some(end) = arch::ramp_fit_end(pts, ramp) else {
+        return refuse("Son kol eğime göre bitirilemiyor: eğimli uzunluk son kolun sahanlığı bitmeden doluyor. Son dönüşü başa yaklaştırın ya da son kolu tıklanan yerde bitirin.");
+    };
+    let mut out = r.pts.clone();
+    if let Some(last) = out.last_mut() {
+        *last = Vec2 { x: end.x, y: end.y };
+    }
+    Ok(out)
+}
+
 fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
     if input.ramps.is_empty() {
         return Err(fail(
@@ -724,16 +749,21 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
             ],
             &at,
         )?;
-        let r = RampFields {
+        let mut r = RampFields {
             pts: n.pts.clone(),
             width: n.width,
             rise: n.rise,
             slope: n.slope,
             base: n.base,
             landing: n.landing,
+            railings: n.railings,
             arch: n.arch.clone().unwrap_or_default(),
         };
         ramp_valid(&r, &at)?;
+        if n.fit == Some(true) {
+            r.pts = ramp_fitted(&r, &at)?;
+            ramp_valid(&r, &at)?;
+        }
         crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
         warnings.extend(ramp_warnings(&r, &at));
         made.push((

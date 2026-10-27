@@ -15,7 +15,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, ColumnShape, GridBubbles};
+use crate::{ArchInfo, ArchPhase, ColumnShape, GridBubbles, Railings};
 
 pub const CAD_GRIDS_CREATE: &str = "cad.grids.create";
 pub const CAD_GRIDS_CREATE_VERSION: u32 = 1;
@@ -380,6 +380,10 @@ pub struct NewStair {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub numbering: Option<bool>,
+    /// Its railings' sides; absent: none (docs/adr/0705 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub railings: Option<Railings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -474,6 +478,15 @@ pub struct NewRamp {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub landing: Option<f64>,
+    /// True: its last point moves along its last segment so that its sloped length is its rise over its slope
+    /// (docs/adr/0705 §1); needs a slope and a rise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fit: Option<bool>,
+    /// Its railings' sides; absent: none (docs/adr/0705 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub railings: Option<Railings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -485,7 +498,8 @@ pub struct NewRamp {
 /// Input of `cad.ramps.create` v1 (“Rampa”): ramps on a named layer, as one undo step. A slope that does not fit
 /// (`ramp_slope_mismatch`) and landings with no sloped run left (`ramp_no_run`) are warnings.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_ramp`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_ramp` (the fields, then the fit),
+/// `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
 /// Warnings: `layer_hidden`, `ramp_slope_mismatch`, `ramp_no_run`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -648,6 +662,15 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub numbering: Option<bool>,
+    /// A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<Railings>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<Railings>"))]
+    pub railings: Option<Option<Railings>>,
     /// A ramp's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

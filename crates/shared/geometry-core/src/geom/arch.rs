@@ -188,6 +188,45 @@ impl crate::api::json::Flat for ColumnSpec {
 }
 to_json_flat!(ColumnSpec);
 
+/// Which sides of a stair or a ramp carry a railing, left and right as one walks up it (docs/adr/0705 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Railings {
+    Left,
+    Right,
+    Both,
+}
+
+impl Railings {
+    fn read(v: &Json) -> Result<Option<Self>, String> {
+        Ok(match word(v, "railings").as_deref() {
+            None => None,
+            Some("left") => Some(Railings::Left),
+            Some("right") => Some(Railings::Right),
+            Some("both") => Some(Railings::Both),
+            Some(other) => return Err(format!("railings: bilinmeyen yan “{other}”")),
+        })
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Railings::Left => "left",
+            Railings::Right => "right",
+            Railings::Both => "both",
+        }
+    }
+
+    pub fn left(self) -> bool {
+        matches!(self, Railings::Left | Railings::Both)
+    }
+
+    pub fn right(self) -> bool {
+        matches!(self, Railings::Right | Railings::Both)
+    }
+}
+
+/// How far inside its band's side a railing's line runs (docs/adr/0705 §2), metres.
+pub const RAILING_INSET: f64 = 0.05;
+
 /// A stair's fields beside its walking line.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StairSpec {
@@ -198,10 +237,20 @@ pub struct StairSpec {
     pub landing: Option<f64>,
     pub cut: Option<f64>,
     pub numbering: bool,
+    pub railings: Option<Railings>,
 }
 
 impl crate::api::json::Flat for StairSpec {
-    const NAMES: &'static [&'static str] = &["width", "risers", "riserHeight", "tread", "landing", "cut", "numbering"];
+    const NAMES: &'static [&'static str] = &[
+        "width",
+        "risers",
+        "riserHeight",
+        "tread",
+        "landing",
+        "cut",
+        "numbering",
+        "railings",
+    ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         Ok(StairSpec {
@@ -212,6 +261,7 @@ impl crate::api::json::Flat for StairSpec {
             landing: number(v, "landing")?,
             cut: number(v, "cut")?,
             numbering: matches!(v.get("numbering"), Json::Bool(true)),
+            railings: Railings::read(v)?,
         })
     }
 
@@ -228,6 +278,9 @@ impl crate::api::json::Flat for StairSpec {
         }
         if self.numbering {
             field(out, first, "numbering", &true);
+        }
+        if let Some(r) = self.railings {
+            field(out, first, "railings", r.name());
         }
     }
 }
@@ -247,10 +300,11 @@ pub struct RampSpec {
     pub slope: Option<f64>,
     pub base: Option<f64>,
     pub landing: Option<f64>,
+    pub railings: Option<Railings>,
 }
 
 impl crate::api::json::Flat for RampSpec {
-    const NAMES: &'static [&'static str] = &["width", "rise", "slope", "base", "landing"];
+    const NAMES: &'static [&'static str] = &["width", "rise", "slope", "base", "landing", "railings"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         Ok(RampSpec {
@@ -259,6 +313,7 @@ impl crate::api::json::Flat for RampSpec {
             slope: number(v, "slope")?,
             base: number(v, "base")?,
             landing: number(v, "landing")?,
+            railings: Railings::read(v)?,
         })
     }
 
@@ -273,6 +328,9 @@ impl crate::api::json::Flat for RampSpec {
         }
         if let Some(l) = &self.landing {
             field(out, first, "landing", l);
+        }
+        if let Some(r) = self.railings {
+            field(out, first, "railings", r.name());
         }
     }
 }
@@ -585,6 +643,116 @@ pub fn stair_fit_end(pts: &[Vec2], spec: &StairSpec) -> Option<Vec2> {
     Some(Vec2::new(prev.x + d.x * t, prev.y + d.y * t))
 }
 
+/// A railing's line on one side of a walking line (docs/adr/0705 §2): its band's side `RAILING_INSET` inside, mitred at
+/// the turns, from the start to the end; `left`: the walking line's left.
+pub fn railing_line(pts: &[Vec2], half: f64, left: bool) -> Vec<Vec2> {
+    let n = pts.len();
+    let b = band(pts, crate::jsmath::js_max(half - RAILING_INSET, 0.0));
+    if b.len() != 2 * n {
+        return Vec::new();
+    }
+    if left {
+        b[..n].to_vec()
+    } else {
+        b[n..].iter().rev().copied().collect()
+    }
+}
+
+/// A railing's line cut where its walking line is `s` along: the part before and the part after; a turn at `s` keeps
+/// its mitred corner.
+fn railing_split(walk: &Walk, line: &[Vec2], half: f64, left: bool, s: f64) -> (Vec<Vec2>, Vec<Vec2>) {
+    if let Some(k) = walk.at.iter().position(|a| (a - s).abs() <= EPS) {
+        return (line[..=k].to_vec(), line[k..].to_vec());
+    }
+    let off = crate::jsmath::js_max(half - RAILING_INSET, 0.0) * if left { 1.0 } else { -1.0 };
+    let (p, d) = walk.point(s);
+    let n = self::left(d);
+    let at = Vec2::new(p.x + n.x * off, p.y + n.y * off);
+    let mut before: Vec<Vec2> = Vec::new();
+    let mut after = vec![at];
+    for (k, v) in line.iter().enumerate() {
+        if walk.at[k] < s {
+            before.push(*v);
+        } else {
+            after.push(*v);
+        }
+    }
+    before.push(at);
+    (before, after)
+}
+
+/// A stair's or ramp's railing lines in order (left, then right; each before, then past `cut`), each with whether it
+/// lies past the cut: `cut` an arc length on the left and one a tread further on the right, as the cut line runs.
+fn railing_lines(
+    walk: &Walk,
+    sides: Option<Railings>,
+    half: f64,
+    cut: Option<(f64, f64)>,
+) -> Vec<(Vec<Vec2>, bool)> {
+    let mut out = Vec::new();
+    let Some(r) = sides else { return out };
+    for (left, on) in [(true, r.left()), (false, r.right())] {
+        if !on {
+            continue;
+        }
+        let line = railing_line(&walk.pts, half, left);
+        if line.len() < 2 {
+            continue;
+        }
+        let Some((on_left, on_right)) = cut else {
+            out.push((line, false));
+            continue;
+        };
+        let at = if left { on_left } else { on_right };
+        let (before, after) = railing_split(walk, &line, half, left, at);
+        if before.len() >= 2 {
+            out.push((before, false));
+        }
+        if after.len() >= 2 {
+            out.push((after, true));
+        }
+    }
+    out
+}
+
+/// A stair's railings (docs/adr/0705 §2): each side's line, the part over its cut (dashed in its pieces) apart.
+pub fn stair_railings(pts: &[Vec2], spec: &StairSpec) -> Vec<(Vec<Vec2>, bool)> {
+    if pts.len() < 2 {
+        return Vec::new();
+    }
+    let walk = Walk::of(pts);
+    let (stations, _) = riser_stations(&walk, spec);
+    let cut = spec
+        .cut
+        .map(|c| (if c > 1.0 { c as usize } else { 1 }).min(stations.len()));
+    let at = match cut {
+        Some(c) if c > 0 => {
+            let s = stations[c - 1];
+            Some((s, crate::jsmath::js_min(s + spec.tread, walk.length())))
+        }
+        _ => None,
+    };
+    railing_lines(&walk, spec.railings, spec.width / 2.0, at)
+}
+
+/// A ramp's railings (docs/adr/0705 §2): each side's whole line (never past a cut).
+pub fn ramp_railings(pts: &[Vec2], spec: &RampSpec) -> Vec<(Vec<Vec2>, bool)> {
+    if pts.len() < 2 {
+        return Vec::new();
+    }
+    railing_lines(&Walk::of(pts), spec.railings, spec.width / 2.0, None)
+}
+
+fn railing_pieces(out: &mut Vec<Piece>, lines: Vec<(Vec<Vec2>, bool)>) {
+    for (line, over) in lines {
+        let mut p = piece(polyline(line));
+        if over {
+            p.stroke.line_type = Some("dashed".into());
+        }
+        out.push(p);
+    }
+}
+
 /// The walking line's band, `half` each side, mitred at the turns: its left side from the start, then its right side
 /// back.
 pub fn band(pts: &[Vec2], half: f64) -> Vec<Vec2> {
@@ -685,8 +853,8 @@ fn arrow(walk: &Walk, from: f64, to: f64, scale: f64) -> Vec<Shape> {
     ]
 }
 
-/// A stair's pieces at 1:`scale`: its band, its landings' edges, its risers (dashed past its cut), the cut line, the
-/// arrow and the numbers below the cut.
+/// A stair's pieces at 1:`scale`: its band, its landings' edges, its risers (dashed past its cut), the cut line, its
+/// railings (dashed past the cut), the arrow and the numbers below the cut.
 pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -727,6 +895,7 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
         }
         _ => walk.length(),
     };
+    railing_pieces(&mut out, stair_railings(pts, spec));
     for s in arrow(&walk, 0.0, end, scale) {
         out.push(piece(s));
     }
@@ -757,12 +926,57 @@ pub fn level_text(v: f64) -> String {
 }
 
 /// A ramp's sloped length: its walking line less its landings.
+/// A ramp's landings (docs/adr/0705 §1): the walking line's at its turns, overlapping ones made one so that a short
+/// middle flight's landings are not counted twice.
+pub fn ramp_landings(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
+    let mut out: Vec<(f64, f64)> = Vec::new();
+    for (a, b) in walk.landings(spec.landing()) {
+        match out.last_mut() {
+            Some(last) if a < last.1 + EPS => last.1 = crate::jsmath::js_max(last.1, b),
+            _ => out.push((a, b)),
+        }
+    }
+    out
+}
+
 pub fn ramp_run(walk: &Walk, spec: &RampSpec) -> f64 {
-    let land: f64 = walk.landings(spec.landing()).iter().map(|(a, b)| b - a).sum();
+    let land: f64 = ramp_landings(walk, spec).iter().map(|(a, b)| b - a).sum();
     walk.length() - land
 }
 
-/// A ramp's pieces at 1:`scale`: its band, its landings' edges, the arrow up it and its levels at its ends.
+/// Where a ramp's line ends for its sloped length to be its rise over its slope (docs/adr/0705 §1, `fit`): its last
+/// point moved along its last segment. None without a slope or a rise, or when that length is used up before the
+/// last segment's landing ends.
+pub fn ramp_fit_end(pts: &[Vec2], spec: &RampSpec) -> Option<Vec2> {
+    let n = pts.len();
+    let slope = spec.slope?;
+    if n < 2 || !(slope > 0.0) || spec.rise == 0.0 || !spec.rise.is_finite() {
+        return None;
+    }
+    let run = spec.rise.abs() / (slope / 100.0);
+    let (prev, last) = (pts[n - 2], pts[n - 1]);
+    let d = unit(Vec2::new(last.x - prev.x, last.y - prev.y));
+    if d.x == 0.0 && d.y == 0.0 {
+        return None;
+    }
+    let start = Walk::of(&pts[..n - 1]).length();
+    // Far enough for the sloped length past every landing: the line's end cuts no landing short.
+    let reach = run + n as f64 * spec.landing() + start;
+    let mut far = pts.to_vec();
+    far[n - 1] = Vec2::new(prev.x + d.x * reach, prev.y + d.y * reach);
+    let lands = ramp_landings(&Walk::of(&far), spec);
+    let landed: f64 = lands.iter().map(|(a, b)| b - a).sum();
+    let total = run + landed;
+    let past = lands.last().map_or(0.0, |l| l.1);
+    if total - start <= EPS || total < past - EPS {
+        return None;
+    }
+    let t = total - start;
+    Some(Vec2::new(prev.x + d.x * t, prev.y + d.y * t))
+}
+
+/// A ramp's pieces at 1:`scale`: its band, its landings' edges, its railings, the arrow up it and its levels at its
+/// ends.
 pub fn ramp_pieces(pts: &[Vec2], spec: &RampSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -771,10 +985,11 @@ pub fn ramp_pieces(pts: &[Vec2], spec: &RampSpec, scale: f64) -> Vec<Piece> {
     let walk = Walk::of(pts);
     let half = spec.width / 2.0;
     out.push(piece(polygon(band(pts, half))));
-    for (a, b) in walk.landings(spec.landing()) {
+    for (a, b) in ramp_landings(&walk, spec) {
         out.push(piece(across(&walk, a, half)));
         out.push(piece(across(&walk, b, half)));
     }
+    railing_pieces(&mut out, ramp_railings(pts, spec));
     for s in arrow(&walk, 0.0, walk.length(), scale) {
         out.push(piece(s));
     }

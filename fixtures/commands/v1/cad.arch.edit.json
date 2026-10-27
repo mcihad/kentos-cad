@@ -1325,6 +1325,344 @@
       ]
     },
     {
+      "name": "Değiştir: merdivene ve rampaya iki yan korkuluk (ADR 0705)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "both"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25,
+                  "railings": "both"
+                },
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "railings": "both"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "railings": "both"
+              },
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "railings": "both"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: korkuluk yanı sola, sonra null kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "left"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25,
+                  "railings": "left"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "railings": "left"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aksa korkuluk reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "right"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“railings” alanı aks nesnesinde yok.",
+              "path": "operation.railings"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: kat ve evre her türde, null kaldırır",
       "steps": [
         {

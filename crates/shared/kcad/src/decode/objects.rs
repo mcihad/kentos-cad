@@ -233,6 +233,8 @@ pub(super) struct Features {
     pub(super) dimension_sets: bool,
     /// Schema 114: a dimension recipe's edge (docs/adr/0700).
     pub(super) dimension_set_edges: bool,
+    /// Schema 115: a stair's and a ramp's railings (docs/adr/0705).
+    railings: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -430,6 +432,7 @@ impl Features {
             space_choices: schema >= crate::SCHEMA_WITH_SPACE_CHOICES,
             dimension_sets: schema >= crate::SCHEMA_WITH_DIMENSION_SETS,
             dimension_set_edges: schema >= crate::SCHEMA_WITH_DIMENSION_SET_EDGES,
+            railings: schema >= crate::SCHEMA_WITH_RAILINGS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2025,6 +2028,15 @@ pub(super) fn object(
         Ok(())
     })?;
     let entity = build(r, kind, index, &mut f)?;
+    // Schema 115 (docs/adr/0705): a stair's or ramp's railings.
+    let railed = match &entity {
+        Entity::Stair(s) => s.stair.railings.is_some(),
+        Entity::Ramp(m) => m.ramp.railings.is_some(),
+        _ => false,
+    };
+    if railed && !has.railings {
+        return Err(r.fail(Code::BadValue, "korkuluk (railings) şema 115 ister"));
+    }
     // A closed and a wide polyline's rules (docs/adr/0258).
     if let Entity::Polyline(p) = &entity
         && let Some(why) = p.extras_problem(false)

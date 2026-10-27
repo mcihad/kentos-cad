@@ -1840,6 +1840,276 @@
       ]
     },
     {
+      "name": "iki yan korkuluklu U merdiven (ADR 0705)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 31.3
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.3
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "railings": "both",
+                "cutHeight": 1.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 31.3
+                  },
+                  {
+                    "x": 0.15999999999999837,
+                    "y": 31.3
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "railings": "both",
+                "cut": 6
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sol korkuluklu düz merdiven",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "railings": "left"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "railings": "left"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verilen rıhtlarla sağ korkuluk (eski girdi)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.75,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "railings": "right"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.75,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "railings": "right"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "plan yükseklikten hesaplanan merdiveni gösterir",
       "steps": [
         {

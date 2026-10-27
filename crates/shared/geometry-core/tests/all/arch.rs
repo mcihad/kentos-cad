@@ -10,6 +10,16 @@ use serde_json::Value;
 const CASES: &str = include_str!("../../../../../fixtures/arch/v1/cases.json");
 const TOL: f64 = 1e-9;
 
+/// The railing lines against the reference's (docs/adr/0705 §2): their points and whether they lie past the cut.
+fn railings(got: &[(Vec<kentos_geometry_core::vec2::Vec2>, bool)], want: &Value, what: &str) {
+    let want = want.as_array().unwrap();
+    assert_eq!(got.len(), want.len(), "{what}: korkuluk çizgileri");
+    for ((line, over), w) in got.iter().zip(want) {
+        assert_eq!(*over, w["over"].as_bool().unwrap(), "{what}: kesmenin üstü");
+        points(line, &w["pts"], what);
+    }
+}
+
 fn close(a: f64, b: f64, what: &str) {
     assert!((a - b).abs() <= TOL, "{what}: {a} ≠ {b}");
 }
@@ -87,6 +97,7 @@ fn arch_elements_draw_as_the_reference_says() {
                     .filter(|p| p.stroke.line_type.as_deref() == Some("dashed"))
                     .count();
                 assert_eq!(dashed as u64, e["dashed"].as_u64().unwrap(), "{name}: kesikli rıhtlar");
+                railings(&arch::stair_railings(pts, stair), &e["railings"], name);
             }
             Shape::Ramp { pts, ramp } => {
                 let run = arch::ramp_run(&arch::Walk::of(pts), ramp);
@@ -104,6 +115,16 @@ fn arch_elements_draw_as_the_reference_says() {
                     e["levels"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
                 assert_eq!(texts, levels, "{name}: kotlar");
                 points(&arch::band(pts, ramp.width / 2.0), &e["band"], name);
+                // docs/adr/0705 §1, §2: the fitted end, the railings.
+                match (arch::ramp_fit_end(pts, ramp), e["fit"].as_array()) {
+                    (Some(p), Some(w)) => {
+                        close(p.x, w[0].as_f64().unwrap(), name);
+                        close(p.y, w[1].as_f64().unwrap(), name);
+                    }
+                    (None, None) => {}
+                    (got, want) => panic!("{name}: sığdırma {got:?}, beklenen {want:?}"),
+                }
+                railings(&arch::ramp_railings(pts, ramp), &e["railings"], name);
             }
             other => panic!("{name}: beklenmeyen şekil {other:?}"),
         }

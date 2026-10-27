@@ -612,11 +612,13 @@ pub const SCHEMA_WITH_DIMENSION_SETS: u32 = 113;
 /// Schema 114 (docs/adr/0700): a dimension recipe's `edge` (the straight edge of a closed or many-edged wall it
 /// measures), written only when a recipe has one.
 pub const SCHEMA_WITH_DIMENSION_SET_EDGES: u32 = 114;
+/// Schema 115 (docs/adr/0705): a stair's and a ramp's `railings`, written only when one has them.
+pub const SCHEMA_WITH_RAILINGS: u32 = 115;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 113] = [
+pub const SCHEMAS: [u32; 114] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -730,6 +732,7 @@ pub const SCHEMAS: [u32; 113] = [
     SCHEMA_WITH_SPACE_CHOICES,
     SCHEMA_WITH_DIMENSION_SETS,
     SCHEMA_WITH_DIMENSION_SET_EDGES,
+    SCHEMA_WITH_RAILINGS,
 ];
 
 /// The file a drawing is saved as.

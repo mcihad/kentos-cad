@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `114`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-115.kcad`) |
+| `version` | tam sayı | `2`'den `115`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-116.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -488,6 +488,14 @@ aynıdır. 113'te `edge` taşıyan tarif `bad_value` olur (alan JSON biçimli
 bölümün içindedir). Örnek `dimension-set-edges.kcad` (dört kenarlı kapalı duvarın
 sağ kenarı, dış yüz), önceki şema örneği
 `broken/dimension-set-edges-in-schema-113.kcad`.
+
+**Şema 115** (docs/adr/0705), merdivenin (`stair`) ve rampanın (`ramp`) JSON biçimli
+alanlarına isteğe bağlı `railings` ekler: `left`, `right` ya da `both`; yürüme
+yönüne göre korkuluğun yanları. Yoksa korkuluk yoktur. Yazıcı 115'i yalnız bir
+merdiven ya da rampada `railings` varken seçer; öteki bütün örneklerin baytları
+aynıdır. 114'te `railings` taşıyan merdiven ya da rampa `bad_value` olur. Örnek
+`railings.kcad` (iki yanı korkuluklu U merdiven ve sol korkuluklu rampa), önceki
+şema örneği `broken/railings-in-schema-114.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

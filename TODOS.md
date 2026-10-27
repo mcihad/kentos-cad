@@ -81,6 +81,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   rıhtlar. Web'in Merdiven aracı yükseklikten çalışmalı (görünür ayarlar, son
   kol rıhtlara göre, planı önizleme) ve `cad.stairs.create.design.json` ile
   sınanmalı; web'in çizicisi kesikli parça çizgi tipini göstermeli.
+- ARCH-STAIR-02 / ADR0705: rampanın `fit`'i, merdiven/rampa `railings`
+  (KCAD 115). Web'in Rampa ve Merdiven araçları ile Öznitelikler'i korkuluğu ve
+  eğime göre biten kolu sunmalı; `cad.ramps.create.design.json` ile sınanmalı.
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı
