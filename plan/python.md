@@ -1,10 +1,30 @@
 # KentOS — Python eklentileri ve analitik ekosistem
 
-İnceleme tarihi: **12 Ekim 2026**. Bu belge [CAD geliştirme planındaki](cad.md) ortak komut, Python ve AI tamlığı şartını Python/uv ortamlarına, KentOS arayüz eklentilerine, Processing araçlarına ve onaylı `.kek` dağıtımına genişletir.
+İlk inceleme: **12 Ekim 2026**; KEK mimarisiyle uzlaştırma: **27 Ekim 2026**.
+Bu belge [CAD geliştirme planındaki](cad.md) ortak komut, Python ve AI tamlığı
+şartını Python/uv ortamlarına, KentOS arayüz eklentilerine, Processing
+araçlarına ve onaylı `.kek` dağıtımına genişletir.
+
+**Eklenti mimarisinin ana planı: [kek.md](kek.md).** Ortak contribution
+registry, CAD/GIS/gelecek proje türlerinde görünürlük, script/model kaydı,
+Python expression fonksiyonları ve uygulama sırası orada tanımlıdır. Bu
+belge mevcut `PY-*`/`ECO-*` ortam, UI, paket ve katalog işlerinin kaynağıdır.
+Manifestin tek güncel örneği KEK planındadır; eski `entrypoints` örneği
+katkı bazlı sözleşmeyle değiştirilmiştir.
+
+**Platform sırası:** [ADR 0228](../docs/adr/0228-web-pause-desktop-and-cloud-first.md)
+gereği uygulama dilimleri masaüstü/headless ve gerektiğinde bulutta yapılır.
+Buradaki web/mobil hedefleri taşınabilir contract/capability hedefleridir;
+web/mobil gerçekleştirmesi ilk teslimin önkoşulu değildir.
 
 **Form sistemi ayrı plan:** Ortak CBS form standardı, tasarımcı, domain/subtype/ilişki/join, merkezi yayın/izinler ve mobil saha akışı [form.md](form.md) içinde ayrıntılıdır. Bütün `FORM-*` görevlerinin tek kaynak planı o belgedir.
 
-**Ürün sırası:** Form sistemi ilk eklenecek özellik olarak önceliklendirilebilir. Form planının core/central dilimleri Python/uv, `.kek` manager veya eklenti bulut kataloğunu beklemez. Bu belge form çekirdeğinin üzerine isteğe bağlı Python builder, UI/Processing action ve dağıtım entegrasyonunu ekler; form kullanıcılarını Python kurmaya zorlamaz.
+**Ürün sırası:** Form planındaki mevcut tamamlanmış işler yeniden açılmaz;
+form çekirdeği Python/uv, `.kek` manager veya eklenti bulut kataloğunu
+beklemez. Bu belge çalışan form sözleşmelerinin üzerine isteğe bağlı
+Python builder, UI/Processing action ve dağıtım entegrasyonunu ekler;
+form kullanıcılarını Python kurmaya zorlamaz. KEK planı diğer ürün
+planlarının kullanıcı tarafından belirlenmiş önceliğini değiştirmez.
 
 **Kullanıcı kararı:** Eklenti arayüzleri **KentOS'un kendi arayüz bileşenlerini** kullanacak. Python eklentileri için ayrı bir Qt/PySide arayüz dünyası kurulması bu planın hedefi değildir.
 
@@ -21,6 +41,9 @@
 - Eklentiler KentOS UI ile form, dialog, dock/panel ve uygulama komutları oluşturabilmeli; Processing araçları da geliştirebilmelidir.
 - Processing araçları parametre, kaynak katman/nesne türü, kapsam, çıktının türü ve hedefi, ilerleme/iptal ve doğrulama için ortak sözleşme kullanmalıdır.
 - Hazır Processing araçları eklentiden kullanılabilmeli; aynı araç UI, komut, model, Python ve AI üzerinden çağrılabilmelidir.
+- Tek `.py` script ve Python builder'ı da aynı Processing descriptor'ına bağlanmalı; model dosyası/proje kaynağı/`.kek` aynı model runner'ını kullanmalıdır.
+- Expression engine kayıtlı Python fonksiyonlarını tipli ve batch/asenkron yoldan çağırabilmeli; oluşturucu ve Akış aynı fonksiyon metadata'sını göstermelidir. Render sırasında nesne başına IPC yapılmamalıdır.
+- Katkı bazında CAD, GIS ve ileride 3D Plan/Yol gibi bir veya birden çok proje türü seçilebilmelidir. Sunum selector'ı, veri/host uygunluğu ve izin ayrı denetlenmelidir.
 - Eklenti yerel kalabilir veya isteğe bağlı olarak buluta gönderilebilir. **Bulutta yayınlanacak her sürüm, yayınlanmadan önce onaydan geçmelidir.**
 - Taşıma biçimi `.kek` uzantılı sıkıştırılmış paket olmalıdır; kaynak, UI/form/tool tanımları, dependency metadata ve dağıtım bilgileri birlikte taşınmalıdır.
 - Python/AI bütün eklenti, UI ve Processing lifecycle işlemlerine aynı komut yüzeyinden erişmelidir; kurulum, izin, doğrulama veya yayın onayını atlayan yol olmamalıdır.
@@ -41,13 +64,14 @@
 | E06 | [Native Processing](../crates/native/processing/src/lib.rs), [tool tipleri](../crates/native/processing/src/types.rs), [registry](../crates/native/processing/src/registry.rs), [runner](../crates/native/processing/src/runner.rs): salt okunur girdi → changeset → tek undo |
 | E07 | [Processing parametreleri](../crates/native/processing/src/parameters.rs), [web parametreleri](../apps/web/src/processing/parameters.ts), [Processing ADR](../docs/adr/0084-desktop-processing.md): doğrulama/default/görünürlük ve platform uyumu |
 | E08 | [Alan sözleşmesi](../crates/shared/contracts/src/fields.rs), [katman alanları ADR](../docs/adr/0199-layer-fields-and-feature-table.md): tür, aralık, seçim listesi, zorunluluk ve otomatik alan düzenleme |
-| E09 | [Sorgu/join ADR](../docs/adr/0200-spatial-and-attribute-queries.md): mekânsal sorgu ve anahtar üzerinden değer aktarma; kalıcı 1:N/N:M ilişki formu ayrı gelecek kapsam |
+| E09 | [Sorgu/join ADR](../docs/adr/0200-spatial-and-attribute-queries.md): mekânsal sorgu ve anahtar üzerinden değer aktarma; kalıcı ilişki/form işlerinin güncel durumu [form.md](form.md) ve TODOS'tan izlenir |
 | E10 | [KentOS UI Form](../crates/ui/src/widget/form.rs), [widget modülü](../crates/ui/src/widget/mod.rs), [web alan düzenleyici](../apps/web/src/ui/properties/fieldRows.ts): mevcut form yapı taşları |
 | E11 | [Proje yetki ADR](../docs/adr/0015-project-ownership-and-access.md), [gerçek yetki değerlendirme](../crates/server/application/src/access.rs): roller, paylaşım, sunucu ve satır güvenliği temeli |
 | E12 | [Proje snapshot](../crates/shared/contracts/src/document.rs), [kalıcı kimlik ADR](../docs/adr/0014-persistent-entity-identity.md): yerel/bulut kayıt ve UUID temeli |
 | E13 | [Öznitelik ekleri ADR](../docs/adr/0225-object-attachments.md), [Attachment sözleşmesi](../crates/shared/contracts/src/attachment.rs): fotoğraf/belge ekleri için mevcut kaynak modeli |
 | E14 | [İfade çekirdeği](../crates/shared/expression/src/lib.rs), [ifade ADR](../docs/adr/0100-expression-engine.md): ortak hesap/ifade altyapısı; form profiline sınırlandırılacak |
 | E15 | [Yol haritası](../TODOS.md), [CAD planı](cad.md): Python ortam, AI kapsam, ilişkiler ve platform hedefleri |
+| E16 | [Processing komut adapter'ı](../crates/native/processing/src/command.rs), [model runner](../crates/native/processing/src/model_runner.rs): komut registry'si ve model-as-tool output metadata boşlukları; [KEK envanteri](kek.md) |
 
 ### 2.2 Mevcut / kısmi / yeni iş ayrımı
 
@@ -60,7 +84,9 @@
 | Native tool executor | `run/validate/preview` alanlarında Rust function pointer var [E06] | Python çağırabilen executor adapter; veri descriptor'ıyla kodun ayrılması |
 | Processing scope | Yerel selection/visible/layer/IDs ve snapshot yolu var [E05–E06] | Dış API'de kalıcı UUID + snapshot; local slot ID sızdırmama |
 | Parametre kuralları | Default/görünürlük/validation var [E07] | Callable callback yerine taşınabilir expression/action sözleşmesi |
-| Processing çıktısı | Layer değişiklikleri, sayı/metin/tablo var [E05–E07] | Dosya/asset/job ve modeller arası typed output akışı; mevcut tablo/file sınırlamalarının kapanması |
+| Processing çıktısı | Layer/sayı/metin/tablo, komut sink ve sunucu job temeli var [E05–E07, E16] | Python external executor ve model portlarında typed table/file/artifact akışı; mevcut sink/job sistemini genişletme |
+| Native dinamik keşif | Komut adapter'ında `Registry::builtin()` tekrar kuruluyor [E16] | UI/command/Python/MCP/model için aynı context registry snapshot |
+| Python expression ve proje bağlamı | Statik function kataloğu; CAD/GIS workspace temeli [E14] | ExternalCall resolver/batch executor ve katkı bazlı sunum selector'ı; [kek.md](kek.md) |
 | uv/.kek/eklenti bulut incelemesi | İncelenen ürün yollarında tam sistem bulunmadı | Yeni opt-in ürün akışı, paket standardı ve onaylı katalog |
 
 **Kapsam sınırı:** Veri şeması, form tasarımı, domain/ilişki, merkezi ACL ve mobil runtime için ayrıntılı envanter ve QGIS/ArcGIS kıyası [form.md](form.md) içindedir. Yukarıdaki ortak kaynaklar plugin broker, binding ve form action entegrasyonunda da kullanılır; bu belge ikinci bir form uygulaması tanımlamaz.
@@ -71,6 +97,7 @@
 - **Veri tanımı:** DatasetSchema, DomainDefinition, SubtypeDefinition, RelationDefinition ve SourceDefinition.
 - **Sunum tanımı:** FormDefinition ve KentOS UiDefinition; veri şeması veya ACL'nin yerine geçmez.
 - **İş tanımı:** ProcessingToolDescriptor, ActionDescriptor, CommandDescriptor ve JobDescriptor.
+- **Katkı tanımı:** [kek.md](kek.md) içindeki ContributionDescriptor, FunctionDescriptor, model dependency lock ve context registry; descriptor ile çalıştırılabilir entrypoint ayrı kalır.
 - **Dağıtım tanımı:** ExtensionManifest, `.kek` içerik manifesti, dependency lock ve yayın inceleme kaydı.
 - **Oturum/veri girişi:** RuntimeContext, FormSession, SubmissionEnvelope, snapshot ve changeset.
 - **Otorite:** Yerelde mevcut native/web domain; bulutta mevcut yetkili application/service katmanı. Her mutation ortak komut/transaction üzerinden geçer.
@@ -163,6 +190,9 @@ urban-analysis.kek
 ├── uv.lock
 ├── src/urban_analysis/
 ├── tools/normalize.tool.json
+├── expressions/net_area.function.json
+├── models/report.model.json
+├── extensions.lock.json
 ├── ui/main.ui.json
 ├── forms/inspection.form.json
 ├── assets/
@@ -176,49 +206,18 @@ urban-analysis.kek
 
 ### 6.2 Önerilen manifest v1
 
-```json
-{
-  "format": "kentos.extension",
-  "schemaVersion": 1,
-  "id": "tr.example.urban-analysis",
-  "version": "0.1.0",
-  "name": "Kentsel analiz",
-  "publisherId": "example-publisher",
-  "licenseFile": "LICENSE",
-  "compatibility": {
-    "sdkProtocol": 1,
-    "python": ">=3.10,<3.14",
-    "runtimes": ["desktop-python", "portable-form"],
-    "operatingSystems": ["windows", "macos", "linux"]
-  },
-  "dependencies": {
-    "projectFile": "pyproject.toml",
-    "lockFile": "uv.lock",
-    "optionalFeatures": {
-      "charts": { "extra": "charts", "label": "Analiz grafikleri" }
-    }
-  },
-  "entrypoints": {
-    "processing": [
-      {
-        "id": "normalize",
-        "runtime": "desktop-python",
-        "descriptor": "tools/normalize.tool.json",
-        "handler": "urban_analysis.tools:normalize"
-      }
-    ],
-    "ui": [{ "runtime": "desktop-python", "definition": "ui/main.ui.json" }],
-    "forms": [{ "runtime": "portable-form", "definition": "forms/inspection.form.json" }]
-  },
-  "requestedCapabilities": [
-    { "id": "datasets.read", "scope": "user-selected" },
-    { "id": "datasets.create", "scope": "current-project" },
-    { "id": "ui.mount", "scope": "plugin-owned" }
-  ]
-}
-```
+Tek güncel örnek ve alan sahipliği **[KEK planı §5](kek.md)** içindedir:
+`contributions`, `environments`, `runtimes`, `extensionDependencies` ve
+katkı bazlı `presentation/requirements/requestedCapabilities`. Paket
+seviyesindeki Python/OS koşulları portable form/model/stil kullanımını
+engellemez. Yalnız portable kaynak içeren pakette `pyproject.toml`,
+`uv.lock` veya Python entrypoint zorunlu değildir; yukarıdaki dizin ağacı
+karma bir paketi gösterir. `extensions.lock.json` yalnız eklenti bağımlılığı
+olan kaynaklar için gerekir.
 
-SDK/Python aralığı örnektir; gerçek release ortamı lock ve test matrisiyle belirlenir. Bu örneğin Python/OS koşulları `desktop-python` katkılarına uygulanır; `portable-form` kendi form standardı/host capability'siyle değerlendirilir. Katkı bazlı compatibility/dependency/capability çözümleme manifest standardında zorunlu olmalıdır. Manifest capability talebi yetki verilmiş olması değildir. Public katalogda `publisherId` ve namespace sahipliği sunucudan doğrulanır; paket kendi yayıncı kimliğini güvenilir ilan edemez.
+Manifest capability talebi grant değildir. Public katalogda `publisherId`
+ve namespace sahipliği sunucudan doğrulanır. Henüz yayımlanmış v1 olmadığı
+için eski örneğe çalışma zamanı uyumluluğu varmış gibi migration kodu yazılmaz.
 
 ### 6.3 Paketleme ve kurulum görevleri
 
@@ -317,7 +316,7 @@ QGIS, Processing provider üzerinden eklenti algoritmalarını normal araç kutu
 
 ### 9.1 Descriptor ve executor ayrımı
 
-`ProcessingToolDescriptor` yalnız taşınabilir veridir. `ProcessingExecutor` Rust built-in, Python plugin, browser worker veya yetkili server job gibi yürütme adapter'ıdır. Mevcut Rust function pointer/TS callable alanları bu ayrımın arkasında kalabilir; dış pakette serialize edilecek sözleşme olamaz.
+`ProcessingToolDescriptor` yalnız taşınabilir veridir. `ProcessingExecutor` Rust built-in, Python plugin, browser worker veya yetkili server job gibi yürütme adapter'ıdır. Mevcut Rust function pointer/TS callable alanları bu ayrımın arkasında kalabilir; dış pakette serialize edilecek sözleşme olamaz. Katkının handler/runtime/environment bağı [kek.md](kek.md) manifestinden çözülür; descriptor'da ikinci elle tutulmuş executor/izin listesi bulunmaz.
 
 | Parametre türü | Zorunlu semantik bilgi |
 |---|---|
@@ -347,11 +346,10 @@ QGIS, Processing provider üzerinden eklenti algoritmalarını normal araç kutu
 {
   "format": "kentos.processingTool",
   "schemaVersion": 1,
-  "id": "tr.example.urban-analysis.normalize",
-  "version": "0.1.0",
+  "id": "tr.example.analytics.normalize",
+  "behaviorVersion": 1,
   "label": "Sayısal alanı normalleştir",
   "category": "analysis",
-  "executor": { "kind": "extension", "entrypoint": "normalize" },
   "parameters": [
     {
       "id": "input",
@@ -383,8 +381,7 @@ QGIS, Processing provider üzerinden eklenti algoritmalarını normal araç kutu
     }
   ],
   "mutation": { "mode": "create-output", "undo": "single-group" },
-  "feedback": { "progress": true, "cancel": true },
-  "capabilities": { "runtimes": ["desktop-python"] }
+  "feedback": { "progress": true, "cancel": true }
 }
 ```
 
@@ -417,6 +414,13 @@ Bu örnekte input layer/selection seçimi **çağrı anında** explicit source/s
 - [ ] **PY-TOOL-21:** UI, command line, batch, Python, AI/MCP ve headless server aynı tool ID/schema/result sözleşmesini kullansın.
 - [ ] **PY-TOOL-22:** Run provenance; tool/plugin/version, environment digest, input snapshot, params/unit/CRS/seed ve output IDs taşısın.
 - [ ] **PY-TOOL-23:** Public tool metadata'da örnek veri ve correctness testleri bulunsun; doğru parametre listesi algoritma doğruluğu kabulü sayılmasın.
+
+Scriptlerin statik keşfi ve tek tool sözleşmesine derlenmesi, model-as-tool
+çıktıları ve dependency pin'leri **[kek.md §9–10](kek.md)** içinde
+`KEK-SCRIPT-*`/`KEK-MODEL-*` işleriyle izlenir. Python expression kayıt,
+ABI, scalar/batch/mask, cache/render ve server validation standardı
+**[kek.md §11](kek.md)** içindedir; `PY-TOOL` içindeki expression parametresi
+tek başına Python fonksiyon desteği sağlanmış anlamına gelmez.
 
 **Kabul:** NumPy kullanan araç sayısal alanı okuyup yeni katmana veya dosyaya çıktı üretir; hazır analizle modelde zincirlenir. UI/Python/AI aynı parametrelerden aynı değerleri ve provenance'ı alır. Hata/iptalde yarım katman oluşmaz.
 
@@ -478,6 +482,7 @@ CBS formu üretme/yayınlama/veri girişinin ayrıntıları [form.md](form.md) i
 | `ui.sessions.*` | Mount/patch/focus/action/close ve host capability |
 | `processing.tools.*` | Discover/describe/validate/plan/run/result ve dynamic provider |
 | `processing.models.*` / `jobs.*` | Model create/run, source snapshots, progress/cancel/artifacts |
+| `expressions.functions.*` | Statik discover/describe/register, imza/dependency, async evaluate/prepare; public adlar KEK ADR'sinde kesinleşir |
 
 - [ ] **ECO-API-01:** Bütün descriptor/schema/capability/error/type kaynakları Rust contracts veya seçilmiş ortak authoritative kaynakta tutulup codegen ile üret.
 - [ ] **ECO-API-02:** Platform adapter'ları lifecycle/state anlamını aynı shared fixture ile uygulasın; Python/AI için alternatif business rule olmasın.
@@ -550,28 +555,33 @@ CBS formunun I01–I08, F01–F14 ve form AI kabul senaryoları [form.md](form.m
 - [ ] `.kek` package/lock/resources ve local/cloud install/update/revoke taşınabilirliği doğrulandı.
 - [ ] Teslim edilen host'larda plugin UI/executor accessibility ve unsupported runtime capability davranışı doğrulandı.
 - [ ] Gerçek analitik/Processing ve KentOS UI plugin'i ile consumer kurulum/kullanım kabulü yapıldı; varsa portable form entegrasyonu form planından doğrulandı.
+- [ ] [KEK planındaki](kek.md) ilgili T01–T30 bağlam, script/model, Python expression ve registry/lifecycle senaryoları uygulanan dilim için geçti.
 - [ ] Kalan platform/package/format sınırı capability ve dokümantasyonda açık; yanlış “hazır/tam” durumu yok.
 
 ## 14. Uygulama fazları, öncelikler ve bağımlılıklar
 
 P0 ortak kaynak/doğruluk/yetki/opt-in temeli, P1 ürün iş akışları, P2 ileri çalışma/dağıtım kapsamıdır. Takvim veya kişi sayısı bilinmediği için sprint/süre tahmini verilmez.
 
-**Önerilen ilk ürün:** [Form planının](form.md) FM0–FM2 core/central dilimleri ilk yeni özellik olarak çıkarılabilir. Python/uv eklenti altyapısı form kullanımının önkoşulu değildir. Aşağıdaki fazlar ayrı Python ekosisteminin teslimleridir; ileri domain/ilişki/mobile/offline form işlerini tekrar sıralamaz.
+**Güncel teslim sırası:** [KEK planı §15](kek.md) içindeki K0–K7 fazları
+esas alınır. Aşağıdaki PY adları mevcut görev gruplarıyla eşlemedir;
+ikinci bir bağımsız faz sırası oluşturmaz. Formun tamamlanmış dilimleri
+yeniden açılmaz; Python/uv eklenti altyapısı form kullanımının önkoşulu değildir.
 
 | Faz | Somut teslim | Bağımlılıklar / çıkış |
 |---|---|---|
-| PY0 — Envanter ve ortak contracts | Processing/SDK/ACL boşlukları; UI/tool/plugin standartları ve form profile/action bağlantısı | Mevcut widget/contracts ile form standardını yeniden kullan; örnek descriptor ve fixture korpusu |
-| PY1 — Opt-in Python ve `.kek` | uv detect/manual install, kişisel analitik env, locked plugin env, inspect/install/enable/unload | P01–P09; kod import etmeden dependency preview |
-| PY2 — Python UI ve Processing | KentOS UI broker, external executor, built-in/model chaining, typed sinks/jobs | P10–P13; UI/command/Python/AI aynı araç |
+| PY0 — Envanter ve ortak contracts | Katkı/registry/context/tool/function sözleşmeleri | K0; mevcut form/widget contracts yeniden kullanılır |
+| PY1 — `.kek` ve opt-in Python | Önce portable paket; sonra uv/personal/locked plugin env | K1–K2; P01–P09; kod import etmeden preview |
+| PY2 — Python Processing, script, model ve UI | External executor, typed sinks, script/model zinciri, KentOS UI broker | K2–K3/K5; P10–P13; aynı command/Python/MCP yolu |
+| PY2E — Python expression fonksiyonları | Function resolver, async batch, Oluşturucu/Akış, hazırlanmış stil/etiket sonucu | K4; `KEK-EXPR-*`, T17–T22 |
 | PY3 — İsteğe bağlı form entegrasyonu | Portable form resources, registered actions/custom widgets, version/runtime/capability pin | Çalışan form contract/command/ACL'yi kullan; yalnız Python action için PY1–PY2 gerekir |
-| PY4 — Onaylı eklenti bulutu | Private/tenant/public review catalogue, digest approval, update/revoke ve izole review worker | P14–P15; her published release onaylı |
-| PY5 — Ekosistem kabulü | SDK templates/docs, host matrix, gerçek UI/Processing plugin, performans ve AI eval | Bütün P/A senaryoları ve ilgili integration gate'leri |
+| PY4 — Onaylı eklenti bulutu | Private/tenant/public review catalogue, digest approval, update/revoke ve izole review worker | K6; P14–P15; her published release onaylı |
+| PY5 — Ekosistem kabulü | SDK/docs, gerçek plugin, performans, AI eval; gelecek host adapter'ları | Her K fazında ilgili kabul; web/mobil K7 ve ADR 0228 sırası |
 
 Python/AI/komut eşdeğerliği her fazın tamamlanma koşuludur. Form tasarım/veri giriş API'si form planının kendi fazlarında mevcut SDK/katalogdan açılır; bu tablodaki runtime fazını beklemez. Eklenti review ve server executor izolasyonu ilk contracts aşamasında netleştirilmelidir. Bir portable form resource, Python entrypoint import edilmeden form compiler/permission/source remapping ile kullanılabilir olmalıdır.
 
 Bağımlılık omurgası:
 
-1. `Form/ortak widget contracts → portable plugin UI/tool descriptor → Python dynamic executor/broker`.
+1. `Mevcut shared contracts → contribution/context registry → portable kaynak ve tool/function descriptor → executor/broker`.
 2. `Opt-in uv → personal dev env → immutable release env → .kek lifecycle`.
 3. `Çalışan form command/ACL → optional resource/action/custom widget entegrasyonu`.
 4. `Immutable .kek digest + dependency/permission metadata → review → approved publication`.
@@ -579,20 +589,20 @@ Bağımlılık omurgası:
 
 **Döngü oluşturma:** Portable core form → isteğe bağlı plugin integration yönü korunur. Core formdan uv/plugin manager'a zorunlu bağımlılık veya ortak form/profile için ikinci bir plugin-only validator kurulmaz.
 
-### 14.1 İlk 12 Python ekosistem işi
+### 14.1 KEK sırasıyla ilk 12 ekosistem işi
 
-1. Form planındaki core/central önceliğini kabul et; mevcut widget, session, binding ve permission contracts ile plugin kesişimini kaydet.
-2. Portable plugin UI, Processing descriptor ve ExtensionManifest v1 ADR/schema taslaklarını kesinleştir.
-3. Processing callable/slot bağımlılıklarının external DTO/executor sınırına taşınmasını planla.
-4. uv discovery ve opt-in personal environment akışını kur; NumPy seçme/kurma/kullanma senaryosunu çalıştır.
-5. `.kek` inspect/package/check ve güvenilir extraction ilk dilimini çıkar.
-6. İzole plugin environment, runtime process, broker ve lifecycle registration dikey dilimini tamamla.
-7. KentOS UI panelini Python builder/broker ile aç; callback/state/stop/unload akışını doğrula.
-8. Python Processing tool'u layer/table/file typed çıktılarıyla built-in/model zincirine bağla.
-9. UI/komut/Python/MCP için aynı plugin tool sonuç ve permission korpusunu geçir.
-10. Portable form resource ve optional action'ı [form.md](form.md) compiler/deployment/session kurallarına bağla; Python'suz form kullanımı korunsun.
-11. Cloud plugin review/digest approval ve consumer install/update/revoke kabulünü uygula.
-12. SDK şablonları/host matrisi/gerçek plugin ve AI eval ile ürün kabulünü tamamla; form planının sahip olduğu uygulama işlerini burada tekrar açma.
+1. Mevcut kaynakları KEK envanteriyle doğrula; tamamlanmış form/Processing/job işlerini tekrar açma.
+2. Katkı manifesti, context selector, registry snapshot ve function signature sözleşmelerini kesinleştir.
+3. UI ve komut host'larını aynı registry'ye geçir; mevcut built-in/`model:` kimliklerini koru.
+4. `.kek` inspect/package/check ve Python'suz kaynak katkısıyla enable/unload dilimini çıkar.
+5. uv discovery, opt-in personal environment ve immutable plugin env akışını kur.
+6. Process/broker, typed batch/handle, cancel ve generation lease dikey dilimini tamamla.
+7. NumPy Processing scriptini UI/command/Python/MCP'de aynı tool olarak çalıştır.
+8. Portable/karma model, table/file output, dependency pin ve tek undo kabulünü geçir.
+9. Python expression resolver/batch/mask ve Oluşturucu/Akış entegrasyonunu tamamla; render cache profiliyle doğrula.
+10. KentOS UI panel/etkileşim aracı ile form resource/action'ı mevcut session/ACL/command yollarına bağla.
+11. Gerçek ihtiyaçla provider/persistence/sunucu executor ve onaylı katalog dilimlerini ekle.
+12. Her fazın consumer/SDK/AI/performance kabulünü geçir; web/mobil için ADR 0228 ve K7'yi izle.
 
 ## 15. Karar kayıtları ve geliştiren ajana sınırlar
 
@@ -626,7 +636,12 @@ Uygulama notları:
 
 ## 16. Resmi araştırma kaynakları
 
-Kaynaklar 12 Ekim 2026 araştırmasında incelendi. QGIS eklenti/Processing kıyası 3.44 resmi dokümanını esas alır. Ürün sürümleri ve platform desteği uygulama aşamasında yeniden doğrulanmalıdır. CBS formu/QGIS form designer/ArcGIS domain ve ilişkiler kaynakları [form.md](form.md) içinde tutulur.
+İlk kaynaklar 12 Ekim 2026 araştırmasına aittir. QGIS plugin/Processing,
+script/model/Function Editor ve task belgeleri ile uv sync davranışı
+27 Ekim'de yeniden incelendi; güncel kıyas ve kaynaklar [kek.md](kek.md)
+içindedir. QGIS kıyası 3.44 sürümlü belgelerini esas alır. Ürün sürümleri ve
+platform desteği uygulama aşamasında yeniden doğrulanmalıdır. CBS formu/
+QGIS form designer/ArcGIS domain ve ilişkiler kaynakları [form.md](form.md) içindedir.
 
 | Kaynak | Kullanıldığı konu |
 |---|---|
