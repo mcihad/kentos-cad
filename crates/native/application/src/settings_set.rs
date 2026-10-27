@@ -27,7 +27,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// What names a level by its own level, in the order a refusal says them (docs/adr/0720 §3).
-const LEVELLED: [&str; 7] = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa"];
+const LEVELLED: [&str; 8] = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa", "kot işareti"];
 
 /// The place of an object that names a level by its own (`Entity::own_level`) in [`LEVELLED`].
 fn levelled_kind(e: &Entity) -> Option<usize> {
@@ -78,7 +78,12 @@ pub fn levels_in_use(doc: &Document, arch: &kentos_commands::ArchSettings) -> Op
         let mut counts = [0_usize; LEVELLED.len()];
         let mut uids = Vec::new();
         for e in doc.entities() {
-            let Some(kind) = levelled_kind(e).filter(|_| e.own_level() == Some(level.id.as_str())) else {
+            // A Kot names its level for its value (docs/adr/0721 §2), not as its own.
+            let kind = match e {
+                Entity::Dimension(d) => d.level.as_ref().is_some_and(|l| l.id == level.id).then_some(7),
+                _ => levelled_kind(e).filter(|_| e.own_level() == Some(level.id.as_str())),
+            };
+            let Some(kind) = kind else {
                 continue;
             };
             counts[kind] += 1;

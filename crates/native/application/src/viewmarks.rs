@@ -442,7 +442,7 @@ pub fn references_of(doc: &Document) -> ViewMarksReferenced {
             targets.push(TargetReference {
                 marks: pointing(&target),
                 name: format!("{} › {frame}", s.name),
-                number: s.name.clone(),
+                number: s.label().to_owned(),
                 order: Some(u32::try_from(k + 1).unwrap_or(u32::MAX)),
                 target,
             });

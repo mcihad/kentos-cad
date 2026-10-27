@@ -18,13 +18,19 @@
 //! millimetres at the plot scale); the preview is the command's ring
 //! (`shapes::revcloud_ring`). With Çakışma or Topoloji changing the area it is
 //! written as any area is (`points::write_area_by`).
+//!
+//! Revizyon işaretle (docs/adr/0721 §4) is the same tool with a revision's number: Revizyon (R) types it (the
+//! drawing's last delta's by default, else 1), Tarih (T) and Açıklama (A) its date and description (a number the
+//! drawing has brings its revision's); the cloud and its delta are written by `cad.revisions.mark` in one undo step
+//! (“Revizyon”), the delta's ghost beside the cloud's from the command's plan. Çakışma and Topoloji do not clip a
+//! revision's cloud.
 
-use kentos_commands::{RevcloudCreate, RevcloudFrame};
+use kentos_commands::{CommandResult, Entity, RevcloudCreate, RevcloudFrame, RevisionsMark};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
-use kentos_native_application::{ExecutionContext, shapes};
+use kentos_native_application::{ExecutionContext, revisions, shapes};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
@@ -36,6 +42,19 @@ use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tool};
 /// The revision cloud tool's id: its command is `tool.revcloud`.
 pub const ID: &str = "revcloud";
 pub const LABEL: &str = "Revizyon bulutu";
+/// Revizyon işaretle's id: its command is `tool.revisionMark` (docs/adr/0721 §4).
+pub const MARK_ID: &str = "revisionMark";
+pub const MARK_LABEL: &str = "Revizyon işaretle";
+
+/// A description shortened for the prompt's chip: its first 24 characters and “…”.
+fn short(text: &str) -> String {
+    if text.chars().count() <= 24 {
+        return text.to_owned();
+    }
+    let mut out: String = text.chars().take(23).collect();
+    out.push('…');
+    out
+}
 
 /// The revision cloud tool.
 #[derive(Clone, Debug, Default)]
@@ -46,6 +65,14 @@ pub struct RevCloud {
     object: bool,
     /// What the session remembered and the project's plot scale, as of the last call.
     seen: Option<(Memory, f64)>,
+    /// Revizyon işaretle: the revision's number (none until the tool has seen the drawing's last), its date and
+    /// description, and the one of Revizyon (R), Tarih (T) and Açıklama (A) asked.
+    mark: Option<Option<String>>,
+    date: Option<String>,
+    description: Option<String>,
+    asking: Option<&'static str>,
+    /// The delta's ghost at the cursor, from the command's plan.
+    tag: Vec<Stroke>,
 }
 
 impl RevCloud {
@@ -53,8 +80,67 @@ impl RevCloud {
         Self::default()
     }
 
+    /// Revizyon işaretle: the cloud and its delta with a revision's number.
+    pub fn mark() -> Self {
+        Self {
+            mark: Some(None),
+            ..Self::default()
+        }
+    }
+
+    fn label_of(&self) -> &'static str {
+        if self.mark.is_some() { MARK_LABEL } else { LABEL }
+    }
+
+    /// The revision's number a mark writes.
+    fn number(&self) -> String {
+        self.mark.clone().flatten().unwrap_or_else(|| "1".to_owned())
+    }
+
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some((*cx.memory, cx.doc.settings().plot_scale));
+        // The drawing's last revision, with its date and description, until one is typed.
+        if self.mark == Some(None) {
+            let number = revisions::last_number(cx.doc).unwrap_or_else(|| "1".to_owned());
+            (self.date, self.description) = revisions::data_of(cx.doc, &number);
+            self.mark = Some(Some(number));
+        }
+    }
+
+    /// The mark's input for `frame`.
+    fn mark_request(&self, frame: RevcloudFrame, cx: &Context<'_>) -> RevisionsMark {
+        RevisionsMark {
+            layer_id: cx.doc.layers().active().to_owned(),
+            frame,
+            arc: self.arc_length(),
+            number: self.number(),
+            date: self.date.clone(),
+            description: self.description.clone(),
+            at: None,
+            size: None,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            expected_revision: None,
+        }
+    }
+
+    /// The delta's ghost for the corners so far and the cursor.
+    fn see_tag(&mut self, cx: &Context<'_>) {
+        self.tag.clear();
+        if self.mark.is_none() {
+            return;
+        }
+        let pts: Vec<Vec2> = self.d.pts.iter().copied().chain(self.d.hover).collect();
+        if pts.len() < 2 {
+            return;
+        }
+        let input = self.mark_request(self.frame_of(&pts), cx);
+        if let CommandResult::Completed { output, .. } = revisions::plan_in(cx.doc, Some(cx.spatial.store()), &input) {
+            let Entity::Insert(i) = &output.tag else { return };
+            if let Some(def) = output.block.or_else(|| cx.doc.block(i.block).cloned()) {
+                self.tag = crate::symbols::definition_ghost(&def, &output.tag);
+            }
+        }
     }
 
     fn memory(&self) -> Memory {
@@ -67,12 +153,16 @@ impl RevCloud {
         (m.cloud_arc_mm / 1000.0) * scale
     }
 
-    /// Dikdörtgen (D), Çokgen (Ç) and Yay boyu (U), before the first corner.
+    /// Dikdörtgen (D), Çokgen (Ç), Yay boyu (U) and, marking, Revizyon (R), Tarih (T) and Açıklama (A), before the
+    /// first corner.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if !self.d.pts.is_empty() {
             return false;
         }
         match key {
+            "R" if self.mark.is_some() => self.asking = Some("R"),
+            "T" if self.mark.is_some() => self.asking = Some("T"),
+            "A" if self.mark.is_some() => self.asking = Some("A"),
             "D" => {
                 cx.memory.cloud_rect = true;
                 self.object = false;
@@ -129,9 +219,24 @@ impl RevCloud {
         }
     }
 
+    /// The cloud and its delta through `cad.revisions.mark` (docs/adr/0721 §4); a refusal says the command's reason.
+    fn write_mark(&mut self, frame: RevcloudFrame, cx: &mut Context<'_>) {
+        let input = self.mark_request(frame, cx);
+        let number = input.number.clone();
+        let result = revisions::execute(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input);
+        if points::written(result, cx).is_some() {
+            cx.say(Level::Success, format!("Revizyon {number} işaretlendi: bulut ve üçgen."));
+        }
+        self.tag.clear();
+    }
+
     /// The cloud as the command makes it, written by the command unless Çakışma or Topoloji changes it; a refusal
     /// says the command's reason.
     fn write(&mut self, input: RevcloudCreate, cx: &mut Context<'_>) {
+        if self.mark.is_some() {
+            self.write_mark(input.frame, cx);
+            return;
+        }
         match shapes::revcloud_ring(Some(&*cx.doc), &input) {
             Ok((pts, _)) => {
                 let arcs = pts.len();
@@ -200,22 +305,44 @@ impl Tool for RevCloud {
         true
     }
     fn id(&self) -> &'static str {
-        ID
+        if self.mark.is_some() { MARK_ID } else { ID }
     }
 
     fn label(&self) -> &'static str {
-        LABEL
+        self.label_of()
     }
 
     fn prompt(&self) -> Prompt {
+        let label = self.label_of();
+        match self.asking {
+            Some("R") => return Prompt::new(label, "revizyonun numarasını ya da harfini yazın (1, A, B2 gibi)"),
+            Some("T") => return Prompt::new(label, "revizyonun tarihini yazın (2026-10-27 gibi; boş: yok)"),
+            Some(_) => return Prompt::new(label, "revizyonda neyin değiştiğini yazın (boş: yok)"),
+            None => {}
+        }
         if self.ask_arc {
-            return Prompt::new(LABEL, "yay boyunu kâğıt milimetresi olarak yazın");
+            return Prompt::new(label, "yay boyunu kâğıt milimetresi olarak yazın");
         }
         let m = self.memory();
         let n = self.d.pts.len();
         let object = self.object;
+        let number = self.mark.as_ref().map(|_| self.number());
         let first = |step: &'static str| {
-            let prompt = Prompt::new(LABEL, step);
+            let prompt = Prompt::new(label, step);
+            let prompt = match &number {
+                Some(n) => {
+                    let prompt = prompt.option_with("Revizyon", "R", n.clone());
+                    let prompt = match &self.date {
+                        Some(d) => prompt.option_with("Tarih", "T", d.clone()),
+                        None => prompt.option("Tarih", "T"),
+                    };
+                    match &self.description {
+                        Some(d) => prompt.option_with("Açıklama", "A", short(d)),
+                        None => prompt.option("Açıklama", "A"),
+                    }
+                }
+                None => prompt,
+            };
             let prompt = if object {
                 prompt.option("Dikdörtgen", "D").option("Çokgen", "Ç")
             } else if m.cloud_rect {
@@ -230,11 +357,11 @@ impl Tool for RevCloud {
         }
         match (m.cloud_rect, n) {
             (true, 0) => first("dikdörtgenin bir köşesine tıklayın"),
-            (true, _) => Prompt::new(LABEL, "karşı köşeye tıklayın"),
+            (true, _) => Prompt::new(label, "karşı köşeye tıklayın"),
             (false, 0) => first("bulutun ilk köşesine tıklayın"),
-            (false, 1 | 2) => Prompt::new(LABEL, "sonraki köşeye tıklayın"),
+            (false, 1 | 2) => Prompt::new(label, "sonraki köşeye tıklayın"),
             (false, _) => Prompt::new(
-                LABEL,
+                label,
                 "sonraki köşeye tıklayın ya da bitirmek için sağ tıklayın",
             ),
         }
@@ -256,6 +383,7 @@ impl Tool for RevCloud {
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.d.hover = Some(self.d.constrain(p, cx));
         self.see(cx);
+        self.see_tag(cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -269,6 +397,9 @@ impl Tool for RevCloud {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if let Some(key) = self.asking.take() {
+            return self.configure(key, text, cx);
+        }
         let done = if self.option(&upper_tr(js_trim(text)), cx) {
             true
         } else if let (true, Some(n)) = (self.ask_arc, parse_number(text)) {
@@ -305,6 +436,60 @@ impl Tool for RevCloud {
         self.d.undo_step(false, cx)
     }
 
+    /// Revizyon işaretle's Revizyon, Tarih and Açıklama: what its next mark writes.
+    fn settings(&self, _f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::Setting;
+        match &self.mark {
+            Some(_) => vec![
+                Setting::text("R", "Revizyon", self.number()),
+                Setting::text("T", "Tarih", self.date.clone().unwrap_or_default()),
+                Setting::text("A", "Açıklama", self.description.clone().unwrap_or_default()),
+            ],
+            None => Vec::new(),
+        }
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if self.mark.is_none() {
+            return false;
+        }
+        let text = js_trim(value);
+        match key {
+            "R" => {
+                if text.is_empty()
+                    || text.chars().count() > kentos_commands::MAX_REVISION_NUMBER
+                    || text.chars().any(char::is_control)
+                {
+                    cx.say(Level::Warn, "Revizyonun numarası boş olmayan, en çok 16 karakter olmalı (1, A, B2 gibi).");
+                    return false;
+                }
+                // A revision the drawing has: its date and description come with it.
+                (self.date, self.description) = revisions::data_of(cx.doc, text);
+                self.mark = Some(Some(text.to_owned()));
+            }
+            "T" | "A" => {
+                let (most, what) = if key == "T" {
+                    (kentos_commands::MAX_REVISION_DATE, "tarihi")
+                } else {
+                    (kentos_commands::MAX_REVISION_DESCRIPTION, "açıklaması")
+                };
+                if text.chars().count() > most || text.chars().any(char::is_control) {
+                    cx.say(Level::Warn, format!("Revizyonun {what} en çok {most} karakter, tek satır olmalı."));
+                    return false;
+                }
+                let value = (!text.is_empty()).then(|| text.to_owned());
+                if key == "T" {
+                    self.date = value;
+                } else {
+                    self.description = value;
+                }
+            }
+            _ => return false,
+        }
+        self.see_tag(cx);
+        true
+    }
+
     fn preview(&self, _format: &Format) -> Preview {
         let pts: Vec<Vec2> = self.d.pts.iter().copied().chain(self.d.hover).collect();
         let tracking = self.d.hover.and(self.d.tracking);
@@ -335,8 +520,10 @@ impl Tool for RevCloud {
             .width(1.5),
             Err(_) => Stroke::dashed(pts, false, [4.0, 3.0]),
         };
+        let mut strokes = vec![stroke];
+        strokes.extend(self.tag.iter().cloned());
         Preview {
-            strokes: vec![stroke],
+            strokes,
             tracking,
             ..Preview::default()
         }

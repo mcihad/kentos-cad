@@ -22,6 +22,8 @@ pub const MAX_CELL_LETTERS: usize = 1000;
 pub const MAX_TABLE_SIZE: f64 = 1.0e6;
 /// The most objects a table's source may name.
 pub const MAX_SOURCE_OBJECTS: usize = 100_000;
+/// The most further columns a block schedule shows (docs/adr/0721 §4).
+pub const MAX_SCHEDULE_DATA: usize = 10;
 
 /// A table (docs/adr/0184 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -216,7 +218,10 @@ pub enum TableSource {
         overrides: crate::SourceOverrides,
     },
     /// Blok çizelgesi (docs/adr/0327 §4): the inserts of the blocks named (none named: every block placed) counted,
-    /// by the attribute `by` when given; written again by the document at every step.
+    /// by the attribute `by` when given; written again by the document at every step. `columns` (docs/adr/0721 §4,
+    /// Revizyon listesi): each row's further cells, an attribute's or a datum's name each, its row's distinct values
+    /// that are not empty in the drawing's order joined with “; ”; a schedule of one block with them leaves out its
+    /// Blok column, every row of which would read the same. At most [`MAX_SCHEDULE_DATA`].
     Blocks {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -224,6 +229,9 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         by: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+        columns: Vec<String>,
     },
     /// Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter
     /// takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
@@ -464,11 +472,23 @@ impl TableShape<'_> {
             ));
         }
         match self.source {
-            Some(TableSource::Blocks { names, by }) => {
-                if names.iter().any(|n| n.trim().is_empty()) || by.as_deref().is_some_and(|b| b.trim().is_empty()) {
+            Some(TableSource::Blocks { names, by, columns }) => {
+                if names.iter().any(|n| n.trim().is_empty())
+                    || by.as_deref().is_some_and(|b| b.trim().is_empty())
+                    || columns.iter().any(|c| c.trim().is_empty())
+                {
                     return Some((
                         "source",
-                        "Blok çizelgesinin blok ve öznitelik adları boş olamaz.".to_owned(),
+                        "Blok çizelgesinin blok, öznitelik ve sütun adları boş olamaz.".to_owned(),
+                    ));
+                }
+                if columns.len() > MAX_SCHEDULE_DATA {
+                    return Some((
+                        "source",
+                        format!(
+                            "Blok çizelgesine {} sütun verildi; en çok {MAX_SCHEDULE_DATA} öznitelik ya da veri sütunu olur.",
+                            columns.len()
+                        ),
                     ));
                 }
             }

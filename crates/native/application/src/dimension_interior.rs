@@ -178,6 +178,7 @@ fn check(doc: &Document, input: &DimensionsInterior) -> Result<Chain, Stop> {
                 rule: Some(DimensionRule::Cross),
             })),
             look: look.clone(),
+            level: None,
         })
     };
     let mut dimensions: Vec<EntityGeometry> = crossed

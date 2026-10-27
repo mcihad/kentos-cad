@@ -18,11 +18,11 @@ import type { Vec2 } from "./Vec2";
  * `invalid_height`, `invalid_uid` (each place's and edge's object, in
  * order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
  * Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
- * işareti or Eksen çizgisi), `invalid_revision`,
- * `revision_conflict` (status `conflict`), `entity_not_found`,
+ * işareti or Eksen çizgisi), `invalid_dimension` (a Kot's `level` with `z`, or a level's id or offset that does not
+ * hold), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`,
  * `no_such_place`, `not_measurable` (the object has no edge of the kind the
- * measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
- * (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
+ * measure takes), `not_straight` (a base not an aligned or a linear dimension), `level_not_found` (a Kot's level
+ * not the project's), `missing_elevation` (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
  * `no_dimension` (no dimension forms there: the points meet, the edges are
  * parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
  * `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,

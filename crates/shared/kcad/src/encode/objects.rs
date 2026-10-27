@@ -839,6 +839,16 @@ impl<'d> Encoder<'d> {
                     }
                     f.push(("textShift", Val::Json(json(serde_json::to_value(s)))));
                 }
+                // A Kot's level (docs/adr/0721 §2), as its JSON: an elevation mark's only.
+                if let Some(l) = &e.level {
+                    if let Some(words) = l.problem() {
+                        return refuse(self, Code::BadValue, "level", &words);
+                    }
+                    if e.style != Some(DimensionStyle::Elevation) {
+                        return refuse(self, Code::BadValue, "level", "katı yalnız kot ölçüsü anar");
+                    }
+                    f.push(("level", Val::Json(json(serde_json::to_value(l)))));
+                }
                 if !e.breaks.is_empty() {
                     if let Some(words) = kentos_contracts::breaks_problem(&e.breaks) {
                         return refuse(self, Code::BadValue, "breaks", &words);

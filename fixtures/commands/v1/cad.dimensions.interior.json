@@ -12487,6 +12487,1654 @@
           }
         }
       ]
+    },
+    {
+      "name": "duvara bileşenli stil verilince bağlar yüzlerinde kalır, değerler aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "from": {
+              "x": -1.0,
+              "y": 2.0
+            },
+            "to": {
+              "x": 13.0,
+              "y": 2.0
+            },
+            "layerId": "olcu",
+            "height": 0.15
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:37",
+                "$uidOf:38",
+                "$uidOf:39",
+                "$uidOf:40",
+                "$uidOf:41",
+                "$uidOf:42",
+                "$uidOf:43"
+              ],
+              "ids": [
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43
+            ],
+            "entities": {
+              "37": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.09999999999999987,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 0.10000000000000009,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 37
+              },
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.10000000000000009,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 3.9000000000000004,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 38
+              },
+              "39": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 3.9000000000000004,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 4.1,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 39
+              },
+              "40": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 4.1,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 7.9,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:3",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 40
+              },
+              "41": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 7.9,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 8.1,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:3",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:3",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 41
+              },
+              "42": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 8.1,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 11.9,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:3",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:4",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 42
+              },
+              "43": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 11.9,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 12.1,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:4",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:4",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 43
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": "İç duvar 15"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43
+            ],
+            "entities": {
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.1,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 3.9,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 38
+              },
+              "39": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 3.9,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 4.1,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 39
+              },
+              "40": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 4.1,
+                  "y": 2.0
+                },
+                "b": {
+                  "x": 7.9,
+                  "y": 2.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:3",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 2.0
+                },
+                "id": 40
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "kentos-ic-duvar-15",
+                "components": [
+                  {
+                    "name": "Sıva",
+                    "material": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed",
+                    "priority": 5
+                  },
+                  {
+                    "name": "Tuğla",
+                    "material": "Tuğla",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "detail": "standard",
+                    "priority": 1
+                  },
+                  {
+                    "name": "Sıva",
+                    "material": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed",
+                    "priority": 5
+                  }
+                ],
+                "fill": "#5A5A5A"
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bileşenli duvarın stili kaldırılınca bağlar yüzlerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "from": {
+              "x": -1.0,
+              "y": 12.0
+            },
+            "to": {
+              "x": 5.0,
+              "y": 12.0
+            },
+            "layerId": "olcu",
+            "height": 0.15
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:37",
+                "$uidOf:38",
+                "$uidOf:39"
+              ],
+              "ids": [
+                37,
+                38,
+                39
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39
+            ],
+            "entities": {
+              "37": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.15000000000000002,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.1499999999999999,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 37
+              },
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.1499999999999999,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 3.9000000000000004,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 38
+              },
+              "39": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 3.9000000000000004,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 4.1,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 39
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39
+            ],
+            "entities": {
+              "37": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.15,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.15,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 37
+              },
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.15,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 3.9,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 38
+              },
+              "7": {
+                "kind": "wall",
+                "id": 7,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 14.0
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center"
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanlar zincirinde stil kalkınca aradaki çizgilerin bağı kopar, noktaları yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "from": {
+              "x": -1.0,
+              "y": 12.0
+            },
+            "to": {
+              "x": 5.0,
+              "y": 12.0
+            },
+            "layerId": "olcu",
+            "height": 0.15,
+            "faces": "skins"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:37",
+                "$uidOf:38",
+                "$uidOf:39",
+                "$uidOf:40",
+                "$uidOf:41"
+              ],
+              "ids": [
+                37,
+                38,
+                39,
+                40,
+                41
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41
+            ],
+            "entities": {
+              "37": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.15000000000000002,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": -0.13000000000000012,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 37
+              },
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.13000000000000012,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.1299999999999999,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 2,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 38
+              },
+              "39": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.1299999999999999,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.1499999999999999,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 2,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 39
+              },
+              "40": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.1499999999999999,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 3.9000000000000004,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 3,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 40
+              },
+              "41": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 3.9000000000000004,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 4.1,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 41
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41
+            ],
+            "entities": {
+              "37": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.15,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": -0.13000000000000012,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    },
+                    "broken": "vertex_gone"
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 37
+              },
+              "38": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": -0.13000000000000012,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.1299999999999999,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    },
+                    "broken": "vertex_gone"
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 2,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    },
+                    "broken": "vertex_gone"
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 38
+              },
+              "39": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.1299999999999999,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 0.15,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 2,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    },
+                    "broken": "vertex_gone"
+                  },
+                  "b": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 39
+              },
+              "40": {
+                "kind": "dimension",
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.15,
+                  "y": 12.0
+                },
+                "b": {
+                  "x": 3.9,
+                  "y": 12.0
+                },
+                "offset": 0.0,
+                "height": 0.15,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:7",
+                    "place": {
+                      "kind": "along",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:8",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "cross"
+                },
+                "style": "linear",
+                "angle": 0.0,
+                "c": {
+                  "x": -1.0,
+                  "y": 12.0
+                },
+                "id": 40
+              },
+              "7": {
+                "kind": "wall",
+                "id": 7,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 14.0
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center"
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
     }
   ]
 }

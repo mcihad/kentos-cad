@@ -433,6 +433,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "sistemsiz yerel projede tarafın projeninki olması; durum dosyasının tek kurulumu TUREF / TM30 projesidir, ret crs_transform.rs'in side'ındadır; Python SDK'nın test_crs.py'si yerel projede sınar (ADR 0519 §3)",
     ),
     (
+        "cad.revisions.mark",
+        "invalid_attribute",
+        "bulutun öznitelikleri (Revizyon, Tarih, Açıklama) katmanın alanlarıyla cad.revcloud.create'in yolundan (polygon::ruled, checks::object_attrs) denetlenir; cad.polygon.create'in durumlarında (ADR 0199 §2, 0721 §4)",
+    ),
+    (
+        "cad.revisions.mark",
+        "attribute_required",
+        "katmanın zorunlu alanı bulutun yazıldığı cad.polygon.create yolunun ortak denetimidir (checks::object_attrs), onun durumlarında (ADR 0199 §2, 0721 §4)",
+    ),
+    (
         "cad.constructions.create",
         "invalid_attribute",
         "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yapımlar onun yolundan yazar (ADR 0199 §2, 0622 §9)",

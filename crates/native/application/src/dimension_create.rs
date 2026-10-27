@@ -305,7 +305,19 @@ fn items(m: &DimensionMeasure) -> Vec<Item<'_>> {
         DimensionMeasure::CenterLine { first, second } => {
             vec![edge(first, "first"), edge(second, "second")]
         }
-        DimensionMeasure::Elevation { a, z: level } => vec![point(a, "a"), z(level, "z")],
+        DimensionMeasure::Elevation { a, z: given, level } => {
+            let mut out = vec![point(a, "a"), z(given, "z")];
+            // A Kot's offset from its level (docs/adr/0721 §2).
+            if let Some(l) = level {
+                out.push(Item::Number(
+                    l.offset,
+                    "measure.level.offset".into(),
+                    "Kotun kata göre farkı",
+                    "Farkı metre olarak sonlu bir sayıyla verin.",
+                ));
+            }
+            out
+        }
         DimensionMeasure::Jogged {
             of,
             shown_centre,
@@ -404,6 +416,19 @@ fn check_input(input: &DimensionsCreate) -> Result<(), Stop> {
                 .into(),
             "offset",
         ));
+    }
+    // A Kot reads its level or its z, not both; the level's id and offset hold (docs/adr/0721 §2).
+    if let DimensionMeasure::Elevation { z, level: Some(l), .. } = &input.measure {
+        if z.is_some() {
+            return Err(refuse(
+                codes::INVALID_DIMENSION,
+                "Kot ya kotunu (z) ya katını (level) alır, ikisini birden değil: birini kaldırın.".into(),
+                "measure.level",
+            ));
+        }
+        if let Some(words) = l.problem() {
+            return Err(refuse(codes::INVALID_DIMENSION, words, "measure.level"));
+        }
     }
     Ok(())
 }
@@ -576,7 +601,19 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
             Some(elevation_of(doc, *za, a, "measure.za")?),
             Some(elevation_of(doc, *zb, b, "measure.zb")?),
         ),
-        DimensionMeasure::Elevation { a, z } => {
+        // A Kot bound to a level: the level's elevation plus its offset (docs/adr/0721 §2).
+        DimensionMeasure::Elevation { level: Some(l), .. } => {
+            let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+            let z = l.value(levels).ok_or_else(|| {
+                refuse(
+                    codes::LEVEL_NOT_FOUND,
+                    format!("Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.", l.id),
+                    "measure.level.id",
+                )
+            })?;
+            (Some(z), None)
+        }
+        DimensionMeasure::Elevation { a, z, level: None } => {
             (Some(elevation_of(doc, *z, a, "measure.z")?), None)
         }
         _ => (None, None),
@@ -1001,6 +1038,10 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_commands::EntitiesC
         zb: g.zb,
         refs: m.refs.clone().map(Box::new),
         look: m.look.clone(),
+        level: match &input.measure {
+            DimensionMeasure::Elevation { level: Some(l), .. } => Some(Box::new(l.clone())),
+            _ => None,
+        },
     };
     // Zincir ölçü and Baz ölçü keep their tools' step names (docs/adr/0140).
     let operation = match input.measure {

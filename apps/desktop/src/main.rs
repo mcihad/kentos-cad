@@ -15,6 +15,8 @@ mod semantic_tool_tests;
 #[cfg(test)]
 mod annotative_sheet_tests;
 #[cfg(test)]
+mod symbols_sheet_tests;
+#[cfg(test)]
 mod text_outputs_tests;
 mod address;
 #[cfg(test)]
@@ -468,6 +470,8 @@ mod opening_scenes;
 mod recess_scenes;
 #[cfg(test)]
 mod level_state_scenes;
+#[cfg(test)]
+mod symbols_scenes;
 #[cfg(test)]
 mod space_scenes;
 #[cfg(test)]

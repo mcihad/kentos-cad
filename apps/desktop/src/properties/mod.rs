@@ -293,6 +293,8 @@ pub enum Field {
     /// Dimensions' increment, and their tolerance's upper (true) or lower value, metres (docs/adr/0321 §2).
     DimensionRound(Vec<Slot>),
     DimensionTolerance(Vec<Slot>, bool),
+    /// Kots' offset from their level, metres (docs/adr/0721 §2): Fark.
+    DimensionLevelOffset(Vec<Slot>),
 }
 
 /// What Öznitelikler's dimension rows ask of `cad.dimensions.edit` (docs/adr/0321 §4).
@@ -304,6 +306,8 @@ pub enum DimensionOp {
     Home,
     /// The lines whole again.
     Unbreak,
+    /// Kots bound to a level, or set free (none) keeping their value (docs/adr/0721 §2).
+    Level(Option<kentos_commands::DimensionLevel>),
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -865,6 +869,7 @@ impl App {
                 properties::edit_dimensions(model, &slots, |uids| match op {
                     DimensionOp::Options(options) => E::Options { uids, options },
                     DimensionOp::Unbreak => E::Unbreak { uids },
+                    DimensionOp::Level(level) => E::Level { uids, level },
                     DimensionOp::Home => E::MoveText {
                         uid: uids[0].clone(),
                         along: 0.0,
@@ -1219,11 +1224,32 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 kentos_commands::DimensionEdit::Options { uids, options }
             });
         }
-        Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
-            let n = f.to_metres(web_number(text));
-            if !n.is_finite() {
+        // Fark (docs/adr/0721 §2): the Kots' offset from the level they share; emptied or 0, none.
+        Field::DimensionLevelOffset(slots) => {
+            let id = slots.iter().find_map(|s| match model.get(*s) {
+                Some(Entity::Dimension(d)) => d.level.as_ref().map(|l| l.id.clone()),
+                _ => None,
+            });
+            let Some(id) = id else {
                 return Vec::new();
-            }
+            };
+            // A length with its unit kept (−2 cm), else in the drawing's unit (docs/adr/0646).
+            let typed = kentos_interaction::js_trim(text);
+            let n = if typed.is_empty() { Some(0.0) } else { length(typed) };
+            let Some(n) = n.filter(|n| n.is_finite() && n.abs() <= kentos_commands::MAX_LEVEL_OFFSET) else {
+                return vec!["Farkı metre olarak bir sayıyla yazın (−0.02 gibi); en çok 1000 m.".into()];
+            };
+            let level = kentos_commands::DimensionLevel { id, offset: (n != 0.0).then_some(n) };
+            return properties::edit_dimensions(model, slots, |uids| kentos_commands::DimensionEdit::Level {
+                uids,
+                level: Some(level),
+            });
+        }
+        // A slope's and a Kot's elevations: a length with its unit kept in CAD (docs/adr/0646, 0721 §2).
+        Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
+            let Some(n) = length(kentos_interaction::js_trim(text)).filter(|n| n.is_finite()) else {
+                return Vec::new();
+            };
             let second = matches!(field, Field::DimensionZb(_));
             return properties::change_dimensions(model, slots, |d| {
                 let z = if second { d.zb } else { d.za };
@@ -1613,7 +1639,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionZa(_)
         | Field::DimensionZb(_)
         | Field::DimensionRound(_)
-        | Field::DimensionTolerance(..) => return Vec::new(),
+        | Field::DimensionTolerance(..)
+        | Field::DimensionLevelOffset(_) => return Vec::new(),
         Field::DimensionSetGap(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {

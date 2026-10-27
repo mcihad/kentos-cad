@@ -1,0 +1,5943 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.legends.materials",
+  "commandVersion": 1,
+  "title": "Malzeme lejandı",
+  "note": "Written by scripts/fixtures/legend_cases.py from docs/adr/0721 §5 and the hatch library's reference; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Malzeme lejandı",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "lejant",
+        "name": "Lejant",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 5,
+            "y": 0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "name": "Sıva",
+            "material": "Kireç sıva",
+            "thickness": 0.02,
+            "detail": "standard"
+          },
+          {
+            "name": "Tuğla",
+            "material": "Tuğla",
+            "thickness": 0.19,
+            "hatch": {
+              "pattern": "ANSI31",
+              "scale": 1.0,
+              "angle": 45.0
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Sıva",
+            "material": "Kireç sıva",
+            "thickness": 0.02,
+            "detail": "standard"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 5,
+            "y": 2
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "name": "Sıva",
+            "material": "Kireç sıva",
+            "thickness": 0.02,
+            "detail": "standard"
+          },
+          {
+            "name": "Tuğla",
+            "material": "Tuğla",
+            "thickness": 0.19,
+            "hatch": {
+              "pattern": "ANSI31",
+              "scale": 1.0,
+              "angle": 45.0
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Sıva",
+            "material": "Kireç sıva",
+            "thickness": 0.02,
+            "detail": "standard"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 4
+          },
+          {
+            "x": 5,
+            "y": 4
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "name": "Gazbeton",
+            "material": "Gazbeton",
+            "thickness": 0.2,
+            "hatch": {
+              "pattern": "ANSI37",
+              "scale": 0.5,
+              "angle": 0.0,
+              "color": "#7A7A7A"
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Sıva",
+            "material": "Kireç sıva",
+            "thickness": 0.02,
+            "detail": "standard"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 6
+          },
+          {
+            "x": 5,
+            "y": 6
+          }
+        ],
+        "width": 0.25,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 8
+          },
+          {
+            "x": 5,
+            "y": 8
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "name": "Isı yalıtımı",
+            "material": "  ",
+            "thickness": 0.05,
+            "hatch": {
+              "pattern": "solid",
+              "scale": 1.0,
+              "angle": 0.0,
+              "color": "#E5E5E5"
+            },
+            "detail": "standard"
+          },
+          {
+            "name": "Tuğla",
+            "material": "Tuğla",
+            "thickness": 0.19,
+            "hatch": {
+              "pattern": "ANSI31",
+              "scale": 1.0,
+              "angle": 0.0
+            },
+            "detail": "standard"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 6,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 10
+          },
+          {
+            "x": 5,
+            "y": 10
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "name": "Betonarme",
+            "material": "Betonarme",
+            "thickness": 0.2,
+            "hatch": {
+              "pattern": "KAYIP",
+              "scale": 1.0,
+              "angle": 0.0
+            },
+            "detail": "standard"
+          }
+        ]
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Lejant bir noktaya: altı satır, blok aynı adımda; adım “Malzeme lejandı”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "uid": "$uidOf:7",
+              "id": 7,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Malzeme lejandı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "blocks": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı 3,5 mm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant",
+            "height": 3.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "uid": "$uidOf:7",
+              "id": 7,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.8749999999999999
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -0.8749999999999999
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -0.35
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.35
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -0.6124999999999999
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.5749999999999997
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.5749999999999997
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.0499999999999998
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.0499999999999998
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.5749999999999997
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.5749999999999997
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.0499999999999998
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.0499999999999998
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -1.3124999999999998
+                    },
+                    "text": "Tuğla",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.275
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.275
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.275
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.275
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -2.0125
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.9749999999999996
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.9749999999999996
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.4499999999999997
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.4499999999999997
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.9749999999999996
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.9749999999999996
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -2.4499999999999997
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.4499999999999997
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -2.7124999999999995
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.675
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -3.675
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -3.15
+                      },
+                      {
+                        "x": 0,
+                        "y": -3.15
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -3.675
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -3.675
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -3.15
+                      },
+                      {
+                        "x": 0,
+                        "y": -3.15
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -3.4124999999999996
+                    },
+                    "text": "Tuğla",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -4.375
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -4.375
+                      },
+                      {
+                        "x": 1.0499999999999998,
+                        "y": -3.85
+                      },
+                      {
+                        "x": 0,
+                        "y": -3.85
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 1.2249999999999999,
+                      "y": -4.1125
+                    },
+                    "text": "Betonarme",
+                    "height": 0.175,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Malzeme lejandı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "blocks": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "uid": "$uidOf:7",
+              "id": 7,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "gizli",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Malzeme lejandı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "blocks": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grubun içindeki katmana",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "alt"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "uid": "$uidOf:7",
+              "id": 7,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "alt",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Malzeme lejandı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "blocks": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvar silinince lejant yerinde yeniden yapılır: Gazbeton satırı gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 2
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "remade": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              7
+            ],
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Malzeme lejandı",
+          "expect": {
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden yaparken yer de verilirse bir yerleştirme daha",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 40,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "remade": true,
+              "uid": "$uidOf:8",
+              "id": 8,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ],
+            "entities": {
+              "7": {
+                "kind": "insert",
+                "id": 7,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "$blockOf:Malzeme lejandı",
+                "p": {
+                  "x": 40,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değişmeyen lejant yeniden istenince hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "captureRevision",
+          "as": "made"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "remade": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same",
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden yaparken katman okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                }
+              ],
+              "block": "$blockOf:Malzeme lejandı",
+              "remade": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "blocks": [
+              {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: satırlar, blok ve yerleştirme (yuvası 0); hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "materials": [
+                {
+                  "name": "Kireç sıva",
+                  "walls": 3
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 2
+                },
+                {
+                  "name": "Gazbeton",
+                  "pattern": "ANSI37",
+                  "walls": 1
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "pattern": "solid",
+                  "walls": 1
+                },
+                {
+                  "name": "Tuğla",
+                  "pattern": "ANSI31",
+                  "walls": 1
+                },
+                {
+                  "name": "Betonarme",
+                  "pattern": "KAYIP",
+                  "walls": 1
+                }
+              ],
+              "block": {
+                "name": "Malzeme lejandı",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "text": "Malzeme lejandı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "topLeft",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.4375
+                    },
+                    "text": "Kireç sıva",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 4,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -0.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -0.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 45.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 5,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -0.9375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 6,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 7,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI37",
+                      "scale": 0.025,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        },
+                        {
+                          "angle": 135.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "color": "#7A7A7A",
+                    "id": 8,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.4375
+                    },
+                    "text": "Gazbeton",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 9,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 10,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -1.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -1.75
+                      }
+                    ],
+                    "pattern": {
+                      "type": "solid",
+                      "angle": 0.0,
+                      "spacing": 1.0
+                    },
+                    "color": "#E5E5E5",
+                    "id": 11,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -1.9375
+                    },
+                    "text": "Isı yalıtımı",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 12,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "closed": true,
+                    "id": 13,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "hatch",
+                    "ring": [
+                      {
+                        "x": 0,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.625
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.25
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.25
+                      }
+                    ],
+                    "pattern": {
+                      "type": "pattern",
+                      "angle": 0.0,
+                      "spacing": 1.0,
+                      "name": "ANSI31",
+                      "scale": 0.05,
+                      "lines": [
+                        {
+                          "angle": 45.0,
+                          "origin": [
+                            0.0,
+                            0.0
+                          ],
+                          "offset": [
+                            0.0,
+                            3.175
+                          ]
+                        }
+                      ]
+                    },
+                    "id": 14,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.4375
+                    },
+                    "text": "Tuğla",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 15,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "polyline",
+                    "pts": [
+                      {
+                        "x": 0,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -3.125
+                      },
+                      {
+                        "x": 0.75,
+                        "y": -2.75
+                      },
+                      {
+                        "x": 0,
+                        "y": -2.75
+                      }
+                    ],
+                    "closed": true,
+                    "id": 16,
+                    "layerId": "",
+                    "attrs": {}
+                  },
+                  {
+                    "kind": "text",
+                    "p": {
+                      "x": 0.875,
+                      "y": -2.9375
+                    },
+                    "text": "Betonarme",
+                    "height": 0.125,
+                    "rotation": 0.0,
+                    "align": "middleLeft",
+                    "id": 17,
+                    "layerId": "",
+                    "attrs": {}
+                  }
+                ],
+                "description": "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721).",
+                "id": "00000000-0000-0000-0000-000000000000"
+              },
+              "insert": {
+                "kind": "insert",
+                "id": 0,
+                "layerId": "lejant",
+                "attrs": {},
+                "block": "00000000-0000-0000-0000-000000000000",
+                "p": {
+                  "x": 12,
+                  "y": 10
+                },
+                "scale": 1,
+                "rotation": 0
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bileşenli duvar yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_materials",
+              "message": "Çizimde bileşenli duvar yok: lejanda yazılacak malzeme yok. Duvarlara bileşenli bir duvar stili verin."
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bileşensiz duvarlar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "lejant",
+            "name": "Lejant",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 5,
+                "y": 0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0,
+                "y": 2
+              },
+              {
+                "x": 5,
+                "y": 2
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yer yok, lejant da yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "lejant"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_legend",
+              "message": "Çizimde malzeme lejandı yok: yeniden yapılacak bir şey yok. Lejandın yerini (at) verin.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeri sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "nonFinite": {
+            "at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Lejandın yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklik sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant",
+            "height": 2.5
+          },
+          "nonFinite": {
+            "height": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Lejandın yazı yüksekliği sonlu bir sayı değil (NaN ya da sonsuz). Yüksekliği kâğıt milimetresi olarak sonlu bir sayıyla verin.",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklik sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant",
+            "height": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_height",
+              "message": "Lejandın yazı yüksekliği sıfırdan büyük, en çok 50 mm olmalı; 0 verildi.",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklik 50 mm'den büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant",
+            "height": 60
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_height",
+              "message": "Lejandın yazı yüksekliği sıfırdan büyük, en çok 50 mm olmalı; 60 verildi.",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 12,
+              "y": 10
+            },
+            "layerId": "lejant"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "lejant",
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

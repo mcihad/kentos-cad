@@ -6,12 +6,14 @@
 //!   at its centre; the tool stays for the next.
 //! - **Eksen çizgisi** (CENTERLINE): a click on one straight edge, then on another, puts the axis between them.
 //! - **Kot**: a click on a point (snapped to a vertex, it follows it and its elevation), then where the value goes;
-//!   a point with no elevation asks for one first.
+//!   a point with no elevation takes Etkin kat's (bound to the level, following it, docs/adr/0721 §2), else asks for
+//!   one first. Kat (K) binds it to a level chosen, or to none (the point's or a typed elevation); Fark (F) is its
+//!   offset from the level (a wet room's −0.02).
 //!
 //! Enter, a quick right click or Esc ends; Esc first drops a half-made mark.
 
 use kentos_commands::{
-    DimensionMeasure, DimensionsCreate, EdgeNear, Entity, MeasuredPoint, NewLook,
+    DimensionLevel, DimensionMeasure, DimensionsCreate, EdgeNear, Entity, MeasuredPoint, NewLook,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::layout_dimension;
@@ -41,6 +43,14 @@ enum Kind {
     CenterMark,
     CenterLine,
     Elevation,
+}
+
+/// Kot's level (docs/adr/0721 §2): Etkin kat's for a point with no elevation, a level chosen, or none.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum LevelChoice {
+    Active,
+    Level(String),
+    Off,
 }
 
 /// A curve a centre mark goes on: a circle, an arc, a path with an arc segment.
@@ -75,6 +85,16 @@ pub struct DimensionMarks {
     z: Option<f64>,
     /// Kot is waiting for an elevation to be typed.
     asking_z: bool,
+    /// Kot's level (Kat) and its offset from it (Fark).
+    level: LevelChoice,
+    offset: Option<f64>,
+    /// Kot's point has an elevation of its own (a vertex's).
+    point_has_z: bool,
+    /// Fark (F) typed next.
+    asking_offset: bool,
+    /// The project's levels (id, name) and Etkin kat, as last seen.
+    levels: Vec<(String, String)>,
+    active: Option<String>,
     hover: Option<Vec2>,
     /// What the command would write at the cursor: its lines and its value.
     shown: Option<(Vec<[Vec2; 2]>, Option<String>)>,
@@ -90,10 +110,56 @@ impl DimensionMarks {
             point: None,
             z: None,
             asking_z: false,
+            level: LevelChoice::Active,
+            offset: None,
+            point_has_z: false,
+            asking_offset: false,
+            levels: Vec::new(),
+            active: None,
             hover: None,
             shown: None,
             tracking: None,
             format: Format::default(),
+        }
+    }
+
+    /// Sees the project's levels and Etkin kat; nothing is allocated while they stay as they were (a pointer move's).
+    fn see_levels(&mut self, cx: &Context<'_>) {
+        let levels = cx.doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+        let same = levels.len() == self.levels.len()
+            && levels.iter().zip(&self.levels).all(|(l, (id, name))| l.id == *id && l.name == *name);
+        if !same {
+            self.levels = levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect();
+        }
+        if self.active.as_deref() != cx.level {
+            self.active = cx.level.map(str::to_owned);
+        }
+        // A level chosen that the project lost: Etkin kat again.
+        if let LevelChoice::Level(id) = &self.level
+            && !self.levels.iter().any(|(l, _)| l == id)
+        {
+            self.level = LevelChoice::Active;
+        }
+    }
+
+    /// The level Kot's point is bound to: a level chosen; Etkin kat's while the point has no elevation of its own.
+    fn bound(&self) -> Option<DimensionLevel> {
+        let id = match &self.level {
+            LevelChoice::Off => return None,
+            LevelChoice::Level(id) => id.clone(),
+            LevelChoice::Active if self.point_has_z => return None,
+            LevelChoice::Active => self.active.clone()?,
+        };
+        Some(DimensionLevel { id, offset: self.offset })
+    }
+
+    /// Kot's measure at its point: the level's, else the typed or the point's own elevation.
+    fn elevation_measure(&self, a: MeasuredPoint) -> DimensionMeasure {
+        let level = self.bound();
+        DimensionMeasure::Elevation {
+            a,
+            z: if level.is_some() { None } else { self.z },
+            level,
         }
     }
 
@@ -157,10 +223,7 @@ impl DimensionMarks {
                 first: self.first.clone()?,
                 second: near(edge::pick(p, cx, straight)?),
             },
-            Kind::Elevation => DimensionMeasure::Elevation {
-                a: self.point.clone()?,
-                z: self.z,
-            },
+            Kind::Elevation => self.elevation_measure(self.point.clone()?),
         };
         Some(Self::input(measure, at, cx))
     }
@@ -207,16 +270,19 @@ impl DimensionMarks {
             DimensionMeasure::Elevation {
                 a: point.clone(),
                 z: None,
+                level: None,
             },
             p,
             cx,
         );
         self.point = Some(point);
         self.z = None;
-        // A point with no elevation of its own asks for one.
+        self.point_has_z = true;
+        // A point with no elevation of its own takes its level's (docs/adr/0721 §2), else asks for one.
         if let Err(e) = measured_in(cx.doc, &probe) {
             if e.code == codes::MISSING_ELEVATION {
-                self.asking_z = true;
+                self.point_has_z = false;
+                self.asking_z = self.bound().is_none();
             } else {
                 cx.say(Level::Warn, e.message);
                 self.point = None;
@@ -229,7 +295,35 @@ impl DimensionMarks {
         self.point = None;
         self.z = None;
         self.asking_z = false;
+        self.point_has_z = false;
         self.shown = None;
+    }
+
+    /// Kat's choices: Etkin kat (named), each level, Yok.
+    fn level_choices(&self) -> Vec<crate::tool::OptionChoice> {
+        let choice = |typed: String, label: String, checked: bool| crate::tool::OptionChoice {
+            label,
+            typed,
+            icon: None,
+            preview: None,
+            checked,
+            command: None,
+        };
+        let active = self
+            .active
+            .as_ref()
+            .and_then(|id| self.levels.iter().find(|(l, _)| l == id))
+            .map_or_else(|| "Etkin kat".to_owned(), |(_, name)| format!("Etkin kat ({name})"));
+        std::iter::once(choice("etkin".into(), active, self.level == LevelChoice::Active))
+            .chain(self.levels.iter().map(|(id, name)| {
+                choice(format!("id:{id}"), name.clone(), self.level == LevelChoice::Level(id.clone()))
+            }))
+            .chain(std::iter::once(choice(
+                "yok".into(),
+                "Yok (noktanın kotu)".into(),
+                self.level == LevelChoice::Off,
+            )))
+            .collect()
     }
 }
 
@@ -251,11 +345,26 @@ impl Tool for DimensionMarks {
             Kind::CenterMark => "daireye, yaya ya da yay parçasına tıklayın",
             Kind::CenterLine if self.first.is_none() => "birinci düz kenara tıklayın",
             Kind::CenterLine => "ikinci düz kenara tıklayın",
+            Kind::Elevation if self.asking_offset => "kata göre farkı yazın (−0.02 gibi; 0 kaldırır)",
             Kind::Elevation if self.point.is_none() => "kotu yazılacak noktayı belirtin",
             Kind::Elevation if self.asking_z => "noktanın kotunu yazın",
             Kind::Elevation => "değerin yerini belirtin",
         };
-        Prompt::new(self.name(), step)
+        let prompt = Prompt::new(self.name(), step);
+        // Kat and Fark while the project has levels (docs/adr/0721 §2).
+        if self.kind == Kind::Elevation && !self.levels.is_empty() && !self.asking_offset {
+            prompt.option("Kat", "K").option("Fark", "F")
+        } else {
+            prompt
+        }
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
+        if self.kind == Kind::Elevation && key == "K" { self.level_choices() } else { Vec::new() }
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        key == "K" && self.configure("K", typed, cx)
     }
 
     fn point_count(&self) -> usize {
@@ -272,7 +381,74 @@ impl Tool for DimensionMarks {
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.format = cx.format();
+        self.see_levels(cx);
         Flow::Stay
+    }
+
+    /// Etkin kat changed (docs/adr/0720 §4): a Kot following it reads the new level at once.
+    fn level_changed(&mut self, cx: &mut Context<'_>) {
+        self.see_levels(cx);
+        if self.kind == Kind::Elevation && self.point.is_some() && !self.point_has_z {
+            self.asking_z = self.bound().is_none() && self.z.is_none();
+        }
+        if let (Some(at), Some(point)) = (self.hover, self.point.clone()) {
+            let input = Self::input(self.elevation_measure(point), at, cx);
+            self.shown = Self::preview_of(&input, cx);
+        }
+    }
+
+    /// Kot's Kat and Fark (docs/adr/0721 §2) while the project has levels.
+    fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        if self.kind != Kind::Elevation || self.levels.is_empty() {
+            return Vec::new();
+        }
+        vec![
+            crate::tool_settings::Setting::choice("K", "Kat", self.level_choices()),
+            crate::tool_settings::Setting::text(
+                "F",
+                "Fark",
+                self.offset.map_or_else(|| "0".to_owned(), |o| f.length(o)),
+            ),
+        ]
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if self.kind != Kind::Elevation {
+            return false;
+        }
+        match key {
+            "K" => {
+                self.level = match js_trim(value) {
+                    "etkin" | "" => LevelChoice::Active,
+                    "yok" => LevelChoice::Off,
+                    v => match v.strip_prefix("id:").or(Some(v)) {
+                        Some(id) if self.levels.iter().any(|(l, _)| l == id) => LevelChoice::Level(id.to_owned()),
+                        _ => {
+                            cx.say(Level::Warn, "Projede böyle bir kat yok.");
+                            return false;
+                        }
+                    },
+                };
+            }
+            "F" => {
+                let text = js_trim(value);
+                if text.is_empty() || text == "0" {
+                    self.offset = None;
+                } else {
+                    let Some(o) = cx.typed_length(text).filter(|o| o.is_finite() && o.abs() <= kentos_commands::MAX_LEVEL_OFFSET) else {
+                        cx.say(Level::Warn, "Farkı metre olarak bir sayıyla yazın (−0.02 gibi).");
+                        return false;
+                    };
+                    self.offset = (o != 0.0).then_some(o);
+                }
+            }
+            _ => return false,
+        }
+        // The point waiting: a level now bound needs no typed elevation.
+        if self.point.is_some() && !self.point_has_z {
+            self.asking_z = self.bound().is_none() && self.z.is_none();
+        }
+        true
     }
 
     /// Edges are picked: no snaps then; Kot's point and place snap.
@@ -300,13 +476,11 @@ impl Tool for DimensionMarks {
             return true;
         }
         let input = Self::input(
-            DimensionMeasure::Elevation {
-                a: self
-                    .point
+            self.elevation_measure(
+                self.point
                     .clone()
                     .unwrap_or(MeasuredPoint::At { at: wire(p) }),
-                z: self.z,
-            },
+            ),
             p,
             cx,
         );
@@ -318,6 +492,7 @@ impl Tool for DimensionMarks {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.format = cx.format();
+        self.see_levels(cx);
         match self.kind {
             Kind::CenterMark | Kind::CenterLine => {
                 let filter = if self.kind == Kind::CenterMark {
@@ -397,8 +572,17 @@ impl Tool for DimensionMarks {
         }
     }
 
-    /// Kot's elevation when asked for; else a typed point.
+    /// Kot's elevation when asked for; Fark's value after F; else a typed point.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if self.asking_offset {
+            self.asking_offset = false;
+            self.configure("F", text, cx);
+            return true;
+        }
+        if self.kind == Kind::Elevation && !self.levels.is_empty() && js_trim(text).eq_ignore_ascii_case("f") {
+            self.asking_offset = true;
+            return true;
+        }
         if self.asking_z {
             let Some(z) = cx.typed_length(js_trim(text)) else {
                 cx.say(Level::Warn, "Kotu bir sayıyla yazın.");

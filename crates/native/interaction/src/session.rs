@@ -244,6 +244,10 @@ pub const TOOLS: &[&str] = &[
     crate::dimension_marks::CENTER_MARK_ID,
     crate::dimension_marks::CENTER_LINE_ID,
     crate::dimension_marks::ELEVATION_ID,
+    // docs/adr/0721: Kuzey oku, Revizyon işaretle and Malzeme lejandı.
+    crate::symbols::NORTH_ID,
+    crate::revcloud::MARK_ID,
+    crate::symbols::LEGEND_ID,
     crate::annotative::PLACE_ID,
     // docs/adr/0147 §7: Hızlı ölçü.
     quick_dimension::ID,
@@ -655,6 +659,9 @@ impl Session {
             crate::dimension_marks::ELEVATION_ID => {
                 Box::new(crate::dimension_marks::DimensionMarks::elevation())
             }
+            crate::symbols::NORTH_ID => Box::new(crate::symbols::NorthArrow::new()),
+            crate::revcloud::MARK_ID => Box::new(crate::revcloud::RevCloud::mark()),
+            crate::symbols::LEGEND_ID => Box::new(crate::symbols::MaterialLegend::new()),
             crate::annotative::PLACE_ID => Box::new(crate::annotative::AnnotativePlace::new()),
             quick_dimension::ID => Box::new(crate::quick_dimension::QuickDimension::tool()),
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),

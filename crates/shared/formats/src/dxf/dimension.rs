@@ -357,6 +357,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         zb: k.zb.filter(|_| slope),
         refs: None,
         look: Default::default(),
+        level: None,
     };
     let def = definition(&d, &layout(&d)?);
     let same = |p: Vec2, q: Vec2| p.x == q.x && p.y == q.y;
@@ -411,6 +412,7 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
             zb: None,
             refs: None,
             look: Default::default(),
+            level: None,
         }
     };
     let dist = |p: Vec2, q: Vec2| hypot(p.x - q.x, p.y - q.y);

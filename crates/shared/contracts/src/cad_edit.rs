@@ -520,6 +520,10 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
+        /// A Kot's level (docs/adr/0721 §2); absent: an elevation mark updated keeps its own, a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        level: Option<Box<crate::DimensionLevel>>,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {

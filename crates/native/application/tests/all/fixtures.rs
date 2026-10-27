@@ -84,7 +84,7 @@ use kentos_native_application::{
     labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign, legends, north, revisions,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
     sheets_create, sheets_edit, sheets_fit, sheets_levels, snap_find, spaces_create, spaces_edit,
@@ -1386,6 +1386,44 @@ impl Input for kentos_commands::LevelsAssign {
     }
 }
 
+/// `at.x`, `north.angle`, `size` (docs/adr/0721 §3).
+impl Input for kentos_commands::NorthCreate {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (path, &mut self.north) {
+            ("at.x", _) => Some(&mut self.at.x),
+            ("at.y", _) => Some(&mut self.at.y),
+            ("north.angle", kentos_commands::NorthDirection::Angle { angle }) => Some(angle),
+            ("size", _) => self.size.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+/// `at.x`, `size`, `arc`, the frame's points (docs/adr/0721 §4).
+impl Input for kentos_commands::RevisionsMark {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => self.at.as_mut().map(|p| &mut p.x),
+            "at.y" => self.at.as_mut().map(|p| &mut p.y),
+            "size" => self.size.as_mut(),
+            "arc" => Some(&mut self.arc),
+            _ => None,
+        }
+    }
+}
+
+/// `at.x`, `height` (docs/adr/0721 §5).
+impl Input for kentos_commands::LegendsMaterials {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => self.at.as_mut().map(|p| &mut p.x),
+            "at.y" => self.at.as_mut().map(|p| &mut p.y),
+            "height" => self.height.as_mut(),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::SheetsLevels {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2443,6 +2481,15 @@ impl Input for DimensionsCreate {
             (DimensionMeasure::Slope { za, .. }, "za") => za.as_mut(),
             (DimensionMeasure::Slope { zb, .. }, "zb") => zb.as_mut(),
             (DimensionMeasure::Elevation { z, .. }, "z") => z.as_mut(),
+            (
+                DimensionMeasure::Elevation {
+                    level: Some(level), ..
+                },
+                "level",
+            ) => match rest {
+                "offset" => level.offset.as_mut(),
+                _ => None,
+            },
             (DimensionMeasure::Elevation { a, .. }, "a") => {
                 xy(point(a)?, rest.strip_prefix("at.")?)
             }
@@ -2570,6 +2617,7 @@ impl Input for kentos_commands::DimensionsEdit {
             ) => Some(s),
             (E::MoveText { along, .. }, "edit.along") => Some(along),
             (E::MoveText { across, .. }, "edit.across") => Some(across),
+            (E::Level { level: Some(l), .. }, "edit.level.offset") => l.offset.as_mut(),
             _ => None,
         }
     }
@@ -4003,6 +4051,9 @@ fn run_op(
         kentos_commands::CAD_CASEWORK_RUN => {
             run!(casework_run, kentos_commands::CaseworkRun)
         }
+        kentos_commands::CAD_NORTH_CREATE => run!(north, kentos_commands::NorthCreate),
+        kentos_commands::CAD_REVISIONS_MARK => run!(revisions, kentos_commands::RevisionsMark),
+        kentos_commands::CAD_LEGENDS_MATERIALS => run!(legends, kentos_commands::LegendsMaterials),
         kentos_commands::CAD_LEVELS_ASSIGN => {
             run!(levels_assign, kentos_commands::LevelsAssign)
         }

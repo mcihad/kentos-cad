@@ -1027,13 +1027,25 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ## 8. P2 — belgeleme, denetim ve çıktı
 
-### ARCH-DOC-01 — Mimari semboller ve notlar [ ]
+### ARCH-DOC-01 — Mimari semboller ve notlar [x]
 
-- Kot/seviye, kesit/görünüş/detay işareti, kuzey, revizyon ve malzeme lejandı;
-  mevcut viewmark/etiket ilişkisi ve yazı stilleri kullanılır.
-- Plan işareti kesit geometrisi üretildiği anlamına gelmez. Başvuru paftası
-  silinirse bozuk referans bildirilir.
-- Kabul: çoklu pafta, yeniden numaralama, kopyalanmış işaret, fontlar ve PDF.
+- [x] Görünüm işaretinin pafta numarası [ADR0721](../docs/adr/0721-architectural-symbols.md) §1:
+  kesit/görünüş/detay işaretinin balonu hedef paftanın çizim numarasını (yoksa adını) okur;
+  yeniden numaralama ve kopya izler, pafta silinince `targetGone` ve Denetim. Plan işareti kesit
+  geometrisi üretmez.
+- [x] Kata bağlı kot (§2): `level {id, offset?}`, KCAD 121; kat yükselince izler, kullanılan kat
+  silinmez; Kot aracında Kat ve Fark, Öznitelikler'de Kot/Kat/Fark.
+- [x] Kuzey oku (§3): `cad.north.create`, kitaplığın bloğu aynı adımda; plan, coğrafi (meridyen
+  yakınsaması; yerelde `no_true_north`) ya da açı; kâğıtta 15 mm.
+- [x] Revizyon (§4): `cad.revisions.mark` bulut + üçgen (numara, tarih, açıklama); Revizyon işaretle
+  aracı; Revizyon listesi sütunlu blok çizelgesi (`columns`, KCAD 122), belge her adımda yazar.
+- [x] Malzeme lejandı (§5): `cad.legends.materials`, duvar bileşenlerinin taraması ve adı, yerinde
+  yenilenir.
+- [x] İnceleme hatası (§6): stil verilen duvarın yüzüne bağlı iç ölçü zinciri artık kopmuyor (yüzler
+  ilk ve son çizgi).
+- [x] Kabul: iki pafta, A-101 → A-201 yeniden numaralama, kopyalanmış işaret, PDF'te sözcükler ve
+  gömülü yazı tipleri (`pdftotext`, `pdffonts`), silinen pafta; Python/MCP; gerçek GUI
+  (`arac-isaret-*`). Pafta başına revizyon çizelgesi ve proje revizyon tablosu açık.
 
 ### ARCH-DOC-02 — Çizelge ve metraj iş akışı [~]
 
@@ -1222,3 +1234,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-SPACE-02 düzeltme / ADR0344 eki | Daire yürüyüşü (kabuk, bölmeler, açıklıklar, toplu mahal, Hepsini etiketle, ölçüler, iç zincir, Metraj, Denetim) gerçek GUI'de: etiketli mahal kendi yazısını da çiziyordu (alan iki kez) → etiket onun yazısı; şablonun boş satırları atılır; numarasız açıklığın boş etiketi `tag_empty` ile ve önizlemede söylenir. 164+29 durum yenilendi, çekirdek/araç testleri, resimler. Kalan bulgular: araçlar kat atamıyor (Denetim her duvarı işaretliyor), açıklıklar numarasız başlıyor. | [x] Üç kusur kapandı |
 | 2026-10-27 | ARCH-EDIT-01 / ADR0712 | Kolonun geçici ölçüsü: dört yanda paralel en yakın duvar yüzüne/kolon yanına net mesafe, sayıya bas-yaz-Enter kolonu kaydırır, mahal izler, akslara bağlı kolon nedenini hemen söyler; `cad.arch.edit` distance, `cad.columns.distances`. 22+23 durum, 3+4+2 test, Python/MCP, gerçek GUI resimleri; geçici ölçülerde maskeli sayı ve en yakın sayıya tıklama. | [~] Kolon dilimi; aksa mesafe, duvar boyu, kilitli referans açık |
 | 2026-10-27 | ARCH-DIM-01 / ADR0711 | İç ölçü zinciri: kesen çizgi, duvar yüzleri/bütün katmanlar, kolon kenar/merkez, toplam, kat; `cross` kuralı (KCAD 118) ile duvar kayınca değer, uzayınca çizgi yerinde; duvar yüzü ve kolonda `along`/`center` yerleri. 44 durum, Python/MCP, 5+4 test, gerçek GUI resimleri. | [x] Kesen çizgi alt maddesi; kalıcı üyelik açık |
+| 2026-10-28 | ARCH-DOC-01 / ADR0721 | Mimari işaretler: görünüm işareti paftanın çizim numarasını okur (A-101 → A-201, kopya, silinen pafta `targetGone`); kata bağlı kot (KCAD 121); kuzey oku (plan/coğrafi/açı); revizyon bulutu + üçgen ve Tarih/Açıklama sütunlu Revizyon listesi (KCAD 122); malzeme lejandı. İncelemede bulunan hata: stil verilen duvarın iç ölçü zinciri kopuyordu, düzeltildi. 27+35+20 yeni komut durumu, 6 tablo + 3 iç zincir durumu; PDF `pdftotext`/`pdffonts`; Python/MCP; masaüstü 1354, Python 374; gerçek GUI `arac-isaret-*`. | [x] Madde tamam; pafta başına revizyon çizelgesi açık |

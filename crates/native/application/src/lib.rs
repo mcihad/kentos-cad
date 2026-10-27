@@ -283,7 +283,11 @@ pub mod spaces_number;
 pub mod arch_elements;
 pub mod arch_edit;
 pub mod casework_run;
+pub mod legends;
 pub mod levels_assign;
+mod library_symbols;
+pub mod north;
+pub mod revisions;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
 pub mod schedules;
@@ -840,6 +844,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LEVELS_ASSIGN,
         kentos_commands::CAD_LEVELS_ASSIGN_VERSION,
+    ),
+    // Kuzey oku, Revizyon işaretle and Malzeme lejandı ([`north`], [`revisions`], [`legends`], docs/adr/0721).
+    (
+        kentos_commands::CAD_NORTH_CREATE,
+        kentos_commands::CAD_NORTH_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_REVISIONS_MARK,
+        kentos_commands::CAD_REVISIONS_MARK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_LEGENDS_MATERIALS,
+        kentos_commands::CAD_LEGENDS_MATERIALS_VERSION,
     ),
     // Duvar, Çizgiden duvar, Duvarı düzenle and Duvar birleşimleri ([`walls_create`], [`walls_from_lines`], [`walls_edit`],
     // [`walls_joins`], docs/adr/0339, 0340).

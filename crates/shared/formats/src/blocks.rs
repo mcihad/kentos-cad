@@ -1036,6 +1036,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             zb: *zb,
             refs: None,
             look: contract_look(look),
+            level: None,
         }),
         Shape::Hatch {
             ring,

@@ -8,6 +8,7 @@ import type { CellRange } from "./CellRange";
 import type { CellStyle } from "./CellStyle";
 import type { DimensionArrow } from "./DimensionArrow";
 import type { DimensionBreak } from "./DimensionBreak";
+import type { DimensionLevel } from "./DimensionLevel";
 import type { DimensionOptions } from "./DimensionOptions";
 import type { DimensionRefs } from "./DimensionRefs";
 import type { DimensionStyle } from "./DimensionStyle";
@@ -185,6 +186,10 @@ breaks?: Array<DimensionBreak>,
  * `cad.annotations.scales` takes them away), a new one has none.
  */
 annotative?: Annotative, 
+/**
+ * A Kot's level (docs/adr/0721 §2); absent: an elevation mark updated keeps its own, a new one has none.
+ */
+level?: DimensionLevel, 
 /**
  * The project's dimension style it follows, by its id; absent: Standart.
  */

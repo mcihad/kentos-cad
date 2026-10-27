@@ -73,6 +73,7 @@ mod snap_reference;
 mod sources;
 mod splitting;
 mod survey_points;
+mod symbols;
 mod templates;
 mod text;
 mod text_file;

@@ -122,6 +122,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   sekme kendi katı); Proje ayarları kullanılan katı silmeden önce sayıları ve Nesneleri seç'i
   göstermeli; Üst kat/Alt kat (Ctrl+↑/↓) ve araçların kat değişimini hemen izlemesi
   (`cad.settings.set.json` ile sınanmalı).
+- ARCH-DOC-01 / ADR0721: Mimari işaretler. Web'in görünüm işareti paftanın çizim numarasını okumalı;
+  kot `level` (KCAD 121) ile kata bağlanıp izlemeli (Kot aracında Kat/Fark, Öznitelikler'de Kat);
+  `cad.north.create`, `cad.revisions.mark`, `cad.legends.materials` işleyicileri ve araçları (Kuzey oku,
+  Revizyon işaretle: R/T/A, Malzeme lejandı), Revizyon listesi sütunlu blok çizelgesi (`columns`, KCAD 122)
+  ve duvar stili değişince yüze bağlı ölçülerin izlemesi; ortak durumlar `cad.north.create.json`,
+  `cad.revisions.mark.json`, `cad.legends.materials.json`, `cad.tables.edit.json`,
+  `cad.dimensions.interior.json` ile sınanmalı.
 - ARCH-ELEM-02 / ADR0719: Niş, baca ve tesisat boşluğu. Web'in açıklık modeli `niche`/`flue`
   biçimlerini, `depth`/`inset`'i ve `tooDeep`'i (KCAD 119), duvar çiziminin kısmi derinlik
   kesimini ve kesme yüksekliğine göre kesikli çizimi (`fixtures/walls/v1/openings.json`),

@@ -3857,6 +3857,62 @@
      }
     ]
    }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000026",
+   "name": "Revizyon",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.3,
+       "y": -0.173
+      },
+      {
+       "x": 0.3,
+       "y": -0.173
+      },
+      {
+       "x": 0.0,
+       "y": 0.346
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Revizyon üçgeni; taban noktası üçgenin merkezi, revizyon numarası REV özniteliğinde.",
+   "units": "m",
+   "card": {
+    "category": "İşaretler/Revizyon",
+    "tags": [
+     "revizyon",
+     "delta",
+     "değişiklik"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "REV",
+     "prompt": "Revizyon",
+     "value": "1",
+     "p": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "height": 0.18,
+     "rotation": 0.0,
+     "align": "middleCenter"
+    }
+   ]
   }
  ]
 }

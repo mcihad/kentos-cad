@@ -4,7 +4,7 @@
   "command": "cad.dimensions.create",
   "commandVersion": 1,
   "title": "Ölçü ekle",
-  "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322); do not edit by hand.",
+  "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322, 0721); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -4279,6 +4279,2123 @@
       ]
     },
     {
+      "name": "Kot kata bağlı: değeri katın kotu; adım “Ekle”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1"
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "k1"
+                },
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.25
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kot kata bağlı, farkıyla: ıslak hacim 2 cm aşağıda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1",
+                "offset": -0.02
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                },
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kot zemin kata bağlı: fark yok, değeri sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "zemin"
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "zemin"
+                },
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kot kata bağlı, noktaya da: noktanın kotu okunmaz, değeri katın",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:10",
+                "place": {
+                  "kind": "node",
+                  "part": 0
+                }
+              },
+              "level": {
+                "id": "k1"
+              }
+            },
+            "at": {
+              "x": 487004,
+              "y": 4420022
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "k1"
+                },
+                "a": {
+                  "x": 487002,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420022
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:10",
+                    "place": {
+                      "kind": "node",
+                      "part": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kot kata bağlı: plan; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1",
+                "offset": -0.02
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "level": {
+                    "id": "k1",
+                    "offset": -0.02
+                  },
+                  "a": {
+                    "x": 487040,
+                    "y": 4420060
+                  },
+                  "b": {
+                    "x": 487043,
+                    "y": 4420062
+                  },
+                  "offset": 0,
+                  "height": 1.25,
+                  "style": "elevation",
+                  "za": 3.23
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kot katı izler: kat yükselince değeri de, geri alma adımı olmadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1",
+                "offset": -0.02
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3.25
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 6.5,
+                  "height": 3.25
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                },
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.48
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3.25
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 6.5,
+                    "height": 3.25
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                },
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.48
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
       "name": "Yeri sonlu değil",
       "steps": [
         {
@@ -6680,6 +8797,1882 @@
           }
         }
       ]
+    },
+    {
+      "name": "Kot hem kotunu hem katını almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1"
+              },
+              "z": 3
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot ya kotunu (z) ya katını (level) alır, ikisini birden değil: birini kaldırın.",
+              "path": "measure.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kotun katı projede yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k9"
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “k9” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "measure.level.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Katsız projede kata bağlı kot",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1"
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “k1” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "measure.level.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katının kimliği boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": ""
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.",
+              "path": "measure.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kotun katının kimliği kenarı boşluklu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": " k1"
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.",
+              "path": "measure.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kotun kata göre farkı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1",
+                "offset": 0
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "measure.level.offset": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kotun kata göre farkı sonlu bir sayı değil (NaN ya da sonsuz). Farkı metre olarak sonlu bir sayıyla verin.",
+              "path": "measure.level.offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kotun kata göre farkı 1000 m'den çok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "level": {
+                "id": "k1",
+                "offset": -1000.5
+              }
+            },
+            "at": {
+              "x": 487041,
+              "y": 4420061
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı.",
+              "path": "measure.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü komutu, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+              "name": "Mimari",
+              "height": 3.5
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487002,
+              "y": 4420020
+            },
+            "z": 50
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420000
+            },
+            "za": 100,
+            "zb": 103
+          },
+          {
+            "kind": "polygon",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487020,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420000
+              },
+              {
+                "x": 487028,
+                "y": 4420006
+              },
+              {
+                "x": 487020,
+                "y": 4420006
+              }
+            ]
+          },
+          {
+            "kind": "arc",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487030,
+              "y": 4420030
+            },
+            "r": 5,
+            "a0": 0,
+            "a1": 1.5707963267948966
+          },
+          {
+            "kind": "circle",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "c": {
+              "x": 487050,
+              "y": 4420030
+            },
+            "r": 5
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420040
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4420036
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420048
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420050
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
     }
   ]
 }

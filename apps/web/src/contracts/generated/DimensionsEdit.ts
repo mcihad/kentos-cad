@@ -3,15 +3,16 @@ import type { DimensionEdit } from "./DimensionEdit";
 
 /**
  * Input of `cad.dimensions.edit` v1 (docs/adr/0321 §4): one edit of dimensions as one undo step named after it
- * (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri). A dimension
- * the edit leaves as it was is not counted; when none changes, nothing is written.
+ * (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri, Kotun katı).
+ * A dimension the edit leaves as it was is not counted; when none changes, nothing is written.
  *
  * Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the base's, then each dimension's, then each
  * object's), `no_entities` (no dimension), `not_finite` (`spacing`, `along`, `across`), `invalid_offset` (a spacing
  * below 0), `empty_text` (a written value of spaces), `invalid_style` (options that break their rules),
- * `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found` (the base, each dimension, each
- * object), `not_a_dimension`, `layer_locked` (a dimension's layer), `not_straight` (Space's and Break's dimensions:
- * aligned or linear), `not_parallel` (Space's dimension not parallel to its base). Break warns `no_crossing` for a
- * dimension no object crosses.
+ * `invalid_dimension` (a level's id or offset that does not hold), `invalid_revision`, `revision_conflict` (status
+ * `conflict`), `entity_not_found` (the base, each dimension, each object), `not_a_dimension`, `layer_locked` (a
+ * dimension's layer), `not_straight` (Space's and Break's dimensions: aligned or linear), `not_parallel` (Space's
+ * dimension not parallel to its base), `invalid_dimension` (Level's dimension no Kot), `level_not_found` (Level's
+ * level not the project's). Break warns `no_crossing` for a dimension no object crosses.
  */
 export type DimensionsEdit = { edit: DimensionEdit, expectedRevision?: string, };

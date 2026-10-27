@@ -589,6 +589,7 @@ fn dimensions_of(
                     zb: None,
                     refs: None,
                     look: look.clone(),
+                    level: None,
                 },
                 None,
             )

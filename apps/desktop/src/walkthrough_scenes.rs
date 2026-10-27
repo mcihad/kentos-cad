@@ -160,7 +160,7 @@ fn dimensions(app: &mut App) {
 }
 
 /// An İç ölçü zinciri across the three rooms at y 7.5.
-fn interior(app: &mut App) {
+pub(crate) fn interior(app: &mut App) {
     dimensions(app);
     run(app, "tool.interiorDimensions");
     click(app, [-1.0, 3.5]);

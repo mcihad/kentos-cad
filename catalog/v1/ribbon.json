@@ -1533,21 +1533,59 @@
           "command": "tool.scheduleSpaces",
           "title": "Çizelge",
           "label": "Mahal çizelgesi"
+         },
+         {
+          "command": "tool.materialLegend",
+          "title": "Çizelge",
+          "label": "Malzeme lejandı"
          }
         ]
        },
        {
-        "command": "tool.viewSection",
-        "size": "small"
+        "key": "archMarks",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.viewSection",
+          "title": "İşaret",
+          "label": "Kesit"
+         },
+         {
+          "command": "tool.viewElevation",
+          "title": "İşaret",
+          "label": "Görünüş"
+         },
+         {
+          "command": "tool.viewDetail",
+          "title": "İşaret",
+          "label": "Detay"
+         },
+         {
+          "command": "tool.northArrow",
+          "title": "İşaret",
+          "label": "Kuzey oku"
+         }
+        ]
        },
        {
-        "command": "tool.viewElevation",
-        "size": "small"
+        "key": "archRevisions",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.revisionMark",
+          "title": "Revizyon",
+          "label": "Revizyon işaretle"
+         },
+         {
+          "command": "arch.revisionList",
+          "title": "Revizyon",
+          "label": "Revizyon listesi"
+         }
+        ]
        }
       ],
       "overflow": [
        "tool.tagAll",
-       "tool.viewDetail",
        "arch.tagsCheck",
        "arch.wallJoinCheck",
        "arch.viewRefs"

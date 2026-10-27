@@ -39,6 +39,10 @@ definitions (docs/adr/0061, 0147 §7, 0183, 0205, 0249), without KentOS code:
   (the second edge turned to run the first's way when their directions are against each other), the same extension,
   each edge bound where it was clicked with the rule `pair`. A level is its point and `at`, its elevation given or its
   place's.
+- A Kot bound to a level (docs/adr/0721 §2): its value the level's elevation plus its offset, the two doubles added;
+  a bound place's vertex is not read for it. `z` and `level` not both; the level one of the project's; its id neither
+  blank nor edged with spaces, its offset finite and at most 1000 m. When the level's elevation changes (a project
+  setting, no undo step) the value follows it.
 - Height: the style's at the project's scale (mm / 1000 × N), Standart's the project's Ölçü height (2.5 mm).
 
 The drawing's coordinates are doubles exactly and the distances whole (3-4-5 triangles), so the arithmetic is
@@ -49,6 +53,7 @@ every libm gives correctly rounded).
 
 `--check` rebuilds the file in memory and compares it with the one on disk.
 """
+import copy
 import json
 import math
 import sys
@@ -777,6 +782,84 @@ def mark_cases():
     return out
 
 
+# ── Kot bound to a level (docs/adr/0721 §2) ─────────────────────────────────────────────────────────────────────────
+
+LEVELS = [{"id": "zemin", "name": "Zemin kat", "elevation": 0, "height": 3.25},
+          {"id": "k1", "name": "1. kat", "elevation": 3.25, "height": 3.25}]
+LEVELLED = copy.deepcopy(SETUP)
+LEVELLED["name"] = "Ölçü komutu, katlı"
+LEVELLED["settings"]["arch"] = {"levels": LEVELS}
+INVALID_LEVEL = "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz."
+FAR_LEVEL = "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı."
+BOTH_LEVEL = "Kot ya kotunu (z) ya katını (level) alır, ikisini birden değil: birini kaldırın."
+
+
+def no_level(level_id):
+    return f"Projede “{level_id}” kimlikli kat yok. Var olan bir katın kimliğini verin."
+
+
+def level_value(level, levels=LEVELS):
+    """The level's elevation plus the offset, added as doubles in that order."""
+    base = next(float(l["elevation"]) for l in levels if l["id"] == level["id"])
+    return base + float(level.get("offset", 0.0))
+
+
+def on_levels(c, setup=LEVELLED):
+    c["setup"] = setup
+    return c
+
+
+def level_cases():
+    out = []
+    lv = lambda a, at, level, **extra: inp({"kind": "elevation", "a": a, "level": level, **extra}, at)  # noqa: E731
+    k1, wet, zemin = {"id": "k1"}, {"id": "k1", "offset": -0.02}, {"id": "zemin"}
+    free, at = (X + 40, Y + 60), (X + 43, Y + 62)
+    out.append(on_levels(case("Kot kata bağlı: değeri katın kotu; adım “Ekle”", lv(at_(*free), at, k1),
+                              lambda i: dimension(i, free, at, 0, kind="elevation", za=level_value(k1), level=k1), undo=True)))
+    out.append(on_levels(case("Kot kata bağlı, farkıyla: ıslak hacim 2 cm aşağıda", lv(at_(*free), at, wet),
+                              lambda i: dimension(i, free, at, 0, kind="elevation", za=level_value(wet), level=wet))))
+    out.append(on_levels(case("Kot zemin kata bağlı: fark yok, değeri sıfır", lv(at_(*free), at, zemin),
+                              lambda i: dimension(i, free, at, 0, kind="elevation", za=level_value(zemin), level=zemin))))
+    # On the point object 10 (its elevation 50): bound to the point for its place, to the level for its value.
+    node = place(10, "node", part=0)
+    out.append(on_levels(case("Kot kata bağlı, noktaya da: noktanın kotu okunmaz, değeri katın",
+                              lv(node, (X + 4, Y + 22), k1),
+                              lambda i: dimension(i, (X + 2, Y + 20), (X + 4, Y + 22), 0, kind="elevation", za=level_value(k1),
+                                                  level=k1, refs={"a": ref_of(node)}))))
+    out.append(on_levels(case("Kot kata bağlı: plan; hiçbir şey yazılmaz", lv(at_(*free), at, wet),
+                              lambda i: dimension(i, free, at, 0, kind="elevation", za=level_value(wet), level=wet), plan=True)))
+    # The level raised (a project setting, no undo step): the Kot follows in place; undone, the Kot goes.
+    raised = [LEVELS[0], {**LEVELS[1], "elevation": 6.5}]
+    made = dimension(NEXT, free, at, 0, kind="elevation", za=level_value(wet, raised), level=wet)
+    out.append(on_levels({"name": "Kot katı izler: kat yükselince değeri de, geri alma adımı olmadan", "steps": [
+        {"op": "execute", "input": lv(at_(*free), at, wet),
+         "result": completed({"created": [UID(NEXT)], "ids": [NEXT], "revision": "$current"})},
+        {"op": "execute", "command": "cad.settings.set", "input": {"arch": {"levels": raised}}, "result": "$any",
+         "expect": {"ids": IDS + [NEXT], "entities": {str(NEXT): made}, "settings": {"arch": {"levels": raised}},
+                    "canUndo": True, "canRedo": False}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": IDS + [NEXT], "entities": {str(NEXT): made}}},
+    ]}))
+    return out
+
+
+def level_refusals():
+    lv = lambda level, **extra: inp({"kind": "elevation", "a": at_(X + 40, Y + 60), "level": level, **extra}, (X + 41, Y + 61))  # noqa: E731
+    return [
+        on_levels(refused("Kot hem kotunu hem katını almaz", lv({"id": "k1"}, z=3), "invalid_dimension", BOTH_LEVEL, "measure.level")),
+        on_levels(refused("Kotun katı projede yok", lv({"id": "k9"}), "level_not_found", no_level("k9"), "measure.level.id")),
+        refused("Katsız projede kata bağlı kot", lv({"id": "k1"}), "level_not_found", no_level("k1"), "measure.level.id"),
+        on_levels(refused("Kotun katının kimliği boş", lv({"id": ""}), "invalid_dimension", INVALID_LEVEL, "measure.level")),
+        on_levels(refused("Kotun katının kimliği kenarı boşluklu", lv({"id": " k1"}), "invalid_dimension", INVALID_LEVEL,
+                          "measure.level")),
+        on_levels(refused("Kotun kata göre farkı sonlu değil", lv({"id": "k1", "offset": 0}), "not_finite",
+                          "Kotun kata göre farkı sonlu bir sayı değil (NaN ya da sonsuz). Farkı metre olarak sonlu bir sayıyla verin.",
+                          "measure.level.offset", non_finite={"measure.level.offset": "Infinity"})),
+        on_levels(refused("Kotun kata göre farkı 1000 m'den çok", lv({"id": "k1", "offset": -1000.5}), "invalid_dimension",
+                          FAR_LEVEL, "measure.level")),
+    ]
+
+
 def mark_refusals():
     mark = lambda of, **extra: inp({"kind": "centerMark", "of": of}, (X, Y), **extra)  # noqa: E731
     line = lambda first, second, **extra: inp({"kind": "centerLine", "first": first, "second": second}, (X, Y), **extra)  # noqa: E731
@@ -803,8 +886,9 @@ def mark_refusals():
 def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.dimensions.create", "commandVersion": 1, "title": "Ölçü ekle",
-        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322); do not edit by hand.",
-        "setup": SETUP, "cases": written_cases() + chain_cases() + mark_cases() + refused_cases() + chain_refusals() + mark_refusals(),
+        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322, 0721); do not edit by hand.",
+        "setup": SETUP, "cases": written_cases() + chain_cases() + mark_cases() + level_cases() + refused_cases() + chain_refusals()
+                 + mark_refusals() + level_refusals(),
     }
 
 

@@ -423,6 +423,7 @@ impl Fields {
                     ext_line_type: self.ext_line_type,
                     text_color: self.text_color,
                 },
+                level: None,
             }),
             "hatch" => Entity::Hatch(HatchEntity {
                 base,

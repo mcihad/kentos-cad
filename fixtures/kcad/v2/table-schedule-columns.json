@@ -1,0 +1,163 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Revizyon listesi",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 500.0,
+  "workspace": "cad"
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "tablo",
+   "name": "Tablolar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "tablo",
+ "entities": [
+  {
+   "kind": "table",
+   "id": 1,
+   "layerId": "tablo",
+   "attrs": {},
+   "p": {
+    "x": 500010.0,
+    "y": 4400070.0
+   },
+   "rotation": 0.0,
+   "height": 1.25,
+   "rows": [
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "columns": [
+    4.0,
+    8.0,
+    18.0,
+    4.0
+   ],
+   "cells": [
+    [
+     "REV",
+     "Tarih",
+     "Açıklama",
+     "Adet"
+    ],
+    [
+     "1",
+     "2026-10-20",
+     "Mutfak duvarı taşındı",
+     "2"
+    ],
+    [
+     "2",
+     "2026-10-27",
+     "Pencere genişledi; Kapı yeri",
+     "1"
+    ],
+    [
+     "Toplam",
+     "",
+     "",
+     "3"
+    ]
+   ],
+   "header": true,
+   "source": {
+    "kind": "blocks",
+    "names": [
+     "Revizyon"
+    ],
+    "by": "REV",
+    "columns": [
+     "Tarih",
+     "Açıklama"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "id": 2,
+   "layerId": "tablo",
+   "attrs": {},
+   "p": {
+    "x": 500010.0,
+    "y": 4400040.0
+   },
+   "rotation": 0.0,
+   "height": 1.25,
+   "rows": [
+    2.5,
+    2.5,
+    2.5
+   ],
+   "columns": [
+    10.0,
+    8.0
+   ],
+   "cells": [
+    [
+     "Blok",
+     "Adet"
+    ],
+    [
+     "Kapı",
+     "3"
+    ],
+    [
+     "Toplam",
+     "3"
+    ]
+   ],
+   "header": true,
+   "source": {
+    "kind": "blocks",
+    "names": [
+     "Kapı"
+    ]
+   }
+  }
+ ],
+ "uids": [
+  "0192f5a1-7220-7000-8000-000000000001",
+  "0192f5a1-7220-7000-8000-000000000002"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

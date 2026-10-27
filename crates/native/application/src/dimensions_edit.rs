@@ -40,6 +40,7 @@ fn label(e: &DimensionEdit) -> &'static str {
         DimensionEdit::MoveText { .. } => "Ölçü yazısını taşı",
         DimensionEdit::Text { .. } => "Ölçü değerini yaz",
         DimensionEdit::Options { .. } => "Ölçü seçenekleri",
+        DimensionEdit::Level { .. } => "Kotun katı",
     }
 }
 
@@ -56,7 +57,8 @@ fn named(e: &DimensionEdit) -> Vec<(&String, String)> {
         | DimensionEdit::Break { uids, .. }
         | DimensionEdit::Unbreak { uids }
         | DimensionEdit::Text { uids, .. }
-        | DimensionEdit::Options { uids, .. } => list(uids),
+        | DimensionEdit::Options { uids, .. }
+        | DimensionEdit::Level { uids, .. } => list(uids),
         DimensionEdit::MoveText { uid, .. } => vec![(uid, "edit.uid".into())],
     }
 }
@@ -162,6 +164,11 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
         } => {
             if let Some(words) = o.problem() {
                 return Err(fail(codes::INVALID_STYLE, words, "edit.options".into()));
+            }
+        }
+        DimensionEdit::Level { level: Some(l), .. } => {
+            if let Some(words) = l.problem() {
+                return Err(fail(codes::INVALID_DIMENSION, words, "edit.level".into()));
             }
         }
         _ => {}
@@ -360,6 +367,39 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
                 if d.look.options != options {
                     let mut next = d.clone();
                     next.look.options = options.clone();
+                    changed.push((*slot, *uid, next));
+                }
+            }
+        }
+        // Kotun katı (docs/adr/0721 §2): bound, the value the level's now; set free, the value kept.
+        DimensionEdit::Level { level, .. } => {
+            for (_, _, path, d) in &list {
+                if d.style != Some(kentos_commands::DimensionStyle::Elevation) {
+                    return Err(fail(
+                        codes::INVALID_DIMENSION,
+                        "Ölçü kot değil: katı yalnız kot ölçüsü anar.".into(),
+                        path.clone(),
+                    ));
+                }
+            }
+            let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+            let value = match level {
+                Some(l) => Some(l.value(levels).ok_or_else(|| {
+                    fail(
+                        codes::LEVEL_NOT_FOUND,
+                        format!("Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.", l.id),
+                        "edit.level.id".into(),
+                    )
+                })?),
+                None => None,
+            };
+            for (slot, uid, _, d) in &list {
+                let mut next = d.clone();
+                next.level = level.clone().map(Box::new);
+                if let Some(z) = value {
+                    next.za = Some(z);
+                }
+                if next != *d {
                     changed.push((*slot, *uid, next));
                 }
             }

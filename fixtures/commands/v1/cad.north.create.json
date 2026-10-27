@@ -1,0 +1,2272 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.north.create",
+  "commandVersion": 1,
+  "title": "Kuzey oku",
+  "note": "Written by scripts/fixtures/north_cases.py from docs/adr/0721 §3 and PROJ's meridian convergence; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kuzey oku",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "isaret",
+        "name": "İşaret",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "isaret",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "isaret",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Plan kuzeyi: kitaplığın oku aynı adımda eklenir, 15 mm; adım “Kuzey oku”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "blocks": [
+              {
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "entities": [
+                  {
+                    "kind": "circle",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "c": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "r": 0.5
+                  },
+                  {
+                    "kind": "polyline",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": 0.0,
+                        "y": 0.6
+                      },
+                      {
+                        "x": -0.15,
+                        "y": -0.3
+                      },
+                      {
+                        "x": 0.0,
+                        "y": -0.15
+                      },
+                      {
+                        "x": 0.15,
+                        "y": -0.3
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "text",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {},
+                    "p": {
+                      "x": -0.08,
+                      "y": 0.7
+                    },
+                    "text": "K",
+                    "height": 0.2,
+                    "rotation": 0.0
+                  }
+                ],
+                "description": "Kuzey oku; taban noktası dairenin merkezi.",
+                "units": "m",
+                "card": {
+                  "category": "İşaretler/Yön",
+                  "tags": [
+                    "kuzey",
+                    "ok",
+                    "yön"
+                  ],
+                  "version": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kâğıtta 20 mm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": 20
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 2,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kâğıtta 7,5 mm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": 7.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 0.75,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planın kuzeyinden 30° saat yönünün tersine",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "angle",
+              "angle": 0.5235987755982988
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0.5235987755982988,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0.5235987755982988
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planın kuzeyinden 90° saat yönünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "angle",
+              "angle": -1.5707963267948966
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": -1.5707963267948966,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": -1.5707963267948966
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coğrafi kuzey, orta meridyenin batısında: doğuya yatar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487020,
+              "y": 4420030
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "true"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": -0.0017001090244766481,
+              "revision": "$current",
+              "added": true,
+              "convergence": -0.0017001090244766481
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                "scale": 1.5,
+                "rotation": -0.0017001090244766481
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coğrafi kuzey, orta meridyenin doğusunda: batıya yatar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 520000,
+              "y": 4420030
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "true"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0.0026195740680812402,
+              "revision": "$current",
+              "added": true,
+              "convergence": 0.0026195740680812402
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 520000,
+                  "y": 4420030
+                },
+                "scale": 1.5,
+                "rotation": 0.0026195740680812402
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coğrafi kuzey ve 25 mm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487020,
+              "y": 4420030
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "true"
+            },
+            "size": 25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": -0.0017001090244766481,
+              "revision": "$current",
+              "added": true,
+              "convergence": -0.0017001090244766481
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                "scale": 2.5,
+                "rotation": -0.0017001090244766481
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renk verilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "color": "#E5484D"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "color": "#E5484D",
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "gizli",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grubun içindeki katmana",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "alt"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "alt",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimin kendi “Kuzey oku” bloğu kitaplığınkinden önce gelir: 2 m enli, eklenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+              "rotation": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 0.75,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "blocks": [
+              {
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "polyline",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": -1,
+                        "y": -1
+                      },
+                      {
+                        "x": 1,
+                        "y": -1
+                      },
+                      {
+                        "x": 1,
+                        "y": 1
+                      },
+                      {
+                        "x": -1,
+                        "y": 1
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "line",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "a": {
+                      "x": 0,
+                      "y": -1
+                    },
+                    "b": {
+                      "x": 0,
+                      "y": 1.5
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "blocks": [
+              {
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "polyline",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": -1,
+                        "y": -1
+                      },
+                      {
+                        "x": 1,
+                        "y": -1
+                      },
+                      {
+                        "x": 1,
+                        "y": 1
+                      },
+                      {
+                        "x": -1,
+                        "y": 1
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "line",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "a": {
+                      "x": 0,
+                      "y": -1
+                    },
+                    "b": {
+                      "x": 0,
+                      "y": 1.5
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kuzey oku, kendi bloğu",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "isaret",
+            "name": "İşaret",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "isaret",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "isaret",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+            "name": "Kuzey oku",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "polyline",
+                "id": 1,
+                "layerId": "",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1,
+                    "y": -1
+                  },
+                  {
+                    "x": 1,
+                    "y": -1
+                  },
+                  {
+                    "x": 1,
+                    "y": 1
+                  },
+                  {
+                    "x": -1,
+                    "y": 1
+                  }
+                ],
+                "closed": true
+              },
+              {
+                "kind": "line",
+                "id": 2,
+                "layerId": "",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": -1
+                },
+                "b": {
+                  "x": 0,
+                  "y": 1.5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Yerel projede plan kuzeyi yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 4,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0,
+              "revision": "$current",
+              "added": true
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "entities": {
+              "4": {
+                "kind": "insert",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kuzey oku, yerel",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "isaret",
+            "name": "İşaret",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "isaret",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "isaret",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "İkinci ok çizimin (ilkin eklediği) bloğunu kullanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487040,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "angle",
+              "angle": 0.7853981633974483
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 5,
+              "block": "0192f5b0-0000-7000-8000-00000000000e",
+              "rotation": 0.7853981633974483,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5
+            ],
+            "blocks": [
+              {
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "entities": [
+                  {
+                    "kind": "circle",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "c": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "r": 0.5
+                  },
+                  {
+                    "kind": "polyline",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": 0.0,
+                        "y": 0.6
+                      },
+                      {
+                        "x": -0.15,
+                        "y": -0.3
+                      },
+                      {
+                        "x": 0.0,
+                        "y": -0.15
+                      },
+                      {
+                        "x": 0.15,
+                        "y": -0.3
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "text",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {},
+                    "p": {
+                      "x": -0.08,
+                      "y": 0.7
+                    },
+                    "text": "K",
+                    "height": 0.2,
+                    "rotation": 0.0
+                  }
+                ],
+                "description": "Kuzey oku; taban noktası dairenin merkezi.",
+                "units": "m",
+                "card": {
+                  "category": "İşaretler/Yön",
+                  "tags": [
+                    "kuzey",
+                    "ok",
+                    "yön"
+                  ],
+                  "version": 1
+                }
+              }
+            ],
+            "entities": {
+              "5": {
+                "kind": "insert",
+                "id": 5,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487040,
+                  "y": 4420010
+                },
+                "scale": 1.5,
+                "rotation": 0.7853981633974483
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kuzey oku",
+          "expect": {
+            "ids": [
+              3,
+              4
+            ],
+            "blocks": [
+              {
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "entities": [
+                  {
+                    "kind": "circle",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "c": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "r": 0.5
+                  },
+                  {
+                    "kind": "polyline",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": 0.0,
+                        "y": 0.6
+                      },
+                      {
+                        "x": -0.15,
+                        "y": -0.3
+                      },
+                      {
+                        "x": 0.0,
+                        "y": -0.15
+                      },
+                      {
+                        "x": 0.15,
+                        "y": -0.3
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "text",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {},
+                    "p": {
+                      "x": -0.08,
+                      "y": 0.7
+                    },
+                    "text": "K",
+                    "height": 0.2,
+                    "rotation": 0.0
+                  }
+                ],
+                "description": "Kuzey oku; taban noktası dairenin merkezi.",
+                "units": "m",
+                "card": {
+                  "category": "İşaretler/Yön",
+                  "tags": [
+                    "kuzey",
+                    "ok",
+                    "yön"
+                  ],
+                  "version": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yerleştirme (yuvası 0), eklenecek blok ve dönüş; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "at": {
+              "x": 487020,
+              "y": 4420030
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "true"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "insert": {
+                "kind": "insert",
+                "id": 0,
+                "layerId": "isaret",
+                "attrs": {},
+                "block": "0192f5b0-0000-7000-8000-00000000000e",
+                "p": {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                "scale": 1.5,
+                "rotation": -0.0017001090244766481
+              },
+              "block": {
+                "id": "0192f5b0-0000-7000-8000-00000000000e",
+                "name": "Kuzey oku",
+                "base": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "entities": [
+                  {
+                    "kind": "circle",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "c": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "r": 0.5
+                  },
+                  {
+                    "kind": "polyline",
+                    "id": 2,
+                    "layerId": "",
+                    "attrs": {},
+                    "pts": [
+                      {
+                        "x": 0.0,
+                        "y": 0.6
+                      },
+                      {
+                        "x": -0.15,
+                        "y": -0.3
+                      },
+                      {
+                        "x": 0.0,
+                        "y": -0.15
+                      },
+                      {
+                        "x": 0.15,
+                        "y": -0.3
+                      }
+                    ],
+                    "closed": true
+                  },
+                  {
+                    "kind": "text",
+                    "id": 3,
+                    "layerId": "",
+                    "attrs": {},
+                    "p": {
+                      "x": -0.08,
+                      "y": 0.7
+                    },
+                    "text": "K",
+                    "height": 0.2,
+                    "rotation": 0.0
+                  }
+                ],
+                "description": "Kuzey oku; taban noktası dairenin merkezi.",
+                "units": "m",
+                "card": {
+                  "category": "İşaretler/Yön",
+                  "tags": [
+                    "kuzey",
+                    "ok",
+                    "yön"
+                  ],
+                  "version": 1
+                }
+              },
+              "rotation": -0.0017001090244766481,
+              "convergence": -0.0017001090244766481,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeri sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "nonFinite": {
+            "at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kuzey okunun yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "angle",
+              "angle": 1
+            }
+          },
+          "nonFinite": {
+            "north.angle": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kuzeyin açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı radyan olarak sonlu bir sayıyla verin.",
+              "path": "north.angle"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": 10
+          },
+          "nonFinite": {
+            "size": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kuzey okunun boyu sonlu bir sayı değil (NaN ya da sonsuz). Boyu kâğıt milimetresi olarak sonlu bir sayıyla verin.",
+              "path": "size"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Kuzey okunun boyu sıfırdan büyük, en çok 200 mm olmalı; 0 verildi. Kâğıttaki boyunu milimetre olarak verin.",
+              "path": "size"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy eksi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": -5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Kuzey okunun boyu sıfırdan büyük, en çok 200 mm olmalı; -5 verildi. Kâğıttaki boyunu milimetre olarak verin.",
+              "path": "size"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy 200 mm'den büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "size": 250
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Kuzey okunun boyu sıfırdan büyük, en çok 200 mm olmalı; 250 verildi. Kâğıttaki boyunu milimetre olarak verin.",
+              "path": "size"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerel projede coğrafi kuzey yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret",
+            "north": {
+              "kind": "true"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_true_north",
+              "message": "Projenin koordinat sisteminde bu noktadan geçen meridyen yok (yerel proje ya da sistemin dışında bir nokta): coğrafi kuzey bulunamaz. Plan kuzeyini ya da bir açı verin.",
+              "path": "north"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kuzey oku, yerel",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "isaret",
+            "name": "İşaret",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "isaret",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "isaret",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              3
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487010,
+              "y": 4420010
+            },
+            "layerId": "isaret"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "layerId": "isaret",
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

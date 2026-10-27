@@ -17,6 +17,9 @@ without KentOS code:
 - The other edits set a field; a dimension already so is not counted.
 - What a dimension shows is scripts/fixtures/dimension_value_cases.py's rule; a written value without `<>` is an
   override; what its points follow: free, partial, bound (every point it measures, or its rule's), broken.
+- Kotun katı (docs/adr/0721 §2): a Kot bound to a level takes the level's elevation plus its offset (the two doubles
+  added) and follows it when the level's elevation changes (a project setting, no undo step); set free, it keeps its
+  value. Elevation marks only; the level one of the project's.
 
 The numbers are whole or halves; `within` where a direction or an angle comes in.
 """
@@ -271,6 +274,123 @@ def edit_cases():
     return out
 
 
+# ── Kotun katı (docs/adr/0721 §2) ──────────────────────────────────────────────────────────────────────────────────
+
+LEVELS = [{"id": "zemin", "name": "Zemin kat", "elevation": 0, "height": 3.25},
+          {"id": "k1", "name": "1. kat", "elevation": 3.25, "height": 3.25}]
+
+
+def level_value(level, levels=LEVELS):
+    """The level's elevation plus the offset, added as doubles in that order."""
+    base = next(float(l["elevation"]) for l in levels if l["id"] == level["id"])
+    return base + float(level.get("offset", 0.0))
+
+
+WET = {"id": "k1", "offset": -0.02}
+KOTS = [dim(30, (X, Y + 60), (X + 2, Y + 62), 0, style="elevation", za=3),
+        dim(31, (X + 10, Y + 60), (X + 12, Y + 62), 0, style="elevation", za=level_value(WET), level=WET),
+        dim(32, (X + 20, Y + 60), (X + 22, Y + 62), 0, layer_id="kilitli", style="elevation", za=1)]
+LEVEL_IDS = IDS + [k["id"] for k in KOTS]
+LEVEL_BY_ID = {**BY_ID, **{k["id"]: k for k in KOTS}}
+LEVEL_SETUP = copy.deepcopy(SETUP)
+LEVEL_SETUP["name"] = "Ölçü düzenleme, katlı"
+LEVEL_SETUP["settings"]["arch"] = {"levels": LEVELS}
+LEVEL_SETUP["entities"] = SETUP["entities"] + KOTS
+LEVEL_UNCHANGED = {**UNCHANGED, "ids": LEVEL_IDS}
+NOT_A_KOT = "Ölçü kot değil: katı yalnız kot ölçüsü anar."
+INVALID_LEVEL = "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz."
+FAR_LEVEL = "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı."
+
+
+def no_level(level_id):
+    return f"Projede “{level_id}” kimlikli kat yok. Var olan bir katın kimliğini verin."
+
+
+def kot(k, level, za=None):
+    """The Kot `k` bound to `level` (None: set free), its value the level's or `za`."""
+    e = copy.deepcopy(LEVEL_BY_ID[k])
+    if level is None:
+        e.pop("level", None)
+    else:
+        e["level"] = level
+        e["za"] = plain(level_value(level))
+    if za is not None:
+        e["za"] = plain(za)
+    return e
+
+
+def level_changed(name, uids, level, made, plan=False):
+    inp = edit("level", uids=[UID(k) for k in uids], level=level)
+    ids = list(made)
+    if plan:
+        return {"name": name, "setup": LEVEL_SETUP, "steps": [
+            {"op": "plan", "input": inp, "result": completed({"dimensions": [made[k] for k in ids], "revision": "$current"}),
+             "expect": LEVEL_UNCHANGED}]}
+    steps = [{"op": "execute", "input": inp, "result": completed({"changed": [UID(k) for k in ids], "revision": "$current"}),
+              "expect": {"ids": LEVEL_IDS, "entities": {str(k): made[k] for k in ids}, "canUndo": bool(ids), "dirty": bool(ids),
+                         "revision": "changed" if ids else "same"}}]
+    if ids:
+        steps.append({"op": "undo", "returns": "Kotun katı", "expect": {"entities": {str(k): LEVEL_BY_ID[k] for k in ids}}})
+    return {"name": name, "setup": LEVEL_SETUP, "steps": steps}
+
+
+def level_refused(name, uids, level, code, message, path, non_finite=None):
+    s = {"op": "execute", "input": edit("level", uids=[UID(k) for k in uids], level=level)}
+    if non_finite:
+        s["nonFinite"] = non_finite
+    s["result"] = failed(code, message, path)
+    s["expect"] = LEVEL_UNCHANGED
+    return {"name": name, "setup": LEVEL_SETUP, "steps": [s]}
+
+
+def level_cases():
+    k1, zemin = {"id": "k1"}, {"id": "zemin", "offset": 0.45}
+    out = [
+        level_changed("Kotun katı: serbest kot kata bağlanır, değeri katın kotu; adım “Kotun katı”", [30], k1, {30: kot(30, k1)}),
+        level_changed("Kotun katı: zemin kata, 45 cm farkla", [30], zemin, {30: kot(30, zemin)}),
+        level_changed("Kotun katı: iki kot, biri zaten öyle; yalnız öbürü sayılır", [30, 31], WET, {30: kot(30, WET)}),
+        level_changed("Kotun katı bırakılır: değeri olduğu gibi kalır", [31], None, {31: kot(31, None)}),
+        level_changed("Kotun katı zaten öyle: hiçbir şey yazılmaz", [31], WET, {}),
+        level_changed("Kotun katı: plan; hiçbir şey yazılmaz", [30, 31], k1, {30: kot(30, k1), 31: kot(31, k1)}, plan=True),
+        level_refused("Kotun katı: ölçü kot değil", [30, 11], k1, "invalid_dimension", NOT_A_KOT, "edit.uids[1]"),
+        level_refused("Kotun katı projede yok", [30], {"id": "k9"}, "level_not_found", no_level("k9"), "edit.level.id"),
+        level_refused("Kotun katının kimliği boş", [30], {"id": ""}, "invalid_dimension", INVALID_LEVEL, "edit.level"),
+        level_refused("Kotun kata göre farkı 1000 m'den çok", [30], {"id": "k1", "offset": 1500}, "invalid_dimension", FAR_LEVEL,
+                      "edit.level"),
+        level_refused("Kotun kata göre farkı sonlu değil", [30], {"id": "k1", "offset": 0}, "invalid_dimension", FAR_LEVEL,
+                      "edit.level", non_finite={"edit.level.offset": "NaN"}),
+        level_refused("Kotun katı: kilitli katmandaki kot", [32], k1, "layer_locked",
+                      "“Kilitli” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın.", "edit.uids[0]"),
+    ]
+    # The level raised (a project setting, no undo step): the bound Kots follow in place. The binding undone, the Kot
+    # is free again with its old value; redone, bound and at the level's value now.
+    raised = [LEVELS[0], {**LEVELS[1], "elevation": 6.5}]
+    out.append({"name": "Kotun katı izlenir: kat yükselince bağlı kotlar da; geri alınıp yinelenince bugünkü değer", "setup": LEVEL_SETUP,
+                "steps": [
+                    {"op": "execute", "input": edit("level", uids=[UID(30)], level=k1), "result": "$any"},
+                    {"op": "execute", "command": "cad.settings.set", "input": {"arch": {"levels": raised}}, "result": "$any",
+                     "expect": {"entities": {"30": kot(30, k1, level_value(k1, raised)), "31": kot(31, WET, level_value(WET, raised))},
+                                "settings": {"arch": {"levels": raised}}, "canUndo": True}},
+                    {"op": "undo", "returns": "Kotun katı",
+                     "expect": {"entities": {"30": LEVEL_BY_ID[30], "31": kot(31, WET, level_value(WET, raised))}}},
+                    {"op": "redo", "returns": "Kotun katı", "expect": {"entities": {"30": kot(30, k1, level_value(k1, raised))}}},
+                ]})
+    # Renamed, the level keeps its Kots and their value.
+    renamed = [LEVELS[0], {**LEVELS[1], "name": "Birinci kat"}]
+    out.append({"name": "Kotun katı yeniden adlandırılınca kot aynı kalır", "setup": LEVEL_SETUP, "steps": [
+        {"op": "execute", "command": "cad.settings.set", "input": {"arch": {"levels": renamed}}, "result": "$any",
+         "expect": {"entities": {"31": LEVEL_BY_ID[31]}, "settings": {"arch": {"levels": renamed}}}}]})
+    # Moved, a bound Kot keeps its level and its value; a copy is bound as well.
+    moved = copy.deepcopy(LEVEL_BY_ID[31])
+    for key in ("a", "b"):
+        moved[key] = P(moved[key]["x"] + 5, moved[key]["y"])
+    out.append({"name": "Kata bağlı kot taşınınca katı ve değeri kalır", "setup": LEVEL_SETUP, "steps": [
+        {"op": "execute", "command": "cad.entities.transform",
+         "input": {"uids": [UID(31)], "transform": {"kind": "move", "dx": 5, "dy": 0}}, "result": "$any",
+         "expect": {"entities": {"31": moved}}}]})
+    return out
+
+
 # ── cad.dimensions.query ───────────────────────────────────────────────────────────────────────────────────────────
 
 def measured(d):
@@ -349,12 +469,12 @@ def query_cases():
 
 def build(command, title, cases):
     return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
-            "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321; do not edit by hand.",
+            "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321, 0721; do not edit by hand.",
             "setup": SETUP, "cases": cases}
 
 
 def main() -> int:
-    files = {"cad.dimensions.edit.json": build("cad.dimensions.edit", "Ölçüyü düzenle", edit_cases()),
+    files = {"cad.dimensions.edit.json": build("cad.dimensions.edit", "Ölçüyü düzenle", edit_cases() + level_cases()),
              "cad.dimensions.query.json": build("cad.dimensions.query", "Ölçüleri oku", query_cases())}
     bad = False
     for name, doc in files.items():

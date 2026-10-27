@@ -1587,6 +1587,8 @@ JOGGED = {"kind": "dimension", "a": P(487100, 4419830), "b": P(487100, 4420130),
 AZIMUTH = {"kind": "dimension", "a": P(487000, 4420160), "b": P(487030, 4420200), "offset": 2, "height": 2.5, "style": "azimuth"}
 SLOPE = {"kind": "dimension", "a": P(487040, 4420160), "b": P(487080, 4420160), "offset": 1.5, "height": 2, "style": "slope", "za": 105.25, "zb": 104.75, "mask": True}
 PLAIN = {"kind": "dimension", "a": P(487000, 4420210), "b": P(487020, 4420210), "offset": 3, "height": 0.5, "mask": False}
+# A Kot (docs/adr/0322) and one bound to a level (docs/adr/0721 §2).
+KOT = {"kind": "dimension", "a": P(487000, 4420220), "b": P(487002, 4420222), "offset": 0, "height": 0.5, "style": "elevation", "za": 7.5}
 dimensions = [O(ORD_Y), O(ORD_X), O(ARC_LENGTH), O(JOGGED), O(AZIMUTH), O(SLOPE), O(PLAIN)]
 
 
@@ -1608,6 +1610,9 @@ def dimension_message(kind, given=None):
         "joggedCentre": "Kırıklı yarıçap ölçüsünde gösterilen merkez (c) yarıçap boyunca yaydaki noktadan (b) geride olmalı; yarıçap çizgisinden uzaklığı bu geriliği aşmamalı. Gösterilen merkezi yayın içinde, yarıçapa yakın verin.",
         "edgeTooShort": f"{given} ölçüsünün iki ucu aynı nokta; ölçülecek kenar yok. Kenarın öbür ucunu (b) verin.",
         "slopeNoElevations": "Eğim ölçüsünün iki ucunun da kotu verilmeli. Eksik kotu (za ya da zb) metre olarak verin.",
+        "levelNotKot": "Katı yalnız kot ölçüsü anar. level'i kaldırın ya da ölçünün biçimini kot yapın.",
+        "levelWords": "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.",
+        "levelFar": "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı.",
     }[kind]
 
 
@@ -1644,10 +1649,32 @@ cases.append({
         bad_dimension({**AZIMUTH, "b": P(487000, 4420160)}, "edgeTooShort", "b", "Semt"),
         bad_dimension({**SLOPE, "b": P(487040, 4420160)}, "edgeTooShort", "b", "Eğim"),
         bad_dimension(without(SLOPE, "zb"), "slopeNoElevations", "zb"),
+        bad_dimension({**PLAIN, "level": {"id": "k1"}}, "levelNotKot", "level"),
+        bad_dimension({**KOT, "level": {"id": "k1 "}}, "levelWords", "level"),
+        bad_dimension({**KOT, "level": {"id": "k1", "offset": 1000.5}}, "levelFar", "level"),
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SLOPE)]}, "nonFinite": {"objects[0].geometry.za": "NaN"},
          "result": not_finite(1), "note": "Kotlar da sonlu sayıdır.", "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**ARC_LENGTH, "offset": -10})]}, "nonFinite": {"objects[0].geometry.c.x": "Infinity"},
          "result": not_finite(1), "note": "Sonlu olmayan sayı ölçünün kurallarından önce.", "expect": NOTHING},
+    ],
+})
+
+
+# A Kot bound to a level (docs/adr/0721 §2) is written with its level's value, whatever za it was given: the
+# level's elevation plus its offset (3.25 − 0.02 as doubles). On a level the project lacks it keeps the za given.
+LEVELLED = json.loads(json.dumps(SETUP))
+LEVELLED["settings"]["arch"] = {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0},
+                                           {"id": "k1", "name": "1. kat", "elevation": 3.25}]}
+BOUND_KOT = {**KOT, "level": {"id": "k1", "offset": -0.02}}
+LACKING_KOT = {**KOT, "a": P(487010, 4420220), "b": P(487012, 4420222), "level": {"id": "k9"}}
+cases.append({
+    "name": "kata bağlı kot (ADR 0721 §2) katının değeriyle yazılır, verilen za'yla değil; projede olmayan kata bağlı olan verilen za'yı korur",
+    "setup": LEVELLED,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(BOUND_KOT), O(LACKING_KOT)]}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": {**made(O(BOUND_KOT), 3), "za": 3.25 + -0.02},
+                                                      "4": made(O(LACKING_KOT), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
     ],
 })
 

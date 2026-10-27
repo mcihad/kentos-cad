@@ -412,6 +412,14 @@ wall_unit.dynamic(
     [{"kind": "stretch", "parameter": "Genişlik", "pieces": [upper, upper_cross], "min": P(0.5, -0.1), "max": P(0.7, 0.45)}])
 blocks.append(wall_unit)
 
+# ── A revision's delta (docs/adr/0721 §4): an equilateral triangle 60 cm across, its base point its centre, the
+# revision's number its attribute; Revizyon bulutu places it scaled to the drawing's scale (6 mm on paper). ──
+delta = Block(38, "Revizyon", "İşaretler/Revizyon", ["revizyon", "delta", "değişiklik"],
+              "Revizyon üçgeni; taban noktası üçgenin merkezi, revizyon numarası REV özniteliğinde.")
+delta.path([(-0.3, -0.173), (0.3, -0.173), (0, 0.346)], closed=True)
+delta.attribute("REV", (0, 0), 0.18, value="1", prompt="Revizyon", align="middleCenter")
+blocks.append(delta)
+
 LIBRARY = {"format": "kentos.blocks", "version": 1, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
 

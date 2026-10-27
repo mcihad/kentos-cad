@@ -1592,6 +1592,14 @@
       ],
       "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327)."
     },
+    "arch.revisionList": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "“Revizyon” bloğunun REV'e göre Blok çizelgesi tablosu; satırlarını belge her adımda kendisi yazar (ADR 0327, 0721 §4)."
+    },
     "table.blockSchedule": {
       "level": "semantic",
       "via": [
@@ -2009,6 +2017,27 @@
         "cad.viewmarks.create"
       ],
       "note": "Nokta, bakış yönü, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5)."
+    },
+    "tool.northArrow": {
+      "level": "semantic",
+      "via": [
+        "cad.north.create"
+      ],
+      "note": "Yer, yön (plan, coğrafi, açı) ve kâğıttaki boy komuta verilir; kitaplığın bloğu aynı adımda eklenir, önizleme planından (ADR 0721 §3)."
+    },
+    "tool.revisionMark": {
+      "level": "semantic",
+      "via": [
+        "cad.revisions.mark"
+      ],
+      "note": "Çerçeve, yay boyu ve revizyon numarası komuta verilir; bulut ve üçgen tek adımda, üçgenin önizlemesi planından (ADR 0721 §4)."
+    },
+    "tool.materialLegend": {
+      "level": "semantic",
+      "via": [
+        "cad.legends.materials"
+      ],
+      "note": "Yer ve yazı yüksekliği komuta verilir; Yenile lejandı yerinde yeniden yapar, önizleme planından (ADR 0721 §5)."
     },
     "tool.viewDetail": {
       "level": "semantic",

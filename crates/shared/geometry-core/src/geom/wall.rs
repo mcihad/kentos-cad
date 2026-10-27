@@ -536,16 +536,23 @@ fn first_direction(pts: &[Vec2]) -> f64 {
 }
 
 fn hatch_of(fill: &ComponentFill, turn: f64, scale: f64) -> Option<HatchPattern> {
-    if fill.pattern.eq_ignore_ascii_case("solid") {
+    component_hatch(&fill.pattern, fill.scale, turn + fill.angle, scale)
+}
+
+/// A component's hatch as its wall draws it (and the material legend's swatch, docs/adr/0721 §5): `pattern` of the
+/// library at `angle` degrees, `size` times its paper size at the drawing's scale (1:`scale`); “solid” filled; none
+/// for a pattern the library lacks.
+pub fn component_hatch(pattern: &str, size: f64, angle: f64, scale: f64) -> Option<HatchPattern> {
+    if pattern.eq_ignore_ascii_case("solid") {
         return Some(HatchPattern::user("solid", 0.0, 1.0));
     }
-    let found = library_pattern(&fill.pattern)?;
+    let found = library_pattern(pattern)?;
     Some(HatchPattern {
         kind: "pattern".into(),
-        angle: turn + fill.angle,
+        angle,
         spacing: 1.0,
         name: Some(found.name.to_owned()),
-        scale: Some(fill.scale * scale / 1000.0),
+        scale: Some(size * scale / 1000.0),
         lines: Some(found.lines.clone()),
         gradient: None,
         origin: None,

@@ -244,6 +244,10 @@ pub(super) struct Features {
     recesses: bool,
     /// Schema 120: the architectural settings' active level and level view (docs/adr/0720).
     pub(super) level_state: bool,
+    /// Schema 121: a Kot's level (`level`, docs/adr/0721 §2).
+    dimension_levels: bool,
+    /// Schema 122: a block schedule's further columns (`columns`, docs/adr/0721 §4).
+    schedule_columns: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -447,6 +451,8 @@ impl Features {
             dimension_cross: schema >= crate::SCHEMA_WITH_DIMENSION_CROSS,
             recesses: schema >= crate::SCHEMA_WITH_RECESSES,
             level_state: schema >= crate::SCHEMA_WITH_LEVEL_STATE,
+            dimension_levels: schema >= crate::SCHEMA_WITH_DIMENSION_LEVELS,
+            schedule_columns: schema >= crate::SCHEMA_WITH_SCHEDULE_COLUMNS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -600,6 +606,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.dimension_options && matches!(key, "options" | "textShift" | "breaks"))
                     || (has.overrides && key == "overrides")
                     || (has.annotative && key == "annotative")
+                    || (has.dimension_levels && key == "level")
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -810,6 +817,8 @@ struct Fields {
     refs: Option<DimensionRefs>,
     /// A dimension's moved value and breaks (docs/adr/0321).
     text_shift: Option<kentos_contracts::TextShift>,
+    /// A Kot's level (docs/adr/0721 §2), where it was read.
+    dimension_level: Option<(kentos_contracts::DimensionLevel, usize)>,
     breaks: Vec<kentos_contracts::DimensionBreak>,
     block: Option<BlockId>,
     /// Where the insert's `block` is in the payload (for an unknown block).
@@ -1632,6 +1641,14 @@ pub(super) fn object(
                 // Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects too.
                 let schedule = matches!(v, TableSource::Blocks { .. })
                     || (has.tags && matches!(v, TableSource::Schedule { .. }));
+                // Schema 122 (docs/adr/0721 §4): a block schedule's further columns.
+                if !has.schedule_columns && matches!(&v, TableSource::Blocks { columns, .. } if !columns.is_empty()) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "blok çizelgesinin sütunları (columns) şema 122'den önce yazılmaz",
+                    ));
+                }
                 if !schedule || f.source.is_some() {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -1699,6 +1716,13 @@ pub(super) fn object(
                     return Err(r.fail_at(Code::BadValue, at, &words));
                 }
                 f.look.options = Some(Box::new(o));
+            }
+            "level" => {
+                let (l, at): (kentos_contracts::DimensionLevel, usize) = json_part(r, "kotun katı")?;
+                if let Some(words) = l.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.dimension_level = Some((l, at));
             }
             "textShift" => {
                 let (s, at): (kentos_contracts::TextShift, usize) =
@@ -2452,6 +2476,12 @@ fn build(
                     &format!("koordinat ölçüsünün ekseni {a}; 0 (Y) ya da 90 (X) olmalı"),
                 ));
             }
+            // A level is a Kot's only (docs/adr/0721 §2).
+            if let Some((_, at)) = &f.dimension_level
+                && style != Some(DimensionStyle::Elevation)
+            {
+                return Err(r.fail_at(Code::BadValue, *at, "katı yalnız kot ölçüsü anar"));
+            }
             Entity::Dimension(DimensionEntity {
                 annotative: f.annotative.take(),
                 text_shift: f.text_shift.take(),
@@ -2470,6 +2500,7 @@ fn build(
                 zb,
                 refs: f.refs.take().map(Box::new),
                 look: std::mem::take(&mut f.look),
+                level: f.dimension_level.take().map(|(l, _)| Box::new(l)),
             })
         }
         Kind::Hatch => Entity::Hatch(HatchEntity {

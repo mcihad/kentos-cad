@@ -98,6 +98,7 @@ pub(crate) fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
         breaks: Vec::new(),
         look: Default::default(),
         annotative: None,
+        level: None,
     })
 }
 

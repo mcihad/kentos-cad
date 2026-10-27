@@ -3,6 +3,7 @@ import type { Annotative } from "./Annotative";
 import type { Attachment } from "./Attachment";
 import type { DimensionArrow } from "./DimensionArrow";
 import type { DimensionBreak } from "./DimensionBreak";
+import type { DimensionLevel } from "./DimensionLevel";
 import type { DimensionOptions } from "./DimensionOptions";
 import type { DimensionRefs } from "./DimensionRefs";
 import type { DimensionStyle } from "./DimensionStyle";
@@ -51,7 +52,12 @@ breaks?: Array<DimensionBreak>,
  * Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
  * at others (docs/adr/0323); absent: one height.
  */
-annotative?: Annotative, id: number, layerId: string, 
+annotative?: Annotative, 
+/**
+ * A Kot's level (docs/adr/0721 §2): `za` is the level's elevation plus its offset, written again when the
+ * level's elevation changes; absent: its own `za`. An elevation mark's only.
+ */
+level?: DimensionLevel, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

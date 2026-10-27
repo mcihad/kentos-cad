@@ -6509,6 +6509,7 @@ class DimensionEdit(_Union):
     - :class:`MoveTextDimensionEdit` (``kind: moveText``)
     - :class:`TextDimensionEdit` (``kind: text``)
     - :class:`OptionsDimensionEdit` (``kind: options``)
+    - :class:`LevelDimensionEdit` (``kind: level``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -7296,6 +7297,28 @@ class NetworkDirection(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> NetworkDirection:
         return _variant(_NETWORK_DIRECTION, "NetworkDirection", "kind", data).from_json(data)
+
+
+class NorthDirection(_Union):
+    """Where a north arrow points (docs/adr/0721 §3).
+
+    One of:
+
+    - :class:`PlanNorthDirection` (``kind: plan``)
+    - :class:`TrueNorthDirection` (``kind: true``)
+    - :class:`AngleNorthDirection` (``kind: angle``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NorthDirection:
+        return _variant(_NORTH_DIRECTION, "NorthDirection", "kind", data).from_json(data)
 
 
 class NurbsBy(_Union):
@@ -17000,6 +17023,8 @@ class DimensionEntity(Entity):
         font: The value's typeface; absent: the project's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        level: A Kot's level (docs/adr/0721 §2): `za` is the level's elevation plus its offset, written again when the
+            level's elevation changes; absent: its own `za`. An elevation mark's only.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -17060,6 +17085,7 @@ class DimensionEntity(Entity):
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    level: DimensionLevel | None | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -17137,6 +17163,8 @@ class DimensionEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
@@ -17217,6 +17245,7 @@ class DimensionEntity(Entity):
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
             line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -17240,6 +17269,32 @@ class DimensionEntity(Entity):
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionLevel(_Model):
+    """A Kot (an elevation mark) bound to a level of the project (docs/adr/0721 §2): its value is the level's floor
+    elevation plus `offset` (a wet room's −0.02), written again whenever the level's elevation changes.
+    Attributes:
+        id: The level, by its id among the project's levels.
+        offset: Metres added to the level's elevation; absent: none. Unit: elevation.
+    """
+    id: str
+    offset: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionLevel:
+        return cls(
+            id=data["id"],
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
         )
 
 
@@ -18002,11 +18057,11 @@ class DimensionsCreate(_Model):
     `invalid_height`, `invalid_uid` (each place's and edge's object, in
     order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
     Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
-    işareti or Eksen çizgisi), `invalid_revision`,
-    `revision_conflict` (status `conflict`), `entity_not_found`,
+    işareti or Eksen çizgisi), `invalid_dimension` (a Kot's `level` with `z`, or a level's id or offset that does not
+    hold), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`,
     `no_such_place`, `not_measurable` (the object has no edge of the kind the
-    measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
-    (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
+    measure takes), `not_straight` (a base not an aligned or a linear dimension), `level_not_found` (a Kot's level
+    not the project's), `missing_elevation` (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
     `no_dimension` (no dimension forms there: the points meet, the edges are
     parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
     `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
@@ -18098,16 +18153,17 @@ class DimensionsCreate(_Model):
 @dataclass(kw_only=True, slots=True)
 class DimensionsEdit(_Model):
     """Input of `cad.dimensions.edit` v1 (docs/adr/0321 §4): one edit of dimensions as one undo step named after it
-    (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri). A dimension
-    the edit leaves as it was is not counted; when none changes, nothing is written.
+    (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri, Kotun katı).
+    A dimension the edit leaves as it was is not counted; when none changes, nothing is written.
 
     Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the base's, then each dimension's, then each
     object's), `no_entities` (no dimension), `not_finite` (`spacing`, `along`, `across`), `invalid_offset` (a spacing
     below 0), `empty_text` (a written value of spaces), `invalid_style` (options that break their rules),
-    `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found` (the base, each dimension, each
-    object), `not_a_dimension`, `layer_locked` (a dimension's layer), `not_straight` (Space's and Break's dimensions:
-    aligned or linear), `not_parallel` (Space's dimension not parallel to its base). Break warns `no_crossing` for a
-    dimension no object crosses.
+    `invalid_dimension` (a level's id or offset that does not hold), `invalid_revision`, `revision_conflict` (status
+    `conflict`), `entity_not_found` (the base, each dimension, each object), `not_a_dimension`, `layer_locked` (a
+    dimension's layer), `not_straight` (Space's and Break's dimensions: aligned or linear), `not_parallel` (Space's
+    dimension not parallel to its base), `invalid_dimension` (Level's dimension no Kot), `level_not_found` (Level's
+    level not the project's). Break warns `no_crossing` for a dimension no object crosses.
     """
     edit: DimensionEdit
     expected_revision: str | None | Unset = UNSET
@@ -33806,6 +33862,153 @@ class LeadersPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LegendMade(_Model):
+    """Output of `cad.legends.materials` v1.
+    Attributes:
+        materials: The rows, top down.
+        block: The legend's block.
+        id: Unit: id.
+        remade: The block was made again (the drawing had it); false: added.
+        uid: The new insert's persistent id, with `at`.
+    """
+    materials: list[LegendMaterial]
+    block: str
+    revision: str
+    id: int | None | Unset = UNSET
+    remade: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["materials"] = [e0.to_json() for e0 in self.materials]
+        out["block"] = self.block
+        out["revision"] = self.revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.remade is not UNSET:
+            out["remade"] = self.remade
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LegendMade:
+        return cls(
+            materials=[LegendMaterial.from_json(e0) for e0 in data["materials"]],
+            block=data["block"],
+            revision=data["revision"],
+            id=data.get("id", UNSET),
+            remade=data.get("remade", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LegendMaterial(_Model):
+    """One row of a material legend.
+    Attributes:
+        name: Its name: the component's material, else its own name.
+        walls: How many walls have it. Unit: 1.
+        pattern: Its hatch pattern's name (absent: none, an empty swatch).
+    """
+    name: str
+    walls: int
+    pattern: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["walls"] = self.walls
+        if self.pattern is not UNSET:
+            out["pattern"] = self.pattern
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LegendMaterial:
+        return cls(
+            name=data["name"],
+            walls=data["walls"],
+            pattern=data.get("pattern", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LegendPlan(_Model):
+    """Plan of `cad.legends.materials` v1: the rows, the block as execute would write it and the new insert (`id` 0)."""
+    materials: list[LegendMaterial]
+    block: BlockDefinition
+    revision: str
+    insert: Entity | None | Unset = UNSET
+    remade: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["materials"] = [e0.to_json() for e0 in self.materials]
+        out["block"] = self.block.to_json()
+        out["revision"] = self.revision
+        if self.insert is not UNSET:
+            out["insert"] = None if self.insert is None else self.insert.to_json()
+        if self.remade is not UNSET:
+            out["remade"] = self.remade
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LegendPlan:
+        return cls(
+            materials=[LegendMaterial.from_json(e0) for e0 in data["materials"]],
+            block=BlockDefinition.from_json(data["block"]),
+            revision=data["revision"],
+            insert=UNSET if "insert" not in data else None if data["insert"] is None else Entity.from_json(data["insert"]),
+            remade=data.get("remade", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LegendsMaterials(_Model):
+    """Input of `cad.legends.materials` v1 (“Malzeme lejandı”, docs/adr/0721 §5): a legend of the materials the walls are
+    drawn with: a row for each component of theirs (in the drawing's order, left face first) that differs from the
+    rows before in its name or its hatch, its swatch hatched as the component and its name (its material, else its
+    own name) beside. Made as the block “Malzeme lejandı”, `height` paper millimetres its text, at the drawing's
+    scale: a legend the drawing has is made again in its place (every insert of it follows); `at` places one more.
+    One undo step “Malzeme lejandı”.
+
+    Refusals, in this order: `not_finite` (`at`, then the height), `invalid_height` (not above 0 or above 50 mm),
+    `invalid_revision`, `revision_conflict` (status `conflict`), `no_materials` (no wall with a component), `no_legend`
+    (no `at` and no legend to make again), then, with `at`, the layer's as every create command's
+    (`layer_not_found`, `not_a_layer`, `layer_locked`). Warnings: `layer_hidden`.
+    Attributes:
+        layer_id: The layer a new insert goes on, a layer's id (read with `at`).
+        at: Where a new insert's top left corner goes; absent: the legend is only made again. Unit: length.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        height: Its text's height on paper, millimetres, above 0 and at most 50; absent: 2.5. Unit: paper-mm.
+    """
+    layer_id: str
+    at: Vec2 | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LegendsMaterials:
+        return cls(
+            layer_id=data["layerId"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LevelAssigned(_Model):
     """One object given the level.
     Attributes:
@@ -37472,6 +37675,140 @@ class NewWall(_Model):
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             style=data.get("style", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NorthCreate(_Model):
+    """Input of `cad.north.create` v1 (“Kuzey oku”, docs/adr/0721 §3): the north arrow placed at `at` on `layerId`,
+    turned to `north`, `size` paper millimetres across (east to west, unturned) at the drawing's scale. It is the
+    drawing's own block “Kuzey oku” when it has one; else KentOS's library's, added in the same step. One undo step
+    “Kuzey oku”.
+
+    Refusals, in this order: `not_finite` (`at`, then the angle, then the size), `invalid_scale` (a size not above 0
+    or above 200 mm), `invalid_revision`, `revision_conflict` (status `conflict`), `no_true_north` (true north asked
+    in a project whose system has no meridian: a local project, or one the point is outside), then the layer's as
+    every create command's (`layer_not_found`, `not_a_layer`, `layer_locked`). Warnings: `layer_hidden`.
+    Attributes:
+        at: Where the arrow's base point goes: its circle's centre. Unit: length.
+        layer_id: The layer it goes on, a layer's id.
+        color: Its own colour (absent: its layer's).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        north: Where it points; absent: the plan's north.
+        size: Its size across on paper, millimetres, above 0 and at most 200; absent: 15. Unit: paper-mm.
+    """
+    at: Vec2
+    layer_id: str
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    north: NorthDirection | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["layerId"] = self.layer_id
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.north is not UNSET:
+            out["north"] = self.north.to_json()
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NorthCreate:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            layer_id=data["layerId"],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            north=NorthDirection.from_json(data["north"]) if "north" in data else UNSET,
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NorthCreated(_Model):
+    """Output of `cad.north.create` v1.
+    Attributes:
+        uid: The insert's persistent id.
+        id: Unit: id.
+        block: The block placed.
+        rotation: The arrow's turn, counter-clockwise from the drawing's up. Unit: rad.
+        added: The library's block was added in this step (the drawing had none of the name).
+        convergence: True north's angle from the plan's north at `at`, counter-clockwise (the meridian convergence); `true` only. Unit: rad.
+    """
+    uid: str
+    id: int
+    block: str
+    rotation: float
+    revision: str
+    added: bool | Unset = UNSET
+    convergence: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["block"] = self.block
+        out["rotation"] = float(self.rotation)
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = self.added
+        if self.convergence is not UNSET:
+            out["convergence"] = None if self.convergence is None else float(self.convergence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NorthCreated:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            block=data["block"],
+            rotation=float(data["rotation"]),
+            revision=data["revision"],
+            added=data.get("added", UNSET),
+            convergence=UNSET if "convergence" not in data else None if data["convergence"] is None else float(data["convergence"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NorthPlan(_Model):
+    """Plan of `cad.north.create` v1: what execute would write.
+    Attributes:
+        insert: The insert, `id` 0.
+        rotation: Unit: rad.
+        block: The library's definition execute would add (absent: the drawing's own is placed).
+        convergence: Unit: rad.
+    """
+    insert: Entity
+    rotation: float
+    revision: str
+    block: BlockDefinition | None | Unset = UNSET
+    convergence: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["insert"] = self.insert.to_json()
+        out["rotation"] = float(self.rotation)
+        out["revision"] = self.revision
+        if self.block is not UNSET:
+            out["block"] = None if self.block is None else self.block.to_json()
+        if self.convergence is not UNSET:
+            out["convergence"] = None if self.convergence is None else float(self.convergence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NorthPlan:
+        return cls(
+            insert=Entity.from_json(data["insert"]),
+            rotation=float(data["rotation"]),
+            revision=data["revision"],
+            block=UNSET if "block" not in data else None if data["block"] is None else BlockDefinition.from_json(data["block"]),
+            convergence=UNSET if "convergence" not in data else None if data["convergence"] is None else float(data["convergence"]),
         )
 
 
@@ -49239,6 +49576,157 @@ class RevcloudCreate(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RevisionMarked(_Model):
+    """Output of `cad.revisions.mark` v1.
+    Attributes:
+        cloud: The cloud's persistent id and slot.
+        cloud_id: Unit: id.
+        tag: The delta's persistent id and slot.
+        tag_id: Unit: id.
+        block: The delta's block.
+        added: The library's block was added in this step.
+    """
+    cloud: str
+    cloud_id: int
+    tag: str
+    tag_id: int
+    block: str
+    revision: str
+    added: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cloud"] = self.cloud
+        out["cloudId"] = self.cloud_id
+        out["tag"] = self.tag
+        out["tagId"] = self.tag_id
+        out["block"] = self.block
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = self.added
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RevisionMarked:
+        return cls(
+            cloud=data["cloud"],
+            cloud_id=data["cloudId"],
+            tag=data["tag"],
+            tag_id=data["tagId"],
+            block=data["block"],
+            revision=data["revision"],
+            added=data.get("added", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RevisionPlan(_Model):
+    """Plan of `cad.revisions.mark` v1: what execute would write.
+    Attributes:
+        cloud: The cloud, `id` 0.
+        tag: The delta, `id` 0.
+        block: The library's definition execute would add (absent: the drawing's own is placed).
+    """
+    cloud: Entity
+    tag: Entity
+    revision: str
+    block: BlockDefinition | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cloud"] = self.cloud.to_json()
+        out["tag"] = self.tag.to_json()
+        out["revision"] = self.revision
+        if self.block is not UNSET:
+            out["block"] = None if self.block is None else self.block.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RevisionPlan:
+        return cls(
+            cloud=Entity.from_json(data["cloud"]),
+            tag=Entity.from_json(data["tag"]),
+            revision=data["revision"],
+            block=UNSET if "block" not in data else None if data["block"] is None else BlockDefinition.from_json(data["block"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RevisionsMark(_Model):
+    """Input of `cad.revisions.mark` v1 (“Revizyon işaretle”, docs/adr/0721 §4): a revision cloud round `frame` (as
+    `cad.revcloud.create` draws it, its arcs `arc` long) and its delta, KentOS's library block “Revizyon” (the
+    drawing's own when it has one), `size` paper millimetres across at the drawing's scale, at `at` (absent: off the
+    cloud's top right corner, out by half an arc and half the delta). The revision's `number` is the delta's `REV`
+    and the cloud's attribute `Revizyon`; `date` and `description`, when given, both objects' `Tarih` and
+    `Açıklama` (a Blok çizelgesi of “Revizyon” by `REV` lists the revisions). One undo step “Revizyon”.
+
+    Refusals, in this order: `invalid_mark` (the number blank, edged with spaces, with control characters or longer
+    than 16; a date longer than 32; a description longer than 240), `not_finite` (`at`, then the size), `invalid_scale`
+    (a size not above 0 or above 100 mm), then `cad.revcloud.create`'s for the frame and the arcs, the expected
+    revision and the layer. Warnings: `layer_hidden`.
+    Attributes:
+        arc: The arcs' chord, in the drawing's length (m), above zero. Unit: length.
+        number: The revision's number or letter: 1, A, B2.
+        at: Where the delta's centre goes; absent: off the cloud's top right corner. Unit: length.
+        color: Both objects' own colour (absent: their layer's).
+        date: Its date, as written (absent: none).
+        description: What changed (absent: none).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        line_weight: The cloud's own line weight, paper millimetres (absent: its layer's). Unit: paper-mm.
+        size: The delta's size across on paper, millimetres, above 0 and at most 100; absent: 6. Unit: paper-mm.
+    """
+    layer_id: str
+    frame: RevcloudFrame
+    arc: float
+    number: str
+    at: Vec2 | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    date: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["frame"] = self.frame.to_json()
+        out["arc"] = float(self.arc)
+        out["number"] = self.number
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RevisionsMark:
+        return cls(
+            layer_id=data["layerId"],
+            frame=RevcloudFrame.from_json(data["frame"]),
+            arc=float(data["arc"]),
+            number=data["number"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            color=data.get("color", UNSET),
+            date=data.get("date", UNSET),
+            description=data.get("description", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
         )
 
 
@@ -65902,6 +66390,30 @@ class OptionsDimensionEdit(DimensionEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class LevelDimensionEdit(DimensionEdit):
+    """Kotun katı (docs/adr/0721 §2): the Kots bound to `level`, their value the level's elevation plus its offset
+    and following it; null: set free, their value kept as it is. Elevation marks only.
+    """
+    TAG_VALUE: ClassVar[str] = "level"
+    uids: list[str]
+    level: DimensionLevel | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "level"}
+        out["uids"] = list(self.uids)
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelDimensionEdit:
+        return cls(
+            uids=list(data["uids"]),
+            level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignedDimensionMeasure(DimensionMeasure):
     """Hizalı: the distance from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "aligned"
@@ -66291,17 +66803,21 @@ class CenterLineDimensionMeasure(DimensionMeasure):
 @dataclass(kw_only=True, slots=True)
 class ElevationDimensionMeasure(DimensionMeasure):
     """Kot (docs/adr/0322): the elevation of `a`, `z` metres (absent: its place's vertex's, docs/adr/0142), its mark on
-    `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's.
+    `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's. With `level`
+    (docs/adr/0721 §2, not with `z`): the level's elevation plus its offset, following the level.
     Attributes:
         z: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "elevation"
     a: MeasuredPoint
+    level: DimensionLevel | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "elevation"}
         out["a"] = self.a.to_json()
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -66310,6 +66826,7 @@ class ElevationDimensionMeasure(DimensionMeasure):
     def from_json(cls, data: Mapping[str, Any]) -> ElevationDimensionMeasure:
         return cls(
             a=MeasuredPoint.from_json(data["a"]),
+            level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -67477,6 +67994,7 @@ class DimensionEntityGeometry(EntityGeometry):
         ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`. Unit: 1.
         ext_weight: The extension lines' weight, paper mm; absent: a hairline. Unit: paper-mm.
         font: The value's typeface; absent: the project's.
+        level: A Kot's level (docs/adr/0721 §2); absent: an elevation mark updated keeps its own, a new one has none.
         mask: The value over the drawing's background (docs/adr/0147).
         options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
         overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
@@ -67514,6 +68032,7 @@ class DimensionEntityGeometry(EntityGeometry):
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    level: DimensionLevel | None | Unset = UNSET
     mask: bool | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
     overrides: list[str] | Unset = UNSET
@@ -67570,6 +68089,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
         if self.mask is not UNSET:
             out["mask"] = self.mask
         if self.options is not UNSET:
@@ -67626,6 +68147,7 @@ class DimensionEntityGeometry(EntityGeometry):
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            level=UNSET if "level" not in data else None if data["level"] is None else DimensionLevel.from_json(data["level"]),
             mask=data.get("mask", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
@@ -70404,6 +70926,57 @@ class FieldNetworkDirection(NetworkDirection):
             backward=list(data["backward"]) if "backward" in data else list(),
             closed=list(data["closed"]) if "closed" in data else list(),
             forward=list(data["forward"]) if "forward" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanNorthDirection(NorthDirection):
+    """The plan's north: the drawing's up (+Y), grid north in a projected system (Revit's Project North)."""
+    TAG_VALUE: ClassVar[str] = "plan"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "plan"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanNorthDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class TrueNorthDirection(NorthDirection):
+    """True north at the arrow: the meridian through it, from the project's coordinate system (a transverse
+    Mercator's meridian convergence; a local system on one, turned by its plane).
+    """
+    TAG_VALUE: ClassVar[str] = "true"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "true"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrueNorthDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleNorthDirection(NorthDirection):
+    """A north turned off the drawing's up by `angle`, counter-clockwise (a project drawn square to its site).
+    Attributes:
+        angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "angle"
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angle"}
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleNorthDirection:
+        return cls(
+            angle=float(data["angle"]),
         )
 
 
@@ -76829,16 +77402,22 @@ class FileTableSource(TableSource):
 @dataclass(kw_only=True, slots=True)
 class BlocksTableSource(TableSource):
     """Blok çizelgesi (docs/adr/0327 §4): the inserts of the blocks named (none named: every block placed) counted,
-    by the attribute `by` when given; written again by the document at every step.
+    by the attribute `by` when given; written again by the document at every step. `columns` (docs/adr/0721 §4,
+    Revizyon listesi): each row's further cells, an attribute's or a datum's name each, its row's distinct values
+    that are not empty in the drawing's order joined with “; ”; a schedule of one block with them leaves out its
+    Blok column, every row of which would read the same. At most [`MAX_SCHEDULE_DATA`].
     """
     TAG_VALUE: ClassVar[str] = "blocks"
     by: str | None | Unset = UNSET
+    columns: list[str] | Unset = UNSET
     names: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "blocks"}
         if self.by is not UNSET:
             out["by"] = self.by
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
         if self.names is not UNSET:
             out["names"] = list(self.names)
         return out
@@ -76847,6 +77426,7 @@ class BlocksTableSource(TableSource):
     def from_json(cls, data: Mapping[str, Any]) -> BlocksTableSource:
         return cls(
             by=data.get("by", UNSET),
+            columns=list(data["columns"]) if "columns" in data else UNSET,
             names=list(data["names"]) if "names" in data else UNSET,
         )
 
@@ -78464,7 +79044,7 @@ _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": Open
 _DERIVE_WORK: dict[str, type[DeriveWork]] = {"vertexPoints": VertexPointsDeriveWork, "centerline": CenterlineDeriveWork, "polygonize": PolygonizeDeriveWork}
 
 
-_DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, "break": BreakDimensionEdit, "unbreak": UnbreakDimensionEdit, "moveText": MoveTextDimensionEdit, "text": TextDimensionEdit, "options": OptionsDimensionEdit}
+_DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, "break": BreakDimensionEdit, "unbreak": UnbreakDimensionEdit, "moveText": MoveTextDimensionEdit, "text": TextDimensionEdit, "options": OptionsDimensionEdit, "level": LevelDimensionEdit}
 
 
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure, "centerMark": CenterMarkDimensionMeasure, "centerLine": CenterLineDimensionMeasure, "elevation": ElevationDimensionMeasure}
@@ -78552,6 +79132,9 @@ _MIGRATION_STEP: dict[str, type[MigrationStep]] = {"renameLayer": RenameLayerMig
 
 
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
+
+
+_NORTH_DIRECTION: dict[str, type[NorthDirection]] = {"plan": PlanNorthDirection, "true": TrueNorthDirection, "angle": AngleNorthDirection}
 
 
 _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurbsBy}
@@ -78811,6 +79394,7 @@ __all__ = [
     "AngleBlockParameter",
     "AngleConstraintRule",
     "AngleDimensionMeasure",
+    "AngleNorthDirection",
     "AngleUnit",
     "AngleUnitName",
     "AngleVertexDimensionMeasure",
@@ -79255,6 +79839,7 @@ __all__ = [
     "DimensionEntityGeometry",
     "DimensionFit",
     "DimensionFitName",
+    "DimensionLevel",
     "DimensionLook",
     "DimensionMeasure",
     "DimensionOptions",
@@ -79924,7 +80509,11 @@ __all__ = [
     "LeadersPlan",
     "LeftWhy",
     "LeftWhyName",
+    "LegendMade",
+    "LegendMaterial",
     "LegendPaperItemKind",
+    "LegendPlan",
+    "LegendsMaterials",
     "LengthPartitionExtent",
     "LengthStyle",
     "LengthStyleName",
@@ -79933,6 +80522,7 @@ __all__ = [
     "LengthenEndName",
     "LevelAdjustWork",
     "LevelAssigned",
+    "LevelDimensionEdit",
     "LevelMethod",
     "LevelMethodName",
     "LevelPaperMapLevelChoice",
@@ -80122,6 +80712,10 @@ __all__ = [
     "NodeSubPlace",
     "NoneCsvGeometryIn",
     "NorthArrowPaperItemKind",
+    "NorthCreate",
+    "NorthCreated",
+    "NorthDirection",
+    "NorthPlan",
     "NoteFormItem",
     "NumberPlace",
     "NumberPlaceName",
@@ -80441,6 +81035,7 @@ __all__ = [
     "PlacementArrayEdit",
     "PlanBox",
     "PlanBoxName",
+    "PlanNorthDirection",
     "PlanRoadWork",
     "PointBinding",
     "PointBlockParameter",
@@ -80775,6 +81370,9 @@ __all__ = [
     "RetireCodeMigrationStep",
     "RevcloudCreate",
     "RevcloudFrame",
+    "RevisionMarked",
+    "RevisionPlan",
+    "RevisionsMark",
     "RingGeometry",
     "RoadKind",
     "RoadKindName",
@@ -81243,6 +81841,7 @@ __all__ = [
     "TrimPick",
     "TrimWallsOperation",
     "TrimWindow",
+    "TrueNorthDirection",
     "TurnLayer",
     "TurnTextEdit",
     "TwoPointsUcsTo",

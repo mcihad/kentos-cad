@@ -250,6 +250,22 @@
    "tests": 0
   },
   {
+   "id": "arch.revisionList",
+   "kind": "command",
+   "title": "Revizyon listesi",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "“Revizyon” bloğunun REV'e göre Blok çizelgesi tablosu; satırlarını belge her adımda kendisi yazar (ADR 0327, 0721 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.settings",
    "kind": "command",
    "title": "Katlar",
@@ -11034,6 +11050,22 @@
    "tests": 1
   },
   {
+   "id": "tool.materialLegend",
+   "kind": "command",
+   "title": "Malzeme lejandı",
+   "level": "semantic",
+   "via": [
+    "cad.legends.materials"
+   ],
+   "operation": null,
+   "python": "kentos.cad.legends.materials",
+   "mcp": "cad.legends.materials",
+   "note": "Yer ve yazı yüksekliği komuta verilir; Yenile lejandı yerinde yeniden yapar, önizleme planından (ADR 0721 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.measure",
    "kind": "tool",
    "title": "Mesafe ölç",
@@ -11183,6 +11215,22 @@
    "python": "kentos.cad.openings.create",
    "mcp": "cad.openings.create",
    "note": "Niş biçimiyle aynı komut; yüz imlecin yanı, derinlik açık (ADR 0719).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.northArrow",
+   "kind": "command",
+   "title": "Kuzey oku",
+   "level": "semantic",
+   "via": [
+    "cad.north.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.north.create",
+   "mcp": "cad.north.create",
+   "note": "Yer, yön (plan, coğrafi, açı) ve kâğıttaki boy komuta verilir; kitaplığın bloğu aynı adımda eklenir, önizleme planından (ADR 0721 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -11884,6 +11932,22 @@
    "mcp": "cad.entities.reverse",
    "note": "Nesnelerin kimlikleri komuta verilir; kotlar, ölçüler (M) ve genişlikler tersine, ilişkili ölçüler izler (ADR 0296).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.revisionMark",
+   "kind": "command",
+   "title": "Revizyon işaretle",
+   "level": "semantic",
+   "via": [
+    "cad.revisions.mark"
+   ],
+   "operation": null,
+   "python": "kentos.cad.revisions.mark",
+   "mcp": "cad.revisions.mark",
+   "note": "Çerçeve, yay boyu ve revizyon numarası komuta verilir; bulut ve üçgen tek adımda, üçgenin önizlemesi planından (ADR 0721 §4).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

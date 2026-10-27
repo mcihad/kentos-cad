@@ -1,5 +1,7 @@
 //! View marks read their targets (docs/adr/0345 §2). A mark's bubble writes its number on top and its target's number
-//! below: a named view's name, or the name of the sheet its map frame is on. The targets are project settings and the
+//! below: a named view's name, or the drawing number of the sheet its map frame is on (`drawingInfo.number`, “A-301”;
+//! its name while it has none, docs/adr/0721 §1), so renumbering the set renumbers the marks. The targets are project
+//! settings and the
 //! sheet book, neither an undo step, so the words are derived: written again
 //!
 //! - at a step's end, for the marks the step added or changed (inside the step);
@@ -22,16 +24,26 @@ use crate::history::Op;
 use crate::identity::Uuid;
 use crate::store::Stored;
 
-/// A sheet of the book as the marks read it: its id and name and its map frames' ids and names, in order.
+/// A sheet of the book as the marks read it: its id, name and drawing number and its map frames' ids and names, in
+/// order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SheetFrames {
     pub id: String,
     pub name: String,
+    /// Its drawing number (`drawingInfo.number`), empty when it has none.
+    pub number: String,
     pub frames: Vec<(String, String)>,
 }
 
+impl SheetFrames {
+    /// What a mark's bubble writes below for this sheet (docs/adr/0721 §1): its drawing number, else its name.
+    pub fn label(&self) -> &str {
+        if self.number.is_empty() { &self.name } else { &self.number }
+    }
+}
+
 /// The book's sheets and their map frames, in the book's order (the sheet core's `kentos.sheet/1` JSON, read as a
-/// JSON value: `sheets[].{id, name, items[].{id, name, kind.type}}`).
+/// JSON value: `sheets[].{id, name, drawingInfo.number, items[].{id, name, kind.type}}`).
 pub fn sheet_frames(sheets: Option<&ProjectSheets>) -> Vec<SheetFrames> {
     let Some(list) = sheets.and_then(|s| s.book.get("sheets")).and_then(|v| v.as_array()) else {
         return Vec::new();
@@ -41,6 +53,7 @@ pub fn sheet_frames(sheets: Option<&ProjectSheets>) -> Vec<SheetFrames> {
         .map(|s| SheetFrames {
             id: text(s, "id"),
             name: text(s, "name"),
+            number: s.get("drawingInfo").map(|d| text(d, "number")).unwrap_or_default().trim().to_owned(),
             frames: s
                 .get("items")
                 .and_then(|v| v.as_array())
@@ -65,7 +78,7 @@ pub fn target_place(doc: &Document, sheets: &[SheetFrames], t: &ViewTarget) -> O
         (None, Some(sheet), Some(item)) => {
             let s = sheets.iter().find(|s| s.id == *sheet)?;
             let k = s.frames.iter().position(|(id, _)| id == item)?;
-            Some((s.name.clone(), Some(u32::try_from(k + 1).unwrap_or(u32::MAX))))
+            Some((s.label().to_owned(), Some(u32::try_from(k + 1).unwrap_or(u32::MAX))))
         }
         _ => None,
     }

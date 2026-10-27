@@ -22,7 +22,10 @@ The rules, as ADR 0711 gives them:
   its line through `at` (absent: the cut's start) along the cut; with `total` (and more than two places) the first to
   the last one row (8 paper mm × the plot scale / 1000) further, on `at`'s side of the cut (left when on it);
 - the rule `cross` follows: an edge's point is where its line crosses the cut through `c`, its `t` where that is
-  along the edge (when on it); the dimension's line stays (its offset changes by how far its `a` moved across).
+  along the edge (when on it); the dimension's line stays (its offset changes by how far its `a` moved across);
+- a wall's lines changed on the same path (its components, ADR 0721 §6): a place on its first or last line (a face)
+  goes to the new first or last line; a place on a line between, its edge's two ends looked for bit for bit among the
+  new lines' vertices as one edge: not found, its reference breaks (`vertex_gone`) and its point stays.
 """
 
 import argparse
@@ -497,8 +500,29 @@ def edge_of(state, place_owner, place):
     return (edge[1], edge[2]) if edge[0] == "seg" else None
 
 
-def follow(state, d, changed):
-    """A dimension of the chain after the objects in `changed` changed: a copy, or the same."""
+def moved_line(before, after, place):
+    """Where a place on a wall's line goes when the wall's lines changed on the same path (ADR 0721 §6): its new place,
+    or None when it is on a line between whose edge's ends are not among the new lines' vertices."""
+    l0, l1 = lines(before), lines(after)
+    if len(l0) == len(l1) or len(before["pts"]) != len(after["pts"]) or before.get("closed") != after.get("closed"):
+        return place
+    part = place["part"]
+    if part == 0:
+        return place
+    if part == len(l0) - 1:
+        return dict(place, part=len(l1) - 1)
+    edge = l0[part][place["index"]]
+    ends = (edge[1], edge[2])
+    for j, line in enumerate(l1):
+        for k, e in enumerate(line):
+            if (e[1], e[2]) == ends:
+                return dict(place, part=j, index=k)
+    return None
+
+
+def follow(state, d, changed, before=None):
+    """A dimension of the chain after the objects in `changed` changed (as they were in `before`): a copy, or the
+    same."""
     out = copy.deepcopy(d)
     owners = {name: int(d["refs"][name]["uid"].split(":")[1]) for name in ("a", "b")}
     if not any(o in changed for o in owners.values()):
@@ -513,6 +537,12 @@ def follow(state, d, changed):
             r["broken"] = "object_gone"
             r["uid"] = uid(owner)
             continue
+        if before is not None and owner in changed and state[owner]["kind"] == "wall" and r["place"]["kind"] == "along":
+            moved = moved_line(before[owner], state[owner], r["place"])
+            if moved is None:
+                r["broken"] = "vertex_gone"
+                continue
+            r["place"] = moved
         edge = edge_of(state, owner, r["place"])
         if edge is None:
             out[name] = P(*xy(state[owner]["at"]))
@@ -679,7 +709,32 @@ def cases():
     add("kesilen duvar boyunca uzayınca noktalar kesen çizgide kalır, t değişir", follow_steps(inp((-1, 2), (13, 2)), 6, -0.5))
     add("eğik zincirde duvar kaydırılınca noktalar kesen çizgide kayar, çizgi yerinde", follow_steps(inp((-1, 1), (13, 3)), 3, 0.4))
     add("kesilen duvar silinince ölçülerinin bağı kopar, yerlerinde kalırlar", delete_steps(inp((-1, 2), (13, 2)), 3))
+    # ADR 0721 §6: a wall given a style (its components) or its style taken away: the faces stay its first and last
+    # lines, the chain stays bound and its values do not change; a line between gone breaks its reference.
+    add("duvara bileşenli stil verilince bağlar yüzlerinde kalır, değerler aynı",
+        style_steps(inp((-1, 2), (13, 2)), 2, "İç duvar 15"))
+    add("bileşenli duvarın stili kaldırılınca bağlar yüzlerinde kalır",
+        style_steps(inp((-1, 12), (5, 12)), 7, None))
+    add("katmanlar zincirinde stil kalkınca aradaki çizgilerin bağı kopar, noktaları yerinde",
+        style_steps(inp((-1, 12), (5, 12), faces="skins"), 7, None))
     return c
+
+
+def style_steps(i, wall_id, style):
+    state = initial()
+    s, state, new = step("execute", i, state)
+    found = wc.find_style([], style)[0] if style else None
+    w = wc.changed({}, state[wall_id], {"style": style}, found, "uids[0]")
+    changed = {wall_id: w}
+    after = {**state, **changed}
+    followed = {k: follow(after, d, changed, before=state) for k, d in new.items()}
+    expect = {str(k): d for k, d in followed.items() if d != new[k]}
+    expect[str(wall_id)] = w
+    edit = {"op": "execute", "command": "cad.walls.edit",
+            "input": {"uids": [u(wall_id)], "operation": {"kind": "set", "style": style}},
+            "result": {"status": "completed", "output": "$any", "warnings": "$any"},
+            "within": WITHIN, "expect": {"ids": sorted(after), "entities": expect, "revision": "changed"}}
+    return [s, edit]
 
 
 def follow_steps(i, wall_id, by):

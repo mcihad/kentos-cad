@@ -394,6 +394,52 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
     }
 }
 
+/// The place on `after` a place on a face of the wall `before` follows to when its lines changed (docs/adr/0721 §6): a
+/// wall's faces are its first and last lines whatever lines its components add between them, so on the same path (as
+/// many vertices, closed alike) a place on its first or last line goes to the new first or last. None for any other
+/// place, shape or path: those follow by their vertices.
+fn wall_face(before: &Shape, after: &Shape, place: Place) -> Option<Place> {
+    let (Shape::Wall { pts: p0, wall: w0, .. }, Shape::Wall { pts: p1, wall: w1, .. }) = (before, after) else {
+        return None;
+    };
+    if p0.len() != p1.len() || w0.closed != w1.closed {
+        return None;
+    }
+    let (last0, last1) = (
+        crate::geom::wall::boundaries(w0).len() - 1,
+        crate::geom::wall::boundaries(w1).len() - 1,
+    );
+    let face = |part: usize| match part {
+        0 => Some(0),
+        p if p == last0 => Some(last1),
+        _ => None,
+    };
+    match place {
+        Place::Vertex { part, ring: 0, index } => Some(Place::Vertex {
+            part: face(part)?,
+            ring: 0,
+            index,
+        }),
+        Place::Mid { part, ring: 0, index } => Some(Place::Mid {
+            part: face(part)?,
+            ring: 0,
+            index,
+        }),
+        Place::Along {
+            part,
+            ring: 0,
+            index,
+            t,
+        } => Some(Place::Along {
+            part: face(part)?,
+            ring: 0,
+            index,
+            t,
+        }),
+        _ => None,
+    }
+}
+
 /// Whether `place` addresses a part and ring with the same number of vertices (or points) in
 /// both shapes: the structure the place depends on did not change.
 fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
@@ -510,6 +556,12 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             None => Followed::Broken(Reason::NoSuchPlace),
         };
     }
+    if let Some(to) = wall_face(&before.shape, &after.shape, place) {
+        return match point(after, to) {
+            Some(p) => Followed::At(to, p),
+            None => Followed::Broken(Reason::NoSuchPlace),
+        };
+    }
     let found = |want: Vec2| -> Result<Place, Reason> {
         let hits: Vec<Place> = vertex_places(&after.shape)
             .into_iter()
@@ -531,12 +583,17 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
         | Place::Along {
             part, ring, index, ..
         } => {
-            // The edge's two ends, found in the new geometry as one edge.
-            let Some(r) = ring_of(&before.shape, part, ring) else {
-                return Followed::Broken(Reason::NoSuchPlace);
+            // The edge's two ends, found in the new geometry as one edge (a path's ring's or a wall's line's).
+            let (a, b) = match ring_of(&before.shape, part, ring) {
+                Some(r) => {
+                    let n = r.pts.len();
+                    (r.pts[index], r.pts[(index + 1) % n])
+                }
+                None => match wall_edge(&before.shape, part, index) {
+                    Some((a, b, _)) if ring == 0 => (a, b),
+                    _ => return Followed::Broken(Reason::NoSuchPlace),
+                },
             };
-            let n = r.pts.len();
-            let (a, b) = (r.pts[index], r.pts[(index + 1) % n]);
             let (
                 Ok(Place::Vertex {
                     part: pa,
@@ -555,14 +612,17 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
                     _ => Reason::VertexGone,
                 });
             };
-            let Some(nr) = ring_of(&after.shape, pa, ra) else {
-                return Followed::Broken(Reason::NoSuchPlace);
+            let (m, closed) = match ring_of(&after.shape, pa, ra) {
+                Some(nr) => (nr.pts.len(), nr.closed),
+                None => match wall_line(&after.shape, pa) {
+                    Some((l, closed)) if ra == 0 => (l.pts.len(), closed),
+                    _ => return Followed::Broken(Reason::NoSuchPlace),
+                },
             };
-            let m = nr.pts.len();
             let next = |i: usize| {
                 if i + 1 < m {
                     Some(i + 1)
-                } else if nr.closed {
+                } else if closed {
                     Some(0)
                 } else {
                     None

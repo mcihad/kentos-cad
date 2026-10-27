@@ -4,7 +4,7 @@
   "command": "cad.dimensions.query",
   "commandVersion": 1,
   "title": "Ölçüleri oku",
-  "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321; do not edit by hand.",
+  "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321, 0721; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

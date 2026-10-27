@@ -10,7 +10,6 @@
 //! weight; 4. the expected revision; 5. the layer.
 
 use std::collections::BTreeMap;
-use std::sync::OnceLock;
 
 use kentos_commands::block_dynamic::{BlockParameter, ParamValue, same_param_value, value_problem};
 use kentos_commands::{
@@ -42,19 +41,6 @@ const DEPTHS: (f64, f64) = (0.30, 1.20);
 /// A filler narrower than this is no filler: the run's modules fill its line.
 const NO_FILLER: f64 = 1e-3;
 
-/// KentOS's block library, read once.
-fn library() -> &'static [BlockDefinition] {
-    static LIB: OnceLock<Vec<BlockDefinition>> = OnceLock::new();
-    LIB.get_or_init(|| {
-        let text = crate::blocks_library::BUILTIN_LIBRARIES[0].1;
-        serde_json::from_str::<serde_json::Value>(text)
-            .ok()
-            .and_then(|file| file.get("blocks").cloned())
-            .and_then(|blocks| serde_json::from_value(blocks).ok())
-            .unwrap_or_default()
-    })
-}
-
 struct Checked {
     entities: Vec<Entity>,
     added: Vec<BlockDefinition>,
@@ -80,7 +66,7 @@ fn definition(
     if let Some(b) = added.iter().find(|b| b.name == name) {
         return Ok(b.clone());
     }
-    let Some(mut b) = library().iter().find(|b| b.name == name).cloned() else {
+    let Some(mut b) = crate::library_symbols::library().iter().find(|b| b.name == name).cloned() else {
         return Err(invalid(
             format!("“{name}” bloğu ne çizimde ne KentOS kitaplığında var."),
             "layerId",

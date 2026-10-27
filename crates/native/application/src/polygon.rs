@@ -101,7 +101,7 @@ fn write_execute(
 
 /// The checks, then the rules (Çakışma, Topoloji; docs/adr/0622 §9): the warnings, the polygon as the document will
 /// store it (id 0) and the neighbours' corners.
-fn ruled(
+pub(crate) fn ruled(
     doc: &Document,
     store: Option<&kentos_geometry_core::store::Store>,
     input: &PolygonCreate,

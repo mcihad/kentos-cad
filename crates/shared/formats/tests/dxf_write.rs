@@ -434,6 +434,7 @@ fn dimensions() -> Vec<Entity> {
             zb: None,
             refs: None,
             look: Default::default(),
+            level: None,
         })
     };
     vec![

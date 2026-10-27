@@ -669,6 +669,7 @@ impl Document {
                 breaks: Vec::new(),
                 look: look.clone(),
                 annotative: None,
+                level: None,
             });
             if appearance_changed && like.is_some() {
                 d.look = set.look.clone();

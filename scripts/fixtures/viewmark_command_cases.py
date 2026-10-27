@@ -5,7 +5,8 @@ Writes fixtures/commands/v1/cad.viewmarks.{create,edit,references}.json and cad.
 and writes nothing. The rules, as the ADR gives them:
 
 - a mark's words: top its `mark`, or, empty, its sheet frame's order on its sheet (from 1); bottom its target's number:
-  a named view's name, a sheet frame's sheet's name, “—” with no target; a target gone keeps the last words and breaks
+  a named view's name, a sheet frame's sheet's drawing number (`drawingInfo.number`, docs/adr/0721 §1), its name while
+  it has none, “—” with no target; a target gone keeps the last words and breaks
   the mark (`targetGone`); a named view is known by its id, else by `v-` and its name's FNV-1a (32 bits, 8 hex digits);
 - the document writes the words again in the step that adds or changes a mark, and, outside any step, whenever the named
   views or the sheet book change and after an undo or a redo (no undo step of its own);
@@ -130,6 +131,8 @@ class Drawing:
         self.objs = {i: {"kind": k, "id": i, "layerId": ly, "attrs": {}, **copy.deepcopy(f)} for i, (k, ly, f) in SEED.items()}
         self.views = copy.deepcopy(VIEWS)
         self.sheets = copy.deepcopy(SHEETS)
+        # The sheets' drawing numbers by their ids (docs/adr/0721 §1); none: the name is written.
+        self.numbers = {}
         self.layers = dict(LAYERS)
         self.next = NEW
 
@@ -149,7 +152,7 @@ class Drawing:
             if s == t["sheet"]:
                 for k, (i, _) in enumerate(frames):
                     if i == t["item"]:
-                        return name, k + 1
+                        return self.numbers.get(s) or name, k + 1
         return None
 
     def settle(self, m):
@@ -485,8 +488,8 @@ def references_output(d):
     for s, name, frames in d.sheets:
         for k, (i, frame) in enumerate(frames):
             t = {"sheet": s, "item": i}
-            targets.append({"target": t, "name": f"{name} › {frame or f'Çerçeve {k + 1}'}", "number": name, "order": k + 1,
-                            "marks": pointing(t)})
+            targets.append({"target": t, "name": f"{name} › {frame or f'Çerçeve {k + 1}'}", "number": d.numbers.get(s) or name,
+                            "order": k + 1, "marks": pointing(t)})
     return {"marks": marks, "targets": targets, "revision": "$current"}
 
 
@@ -539,7 +542,34 @@ def rename_sheet(d, sid, to):
                          "result": ANY, "expect": {"revision": "changed"}})
 
 
+def number_sheet(d, sid, number):
+    """The sheet's drawing number set (none: its drawing information taken away); the marks write it below."""
+    if number:
+        d.numbers[sid] = number
+    else:
+        d.numbers.pop(sid, None)
+    return refreshed(d, {"op": "execute", "command": "cad.sheets.edit",
+                         "input": {"ops": [{"op": "setDrawingInfo", "id": sid, "info": {"number": number} if number else None}]},
+                         "result": ANY, "expect": {"revision": "changed"}})
+
+
+def copy_mark(d, oid, dx, dy):
+    """Kopyala: the mark copied by (dx, dy), a new object with the same target; its words settled from it."""
+    new = copy.deepcopy(d.objs[oid])
+    new["id"] = d.next
+    new["points"] = [P(q["x"] + dx, q["y"] + dy) for q in new["points"]]
+    if "at" in new:
+        new["at"] = P(new["at"]["x"] + dx, new["at"]["y"] + dy)
+    d.objs[d.next] = new
+    d.next += 1
+    d.refresh()
+    return {"op": "execute", "command": "cad.entities.transform",
+            "input": {"uids": [f"$uidOf:{oid}"], "transform": {"kind": "move", "dx": dx, "dy": dy}, "copy": True},
+            "result": ANY, "expect": {"ids": d.ids(), "entities": entities(d, [oid, new["id"]]), "revision": "changed"}}
+
+
 def remove_sheet(d, sid):
+    d.numbers.pop(sid, None)
     d.sheets = [x for x in d.sheets if x[0] != sid]
     return refreshed(d, {"op": "execute", "command": "cad.sheets.edit", "input": {"ops": [{"op": "removeSheet", "id": sid}]},
                          "result": ANY, "expect": {"revision": "changed"}})
@@ -761,6 +791,27 @@ def reference_cases():
     d = Drawing()
     s = create_step(d, "execute", {"layerId": "isaret", "marks": [{"form": "section", "points": [P(0, 0), P(1, 0)], "target": {"view": "v-kesit"}}]})
     c.add("Görünüme bakan numarasız işaretin üst yarısı boş", [s, references_step(d)])
+    # docs/adr/0721 §1: the sheet's drawing number below; renumbering the set renumbers the marks, copies too.
+    d = Drawing()
+    c.add("Paftanın çizim numarası işaretin alt yarısına yazılır", [number_sheet(d, "pafta-1", "A-301"), references_step(d)])
+    d = Drawing()
+    c.add("Pafta yeniden numaralanınca işaret yeni numarayı yazar",
+          [number_sheet(d, "pafta-1", "A-301"), number_sheet(d, "pafta-1", "A-302"), references_step(d)])
+    d = Drawing()
+    c.add("Çizim numarası kalkan paftada işaret yine adını yazar",
+          [number_sheet(d, "pafta-1", "A-301"), number_sheet(d, "pafta-1", None), references_step(d)])
+    d = Drawing()
+    c.add("Kopyalanan işaret aynı hedefe bakar; pafta numaralanınca ikisi birlikte izler",
+          [copy_mark(d, 6, 0, 5), number_sheet(d, "pafta-1", "A-501"), references_step(d)])
+    d = Drawing()
+    c.add("İkinci paftanın numarası kendi işaretine yazılır",
+          [add_sheet(d, "pafta-2", "Kesitler", [("harita-3", "Kesit 1")]), number_sheet(d, "pafta-2", "A-301"),
+           create_step(d, "execute", {"layerId": "isaret", "marks": [
+               {"form": "section", "points": [P(0, 6), P(8, 6)], "target": {"sheet": "pafta-2", "item": "harita-3"}}]}),
+           references_step(d)])
+    d = Drawing()
+    c.add("Numaralı pafta silinince işaret son yazısıyla kopar",
+          [number_sheet(d, "pafta-1", "A-301"), remove_sheet(d, "pafta-1"), references_step(d)])
     return c
 
 # ── cad.spaces.finish ──────────────────────────────────────────────────────────────────────────────────────────

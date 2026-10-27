@@ -1261,6 +1261,7 @@ impl Document {
             self.settings = settings;
             self.refresh_viewmarks();
             self.refresh_derived_tags();
+            self.refresh_level_marks();
             if scale_changed {
                 self.refresh_dimension_set_rows();
             }

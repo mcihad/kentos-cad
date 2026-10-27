@@ -1211,6 +1211,8 @@ codes! {
     SHEET_AMBIGUOUS_SOURCE = "ambiguous_source", Failed, false, "Sığdırmak için ya kapsam ya nesne kimlikleri verilmeli.";
     /// The target is not a fixed map frame.
     SHEET_NOT_FIXED_MAP = "not_fixed_map", Failed, false, "Bu işlem sabit görünüm penceresi gerektiriyor.";
+    /// Kat planı paftaları with every level asked already on a sheet (docs/adr/0718).
+    LEVELS_HAVE_SHEETS = "levels_have_sheets", Failed, false, "Seçilen katların hepsinin planı bir paftada var; yeniden yapmak için Yeniden'i (again) seçin.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.
@@ -1609,6 +1611,14 @@ codes! {
     INVALID_ARCH = "invalid_arch", Failed, false, "Katlar geçersiz: iki katın kimliği ya da adı aynı, ya da bir katın kotu ya da yüksekliği sayı değil.";
     /// A level a wall names, not taken away.
     LEVEL_IN_USE = "level_in_use", Failed, false, "Katı bir mimari nesne ya da pafta haritası anıyor; kaldırılmadı. Önce onlara başka kat verin.";
+    /// True north asked where the project's system has no meridian (docs/adr/0721 §3).
+    NO_TRUE_NORTH = "no_true_north", Failed, false, "Projenin koordinat sisteminde meridyen yok (yerel proje ya da sistemin dışında bir nokta): coğrafi kuzey bulunamaz. Plan kuzeyini ya da bir açı verin.";
+    /// A revision's number, date or description against their rules (docs/adr/0721 §4).
+    INVALID_MARK = "invalid_mark", Failed, false, "Revizyonun numarası boş olmayan, kenarı boşluksuz, denetim karaktersiz ve en çok 16 karakter; tarihi en çok 32, açıklaması en çok 240 karakter olmalı.";
+    /// A material legend asked of a drawing whose walls have no component (docs/adr/0721 §5).
+    NO_MATERIALS = "no_materials", Failed, false, "Çizimde bileşenli duvar yok: lejanda yazılacak malzeme yok.";
+    /// A material legend made again where the drawing has none (docs/adr/0721 §5).
+    NO_LEGEND = "no_legend", Failed, false, "Çizimde malzeme lejandı yok: yeniden yapılacak bir şey yok. Lejandın yerini (at) verin.";
     /// An object that is no wall where a wall is asked.
     NOT_A_WALL = "not_a_wall", Failed, false, "Nesne duvar değil.";
     /// An object no wall is drawn along.

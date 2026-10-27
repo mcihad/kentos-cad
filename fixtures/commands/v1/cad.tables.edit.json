@@ -3540,6 +3540,956 @@
    ]
   },
   {
+   "name": "Blok çizelgesi sütunla: tek blokta Blok sütunu yok, satırın değerleri “; ” ile",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "names": [
+           "Kapı"
+          ],
+          "columns": [
+           "TUR"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:17"
+       ],
+       "ids": [
+        17
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         0.7805
+        ],
+        "cells": [
+         [
+          "TUR",
+          "Adet"
+         ],
+         [
+          "İç; Dış",
+          "3"
+         ],
+         [
+          "Toplam",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "columns": [
+          "TUR"
+         ]
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Blok çizelgesi sütunla: iki blokta Blok sütunu kalır, veri de sütun olur",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:7"
+      ],
+      "attrs": {
+       "Not": "Yangın"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "by": "TUR",
+          "columns": [
+           "Not"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:17"
+       ],
+       "ids": [
+        17
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         0.707,
+         0.9875,
+         0.7805
+        ],
+        "cells": [
+         [
+          "Blok",
+          "TUR",
+          "Not",
+          "Adet"
+         ],
+         [
+          "Kapı",
+          "Dış",
+          "Yangın",
+          "1"
+         ],
+         [
+          "Kapı",
+          "İç",
+          "Yangın",
+          "2"
+         ],
+         [
+          "Pencere",
+          "",
+          "",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          "",
+          "4"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "by": "TUR",
+         "columns": [
+          "Not"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Blok çizelgesi sütunları aynı adımda izler; geri alma birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "attrs": {
+       "Tarih": "2026-10-20",
+       "Açıklama": "Mutfak kapısı"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Tarih": "2026-10-20",
+       "Açıklama": "Banyo kapısı"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "names": [
+           "Kapı"
+          ],
+          "by": "TUR",
+          "columns": [
+           "Tarih",
+           "Açıklama"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:17"
+       ],
+       "ids": [
+        17
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.50125,
+         3.169,
+         0.7805
+        ],
+        "cells": [
+         [
+          "TUR",
+          "Tarih",
+          "Açıklama",
+          "Adet"
+         ],
+         [
+          "Dış",
+          "",
+          "",
+          "1"
+         ],
+         [
+          "İç",
+          "2026-10-20",
+          "Mutfak kapısı; Banyo kapısı",
+          "2"
+         ],
+         [
+          "Toplam",
+          "",
+          "",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "by": "TUR",
+         "columns": [
+          "Tarih",
+          "Açıklama"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ],
+      "attrs": {
+       "Tarih": "2026-10-27",
+       "Açıklama": "Giriş kapısı genişledi"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.50125,
+         3.169,
+         0.7805
+        ],
+        "cells": [
+         [
+          "TUR",
+          "Tarih",
+          "Açıklama",
+          "Adet"
+         ],
+         [
+          "Dış",
+          "2026-10-27",
+          "Giriş kapısı genişledi",
+          "1"
+         ],
+         [
+          "İç",
+          "2026-10-20",
+          "Mutfak kapısı; Banyo kapısı",
+          "2"
+         ],
+         [
+          "Toplam",
+          "",
+          "",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "by": "TUR",
+         "columns": [
+          "Tarih",
+          "Açıklama"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.50125,
+         3.169,
+         0.7805
+        ],
+        "cells": [
+         [
+          "TUR",
+          "Tarih",
+          "Açıklama",
+          "Adet"
+         ],
+         [
+          "Dış",
+          "",
+          "",
+          "1"
+         ],
+         [
+          "İç",
+          "2026-10-20",
+          "Mutfak kapısı; Banyo kapısı",
+          "2"
+         ],
+         [
+          "Toplam",
+          "",
+          "",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "by": "TUR",
+         "columns": [
+          "Tarih",
+          "Açıklama"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Blok çizelgesi sütunu: kapı silinince değeri hücreden çıkar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "attrs": {
+       "Not": "Yangın"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Not": "Ahşap"
+      },
+      "operation": "attributes"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "names": [
+           "Kapı"
+          ],
+          "columns": [
+           "Not"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:17"
+       ],
+       "ids": [
+        17
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         0.7805
+        ],
+        "cells": [
+         [
+          "Not",
+          "Adet"
+         ],
+         [
+          "Yangın; Ahşap",
+          "3"
+         ],
+         [
+          "Toplam",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "columns": [
+          "Not"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         0.7805
+        ],
+        "cells": [
+         [
+          "Not",
+          "Adet"
+         ],
+         [
+          "Yangın",
+          "2"
+         ],
+         [
+          "Toplam",
+          "2"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "names": [
+          "Kapı"
+         ],
+         "columns": [
+          "Not"
+         ]
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Ret: blok çizelgesinin sütun adı boş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "names": [
+           "Kapı"
+          ],
+          "columns": [
+           "Tarih",
+           " "
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "Blok çizelgesinin blok, öznitelik ve sütun adları boş olamaz.",
+       "path": "objects[0].geometry.source"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: blok çizelgesine on birinci sütun",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5
+         ],
+         "columns": [
+          2.5
+         ],
+         "cells": [
+          [
+           "x"
+          ]
+         ],
+         "header": true,
+         "source": {
+          "kind": "blocks",
+          "names": [
+           "Kapı"
+          ],
+          "columns": [
+           "S0",
+           "S1",
+           "S2",
+           "S3",
+           "S4",
+           "S5",
+           "S6",
+           "S7",
+           "S8",
+           "S9",
+           "S10"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "Blok çizelgesine 11 sütun verildi; en çok 10 öznitelik ya da veri sütunu olur.",
+       "path": "objects[0].geometry.source"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "Güncelle: bağlı dosya, elle değişen hücreler korunur",
    "steps": [
     {

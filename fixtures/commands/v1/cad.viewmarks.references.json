@@ -8512,6 +8512,2849 @@
           }
         }
       ]
+    },
+    {
+      "name": "Paftanın çizim numarası işaretin alt yarısına yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-301"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-301"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-301"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-1"
+                  },
+                  "name": "A-101 › Kat planı",
+                  "number": "A-301",
+                  "order": 1,
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "name": "A-101 › Kesit",
+                  "number": "A-301",
+                  "order": 2,
+                  "marks": [
+                    "$uidOf:6"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pafta yeniden numaralanınca işaret yeni numarayı yazar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-301"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-301"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-302"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-302"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-302"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-1"
+                  },
+                  "name": "A-101 › Kat planı",
+                  "number": "A-302",
+                  "order": 1,
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "name": "A-101 › Kesit",
+                  "number": "A-302",
+                  "order": 2,
+                  "marks": [
+                    "$uidOf:6"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizim numarası kalkan paftada işaret yine adını yazar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-301"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-301"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-101"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-101"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-1"
+                  },
+                  "name": "A-101 › Kat planı",
+                  "number": "A-101",
+                  "order": 1,
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "name": "A-101 › Kesit",
+                  "number": "A-101",
+                  "order": 2,
+                  "marks": [
+                    "$uidOf:6"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kopyalanan işaret aynı hedefe bakar; pafta numaralanınca ikisi birlikte izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0,
+              "dy": 5
+            },
+            "copy": true
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-101"
+                }
+              },
+              "8": {
+                "kind": "viewmark",
+                "id": 8,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-101"
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-501"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-501"
+                }
+              },
+              "8": {
+                "kind": "viewmark",
+                "id": 8,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-501"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-501"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-501"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-1"
+                  },
+                  "name": "A-101 › Kat planı",
+                  "number": "A-501",
+                  "order": 1,
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "name": "A-101 › Kesit",
+                  "number": "A-501",
+                  "order": 2,
+                  "marks": [
+                    "$uidOf:6",
+                    "$uidOf:8"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci paftanın numarası kendi işaretine yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-2",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-3",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit 1",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "Kesitler",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-101"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-2",
+                "info": {
+                  "number": "A-301"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-101"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.create",
+          "input": {
+            "layerId": "isaret",
+            "marks": [
+              {
+                "form": "section",
+                "points": [
+                  {
+                    "x": 0.0,
+                    "y": 6.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 6.0
+                  }
+                ],
+                "target": {
+                  "sheet": "pafta-2",
+                  "item": "harita-3"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "viewmark",
+                "id": 8,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": 0.0,
+                    "y": 6.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 6.0
+                  }
+                ],
+                "target": {
+                  "sheet": "pafta-2",
+                  "item": "harita-3"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "A-301"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-101"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "form": "section",
+                  "target": {
+                    "sheet": "pafta-2",
+                    "item": "harita-3"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "A-301"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 0.0,
+                    "y": 6.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-1"
+                  },
+                  "name": "A-101 › Kat planı",
+                  "number": "A-101",
+                  "order": 1,
+                  "marks": []
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "name": "A-101 › Kesit",
+                  "number": "A-101",
+                  "order": 2,
+                  "marks": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "target": {
+                    "sheet": "pafta-2",
+                    "item": "harita-3"
+                  },
+                  "name": "Kesitler › Kesit 1",
+                  "number": "A-301",
+                  "order": 1,
+                  "marks": [
+                    "$uidOf:8"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numaralı pafta silinince işaret son yazısıyla kopar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "pafta kitabı: kurulum kitap veremez",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "pafta-1",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-1",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kat planı",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    },
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 210000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "harita-2",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Kesit",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "A-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "setDrawingInfo",
+                "id": "pafta-1",
+                "info": {
+                  "number": "A-301"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-301"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "input": {
+            "ops": [
+              {
+                "op": "removeSheet",
+                "id": "pafta-1"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "4": {
+                "kind": "viewmark",
+                "id": 4,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "section",
+                "points": [
+                  {
+                    "x": -1.0,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 1.5
+                  }
+                ],
+                "mark": "A",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "A",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "5": {
+                "kind": "viewmark",
+                "id": 5,
+                "layerId": "kilitli",
+                "attrs": {},
+                "form": "elevation",
+                "points": [
+                  {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                ],
+                "mark": "1",
+                "target": {
+                  "view": "v-kesit"
+                },
+                "words": {
+                  "top": "1",
+                  "bottom": "Kesit A-A"
+                }
+              },
+              "6": {
+                "kind": "viewmark",
+                "id": 6,
+                "layerId": "isaret",
+                "attrs": {},
+                "form": "detail",
+                "points": [
+                  {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                ],
+                "radius": 0.8,
+                "target": {
+                  "sheet": "pafta-1",
+                  "item": "harita-2"
+                },
+                "words": {
+                  "top": "2",
+                  "bottom": "A-301"
+                },
+                "broken": "targetGone"
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.viewmarks.references",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "marks": [
+                {
+                  "uid": "$uidOf:4",
+                  "form": "section",
+                  "mark": "A",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "A",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": -1.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "form": "elevation",
+                  "mark": "1",
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "words": {
+                    "top": "1",
+                    "bottom": "Kesit A-A"
+                  },
+                  "broken": false,
+                  "at": {
+                    "x": 2.0,
+                    "y": -2.0
+                  }
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "form": "detail",
+                  "target": {
+                    "sheet": "pafta-1",
+                    "item": "harita-2"
+                  },
+                  "words": {
+                    "top": "2",
+                    "bottom": "A-301"
+                  },
+                  "broken": true,
+                  "at": {
+                    "x": 6.0,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "targets": [
+                {
+                  "target": {
+                    "view": "v-kesit"
+                  },
+                  "name": "Kesit A-A",
+                  "number": "Kesit A-A",
+                  "marks": [
+                    "$uidOf:4",
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "target": {
+                    "view": "v-74fc4b63"
+                  },
+                  "name": "Detay 1",
+                  "number": "Detay 1",
+                  "marks": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
     }
   ]
 }

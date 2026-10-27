@@ -2786,6 +2786,8 @@ impl App {
             }
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
             "arch.quantities" => self.open_quantities(),
+            // Revizyon listesi (docs/adr/0721 §4).
+            "arch.revisionList" => self.place_revision_list(),
             "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)

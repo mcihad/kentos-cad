@@ -715,6 +715,7 @@ impl Document {
             if changed {
                 self.refresh_viewmarks();
                 self.refresh_derived_tags();
+                self.refresh_level_marks();
                 self.refresh_dimension_set_rows();
                 self.mark_changed();
             }
@@ -762,6 +763,7 @@ impl Document {
         if !undone.is_empty() {
             self.refresh_viewmarks();
             self.refresh_derived_tags();
+            self.refresh_level_marks();
             self.refresh_dimension_set_rows();
             self.mark_changed();
         }
@@ -851,6 +853,7 @@ impl Document {
         self.history.redo.push(step);
         self.refresh_viewmarks();
         self.refresh_derived_tags();
+        self.refresh_level_marks();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
@@ -871,6 +874,7 @@ impl Document {
         self.history.undo.push_back(step);
         self.refresh_viewmarks();
         self.refresh_derived_tags();
+        self.refresh_level_marks();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
@@ -977,6 +981,9 @@ impl Document {
         // Then: the view marks with their targets (docs/adr/0345 §2).
         let marks = self.follow_viewmarks(ops);
         ops.extend(marks);
+        // Then: the Kots bound to a level with it (docs/adr/0721 §2).
+        let levelled = self.follow_level_marks(ops);
+        ops.extend(levelled);
         // Then: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
         let settled = self.settle_boundaries(ops);
         ops.extend(settled);

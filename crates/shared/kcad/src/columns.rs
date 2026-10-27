@@ -983,6 +983,7 @@ impl Packer {
                 zb,
                 refs,
                 look,
+                level,
             }) => {
                 self.point(a);
                 self.point(b);
@@ -1153,9 +1154,14 @@ impl Packer {
                     || !breaks.is_empty()
                     || !look.overrides.is_empty()
                     || annotative.is_some()
+                    || level.is_some()
                 {
                     flags |= MORE;
                     let mut more = serde_json::Map::new();
+                    // A Kot's level (docs/adr/0721 §2), as its JSON.
+                    if let Some(l) = level {
+                        more.insert("level".into(), serde_json::to_value(l).unwrap_or_default());
+                    }
                     if let Some(a) = annotative {
                         more.insert(
                             "annotative".into(),
@@ -2753,6 +2759,10 @@ fn geometry(
                 Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("ölçünün ölçekleri"))?),
                 None => None,
             };
+            let level: Option<Box<kentos_contracts::DimensionLevel>> = match part("level") {
+                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("kotun katı"))?),
+                None => None,
+            };
             Entity::Dimension(DimensionEntity {
                 annotative,
                 text_shift,
@@ -2793,6 +2803,7 @@ fn geometry(
                     ext_line_type,
                     text_color,
                 },
+                level,
             })
         }
         12 => {

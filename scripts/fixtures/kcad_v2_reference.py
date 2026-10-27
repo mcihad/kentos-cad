@@ -1695,6 +1695,8 @@ KINDS = {
         "overrides": (lambda o: opaque(o) if o else None, False),
         # Schema 64 (docs/adr/0323): its scales, as their JSON.
         "annotative": (opaque, False),
+        # Schema 121 (docs/adr/0721 §2): a Kot's level, as its JSON.
+        "level": (opaque, False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -2227,6 +2229,15 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    columned = lambda es: any(e["kind"] == "table" and e.get("source", {}).get("kind") == "blocks"  # noqa: E731
+                              and e["source"].get("columns") for e in es)
+    if columned(entities) or any(columned(b["entities"]) for b in blocks or []):
+        # A block schedule's further columns (docs/adr/0721 §4).
+        return 122
+    levelled = lambda es: any(e["kind"] == "dimension" and "level" in e for e in es)  # noqa: E731
+    if levelled(entities) or any(levelled(b["entities"]) for b in blocks or []):
+        # A Kot bound to a level (docs/adr/0721 §2).
+        return 121
     arch = (settings or {}).get("arch", {})
     if "activeLevel" in arch or "levelView" in arch:
         # The level and view the drawing opens with (docs/adr/0720).
@@ -2883,7 +2894,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-121.kcad"] = container(root(cmap(parts), version=uint(121)))
+    files["schema-version-123.kcad"] = container(root(cmap(parts), version=uint(123)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4943,6 +4954,33 @@ def build():
     level_bad("unknown-level", lambda a: a.update(activeLevel="yok"))
     level_bad("without-levels", lambda a: a.pop("levels"))
     level_bad("view-type", lambda a: a.update(levelView="hepsi"))
+    # Schema 121 (docs/adr/0721 §2): Kots bound to a level, one with an offset; a Kot without stays as it was.
+    kp = document(load("dimension-levels.json"))
+    assert kp.count(b"\x67version\x18\x79") == 1
+    out["dimension-levels.kcad"] = container(kp)
+    out["broken/dimension-levels-in-schema-120.kcad"] = container(kp.replace(b"\x67version\x18\x79", b"\x67version\x18\x78"))
+    def kot_bad(name, index, change):
+        d = load("dimension-levels.json")
+        change(d["entities"][index])
+        out["broken/dimension-level-" + name + ".kcad"] = container(document(d))
+    kot_bad("not-a-kot", 3, lambda e: (e.pop("style"), e.pop("za"), e.update(level={"id": "zemin"})))
+    kot_bad("blank-id", 0, lambda e: e.update(level={"id": ""}))
+    kot_bad("far-offset", 1, lambda e: e.update(level={"id": "kat-1", "offset": 1000.5}))
+    kot_bad("unknown-field", 1, lambda e: e.update(level={"id": "kat-1", "bogus": 1.0}))
+    kot_bad("type", 0, lambda e: e.update(level="kat-1"))
+    # Schema 122 (docs/adr/0721 §4): a block schedule with further columns (Revizyon listesi's shape) beside one
+    # without, which stays as it was.
+    sp = document(load("table-schedule-columns.json"))
+    assert sp.count(b"\x67version\x18\x7a") == 1
+    out["table-schedule-columns.kcad"] = container(sp)
+    out["broken/table-schedule-columns-in-schema-121.kcad"] = container(sp.replace(b"\x67version\x18\x7a", b"\x67version\x18\x79"))
+    def columns_bad(name, change):
+        d = load("table-schedule-columns.json")
+        change(d["entities"][0]["source"])
+        out["broken/table-schedule-columns-" + name + ".kcad"] = container(document(d))
+    columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
+    columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
+    columns_bad("type", lambda src: src.update(columns="Tarih"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

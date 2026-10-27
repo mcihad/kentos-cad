@@ -10,6 +10,8 @@ mod attachments;
 mod blocks;
 mod columns;
 mod compose;
+mod dimension_levels;
+mod schedule_columns;
 mod dimension_refs;
 mod dimension_sets;
 mod dimensions;

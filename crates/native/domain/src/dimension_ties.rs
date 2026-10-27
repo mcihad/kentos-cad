@@ -436,8 +436,10 @@ impl Document {
                 let prior = was.as_ref().unwrap_or(d);
                 self.apply_rule(rule, prior, d, &mut next, &mut next_refs, &changed);
             }
-            // A level's elevation is its point's vertex's while it has one (docs/adr/0322).
+            // A level's elevation is its point's vertex's while it has one (docs/adr/0322); a Kot bound to a level
+            // reads its level instead (docs/adr/0721 §2).
             if d.style == Some(DimensionStyle::Elevation)
+                && d.level.is_none()
                 && let Some(r) = next_refs
                     .a
                     .as_ref()

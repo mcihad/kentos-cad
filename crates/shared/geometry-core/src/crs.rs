@@ -133,6 +133,22 @@ impl System {
         self.unproject(p)
     }
 
+    /// True north at a point of the system's plane (docs/adr/0721 §3): the angle, radians counter-clockwise, from the
+    /// plane's up (+y, grid north) to the meridian through the point, northwards: a transverse Mercator's meridian
+    /// convergence; 0 for a geographic system's and the Pseudo-Mercator's, whose meridians run up the plane; a local
+    /// system's, its base's turned by its plane. Read from the meridian's points a ten-thousandth of a degree either
+    /// side of the point's latitude; none where the system does not reach the point or within a degree of a pole.
+    pub fn true_north(&self, p: Vec2) -> Option<f64> {
+        const STEP: f64 = 1e-4;
+        let (lat, lon) = self.unproject(p)?;
+        if lat.abs() > 89.0 {
+            return None;
+        }
+        let (a, b) = (self.project(lat - STEP, lon)?, self.project(lat + STEP, lon)?);
+        let angle = libm::atan2(a.x - b.x, b.y - a.y);
+        angle.is_finite().then_some(angle)
+    }
+
     /// Whether the system's coordinates are degrees (a local system's are its
     /// plane's, whatever its base).
     pub fn is_geographic(&self) -> bool {

@@ -626,11 +626,16 @@ pub const SCHEMA_WITH_RECESSES: u32 = 119;
 /// Schema 120 (docs/adr/0720): the architectural settings' `activeLevel` and `levelView` (the level and view a drawing
 /// opens with), written only when one is said.
 pub const SCHEMA_WITH_LEVEL_STATE: u32 = 120;
+/// Schema 121 (docs/adr/0721): a Kot bound to a level (a dimension's `level`), written only when one is.
+pub const SCHEMA_WITH_DIMENSION_LEVELS: u32 = 121;
+/// Schema 122 (docs/adr/0721 §4): a block schedule's further columns (its source's `columns`, Revizyon listesi's Tarih
+/// and Açıklama), written only when a table has them.
+pub const SCHEMA_WITH_SCHEDULE_COLUMNS: u32 = 122;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 119] = [
+pub const SCHEMAS: [u32; 121] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -750,6 +755,8 @@ pub const SCHEMAS: [u32; 119] = [
     SCHEMA_WITH_DIMENSION_CROSS,
     SCHEMA_WITH_RECESSES,
     SCHEMA_WITH_LEVEL_STATE,
+    SCHEMA_WITH_DIMENSION_LEVELS,
+    SCHEMA_WITH_SCHEDULE_COLUMNS,
 ];
 
 /// The file a drawing is saved as.

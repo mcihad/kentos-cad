@@ -67,6 +67,7 @@ mod tables_cmd;
 mod transform;
 mod units;
 mod wall_follow;
+mod wall_style_ties;
 mod walls_rectangle;
 mod walls_partition;
 mod opening_placement;

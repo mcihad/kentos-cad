@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mimari işaretler (28 Ekim 2026; [ADR0721](docs/adr/0721-architectural-symbols.md)).**
+  Görünüm işareti hedef paftanın çizim numarasını okur (yeniden numaralama, kopya, `targetGone`). Kot `level
+  {id, offset?}` ile kata bağlanır, kat değişince izler (KCAD 121). `cad.north.create` (plan, coğrafi kuzey: meridyen
+  yakınsaması, açı), `cad.revisions.mark` (bulut + kitaplığın “Revizyon” üçgeni, numara/tarih/açıklama),
+  `cad.legends.materials` (duvar bileşenlerinin taraması ve adı); Revizyon listesi sütunlu blok çizelgesidir
+  (`TableSource::Blocks.columns`, KCAD 122). Duvarın yüzleri stil değişse de ilk ve son çizgisidir
+  (`subref::wall_face`). Kabul PDF'te `pdftotext`/`pdffonts` ile; pafta başına revizyon çizelgesi açık.
+
 - **Etkin kat dosyada (27 Ekim 2026; [ADR0720](docs/adr/0720-active-level-in-the-file.md)).**
   Çizim kaydedildiği etkin katta ve kat görünümüyle açılır: `arch.activeLevel` (kat kimliği, Katsız `null`) ve
   `levelView`, KCAD 120 opt-in; kaydetme ve kurtarma kopyası ekrandakini anlık görüntüye yazar

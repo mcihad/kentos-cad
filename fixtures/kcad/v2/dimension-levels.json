@@ -1,0 +1,145 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kata bağlı kotlar: 1. kat ve ıslak hacim",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.25
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.25,
+          "height": 3.25
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "dimension",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "b": {
+        "x": 1.5,
+        "y": 1.5
+      },
+      "offset": 0.0,
+      "height": 0.125,
+      "style": "elevation",
+      "za": 3.25,
+      "level": {
+        "id": "kat-1"
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 4.0,
+        "y": 1.0
+      },
+      "b": {
+        "x": 4.5,
+        "y": 1.5
+      },
+      "offset": 0.0,
+      "height": 0.125,
+      "style": "elevation",
+      "za": 3.23,
+      "level": {
+        "id": "kat-1",
+        "offset": -0.02
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 7.0,
+        "y": 1.0
+      },
+      "b": {
+        "x": 7.5,
+        "y": 1.5
+      },
+      "offset": 0.0,
+      "height": 0.125,
+      "style": "elevation",
+      "za": 0.0,
+      "level": {
+        "id": "zemin"
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 10.0,
+        "y": 1.0
+      },
+      "b": {
+        "x": 10.5,
+        "y": 1.5
+      },
+      "offset": 0.0,
+      "height": 0.125,
+      "style": "elevation",
+      "za": 1.5
+    }
+  ],
+  "uids": [
+    "0192f5a1-7210-7000-8000-000000000001",
+    "0192f5a1-7210-7000-8000-000000000002",
+    "0192f5a1-7210-7000-8000-000000000003",
+    "0192f5a1-7210-7000-8000-000000000004"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

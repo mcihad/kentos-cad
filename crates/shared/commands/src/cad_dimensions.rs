@@ -175,13 +175,17 @@ pub enum DimensionMeasure {
     /// edges; `at` is not read.
     CenterLine { first: EdgeNear, second: EdgeNear },
     /// Kot (docs/adr/0322): the elevation of `a`, `z` metres (absent: its place's vertex's, docs/adr/0142), its mark on
-    /// `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's.
+    /// `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's. With `level`
+    /// (docs/adr/0721 §2, not with `z`): the level's elevation plus its offset, following the level.
     Elevation {
         a: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         z: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        level: Option<crate::DimensionLevel>,
     },
 }
 
@@ -200,11 +204,11 @@ pub enum DimensionMeasure {
 /// `invalid_height`, `invalid_uid` (each place's and edge's object, in
 /// order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
 /// Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
-/// işareti or Eksen çizgisi), `invalid_revision`,
-/// `revision_conflict` (status `conflict`), `entity_not_found`,
+/// işareti or Eksen çizgisi), `invalid_dimension` (a Kot's `level` with `z`, or a level's id or offset that does not
+/// hold), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`,
 /// `no_such_place`, `not_measurable` (the object has no edge of the kind the
-/// measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
-/// (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
+/// measure takes), `not_straight` (a base not an aligned or a linear dimension), `level_not_found` (a Kot's level
+/// not the project's), `missing_elevation` (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
 /// `no_dimension` (no dimension forms there: the points meet, the edges are
 /// parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
 /// `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
@@ -554,19 +558,27 @@ pub enum DimensionEdit {
         uids: Vec<String>,
         options: Option<crate::DimensionOptions>,
     },
+    /// Kotun katı (docs/adr/0721 §2): the Kots bound to `level`, their value the level's elevation plus its offset
+    /// and following it; null: set free, their value kept as it is. Elevation marks only.
+    Level {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        level: Option<crate::DimensionLevel>,
+    },
 }
 
 /// Input of `cad.dimensions.edit` v1 (docs/adr/0321 §4): one edit of dimensions as one undo step named after it
-/// (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri). A dimension
-/// the edit leaves as it was is not counted; when none changes, nothing is written.
+/// (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri, Kotun katı).
+/// A dimension the edit leaves as it was is not counted; when none changes, nothing is written.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the base's, then each dimension's, then each
 /// object's), `no_entities` (no dimension), `not_finite` (`spacing`, `along`, `across`), `invalid_offset` (a spacing
 /// below 0), `empty_text` (a written value of spaces), `invalid_style` (options that break their rules),
-/// `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found` (the base, each dimension, each
-/// object), `not_a_dimension`, `layer_locked` (a dimension's layer), `not_straight` (Space's and Break's dimensions:
-/// aligned or linear), `not_parallel` (Space's dimension not parallel to its base). Break warns `no_crossing` for a
-/// dimension no object crosses.
+/// `invalid_dimension` (a level's id or offset that does not hold), `invalid_revision`, `revision_conflict` (status
+/// `conflict`), `entity_not_found` (the base, each dimension, each object), `not_a_dimension`, `layer_locked` (a
+/// dimension's layer), `not_straight` (Space's and Break's dimensions: aligned or linear), `not_parallel` (Space's
+/// dimension not parallel to its base), `invalid_dimension` (Level's dimension no Kot), `level_not_found` (Level's
+/// level not the project's). Break warns `no_crossing` for a dimension no object crosses.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

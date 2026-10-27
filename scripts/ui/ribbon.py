@@ -251,6 +251,8 @@ CAD = [
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split: the tab keeps its words at 1440 px.
+        # İşaret ▾ and Revizyon ▾ (docs/adr/0721) are small splits, Malzeme lejandı with the schedules: the tab keeps
+        # its words at 1440 px.
         P("Belgele", "tag", [{"key": "archDimensions", "size": "large", "split": [
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
@@ -258,8 +260,17 @@ CAD = [
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
-            ]}, S("tool.viewSection"), S("tool.viewElevation")],
-          overflow=["tool.tagAll", "tool.viewDetail", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
+                {"command": "tool.materialLegend", "title": "Çizelge", "label": "Malzeme lejandı"},
+            ]}, {"key": "archMarks", "size": "small", "split": [
+                {"command": "tool.viewSection", "title": "İşaret", "label": "Kesit"},
+                {"command": "tool.viewElevation", "title": "İşaret", "label": "Görünüş"},
+                {"command": "tool.viewDetail", "title": "İşaret", "label": "Detay"},
+                {"command": "tool.northArrow", "title": "İşaret", "label": "Kuzey oku"},
+            ]}, {"key": "archRevisions", "size": "small", "split": [
+                {"command": "tool.revisionMark", "title": "Revizyon", "label": "Revizyon işaretle"},
+                {"command": "arch.revisionList", "title": "Revizyon", "label": "Revizyon listesi"},
+            ]}],
+          overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
         P("Proje", "archSettings", [S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           overflow=["arch.sheetSet"]),

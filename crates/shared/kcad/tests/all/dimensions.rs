@@ -67,6 +67,7 @@ fn dimension() -> DimensionEntity {
         zb: None,
         refs: None,
         look: Default::default(),
+        level: None,
     }
 }
 

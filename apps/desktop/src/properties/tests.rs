@@ -11,7 +11,7 @@ use kentos_commands::{
 };
 use kentos_domain::Slot;
 
-use super::{Choice, Editor, Event, Field, Part, Row, Spot, Summary, web_number};
+use super::{Choice, DimensionOp, Editor, Event, Field, Part, Row, Spot, Summary, web_number};
 use crate::app::{App, Message};
 use crate::selecting::tests::{click, objects};
 
@@ -523,6 +523,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             zb: None,
             refs: None,
             look: Default::default(),
+            level: None,
         }),
     );
     let s = Slot(dim);
@@ -2327,6 +2328,7 @@ fn dimension(style: kentos_commands::DimensionStyle, a: [f64; 2], b: [f64; 2]) -
         zb: None,
         refs: None,
         look: Default::default(),
+        level: None,
     }
 }
 
@@ -2945,4 +2947,73 @@ fn virtual_separator_property_role_phase_lock_and_single_undo_use_the_semantic_c
     let locked=app.document.as_ref().unwrap().model.to_snapshot_v2();
     assert!(!row_editable(&app,"Geometri","Mahal ayırıcı"));
     event(&mut app,Event::SpaceSeparator(Slot(id),false));assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),locked);
+}
+
+/// A Kot's rows (docs/adr/0721 §2): Kot, Kat ▾ (Yok or a level of the project) and, while bound, Fark; the value
+/// read only while the level gives it. Each change one step “Kotun katı”.
+#[test]
+fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
+    use kentos_commands::DimensionStyle::Elevation;
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    {
+        let doc = &mut app.document.as_mut().expect("open").model;
+        let mut s = doc.settings().clone();
+        s.arch = Some(
+            serde_json::from_value(serde_json::json!({"levels": [
+                {"id": "zemin", "name": "Zemin kat", "elevation": 0.0},
+                {"id": "kat-1", "name": "1. kat", "elevation": 3.25}
+            ]}))
+            .unwrap(),
+        );
+        doc.set_settings(s);
+    }
+    let kot = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            za: Some(2.0),
+            offset: 0.0,
+            ..dimension(Elevation, [0.0, 0.0], [2.0, 2.0])
+        }),
+    );
+    select(&mut app, &[kot]);
+    assert_eq!(value(&app, "Geometri", "Kot"), "2.000 m");
+    assert!(row_editable(&app, "Geometri", "Kot"));
+    assert_eq!(value(&app, "Geometri", "Kat"), "Yok (kendi kotu)");
+    assert!(!has_row(&app, "Geometri", "Fark"));
+    // Its own value typed in centimetres.
+    event(&mut app, Event::Commit(Field::DimensionZa(vec![Slot(kot)]), "250 cm".into()));
+    assert_eq!(dimension_of(&app, kot).za, Some(2.5));
+    // Kat: 1. kat; the value is the level's, read only.
+    event(
+        &mut app,
+        Event::DimensionEdit(
+            vec![Slot(kot)],
+            DimensionOp::Level(Some(kentos_commands::DimensionLevel { id: "kat-1".into(), offset: None })),
+        ),
+    );
+    assert_eq!(dimension_of(&app, kot).za, Some(3.25));
+    assert_eq!(value(&app, "Geometri", "Kat"), "1. kat");
+    assert_eq!(value(&app, "Geometri", "Kot"), "3.250 m");
+    assert!(!row_editable(&app, "Geometri", "Kot"), "the level gives it");
+    assert_eq!(value(&app, "Geometri", "Fark"), "0.000 m");
+    // Fark −2 cm: a wet room's floor.
+    event(&mut app, Event::Commit(Field::DimensionLevelOffset(vec![Slot(kot)]), "-2 cm".into()));
+    assert_eq!(dimension_of(&app, kot).za, Some(3.25 + -0.02));
+    assert_eq!(value(&app, "Geometri", "Fark"), "-0.020 m");
+    // The level raised in the project's settings: the Kot follows.
+    {
+        let doc = &mut app.document.as_mut().expect("open").model;
+        let mut s = doc.settings().clone();
+        s.arch.as_mut().unwrap().levels[1].elevation = 6.5;
+        doc.set_settings(s);
+    }
+    assert_eq!(value(&app, "Geometri", "Kot"), "6.480 m");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Kotun katı"));
+    assert_eq!(dimension_of(&app, kot).level.as_deref().and_then(|l| l.offset), None);
+    // Yok: free again, its value kept as it is.
+    event(&mut app, Event::DimensionEdit(vec![Slot(kot)], DimensionOp::Level(None)));
+    let d = dimension_of(&app, kot);
+    assert_eq!((d.za, d.level.is_none()), (Some(6.5), true));
+    assert_eq!(value(&app, "Geometri", "Kat"), "Yok (kendi kotu)");
 }

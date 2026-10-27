@@ -78,6 +78,8 @@ pub(crate) struct Store {
     tags: BTreeSet<Slot>,
     /// The view marks (docs/adr/0345 §2): written again when their targets change.
     viewmarks: BTreeSet<Slot>,
+    /// The Kots bound to a level (docs/adr/0721 §2): written again when the levels change.
+    level_marks: BTreeSet<Slot>,
 }
 
 /// Whether a table has cells the document works out (docs/adr/0327).
@@ -285,6 +287,16 @@ impl Store {
         self.viewmarks.iter().copied()
     }
 
+    /// Whether the drawing has a Kot bound to a level.
+    pub fn has_level_marks(&self) -> bool {
+        !self.level_marks.is_empty()
+    }
+
+    /// The Kots bound to a level, in slot order.
+    pub fn level_mark_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.level_marks.iter().copied()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if crate::space_follow::separator_path(&stored.entity).is_some() {
             self.space_separators.insert(stored.slot());
@@ -300,6 +312,9 @@ impl Store {
         }
         if matches!(&*stored.entity, Entity::ViewMark(_)) {
             self.viewmarks.insert(stored.slot());
+        }
+        if matches!(&*stored.entity, Entity::Dimension(d) if d.level.is_some()) {
+            self.level_marks.insert(stored.slot());
         }
         if let Some((of, always)) = fields_of(stored) {
             for uid in of {
@@ -332,6 +347,7 @@ impl Store {
         self.computed.remove(&stored.slot());
         self.tags.remove(&stored.slot());
         self.viewmarks.remove(&stored.slot());
+        self.level_marks.remove(&stored.slot());
         if let Some((of, _)) = fields_of(stored) {
             for uid in of {
                 if let Some(texts) = self.fielded.get_mut(&uid) {

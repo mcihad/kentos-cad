@@ -48,10 +48,12 @@ impl Document {
         )
     }
 
-    /// A block schedule's rows (docs/adr/0327 §4): a heading (Blok, the attribute, Adet), a row for each block named
-    /// (none named: each block placed, in the drawing's order of definitions) and, with `by`, for each of its values
-    /// (in code point order; an insert without it counts under the empty value), then the total.
-    pub fn blocks_schedule(&self, names: &[String], by: Option<&str>) -> Vec<Vec<String>> {
+    /// A block schedule's rows (docs/adr/0327 §4): a heading (Blok, the attribute, the further columns, Adet), a row
+    /// for each block named (none named: each block placed, in the drawing's order of definitions) and, with `by`, for
+    /// each of its values (in code point order; an insert without it counts under the empty value), then the total.
+    /// A further column (docs/adr/0721 §4) holds its row's inserts' distinct values that are not empty, in the
+    /// drawing's order, joined with “; ”; with them a schedule of one block named leaves out its Blok column.
+    pub fn blocks_schedule(&self, names: &[String], by: Option<&str>, columns: &[String]) -> Vec<Vec<String>> {
         let defs: Vec<(Option<kentos_contracts::BlockId>, String)> = if names.is_empty() {
             self.blocks().iter().map(|b| (Some(b.id), b.name.clone())).collect()
         } else {
@@ -63,13 +65,41 @@ impl Document {
                 })
                 .collect()
         };
-        let mut head = vec!["Blok".to_owned()];
+        let named = columns.is_empty() || names.len() != 1;
+        let mut head = Vec::new();
+        if named {
+            head.push("Blok".to_owned());
+        }
         if let Some(b) = by {
             head.push(b.to_owned());
         }
+        head.extend(columns.iter().cloned());
         head.push("Adet".to_owned());
         let mut rows = vec![head];
         let mut total = 0usize;
+        // A row: its block's name, its value of `by`, its further cells, its count.
+        let row = |name: &str, value: Option<String>, of: &[&kentos_contracts::InsertEntity]| {
+            let mut r = Vec::new();
+            if named {
+                r.push(name.to_owned());
+            }
+            if let Some(v) = value {
+                r.push(v);
+            }
+            for c in columns {
+                let mut seen: Vec<&str> = Vec::new();
+                for i in of {
+                    if let Some(v) = i.base.attrs.get(c).map(String::as_str).filter(|v| !v.is_empty())
+                        && !seen.contains(&v)
+                    {
+                        seen.push(v);
+                    }
+                }
+                r.push(seen.join("; "));
+            }
+            r.push(of.len().to_string());
+            r
+        };
         for (id, name) in &defs {
             let inserts: Vec<&kentos_contracts::InsertEntity> = self
                 .entities()
@@ -84,28 +114,29 @@ impl Document {
             match by {
                 None => {
                     total += inserts.len();
-                    rows.push(vec![name.clone(), inserts.len().to_string()]);
+                    rows.push(row(name, None, &inserts));
                 }
                 Some(tag) => {
-                    let mut values: std::collections::BTreeMap<String, usize> = Default::default();
+                    let mut values: std::collections::BTreeMap<String, Vec<&kentos_contracts::InsertEntity>> =
+                        Default::default();
                     for i in &inserts {
                         let v = i.base.attrs.get(tag).cloned().unwrap_or_default();
-                        *values.entry(v).or_default() += 1;
+                        values.entry(v).or_default().push(i);
                     }
                     if values.is_empty() {
-                        rows.push(vec![name.clone(), String::new(), "0".to_owned()]);
+                        rows.push(row(name, Some(String::new()), &[]));
                     }
-                    for (v, n) in values {
-                        total += n;
-                        rows.push(vec![name.clone(), v, n.to_string()]);
+                    for (v, of) in values {
+                        total += of.len();
+                        rows.push(row(name, Some(v), &of));
                     }
                 }
             }
         }
         let mut last = vec![TOTAL.to_owned()];
-        if by.is_some() {
-            last.push(String::new());
-        }
+        let blanks = usize::from(named) + usize::from(by.is_some()) + columns.len();
+        // "Toplam" takes the first cell; the rest of the cells before the count are empty.
+        last.extend(std::iter::repeat_n(String::new(), blanks.saturating_sub(1)));
         last.push(total.to_string());
         rows.push(last);
         rows
@@ -140,8 +171,8 @@ impl Document {
     /// fields' values, then its formulas' results.
     pub fn table_worked_out(&self, t: &TableEntity) -> TableEntity {
         let mut out = t.clone();
-        if let Some(TableSource::Blocks { names, by }) = &t.source {
-            let rows = self.blocks_schedule(names, by.as_deref());
+        if let Some(TableSource::Blocks { names, by, columns }) = &t.source {
+            let rows = self.blocks_schedule(names, by.as_deref(), columns);
             self.take_rows(&mut out, rows);
         }
         // A schedule of the drawing's objects (docs/adr/0344 §3): its rows, members and look.

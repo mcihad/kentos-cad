@@ -1482,6 +1482,11 @@ pub struct DimensionEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annotative: Option<Box<crate::Annotative>>,
+    /// A Kot's level (docs/adr/0721 §2): `za` is the level's elevation plus its offset, written again when the
+    /// level's elevation changes; absent: its own `za`. An elevation mark's only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<Box<crate::DimensionLevel>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

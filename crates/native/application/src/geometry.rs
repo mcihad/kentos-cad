@@ -1621,6 +1621,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             zb,
             refs,
             look,
+            level,
         } => Entity::Dimension(DimensionEntity {
             annotative,
             text_shift,
@@ -1639,6 +1640,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             zb,
             refs,
             look,
+            level,
         }),
         EntityGeometry::Hatch {
             ring,
@@ -1940,6 +1942,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
                 refs: None,
                 look: contract_look(look),
+                level: None,
             }
         }
         Shape::Hatch {

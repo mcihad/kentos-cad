@@ -589,6 +589,13 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 {
                     now.refs = was.refs.clone();
                 }
+                // A Kot keeps its level when the edit names none (docs/adr/0721 §2), an elevation mark still.
+                if let (Entity::Dimension(was), Entity::Dimension(now)) = (entity, &mut next)
+                    && now.level.is_none()
+                    && now.style == Some(kentos_commands::DimensionStyle::Elevation)
+                {
+                    now.level = was.level.clone();
+                }
                 // An annotation keeps its scales (docs/adr/0323 §4): cad.annotations.scales changes them,
                 // and one that cannot be annotative any more (a text given a curve) has none.
                 if let Some(scales) = kentos_commands::annotative_of(entity)

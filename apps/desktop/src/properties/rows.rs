@@ -1820,9 +1820,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     },
                     l.value,
                 )),
-                Some(l) if l.unit == "level" => {
-                    geo.push(metres("Kot", l.value).editor(number(Field::DimensionZa(vec![slot]))))
-                }
+                // A Kot bound to a level reads it (docs/adr/0721 §2): its value is shown only.
+                Some(l) if l.unit == "level" => geo.push(metres("Kot", l.value).editor(if d.level.is_some() {
+                    None
+                } else {
+                    number(Field::DimensionZa(vec![slot]))
+                })),
                 Some(l) if l.unit == "coordinate" => geo.push(metres(
                     if l.prefix == "Y=" {
                         "Ölçülen Y"
@@ -1888,7 +1891,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .editor(edit(Editor::Text(Field::DimensionText(slot)))),
             ]);
             // Zemin, an ordinate's axis, a slope's elevations, an arc length's radius and angle (docs/adr/0147 §7).
-            let mut own = dimension::rows(&[d], &ids, locked, &f);
+            let levels = doc.model.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+            let mut own = dimension::rows(&[d], &ids, locked, &f, levels);
             if set_member.is_some() {
                 // Letting go is explicit for a recipe; freeing just one reference would be recreated.
                 if let Some(relation) = own.iter_mut().find(|row| row.label == "İlişki") {
@@ -1910,6 +1914,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             // İlişki right under its kind: whether the dimension follows its objects (docs/adr/0249 §3).
             if let Some(i) = own.iter().position(|r| r.label == "İlişki") {
                 geo.insert(1.min(geo.len()), own.remove(i));
+            }
+            // A Kot's Kat and Fark right under its value: the level it reads (docs/adr/0721 §2).
+            if let Some(at) = geo.iter().position(|r| r.label == "Kot") {
+                for (k, label) in ["Kat", "Fark"].into_iter().enumerate() {
+                    if let Some(i) = own.iter().position(|r| r.label == label) {
+                        geo.insert(at + 1 + k, own.remove(i));
+                    }
+                }
             }
             geo.extend(own);
         }
@@ -3493,7 +3505,13 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                     &slots,
                     any_locked,
                 ),
-                dimension::rows(&dims, &slots, any_locked, &f),
+                dimension::rows(
+                    &dims,
+                    &slots,
+                    any_locked,
+                    &f,
+                    doc.model.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice()),
+                ),
             ]
             .concat(),
         });

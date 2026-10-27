@@ -304,14 +304,17 @@ def cases():
 
 # A level an object names by its own level or a sheet's map shows stays (docs/adr/0339 §3, 0720 §3): the refusal says
 # the level by its name, how many of each kind name it (in this order) and the maps that show it; the objects' ids go
-# with it. Only the levels the input takes away are looked at.
-KINDS = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa"]
+# with it. Only the levels the input takes away are looked at. A Kot bound to a level names it for its value
+# (docs/adr/0721 §2): it counts too, last.
+KINDS = ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa", "kot işareti"]
 FIX_OBJECTS = "Önce bu nesnelere başka kat verin (seçip Öznitelikler › Kat) ya da katı bırakın."
 FIX_MAPS = "Önce haritanın katını değiştirin (paftada Harita › Kat) ya da katı bırakın."
 FIX_BOTH = "Önce nesnelere ve haritalara başka kat verin ya da katı bırakın."
 
 
 def kind_of(e):
+    if e["kind"] == "dimension":
+        return KINDS.index("kot işareti") if "level" in e else None
     if e["kind"] == "polyline":
         return KINDS.index("mahal ayırıcı") if "spaceSeparator" in e else None
     names = {"wall": "duvar", "space": "mahal", "column": "kolon", "grid": "aks", "stair": "merdiven", "ramp": "rampa"}
@@ -327,7 +330,8 @@ def in_use_words(doc, level):
     counts, ids = [0] * len(KINDS), []
     for e in doc["entities"]:
         k = kind_of(e)
-        if k is not None and la.level_of(e) == level["id"]:
+        named = (e.get("level") or {}).get("id") if e["kind"] == "dimension" else la.level_of(e)
+        if k is not None and named == level["id"]:
             counts[k] += 1
             ids.append(e["id"])
     book = (doc.get("sheets") or {}).get("book") or {}
@@ -416,6 +420,20 @@ def level_state_cases(levels, walled):
     c = refused("hem duvar hem pafta haritası", {"arch": {"levels": levels[:1]}}, "level_in_use", words, "arch.levels", both)
     c["steps"][0]["result"]["error"]["uids"] = ["$uidOf:5"]
     c["steps"][0]["expect"]["ids"] = IDS + [5]
+    c["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
+    out.append(c)
+    # A Kot bound to 1. kat (docs/adr/0721 §2) keeps it; a wall on Zemin kat says nothing of it.
+    kotted = setup(arch={"levels": levels})
+    kotted["entities"].append(dict(walled["entities"][-1], arch={"level": "zemin"}))
+    kotted["entities"].append({"kind": "dimension", "id": 6, "layerId": "yazi", "attrs": {}, "a": {"x": X, "y": Y + 30},
+                               "b": {"x": X + 2, "y": Y + 32}, "offset": 0, "height": 1, "style": "elevation", "za": 2.98,
+                               "level": {"id": "k1", "offset": -0.02}})
+    words, ids = in_use_words(kotted, k1)
+    assert words == "“1. kat” katını 1 kot işareti anıyor; kaldırılmadı. " + FIX_OBJECTS
+    c = refused("kata bağlı kot işaretinin katı kaldırılmaz", {"arch": {"levels": levels[:1]}}, "level_in_use", words,
+                "arch.levels", kotted)
+    c["steps"][0]["result"]["error"]["uids"] = [f"$uidOf:{i}" for i in ids]
+    c["steps"][0]["expect"]["ids"] = IDS + [5, 6]
     c["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
     out.append(c)
     # The map's level kept, another taken away: written.

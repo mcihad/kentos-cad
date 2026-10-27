@@ -160,6 +160,49 @@ pub struct TextShift {
     pub across: f64,
 }
 
+/// The most a Kot bound to a level may stand off its level, metres (docs/adr/0721 §2).
+pub const MAX_LEVEL_OFFSET: f64 = 1000.0;
+
+/// A Kot (an elevation mark) bound to a level of the project (docs/adr/0721 §2): its value is the level's floor
+/// elevation plus `offset` (a wet room's −0.02), written again whenever the level's elevation changes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionLevel {
+    /// The level, by its id among the project's levels.
+    pub id: String,
+    /// Metres added to the level's elevation; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub offset: Option<f64>,
+}
+
+impl DimensionLevel {
+    /// What is wrong with it, in a refusal's words; none when it holds.
+    pub fn problem(&self) -> Option<String> {
+        if self.id.trim() != self.id || self.id.is_empty() || self.id.chars().any(char::is_control) {
+            return Some("Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.".into());
+        }
+        if self.offset.is_some_and(|o| !(o.is_finite() && o.abs() <= MAX_LEVEL_OFFSET)) {
+            return Some(format!(
+                "Kot işaretinin kata göre farkı sonlu ve en çok {MAX_LEVEL_OFFSET} m olmalı."
+            ));
+        }
+        None
+    }
+
+    /// Its value among `levels`: the level's elevation plus the offset; none when the project lacks the level.
+    pub fn value(&self, levels: &[crate::ArchLevel]) -> Option<f64> {
+        levels
+            .iter()
+            .find(|l| l.id == self.id)
+            .map(|l| l.elevation + self.offset.unwrap_or(0.0))
+    }
+}
+
 /// Which of a dimension's lines a break is on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

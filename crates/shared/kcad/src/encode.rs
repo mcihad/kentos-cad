@@ -1976,6 +1976,21 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 122 (docs/adr/0721 §4): a block schedule with further columns (of the drawing or a block).
+    let columned = |list: Objs<'_>| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Table(t)
+                if matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { columns, .. }) if !columns.is_empty()))
+        })
+    };
+    if columned(objs) || doc.blocks.iter().any(|b| columned(Objs::Plain(&b.entities))) {
+        return crate::SCHEMA_WITH_SCHEDULE_COLUMNS;
+    }
+    // Schema 121 (docs/adr/0721): a Kot bound to a level (of the drawing or a block).
+    let levelled = |list: Objs<'_>| list.iter().any(|e| matches!(e, Entity::Dimension(d) if d.level.is_some()));
+    if levelled(objs) || doc.blocks.iter().any(|b| levelled(Objs::Plain(&b.entities))) {
+        return crate::SCHEMA_WITH_DIMENSION_LEVELS;
+    }
     // Schema 120 (docs/adr/0720): the level and view the drawing opens with.
     if doc
         .settings

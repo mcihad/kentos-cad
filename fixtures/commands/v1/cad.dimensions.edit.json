@@ -4,7 +4,7 @@
   "command": "cad.dimensions.edit",
   "commandVersion": 1,
   "title": "Ölçüyü düzenle",
-  "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321; do not edit by hand.",
+  "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321, 0721; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -2806,6 +2806,6772 @@
             "canRedo": false,
             "dirty": false,
             "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: serbest kot kata bağlanır, değeri katın kotu; adım “Kotun katı”",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "k1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:30"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.25,
+                "level": {
+                  "id": "k1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: zemin kata, 45 cm farkla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "zemin",
+                "offset": 0.45
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:30"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 0.45,
+                "level": {
+                  "id": "zemin",
+                  "offset": 0.45
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: iki kot, biri zaten öyle; yalnız öbürü sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30",
+                "$uidOf:31"
+              ],
+              "level": {
+                "id": "k1",
+                "offset": -0.02
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:30"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı bırakılır: değeri olduğu gibi kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:31"
+              ],
+              "level": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:31"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "entities": {
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı zaten öyle: hiçbir şey yazılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:31"
+              ],
+              "level": {
+                "id": "k1",
+                "offset": -0.02
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "entities": {},
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: plan; hiçbir şey yazılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30",
+                "$uidOf:31"
+              ],
+              "level": {
+                "id": "k1"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "dimensions": [
+                {
+                  "kind": "dimension",
+                  "id": 30,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487000,
+                    "y": 4420060
+                  },
+                  "b": {
+                    "x": 487002,
+                    "y": 4420062
+                  },
+                  "offset": 0,
+                  "height": 1.25,
+                  "style": "elevation",
+                  "za": 3.25,
+                  "level": {
+                    "id": "k1"
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 31,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487010,
+                    "y": 4420060
+                  },
+                  "b": {
+                    "x": 487012,
+                    "y": 4420062
+                  },
+                  "offset": 0,
+                  "height": 1.25,
+                  "style": "elevation",
+                  "za": 3.25,
+                  "level": {
+                    "id": "k1"
+                  }
+                }
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: ölçü kot değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30",
+                "$uidOf:11"
+              ],
+              "level": {
+                "id": "k1"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Ölçü kot değil: katı yalnız kot ölçüsü anar.",
+              "path": "edit.uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı projede yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "k9"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “k9” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "edit.level.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katının kimliği boş",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": ""
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.",
+              "path": "edit.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun kata göre farkı 1000 m'den çok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "k1",
+                "offset": 1500
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı.",
+              "path": "edit.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun kata göre farkı sonlu değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "k1",
+                "offset": 0
+              }
+            }
+          },
+          "nonFinite": {
+            "edit.level.offset": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension",
+              "message": "Kot işaretinin kata göre farkı sonlu ve en çok 1000 m olmalı.",
+              "path": "edit.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı: kilitli katmandaki kot",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:32"
+              ],
+              "level": {
+                "id": "k1"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              30,
+              31,
+              32
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı izlenir: kat yükselince bağlı kotlar da; geri alınıp yinelenince bugünkü değer",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "level",
+              "uids": [
+                "$uidOf:30"
+              ],
+              "level": {
+                "id": "k1"
+              }
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3.25
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 6.5,
+                  "height": 3.25
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.5,
+                "level": {
+                  "id": "k1"
+                }
+              },
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.48,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3.25
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 6.5,
+                    "height": 3.25
+                  }
+                ]
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3
+              },
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.48,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kotun katı",
+          "expect": {
+            "entities": {
+              "30": {
+                "kind": "dimension",
+                "id": 30,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487002,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 6.5,
+                "level": {
+                  "id": "k1"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kotun katı yeniden adlandırılınca kot aynı kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3.25
+                },
+                {
+                  "id": "k1",
+                  "name": "Birinci kat",
+                  "elevation": 3.25,
+                  "height": 3.25
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3.25
+                  },
+                  {
+                    "id": "k1",
+                    "name": "Birinci kat",
+                    "elevation": 3.25,
+                    "height": 3.25
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kata bağlı kot taşınınca katı ve değeri kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ölçü düzenleme, katlı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3.25
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.25,
+                "height": 3.25
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 11,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 2,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 12,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "offset": 3.5,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 13,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "offset": -6,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 14,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4419999
+            },
+            "b": {
+              "x": 487008,
+              "y": 4419999
+            },
+            "offset": -2.5,
+            "height": 1.25,
+            "style": "linear",
+            "angle": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 15,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487033,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420003
+            },
+            "offset": 2,
+            "height": 1.25,
+            "style": "angular",
+            "c": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 16,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420005
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420010
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 18,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420020
+            },
+            "b": {
+              "x": 487006,
+              "y": 4420020
+            },
+            "offset": 1.5,
+            "height": 1.25,
+            "text": "<> tip",
+            "textShift": {
+              "along": 1,
+              "across": 0.5
+            },
+            "breaks": [
+              {
+                "line": "first",
+                "t": 0.5
+              }
+            ],
+            "options": {
+              "zeros": "trailing"
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420030
+            },
+            "b": {
+              "x": 487004,
+              "y": 4420030
+            },
+            "offset": 1,
+            "height": 1.25
+          },
+          {
+            "kind": "dimension",
+            "id": 20,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420040
+            },
+            "b": {
+              "x": 487005,
+              "y": 4420040
+            },
+            "offset": 1,
+            "height": 1.25,
+            "text": "5.00"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420050
+            },
+            "b": {
+              "x": 487002.5,
+              "y": 4420050
+            },
+            "offset": 1,
+            "height": 1.25,
+            "unit": "mm",
+            "decimals": 0,
+            "options": {
+              "tolerance": {
+                "kind": "symmetric",
+                "upper": 0.001
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "id": 22,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487005,
+              "y": 4420002
+            },
+            "text": "Not",
+            "height": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 30,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487002,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3
+          },
+          {
+            "kind": "dimension",
+            "id": 31,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487012,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 3.23,
+            "level": {
+              "id": "k1",
+              "offset": -0.02
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420060
+            },
+            "b": {
+              "x": 487022,
+              "y": 4420062
+            },
+            "offset": 0,
+            "height": 1.25,
+            "style": "elevation",
+            "za": 1
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:31"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 5,
+              "dy": 0
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "31": {
+                "kind": "dimension",
+                "id": 31,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487015,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487017,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.23,
+                "level": {
+                  "id": "k1",
+                  "offset": -0.02
+                }
+              }
+            }
           }
         }
       ]

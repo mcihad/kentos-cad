@@ -717,10 +717,25 @@ def door(i, x, kind_, block=DOOR):
             "p": pt(x, -10), "scale": 1, "rotation": 0}
 
 
-def blocks_schedule(entities, blocks, names, by):
+def blocks_schedule(entities, blocks, names, by, columns=()):
+    """ADR 0327 §4's rows; ADR 0721 §4's further columns: a row's inserts' distinct values that are not empty, in the
+    drawing's order, joined with “; ”; with them a schedule of one block named leaves out its Blok column."""
     defs = [(b["id"], b["name"]) for b in blocks] if not names else [
         (next((b["id"] for b in blocks if b["name"] == n), None), n) for n in names]
-    head = ["Blok"] + ([by] if by else []) + ["Adet"]
+    named = not (columns and len(names) == 1)
+    head = (["Blok"] if named else []) + ([by] if by else []) + list(columns) + ["Adet"]
+
+    def row(name, value, ins):
+        r = ([name] if named else []) + ([value] if value is not None else [])
+        for c in columns:
+            seen = []
+            for e in ins:
+                v = e["attrs"].get(c, "")
+                if v and v not in seen:
+                    seen.append(v)
+            r.append("; ".join(seen))
+        return r + [str(len(ins))]
+
     rows, total = [head], 0
     for bid, name in defs:
         ins = [e for e in entities if e["kind"] == "insert" and bid is not None and e["block"] == bid]
@@ -728,18 +743,18 @@ def blocks_schedule(entities, blocks, names, by):
             continue
         if by is None:
             total += len(ins)
-            rows.append([name, str(len(ins))])
+            rows.append(row(name, None, ins))
         else:
             values = {}
             for e in ins:
-                v = e["attrs"].get(by, "")
-                values[v] = values.get(v, 0) + 1
+                values.setdefault(e["attrs"].get(by, ""), []).append(e)
             if not values:
-                rows.append([name, "", "0"])
+                rows.append(row(name, "", []))
             for v in sorted(values):
-                total += values[v]
-                rows.append([name, v, str(values[v])])
-    rows.append(["Toplam"] + ([""] if by else []) + [str(total)])
+                total += len(values[v])
+                rows.append(row(name, v, values[v]))
+    blanks = (1 if named else 0) + (1 if by else 0) + len(columns)
+    rows.append(["Toplam"] + [""] * max(blanks - 1, 0) + [str(total)])
     return rows
 
 
@@ -800,7 +815,7 @@ def worked(t, ents=None):
     ents = ents if ents is not None else drawing()
     src = t.get("source") or {}
     if src.get("kind") == "blocks":
-        rows = blocks_schedule(ents, BLOCKS, src.get("names", []), src.get("by"))
+        rows = blocks_schedule(ents, BLOCKS, src.get("names", []), src.get("by"), src.get("columns", []))
         n, m = len(rows), max(len(r) for r in rows)
         rows = [r + [""] * (m - len(r)) for r in rows]
         h = mpf(t["height"])
@@ -869,6 +884,85 @@ def refused(name, operation, result, non_finite=None):
     if non_finite:
         step["nonFinite"] = non_finite
     return {"name": name, "steps": [step]}
+
+
+def schedule_column_cases():
+    """ADR 0721 §4: a block schedule's further columns (Revizyon listesi's Tarih and Açıklama)."""
+    out = []
+
+    def make(source, cells=(("x",),)):
+        t = table(17, [list(r) for r in cells], source=source)
+        geometry = {k: v for k, v in t.items() if k not in ("id", "layerId", "attrs")}
+        return t, {"op": "execute", "command": "cad.entities.create",
+                   "input": {"layerId": "tablo", "operation": "table", "objects": [{"geometry": geometry}]},
+                   "result": {"status": "completed", "output": {"created": ["$uidOf:17"], "ids": [17], "revision": "$current"},
+                              "warnings": []}}
+
+    def with_data(ents, data):
+        ents = copy.deepcopy(ents)
+        for e in ents:
+            if e["id"] in data:
+                e["attrs"].update(data[e["id"]])
+        return ents
+
+    def set_data(ids, attrs):
+        return {"op": "execute", "command": "cad.entities.set",
+                "input": {"uids": [f"$uidOf:{i}" for i in ids], "attrs": attrs, "operation": "attributes"}, "result": "$any"}
+
+    # One block named: no Blok column; the doors' kinds one cell, “İç; Dış”.
+    t, step = make({"kind": "blocks", "names": ["Kapı"], "columns": ["TUR"]})
+    step["expect"] = {"ids": ALL + [17], "entities": {"17": worked(t)}, "canUndo": True, "revision": "changed"}
+    step["within"] = 1e-9
+    out.append({"name": "Blok çizelgesi sütunla: tek blokta Blok sütunu yok, satırın değerleri “; ” ile", "steps": [step]})
+
+    # Every block, by TUR, with a datum “Not”: the Blok column stays; a row's notes once each.
+    ents = with_data(drawing(), {5: {"Not": "Yangın"}, 7: {"Not": "Yangın"}})
+    t, step = make({"kind": "blocks", "by": "TUR", "columns": ["Not"]})
+    step["expect"] = {"entities": {"17": worked(t, ents)}}
+    step["within"] = 1e-9
+    out.append({"name": "Blok çizelgesi sütunla: iki blokta Blok sütunu kalır, veri de sütun olur", "steps": [
+        set_data([5, 7], {"Not": "Yangın"}), step]})
+
+    # Revizyon listesi's shape: one block by REV with Tarih and Açıklama; a datum changed, the list follows in the
+    # same step; undo takes both back.
+    src = {"kind": "blocks", "names": ["Kapı"], "by": "TUR", "columns": ["Tarih", "Açıklama"]}
+    ents = with_data(drawing(), {5: {"Tarih": "2026-10-20", "Açıklama": "Mutfak kapısı"},
+                                 6: {"Tarih": "2026-10-20", "Açıklama": "Banyo kapısı"}})
+    t, step = make(src)
+    first = worked(t, ents)
+    step["expect"] = {"entities": {"17": first}}
+    step["within"] = 1e-9
+    later = with_data(ents, {7: {"Tarih": "2026-10-27", "Açıklama": "Giriş kapısı genişledi"}})
+    out.append({"name": "Blok çizelgesi sütunları aynı adımda izler; geri alma birlikte", "steps": [
+        set_data([5], {"Tarih": "2026-10-20", "Açıklama": "Mutfak kapısı"}),
+        set_data([6], {"Tarih": "2026-10-20", "Açıklama": "Banyo kapısı"}),
+        step,
+        {**set_data([7], {"Tarih": "2026-10-27", "Açıklama": "Giriş kapısı genişledi"}),
+         "expect": {"entities": {"17": worked(first, later)}}, "within": 1e-9},
+        {"op": "undo", "expect": {"entities": {"17": first}}, "within": 1e-9}]})
+
+    # A door gone: its notes leave the cell.
+    ents = with_data(drawing(), {5: {"Not": "Yangın"}, 6: {"Not": "Ahşap"}})
+    t, step = make({"kind": "blocks", "names": ["Kapı"], "columns": ["Not"]})
+    step["expect"] = {"entities": {"17": worked(t, ents)}}
+    step["within"] = 1e-9
+    gone = [e for e in ents if e["id"] != 6]
+    out.append({"name": "Blok çizelgesi sütunu: kapı silinince değeri hücreden çıkar", "steps": [
+        set_data([5], {"Not": "Yangın"}), set_data([6], {"Not": "Ahşap"}), step,
+        {"op": "execute", "command": "cad.entities.delete", "input": {"uids": ["$uidOf:6"]}, "result": "$any",
+         "expect": {"entities": {"17": worked(worked(t, ents), gone)}}, "within": 1e-9}]})
+
+    # Refused: a blank column's name; more than ten columns.
+    for name, columns, words in [
+        ("Ret: blok çizelgesinin sütun adı boş", ["Tarih", " "], "Blok çizelgesinin blok, öznitelik ve sütun adları boş olamaz."),
+        ("Ret: blok çizelgesine on birinci sütun", [f"S{k}" for k in range(11)],
+         "Blok çizelgesine 11 sütun verildi; en çok 10 öznitelik ya da veri sütunu olur."),
+    ]:
+        _, step = make({"kind": "blocks", "names": ["Kapı"], "columns": columns})
+        step["result"] = failed("invalid_table", words, "objects[0].geometry.source")
+        step["expect"] = {"ids": ALL, "canUndo": False, "dirty": False, "revision": "same"}
+        out.append({"name": name, "steps": [step]})
+    return out
 
 
 def cases():
@@ -957,6 +1051,7 @@ def cases():
          "result": "$any",
          "expect": {"entities": {"1": counted_after, "9": sched}}, "within": 1e-9},
         {"op": "undo", "expect": {"entities": {"1": counted, "9": ent(9)}}, "within": 1e-9}]})
+    out.extend(schedule_column_cases())
     # Refresh.
     rooms = copy.deepcopy(ent(10))
     cells, kept, replaced = overridden(rooms, ROOMS_NEW, "keep")

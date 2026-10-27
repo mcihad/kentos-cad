@@ -480,7 +480,7 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
 }
 
 /// The cloud as the command writes it, or why not.
-fn cloud_ring_in(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Ring, Stop> {
+pub(crate) fn cloud_ring_in(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Ring, Stop> {
     let ring = cloud_frame(doc, input)?;
     if cloud_arcs(&ring, input.arc) > kentos_commands::MOST_CLOUD_ARCS as f64 {
         return Err(refuse(
@@ -503,7 +503,7 @@ pub fn revcloud_ring(
     cloud_ring_in(doc, input).map_err(|stop| Box::new(stop.into_error()))
 }
 
-fn revcloud_polygon(input: &RevcloudCreate, (pts, bulges): Ring) -> PolygonCreate {
+pub(crate) fn revcloud_polygon(input: &RevcloudCreate, (pts, bulges): Ring) -> PolygonCreate {
     PolygonCreate {
         layer_id: input.layer_id.clone(),
         pts: pts.into_iter().map(w).collect(),

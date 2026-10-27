@@ -4035,6 +4035,122 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Kuzey oku, Revizyon işaretle and Malzeme lejandı (docs/adr/0721), held together by
+        // fixtures/commands/v1/cad.north.create.json, cad.revisions.mark.json and cad.legends.materials.json.
+        CommandDescriptor {
+            id: crate::CAD_NORTH_CREATE.into(),
+            version: crate::CAD_NORTH_CREATE_VERSION,
+            title: "Kuzey oku".into(),
+            summary: "Kuzey okunu yerleştirir (docs/adr/0721 §3); tek geri alma adımı “Kuzey oku”. Çizimin kendi “Kuzey oku” bloğu varsa o, yoksa KentOS blok kitaplığınınki aynı adımda eklenip yerleştirilir (added). at okun dairesinin merkezidir; size kâğıttaki eni (mm, yok: 15; 0'dan büyük, en çok 200), çizim ölçeğiyle büyür: ölçek = size/1000 · ölçek paydası / bloğun doğu-batı eni (yazıları sayılmaz). north okun gösterdiği kuzeydir: plan (yok: çizimin yukarısı, projenin plan kuzeyi), true (bu noktadan geçen meridyen: projenin koordinat sisteminin meridyen yakınsaması, convergence; yerel projede no_true_north) ya da angle (planın kuzeyinden saat yönünün tersine radyan). Dönüş (rotation) bu açıdır. Ret sırası: not_finite (at, açı, boy), invalid_scale, invalid_revision, revision_conflict, no_true_north, katman (layer_not_found, not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı. Plan yerleştirmeyi (id 0), eklenecek bloğu, dönüşü ve yakınsamayı verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::NorthCreate>(),
+            output: schema::<crate::NorthCreated>(),
+            plan: Some(schema::<crate::NorthPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Plan kuzeyine, 15 mm".into(),
+                    input: json!({ "at": { "x": 12.0, "y": 8.0 }, "layerId": "isaret" }),
+                    output: Some(json!({
+                        "uid": "0192f5a1-7210-7000-8000-000000000001", "id": 1,
+                        "block": "0192f5b0-0000-7000-8000-00000000000e", "added": true, "rotation": 0.0, "revision": "2"
+                    })),
+                },
+                CommandExample {
+                    title: "Coğrafi kuzeye, 20 mm".into(),
+                    input: json!({ "at": { "x": 487000.0, "y": 4420000.0 }, "layerId": "isaret", "north": { "kind": "true" }, "size": 20.0 }),
+                    output: Some(json!({
+                        "uid": "0192f5a1-7210-7000-8000-000000000002", "id": 2,
+                        "block": "0192f5b0-0000-7000-8000-00000000000e", "rotation": -0.0017027, "convergence": -0.0017027,
+                        "revision": "3"
+                    })),
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_REVISIONS_MARK.into(),
+            version: crate::CAD_REVISIONS_MARK_VERSION,
+            title: "Revizyon işaretle".into(),
+            summary: "Revizyon bulutunu ve üçgenini birlikte yazar (docs/adr/0721 §4); tek geri alma adımı “Revizyon”. Bulut cad.revcloud.create'in çizdiğidir (frame: dikdörtgen, çokgen ya da nesne; arc yay boyu), özniteliği Revizyon numaradır (date, description verilirse Tarih, Açıklama). Üçgen KentOS blok kitaplığının “Revizyon” bloğudur (çizimin kendisininki varsa o; yoksa aynı adımda eklenir, added), REV özniteliği numara; size kâğıttaki eni (mm, yok: 6; en çok 100), çizim ölçeğiyle büyür. at üçgenin merkezidir; yoksa bulutun sağ üst köşesinin dışında: köşelerin en doğusu ve en kuzeyi artı yarım yay ve yarım üçgen. Revizyonları “Revizyon” bloğunun REV'e göre Blok çizelgesi listeler. Ret sırası: invalid_mark (numara boş, kenarı boşluklu, denetim karakterli ya da 16 karakterden uzun; tarih 32, açıklama 240 karakterden uzun), not_finite (at, boy), invalid_scale, sonra cad.revcloud.create'inkiler (çerçeve, yay, beklenen sürüm, katman). Plan bulutu ve üçgeni (id 0) ve eklenecek bloğu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RevisionsMark>(),
+            output: schema::<crate::RevisionMarked>(),
+            plan: Some(schema::<crate::RevisionPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mutfak değişikliği: B revizyonu".into(),
+                input: json!({
+                    "layerId": "revizyon", "frame": { "kind": "rectangle", "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 4.0, "y": 3.0 } },
+                    "arc": 0.5, "number": "B", "date": "27.10.2026", "description": "Mutfak tezgâhı uzatıldı"
+                }),
+                output: Some(json!({
+                    "cloud": "0192f5a1-7210-7000-8000-000000000003", "cloudId": 3,
+                    "tag": "0192f5a1-7210-7000-8000-000000000004", "tagId": 4,
+                    "block": "0192f5b0-0000-7000-8000-000000000026", "added": true, "revision": "4"
+                })),
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_LEGENDS_MATERIALS.into(),
+            version: crate::CAD_LEGENDS_MATERIALS_VERSION,
+            title: "Malzeme lejandı".into(),
+            summary: "Duvarların malzemelerinin lejandını yazar (docs/adr/0721 §5); tek geri alma adımı “Malzeme lejandı”. Her satır bir duvar bileşenidir (duvarlar çizimin sırasıyla, bileşenleri sol yüzden): adı malzemesi (yoksa bileşenin adı), örneği duvarın taradığı gibi taranmış kutu; adı ya da taraması öncekilerden farklı olan yeni satırdır, walls onu taşıyan duvar sayısı. Lejant “Malzeme lejandı” bloğudur: çizimde varsa yerinde yeniden yapılır (remade, bütün yerleştirmeleri izler), at verilirse bir yerleştirmesi de konur (at sol üst köşe). height yazının kâğıttaki yüksekliğidir (mm, yok: 2,5; en çok 50), H = height · ölçek paydası / 1000: başlık sol üstte, i. satırın kutusu 6H eninde 3H yüksekliğinde, üstü 2H + 4H·i aşağıda, adı 7H sağda kutunun ortası hizasında. Ret sırası: not_finite (at, yükseklik), invalid_height, invalid_revision, revision_conflict, no_materials (bileşenli duvar yok), no_legend (at yok, lejant da yok), at ile katman (layer_not_found, not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı. Plan satırları, bloğu ve yeni yerleştirmeyi verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LegendsMaterials>(),
+            output: schema::<crate::LegendMade>(),
+            plan: Some(schema::<crate::LegendPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Lejant paftanın köşesine".into(),
+                    input: json!({ "at": { "x": 30.0, "y": 20.0 }, "layerId": "lejant" }),
+                    output: Some(json!({
+                        "materials": [
+                            { "name": "Sıva", "walls": 4 },
+                            { "name": "Tuğla", "pattern": "ANSI31", "walls": 4 }
+                        ],
+                        "block": "0192f5a1-7210-7000-8000-000000000010", "uid": "0192f5a1-7210-7000-8000-000000000011",
+                        "id": 11, "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Duvarlar değişti: lejant yerinde yeniden".into(),
+                    input: json!({ "layerId": "lejant" }),
+                    output: Some(json!({
+                        "materials": [
+                            { "name": "Sıva", "walls": 5 },
+                            { "name": "Tuğla", "pattern": "ANSI31", "walls": 4 },
+                            { "name": "Gazbeton", "pattern": "AR-CONC", "walls": 1 }
+                        ],
+                        "block": "0192f5a1-7210-7000-8000-000000000010", "remade": true, "revision": "14"
+                    })),
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_CASEWORK_RUN.into(),
             version: crate::CAD_CASEWORK_RUN_VERSION,
@@ -10925,6 +11041,15 @@ mod tests {
                     crate::CAD_LEVELS_ASSIGN => {
                         serde_json::from_value::<crate::LevelsAssign>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_NORTH_CREATE => {
+                        serde_json::from_value::<crate::NorthCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_REVISIONS_MARK => {
+                        serde_json::from_value::<crate::RevisionsMark>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LEGENDS_MATERIALS => {
+                        serde_json::from_value::<crate::LegendsMaterials>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CASEWORK_RUN => {
                         serde_json::from_value::<crate::CaseworkRun>(e.input.clone()).map(|_| ())
                     }
@@ -11994,6 +12119,15 @@ mod tests {
                         crate::CAD_LEVELS_ASSIGN => {
                             serde_json::from_value::<crate::LevelsAssigned>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_NORTH_CREATE => {
+                            serde_json::from_value::<crate::NorthCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_REVISIONS_MARK => {
+                            serde_json::from_value::<crate::RevisionMarked>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_LEGENDS_MATERIALS => {
+                            serde_json::from_value::<crate::LegendMade>(output.clone()).map(|_| ())
                         }
                         crate::CAD_CASEWORK_RUN => {
                             serde_json::from_value::<crate::CaseworkBuilt>(output.clone())

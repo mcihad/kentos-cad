@@ -215,6 +215,7 @@ pub(super) fn rows(
     slots: &[Slot],
     locked: bool,
     f: &Format,
+    levels: &[kentos_commands::ArchLevel],
 ) -> Vec<Row> {
     if dims.is_empty() {
         return Vec::new();
@@ -297,6 +298,13 @@ pub(super) fn rows(
             rows.push(row.editor(edit(Editor::Number(field))));
         }
     }
+    // A Kot's value, its level and its offset from it (docs/adr/0721 §2).
+    if dims
+        .iter()
+        .all(|d| d.style == Some(DimensionStyle::Elevation))
+    {
+        rows.extend(kot_rows(dims, slots, locked, f, levels));
+    }
     // An arc length's radius and the arc's angle, shown only.
     if dims
         .iter()
@@ -319,6 +327,82 @@ pub(super) fn rows(
         });
     }
     rows
+}
+
+/// A Kot's rows (docs/adr/0721 §2): over several, Kot, their value (read only while bound: the level gives it; one
+/// Kot's is its measured value's row); Kat ▾, the level it follows (Yok: its own value, kept as it is); Fark, its
+/// offset from that level, while the Kots share one.
+fn kot_rows(
+    dims: &[&DimensionEntity],
+    slots: &[Slot],
+    locked: bool,
+    f: &Format,
+    levels: &[kentos_commands::ArchLevel],
+) -> Vec<Row> {
+    let edit = |editor: Editor| (!locked).then_some(editor);
+    let bound = dims.iter().any(|d| d.level.is_some());
+    let mut out = Vec::new();
+    if dims.len() > 1 {
+        let value = match common(dims, |d| d.za.unwrap_or(f64::NAN)) {
+            Some(z) => Row::figure("Kot", f.length_bare(z)).unit(f.length_unit_label()),
+            None => Row::text("Kot", MIXED),
+        };
+        out.push(if bound {
+            value
+        } else {
+            value.editor(edit(Editor::Number(Field::DimensionZa(slots.to_vec()))))
+        });
+    }
+    if levels.is_empty() && !bound {
+        return out;
+    }
+    let id = common(dims, |d| d.level.as_ref().map(|l| l.id.clone()));
+    let offset = common(dims, |d| d.level.as_ref().and_then(|l| l.offset));
+    let name = |id: &str| {
+        levels
+            .iter()
+            .find(|l| l.id == id)
+            .map_or_else(|| format!("{id} (projede yok)"), |l| l.name.clone())
+    };
+    const OWN: &str = "Yok (kendi kotu)";
+    let text = match &id {
+        Some(Some(i)) => name(i),
+        Some(None) => OWN.to_owned(),
+        None => MIXED.to_owned(),
+    };
+    // A level chosen keeps the offset the Kots share.
+    let kept = offset.flatten();
+    let pick = |label: String, chosen: bool, level: Option<kentos_commands::DimensionLevel>| Choice::Pick {
+        label,
+        swatch: None,
+        icon: None,
+        wide: false,
+        chosen,
+        enabled: true,
+        message: Message::Properties(Event::DimensionEdit(slots.to_vec(), DimensionOp::Level(level))),
+    };
+    let mut items = vec![pick(OWN.to_owned(), id == Some(None), None)];
+    items.extend(levels.iter().map(|l| {
+        pick(
+            l.name.clone(),
+            id.as_ref().is_some_and(|i| i.as_deref() == Some(l.id.as_str())),
+            Some(kentos_commands::DimensionLevel { id: l.id.clone(), offset: kept }),
+        )
+    }));
+    out.push(Row::text("Kat", &text).editor(edit(Editor::Select {
+        text,
+        swatch: None,
+        icon: None,
+        items,
+    })));
+    if let Some(Some(_)) = id {
+        let row = match offset {
+            Some(o) => Row::figure("Fark", f.length_bare(o.unwrap_or(0.0))).unit(f.length_unit_label()),
+            None => Row::text("Fark", MIXED),
+        };
+        out.push(row.editor(edit(Editor::Number(Field::DimensionLevelOffset(slots.to_vec())))));
+    }
+    out
 }
 
 /// How many measured points a dimension's kind binds (docs/adr/0249 §3): two for the point methods, one for an
