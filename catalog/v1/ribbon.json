@@ -1735,6 +1735,20 @@
         ]
        },
        {
+        "menu": "Kat görünümü",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.levels.all",
+           "view.levels.active",
+           "view.levels.below"
+          ]
+         }
+        ]
+       },
+       {
         "command": "view.fills",
         "size": "small"
        },

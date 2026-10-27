@@ -189,11 +189,12 @@ fn slots(ids: Vec<f64>) -> Vec<Slot> {
         .collect()
 }
 
-/// Whether the store shows the object: its layer visible, a layer's filter and the time window passing it.
+/// Whether the store shows the object for picking: its layer visible, a layer's filter and the time window passing it,
+/// not on the faint level under the active one (docs/adr/0715 §2).
 fn shown(store: &Store, slot: Slot) -> bool {
     store
         .get(f64::from(slot.0))
-        .is_some_and(|it| store.shown(it))
+        .is_some_and(|it| store.pickable(it))
 }
 
 /// The objects shown, in the drawing's order.

@@ -50,6 +50,14 @@ impl Phasing {
         self.looks.insert(id, PhaseLook::Hidden);
     }
 
+    /// Object `id` drawn faint (the level under the active one, docs/adr/0715 §2) unless it is left out.
+    pub fn fade(&mut self, id: u32) {
+        let look = self.looks.entry(id).or_insert(PhaseLook::Faded);
+        if *look != PhaseLook::Hidden {
+            *look = PhaseLook::Faded;
+        }
+    }
+
     /// The hidden objects' numbers.
     pub fn hidden(&self) -> impl Iterator<Item = u32> + '_ {
         self.looks

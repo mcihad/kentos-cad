@@ -339,6 +339,11 @@ fn build<'a>(
     }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
     (canvas as u8, font as u8, mode as u8).hash(&mut look);
+    // Kat görünümü's faint level (docs/adr/0715 §2): another one draws the words again.
+    let (level_version, level_looks) = spatial.level_looks();
+    level_version.hash(&mut look);
+    let faded: Rc<std::collections::HashSet<u32>> =
+        Rc::new(level_looks.faded.iter().copied().collect());
     map_marks.map(f32::to_bits).hash(&mut look);
     format!("{format:?}").hash(&mut look);
     let look = look.finish();
@@ -355,6 +360,7 @@ fn build<'a>(
         key: key.finish(),
         fence: None,
         current: Cell::new(None),
+        faded,
         map_marks,
         preview: preview.map(Rc::new),
         pinned: engine.pinned,
@@ -519,6 +525,8 @@ struct Labels<'a> {
     fence: Option<Fence>,
     /// The object whose label is being drawn (a sheet PDF puts it in its layer).
     current: Cell<Option<Slot>>,
+    /// The objects of the level drawn faint under the active one (docs/adr/0715 §2): their words faint as their lines.
+    faded: Rc<std::collections::HashSet<u32>>,
     /// Grid north and the scale bar, or the axes, over the text (not in Büyüteç's window):
     /// how far the scale bar is lifted over the map services' credits.
     map_marks: Option<f32>,
@@ -600,6 +608,7 @@ pub fn paint_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
+        faded: Rc::default(),
         map_marks: None,
         preview: None,
         pinned: false,
@@ -645,6 +654,7 @@ pub fn texts_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
+        faded: Rc::default(),
         map_marks: None,
         preview: None,
         pinned: false,
@@ -1225,6 +1235,21 @@ impl Labels<'_> {
     /// Draws a piece, unless a map frame's text is anchored outside the frame (design §9a: one
     /// anchored inside is drawn and cut at the frame's edge).
     fn draw(&self, frame: &mut impl Ink, piece: &Piece<'_>, halo: Color) {
+        // A word of the level drawn faint under the active one (docs/adr/0715 §2), as faint as its lines.
+        let faint;
+        let piece = match self.current.get() {
+            Some(slot) if !self.faded.is_empty() && self.faded.contains(&slot.0) => {
+                faint = Piece {
+                    color: Color {
+                        a: piece.color.a * (1.0 - kentos_commands::PHASE_FADED as f32),
+                        ..piece.color
+                    },
+                    ..*piece
+                };
+                &faint
+            }
+            _ => piece,
+        };
         if let Some(fence) = &self.fence
             && !fence.holds(piece.at)
         {
@@ -3451,6 +3476,7 @@ fn perf() {
         key: 0,
         fence: None,
         current: Cell::new(None),
+        faded: Rc::default(),
         map_marks: Some(0.0),
         preview: None,
         pinned: false,
@@ -3541,6 +3567,7 @@ fn file_paint() {
         key: 0,
         fence: None,
         current: Cell::new(None),
+        faded: Rc::default(),
         map_marks: None,
         preview: None,
         pinned: false,

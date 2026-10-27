@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Kat görünümü (27 Ekim 2026; [ADR0715](docs/adr/0715-level-view.md)).**
+  Oturumun durumu: Bütün katlar / Yalnız etkin kat / Etkin kat ve alt kat (alt
+  kat %60 soluk, yazıları da; kenetlenir, seçilmez: Revit altlığı). Nesnenin katı
+  `Entity::level` (açıklık duvarının, etiket nesnesinin, kaplama mahalin, ölçü
+  bağlarının); çekirdek depoda `set_unpicked`/`pickable`, `Spatial::set_level_view`,
+  tıklamada etkin kat önce (üst üste duvarda kapı/pencere etkin kata). Kat menüsü,
+  hücre ikonu, Görünüm › Kat görünümü ▾ (`view.levels.*`). Pafta bütün katları çizer.
+
 - **Açıklığın numarası yerleştirirken (27 Ekim 2026; [ADR0714](docs/adr/0714-opening-numbers-on-placement.md)).**
   Revit'in Mark'ı gibi: Kapı/Pencere/Boşluk'un Numara (N) ayarı Otomatik (aynı
   biçimin son numarasından artar, genişliği korur; yoksa K1/P1/B1), yazılan

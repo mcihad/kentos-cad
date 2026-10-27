@@ -55,6 +55,7 @@ söyleyen oturum durumu. Kat görünümü (yalnız etkin katı gösterme, öbür
 
 - Etkin kat dosyaya yazılmaz; çizim her açılışta zemin katta başlar.
 - Kat görünümü yoktur: bütün katlar birlikte çizilir; katları planda ayırmak katmanlarla ya da yan yana çizimle yapılır.
+  (ADR 0715 ile geldi: Yalnız etkin kat, Etkin kat ve alt kat.)
 - Açıklık katını duvarından, etiket kaynağının katını kendi kuralından alır (ADR 0663); onlara etkin kat yazılmaz.
 - Katsız çizilmiş nesnelere toplu kat atama (Denetim'in düzeltmesi) bu dilimde yoktur.
 

@@ -2,7 +2,7 @@
 //! wrong together (not one at a time): the shell with Dikdörtgen duvar (12 × 9 m clear, 25 cm), two Ölçülü bölme
 //! partitions, doors and windows, Toplu mahal bul, Hepsini etiketle, Duvar ölçüleri round the shell, an İç ölçü
 //! zinciri across the rooms, Mahalleri numarala, a kitchen run, a stair, the door and window schedule, the Metraj and
-//! the Denetim. `tools_screens` takes them in both themes at 1440×900 and
+//! the Denetim; then a 1. kat over it and Kat görünümü (docs/adr/0715). `tools_screens` takes them in both themes at 1440×900 and
 //! 1100×650:
 //!
 //! ```text
@@ -285,6 +285,95 @@ fn audit(app: &mut App) {
     run(app, "arch.audit");
 }
 
+/// docs/adr/0715: a 1. kat (3.06 m up) drawn over the finished ground floor: the same shell, a partition 6 m from the
+/// west wall and one 4 m from the north wall east of it, two doors, three windows, its rooms found and everything
+/// tagged on 1. kat. Kat görünümü still Bütün katlar: both floors over each other.
+fn upper_floor(app: &mut App) {
+    interior(app);
+    if let Some(doc) = app.document.as_mut() {
+        let mut settings = doc.model.settings().clone();
+        let arch = settings.arch.get_or_insert_with(Default::default);
+        arch.levels.push(kentos_commands::ArchLevel {
+            id: "kat-1".into(),
+            name: "1. kat".into(),
+            elevation: 3.06,
+            height: Some(3.06),
+        });
+        doc.model.set_settings(settings);
+    }
+    let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
+    run(app, "tool.wallRectangle");
+    typed(app, "E");
+    typed(app, "0.25m");
+    click(app, [0.0, 0.0]);
+    click(app, [12.0, 9.0]);
+    typed(app, "");
+    run(app, "tool.wallPartition");
+    for (key, value) in [("E", "150mm"), ("U", "6m")] {
+        let _ = app.tool_setting(crate::architecture_settings::Commit {
+            tool: "wallPartition",
+            key,
+            value: value.into(),
+        });
+    }
+    click(app, [0.0, 4.5]);
+    hover(app, [3.0, 6.0]);
+    typed(app, "");
+    run(app, "tool.wallPartition");
+    for (key, value) in [("E", "150mm"), ("U", "4m"), ("B", "between")] {
+        let _ = app.tool_setting(crate::architecture_settings::Commit {
+            tool: "wallPartition",
+            key,
+            value: value.into(),
+        });
+    }
+    click(app, [9.0, 9.0]);
+    click(app, [6.075, 3.0]);
+    click(app, [12.0, 3.0]);
+    typed(app, "");
+    run(app, "tool.door");
+    for p in [[6.075, 2.0], [9.0, 4.925]] {
+        click(app, p);
+    }
+    typed(app, "");
+    run(app, "tool.window");
+    for p in [[3.0, -0.125], [9.0, -0.125], [3.0, 9.125]] {
+        click(app, p);
+    }
+    typed(app, "");
+    run(app, "tool.spaceDiscover");
+    typed(app, "");
+    run(app, "tool.tagAll");
+    typed(app, "");
+    app.cancel();
+    app.selection.clear();
+    hover(app, [14.0, 11.0]);
+}
+
+/// Yalnız etkin kat: 1. kat alone (the ground floor's walls, rooms, tags and the dimensions bound to them hidden).
+fn upper_floor_alone(app: &mut App) {
+    upper_floor(app);
+    let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+}
+
+/// Etkin kat ve alt kat: 1. kat over the ground floor drawn faint.
+fn upper_floor_over_ground(app: &mut App) {
+    upper_floor(app);
+    let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Below));
+}
+
+/// Zemin kat active again with Yalnız etkin kat: the ground floor alone, its dimensions back.
+fn ground_floor_alone(app: &mut App) {
+    upper_floor_alone(app);
+    let _ = app.update(Message::ActiveLevel(Some("zemin".into())));
+}
+
+/// Görünüm › Kat görünümü ▾ (CAD's Görünüm tab).
+fn view_tab_levels(app: &mut App) {
+    upper_floor_over_ground(app);
+    app.tab = "view";
+}
+
 /// The status bar's Kat cell open (docs/adr/0713): the levels, Katsız, Katları düzenle.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
@@ -294,6 +383,24 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |s, app| press_caption(s, app, "Zemin kat", false, false),
         ),
         // The wall drawn on 1. kat, its Öznitelikler scrolled to its Mimari rows: Kat 1. kat.
+        // docs/adr/0715: the Kat menu with Kat görünümü's three choices, and the ribbon's Kat görünümü ▾.
+        ("kat-gorunumu-menu", upper_floor_over_ground, |s, app| {
+            // The Kat cell right of the scale's (its words fold away first in a full bar): its icon.
+            // The status bar's (Öznitelikler's Çizim ölçeği reads 1:100 too, below the window when it is low).
+            let bar = crate::files_testing::find_text(s, app, "Yardımcılar").expect("the status bar");
+            let scale = crate::files_testing::find_texts(s, app, "1:100")
+                .into_iter()
+                .find(|r| (r.center_y() - bar.center_y()).abs() < 6.0)
+                .expect("the scale cell");
+            let at = iced::Point::new(scale.x + scale.width + 50.0, scale.center_y());
+            let mut update = |app: &mut App, message: Message| {
+                let _ = app.update(message);
+            };
+            s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Click(at));
+        }),
+        ("kat-gorunumu-serit", view_tab_levels, |s, app| {
+            crate::tools_screens::open_ribbon_menu(s, app, "Kat görünümü")
+        }),
         ("kat-duvar-oznitelik", on_first_floor, |s, app| {
             let mut update = |app: &mut App, message: Message| {
                 let _ = app.update(message);
@@ -332,5 +439,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("daire-cizelge-yazildi", scheduled),
         ("daire-metraj", quantities),
         ("daire-denetim", audit),
+        ("kat-gorunumu-butun", upper_floor),
+        ("kat-gorunumu-yalniz", upper_floor_alone),
+        ("kat-gorunumu-alt", upper_floor_over_ground),
+        ("kat-gorunumu-zemin", ground_floor_alone),
     ]
 }

@@ -287,6 +287,8 @@ pub struct Store {
     masks: IdSet,
     /// The objects the project's phase view hides (`set_phase_hidden`, docs/adr/0346 §2).
     phase_hidden: IdSet,
+    /// The objects drawn faint under the active level (`set_unpicked`, docs/adr/0715 §2): snapped to, never picked.
+    unpicked: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
     /// objects' texts and pins.
     labelling: placing::Labels,
@@ -528,6 +530,7 @@ impl Store {
             self.filtered.remove(&id.to_bits());
             self.masks.remove(&id.to_bits());
             self.phase_hidden.remove(&id.to_bits());
+            self.unpicked.remove(&id.to_bits());
             self.labelling.objects.remove(&id.to_bits());
             self.labelling.pins.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
@@ -935,6 +938,26 @@ impl Store {
     /// Whether the phase view hides none.
     pub fn no_phase_hidden(&self) -> bool {
         self.phase_hidden.is_empty()
+    }
+
+    /// The objects shown only to snap to (docs/adr/0715 §2): the level under the active one, drawn faint. A click,
+    /// a window, a fence or a polygon does not pick them, nor do they bound a hatch or a trim; snaps find them (as
+    /// Revit's underlay with Select underlay elements off, Archicad's Trace Reference).
+    pub fn set_unpicked(&mut self, ids: impl IntoIterator<Item = f64>) {
+        self.unpicked.clear();
+        for id in ids {
+            self.unpicked.insert(id.to_bits());
+        }
+    }
+
+    /// Whether none is shown only to snap to.
+    pub fn no_unpicked(&self) -> bool {
+        self.unpicked.is_empty()
+    }
+
+    /// Whether a pick may take the object: shown, and not shown only to snap to.
+    pub fn pickable(&self, it: &Item) -> bool {
+        self.shown(it) && (self.unpicked.is_empty() || !self.unpicked.contains(&it.id.to_bits()))
     }
 
     /// Lets every object in again (the drawing reloaded, or its last filter gone).

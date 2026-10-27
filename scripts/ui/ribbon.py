@@ -124,6 +124,8 @@ def view_tab(cad):
           overflow=["view.keyTips"]),
     ]
     if cad:
+        # Kat görünümü (docs/adr/0715): which levels the plan shows; the status bar's Kat menu has it too.
+        panels[2]["items"].insert(4, M("Kat görünümü", [("", ["view.levels.all", "view.levels.active", "view.levels.below"])]))
         panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
             S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
     return T("view", "Görünüm", panels)

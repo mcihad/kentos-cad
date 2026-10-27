@@ -85,7 +85,7 @@ impl Store {
     pub fn hit(&self, p: Vec2, tol: f64) -> Option<f64> {
         let mut edge: Option<(f64, f64)> = None;
         let mut area: Option<(f64, f64)> = None;
-        for it in self.near(p, tol * 1.5) {
+        for it in self.near(p, tol * 1.5).into_iter().filter(|it| self.pickable(it)) {
             let s = self.score(it, p, tol);
             if let Some(d) = s.edge
                 && edge.is_none_or(|(_, best)| d < best)
@@ -108,7 +108,7 @@ impl Store {
     pub fn hits(&self, p: Vec2, tol: f64) -> Vec<f64> {
         let mut edges: Vec<(f64, f64)> = Vec::new();
         let mut areas: Vec<(f64, f64)> = Vec::new();
-        for it in self.near(p, tol * 1.5) {
+        for it in self.near(p, tol * 1.5).into_iter().filter(|it| self.pickable(it)) {
             let s = self.score(it, p, tol);
             match (s.edge, s.area) {
                 (Some(d), _) => edges.push((it.id, d)),
@@ -199,6 +199,7 @@ impl Store {
         let mut out: Vec<(f64, f64)> = self
             .near(p, tol)
             .into_iter()
+            .filter(|it| self.pickable(it))
             .filter(|it| {
                 // A wall's faces are its pieces, no edge an edge tool acts on (docs/adr/0339 §1); an opening's symbol
                 // likewise (docs/adr/0341 §2).
@@ -224,7 +225,7 @@ impl Store {
     /// spline) containing `p`, with its ring: the boundary a hatch fills.
     pub fn enclosing(&self, p: Vec2) -> Option<(f64, Vec<Vec2>)> {
         let mut best: Option<(f64, Vec<Vec2>, f64)> = None;
-        for it in self.near(p, 0.0) {
+        for it in self.near(p, 0.0).into_iter().filter(|it| self.pickable(it)) {
             let e = &it.shape;
             let ring = match e {
                 // The part `p` is in, of a multi-part area (docs/adr/0143).
@@ -273,6 +274,7 @@ impl Store {
     pub fn edges_in(&self, r: &Bounds, except: Option<f64>) -> Vec<Edge> {
         self.overlapping(r, except)
             .into_iter()
+            .filter(|it| self.pickable(it))
             .flat_map(|it| it.shapes().flat_map(entity_edges))
             .collect()
     }
@@ -281,7 +283,7 @@ impl Store {
     pub fn in_rect(&self, r: &Bounds, crossing: bool) -> Vec<f64> {
         let mut out = Vec::new();
         for it in self.candidates(&padded(*r, 0.0)) {
-            if !self.shown(it) {
+            if !self.pickable(it) {
                 continue;
             }
             let b = &it.bounds;

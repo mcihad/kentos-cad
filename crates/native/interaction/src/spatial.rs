@@ -109,6 +109,15 @@ pub struct Spatial {
     /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
     /// and snapped to; none, the drawing's.
     theme: Option<kentos_commands::LayerState>,
+    /// Kat görünümü (docs/adr/0715) and the active level it reads; what it hides and draws faint as last made, and
+    /// how many times that changed (the drawing area builds its looks again then).
+    level_view: crate::level_view::LevelView,
+    active_level: Option<String>,
+    level_looks: Arc<crate::level_view::LevelLooks>,
+    level_version: u64,
+    /// The objects on a level other than the active one, whatever the view: a click takes the others first where
+    /// objects lie over each other (docs/adr/0715 §2).
+    elsewhere: HashSet<u32>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled in the
@@ -164,6 +173,32 @@ impl Spatial {
 
     pub fn has_sheet_view(&self) -> bool {
         self.sheet_view.is_some()
+    }
+
+    /// Kat görünümü with `active` the active level (docs/adr/0715): what it hides is neither picked nor snapped to,
+    /// what it draws faint is snapped to only. Made again at once when either changed.
+    pub fn set_level_view(
+        &mut self,
+        doc: &Document,
+        view: crate::level_view::LevelView,
+        active: Option<String>,
+    ) {
+        if self.level_view == view && self.active_level == active {
+            return;
+        }
+        self.level_view = view;
+        self.active_level = active;
+        self.sync_phases(doc);
+    }
+
+    /// Kat görünümü as set.
+    pub fn level_view(&self) -> crate::level_view::LevelView {
+        self.level_view
+    }
+
+    /// What Kat görünümü hides and draws faint now, and its version: a new one whenever that changed.
+    pub fn level_looks(&self) -> (u64, Arc<crate::level_view::LevelLooks>) {
+        (self.level_version, Arc::clone(&self.level_looks))
     }
 
     /// Explicit command input for tools that query the same source through the public catalog.
@@ -275,12 +310,36 @@ impl Spatial {
 
     /// The objects the project's phase view hides (docs/adr/0346 §2): every object again while a view other than
     /// Tümü is set (an object's phase may come from its wall or its tag's object), none to do otherwise.
+    /// Kat görünümü (docs/adr/0715) joins it: the levels it hides are hidden as well, the level it draws faint is
+    /// snapped to only. A sheet's map shows every level.
     fn sync_phases(&mut self, doc: &Document) {
         if self.sheet_view.is_some() {
             self.store.set_phase_hidden(
                 kentos_native_application::viewport_scope::hidden_entities(doc),
             );
+            if !self.store.no_unpicked() {
+                self.store.set_unpicked(std::iter::empty());
+            }
             return;
+        }
+        let looks = crate::level_view::looks(doc, self.level_view, self.active_level.as_deref());
+        self.elsewhere = looks.elsewhere.iter().copied().collect();
+        let shown = crate::level_view::LevelLooks {
+            hidden: looks.hidden,
+            faded: looks.faded,
+            elsewhere: Vec::new(),
+        };
+        if *self.level_looks != shown {
+            self.level_looks = Arc::new(shown);
+            self.level_version += 1;
+        }
+        if self.level_looks.faded.is_empty() {
+            if !self.store.no_unpicked() {
+                self.store.set_unpicked(std::iter::empty());
+            }
+        } else {
+            self.store
+                .set_unpicked(self.level_looks.faded.iter().map(|&id| f64::from(id)));
         }
         let view = doc
             .settings()
@@ -288,9 +347,14 @@ impl Spatial {
             .as_ref()
             .and_then(|a| a.phase_view)
             .unwrap_or_default();
+        let levels = self.level_looks.hidden.iter().map(|&id| f64::from(id));
         if view == kentos_commands::PhaseView::All {
-            if !self.store.no_phase_hidden() {
-                self.store.set_phase_hidden(std::iter::empty());
+            if self.level_looks.hidden.is_empty() {
+                if !self.store.no_phase_hidden() {
+                    self.store.set_phase_hidden(std::iter::empty());
+                }
+            } else {
+                self.store.set_phase_hidden(levels);
             }
             return;
         }
@@ -304,6 +368,7 @@ impl Spatial {
             .entities()
             .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
             .map(|e| f64::from(e.base().id))
+            .chain(levels)
             .collect();
         self.store.set_phase_hidden(hidden);
     }
@@ -966,17 +1031,36 @@ impl Spatial {
     /// (`PickIndex.hit`): points and edges first, then the smallest area
     /// around it; layers without interior picking by their edges only.
     pub fn pick(&self, at: Vec2, tol: f64) -> Option<Slot> {
+        if !self.elsewhere.is_empty() {
+            return self.hits(at, tol).into_iter().next();
+        }
         self.store.hit(at, tol).and_then(slot)
     }
 
     /// Every visible object a click at `at` could mean, the most specific
     /// first (`Store::hits`, docs/adr/0187 §1): the first is [`Self::pick`]'s.
+    /// The active level's objects and those on no level come before the other levels' (docs/adr/0715 §2): a wall
+    /// over another one, a door goes in the active level's.
     pub fn hits(&self, at: Vec2, tol: f64) -> Vec<Slot> {
-        self.store
-            .hits(at, tol)
+        self.on_level_first(
+            self.store
+                .hits(at, tol)
+                .into_iter()
+                .filter_map(slot)
+                .collect(),
+        )
+    }
+
+    /// `slots` with those on another level than the active one after the rest, each part in its order.
+    fn on_level_first(&self, slots: Vec<Slot>) -> Vec<Slot> {
+        if self.elsewhere.is_empty() {
+            return slots;
+        }
+        let (mut here, there): (Vec<Slot>, Vec<Slot>) = slots
             .into_iter()
-            .filter_map(slot)
-            .collect()
+            .partition(|s| !self.elsewhere.contains(&s.0));
+        here.extend(there);
+        here
     }
 
     /// The nearest visible object whose edge comes within `tol` world units
@@ -984,11 +1068,14 @@ impl Spatial {
     /// tools act on. Points and text have no edges; among equal distances
     /// the document's order decides.
     pub fn pick_edge(&self, at: Vec2, tol: f64, accept: impl Fn(Slot) -> bool) -> Option<Slot> {
-        self.store
+        let taken: Vec<Slot> = self
+            .store
             .hit_edge(at, tol)
             .into_iter()
             .filter_map(|(id, _)| slot(id))
-            .find(|s| accept(*s))
+            .filter(|s| accept(*s))
+            .collect();
+        self.on_level_first(taken).into_iter().next()
     }
 
     /// The smallest visible closed shape around `at` (a polygon, circle,

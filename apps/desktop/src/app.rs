@@ -361,6 +361,8 @@ pub enum Message {
     Run(&'static str),
     /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
     ActiveLevel(Option<String>),
+    /// Kat görünümü chosen (docs/adr/0715).
+    LevelView(kentos_interaction::level_view::LevelView),
     /// Run a command ticked on a menu that stays open (a checklist's row:
     /// the selection filter's and the snap kinds, docs/adr/0187 §5): as
     /// `Run`, but the ribbon opened over the drawing stays as it is.
@@ -1000,6 +1002,8 @@ pub struct App {
     pub(crate) template: Option<crate::templates::TemplateRun>,
     /// Etkin kat (active_level.rs, docs/adr/0713): the level new architectural objects go on, the session's.
     pub(crate) active_level: crate::active_level::Chosen,
+    /// Kat görünümü (active_level.rs, docs/adr/0715): which levels the plan shows, the session's.
+    pub(crate) level_view: kentos_interaction::level_view::LevelView,
     pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
@@ -1405,6 +1409,7 @@ impl App {
             ucs_history: crate::ucs::UcsHistory::default(),
             template: None,
             active_level: Default::default(),
+            level_view: Default::default(),
             arch_template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
@@ -1807,6 +1812,8 @@ impl App {
         // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
         self.say_hidden_new();
         self.follow_map();
+        // Kat görünümü with Etkin kat as the drawing has its levels now (docs/adr/0715).
+        self.sync_level_view();
     }
 
     /// The drawing area draws in the project's map system (docs/adr/0583 §3): vectors moved in the style engine's
@@ -1872,6 +1879,7 @@ impl App {
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::ActiveLevel(level) => self.choose_level(level),
+            Message::LevelView(view) => self.choose_level_view(view),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
@@ -2758,6 +2766,12 @@ impl App {
             "xref.attach" => return self.start_xref_attach(),
             "arch.template" => self.apply_arch_template(),
             id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
+            // Kat görünümü (docs/adr/0715).
+            id if id.starts_with("view.levels.") => {
+                if let Some(view) = crate::active_level::level_view_named(&id["view.levels.".len()..]) {
+                    self.choose_level_view(view);
+                }
+            }
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
             "arch.quantities" => self.open_quantities(),
             "arch.spaceMerge" => self.space_merge(),
@@ -3179,6 +3193,9 @@ impl App {
             }
             id if id.starts_with("arch.phase.") => {
                 self.phase_view().name() == &id["arch.phase.".len()..]
+            }
+            id if id.starts_with("view.levels.") => {
+                crate::active_level::level_view_named(&id["view.levels.".len()..]) == Some(self.level_view)
             }
             "draft.lock.keep" => self.locks.keep,
             "draft.lock.construction" => self.session.construction(),

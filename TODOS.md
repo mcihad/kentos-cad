@@ -108,6 +108,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   rampa ve aks ağına etkin katı yazmalı (zemin katta açılış), durum çubuğu ve
   araç ayarlarında Kat menüsü; mahal araçları o katta duvar varken izlemeli.
   Ek: merdiven aracının Yükseklik'i yazılmadıkça etkin katın yüksekliği.
+- ARCH-UX-04 / ADR0715: Kat görünümü (Bütün katlar, Yalnız etkin kat, Etkin kat
+  ve alt kat soluk). Web'in deposu `set_unpicked`/`pickable`'ı, `Entity::level`
+  kuralını, tıklamada etkin katı öne alan sırayı ve görünümün menüsünü almalı.
 - ARCH-DOC-02 / ADR0344 eki: kapı ve pencere çizelgesinin Duvar sütunu stilsiz
   duvarda kalınlığı yazar; `cad.schedules.create.json`'un yeni durumuyla.
 - ARCH-SPACE-02 / ADR0344 eki (27 Ekim): etiketli mahal kendi yazısını çizmez

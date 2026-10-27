@@ -45,7 +45,7 @@ impl Store {
     /// block inside a district the answer is parcel, block, district.
     pub fn containing(&self, p: Vec2) -> Vec<(f64, f64)> {
         let mut out: Vec<(f64, f64)> = Vec::new();
-        for it in self.near(p, 0.0) {
+        for it in self.near(p, 0.0).into_iter().filter(|it| self.pickable(it)) {
             let e = &it.shape;
             let area = match e {
                 Shape::Polygon { .. } if inside_polygon(e, p) => entity_area(e),
@@ -80,7 +80,7 @@ impl Store {
     /// its own hole before the other's). Equal holes keep the document's order.
     pub fn holes_at(&self, p: Vec2) -> Vec<(f64, HoleAt)> {
         let mut out: Vec<(f64, HoleAt, f64)> = Vec::new();
-        for it in self.near(p, 0.0) {
+        for it in self.near(p, 0.0).into_iter().filter(|it| self.pickable(it)) {
             let (Some(at), Ok(ring)) = (hole_at(&it.shape, p), hole_ring(&it.shape, p)) else {
                 continue;
             };
@@ -115,7 +115,7 @@ impl Store {
         self.candidates(&super::padded(q, tol))
             .into_iter()
             .filter(|it| {
-                self.shown(it)
+                self.pickable(it)
                     && it
                         .shapes()
                         .any(|s| crosses(s, fence, &segs, tol, self.font))
@@ -140,7 +140,7 @@ impl Store {
         let within = |p: &Vec2| js_hypot(p.x - c.x, p.y - c.y) <= r;
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(q, 0.0)) {
-            if !self.shown(it) {
+            if !self.pickable(it) {
                 continue;
             }
             // An insert by its pieces (docs/adr/0144).
@@ -177,7 +177,7 @@ impl Store {
         let items: Vec<_> = self
             .all_items()
             .into_iter()
-            .filter(|it| self.shown(it) && !infinite(&it.shape))
+            .filter(|it| self.pickable(it) && !infinite(&it.shape))
             .collect();
         if items.len() < 4 {
             return Vec::new();

@@ -295,7 +295,7 @@ pub fn highlight_color(key: &str, accent: Rgba8) -> Rgba8 {
 
 /// The project's line types as last made, by the drawing's session and generation (docs/adr/0313 §3).
 type KeptPhasing = (
-    (u64, u64),
+    (u64, u64, u64),
     std::sync::Arc<kentos_native_style::phases::Phasing>,
 );
 type KeptLineTypes = (
@@ -334,7 +334,8 @@ pub struct Viewport {
     /// The project's line types as the style engine draws them, by the drawing's session and generation: made again
     /// only when the drawing changed, not every frame (docs/adr/0313 §3).
     line_types: RefCell<Option<KeptLineTypes>>,
-    /// The phase view's looks (docs/adr/0346 §2) by the drawing's session and generation.
+    /// The phase view's looks (docs/adr/0346 §2) with Kat görünümü's (docs/adr/0715) by the drawing's session and
+    /// generation and the level view's version.
     phasings: RefCell<Option<KeptPhasing>>,
     /// The wheel's last zoom: screen-sized symbols wait for it to settle.
     zoomed_at: Option<Instant>,
@@ -777,14 +778,24 @@ impl Viewport {
                 }
             }
         };
-        // The phase view's looks (docs/adr/0346 §2), made again only when the drawing changed.
+        // The phase view's looks (docs/adr/0346 §2) and Kat görünümü's (docs/adr/0715 §2): the levels it hides left
+        // out, the one under the active level faint; made again only when the drawing or the level view changed.
+        let (level_version, level_looks) = s.spatial.level_looks();
         let phasing = {
             let mut kept = self.phasings.borrow_mut();
+            let at = (key.0, key.1, level_version);
             match kept.as_ref() {
-                Some((k, p)) if *k == key => std::sync::Arc::clone(p),
+                Some((k, p)) if *k == at => std::sync::Arc::clone(p),
                 _ => {
-                    let p = std::sync::Arc::new(kentos_plot::layers::phasing_of(&doc.model));
-                    *kept = Some((key, std::sync::Arc::clone(&p)));
+                    let mut p = kentos_plot::layers::phasing_of(&doc.model);
+                    for &id in &level_looks.hidden {
+                        p.hide(id);
+                    }
+                    for &id in &level_looks.faded {
+                        p.fade(id);
+                    }
+                    let p = std::sync::Arc::new(p);
+                    *kept = Some((at, std::sync::Arc::clone(&p)));
                     p
                 }
             }

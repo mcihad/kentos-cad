@@ -1934,6 +1934,52 @@ impl Entity {
         }
     }
 
+    /// Its own level (docs/adr/0715): a wall's, a space's, a grid's, a column's, a stair's, a ramp's or a room
+    /// separator's.
+    pub fn own_level(&self) -> Option<&str> {
+        match self {
+            Entity::Wall(x) => x.wall.arch.level.as_deref(),
+            Entity::Space(x) => x.space.arch.level.as_deref(),
+            Entity::Grid(x) => x.grid.arch.level.as_deref(),
+            Entity::Column(x) => x.column.arch.level.as_deref(),
+            Entity::Stair(x) => x.stair.arch.level.as_deref(),
+            Entity::Ramp(x) => x.ramp.arch.level.as_deref(),
+            Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.level.as_deref()),
+            _ => None,
+        }
+    }
+
+    /// Its level as a level view reads it (docs/adr/0715 §1): its own; an opening's its wall's; a tag's its object's;
+    /// a hatch following a room (a room's finish, docs/adr/0345) the room's; a dimension bound to objects all of one
+    /// level that level (`by_uid` finds an object by its persistent id). None: on no level, shown on every one.
+    pub fn level<'a>(&'a self, by_uid: impl Fn(&str) -> Option<&'a Entity>) -> Option<&'a str> {
+        let followed = |e: &'a Entity| match e {
+            Entity::Opening(o) => by_uid(&o.opening.host).and_then(Entity::own_level),
+            other => other.own_level(),
+        };
+        match self {
+            Entity::Opening(_) => followed(self),
+            Entity::Tag(t) => by_uid(&t.tag.of).and_then(followed),
+            Entity::Hatch(h) => {
+                let outer = h.assoc.as_ref()?.outer.as_ref()?;
+                by_uid(&outer.to_text()).and_then(followed)
+            }
+            Entity::Dimension(d) => {
+                let refs = d.refs.as_deref()?;
+                let mut level = None;
+                for r in [&refs.a, &refs.b, &refs.c].into_iter().flatten() {
+                    let l = by_uid(&r.uid.to_text()).and_then(followed)?;
+                    match level {
+                        Some(m) if m != l => return None,
+                        _ => level = Some(l),
+                    }
+                }
+                level
+            }
+            other => other.own_level(),
+        }
+    }
+
     pub fn kind(&self) -> &'static str {
         match self {
             Entity::Point(_) => "point",

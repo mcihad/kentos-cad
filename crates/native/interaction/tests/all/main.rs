@@ -34,6 +34,7 @@ mod find_replace;
 mod gnss;
 mod grip_modes;
 mod grips;
+mod level_view;
 mod opening_distance;
 mod tag_grips;
 mod tag_settings;

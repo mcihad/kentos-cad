@@ -169,6 +169,7 @@ pub mod label_tools;
 pub mod labels_to_text;
 pub mod layer_move;
 pub mod layer_tools;
+pub mod level_view;
 pub mod leader;
 pub mod lengthen;
 pub mod line;
