@@ -58,17 +58,19 @@ fn visible_settings_and_live_text_preview_do_not_write_and_one_confirmation_plac
         assert!(settings.iter().any(|setting| setting.key == key));
     }
     assert!(settings.iter().any(|setting| setting.note && !setting.warn));
+    // A wall without openings: its openings row is its whole length, written once (docs/adr/0695's 27 October
+    // addendum), not again as the overall row.
     let preview = b.session.preview(&Default::default()).unwrap();
     assert!(!preview.strokes.is_empty());
-    assert_eq!(preview.texts.len(), 2);
+    assert_eq!(preview.texts.len(), 1);
     assert!(preview.texts.iter().all(|text| !text.text.is_empty()));
     assert_eq!(b.doc.to_snapshot_v2(), before);
     b.confirm();
     assert!(!b.session.is_running());
     assert_eq!(b.doc.dimension_sets().len(), 1);
-    assert_eq!(b.doc.dimension_sets()[0].members.len(), 2);
+    assert_eq!(b.doc.dimension_sets()[0].members.len(), 1);
     assert_eq!(b.doc.dimension_sets()[0].gap_mm, 9.);
-    assert_eq!(b.selection.len(), 2);
+    assert_eq!(b.selection.len(), 1);
     b.doc.undo().unwrap();
     assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
     assert!(b.doc.dimension_sets().is_empty());
@@ -154,7 +156,7 @@ fn a_closed_wall_measures_the_edge_under_the_pointer() {
     let set = &b.doc.dimension_sets()[0];
     assert_eq!(set.edge, Some(1));
     assert_eq!(set.face, kentos_commands::DimensionSetFace::Right);
-    assert_eq!(set.members.len(), 2);
+    assert_eq!(set.members.len(), 1);
     b.doc.undo().unwrap();
     assert!(b.doc.dimension_sets().is_empty());
 }
@@ -169,7 +171,7 @@ fn every_edge_of_a_closed_wall_in_one_step() {
     // Inside the room, the rows still go out from the outer faces.
     b.move_to(10., 1.);
     let preview = b.session.preview(&Default::default()).unwrap();
-    assert_eq!(preview.texts.len(), 8, "four edges, two rows each");
+    assert_eq!(preview.texts.len(), 4, "four edges, one dimension each: no openings, the overall row not repeated");
     assert!(
         preview
             .tag
@@ -190,7 +192,7 @@ fn every_edge_of_a_closed_wall_in_one_step() {
         sets.iter()
             .all(|s| s.face == kentos_commands::DimensionSetFace::Right)
     );
-    assert_eq!(b.selection.len(), 8);
+    assert_eq!(b.selection.len(), 4);
     b.doc.undo().unwrap();
     assert!(b.doc.dimension_sets().is_empty());
     assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);

@@ -110,3 +110,15 @@ WBLOCK/`file.export.block` seçimindeki aktif ölçü üyesi, seçim kaynak duva
 ## Sonraki dilimler
 Kapalı/dikdörtgen ve çok parçalı duvarda açık cephe seçimi; çoklu duvar/mahal; çekirdek/yapı/ara duvar sıraları; çoklu pafta; çakışma ve sığmayan yazıyı açıklayan yerleştirme; tam grafik kopyalama ve bütün kabul matrisi. Bunlar ARCH-DIM-01 açık kapsamıdır.
 
+
+## Ek (27 Ekim 2026): açıklıksız kenarda tek ölçü
+
+Kullanıcının bildirdiği kusur: Duvar ölçüleri, açıklığı olmayan duvar kenarına aynı boyu iki kez yazıyordu. Açıklık sırası
+açıklık yokken kenarın bütün boyudur ve toplam sırası onu ikinci sırada tekrar ediyordu. Kural: bir ölçü, sıraların
+sırasıyla kendinden önce çizilen bir ölçüyle aynı iki yeri ölçüyorsa çizilmez. Açıklıksız kenarda kullanıcının tıkladığı
+ilk sırada tek ölçü kalır; kenara açıklık eklenince açıklık sırası parçalanır ve toplam yeniden çizilir (eski toplam ölçünün
+yerine yeni üye). Kullanıcının kaldırdığı (bastırılmış) parça çizilmediği için öbür sıranın aynı ölçüsü kalır. Kural
+belgenin planındadır (`dimension_set_plan`), çekirdeğin sıra hesabı değişmedi. Eski dosyalardaki yinelenen toplam ölçü,
+duvar ya da dizi yeniden planlanınca kalkar; açılışta kendiliğinden silinmez. Doğrulama: `dimension_sets_command_cases.py`
+(109 ortak durum, kural başvuruda da), belge ve araç testleri (bir kenar tek ölçü, pencere silinince 4 üye gider 1 gelir,
+odanın dört kenarı dört ölçü).

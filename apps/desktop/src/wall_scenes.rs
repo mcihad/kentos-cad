@@ -447,6 +447,33 @@ fn dimensions_edge(app: &mut App) {
     hover(app, [10.0, 2.0]);
 }
 
+/// docs/adr/0695's 27 October addendum: a wall without openings, Duvar ölçüleri from the ribbon, placed: one
+/// dimension, not its length twice (the openings row and the overall row).
+fn dimensions_plain_wall(app: &mut App) {
+    opened(app, Objects::new(), 50.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 1.0,
+            min_y: N - 3.0,
+            max_x: E + 9.0,
+            max_y: N + 3.0,
+        },
+        24.0,
+    );
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wall");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 0.0]);
+    typed(app, "");
+    typed(app, "");
+    app.selection.clear();
+    run(app, "tool.wallDimensions");
+    click(app, [4.0, 0.0]);
+    click(app, [4.0, 1.2]);
+    hover(app, [6.0, 2.2]);
+}
+
 /// Kenarlar → Bütün kenarlar: a chain on each of the four edges, on the outer faces, still a preview.
 fn dimensions_around(app: &mut App) {
     closed_room(app);
@@ -507,6 +534,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-mesafe-oda", wall_distance_room),
         ("duvar-mesafe-oda-genisledi", wall_distance_room_wider),
         ("olcu-kenar", dimensions_edge),
+        ("olcu-aciksiz-duvar", dimensions_plain_wall),
         ("olcu-butun-kenarlar", dimensions_around),
         ("olcu-butun-kenarlar-yazildi", dimensions_around_written),
         ("olcu-butun-kenarlar-geri-alindi", dimensions_around_undone),

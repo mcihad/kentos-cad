@@ -343,9 +343,11 @@ fn preview_add_remove_and_source_motion_leave_scratch_and_allocation_unchanged()
     assert_eq!(scratch.to_snapshot_v2(), snapshot);
     assert_eq!(scratch.next_slot(), next);
     assert!(!scratch.can_undo());
+    // Without the window the openings row is the whole face: drawn once, where the first row is; the overall row
+    // would repeat it (docs/adr/0695's 27 October addendum).
     let delta = doc.preview_followers(&[], &[], &[window]);
     assert_eq!(delta.added.len(), 1);
-    assert_eq!(delta.removed.len(), 3);
+    assert_eq!(delta.removed.len(), 4);
     let mut moved = doc.get(window).unwrap().clone();
     if let Entity::Opening(o) = &mut moved {
         o.opening.at = 5.;
@@ -720,9 +722,10 @@ fn an_edge_follows_its_two_ends_and_breaks_when_one_goes() {
     set.face = DimensionSetFace::Right;
     set.at = Vec2 { x: 5., y: 7. };
     doc.add_dimension_set(set).unwrap();
-    // The top edge's outer face, mitred at both corners; the bottom edge's window is not on it.
+    // The top edge's outer face, mitred at both corners; the bottom edge's window is not on it: one dimension, the
+    // overall row not repeating the openings row's whole length.
     let measured = lengths(&doc);
-    assert_eq!(measured.len(), 2);
+    assert_eq!(measured.len(), 1);
     for length in measured {
         close(length, 10.2);
     }
@@ -744,7 +747,7 @@ fn an_edge_follows_its_two_ends_and_breaks_when_one_goes() {
     checked_update(&mut doc, wall, fewer).unwrap();
     let broken = doc.dimension_set(SET).unwrap();
     assert_eq!(broken.broken, Some(DimensionSetBreak::UnsupportedWall));
-    assert_eq!(broken.members.len(), 2, "the last geometry stays for repair");
+    assert_eq!(broken.members.len(), 1, "the last geometry stays for repair");
     doc.undo().unwrap();
     let back = doc.dimension_set(SET).unwrap();
     assert_eq!((back.edge, back.broken), (Some(3), None));

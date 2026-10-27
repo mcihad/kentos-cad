@@ -608,6 +608,10 @@ impl Document {
             before.is_some_and(|s| s.look != set.look || s.height != set.height);
         let layer_changed = before.is_some_and(|s| s.layer_id != set.layer_id);
         let mut out = Vec::with_capacity(spans.len());
+        // A span measuring the same two places as one drawn before it, in the rows' order, is not drawn again: an
+        // edge without openings has its openings row its whole length, the overall dimension once (docs/adr/0695's
+        // 27 October addendum). What the user removed is not drawn, so the other row's stays.
+        let mut drawn: Vec<(SubRef, SubRef)> = Vec::new();
         for span in spans {
             let segment = DimensionSetSegment {
                 row: contract_row(span.row),
@@ -616,9 +620,14 @@ impl Document {
             };
             let key =
                 serde_json::to_string(&segment).map_err(|_| DimensionSetBreak::UnsupportedWall)?;
-            if suppressed.contains(&key) {
+            if suppressed.contains(&key)
+                || drawn
+                    .iter()
+                    .any(|(a, b)| *a == segment.a && *b == segment.b)
+            {
                 continue;
             }
+            drawn.push((segment.a.clone(), segment.b.clone()));
             let old = old_by_key.get(&key).copied();
             let like = old
                 .and_then(|m| self.slot_of(Uuid::from_bytes(m.uid.0)))

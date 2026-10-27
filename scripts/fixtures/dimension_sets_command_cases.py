@@ -68,13 +68,16 @@ def row_geometry(d,spec,*,existing=None):
     nodes.sort(key=lambda v:v[0]);nodes=[v for i,v in enumerate(nodes) if not i or v[0]!=nodes[i-1][0]]
     at=spec['at'];offset=(at['x']-line[0]['x'])*n[0]+(at['y']-line[0]['y'])*n[1];side=-1 if offset<0 else 1
     rows=spec.get('rows',['openings','overall']);gap=float(D(str(spec.get('gapMm',7.5)))*D(str(d['settings']['plotScale']))/D(1000));places={r['row']:r['at'] for r in spec.get('rowPlaces',[])}
-    suppressed=spec.get('suppressed',[]);entities=[];spans=[];uids=[]
+    suppressed=spec.get('suppressed',[]);entities=[];spans=[];uids=[];drawn=[]
     for i,row in enumerate(rows):
         row_at=places.get(row,point(at['x']+n[0]*side*gap*i,at['y']+n[1]*side*gap*i))
         chosen=ends if row=='overall' else nodes
         for first,last in zip(chosen,chosen[1:]):
             span=dict(row=row,a=first[2],b=last[2])
-            if span in suppressed:continue
+            # A span measuring the same two places as one drawn before it is not drawn twice (an edge without
+            # openings); a removed one is not drawn, so the other row's stays.
+            if span in suppressed or (span['a'],span['b']) in drawn:continue
+            drawn.append((span['a'],span['b']))
             known=next((m for m in spec.get('members',[]) if all(m[k]==span[k] for k in ('row','a','b'))),None)
             old=existing if known is not None else None
             e=cp(old) if old else dict(kind='dimension',id=0,layerId=spec.get('layerId','0'),attrs={},height=spec.get('height',float(D('2.5')*D(str(d['settings']['plotScale']))/D(1000))))
@@ -305,10 +308,12 @@ def edge_geometry(d,edge,face,at,*,rows=('openings','overall'),mode='ends',gap_m
             for i in ([0,2] if face=='left' else [1,3]):nodes.append((along(e['place'][i]),cp(e['place'][i]),ref(uid,i)))
     nodes.sort(key=lambda v:v[0])
     off=(at['x']-a['x'])*nx+(at['y']-a['y'])*ny;side=-1 if off<0 else 1;gap=float(D(str(gap_mm))*D(str(d['settings']['plotScale']))/D(1000))
-    height=float(D('2.5')*D(str(d['settings']['plotScale']))/D(1000));entities=[];spans=[]
+    height=float(D('2.5')*D(str(d['settings']['plotScale']))/D(1000));entities=[];spans=[];drawn=[]
     for i,row in enumerate(rows):
         row_at=point(at['x']+nx*side*gap*i,at['y']+ny*side*gap*i);chosen=ends if row=='overall' else nodes
         for first,last in zip(chosen,chosen[1:]):
+            if (first[2],last[2]) in drawn:continue
+            drawn.append((first[2],last[2]))
             entities.append(dict(kind='dimension',id=0,layerId='0',attrs={},height=height,a=cp(first[1]),b=cp(last[1]),
                 offset=(row_at['x']-first[1]['x'])*nx+(row_at['y']-first[1]['y'])*ny,style='linear',angle=math.degrees(math.atan2(uy,ux)),
                 refs=dict(a=cp(first[2]),b=cp(last[2]))))
