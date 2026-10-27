@@ -2242,6 +2242,7 @@ __all__ = [
     "SheetsEdit",
     "SheetsEdited",
     "SheetsFit",
+    "SheetsLevels",
     "SheetsPreflighted",
     "SheetsPublished",
     "SheetsSet",

@@ -87,7 +87,7 @@ use kentos_native_application::{
     linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
-    sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
+    sheets_create, sheets_edit, sheets_fit, sheets_levels, snap_find, spaces_create, spaces_edit,
     spaces_quantities, styles_edit, survey_adjust, survey_points, tables_edit, texts_check,
     texts_edit, time_version, transform, ucs_set, units_change, views_edit, walls_create,
     walls_edit, walls_from_lines, walls_joins, walls_partition, walls_rectangle,
@@ -1374,6 +1374,12 @@ impl Input for kentos_commands::ColumnsDistancesInput {
 }
 
 impl Input for kentos_commands::LevelsAssign {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SheetsLevels {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4309,6 +4315,7 @@ fn run_op(
         }
         kentos_commands::CAD_SHEETS_CREATE => run!(sheets_create, SheetsCreate),
         kentos_commands::CAD_SHEETS_FIT => run!(sheets_fit, SheetsFit),
+        kentos_commands::CAD_SHEETS_LEVELS => run!(sheets_levels, kentos_commands::SheetsLevels),
         kentos_commands::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_commands::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),

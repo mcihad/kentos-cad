@@ -297,6 +297,8 @@ pub enum Message {
     /// is drawn faint.
     MapLevel(Option<String>),
     MapLevelBelow(bool),
+    /// Yeni ▾'s Kat planı paftaları (docs/adr/0718): a sheet per level from the project's default template.
+    LevelSheets,
     MapOverrideAdd(String),
     MapOverride(usize, OverrideEdit),
     MapOverrideRemove(usize),

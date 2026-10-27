@@ -926,6 +926,10 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
     ),
     (
+        "cad.sheets.levels", "*",
+        "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.create'inkiler gibi; çekirdeğin testleri); kat retleri ve levels_have_sheets, not_fixed_map, bad_drawing_info ortak durumlarda (ADR 0718).",
+    ),
+    (
         "cad.sheets.fit",
         "book_unreadable",
         "Ortak kurulum geçersiz kitap vermez; kitap okuma aynı sheets_edit/sheets_set yolunda korunur (ADR 0592).",

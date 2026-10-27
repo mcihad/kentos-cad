@@ -338,7 +338,13 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   model düzenlemede seçim/kenet haritanın katıyla. Görünüm penceresinin kapsamı
   artık geometrik (soluk kat kenetlenmiyordu, düzeldi). Testler ve gerçek GUI
   (`arac-pafta-kat-*`).
-- Etkin katın dosyaya yazılması; her kat için pafta seti (ARCH-DOC-04).
+- [x] Kat planı paftaları [ADR0718](../docs/adr/0718-level-plan-sheets.md): her kat
+  için pafta tek adımda (Revit'in New Plan'ı ve Archicad'in otomatik paftası gibi),
+  haritası o katı çizer; bütün haritalar katların kutusunda aynı ölçekte, planlar
+  kâğıtta üst üste oturur. Numara A-101'den, paftası olan kat atlanır.
+  `cad.sheets.levels`, Pafta › Yeni ▾ ve Çıktı › Pafta › Kat planları; 31 ortak durum,
+  testler ve gerçek GUI (`arac-pafta-kat-planlari*`).
+- Etkin katın dosyaya yazılması.
 - [x] Kat ver [ADR0717](../docs/adr/0717-assign-levels.md): `cad.levels.assign` (yer
   değişmez; Archicad'in Relink Home Story'si gibi). Denetim'in kat bulgularının Düzelt'i
   etkin katı verir; Kata ver (n) ▾: Seç ve göster (önizleme), sonra bir kat, hepsi tek
@@ -1045,8 +1051,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: bir bulguya tıkla-yakınlaş-düzelt-yeniden denetle, undo ve aynı raporun
   Python/MCP'den alınması. “Hata yok” ruhsat/standart uygunluğu değildir.
 
-### ARCH-DOC-04 — Pafta takımı ve ofis profili [ ]
+### ARCH-DOC-04 — Pafta takımı ve ofis profili [~]
 
+- [x] Kat planı paftaları [ADR0718](../docs/adr/0718-level-plan-sheets.md): katlar
+  için A-101'den numaralı, “Mimari › Kat planları” alt kümesinde, ortak zeminli ve
+  aynı ölçekli plan paftaları (sistem ya da projenin şablonundan, soruları bir kez).
 - Mevcut sheet_set ile A3/A2/A1 plan, detay ve çizelge yerleşimi; antet,
   revizyon, ölçek ve görünüş ayrıntısı. Hazır takım uygulamadan önce fark göster.
 - Model ve basılı anotasyon davranışı mevcut güncel kuralla sürer. Birim/render
@@ -1176,6 +1185,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-UX-04, ARCH-DOC-04 / ADR0718 | Kat planı paftaları: pafta çekirdeği `levels::level_sheets` (katın paftası, ortak zemin ve ölçek, A-101'den numara, alt küme Mimari › Kat planları, paftası olan kat atlanır), `cad.sheets.levels` (`levels_have_sheets`, `level_not_found`, `not_fixed_map`, `bad_drawing_info`, `invalid_options`); Pafta › Yeni ▾ ve CAD'in Çıktı › Pafta › Kat planları, tek adım. 31 ortak durum (Rust, Python), çekirdek/tasarımcı/masaüstü (1347) testleri, bütün ortak durumlar, clippy, gerçek GUI. | [x] Pafta seti alt maddesi; pafta takımının kalanı açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0717 | Kat ver: `cad.levels.assign` (katsızlar ya da verilen mimari nesneler, kilitli atlanır, mahal yeni katında yeniden bulunur, kapanmazsa `arch_space_broken`); Denetim'de kat bulgusunun Düzelt'i etkin katı verir, Kata ver ▾ (Seç ve göster, tek adım); Öznitelikler'de karışık seçimde ortak Kat; ayırıcı kat denetiminde. Ortak durum koşucusunun yığın taşması düzeldi (komut başına çerçeve). 32+41 durum, uygulama/etkileşim/masaüstü (1346)/MCP takımları, clippy, Python, gerçek GUI. | [x] Toplu kat atama alt maddesi |
 | 2026-10-27 | ARCH-UX-04 / ADR0716 | Paftada kat: haritanın kendi Kat'ı ve Alt kat soluk (çekirdek `MapItem.level`, `setViewport.level`, `level_not_found`/`bad_level`, PDF ve masaüstü kâğıdı, ön denetim `map_level_missing`, denetçi); yerinde model düzenleme haritanın katıyla; görünüm penceresinin kapsamı geometrik (soluk kat kenetlenmiyordu). 56 ortak durum (10 yeni), 2+2+1+1 test, etkileşim (771)/pafta çekirdeği/çıktı/tasarımcı takımları, clippy, gerçek GUI. | [x] Pafta katı alt maddesi; toplu kat atama açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0715 | Kat görünümü: Bütün katlar / Yalnız etkin kat / Etkin kat ve alt kat (soluk, kenetlenir, seçilmez); nesnenin katı sözleşmede (`Entity::level`: açıklık duvarın, etiket nesnenin, kaplama mahalin, ölçü bağlarının); depoda seçilmez küme; tıklamada etkin kat önce (iki katlı dairede pencereler alt kata oturuyordu, düzeldi). Kat menüsü, hücre ikonu, Görünüm şeridi. 1+3+1 test, etkileşim (770)/çekirdek (282)/masaüstü (1344) takımları, clippy, gerçek GUI. | [~] Ekran dilimi; paftanın katı ve toplu kat atama açık |

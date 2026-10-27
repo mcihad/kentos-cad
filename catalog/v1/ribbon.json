@@ -1989,6 +1989,10 @@
        {
         "command": "sheet.drawingSet",
         "size": "small"
+       },
+       {
+        "command": "sheet.levels",
+        "size": "small"
        }
       ]
      },

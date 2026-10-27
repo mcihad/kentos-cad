@@ -13,8 +13,6 @@ pub fn object_extent(
     doc: &Document,
     uids: Option<&[String]>,
 ) -> Result<Option<[f64; 4]>, Box<kentos_commands::CommandError>> {
-    let blocks = crate::blocks::core_blocks(doc.blocks());
-    let font = geometry::drawing_font(doc.settings().drawing_font);
     let entities = match uids {
         Some(ids) => checks::named(doc, ids)
             .map_err(|s| Box::new(s.into_error()))?
@@ -23,6 +21,16 @@ pub fn object_extent(
             .collect::<Vec<_>>(),
         None => doc.entities().collect(),
     };
+    Ok(extent_of(doc, entities.into_iter()))
+}
+
+/// The box of `entities` as the paper fits them (nested blocks' geometry too); none for none with a finite box.
+pub fn extent_of<'a>(
+    doc: &Document,
+    entities: impl Iterator<Item = &'a kentos_commands::Entity>,
+) -> Option<[f64; 4]> {
+    let blocks = crate::blocks::core_blocks(doc.blocks());
+    let font = geometry::drawing_font(doc.settings().drawing_font);
     let mut extent: Option<[f64; 4]> = None;
     for e in entities {
         let b = object_bounds(&geometry::shape(e), &blocks, font);
@@ -42,7 +50,7 @@ pub fn object_extent(
             ],
         });
     }
-    Ok(extent)
+    extent
 }
 fn prepare(cx: &ExecutionContext<'_>, input: &SheetsFit) -> Result<SheetsEdit, Stop> {
     checks::revision(cx.doc, input.expected_revision.as_deref())?;

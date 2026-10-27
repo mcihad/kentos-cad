@@ -2264,3 +2264,48 @@ fn a_map_draws_a_level() {
     d.update(Message::Redo);
     assert_eq!(level(&d), on("kat-1", false));
 }
+
+/// docs/adr/0718: Yeni ▾'s Kat planı paftaları asks the default template's questions once, then makes a sheet per
+/// level, each map drawing its level on the levels' box at the project's scale, in one step that Geri al takes back.
+#[test]
+fn kat_plani_paftalari_make_a_sheet_per_level() {
+    use kentos_sheet::kinds::{MapLevel, MapView};
+    let mut d = Designer::new(Context {
+        levels: vec![
+            ("zemin".into(), "Zemin kat".into()),
+            ("kat-1".into(), "1. kat".into()),
+        ],
+        level_bounds: Some([500_000.0, 4_420_000.0, 500_012.0, 4_420_008.0]),
+        ..context()
+    });
+    let effects = d.update(Message::LevelSheets);
+    if d.questions().is_some() {
+        assert!(effects.is_empty(), "the questions first");
+        let effects = d.update(Message::Questions(QuestionsMessage::Make));
+        assert!(effects.contains(&Effect::ShowSheet), "{effects:?}");
+    } else {
+        assert!(effects.contains(&Effect::ShowSheet), "{effects:?}");
+    }
+    let book = d.book();
+    let names: Vec<&str> = book.sheets.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["A-101 Zemin kat planı", "A-102 1. kat planı"]);
+    for (sheet, level) in book.sheets.iter().zip(["zemin", "kat-1"]) {
+        let map = sheet
+            .items
+            .iter()
+            .find_map(|i| match &i.kind {
+                ItemKind::Map(m) => Some(m),
+                _ => None,
+            })
+            .expect("a map");
+        assert_eq!(map.level, Some(MapLevel { id: level.into(), below: false }));
+        let MapView::Fixed(v) = &map.view else {
+            panic!("a fixed map")
+        };
+        assert_eq!(v.scale, 1000, "the project's scale");
+        assert_eq!(v.center.map(|c| (c.x, c.y)), Some((500_006.0, 4_420_004.0)), "the levels' box");
+    }
+    assert_eq!(d.open_sheet().map(|s| s.name.as_str()), Some("A-101 Zemin kat planı"));
+    d.update(Message::Undo);
+    assert!(d.book().sheets.is_empty(), "one step");
+}

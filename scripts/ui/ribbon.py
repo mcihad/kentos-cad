@@ -132,7 +132,8 @@ def view_tab(cad):
 
 def output_tab(cad):
     panels = [
-        P("Pafta", "sheet", [L("sheet.new"), S("sheet.fromTemplate"), S("sheet.drawingSet")]),
+        P("Pafta", "sheet", [L("sheet.new"), S("sheet.fromTemplate"), S("sheet.drawingSet")]
+          + ([S("sheet.levels")] if cad else [])),
         P("Yayınla", "print", [L("file.publish.sheets"), S("file.preflight.sheets"), S("file.export.atlas")]),
     ]
     if not cad:

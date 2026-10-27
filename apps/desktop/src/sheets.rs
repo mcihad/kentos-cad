@@ -1322,6 +1322,7 @@ impl App {
             annotation_scales:self.sheet_maps.annotation_scales.borrow().clone(),
             named_views:settings.map_or_else(Vec::new,|s|s.named_views.clone()),
             drawing_bounds: self.sheet_extent.get(),
+            level_bounds: self.sheet_level_extent.get(),
             selection_bounds: doc.and_then(|d| {
                 let ids:Vec<_>=self.selection.ids().iter().filter_map(|s|d.model.uid(*s)).map(|u|u.to_string()).collect();
                 if ids.is_empty() {None} else {kentos_native_application::sheets_fit::object_extent(&d.model,Some(&ids)).ok().flatten()}
@@ -1409,7 +1410,7 @@ impl App {
                     .as_ref()
                     .is_some_and(|d| d.model.entities().any(|e| !e.base().attrs.is_empty())),
             );
-            self.sheet_extent.set(self.document.as_ref().and_then(|d|kentos_native_application::sheets_fit::object_extent(&d.model,None).ok().flatten()));
+            self.refresh_sheet_extents();
             self.sheet_maps.sync(self.document.as_ref());
         }
         let ctx = self.sheet_context();
@@ -1495,6 +1496,23 @@ impl App {
     }
 
     /// A message of the sheet mode, and what it asks of the desktop.
+    /// The drawing's and its levels' boxes, as the paper fits them (docs/adr/0718).
+    fn refresh_sheet_extents(&self) {
+        self.sheet_extent.set(self.document.as_ref().and_then(|d| {
+            kentos_native_application::sheets_fit::object_extent(&d.model, None).ok().flatten()
+        }));
+        self.sheet_level_extent.set(self.document.as_ref().and_then(|d| {
+            let levels: std::collections::BTreeSet<String> = d
+                .model
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
+                .unwrap_or_default();
+            kentos_native_application::sheets_levels::level_extent(&d.model, &levels)
+        }));
+    }
+
     pub(crate) fn sheet_message(&mut self, m: kentos_sheet_ui::Message) -> Task<Message> {
         // A new map looks where the drawing area does now; a map takes its place and scale from
         // it (docs/adr/0206 §1).
@@ -1511,6 +1529,14 @@ impl App {
             let ctx = self.sheet_context();
             let now = self.sheets.context();
             if ctx.center != now.center || ctx.view_size != now.view_size || ctx.drawing_bounds != now.drawing_bounds || ctx.selection_bounds != now.selection_bounds {
+                self.sheets.set_context(ctx);
+            }
+        }
+        // Kat planı paftaları reads the project's levels and their box, from the drawing as well (docs/adr/0718).
+        if matches!(&m, kentos_sheet_ui::Message::LevelSheets) {
+            self.refresh_sheet_extents();
+            let ctx = self.sheet_context();
+            if ctx != *self.sheets.context() {
                 self.sheets.set_context(ctx);
             }
         }

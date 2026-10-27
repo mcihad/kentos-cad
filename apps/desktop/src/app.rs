@@ -1224,6 +1224,8 @@ pub struct App {
     pub(crate) sheet_generation: Option<(u64, u64)>,
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
     pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
+    /// The box of the objects on the project's levels, the ground of Kat planı paftaları (docs/adr/0718).
+    pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64;4]>>,
     /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
@@ -1375,6 +1377,7 @@ impl App {
             sheet_generation: None,
             sheet_attributes: std::cell::Cell::new(false),
             sheet_extent: std::cell::Cell::new(None),
+            sheet_level_extent: std::cell::Cell::new(None),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
@@ -2656,6 +2659,8 @@ impl App {
             "tools.options" => self.open_settings(),
             // Yeni pafta and Şablondan pafta (docs/adr/0622 §3): the sheet mode's own, from the ribbon.
             "sheet.new" => return self.sheet_message(kentos_sheet_ui::Message::NewSheet),
+            // Kat planı paftaları (docs/adr/0718): the sheet mode's own, from the drawing too.
+            "sheet.levels" => return self.sheet_message(kentos_sheet_ui::Message::LevelSheets),
             "sheet.fromTemplate" => {
                 return self.sheet_message(kentos_sheet_ui::Message::Gallery(
                     kentos_sheet_ui::gallery::GalleryMessage::Open,

@@ -2298,6 +2298,13 @@
       ],
       "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır."
     },
+    "sheet.levels": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.levels"
+      ],
+      "note": "Pafta tasarımcısı ve Python/MCP aynı pafta çekirdeği işleviyle (kentos_sheet::levels) her kat için pafta yapar; haritalar katlarını çizer, ortak zeminde (ADR 0718)."
+    },
     "sheet.drawingSet": {
       "level": "semantic",
       "via": [

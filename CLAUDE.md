@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Kat planı paftaları (27 Ekim 2026; [ADR0718](docs/adr/0718-level-plan-sheets.md)).**
+  Her kat için pafta tek adımda: pafta çekirdeği `levels::level_sheets` (tasarımcının Yeni ▾
+  ve `cad.sheets.levels` aynı yol), haritası o katı çizer, bütün haritalar katların nesnelerinin
+  kutusunda aynı ölçekte (ölçek/merkez verilmezse sığan standart ölçek). Numara A-101'den
+  (kullanılanlar atlanır), ad “A-101 Zemin kat planı”, alt küme Mimari › Kat planları; paftası
+  olan kat atlanır (`again` ile `-2`). Pafta › Yeni ▾ ve CAD'in Çıktı › Pafta › Kat planları.
+
 - **Kat ver (27 Ekim 2026; [ADR0717](docs/adr/0717-assign-levels.md)).**
   `cad.levels.assign`: verilen mimari nesnelere ya da (uids yoksa) Denetim'in katsız
   saydıklarına projenin katı, yer değişmez, tek adım “Kat ver”; kilitli atlanır, mahal

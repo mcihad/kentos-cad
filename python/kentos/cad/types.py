@@ -51416,6 +51416,63 @@ class SheetsFit(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetsLevels(_Model):
+    """Input of `cad.sheets.levels` v1 (“Kat planı paftaları”, docs/adr/0718): one sheet per level from one template, each
+    map drawing its level (docs/adr/0716), every map on the same ground: the chosen levels' objects' box (none: the
+    drawing's), at `options.scale` or, without one, the standard scale it fits at. The sheets are numbered on from
+    `first` and named “A-101 Zemin kat planı”; a level some map shows already is left out unless `again`.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `level_not_found` (a level the project lacks, an
+    empty list, a project without levels), `unknown_template`, `invalid_options` (options that do not read, a `name`:
+    the sheets' names are the levels'), `levels_have_sheets`, `not_fixed_map` (a template without a map),
+    `bad_drawing_info` (a `first` that ends in no digits), then the sheet core's own.
+    Attributes:
+        again: Make a sheet for a level some map shows already too.
+        below: Alt kat soluk on every map: the level under it faint.
+        first: The first sheet's number, its last digits counting on and numbers taken skipped; absent: A-101.
+        levels: The levels, by their ids, in the order wanted; absent: every level of the project in its order.
+        options: The template's paper, scale, centre and answers, every sheet's alike (cad.sheets.create's options but the name).
+        source: The template; absent: KentOS's architectural sheet (`sys:cad-mimari`).
+    """
+    again: bool | Unset = UNSET
+    below: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    first: str | None | Unset = UNSET
+    levels: list[str] | None | Unset = UNSET
+    options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
+    source: SheetTemplateSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.again is not UNSET:
+            out["again"] = self.again
+        if self.below is not UNSET:
+            out["below"] = self.below
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.first is not UNSET:
+            out["first"] = self.first
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
+        out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsLevels:
+        return cls(
+            again=data.get("again", UNSET),
+            below=data.get("below", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            first=data.get("first", UNSET),
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
+            options=data["options"] if "options" in data else dict(),
+            source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetsPreflighted(_Model):
     source: SheetPublishPin
     sheets: list[str]
@@ -80755,6 +80812,7 @@ __all__ = [
     "SheetsEdit",
     "SheetsEdited",
     "SheetsFit",
+    "SheetsLevels",
     "SheetsPreflighted",
     "SheetsPublished",
     "SheetsSet",

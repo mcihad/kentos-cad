@@ -8549,6 +8549,31 @@ pub fn catalog() -> CommandCatalog {
             plan: Some(schema::<crate::SheetsEdited>()), capabilities: None,
             examples: vec![CommandExample {title: "Görünüm penceresini nesnelere sığdır".into(), input: json!({"item":"kat-plani-item-0","bounds":[0.0,0.0,5.0,3.0],"marginPct":5}), output: None}],
         },
+        // Kat planı paftaları (docs/adr/0718), held together by fixtures/commands/v1/cad.sheets.levels.json.
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_LEVELS.into(),
+            version: crate::CAD_SHEETS_LEVELS_VERSION,
+            title: "Kat planı paftaları".into(),
+            summary: "Projenin her katı için bir pafta yapar (docs/adr/0718): aynı şablondan (source; yok: sys:cad-mimari), haritası o katı çizer (docs/adr/0716; below: alt kat soluk), bütün haritalar aynı zemini gösterir: seçilen katların nesnelerinin kutusu (yoksa bütün çizim), options.scale ölçeğinde ya da verilmezse sığdığı standart ölçekte; planlar kâğıtta üst üste oturur. levels: katların kimlikleri (yok: projenin bütün katları). Paftalar first'ten (yok: A-101) son rakamları artarak numaralanır, kullanılan numaralar atlanır; adı “A-101 Zemin kat planı”, çizim bilgisi numara, başlık ve Mimari › Kat planları. Bir haritası zaten gösterdiği kat atlanır (Revit'in Do not duplicate existing views'i); again true yeniden yapar. Plan yapılacak paftaları ve haritalarını verir; hepsi tek değişiklik, inverse geri alır. Projede olmayan kat level_not_found, options.name invalid_options, katların hepsinin paftası varsa levels_have_sheets, haritasız şablon not_fixed_map, rakamla bitmeyen first bad_drawing_info."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SheetsLevels>(),
+            output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Her kat için A1 mimari pafta, 1:100".into(),
+                input: json!({ "options": { "scale": 100 } }),
+                output: None,
+            }],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -11243,6 +11268,9 @@ mod tests {
                         serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_SHEETS_LEVELS => {
+                        serde_json::from_value::<crate::SheetsLevels>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_CREATE => {
                         serde_json::from_value::<crate::SheetsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -11902,7 +11930,8 @@ mod tests {
                         }
                         crate::CAD_SHEETS_EDIT
                         | crate::CAD_SHEETS_CREATE
-                        | crate::CAD_SHEETS_FIT => {
+                        | crate::CAD_SHEETS_FIT
+                        | crate::CAD_SHEETS_LEVELS => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
                                 .map(|_| ())
                         }

@@ -7814,6 +7814,22 @@
    "tests": 0
   },
   {
+   "id": "sheet.levels",
+   "kind": "command",
+   "title": "Kat planı paftaları",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.levels"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.levels",
+   "mcp": "cad.sheets.levels",
+   "note": "Pafta tasarımcısı ve Python/MCP aynı pafta çekirdeği işleviyle (kentos_sheet::levels) her kat için pafta yapar; haritalar katlarını çizer, ortak zeminde (ADR 0718).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.lockItems",
    "kind": "command",
    "title": "Kilitle ya da aç",

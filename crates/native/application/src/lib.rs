@@ -344,6 +344,7 @@ pub mod settings_set;
 pub mod sheets_edit;
 pub mod sheets_create;
 pub mod sheets_fit;
+pub mod sheets_levels;
 pub mod snap_find;
 pub mod profile_files;
 pub mod profiles;
@@ -1431,6 +1432,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     (kentos_commands::CAD_SHEETS_CREATE, kentos_commands::CAD_SHEETS_CREATE_VERSION),
     (kentos_commands::CAD_SHEETS_FIT, kentos_commands::CAD_SHEETS_FIT_VERSION),
+    // Kat planı paftaları ([`sheets_levels`], docs/adr/0718).
+    (kentos_commands::CAD_SHEETS_LEVELS, kentos_commands::CAD_SHEETS_LEVELS_VERSION),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (
         kentos_commands::CAD_SHEETS_EDIT,

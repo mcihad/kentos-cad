@@ -34,6 +34,7 @@ pub mod inspect;
 pub mod inspector_view;
 mod interact;
 pub mod library;
+mod level_sheets;
 pub mod message;
 mod print_preview;
 pub mod paint;

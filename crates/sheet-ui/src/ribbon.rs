@@ -158,12 +158,19 @@ impl Designer {
         let several = self.selection.len() > 1;
         let mut groups = Vec::new();
 
+        let levels = !self.ctx.levels.is_empty();
         let new_menu = {
             let open = open.clone();
             move || {
                 let mut m = Menu::new()
                     .item("Yeni pafta", wrap(Message::NewSheet))
                     .icon(icons::NEW);
+                // A sheet per level, each map drawing its level (docs/adr/0718).
+                if levels {
+                    m = m
+                        .item("Kat planı paftaları", wrap(Message::LevelSheets))
+                        .icon(icons::TABLE_DRAWINGS);
+                }
                 if let Some(id) = &open {
                     m = m
                         .item("Paftayı çoğalt", wrap(Message::DuplicateSheet(id.clone())))

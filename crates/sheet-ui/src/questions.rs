@@ -50,6 +50,8 @@ pub struct QuestionsDialog {
     pub(crate) areas: Vec<Option<text_editor::Content>>,
     pub bools: Vec<bool>,
     pub problem: Option<String>,
+    /// The answers make a sheet per level (Kat planı paftaları, docs/adr/0718), not one sheet.
+    pub(crate) levels: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -131,8 +133,19 @@ impl Designer {
                 .map(|v| matches!(v.value, VarValue::Bool(true)))
                 .collect(),
             problem: None,
+            levels: false,
         })));
         Vec::new()
+    }
+
+    /// Kat planı paftaları's questions: the template's, asked once for every level's sheet (docs/adr/0718).
+    pub(crate) fn ask_then_levels(&mut self, t: &Template) -> Vec<Effect> {
+        let label = crate::level_sheets::STEP.to_owned();
+        let effects = self.ask_then_use(t, None, label);
+        if let Some(Window::Questions(d)) = &mut self.dialog {
+            d.levels = true;
+        }
+        effects
     }
 
     pub(crate) fn questions_update(&mut self, m: QuestionsMessage) -> Vec<Effect> {
@@ -188,6 +201,13 @@ impl Designer {
                     });
                 }
                 let (t, paper, label) = (d.template.clone(), d.paper, d.label.clone());
+                if d.levels {
+                    let effects = self.make_level_sheets(&t, values);
+                    if effects.contains(&Effect::ShowSheet) {
+                        self.dialog = None;
+                    }
+                    return effects;
+                }
                 if self.use_template_with(&t, paper, &label, values) {
                     self.dialog = None;
                     self.gallery = None;

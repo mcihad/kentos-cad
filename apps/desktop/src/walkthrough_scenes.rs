@@ -405,6 +405,24 @@ fn sheet_of_level(app: &mut App, below: bool) {
     }
 }
 
+/// docs/adr/0718: Pafta › Yeni ▾ › Kat planı paftaları over the two floors: a sheet per level from the default
+/// template (its questions answered once), each map drawing its level on the levels' box at the project's scale.
+fn level_sheets(app: &mut App) {
+    use kentos_sheet_ui::Message as Sheet;
+    upper_floor(app);
+    sheet(app, Sheet::LevelSheets);
+    if app.sheets.questions().is_some() {
+        sheet(app, Sheet::Questions(kentos_sheet_ui::questions::QuestionsMessage::Make));
+    }
+}
+
+/// The second sheet in front: 1. kat's plan.
+fn level_sheets_upper(app: &mut App) {
+    use kentos_sheet_ui::Message as Sheet;
+    level_sheets(app);
+    sheet(app, Sheet::Tab(2));
+}
+
 fn sheet_upper(app: &mut App) {
     sheet_of_level(app, false);
 }
@@ -449,6 +467,10 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 &mut update,
                 kentos_ui::snapshot::Input::Scroll(at, -11.0),
             );
+        }),
+        // docs/adr/0718: Pafta › Yeni ▾ open: Kat planı paftaları under Yeni pafta.
+        ("pafta-yeni-menu", sheet_upper, |s, app| {
+            crate::tools_screens::press_caption(s, app, "Yeni", false, true)
         }),
         ("kat-gorunumu-serit", view_tab_levels, |s, app| {
             crate::tools_screens::open_ribbon_menu(s, app, "Kat görünümü")
@@ -496,6 +518,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("kat-gorunumu-alt", upper_floor_over_ground),
         ("kat-gorunumu-zemin", ground_floor_alone),
         ("pafta-kat-1", sheet_upper),
+        ("pafta-kat-planlari", level_sheets),
+        ("pafta-kat-planlari-1", level_sheets_upper),
         ("pafta-kat-1-alt", sheet_upper_over_ground),
     ]
 }

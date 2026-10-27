@@ -4090,6 +4090,26 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Kat planı paftaları (docs/adr/0718): the template reader's and the sheet core's own, and the levels'.
+    Entry {
+        id: "cad.sheets.levels",
+        refusals: &[
+            SHEET_CORE,
+            REVISION,
+            &[
+                "level_not_found",
+                "unknown_template",
+                "unknown_variable",
+                "invalid_options",
+                "levels_have_sheets",
+                "not_fixed_map",
+                "bad_drawing_info",
+                "book_unreadable",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.sheets.fit",
         refusals: &[

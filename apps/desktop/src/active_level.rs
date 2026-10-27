@@ -399,4 +399,28 @@ mod tests {
         doc.model.set_settings(settings);
         assert_eq!(app.active_level().as_deref(), Some("zemin"));
     }
+
+    /// docs/adr/0718: Çıktı › Kat planları from the drawing: a sheet per level, each map drawing its level, in front;
+    /// the sheet mode's Geri al takes them all back.
+    #[test]
+    fn kat_planlari_make_a_sheet_per_level_from_the_drawing() {
+        let mut app = app_with_drawing();
+        make_cad(&mut app);
+        with_levels(&mut app);
+        wall(&mut app);
+        let task = app.run("sheet.levels");
+        crate::files_testing::drive(&mut app, task);
+        if app.sheets.questions().is_some() {
+            let task = app.update(Message::Sheet(kentos_sheet_ui::Message::Questions(
+                kentos_sheet_ui::questions::QuestionsMessage::Make,
+            )));
+            crate::files_testing::drive(&mut app, task);
+        }
+        let names: Vec<String> = app.sheets.book().sheets.iter().map(|s| s.name.clone()).collect();
+        assert_eq!(names, ["A-101 Bodrum planı", "A-102 Zemin kat planı", "A-103 1. kat planı"]);
+        assert!(app.sheets.is_active(), "the first sheet in front");
+        let task = app.update(Message::Sheet(kentos_sheet_ui::Message::Undo));
+        crate::files_testing::drive(&mut app, task);
+        assert!(app.sheets.book().sheets.is_empty(), "one step");
+    }
 }

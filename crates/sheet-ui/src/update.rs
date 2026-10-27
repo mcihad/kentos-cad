@@ -78,6 +78,7 @@ impl Designer {
                 }
             }
             // Yeni pafta: the mode's template, its questions asked first (the web's `newSheet`).
+            Message::LevelSheets => return self.level_sheets(),
             Message::NewSheet => {
                 let id = self.profile.default_template.clone();
                 if let Some(t) = kentos_sheet::template::system_template(&id).cloned() {

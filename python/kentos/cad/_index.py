@@ -193,6 +193,7 @@ COMMANDS: dict[str, Any] = {
     "cad.sheets.create": sheets.create,
     "cad.sheets.edit": sheets.edit,
     "cad.sheets.fit": sheets.fit,
+    "cad.sheets.levels": sheets.levels,
     "cad.sheets.set": sheets.set,
     "cad.snap.find": snap.find,
     "cad.sources.describe": sources.describe,
