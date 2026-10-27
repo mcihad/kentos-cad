@@ -236,6 +236,8 @@ pub(super) struct Features {
     pub(super) dimension_set_edges: bool,
     /// Schema 115: a stair's and a ramp's railings (docs/adr/0705).
     railings: bool,
+    /// Schema 117: a curved stair's arc (docs/adr/0709).
+    stair_arcs: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -435,6 +437,7 @@ impl Features {
             dimension_sets: schema >= crate::SCHEMA_WITH_DIMENSION_SETS,
             dimension_set_edges: schema >= crate::SCHEMA_WITH_DIMENSION_SET_EDGES,
             railings: schema >= crate::SCHEMA_WITH_RAILINGS,
+            stair_arcs: schema >= crate::SCHEMA_WITH_STAIR_ARCS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2041,6 +2044,10 @@ pub(super) fn object(
     };
     if railed && !has.railings {
         return Err(r.fail(Code::BadValue, "korkuluk (railings) şema 115 ister"));
+    }
+    // Schema 117 (docs/adr/0709): a curved stair's arc.
+    if matches!(&entity, Entity::Stair(s) if s.stair.bulges.is_some()) && !has.stair_arcs {
+        return Err(r.fail(Code::BadValue, "döner merdivenin bükümü (bulges) şema 117 ister"));
     }
     // A closed and a wide polyline's rules (docs/adr/0258).
     if let Entity::Polyline(p) = &entity

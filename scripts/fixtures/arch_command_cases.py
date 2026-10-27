@@ -360,9 +360,28 @@ def flight_problem(pts, what, code, path):
     return None
 
 
+def arc_problem(s, path):
+    """docs/adr/0709: a curved stair's arc: two points, two finite bulges (its arc's, not 0, then 0), its walking line's
+    radius more than half its width."""
+    b = s.get("bulges")
+    if b is None:
+        return None
+    code, at = "invalid_stair", f"{path}.bulges"
+    if len(s["pts"]) != 2:
+        return refusal(code, "Döner merdivenin yürüme çizgisi iki noktadır (başı ve sonu) ve bir yaydır.", at)
+    if len(b) != 2 or not all(math.isfinite(x) for x in b) or b[1] != 0.0 or b[0] == 0.0:
+        return refusal(code, "Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.", at)
+    (ax, ay), (bx, by) = [(q["x"], q["y"]) for q in s["pts"]]
+    chord = math.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+    r = chord * (1.0 + b[0] * b[0]) / (4.0 * abs(b[0]))
+    if math.isfinite(s["width"]) and r - s["width"] / 2.0 <= 1e-9:
+        return refusal(code, f"Yürüme çizgisinin yarıçapı {r:.3f} m; merdivenin genişliğinin yarısından ({s['width'] / 2.0:.3f} m) büyük olmalı.", at)
+    return None
+
+
 def stair_problem(s, path):
     code = "invalid_stair"
-    r = flight_problem(s["pts"], "Merdivenin", code, path)
+    r = flight_problem(s["pts"], "Merdivenin", code, path) or arc_problem(s, path)
     if r:
         return r
     for field, whose in (("width", "Merdivenin genişliği"), ("riserHeight", "Rıht yüksekliği"), ("tread", "Basamak derinliği")):
@@ -410,14 +429,29 @@ def stair_warnings(s, path):
     """The drawing reference's checks, then the level's height (ADR 0343 §2)."""
     out = []
     w = lambda code, words: out.append({"code": code, "message": words, "path": path})
+    if s.get("bulges"):
+        # A curved stair (docs/adr/0709): its risers a tread apart along its arc, no landings.
+        (a, b) = [(q["x"], q["y"]) for q in s["pts"]]
+        _, rad, _, sweep = ac.arc_of(a, b, s["bulges"][0])
+        total = rad * abs(sweep)
+        st = [k * F(s["tread"]) for k in range(s["risers"]) if float(k * F(s["tread"])) <= total + 1e-9]
+        missing = s["risers"] - len(st)
+        if missing:
+            w("stair_short", f"Yürüme çizgisi ({fixed(total, 2)} m) {s['risers']} rıhta yetmiyor: {missing} rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.")
+        elif st and total - float(st[-1]) > 1e-6:
+            w("stair_long", f"Son rıhttan sonra yürüme çizgisinde {fixed(total - float(st[-1]), 2)} m kalıyor; merdiven yoldan kısa.")
+        st = None
+    else:
+        st = True
     pts = fpts(s["pts"])
     width = F(s["width"])
     land = F(s["landing"]) if s.get("landing") is not None else width
-    st, missing, at = ac.risers(pts, width, s["risers"], F(s["tread"]), land)
-    if missing:
-        w("stair_short", f"Yürüme çizgisi ({fixed(float(at[-1]), 2)} m) {s['risers']} rıhta yetmiyor: {missing} rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.")
-    elif st and float(at[-1] - st[-1]) > 1e-6:
-        w("stair_long", f"Son rıhttan sonra yürüme çizgisinde {fixed(float(at[-1] - st[-1]), 2)} m kalıyor; merdiven yoldan kısa.")
+    if st:
+        st, missing, at = ac.risers(pts, width, s["risers"], F(s["tread"]), land)
+        if missing:
+            w("stair_short", f"Yürüme çizgisi ({fixed(float(at[-1]), 2)} m) {s['risers']} rıhta yetmiyor: {missing} rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.")
+        elif st and float(at[-1] - st[-1]) > 1e-6:
+            w("stair_long", f"Son rıhttan sonra yürüme çizgisinde {fixed(float(at[-1] - st[-1]), 2)} m kalıyor; merdiven yoldan kısa.")
     rule = 2 * s["riserHeight"] + s["tread"]
     if rule < 0.60 - 1e-9 or rule > 0.65 + 1e-9:
         w("stair_step_rule", f"2 × rıht + basamak = {fixed(rule, 3)} m; Blondel'in oranı 0.60–0.65 m. Bu bir bilgidir, yönetmelik denetimi değildir.")
@@ -749,6 +783,8 @@ def columns_create(d, inp, conflict=False):
 def stair_fields(n, risers=None, riser=None):
     s = {"pts": n["pts"], "width": n["width"], "risers": n.get("risers", 0) if risers is None else risers,
          "riserHeight": n.get("riserHeight", 0.0) if riser is None else riser, "tread": n["tread"]}
+    if n.get("bulges") is not None:
+        s["bulges"] = n["bulges"]
     for k in ("landing", "cut", "arch"):
         if n.get(k) is not None:
             s[k] = n[k]
@@ -843,7 +879,37 @@ def float_fit_end(pts, width, count, tread, land):
     return (px + ux * t, py + uy * t)
 
 
+def core_arc(a, b, bulge):
+    """geom::bulge::bulge_arc's floating-point steps: centre, radius, start angle, sweep."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    chord = js_hypot(dx, dy)
+    k = (1.0 - bulge * bulge) / (4.0 * bulge)
+    c = ((a[0] + b[0]) / 2.0 - dy * k, (a[1] + b[1]) / 2.0 + dx * k)
+    r = (chord * (1.0 + bulge * bulge)) / (4.0 * abs(bulge))
+    return c, r, math.atan2(a[1] - c[1], a[0] - c[0]), 4.0 * math.atan(bulge)
+
+
+def fitted_arc(s, at):
+    """docs/adr/0709: a curved stair's end round its centre from its start by (risers − 1) × tread, in the core's steps
+    (geom::arch::stair_fit_arc); the independent `curved_end` must agree within 10⁻⁹."""
+    a, b = [(p["x"], p["y"]) for p in s["pts"]]
+    c, r, a0, sweep = core_arc(a, b, s["bulges"][0])
+    turn = -1.0 if sweep < 0 else 1.0
+    sw = turn * ((s["risers"] - 1.0) * s["tread"]) / r
+    exact = ac.curved_end(a, ac.arc_of(a, b, s["bulges"][0])[0], s["risers"], s["tread"], turn)
+    if not (abs(sw) > 1e-9 and abs(sw) < 2 * math.pi - 1e-9):
+        assert exact is None
+        return refusal("invalid_stair", "Döner merdiven rıhtlara göre bitirilemiyor: rıhtlar yürüme çizgisinde tam bir turdan uzun. Yarıçapı büyütün, basamağı kısaltın ya da yüksekliği bölün.", f"{at}.fit")
+    t = a0 + sw
+    end, bulge = (c[0] + r * math.cos(t), c[1] + r * math.sin(t)), math.tan(sw / 4.0)
+    assert exact and abs(end[0] - exact[0][0]) <= 1e-9 and abs(end[1] - exact[0][1]) <= 1e-9 and abs(bulge - exact[1]) <= 1e-9
+    pts = [s["pts"][0], {"x": end[0], "y": end[1]}]
+    return (pts, [bulge, 0.0]), (pts, [bulge, 0.0])
+
+
 def fitted(s, at):
+    if s.get("bulges"):
+        return fitted_arc(s, at)
     pts = [(p["x"], p["y"]) for p in s["pts"]]
     land = s.get("landing", s["width"])
     got = float_fit_end(pts, s["width"], s["risers"], s["tread"], land)
@@ -862,7 +928,7 @@ def stairs_create(d, inp, conflict=False):
     made, warnings = [], []
     for i, n in enumerate(inp["stairs"]):
         at = f"stairs[{i}]"
-        r = points_not_finite(n["pts"], at) or finite_each(
+        r = points_not_finite(n["pts"], at) or next((not_finite("Büküm", f"{at}.bulges[{k}]") for k, b in enumerate(n.get("bulges") or []) if not math.isfinite(b)), None) or finite_each(
             [(n["width"], "width", "Genişlik"), (n.get("riserHeight", 0.0), "riserHeight", "Rıht yüksekliği"),
              (n["tread"], "tread", "Basamak derinliği"), (n.get("landing"), "landing", "Sahanlık"),
              (n.get("height"), "height", "Yükseklik"), (n.get("maxRiser"), "maxRiser", "En fazla rıht"),
@@ -889,8 +955,12 @@ def stairs_create(d, inp, conflict=False):
             pts = fitted(s, at)
             if isinstance(pts, dict):
                 return pts, None
-            s["pts"] = pts[0]
-            exact = {**s, "pts": pts[1]}
+            if s.get("bulges"):
+                (s["pts"], s["bulges"]), _ = pts
+                exact = s
+            else:
+                s["pts"] = pts[0]
+                exact = {**s, "pts": pts[1]}
             r = stair_problem(s, at)
             if r:
                 return r, None
@@ -1326,6 +1396,60 @@ def design_cases():
     return c.cases
 
 
+def curved(**kw):
+    """docs/adr/0709: a curved stair round (0, 30), 1.5 m on its walking line, from its height, fitted to its risers."""
+    s = {"pts": [P(1.5, 30), P(-1.5, 30)], "bulges": [1.0, 0.0], "width": 1.0, "height": 3.0, "tread": 0.28, "fit": True}
+    s.update(kw)
+    for k in [k for k, v in s.items() if v is None]:
+        del s[k]
+    return {"layerId": "merdiven", "stairs": [s]}
+
+
+def curved_cases():
+    c = Cases()
+    life(c, STAIRS, curved(), "Yükseklikten döner merdiven, rıhtlara göre biter")
+    quarter = math.tan(math.pi / 8)
+    for name, inp in [
+        ("saat yönünde döner merdiven, iki yan korkuluk ve numaralar", curved(bulges=[-1.0, 0.0], railings="both", numbering=True)),
+        ("kesme yüksekliği 1,10 m: kesme 6. rıhtta, korkuluğun üstü ayrı", curved(cutHeight=1.1, railings="left")),
+        ("270° döner merdiven, 4,20 m, 1,20 m yarıçap", curved(pts=[P(1.2, 30), P(0, 31.2)], bulges=[quarter, 0.0], width=1.0, height=4.2, tread=0.25)),
+        ("verilen rıhtlarla döner merdiven, yol uzun: stair_long", curved(height=None, fit=None, risers=12, riserHeight=0.175)),
+        ("çeyrek dönüş yetmez: stair_short (sığdırmasız)", curved(pts=[P(1.5, 30), P(0, 31.5)], bulges=[quarter, 0.0], fit=None)),
+        ("Blondel dışı döner merdiven: stair_step_rule", curved(height=None, fit=None, risers=10, riserHeight=0.2, tread=0.32)),
+        ("kattan döner merdiven: stair_rise_level yok", curved(height=3.06, arch={"level": "zemin"})),
+        ("kattan döner merdiven: rıhtlar katı tutmuyor", curved(height=None, fit=None, risers=12, riserHeight=0.175, arch={"level": "zemin"})),
+        ("düz ve döner merdiven birlikte", {"layerId": "merdiven", "stairs": [curved()["stairs"][0], design()["stairs"][0]]}),
+        ("eğik yaylı yürüme çizgisi (3-4-5 kiriş)", curved(pts=[P(0, 30), P(2.4, 33.2)], bulges=[0.5, 0.0], width=1.2, height=2.8)),
+        ("saat yönünde 1,80 m yarıçap, sağ korkuluk, sığdırmasız", curved(pts=[P(6.8, 35), P(5, 33.2)], bulges=[-quarter, 0.0], width=1.1, fit=None, height=None, risers=8, riserHeight=0.175, tread=0.27, railings="right")),
+    ]:
+        c.add(name, [create_step(Drawing(), STAIRS, "execute", inp)])
+    c.add("plan döner merdiveni rıhtlarıyla gösterir", [create_step(Drawing(), STAIRS, "plan", curved(cutHeight=1.1))])
+    # A mirror turns the stair's arc over (docs/adr/0709): the bulge's sign changes with the points.
+    d = Drawing()
+    made = create_step(d, STAIRS, "execute", curved(height=None, fit=None, risers=17, riserHeight=0.175))
+
+    def mirrored(d):
+        k, ly, f = d.objs[d.next - 1]
+        f = dict(f, pts=[{"x": -q["x"], "y": q["y"]} for q in f["pts"]], bulges=[-f["bulges"][0], 0.0])
+        d.objs[d.next - 1] = (k, ly, f)
+        return []
+    c.add("aynalanan döner merdivenin yayı ters döner", [made, other_step(
+        d, "cad.entities.transform", {"uids": [uid_of(d.next - 1)], "transform": {"kind": "mirror", "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 10}}},
+        mirrored, [d.next - 1])])
+    refusals(c, STAIRS, [
+        ("üç noktalı yolda büküm reddedilir", curved(pts=[P(0, 30), P(3, 30), P(3, 33)], bulges=[0.5, 0.0]), {}),
+        ("tek büküm reddedilir", curved(bulges=[1.0]), {}),
+        ("ikinci büküm sıfır değilse reddedilir", curved(bulges=[1.0, 0.5]), {}),
+        ("sıfır büküm (düz) reddedilir", curved(bulges=[0.0, 0.0]), {}),
+        ("yarıçap genişliğin yarısından küçükse reddedilir", curved(pts=[P(0.5, 30), P(-0.5, 30)], width=1.2), {}),
+        ("yarıçap tam yarı genişlikse reddedilir", curved(pts=[P(0.5, 30), P(-0.5, 30)], width=1.0), {}),
+        ("sonsuz büküm reddedilir", curved(), {"non_finite": {"stairs[0].bulges[0]": "NaN"}}),
+        ("sonsuz ikinci büküm reddedilir", curved(), {"non_finite": {"stairs[0].bulges[1]": "Infinity"}}),
+        ("rıhtlar bir turdan uzunsa sığdırma reddedilir", curved(pts=[P(0.4, 30), P(-0.4, 30)], width=0.6), {}),
+    ])
+    return c.cases
+
+
 def rdesign(**kw):
     """docs/adr/0705: a ramp fitted to its rise over its slope."""
     r = {"pts": [P(0, 40), P(5, 40)], "width": 1.5, "rise": 0.5, "slope": 6.25, "fit": True}
@@ -1700,6 +1824,7 @@ def files():
         "cad.columns.create.json": document(COLUMNS, "Kolon: merkezden, akslara bağlı, aks kesişimleri, etiketler; aksla gitmek; retler", column_cases()),
         "cad.stairs.create.json": document(STAIRS, "Merdiven: düz, L, U; sahanlık, kesme, numaralar; denetimlerin uyarıları; retler", stair_cases()),
         "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
+        "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.grids.create.system.json": document(GRIDS, "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)", system_cases()),

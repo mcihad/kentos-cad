@@ -353,14 +353,45 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
         }
         Entity::Stair(s) => {
             let x = &s.stair;
+            // A curved stair's arc (docs/adr/0709): its walking line's radius and turn, its tread on its inner side.
+            let arc = match x.pts[..] {
+                [a, b] => kentos_geometry_core::geom::bulge::bulge_arc(
+                    kentos_geometry_core::vec2::Vec2::new(a.x, a.y),
+                    kentos_geometry_core::vec2::Vec2::new(b.x, b.y),
+                    x.bulge(),
+                ),
+                _ => None,
+            };
+            let shape = match (&arc, x.pts.len()) {
+                // Going up a counter-clockwise stair one turns left.
+                (Some(a), _) => format!(
+                    "Döner, {}° {}",
+                    fixed(a.sweep.abs().to_degrees(), 0),
+                    if a.sweep < 0.0 { "sağa" } else { "sola" }
+                ),
+                (None, 3) => "L".to_owned(),
+                (None, 4) => "U".to_owned(),
+                _ => "Düz".to_owned(),
+            };
+            out.push(Row::text("Biçim", shape));
             out.push(length("Genişlik", x.width, ArchField::Width));
+            if let Some(a) = &arc {
+                out.push(Row::figure("Yarıçap", f.length_bare(a.r)).unit(f.length_unit_label()));
+            }
             out.push(
                 Row::figure("Rıht sayısı", x.risers.to_string())
                     .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Risers)))),
             );
             out.push(length("Rıht", x.riser_height, ArchField::RiserHeight));
             out.push(length("Basamak", x.tread, ArchField::Tread));
-            out.push(length("Sahanlık", x.landing(), ArchField::Landing));
+            match &arc {
+                // Measured on its walking line; shorter on its inner side, no landings (no turns).
+                Some(a) => out.push(
+                    Row::figure("İç basamak", f.length_bare(x.tread * (a.r - x.width / 2.0) / a.r))
+                        .unit(f.length_unit_label()),
+                ),
+                None => out.push(length("Sahanlık", x.landing(), ArchField::Landing)),
+            }
             out.push(railings_row(slot, x.railings, &edit));
             out.push(
                 Row::figure(

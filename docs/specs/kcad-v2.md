@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `116`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-117.kcad`) |
+| `version` | tam sayı | `2`'den `117`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-118.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -504,6 +504,15 @@ yalnız bir mahal boşlukken seçer; öteki bütün örneklerin baytları aynıd
 `void` taşıyan mahal `unknown_field` olur. Örnek `space-voids.kcad` (bir salon ve
 duvarın dışında çizilmiş bir şaft), önceki şema örneği
 `broken/space-voids-in-schema-115.kcad`.
+
+**Şema 117** (docs/adr/0709), merdivenin (`stair`) JSON biçimli alanlarına isteğe
+bağlı `bulges` ekler: döner merdivenin iki noktalı yürüme çizgisinin yayı, iki büküm
+(ilki yayınki, dönüşünün dörtte birinin tanjantı, saat yönünün tersine artı, sıfır
+değil; ikincisi 0); yürüme çizgisinin yarıçapı genişliğin yarısından büyüktür. Yoksa
+merdiven düzdür. Yazıcı 117'yi yalnız bir merdiven döner iken seçer; öteki bütün
+örneklerin baytları aynıdır. 116'da `bulges` taşıyan merdiven `bad_value` olur.
+Örnek `stair-arcs.kcad` (yarım dönüşlü, saat yönünde korkuluklu ve düz merdiven),
+önceki şema örneği `broken/stair-arcs-in-schema-116.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

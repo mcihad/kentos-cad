@@ -1884,6 +1884,13 @@
       ],
       "note": "Yürüme çizgisinin noktaları ve ölçüler komuta verilir; basamaklar ve denetimler komutun, önizleme planından (ADR 0343 §2, §4)."
     },
+    "tool.stairCurved": {
+      "level": "semantic",
+      "via": [
+        "cad.stairs.create"
+      ],
+      "note": "Merkez, başlangıç ve dönüş yönü; yürüme çizgisi yay (bulges) olarak komuta verilir, yayı son rıhta komut bitirir (ADR 0709)."
+    },
     "tool.ramp": {
       "level": "semantic",
       "via": [

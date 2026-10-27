@@ -11,7 +11,12 @@ export type NewStair = {
 /**
  * Its walking line, up from its first point: two points straight, three an L, four a U.
  */
-pts: Array<Vec2>, width: number, 
+pts: Array<Vec2>, 
+/**
+ * A curved (spiral) stair (docs/adr/0709): its two-point walking line's arc as two bulges, the first the tangent
+ * of a quarter of its turn (counter-clockwise positive), the second 0. Absent: straight.
+ */
+bulges?: Array<number>, width: number, 
 /**
  * Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`.
  */

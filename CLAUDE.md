@@ -28,6 +28,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Döner merdiven (27 Ekim 2026; [ADR0709](docs/adr/0709-curved-stairs.md)).**
+  Merdivenin iki noktalı yürüme çizgisi yay olabilir (`bulges`, KCAD 117 opt-in):
+  rıhtlar yay boyunca radyal, bant ve korkuluk eş merkezli yay, `fit` yayı son
+  rıhtta bitirir; ayna yayı çevirir. Döner merdiven aracı Merdiven ▾'da ve
+  Merdiven'in Biçim'inde: merkez, başlangıç, imleçle biriken yön ya da yazılan
+  dönüş; etiket/Öznitelikler yarıçap, sola/sağa ve iç basamağı söyler (bilgi).
+  10+26 bağımsız durum, KCAD/Python/MCP, araç testleri; panel seçimlerinin
+  (`right`, `clicked`, `fit`) Türkçe büyük harfle reddi bulundu, düzeltildi ve
+  `setting_choices` ile korunur. Merkez direği/karışık kol açık.
+
 - **Mahal boşluğu: şaft ve döşeme boşluğu (27 Ekim 2026; [ADR0708](docs/adr/0708-space-voids.md)).**
   Mahalin isteğe bağlı `void`'u (KCAD şema 116, opt-in): planda parçanın içinde
   kırpılmış çapraz (`geom::space::void_cross`), Metraj'da `spaceArea` dışı ve

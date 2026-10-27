@@ -103,6 +103,8 @@ mod space_columns;
 
 mod space_number;
 mod stair_design;
+mod spiral_stair;
+mod setting_choices;
 mod casework;
 mod grid_system;
 mod space_void;

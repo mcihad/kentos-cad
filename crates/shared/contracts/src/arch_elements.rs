@@ -287,6 +287,12 @@ pub struct StairFields {
     /// Its walking line, up from its first point: two points straight, three an L, four a U.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
+    /// A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent
+    /// of a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Option<Vec<f64>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -512,6 +518,9 @@ impl StairFields {
         if let Some(found) = flight_problem(&self.pts, "Merdivenin") {
             return Some(found);
         }
+        if let Some(found) = self.arc_problem() {
+            return Some(found);
+        }
         for (field, v, whose) in [
             ("width", self.width, "Merdivenin genişliği"),
             ("riserHeight", self.riser_height, "Rıht yüksekliği"),
@@ -546,6 +555,36 @@ impl StairFields {
     /// Its landing's length: its own, else its width.
     pub fn landing(&self) -> f64 {
         self.landing.unwrap_or(self.width)
+    }
+
+    /// Its arc's bulge (docs/adr/0709): the first of `bulges`; 0 for a straight stair.
+    pub fn bulge(&self) -> f64 {
+        self.bulges.as_ref().and_then(|b| b.first().copied()).unwrap_or(0.0)
+    }
+
+    /// What is wrong with a curved stair's arc: two bulges on a two-point line, the first finite and not 0, the second
+    /// 0; its inner side's radius above 0 (the walking line's radius more than half the width).
+    fn arc_problem(&self) -> Problem {
+        let Some(b) = &self.bulges else {
+            return None;
+        };
+        let bad = |words: &str| Some(("bulges".to_owned(), words.to_owned()));
+        if self.pts.len() != 2 {
+            return bad("Döner merdivenin yürüme çizgisi iki noktadır (başı ve sonu) ve bir yaydır.");
+        }
+        if b.len() != 2 || !b.iter().all(|x| x.is_finite()) || b[1] != 0.0 || b[0] == 0.0 {
+            return bad("Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.");
+        }
+        let (dx, dy) = (self.pts[1].x - self.pts[0].x, self.pts[1].y - self.pts[0].y);
+        let chord = (dx * dx + dy * dy).sqrt();
+        let r = chord * (1.0 + b[0] * b[0]) / (4.0 * b[0].abs());
+        if self.width.is_finite() && r - self.width / 2.0 <= 1e-9 {
+            return bad(&format!(
+                "Yürüme çizgisinin yarıçapı {r:.3} m; merdivenin genişliğinin yarısından ({:.3} m) büyük olmalı.",
+                self.width / 2.0
+            ));
+        }
+        None
     }
 }
 

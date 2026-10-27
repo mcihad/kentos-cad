@@ -230,7 +230,10 @@ CAD = [
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
                 {"command": "tool.gridSystem", "title": "Aks", "label": "Aks ağı"},
-            ]}, S("tool.stair"), S("tool.ramp"), S("tool.casework")]),
+            ]}, {"key": "archStairs", "size": "small", "split": [
+                {"command": "tool.stair", "title": "Merdiven", "label": "Merdiven"},
+                {"command": "tool.stairCurved", "title": "Merdiven", "label": "Döner merdiven"},
+            ]}, S("tool.ramp"), S("tool.casework")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",

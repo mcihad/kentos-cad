@@ -750,6 +750,14 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
     for (i, n) in input.stairs.iter().enumerate() {
         let at = format!("stairs[{i}]");
         points(&n.pts, &at)?;
+        for (k, b) in n.bulges.iter().flatten().enumerate() {
+            checks::finite(
+                *b,
+                "Büküm",
+                "Sonlu bir sayı verin.",
+                &format!("{at}.bulges[{k}]"),
+            )?;
+        }
         finite_each(
             &[
                 (Some(n.width), "width", "Genişlik"),
@@ -772,6 +780,7 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
         }
         let mut s = StairFields {
             pts: n.pts.clone(),
+            bulges: n.bulges.clone(),
             width: n.width,
             risers,
             riser_height,
@@ -790,7 +799,7 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
             s.cut = Some(under.clamp(1.0, f64::from(s.risers)) as u32);
         }
         if n.fit == Some(true) {
-            s.pts = fitted(&s, &at)?;
+            (s.pts, s.bulges) = fitted(&s, &at)?;
             stair_valid(&s, &at)?;
         }
         crate::walls::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
@@ -882,12 +891,26 @@ fn designed(n: &kentos_commands::NewStair, at: &str) -> Result<(u32, f64, Option
     Ok((count as u32, riser, high))
 }
 
-/// The stair's walking line ending at its last riser (docs/adr/0704 §1), its last point moved along its last segment.
-fn fitted(s: &StairFields, at: &str) -> Result<Vec<Vec2>, Stop> {
+/// The stair's walking line ending at its last riser (docs/adr/0704 §1), its last point moved along its last segment;
+/// a curved stair's round its arc's centre (docs/adr/0709), its bulge with it.
+fn fitted(s: &StairFields, at: &str) -> Result<(Vec<Vec2>, Option<Vec<f64>>), Stop> {
     let shape = kentos_formats::arch_elements::core_stair(s);
     let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
         unreachable!("core_stair makes a stair");
     };
+    if stair.bulge != 0.0 {
+        let Some((end, bulge)) = arch::stair_fit_arc(pts, stair) else {
+            return Err(fail(
+                codes::INVALID_STAIR,
+                "Döner merdiven rıhtlara göre bitirilemiyor: rıhtlar yürüme çizgisinde tam bir turdan uzun. Yarıçapı büyütün, basamağı kısaltın ya da yüksekliği bölün."
+                    .into(),
+                &format!("{at}.fit"),
+            ));
+        };
+        let mut out = s.pts.clone();
+        out[1] = Vec2 { x: end.x, y: end.y };
+        return Ok((out, Some(vec![bulge, 0.0])));
+    }
     let Some(end) = arch::stair_fit_end(pts, stair) else {
         return Err(fail(
             codes::INVALID_STAIR,
@@ -900,7 +923,7 @@ fn fitted(s: &StairFields, at: &str) -> Result<Vec<Vec2>, Stop> {
     if let Some(last) = out.last_mut() {
         *last = Vec2 { x: end.x, y: end.y };
     }
-    Ok(out)
+    Ok((out, s.bulges.clone()))
 }
 
 /// The ramp's line ending where its sloped length is its rise over its slope (docs/adr/0705 §1), its last point moved

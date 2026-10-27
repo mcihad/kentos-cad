@@ -1396,8 +1396,20 @@
         ]
        },
        {
-        "command": "tool.stair",
-        "size": "small"
+        "key": "archStairs",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.stair",
+          "title": "Merdiven",
+          "label": "Merdiven"
+         },
+         {
+          "command": "tool.stairCurved",
+          "title": "Merdiven",
+          "label": "Döner merdiven"
+         }
+        ]
        },
        {
         "command": "tool.ramp",

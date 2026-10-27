@@ -94,6 +94,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-ELEM-01 / ADR0708: mahalin `void`'u (KCAD 116), çapraz, metrajın
   `voidArea`'sı. Web'in mahal çizimi çaprazı, Metraj'ı Boşluk sütununu ve
   Mahal aracı Boşluk seçeneğini göstermeli; `cad.spaces.*.json` ile sınanmalı.
+- ARCH-STAIR-01 / ADR0709: merdivenin `bulges`'ı (KCAD 117, döner merdiven).
+  Web'in merdiven çizimi yaylı bandı, radyal rıhtları ve yay korkuluğu;
+  Döner merdiven aracı (merkez, başlangıç, imleçle yön) ve işleyicisi
+  `cad.stairs.create.curved.json` ile sınanmalı. Web'in ayar paneli de seçim
+  değerlerini Türkçe büyük harfe çevirmeden uygulamalı (ADR0709 §5).
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı

@@ -711,6 +711,10 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             spec.tread *= s;
             spec.riser_height *= s;
             spec.landing = stair.landing.map(|l| l * s);
+            // A mirror turns a curved stair's arc over (docs/adr/0709).
+            if is_reflection(m) {
+                spec.bulge = -stair.bulge;
+            }
             Shape::Stair {
                 pts: pts.iter().map(|q| apply(m, *q)).collect(),
                 stair: spec,

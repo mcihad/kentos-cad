@@ -883,6 +883,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   ve çekirdekte 14 merdiven durumu bağımsız başvurudan, 3 araç testi, gerçek
   GUI resimleri (`.run/shots/arac-merdiven-*`). Kat görünümü, dairesel/döner
   merdiven, kat yüksekliğine bağlı izleme ve kurum profili açık.
+- [x] Döner merdiven dilimi [ADR0709](../docs/adr/0709-curved-stairs.md):
+  iki noktalı yürüme çizgisi yay (`bulges`, KCAD şema 117 opt-in); rıhtlar yay
+  boyunca radyal, bant iki eş merkezli yay, korkuluklar yay, kesme ve kesikli
+  üst; `fit` yayı son rıhtta bitirir, bir turdan uzunu reddeder; ayna yayı
+  çevirir. Döner merdiven aracı (Merdiven ▾ ve Biçim: Döner): merkez, başlangıç,
+  imleçle birikerek dönen yön, yazılan dönüş; etikette ve Öznitelikler'de
+  yarıçap, sola/sağa dönüş ve iç kenardaki basamak (bilgi). Revit Center-Ends
+  Spiral ve Archicad Along Arc araştırıldı. 10 çekirdek + 26 komut durumu
+  bağımsız başvurudan, KCAD/Python/MCP, 5 araç testi ve panelin her seçimini
+  uygulayan regresyon testi (Sağ korkuluk/Tıklanan yerde/Yan: Sağ'ın panelden
+  uygulanamaması bu dilimde bulunup düzeltildi), gerçek GUI resimleri
+  (`.run/shots/arac-doner-merdiven-*`). Merkez direği, yay+düz karışık kol ve
+  iç basamak denetimi açık.
 
 - Düz/L/U ve sahanlık; toplam yükseklik, rıht sayısı, basamak derinliği, kol eni;
   değiştirilen parametre ve sabit tutulan kural açık olsun.
@@ -1088,4 +1101,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
 | 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |
+| 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |

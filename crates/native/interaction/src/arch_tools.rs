@@ -9,7 +9,9 @@
 //! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y): En fazla
 //!   rıht (R), Rıht sayısı (S, else from the height), Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar
 //!   (N); its last flight ends at its last riser (docs/adr/0704). A ramp's Yükseklik (Y) and Eğim (E). Their checks
-//!   are said, never refused; the same values are in the tool's settings pane.
+//!   are said, never refused; the same values are in the tool's settings pane. Biçim (B) Döner, and Döner merdiven
+//!   (docs/adr/0709): its centre, its walking line's start, then the way it turns as the pointer goes round; it ends at
+//!   its last riser, or where clicked, or at a turn typed in degrees.
 //! - Aksları numarala: Başlangıç (B), then the grids clicked in order; Enter writes.
 
 use kentos_commands::{
@@ -38,6 +40,8 @@ use crate::tool_settings::Setting;
 pub const GRID_ID: &str = "grid";
 pub const COLUMN_ID: &str = "column";
 pub const STAIR_ID: &str = "stair";
+/// Döner merdiven (docs/adr/0709): the stair tool started curved.
+pub const SPIRAL_ID: &str = "stairCurved";
 pub const RAMP_ID: &str = "ramp";
 pub const GRID_NUMBER_ID: &str = "gridNumber";
 
@@ -697,6 +701,15 @@ impl Tool for ColumnTool {
 #[derive(Clone, Debug)]
 pub struct FlightTool {
     ramp: bool,
+    /// Döner merdiven (docs/adr/0709): its points its centre and its walking line's start; the pointer's way round the
+    /// centre turns it. `spiral`: started as Döner merdiven (its own tool).
+    curved: bool,
+    spiral: bool,
+    /// The turn the pointer has gone round the centre from the start (counter-clockwise positive) and its last angle.
+    turned: f64,
+    seen_at: Option<f64>,
+    /// The planned curved stair: its walking line's radius and turn.
+    arc_design: Option<(f64, f64)>,
     width: f64,
     /// A stair's whole rise, its highest riser, its risers (0: from the height), its tread, its cut height.
     height: f64,
@@ -772,6 +785,11 @@ impl FlightTool {
     pub fn stair() -> Self {
         Self {
             ramp: false,
+            curved: false,
+            spiral: false,
+            turned: 0.0,
+            seen_at: None,
+            arc_design: None,
             width: 1.2,
             height: 3.0,
             max_riser: kentos_commands::DEFAULT_MAX_RISER,
@@ -806,8 +824,83 @@ impl FlightTool {
         }
     }
 
+    /// Döner merdiven (docs/adr/0709): 1.00 m wide, its walking line's radius where its start is clicked.
+    pub fn curved_stair() -> Self {
+        Self {
+            curved: true,
+            spiral: true,
+            width: 1.0,
+            ..Self::stair()
+        }
+    }
+
     fn name(&self) -> &'static str {
-        if self.ramp { "Rampa" } else { "Merdiven" }
+        match (self.ramp, self.curved) {
+            (true, _) => "Rampa",
+            (false, true) => "Döner merdiven",
+            (false, false) => "Merdiven",
+        }
+    }
+
+    /// Whether the clicks draw a curved stair.
+    fn spiralling(&self) -> bool {
+        self.curved && !self.ramp
+    }
+
+    /// The angle of `p` round the clicked centre.
+    fn angle_of(&self, p: Vec2) -> Option<f64> {
+        let c = *self.pts.first()?;
+        let (dx, dy) = (p.x - c.x, p.y - c.y);
+        (dx != 0.0 || dy != 0.0).then(|| dy.atan2(dx))
+    }
+
+    /// Follows the pointer round the centre (docs/adr/0709): its turn grows by each move's own, so that going on round
+    /// past a half turn keeps its way; less than a whole turn.
+    fn follow(&mut self, p: Vec2) {
+        if !self.spiralling() || self.pts.len() != 2 {
+            return;
+        }
+        let Some(a) = self.angle_of(p) else { return };
+        if let Some(last) = self.seen_at.or_else(|| self.angle_of(self.pts[1])) {
+            let tau = std::f64::consts::TAU;
+            let d = (a - last + std::f64::consts::PI).rem_euclid(tau) - std::f64::consts::PI;
+            self.turned = (self.turned + d).clamp(-(tau - 1e-6), tau - 1e-6);
+        }
+        self.seen_at = Some(a);
+    }
+
+    /// A curved stair's walking line and its bulges: from its start round its centre by the pointer's turn; with Son
+    /// kol rıhtlara göre a quarter turn its way (the command ends it at its last riser). None before the start or with
+    /// no turn yet.
+    fn arc_line(&self) -> Option<(Vec<Vec2>, Vec<f64>)> {
+        let [c, a] = self.pts[..] else { return None };
+        if self.turned.abs() < 1e-6 {
+            return None;
+        }
+        let sweep = if self.fit {
+            std::f64::consts::FRAC_PI_2.copysign(self.turned)
+        } else {
+            self.turned
+        };
+        let r = (a.x - c.x).hypot(a.y - c.y);
+        let t = (a.y - c.y).atan2(a.x - c.x) + sweep;
+        Some((vec![a, Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())], vec![(sweep / 4.0).tan(), 0.0]))
+    }
+
+    /// Writes the curved stair the pointer has turned; says so when it has not turned yet.
+    fn write_arc(&mut self, cx: &mut Context<'_>) {
+        match self.arc_line() {
+            Some((pts, bulges)) => {
+                self.run(&pts, Some(bulges), cx, true);
+                self.pts.clear();
+                self.turned = 0.0;
+                self.seen_at = None;
+            }
+            None => cx.say(
+                Level::Warn,
+                "Döner merdivenin yönü yok: imleci merkezin çevresinde merdivenin döneceği yana götürün ya da dönüşü derece yazın.",
+            ),
+        }
     }
 
     fn line(&self, with_hover: bool) -> Vec<Vec2> {
@@ -825,6 +918,7 @@ impl FlightTool {
     fn run(
         &self,
         pts: &[Vec2],
+        bulges: Option<Vec<f64>>,
         cx: &mut Context<'_>,
         write: bool,
     ) -> (Vec<Entity>, Option<String>, Vec<String>) {
@@ -868,6 +962,7 @@ impl FlightTool {
                 layer_id,
                 stairs: vec![NewStair {
                     pts: points::wire_all(pts),
+                    bulges,
                     width: self.width,
                     risers: self.risers,
                     tread: self.tread,
@@ -889,10 +984,11 @@ impl FlightTool {
                 if points::written(result, cx).is_some() {
                     cx.say(
                         Level::Success,
-                        if self.fit {
-                            "Merdiven çizildi; son kol son rıhtta bitti."
-                        } else {
-                            "Merdiven çizildi."
+                        match (self.spiralling(), self.fit) {
+                            (true, true) => "Döner merdiven çizildi; yay son rıhtta bitti.",
+                            (true, false) => "Döner merdiven çizildi.",
+                            (false, true) => "Merdiven çizildi; son kol son rıhtta bitti.",
+                            (false, false) => "Merdiven çizildi.",
                         },
                     );
                 }
@@ -908,12 +1004,35 @@ impl FlightTool {
         self.notes.clear();
         self.design = None;
         self.ramp_design = None;
-        let pts = self.line(true);
+        self.arc_design = None;
+        let (pts, bulges) = if self.spiralling() {
+            match self.arc_line() {
+                Some((pts, bulges)) => (pts, Some(bulges)),
+                None => {
+                    self.circles();
+                    return;
+                }
+            }
+        } else {
+            (self.line(true), None)
+        };
         if pts.len() < 2 {
             return;
         }
-        let (made, why, notes) = self.run(&pts, cx, false);
+        let (made, why, notes) = self.run(&pts, bulges, cx, false);
         flight_drawn(&made, cx.doc.settings().plot_scale, &mut self.drawn);
+        self.arc_design = made.iter().find_map(|e| match e {
+            Entity::Stair(s) => {
+                let [a, b] = s.stair.pts[..] else { return None };
+                kentos_geometry_core::geom::bulge::bulge_arc(
+                    kentos_geometry_core::vec2::Vec2::new(a.x, a.y),
+                    kentos_geometry_core::vec2::Vec2::new(b.x, b.y),
+                    s.stair.bulge(),
+                )
+                .map(|arc| (arc.r, arc.sweep))
+            }
+            _ => None,
+        });
         self.design = made.iter().find_map(|e| match e {
             Entity::Stair(s) => {
                 let walk: Vec<kentos_geometry_core::vec2::Vec2> = s
@@ -926,7 +1045,7 @@ impl FlightTool {
                     s.stair.risers,
                     s.stair.riser_height,
                     s.stair.tread,
-                    arch::Walk::of(&walk).length(),
+                    arch::Walk::curved(&walk, s.stair.bulge()).length(),
                 ))
             }
             _ => None,
@@ -948,6 +1067,26 @@ impl FlightTool {
         self.notes = notes;
     }
 
+    /// Before a curved stair turns: its walking line's circle through the pointer (or its start) and its sides' circles
+    /// half its width in and out, dashed.
+    fn circles(&mut self) {
+        let Some(&c) = self.pts.first() else { return };
+        let Some(at) = self.pts.get(1).copied().or(self.hover) else { return };
+        let r = (at.x - c.x).hypot(at.y - c.y);
+        if r <= 0.0 {
+            return;
+        }
+        for (radius, dash) in [(r, None), (r - self.width / 2.0, Some([5.0, 4.0])), (r + self.width / 2.0, Some([5.0, 4.0]))] {
+            if radius > 0.0 {
+                let circle = kentos_geometry_core::entity::Shape::Circle {
+                    c: kentos_geometry_core::vec2::Vec2::new(c.x, c.y),
+                    r: radius,
+                };
+                self.drawn.strokes.extend(Outline::of(&circle, dash, 1.5, Tone::Accent).strokes);
+            }
+        }
+    }
+
     /// The planned stair in words: its risers and their height, its tread, the step rule, its walking line; a ramp's
     /// slope, sloped length and levels.
     fn design_words(&self, f: &Format) -> Vec<String> {
@@ -960,10 +1099,22 @@ impl FlightTool {
         let Some((risers, riser, tread, run)) = self.design else {
             return Vec::new();
         };
-        vec![
+        let mut out = vec![
             format!("{risers} rıht × {}, basamak {}", f.length(riser), f.length(tread)),
             format!("2R+G {} · yürüme çizgisi {}", f.length(2.0 * riser + tread), f.length(run)),
-        ]
+        ];
+        // A curved stair's tread is measured on its walking line; on its inner side it is shorter (docs/adr/0709).
+        if let Some((r, sweep)) = self.arc_design {
+            // Going up a counter-clockwise stair one turns left.
+            out.push(format!(
+                "yarıçap {} · {}° {} döner",
+                f.length(r),
+                crate::fixed(sweep.abs().to_degrees(), 0),
+                if sweep < 0.0 { "sağa" } else { "sola" },
+            ));
+            out.push(format!("iç kenarda basamak {}", f.length(tread * (r - self.width / 2.0) / r)));
+        }
+        out
     }
 
     /// Applies one setting's value: the stair's or the ramp's own; false when it does not read.
@@ -1011,7 +1162,8 @@ impl FlightTool {
                     self.railings = Some(Railings::Left);
                     true
                 }
-                "RIGHT" | "SAĞ" => {
+                // The settings pane sends `right`, which Turkish capitals make RİGHT.
+                "RIGHT" | "RİGHT" | "SAĞ" => {
                     self.railings = Some(Railings::Right);
                     true
                 }
@@ -1021,12 +1173,22 @@ impl FlightTool {
                 }
                 _ => false,
             },
+            "B" if !self.ramp => {
+                let curved = match words.as_str() {
+                    w if w == "CURVED" || w.starts_with("DÖNER") => true,
+                    w if w == "STRAIGHT" || w == "STRAİGHT" || w.starts_with("DÜZ") || w.starts_with("YOL") => false,
+                    _ => return false,
+                };
+                self.shape(curved);
+                true
+            }
             "U" => match words.as_str() {
-                w if w == "FIT" || w.starts_with("RIHT") || w.starts_with("EĞİM") => {
+                // The settings pane's `fit` and `clicked` in Turkish capitals are FİT and CLİCKED.
+                w if w == "FIT" || w == "FİT" || w.starts_with("RIHT") || w.starts_with("EĞİM") || w.starts_with("YAY") => {
                     self.fit = true;
                     true
                 }
-                w if w == "CLICKED" || w.starts_with("TIKLA") => {
+                w if w == "CLICKED" || w == "CLİCKED" || w.starts_with("TIKLA") => {
                     self.fit = false;
                     true
                 }
@@ -1048,9 +1210,25 @@ impl FlightTool {
     }
 }
 
+impl FlightTool {
+    /// Biçim: a curved or a straight stair; the points clicked so far go with the other shape's (they mean other things).
+    fn shape(&mut self, curved: bool) {
+        if self.curved != curved {
+            self.curved = curved;
+            self.pts.clear();
+            self.turned = 0.0;
+            self.seen_at = None;
+        }
+    }
+}
+
 impl Tool for FlightTool {
     fn id(&self) -> &'static str {
-        if self.ramp { RAMP_ID } else { STAIR_ID }
+        match (self.ramp, self.spiral) {
+            (true, _) => RAMP_ID,
+            (false, true) => SPIRAL_ID,
+            (false, false) => STAIR_ID,
+        }
     }
 
     fn label(&self) -> &'static str {
@@ -1071,6 +1249,8 @@ impl Tool for FlightTool {
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.pts.pop().is_some() {
+            self.turned = 0.0;
+            self.seen_at = None;
             self.see(cx);
             return true;
         }
@@ -1080,6 +1260,30 @@ impl Tool for FlightTool {
     fn prompt(&self) -> Prompt {
         if let Some(ask) = self.ask {
             return Prompt::new(self.name(), ask_words(ask)).option("Geri", "G");
+        }
+        if self.spiralling() {
+            let n = |v: f64| v.to_string();
+            let step = match self.pts.len() {
+                0 => "döner merdivenin merkezine tıklayın",
+                1 => "yürüme çizgisinin başına tıklayın (merkeze uzaklığı yarıçap; çıkış buradan)",
+                _ if self.fit => "imleci merdivenin döneceği yana götürüp tıklayın; yay son rıhtta biter",
+                _ => "yayın bitişine tıklayın ya da dönüşü derece yazın (eksi: saat yönünde)",
+            };
+            return Prompt::new(self.name(), step)
+                .option_with("Biçim", "B", "Döner")
+                .option_with("Yükseklik", "Y", n(self.height))
+                .option_with("En fazla rıht", "R", n(self.max_riser))
+                .option_with(
+                    "Rıht sayısı",
+                    "S",
+                    if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+                )
+                .option_with("Basamak", "D", n(self.tread))
+                .option_with("Genişlik", "G", n(self.width))
+                .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
+                .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+                .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
+                .option_with("Yay", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
         }
         let n = |v: f64| v.to_string();
         if self.ramp {
@@ -1109,6 +1313,7 @@ impl Tool for FlightTool {
             _ => "dönüşe tıklayın ya da Enter ile bitirin",
         };
         Prompt::new(self.name(), step)
+            .option_with("Biçim", "B", "Düz, L, U")
             .option_with("Yükseklik", "Y", n(self.height))
             .option_with("En fazla rıht", "R", n(self.max_riser))
             .option_with(
@@ -1128,6 +1333,7 @@ impl Tool for FlightTool {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover = Some(p.world);
+        self.follow(p.world);
         self.see(cx);
     }
 
@@ -1140,10 +1346,27 @@ impl Tool for FlightTool {
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if self.spiralling() {
+            // Its centre, its start, then the end of its turn (docs/adr/0709).
+            match self.pts.len() {
+                0 | 1 => {
+                    self.pts.push(p);
+                    self.turned = 0.0;
+                    self.seen_at = None;
+                }
+                _ => {
+                    self.hover = Some(p);
+                    self.follow(p);
+                    self.write_arc(cx);
+                }
+            }
+            self.see(cx);
+            return true;
+        }
         self.pts.push(p);
         if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, cx, true);
+            self.run(&pts, None, cx, true);
         }
         self.see(cx);
         true
@@ -1198,6 +1421,11 @@ impl Tool for FlightTool {
                 self.see(cx);
                 return true;
             }
+            "B" if !self.ramp => {
+                self.shape(!self.curved);
+                self.see(cx);
+                return true;
+            }
             "O" => {
                 self.railings = match self.railings {
                     None => Some(Railings::Left),
@@ -1209,6 +1437,18 @@ impl Tool for FlightTool {
                 return true;
             }
             _ => {
+                // A curved stair's turn typed in the project's angle (docs/adr/0709): its way, and with Yay tıklanan
+                // yerde its size.
+                if self.spiralling()
+                    && self.pts.len() == 2
+                    && let Some(n) = parse_number(text)
+                {
+                    let tau = std::f64::consts::TAU;
+                    self.turned = cx.format().turn_from_typed(n).clamp(-(tau - 1e-6), tau - 1e-6);
+                    self.write_arc(cx);
+                    self.see(cx);
+                    return true;
+                }
                 if let Some(p) = cx.typed_point(text, self.pts.last().copied(), self.hover) {
                     return self.accept_point(p, cx);
                 }
@@ -1252,6 +1492,14 @@ impl Tool for FlightTool {
             return rows;
         }
         let mut rows = vec![
+            Setting::choice(
+                "B",
+                "Biçim",
+                crate::tool_settings::choices(
+                    &[("straight", "Düz, L ya da U"), ("curved", "Döner")],
+                    if self.curved { "curved" } else { "straight" },
+                ),
+            ),
             Setting::text("Y", "Yükseklik", f.length(self.height)),
             Setting::text("R", "En fazla rıht", f.length(self.max_riser)),
             Setting::text(
@@ -1267,13 +1515,17 @@ impl Tool for FlightTool {
             railings_setting(self.railings),
             Setting::choice(
                 "U",
-                "Son kol",
+                if self.curved { "Yay" } else { "Son kol" },
                 crate::tool_settings::choices(
                     &[("fit", "Rıhtlara göre biter"), ("clicked", "Tıklanan yerde biter")],
                     if self.fit { "fit" } else { "clicked" },
                 ),
             ),
         ];
+        if self.curved {
+            // A curved stair has no turns, so no landings (docs/adr/0709).
+            rows.retain(|r| r.key != "H");
+        }
         let words = self.design_words(f);
         if !words.is_empty() {
             rows.push(Setting::hint("T", "Tasarım", words.join("; ")));
@@ -1320,6 +1572,8 @@ impl Tool for FlightTool {
         }
         if !self.pts.is_empty() {
             self.pts.clear();
+            self.turned = 0.0;
+            self.seen_at = None;
             self.see(cx);
             return true;
         }
@@ -1327,9 +1581,17 @@ impl Tool for FlightTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if self.spiralling() {
+            if self.pts.len() == 2 {
+                self.write_arc(cx);
+                self.see(cx);
+                return Flow::Stay;
+            }
+            return Flow::Exit;
+        }
         if self.pts.len() >= 2 {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, cx, true);
+            self.run(&pts, None, cx, true);
             self.see(cx);
             return Flow::Stay;
         }
@@ -1338,7 +1600,15 @@ impl Tool for FlightTool {
 
     fn preview(&self, format: &Format) -> Preview {
         let mut out = self.drawn.clone();
-        out.path = self.line(true);
+        out.path = if self.spiralling() {
+            // The radius: the centre to the start, or to the pointer before the start.
+            match (self.pts.first(), self.pts.get(1).copied().or(self.hover)) {
+                (Some(&c), Some(a)) => vec![c, a],
+                _ => Vec::new(),
+            }
+        } else {
+            self.line(true)
+        };
         out.tag = self.hover.map(|at| {
             let mut lines = vec![self.name().to_owned()];
             if let Some(why) = &self.why {

@@ -380,7 +380,7 @@ impl Document {
             Entity::Insert(i) => Some(i.p),
             Entity::Grid(g) => path_middle(&g.grid.pts, g.grid.bulges.as_deref()),
             Entity::Wall(w) => path_middle(&w.wall.pts, w.wall.bulges.as_deref()),
-            Entity::Stair(s) => path_middle(&s.stair.pts, None),
+            Entity::Stair(s) => path_middle(&s.stair.pts, s.stair.bulges.as_deref()),
             Entity::Ramp(r) => path_middle(&r.ramp.pts, None),
             _ => None,
         }

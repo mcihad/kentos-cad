@@ -959,14 +959,17 @@ impl Input for kentos_commands::ColumnsCreate {
 }
 
 impl Input for kentos_commands::StairsCreate {
-    /// `stairs[0].tread`, `.width`, `.height`, `.cutHeight`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343,
-    /// docs/adr/0704).
+    /// `stairs[0].tread`, `.width`, `.height`, `.cutHeight`, `.pts[k].x` and `.y`, `.bulges[k]`, `lineWeight`
+    /// (docs/adr/0343, docs/adr/0704, docs/adr/0709).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
         }
         let (i, rest) = path.strip_prefix("stairs[")?.split_once("].")?;
         let s = self.stairs.get_mut(i.parse::<usize>().ok()?)?;
+        if let Some(k) = rest.strip_prefix("bulges[").and_then(|k| k.strip_suffix(']')) {
+            return s.bulges.as_mut()?.get_mut(k.parse::<usize>().ok()?);
+        }
         match rest {
             "tread" => Some(&mut s.tread),
             "width" => Some(&mut s.width),

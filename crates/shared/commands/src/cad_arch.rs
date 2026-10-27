@@ -432,6 +432,12 @@ pub struct NewStair {
     /// Its walking line, up from its first point: two points straight, three an L, four a U.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
+    /// A curved (spiral) stair (docs/adr/0709): its two-point walking line's arc as two bulges, the first the tangent
+    /// of a quarter of its turn (counter-clockwise positive), the second 0. Absent: straight.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Option<Vec<f64>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     /// Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`.

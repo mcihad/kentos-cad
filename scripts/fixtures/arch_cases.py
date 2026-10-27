@@ -20,6 +20,12 @@ so every length is an exact fraction; a turn's angle is checked as floats within
   before the last landing ends.
 - A ramp's sloped run: its length less its landings; its slope rise / run × 100; ramp_slope_mismatch beyond 0.1 points;
   its levels “+base” and “+base+rise” with two decimals.
+- A curved (spiral) stair (docs/adr/0709): its two-point walking line an arc, sweep 4·atan(bulge) (counter-clockwise
+  positive), its centre on the chord's left at chord/2·cot(sweep/2), its radius chord/(2|sin(sweep/2)|); its length the
+  radius times the turn. No landings; its risers a tread apart along the arc, each a radial line across its width; its
+  band the two concentric arcs half its width each side (bulges b, 0, −b, 0); fitted, its end round the centre from its
+  start by (risers − 1) × tread, none when that is a whole turn or more; its railings concentric arcs 5 cm inside its
+  sides, split at the cut as a straight stair's. Floats (trigonometry): the core's test checks within 1e-9.
 """
 
 import argparse
@@ -259,6 +265,108 @@ def stair_case(name, pts, width, count, riser, tread, land=None, cut=None, sides
                        "railings": rails(lines)}}
 
 
+def arc_of(a, b, bulge):
+    """A bulged two-point line's arc: its centre, radius, start angle and signed sweep."""
+    (ax, ay), (bx, by) = (float(a[0]), float(a[1])), (float(b[0]), float(b[1]))
+    sweep = 4.0 * math.atan(bulge)
+    dx, dy = bx - ax, by - ay
+    chord = math.sqrt(dx * dx + dy * dy)
+    d = chord / 2.0 / math.tan(sweep / 2.0)
+    c = ((ax + bx) / 2.0 - dy / chord * d, (ay + by) / 2.0 + dx / chord * d)
+    r = chord / (2.0 * abs(math.sin(sweep / 2.0)))
+    return c, r, math.atan2(ay - c[1], ax - c[0]), sweep
+
+
+def arc_point(arc, s, off=0.0):
+    """The point `s` along the arc, moved `off` to its walking line's left (towards the centre turning left)."""
+    c, r, a0, sweep = arc
+    sign = 1.0 if sweep > 0 else -1.0
+    t = a0 + sign * s / r
+    d = (-math.sin(t) * sign, math.cos(t) * sign)
+    n = (-d[1], d[0])
+    return [c[0] + r * math.cos(t) + n[0] * off, c[1] + r * math.sin(t) + n[1] * off]
+
+
+def curved_end(a, centre, n_risers, tread, sign):
+    """Where a curved stair's walking line ends to hold its risers: round `centre` from `a`; its end and bulge."""
+    r = math.hypot(float(a[0]) - centre[0], float(a[1]) - centre[1])
+    sweep = sign * (n_risers - 1) * float(tread) / r
+    if not (1e-9 < abs(sweep) < 2 * math.pi - 1e-9):
+        return None
+    t = math.atan2(float(a[1]) - centre[1], float(a[0]) - centre[0]) + sweep
+    return [centre[0] + r * math.cos(t), centre[1] + r * math.sin(t)], math.tan(sweep / 4.0)
+
+
+def curved_case(name, a, b, bulge, width, count, riser, tread, cut=None, sides=None, numbering=False):
+    arc = arc_of(a, b, bulge)
+    c, r, a0, sweep = arc
+    total = r * abs(sweep)
+    st, missing, k = [], 0, 0
+    for k in range(count):
+        s = k * F(tread)
+        if float(s) > total + 1e-9:
+            missing += 1
+        else:
+            st.append(s)
+    codes = []
+    if missing:
+        codes.append("stair_short")
+    elif st and total - float(st[-1]) > 1e-6:
+        codes.append("stair_long")
+    rule = 2 * F(riser) + F(tread)
+    if rule < F(60, 100) or rule > F(65, 100):
+        codes.append("stair_step_rule")
+    half = float(width) / 2.0
+    shape = {"kind": "stair", "pts": [{"x": float(a[0]), "y": float(a[1])}, {"x": float(b[0]), "y": float(b[1])}],
+             "bulges": [bulge, 0.0], "width": float(width), "risers": count, "riserHeight": float(riser),
+             "tread": float(tread)}
+    if cut is not None:
+        shape["cut"] = cut
+    if numbering:
+        shape["numbering"] = True
+    if sides is not None:
+        shape["railings"] = sides
+    fit = curved_end(a, c, count, tread, 1.0 if sweep > 0 else -1.0)
+    shown = len(st) if cut is None else min(max(cut, 1), len(st))
+    rails = []
+    if sides is not None:
+        off = max(half - 0.05, 0.0)
+        span = None
+        if cut is not None and st:
+            at = float(st[min(max(cut, 1), len(st)) - 1])
+            span = (at, min(at + float(tread), total))
+        sign = 1.0 if sweep > 0 else -1.0
+        for side, on in (("left", sides in ("left", "both")), ("right", sides in ("right", "both"))):
+            if not on:
+                continue
+            k = 1.0 if side == "left" else -1.0
+            arc_line = lambda s0, s1: {"pts": [arc_point(arc, s0, off * k), arc_point(arc, s1, off * k)],  # noqa: E731
+                                        "bulge": math.tan(sign * (s1 - s0) / r / 4.0)}
+            at = None if span is None else (span[0] if side == "left" else span[1])
+            if at is not None and 1e-9 < at < total - 1e-9:
+                rails.append({**arc_line(0.0, at), "over": False})
+                rails.append({**arc_line(at, total), "over": True})
+            elif at is not None and at <= 1e-9:
+                rails.append({**arc_line(0.0, total), "over": True})
+            else:
+                rails.append({**arc_line(0.0, total), "over": False})
+    return {"name": name, "shape": shape, "scale": 50.0,
+            "expect": {"stations": [float(s) for s in st], "missing": missing, "codes": codes,
+                       "band": [arc_point(arc, 0.0, half), arc_point(arc, total, half), arc_point(arc, total, -half),
+                                arc_point(arc, 0.0, -half)],
+                       "bandBulges": [bulge, 0.0, -bulge, 0.0],
+                       "landings": [],
+                       "fitArc": [fit[0][0], fit[0][1], fit[1]] if fit else None,
+                       "risers": [[arc_point(arc, float(x), half), arc_point(arc, float(x), -half)] for x in st],
+                       "dashed": len(st) - shown + sum(1 for x in rails if x["over"]),
+                       "railingArcs": rails}}
+
+
+def fitted_curve(a, centre, count, tread, sign):
+    """A curved stair's end and bulge drawn as the command's fit writes it (for a case that holds its risers)."""
+    return curved_end(a, centre, count, tread, sign)
+
+
 def level(v):
     t = f"{abs(v):.2f}"
     return f"-{t}" if v < 0 and t != "0.00" else f"+{t}"
@@ -386,6 +494,29 @@ def cases():
         ramp_case("Kot farkı sıfır: sığdırılmaz", [P(0, 0), P(6, 0)], F(3, 2), F(0), slope=5),
         ramp_case("Eğik (3-4-5) rampa, sağ korkuluk", [P(0, 0), P(F(24, 5), F(32, 5))], F(6, 5), F(1, 2), slope=8,
                   sides="right"),
+    ]
+    # ADR 0709: curved (spiral) stairs.
+    half_turn = (P(F(3, 2), 0), P(F(-3, 2), 0), 1.0)
+    end, b = fitted_curve(P(F(3, 2), 0), (0.0, 0.0), 17, F(7, 25), 1.0)
+    fits = (P(F(3, 2), 0), end, b)
+    cw_end, cw_b = fitted_curve(P(F(34, 5), 5), (5.0, 5.0), 14, F(27, 100), -1.0)
+    c += [
+        curved_case("Döner merdiven, rıhtlara göre bitmiş: tam sığar", *fits, F(1), 17, F(7, 40), F(7, 25)),
+        curved_case("Döner merdiven, yarım dönüş, yol uzun", *half_turn, F(1), 17, F(7, 40), F(7, 25)),
+        curved_case("Döner merdiven, çeyrek dönüş, yol kısa", P(F(3, 2), 0), P(0, F(3, 2)), math.tan(math.pi / 8), F(1),
+                    17, F(7, 40), F(7, 25)),
+        curved_case("Saat yönünde döner merdiven, 270°, kesme ve numaralar", P(2, 0), P(0, 2), math.tan(-3 * math.pi / 8),
+                    F(6, 5), 20, F(17, 100), F(29, 100), cut=7, numbering=True),
+        curved_case("Döner merdiven, iki yan korkuluk, kesmede kesikli", *fits, F(1), 17, F(7, 40), F(7, 25), cut=6,
+                    sides="both"),
+        curved_case("Döner merdiven, sol korkuluk, kesmesiz", *half_turn, F(1), 17, F(7, 40), F(7, 25), sides="left"),
+        curved_case("Saat yönünde, sağ korkuluk, kesme son rıhtta", P(F(34, 5), 5), cw_end, cw_b, F(11, 10), 14,
+                    F(17, 100), F(27, 100), cut=14, sides="right"),
+        curved_case("Döner merdiven, rıhtlar bir turdan uzun: sığdırılamaz", P(F(4, 5), 0), P(F(-4, 5), 0), 1.0,
+                    F(3, 5), 20, F(17, 100), F(7, 25)),
+        curved_case("Döner merdiven, Blondel dışı", *half_turn, F(1), 10, F(1, 5), F(8, 25)),
+        curved_case("Döner merdiven, kesme ilk rıhtta, iki yan korkuluk", *half_turn, F(1), 17, F(7, 40), F(7, 25),
+                    cut=1, sides="both"),
     ]
     return c
 

@@ -1343,6 +1343,8 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.stair.tread = stair.tread;
             e.stair.riser_height = stair.riser_height;
             e.stair.landing = stair.landing;
+            // A mirror turns a curved stair's arc over (docs/adr/0709).
+            e.stair.bulges = (stair.bulge != 0.0).then(|| vec![stair.bulge, 0.0]);
         }
         // A tag's middle (docs/adr/0344 §1): its words are sized on paper.
         (Entity::Tag(e), Shape::Tag { at, .. }) => {

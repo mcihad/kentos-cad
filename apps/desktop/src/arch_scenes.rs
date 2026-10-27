@@ -11,6 +11,7 @@
 //! KENTOS_SHOTS_ONLY=merdiven-yukseklik,merdiven-l,merdiven-u,merdiven-u-yazildi,merdiven-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0704
 //! KENTOS_SHOTS_ONLY=rampa-egim,rampa-l-korkuluk,merdiven-korkuluk,rampa-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0705
 //! KENTOS_SHOTS_ONLY=aks-agi,aks-agi-dondur,aks-agi-yazildi cargo test -p kentos-desktop tools_screens::screens -- --ignored --nocapture   # docs/adr/0707
+//! KENTOS_SHOTS_ONLY=doner-merdiven,doner-merdiven-yazildi,doner-merdiven-dar,doner-merdiven-serit cargo test -p kentos-desktop tools_screens::screens -- --ignored --nocapture   # docs/adr/0709
 //! ```
 //!
 //! Test code only.
@@ -20,7 +21,7 @@ use kentos_ui::widget::docking;
 
 use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, click, hover, run, typed};
-use crate::tools_screens::Scene;
+use crate::tools_screens::{Pointed, Scene, open_split};
 use crate::wall_scenes::{fit, opened};
 
 /// The level the stair climbs: Zemin kat of 3.06 m.
@@ -340,6 +341,59 @@ fn grid_system_written(app: &mut App) {
     hover(app, [19.5, 13.5]);
 }
 
+/// The pointer round `centre` at `r` from 0° to `to` degrees, 15° a step: Döner merdiven's way (docs/adr/0709).
+fn round(app: &mut App, centre: [f64; 2], r: f64, to: f64) {
+    let steps = (to.abs() / 15.0).ceil() as i32;
+    for k in 1..=steps {
+        let a = (to * f64::from(k) / f64::from(steps)).to_radians();
+        hover(app, [centre[0] + r * a.cos(), centre[1] + r * a.sin()]);
+    }
+}
+
+/// docs/adr/0709: Döner merdiven in bay A–B / 1–2: its centre and its walking line's start 1 m off clicked, the pointer
+/// gone round three quarters; 3.06 m in 18 risers along its arc, radial, railings on both sides, the cut 1.10 m up.
+fn spiral_tool(app: &mut App) {
+    grids(app);
+    run(app, "tool.stairCurved");
+    typed(app, "Y");
+    typed(app, "3.06");
+    for _ in 0..3 {
+        typed(app, "O");
+    }
+    click(app, [3.0, 2.5]);
+    click(app, [4.0, 2.5]);
+    close_on(app, [-0.5, -0.2], [7.0, 5.2]);
+    round(app, [3.0, 2.5], 1.0, 250.0);
+}
+
+/// Two written: counter-clockwise with railings and numbers in bay A–B / 1–2, clockwise 1.40 m out in bay C–D / 1–2;
+/// the first selected: Biçim, Yarıçap and İç kenarda basamak in Öznitelikler.
+fn spiral_written(app: &mut App) {
+    spiral_tool(app);
+    click(app, [3.0, 1.5]);
+    typed(app, "N");
+    typed(app, "G");
+    typed(app, "1.1");
+    click(app, [14.25, 2.5]);
+    click(app, [15.65, 2.5]);
+    round(app, [14.25, 2.5], 1.4, -200.0);
+    click(app, [13.0376, 3.2]);
+    typed(app, "");
+    app.selection.set([Slot(8)]);
+    close_on(app, [-0.5, -0.5], [17.5, 5.5]);
+    hover(app, [17.2, -0.2]);
+}
+
+/// Its start 0.40 m from its centre for a 1.00 m wide stair: the tag says why in red, nothing is written.
+fn spiral_tight(app: &mut App) {
+    grids(app);
+    run(app, "tool.stairCurved");
+    click(app, [3.0, 2.5]);
+    click(app, [3.4, 2.5]);
+    close_on(app, [-0.5, -0.2], [7.0, 5.2]);
+    round(app, [3.0, 2.5], 0.4, 120.0);
+}
+
 /// Aksları numarala from E: D and C picked, the plan's labels drawn.
 fn numbering(app: &mut App) {
     system(app);
@@ -395,5 +449,22 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("aks-agi-dondur", grid_system_turned),
         ("aks-agi-yazildi", grid_system_written),
         ("aks-izleme", following),
+        ("doner-merdiven", spiral_tool),
+        ("doner-merdiven-yazildi", spiral_written),
+        ("doner-merdiven-dar", spiral_tight),
     ]
+}
+
+/// Mimari's Merdiven ▾ open: Merdiven and Döner merdiven (docs/adr/0709).
+pub(crate) fn pointed() -> Vec<Pointed> {
+    vec![(
+        "doner-merdiven-serit",
+        |app| {
+            spiral_written(app);
+            // No selection: Mimari stays in front instead of Mimari nesne.
+            app.selection.set([]);
+            app.tab = "arch";
+        },
+        |s, app| open_split(s, app, "archStairs"),
+    )]
 }

@@ -1,0 +1,2499 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.stairs.create",
+  "commandVersion": 1,
+  "title": "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Yükseklikten döner merdiven, rıhtlara göre biter: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklikten döner merdiven, rıhtlara göre biter: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stairs": [
+                {
+                  "kind": "stair",
+                  "id": 0,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 1.5,
+                      "y": 30.0
+                    },
+                    {
+                      "x": -1.4992444603722652,
+                      "y": 29.9523969744336
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "bulges": [
+                    1.0159976194759095,
+                    0.0
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklikten döner merdiven, rıhtlara göre biter: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Merdiven",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yükseklikten döner merdiven, rıhtlara göre biter: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "saat yönünde döner merdiven, iki yan korkuluk ve numaralar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  -1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "railings": "both",
+                "numbering": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 30.0476030255664
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  -1.0159976194759095,
+                  0.0
+                ],
+                "numbering": true,
+                "railings": "both"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kesme yüksekliği 1,10 m: kesme 6. rıhtta, korkuluğun üstü ayrı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "cutHeight": 1.1,
+                "railings": "left"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "railings": "left",
+                "cut": 6
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "270° döner merdiven, 4,20 m, 1,20 m yarıçap",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.2,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.2
+                  }
+                ],
+                "bulges": [
+                  0.4142135623730951,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 4.2,
+                "tread": 0.25,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.2,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 0.0950336035655314,
+                    "y": 28.80376899630826
+                  }
+                ],
+                "width": 1.0,
+                "risers": 24,
+                "riserHeight": 0.17500000000000002,
+                "tread": 0.25,
+                "bulges": [
+                  2.556369578132772,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verilen rıhtlarla döner merdiven, yol uzun: stair_long",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "tread": 0.28,
+                "risers": 12,
+                "riserHeight": 0.175
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 1.63 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 12,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  1.0,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çeyrek dönüş yetmez: stair_short (sığdırmasız)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "bulges": [
+                  0.4142135623730951,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (2.36 m) 18 rıhta yetmiyor: 9 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 31.5
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  0.4142135623730951,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blondel dışı döner merdiven: stair_step_rule",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "tread": 0.32,
+                "risers": 10,
+                "riserHeight": 0.2
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 1.83 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              },
+              {
+                "code": "stair_step_rule",
+                "message": "2 × rıht + basamak = 0.720 m; Blondel'in oranı 0.60–0.65 m. Bu bir bilgidir, yönetmelik denetimi değildir.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 10,
+                "riserHeight": 0.2,
+                "tread": 0.32,
+                "bulges": [
+                  1.0,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kattan döner merdiven: stair_rise_level yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.06,
+                "tread": 0.28,
+                "fit": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kattan döner merdiven: rıhtlar katı tutmuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "tread": 0.28,
+                "risers": 12,
+                "riserHeight": 0.175,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 1.63 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              },
+              {
+                "code": "stair_rise_level",
+                "message": "12 rıht × 0.175 m = 2.100 m; katın yüksekliği 3.060 m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 12,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düz ve döner merdiven birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              },
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              },
+              "11": {
+                "kind": "stair",
+                "id": 11,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğik yaylı yürüme çizgisi (3-4-5 kiriş)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.4,
+                    "y": 33.2
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0.0
+                ],
+                "width": 1.2,
+                "height": 2.8,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.4851080054951895,
+                    "y": 32.77246688059968
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  0.446572546284595,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "saat yönünde 1,80 m yarıçap, sağ korkuluk, sığdırmasız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 6.8,
+                    "y": 35.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 33.2
+                  }
+                ],
+                "bulges": [
+                  -0.4142135623730951,
+                  0.0
+                ],
+                "width": 1.1,
+                "tread": 0.27,
+                "risers": 8,
+                "riserHeight": 0.175,
+                "railings": "right"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.94 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.8,
+                    "y": 35.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 33.2
+                  }
+                ],
+                "width": 1.1,
+                "risers": 8,
+                "riserHeight": 0.175,
+                "tread": 0.27,
+                "bulges": [
+                  -0.4142135623730951,
+                  0.0
+                ],
+                "railings": "right"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan döner merdiveni rıhtlarıyla gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "cutHeight": 1.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stairs": [
+                {
+                  "kind": "stair",
+                  "id": 0,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 1.5,
+                      "y": 30.0
+                    },
+                    {
+                      "x": -1.4992444603722652,
+                      "y": 29.9523969744336
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "bulges": [
+                    1.0159976194759095,
+                    0.0
+                  ],
+                  "cut": 6
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynalanan döner merdivenin yayı ters döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "tread": 0.28,
+                "risers": 17,
+                "riserHeight": 0.175
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.23 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 17,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  1.0,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "transform": {
+              "kind": "mirror",
+              "a": {
+                "x": 0,
+                "y": 0
+              },
+              "b": {
+                "x": 0,
+                "y": 10
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 17,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  -1.0,
+                  0.0
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "üç noktalı yolda büküm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 33.0
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdivenin yürüme çizgisi iki noktadır (başı ve sonu) ve bir yaydır.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek büküm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ikinci büküm sıfır değilse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.5
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır büküm (düz) reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  0.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yarıçap genişliğin yarısından küçükse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Yürüme çizgisinin yarıçapı 0.500 m; merdivenin genişliğinin yarısından (0.600 m) büyük olmalı.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yarıçap tam yarı genişlikse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Yürüme çizgisinin yarıçapı 0.500 m; merdivenin genişliğinin yarısından (0.500 m) büyük olmalı.",
+              "path": "stairs[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz büküm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "nonFinite": {
+            "stairs[0].bulges[0]": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Büküm sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "stairs[0].bulges[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz ikinci büküm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "nonFinite": {
+            "stairs[0].bulges[1]": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Büküm sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "stairs[0].bulges[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rıhtlar bir turdan uzunsa sığdırma reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.4,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -0.4,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 0.6,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdiven rıhtlara göre bitirilemiyor: rıhtlar yürüme çizgisinde tam bir turdan uzun. Yarıçapı büyütün, basamağı kısaltın ya da yüksekliği bölün.",
+              "path": "stairs[0].fit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

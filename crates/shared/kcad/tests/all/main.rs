@@ -42,6 +42,7 @@ mod robustness;
 mod carriage;
 mod railings;
 mod space_voids;
+mod stair_arcs;
 mod schemas;
 mod shared_objects;
 mod services;

@@ -1978,6 +1978,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     if objs
         .iter()
+        .any(|e| matches!(e, Entity::Stair(s) if s.stair.bulges.is_some()))
+    {
+        return crate::SCHEMA_WITH_STAIR_ARCS;
+    }
+    if objs
+        .iter()
         .any(|e| matches!(e, Entity::Space(s) if s.space.void))
     {
         return crate::SCHEMA_WITH_SPACE_VOIDS;

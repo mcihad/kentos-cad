@@ -51,6 +51,7 @@ pub fn core_stair(s: &StairFields) -> Shape {
     Shape::Stair {
         pts: core(&s.pts),
         stair: StairSpec {
+            bulge: s.bulge(),
             width: s.width,
             risers: f64::from(s.risers),
             riser_height: s.riser_height,

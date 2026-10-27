@@ -381,7 +381,8 @@ impl Casework {
                     self.side = Some(CaseworkSide::Left);
                     true
                 }
-                "RIGHT" | "SAĞ" => {
+                // The settings pane sends `right`, which Turkish capitals make RİGHT.
+                "RIGHT" | "RİGHT" | "SAĞ" => {
                     self.side = Some(CaseworkSide::Right);
                     true
                 }

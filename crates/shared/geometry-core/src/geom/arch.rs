@@ -230,6 +230,8 @@ pub const RAILING_INSET: f64 = 0.05;
 /// A stair's fields beside its walking line.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StairSpec {
+    /// A curved (spiral) stair's arc (docs/adr/0709): its two-point walking line's bulge; 0 straight.
+    pub bulge: f64,
     pub width: f64,
     pub risers: f64,
     pub riser_height: f64,
@@ -250,10 +252,19 @@ impl crate::api::json::Flat for StairSpec {
         "cut",
         "numbering",
         "railings",
+        "bulges",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
+        let bulge = match v.get("bulges") {
+            Json::Arr(b) => match b.first() {
+                Some(Json::Num(x)) => *x,
+                _ => 0.0,
+            },
+            _ => 0.0,
+        };
         Ok(StairSpec {
+            bulge,
             width: number(v, "width")?.unwrap_or(0.0),
             risers: number(v, "risers")?.unwrap_or(0.0),
             riser_height: number(v, "riserHeight")?.unwrap_or(0.0),
@@ -281,6 +292,9 @@ impl crate::api::json::Flat for StairSpec {
         }
         if let Some(r) = self.railings {
             field(out, first, "railings", r.name());
+        }
+        if self.bulge != 0.0 {
+            field(out, first, "bulges", &vec![self.bulge, 0.0]);
         }
     }
 }
@@ -395,6 +409,26 @@ fn polygon(pts: Vec<Vec2>) -> Shape {
         bulges: None,
         holes: None,
         parts: None,
+    }
+}
+
+fn bulged_polygon(pts: Vec<Vec2>, bulges: Vec<f64>) -> Shape {
+    Shape::Polygon {
+        pts,
+        bulges: Some(bulges),
+        holes: None,
+        parts: None,
+    }
+}
+
+fn arc_polyline(a: Vec2, b: Vec2, bulge: f64) -> Shape {
+    Shape::Polyline {
+        pts: vec![a, b],
+        bulges: Some(vec![bulge, 0.0]),
+        holes: None,
+        parts: None,
+        closed: false,
+        widths: None,
     }
 }
 
@@ -546,11 +580,14 @@ pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
     out
 }
 
-/// A walking line measured: its segments' lengths and the arc length at each point.
+/// A walking line measured: its segments' lengths and the arc length at each point; a curved stair's one arc
+/// (docs/adr/0709).
 pub struct Walk {
     pub pts: Vec<Vec2>,
     /// Arc length at each point.
     pub at: Vec<f64>,
+    /// A two-point line's arc, when it is one.
+    pub arc: Option<crate::geom::bulge::BulgeArc>,
 }
 
 impl Walk {
@@ -563,6 +600,22 @@ impl Walk {
         Walk {
             pts: pts.to_vec(),
             at,
+            arc: None,
+        }
+    }
+
+    /// A walking line of two points bulged `bulge` (an arc), else straight as [`Walk::of`].
+    pub fn curved(pts: &[Vec2], bulge: f64) -> Walk {
+        let arc = (pts.len() == 2)
+            .then(|| crate::geom::bulge::bulge_arc(pts[0], pts[1], bulge))
+            .flatten();
+        match arc {
+            Some(arc) => Walk {
+                pts: pts.to_vec(),
+                at: vec![0.0, arc.sweep.abs() * arc.r],
+                arc: Some(arc),
+            },
+            None => Walk::of(pts),
         }
     }
 
@@ -570,8 +623,17 @@ impl Walk {
         self.at.last().copied().unwrap_or(0.0)
     }
 
-    /// The point at arc length `s` and its segment's direction (at a turn, the segment's it ends).
+    /// The point at arc length `s` and its segment's direction (at a turn, the segment's it ends); on an arc its tangent.
     pub fn point(&self, s: f64) -> (Vec2, Vec2) {
+        if let Some(a) = &self.arc {
+            let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+            let t = a.a0 + turn * s / a.r;
+            let (c, sn) = (cos(t), sin(t));
+            return (
+                Vec2::new(a.c.x + a.r * c, a.c.y + a.r * sn),
+                Vec2::new(-sn * turn, c * turn),
+            );
+        }
         let n = self.pts.len();
         let mut k = 0;
         while k + 2 < n && s > self.at[k + 1] {
@@ -621,7 +683,7 @@ pub fn stair_landings(walk: &Walk, spec: &StairSpec) -> Vec<(f64, f64)> {
 /// at its start), or the fields hold no riser or tread.
 pub fn stair_fit_end(pts: &[Vec2], spec: &StairSpec) -> Option<Vec2> {
     let n = pts.len();
-    if n < 2 || !(spec.risers >= 1.0 && spec.tread > 0.0) {
+    if n < 2 || !(spec.risers >= 1.0 && spec.tread > 0.0) || spec.bulge != 0.0 {
         return None;
     }
     let (prev, last) = (pts[n - 2], pts[n - 1]);
@@ -641,6 +703,81 @@ pub fn stair_fit_end(pts: &[Vec2], spec: &StairSpec) -> Option<Vec2> {
     }
     let t = end - start;
     Some(Vec2::new(prev.x + d.x * t, prev.y + d.y * t))
+}
+
+/// Where a curved stair's walking line ends to hold its risers exactly (docs/adr/0709): round its arc's centre from its
+/// start, its turn as long as its risers need (its last riser `risers − 1` treads on); the new end and bulge. None
+/// without an arc, a riser or a tread, or when the risers need a whole turn or more.
+pub fn stair_fit_arc(pts: &[Vec2], spec: &StairSpec) -> Option<(Vec2, f64)> {
+    if pts.len() != 2 || !(spec.risers >= 1.0 && spec.tread > 0.0) {
+        return None;
+    }
+    let a = crate::geom::bulge::bulge_arc(pts[0], pts[1], spec.bulge)?;
+    let length = (spec.risers - 1.0) * spec.tread;
+    let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+    let sweep = turn * length / a.r;
+    if !(sweep.abs() > EPS && sweep.abs() < 2.0 * crate::jsmath::PI - EPS) {
+        return None;
+    }
+    let t = a.a0 + sweep;
+    Some((
+        Vec2::new(a.c.x + a.r * cos(t), a.c.y + a.r * sin(t)),
+        crate::geom::bulge::bulge_of_sweep(sweep),
+    ))
+}
+
+/// A stair's band (docs/adr/0709): a straight stair's mitred polygon, a curved one's ring of its two arcs.
+pub fn stair_band(pts: &[Vec2], spec: &StairSpec) -> Shape {
+    let walk = Walk::curved(pts, spec.bulge);
+    if walk.arc.is_none() {
+        return polygon(band(pts, spec.width / 2.0));
+    }
+    let half = spec.width / 2.0;
+    let side = |s: f64, k: f64| {
+        let (p, d) = walk.point(s);
+        let n = left(d);
+        Vec2::new(p.x + n.x * half * k, p.y + n.y * half * k)
+    };
+    let l = walk.length();
+    bulged_polygon(
+        vec![side(0.0, 1.0), side(l, 1.0), side(l, -1.0), side(0.0, -1.0)],
+        vec![spec.bulge, 0.0, -spec.bulge, 0.0],
+    )
+}
+
+/// A curved stair's railings (docs/adr/0709): each side's arc `RAILING_INSET` inside its band, split at the cut as a
+/// straight stair's are; each with whether it lies past the cut.
+fn arc_railings(walk: &Walk, spec: &StairSpec, cut: Option<(f64, f64)>) -> Vec<(Shape, bool)> {
+    let mut out = Vec::new();
+    let (Some(r), Some(a)) = (spec.railings, walk.arc) else {
+        return out;
+    };
+    let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+    let off = crate::jsmath::js_max(spec.width / 2.0 - RAILING_INSET, 0.0);
+    let total = walk.length();
+    for (on_left, on) in [(true, r.left()), (false, r.right())] {
+        if !on {
+            continue;
+        }
+        let k = if on_left { 1.0 } else { -1.0 };
+        let at = |s: f64| {
+            let (p, d) = walk.point(s);
+            let n = left(d);
+            Vec2::new(p.x + n.x * off * k, p.y + n.y * off * k)
+        };
+        let arc = |s0: f64, s1: f64| {
+            arc_polyline(at(s0), at(s1), crate::geom::bulge::bulge_of_sweep(turn * (s1 - s0) / a.r))
+        };
+        match cut.map(|(l, r)| if on_left { l } else { r }) {
+            Some(c) if c > EPS && c < total - EPS => {
+                out.push((arc(0.0, c), false));
+                out.push((arc(c, total), true));
+            }
+            Some(c) if c <= EPS => out.push((arc(0.0, total), true)),
+            _ => out.push((arc(0.0, total), false)),
+        }
+    }
+    out
 }
 
 /// A railing's line on one side of a walking line (docs/adr/0705 §2): its band's side `RAILING_INSET` inside, mitred at
@@ -715,24 +852,44 @@ fn railing_lines(
     out
 }
 
-/// A stair's railings (docs/adr/0705 §2): each side's line, the part over its cut (dashed in its pieces) apart.
-pub fn stair_railings(pts: &[Vec2], spec: &StairSpec) -> Vec<(Vec<Vec2>, bool)> {
-    if pts.len() < 2 {
-        return Vec::new();
-    }
-    let walk = Walk::of(pts);
-    let (stations, _) = riser_stations(&walk, spec);
-    let cut = spec
-        .cut
-        .map(|c| (if c > 1.0 { c as usize } else { 1 }).min(stations.len()));
-    let at = match cut {
+/// The riser a stair's cut line stands at, 1 up to its risers drawn; none without a cut.
+fn cut_riser(spec: &StairSpec, stations: &[f64]) -> Option<usize> {
+    spec.cut
+        .map(|c| (if c > 1.0 { c as usize } else { 1 }).min(stations.len()))
+}
+
+/// Where a stair's cut line crosses its left and its right side: its riser's arc length and a tread further on.
+fn cut_span(walk: &Walk, spec: &StairSpec, stations: &[f64]) -> Option<(f64, f64)> {
+    match cut_riser(spec, stations) {
         Some(c) if c > 0 => {
             let s = stations[c - 1];
             Some((s, crate::jsmath::js_min(s + spec.tread, walk.length())))
         }
         _ => None,
-    };
+    }
+}
+
+/// A stair's railings (docs/adr/0705 §2): each side's line, the part over its cut (dashed in its pieces) apart; none
+/// for a curved stair (its are arcs: [`stair_railing_arcs`]).
+pub fn stair_railings(pts: &[Vec2], spec: &StairSpec) -> Vec<(Vec<Vec2>, bool)> {
+    if pts.len() < 2 || spec.bulge != 0.0 {
+        return Vec::new();
+    }
+    let walk = Walk::of(pts);
+    let (stations, _) = riser_stations(&walk, spec);
+    let at = cut_span(&walk, spec, &stations);
     railing_lines(&walk, spec.railings, spec.width / 2.0, at)
+}
+
+/// A curved stair's railings (docs/adr/0709): each side's arc, the part over its cut apart; none for a straight one.
+pub fn stair_railing_arcs(pts: &[Vec2], spec: &StairSpec) -> Vec<(Shape, bool)> {
+    let walk = Walk::curved(pts, spec.bulge);
+    if walk.arc.is_none() {
+        return Vec::new();
+    }
+    let (stations, _) = riser_stations(&walk, spec);
+    let at = cut_span(&walk, spec, &stations);
+    arc_railings(&walk, spec, at)
 }
 
 /// A ramp's railings (docs/adr/0705 §2): each side's whole line (never past a cut).
@@ -827,6 +984,30 @@ pub fn riser_stations(walk: &Walk, spec: &StairSpec) -> (Vec<f64>, u32) {
 }
 
 fn arrow(walk: &Walk, from: f64, to: f64, scale: f64) -> Vec<Shape> {
+    if let Some(a) = &walk.arc {
+        // A curved stair's arrow runs round its walking line (docs/adr/0709).
+        let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+        let (tip, d) = walk.point(to);
+        let head = HEAD_MM * scale / 1000.0;
+        let back = Vec2::new(-d.x, -d.y);
+        let wing = |w: f64| {
+            let w = turned(back, w);
+            line(tip, Vec2::new(tip.x + w.x * head, tip.y + w.y * head))
+        };
+        return vec![
+            arc_polyline(
+                walk.point(from).0,
+                tip,
+                crate::geom::bulge::bulge_of_sweep(turn * (to - from) / a.r),
+            ),
+            wing(crate::jsmath::PI / 6.0),
+            wing(-crate::jsmath::PI / 6.0),
+            Shape::Circle {
+                c: walk.point(from).0,
+                r: DOT_MM * scale / 1000.0,
+            },
+        ];
+    }
     let mut pts = vec![walk.point(from).0];
     for (k, &s) in walk.at.iter().enumerate() {
         if s > from + EPS && s < to - EPS {
@@ -860,17 +1041,15 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
     if pts.len() < 2 {
         return out;
     }
-    let walk = Walk::of(pts);
+    let walk = Walk::curved(pts, spec.bulge);
     let half = spec.width / 2.0;
-    out.push(piece(polygon(band(pts, half))));
+    out.push(piece(stair_band(pts, spec)));
     for (a, b) in stair_landings(&walk, spec) {
         out.push(piece(across(&walk, a, half)));
         out.push(piece(across(&walk, b, half)));
     }
     let (stations, _) = riser_stations(&walk, spec);
-    let cut = spec
-        .cut
-        .map(|c| (if c > 1.0 { c as usize } else { 1 }).min(stations.len()));
+    let cut = cut_riser(spec, &stations);
     let shown = cut.unwrap_or(stations.len());
     for (i, &s) in stations.iter().enumerate() {
         let mut riser = piece(across(&walk, s, half));
@@ -895,6 +1074,13 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
         }
         _ => walk.length(),
     };
+    for (shape, over) in stair_railing_arcs(pts, spec) {
+        let mut p = piece(shape);
+        if over {
+            p.stroke.line_type = Some("dashed".into());
+        }
+        out.push(p);
+    }
     railing_pieces(&mut out, stair_railings(pts, spec));
     for s in arrow(&walk, 0.0, end, scale) {
         out.push(piece(s));
@@ -1027,7 +1213,7 @@ pub fn stair_checks(pts: &[Vec2], spec: &StairSpec) -> Vec<Check> {
     if pts.len() < 2 {
         return out;
     }
-    let walk = Walk::of(pts);
+    let walk = Walk::curved(pts, spec.bulge);
     let (stations, missing) = riser_stations(&walk, spec);
     if missing > 0 {
         out.push(Check {
@@ -1118,7 +1304,7 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
                 polygon(column_corners(*at, column))
             }
         }
-        Shape::Stair { pts, stair } => polygon(band(pts, stair.width / 2.0)),
+        Shape::Stair { pts, stair } => stair_band(pts, stair),
         Shape::Ramp { pts, ramp } => polygon(band(pts, ramp.width / 2.0)),
         // A tag's middle: its frame is sized on paper (docs/adr/0344 §1).
         Shape::Tag { at, .. } => Shape::Point {

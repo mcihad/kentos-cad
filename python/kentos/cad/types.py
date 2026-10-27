@@ -36776,6 +36776,8 @@ class NewStair(_Model):
         pts: Its walking line, up from its first point: two points straight, three an L, four a U. Unit: length.
         width: Unit: length.
         tread: A tread's depth along the walking line. Unit: length.
+        bulges: A curved (spiral) stair (docs/adr/0709): its two-point walking line's arc as two bulges, the first the tangent
+            of a quarter of its turn (counter-clockwise positive), the second 0. Absent: straight. Unit: 1.
         cut: The riser its cut line stands at; absent: none. Unit: index.
         cut_height: The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`). Unit: length.
         fit: True: its last point moves along its last segment so that its walking line ends at its last riser.
@@ -36791,6 +36793,7 @@ class NewStair(_Model):
     tread: float
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
     cut: int | None | Unset = UNSET
     cut_height: float | None | Unset = UNSET
     fit: bool | None | Unset = UNSET
@@ -36811,6 +36814,8 @@ class NewStair(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.cut is not UNSET:
             out["cut"] = self.cut
         if self.cut_height is not UNSET:
@@ -36839,6 +36844,7 @@ class NewStair(_Model):
             tread=float(data["tread"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             cut=data.get("cut", UNSET),
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             fit=data.get("fit", UNSET),
@@ -54501,6 +54507,8 @@ class StairEntity(Entity):
         tread: A tread's depth along the walking line. Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        bulges: A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent
+            of a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight. Unit: 1.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -54536,6 +54544,7 @@ class StairEntity(Entity):
     tread: float
     arch: ArchInfo | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     cut: int | None | Unset = UNSET
@@ -54567,6 +54576,8 @@ class StairEntity(Entity):
             out["arch"] = self.arch.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -54614,6 +54625,7 @@ class StairEntity(Entity):
             tread=float(data["tread"]),
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             cut=data.get("cut", UNSET),

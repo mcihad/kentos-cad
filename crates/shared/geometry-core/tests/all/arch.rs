@@ -65,6 +65,7 @@ fn arch_elements_draw_as_the_reference_says() {
                 }
             }
             Shape::Column { at, column } => points(&arch::column_corners(*at, column), &e["corners"], name),
+            Shape::Stair { pts, stair } if stair.bulge != 0.0 => curved_stair(pts, stair, e, name),
             Shape::Stair { pts, stair } => {
                 let walk = arch::Walk::of(pts);
                 let (stations, missing) = arch::riser_stations(&walk, stair);
@@ -128,5 +129,66 @@ fn arch_elements_draw_as_the_reference_says() {
             }
             other => panic!("{name}: beklenmeyen şekil {other:?}"),
         }
+    }
+}
+
+/// A curved stair (docs/adr/0709) against the reference: its risers along its arc, radial; its band of two arcs; its
+/// fitted end round its centre; its railings concentric arcs split at the cut.
+fn curved_stair(pts: &[kentos_geometry_core::vec2::Vec2], stair: &arch::StairSpec, e: &Value, name: &str) {
+    let walk = arch::Walk::curved(pts, stair.bulge);
+    assert!(walk.arc.is_some(), "{name}: yay");
+    let (stations, missing) = arch::riser_stations(&walk, stair);
+    let want: Vec<f64> = e["stations"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
+    assert_eq!(stations.len(), want.len(), "{name}: rıhtlar");
+    for (g, w) in stations.iter().zip(&want) {
+        close(*g, *w, name);
+    }
+    assert_eq!(f64::from(missing), e["missing"].as_f64().unwrap(), "{name}: sığmayan");
+    assert_eq!(codes(&arch::stair_checks(pts, stair)), want_codes(&e["codes"]), "{name}");
+    assert!(arch::stair_landings(&walk, stair).is_empty(), "{name}: döner merdivende sahanlık yok");
+    let Shape::Polygon { pts: band, bulges: Some(bulges), .. } = arch::stair_band(pts, stair) else {
+        panic!("{name}: bant iki yaylı halka olmalı");
+    };
+    points(&band, &e["band"], name);
+    for (g, w) in bulges.iter().zip(e["bandBulges"].as_array().unwrap()) {
+        close(*g, w.as_f64().unwrap(), name);
+    }
+    match (arch::stair_fit_arc(pts, stair), e["fitArc"].as_array()) {
+        (Some((p, b)), Some(w)) => {
+            close(p.x, w[0].as_f64().unwrap(), name);
+            close(p.y, w[1].as_f64().unwrap(), name);
+            close(b, w[2].as_f64().unwrap(), name);
+        }
+        (None, None) => {}
+        (got, want) => panic!("{name}: sığdırma {got:?}, beklenen {want:?}"),
+    }
+    let pieces = arch::stair_pieces(pts, stair, 50.0);
+    // After the band (no landings): the risers, radial across the width.
+    let risers: Vec<_> = pieces
+        .iter()
+        .filter_map(|p| match p.shape {
+            Shape::Line { a, b } => Some([a, b]),
+            _ => None,
+        })
+        .take(stations.len())
+        .collect();
+    let want = e["risers"].as_array().unwrap();
+    assert_eq!(risers.len(), want.len(), "{name}: rıht çizgileri");
+    for (g, w) in risers.iter().zip(want) {
+        points(g, w, name);
+    }
+    let dashed = pieces.iter().filter(|p| p.stroke.line_type.as_deref() == Some("dashed")).count();
+    assert_eq!(dashed as u64, e["dashed"].as_u64().unwrap(), "{name}: kesikli parçalar");
+    assert!(arch::stair_railings(pts, stair).is_empty(), "{name}: düz korkuluk çizgisi yok");
+    let arcs = arch::stair_railing_arcs(pts, stair);
+    let want = e["railingArcs"].as_array().unwrap();
+    assert_eq!(arcs.len(), want.len(), "{name}: korkuluk yayları");
+    for ((shape, over), w) in arcs.iter().zip(want) {
+        assert_eq!(*over, w["over"].as_bool().unwrap(), "{name}: kesmenin üstü");
+        let Shape::Polyline { pts, bulges: Some(b), .. } = shape else {
+            panic!("{name}: korkuluk yay olmalı");
+        };
+        points(pts, &w["pts"], name);
+        close(b[0], w["bulge"].as_f64().unwrap(), name);
     }
 }

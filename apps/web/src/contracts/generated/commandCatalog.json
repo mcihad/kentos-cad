@@ -17161,6 +17161,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -28554,6 +28566,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -58624,6 +58648,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -75917,6 +75953,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -86517,6 +86565,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -97088,6 +97148,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -107701,6 +107773,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -118239,6 +118323,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -128773,6 +128869,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -139322,6 +139430,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -150176,6 +150296,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -166317,6 +166449,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -177060,6 +177204,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -187898,6 +188054,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -199951,6 +200119,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -211005,6 +211185,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -223376,6 +223568,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -234193,6 +234397,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -244763,6 +244979,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -255415,6 +255643,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -269248,6 +269488,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -283377,6 +283629,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -297649,6 +297913,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -308544,6 +308820,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -319858,6 +320146,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -330431,6 +330731,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -341029,6 +341341,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -351676,6 +352000,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -362475,6 +362811,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -373371,6 +373719,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -384301,6 +384661,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -395006,6 +395378,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -405903,6 +406287,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -416273,6 +416669,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -428007,6 +428415,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -438348,6 +438768,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -449050,6 +449482,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -460437,6 +460881,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -471134,6 +471590,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -481475,6 +481943,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -493360,6 +493840,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -504156,6 +504648,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -506703,6 +507207,18 @@
                   "object",
                   "null"
                 ]
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair (docs/adr/0709): its two-point walking line's arc as two bulges, the first the tangent\nof a quarter of its turn (counter-clockwise positive), the second 0. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "cut": {
                 "description": "The riser its cut line stands at; absent: none.",
@@ -514871,6 +515387,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -525547,6 +526075,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -536269,6 +536809,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -546591,6 +547143,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -557290,6 +557854,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -567776,6 +568352,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -578097,6 +578685,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -588891,6 +589491,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -599437,6 +600049,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -609758,6 +610382,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -620704,6 +621340,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -631033,6 +631681,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -674665,6 +675325,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -685330,6 +686002,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -695657,6 +696341,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -706456,6 +707152,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -717485,6 +718193,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -727842,6 +728562,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -739541,6 +740273,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -750273,6 +751017,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -761514,6 +762270,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -772438,6 +773206,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -784172,6 +784952,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -795161,6 +795953,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -806674,6 +807478,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -817560,6 +818376,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -828288,6 +829116,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -839218,6 +840058,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -849937,6 +850789,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -860560,6 +861424,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -871211,6 +872087,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -881784,6 +882672,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -892332,6 +893232,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -902925,6 +903837,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -913423,6 +914347,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -924036,6 +924972,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -934692,6 +935640,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -945337,6 +946297,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -956317,6 +957289,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -972227,6 +973211,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -983057,6 +984053,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -994359,6 +995367,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1005604,6 +1006624,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1017018,6 +1018050,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1028522,6 +1029566,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1038875,6 +1039931,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1050106,6 +1051174,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1127776,6 +1128856,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1182539,6 +1183631,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1193933,6 +1195037,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1204536,6 +1205652,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1215304,6 +1216432,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1228148,6 +1229288,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1238887,6 +1240039,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1249519,6 +1250683,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1260087,6 +1261263,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1270702,6 +1271890,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1281305,6 +1282505,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1291870,6 +1293082,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1302683,6 +1303907,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1313518,6 +1314754,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1324311,6 +1325559,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1334920,6 +1336180,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1345471,6 +1346743,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1356119,6 +1357403,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1366770,6 +1368066,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1377655,6 +1378963,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1388480,6 +1389800,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -1399602,6 +1400934,18 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
                 "items": {
@@ -1410356,6 +1411700,18 @@
                 },
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
+              },
+              "bulges": {
+                "description": "A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent\nof a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
               },
               "byLayer": {
                 "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",

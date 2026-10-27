@@ -12353,6 +12353,22 @@
    "tests": 0
   },
   {
+   "id": "tool.stairCurved",
+   "kind": "command",
+   "title": "Döner merdiven",
+   "level": "semantic",
+   "via": [
+    "cad.stairs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.stairs.create",
+   "mcp": "cad.stairs.create",
+   "note": "Merkez, başlangıç ve dönüş yönü; yürüme çizgisi yay (bulges) olarak komuta verilir, yayı son rıhta komut bitirir (ADR 0709).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.stakeout",
    "kind": "tool",
    "title": "Aplikasyon",
