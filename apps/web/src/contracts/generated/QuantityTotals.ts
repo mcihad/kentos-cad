@@ -3,4 +3,12 @@
 /**
  * The rows' sums.
  */
-export type QuantityTotals = { spaceArea: number, wallLength: number, wallNetArea: number, openings: number, openingArea: number, };
+export type QuantityTotals = { 
+/**
+ * The rooms' area, voids left out (docs/adr/0708).
+ */
+spaceArea: number, 
+/**
+ * The voids' area: shafts, lift shafts, openings in the floor.
+ */
+voidArea?: number, wallLength: number, wallNetArea: number, openings: number, openingArea: number, };

@@ -255,6 +255,9 @@ def stored(s, exact):
     fin = {k: v for k, v in s.get("finishes", {}).items() if v is not None}
     if fin:
         out["finishes"] = fin
+    if s.get("void"):
+        # A void (docs/adr/0708): written only when true.
+        out["void"] = True
     if s.get("broken"):
         out["broken"] = s["broken"]
     return out
@@ -280,7 +283,7 @@ def create(d, inp, conflict=False):
             return not_finite("Yükseklik", f"{at}.height"), None
         s = {"seed": n.get("seed"), "method": n.get("method", "net"), "number": n.get("number"), "name": n.get("name"),
              "usage": n.get("usage"), "arch": n.get("arch", {}), "height": n.get("height"),
-             "finishes": n.get("finishes", {}), "attrs": n.get("attrs", {})}
+             "finishes": n.get("finishes", {}), "attrs": n.get("attrs", {}), "void": n.get("void", False)}
         if "seed" in n:
             r = level_check(s, f"{at}.arch.level")
             if r:
@@ -396,7 +399,8 @@ def quantities(d, inp):
             area = float(area_of(s["parts"]))
             height = s.get("height") if s.get("height") is not None else level_height(arch)
             row = {"uid": uid_of(i), "number": s.get("number"), "name": s.get("name"), "usage": s.get("usage"),
-                   "level": arch.get("level"), "method": s.get("method", "net"), "area": area,
+                   "level": arch.get("level"), "method": s.get("method", "net"), "void": True if s.get("void") else None,
+                   "area": area,
                    "perimeter": float(perimeter_of(s["parts"])), "height": height,
                    "volume": None if height is None else area * height}
             if s.get("seed") is not None:
@@ -407,6 +411,8 @@ def quantities(d, inp):
                         by[m] = float(area_of(p))
                 row["byMethod"] = by
             row["rule"] = f"alan: halkaların alanı, delikler düşülür ({METHOD_LABEL[s.get('method', 'net')]}); hacim: alan × yükseklik"
+            if s.get("void"):
+                row["rule"] += "; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
             spaces_rows.append({k: v for k, v in row.items() if v is not None})
         elif i in d.walls and inp.get("usages") is None:
             w = d.walls[i]
@@ -424,10 +430,14 @@ def quantities(d, inp):
                    "volume": None if net is None else net * w["width"], "openings": [uid_of(o) for o, _ in ops] or None,
                    "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"}
             walls_rows.append({k: v for k, v in row.items() if v is not None})
-    totals = {"spaceArea": sum((r["area"] for r in spaces_rows), 0.0),
+    totals = {"spaceArea": sum((r["area"] for r in spaces_rows if not r.get("void")), 0.0),
               "wallLength": sum((r["length"] for r in walls_rows), 0.0),
               "wallNetArea": sum((r["netArea"] for r in walls_rows if "netArea" in r), 0.0),
               "openings": len(openings), "openingArea": sum((r["area"] for r in openings if "area" in r), 0.0)}
+    void_area = sum((r["area"] for r in spaces_rows if r.get("void")), 0.0)
+    if void_area:
+        # The voids' area apart (docs/adr/0708); none: the key is not written.
+        totals["voidArea"] = void_area
     return {"status": "completed", "output": {"spaces": spaces_rows, "walls": walls_rows, "openings": openings, "totals": totals},
             "warnings": []}
 
@@ -518,6 +528,8 @@ def edit(d, inp, conflict=False):
                 if k in ch:
                     fin[k] = ch[k]
             s["finishes"] = fin
+            if "void" in ch:
+                s["void"] = ch["void"]
             if ("method" in ch or "level" in ch) and s.get("seed") is not None:
                 p = d.found(s["seed"], s["method"], s.get("arch", {}).get("level"))
                 if p is None:
@@ -683,6 +695,10 @@ def create_cases():
         ("renk ve kalınlık mahalin kendisinin", {"layerId": "mahal", "color": "#3366AA", "lineWeight": 0.13, "spaces": [{"seed": LEFT}]}),
         ("gizli katmana uyarıyla yazılır", one(layer="gizli", seed=LEFT)),
         ("iki mahal tek çağrıda, tek adım", {"layerId": "mahal", "spaces": [{"seed": LEFT, "number": "1"}, {"seed": RIGHT, "number": "2"}]}),
+        # A void (docs/adr/0708): its area summed apart in the quantities.
+        ("çizilmiş şaft boşluk olarak; metraj alanını boşluk toplamına yazar", one(parts=[box_json(20, 0, 20.8, 0.6)], name="Şaft", usage="Tesisat şaftı", void=True)),
+        ("duvarlarla çevrili sağ oda boşluk (asansör); oda ile boşluk ayrı toplanır", {"layerId": "mahal", "spaces": [{"seed": LEFT, "name": "Salon"}, {"seed": RIGHT, "name": "Asansör", "void": True}]}),
+        ("boşluk false yazılmaz: oda olarak kalır", one(seed=LEFT, void=False)),
     ]:
         dd = Drawing()
         c.add(name, [create_step(dd, "execute", inp), quant_step(dd, command=QUANT)])
@@ -731,6 +747,14 @@ def edit_cases():
     ]:
         d, made = fresh({"seed": LEFT, "name": "Oda"})
         c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op}), quant_step(d, command=QUANT)])
+    # A room made a void and a room again (docs/adr/0708).
+    d, made = fresh({"seed": LEFT, "name": "Oda"}, {"seed": RIGHT, "name": "Şaft"})
+    c.add("Değiştir: oda boşluk olur, metraj boşluğu ayrı toplar; sonra yine oda",
+          [made, edit_step(d, "execute", {"uids": [uid_of(first + 1)], "operation": {"kind": "set", "void": True}}), quant_step(d, command=QUANT),
+           edit_step(d, "execute", {"uids": [uid_of(first + 1)], "operation": {"kind": "set", "void": False}}), quant_step(d, command=QUANT)])
+    d, made = fresh({"parts": [box_json(20, 0, 23, 4)], "number": "A", "void": True}, {"parts": [box_json(23, 0, 26, 4)], "number": "B"})
+    c.add("Birleştir: ilk mahal boşluksa birleşen de boşluktur",
+          [made, edit_step(d, "execute", {"uids": [uid_of(first), uid_of(first + 1)], "operation": {"kind": "merge"}}), quant_step(d, command=QUANT)])
     d, made = fresh({"seed": LEFT, "height": 2.5, "name": "Oda"})
     c.add("Değiştir: yüksekliği kaldırmak katınkini verir", [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "height": None}})])
     d, made = fresh({"parts": [box_json(20, 0, 23, 4)], "number": "A"}, {"parts": [box_json(23, 0, 26, 4)], "number": "B"})

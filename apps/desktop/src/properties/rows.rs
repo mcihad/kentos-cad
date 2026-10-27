@@ -1441,6 +1441,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     geo.push(Row::text(label, shown.clone()).editor(select(shown, items)));
                 }
             }
+            // Boşluk (docs/adr/0708): a shaft or an opening in the floor, drawn crossed, its area summed apart.
+            let void_words = if x.void { "Evet (şaft)" } else { "Hayır (oda)" };
+            let voids = [(true, "Evet (şaft)"), (false, "Hayır (oda)")]
+                .into_iter()
+                .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
+                .collect();
+            geo.push(Row::text("Boşluk", void_words).editor(select(void_words.into(), voids)));
             let methods = SpaceMethod::ALL
                 .iter()
                 .map(|&m| {

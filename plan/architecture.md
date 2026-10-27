@@ -827,7 +827,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: toplam uzunluk/modül dağılımı, dar köşe, negatif kalan, çakışma,
   tek modül düzenleme ve kaynak duvar taşınması. İlk iş basit düz diziyle sınırlı.
 
-### ARCH-ELEM-01 — Döşeme, balkon, teras ve şaft sınırı [ ]
+### ARCH-ELEM-01 — Döşeme, balkon, teras ve şaft sınırı [~]
+
+- [x] Şaft/döşeme boşluğu dilimi [ADR0708](../docs/adr/0708-space-voids.md):
+  ikinci alan motoru yerine mahalin `void` işareti (KCAD şema 116, opt-in);
+  duvarlardan bulunur ya da çizilir, planda kırpılmış çapraz, Metraj'da oda
+  toplamı dışı ve ayrı boşluk toplamı, denetimde küçük/dar bulgusu yok. Mahal
+  aracında Boşluk (V), Öznitelikler'de satır. Revit Shaft Opening ve Archicad
+  Area List araştırıldı. Ortak durumlar bağımsız başvurulardan, KCAD/Python/
+  araç testleri, gerçek GUI resimleri (`.run/shots/arac-saft-*`). Döşeme
+  konturu/kot, balkon ve korkuluk, katlar arası şaft ve çizelge toplamı açık.
 
 - Kapalı kontur, kenar ötelemesi, delik/boşluk, kat/kot ve malzeme/kaplama bilgisi.
 - Mevcut polygon/hatch/mahal modelleriyle nelerin temsil edilebildiğini incele;
@@ -1079,3 +1088,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
 | 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |
+| 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |

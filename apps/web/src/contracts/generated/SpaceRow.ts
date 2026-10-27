@@ -22,6 +22,10 @@ columns?: SpaceColumns, scope?: SpaceScope,
  */
 boundaryBreak?: SpaceBreak, 
 /**
+ * A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
+ */
+void?: boolean, 
+/**
  * Its rings' area, m².
  */
 area: number, perimeter: number, height?: number, volume?: number, 

@@ -282,6 +282,18 @@ impl App {
                 })
                 .collect(),
         };
+        // A void (docs/adr/0708) says so in its own column, in the table and in the cells copied or exported; its area
+        // is summed apart. Without a void the table is as it was.
+        if q.spaces.iter().any(|r| r.void) {
+            spaces.heading.insert(3, "Boşluk");
+            spaces.numbers.insert(3, false);
+            spaces.widths.insert(3, 56.0);
+            for ((shown, cells), room) in spaces.shown.iter_mut().zip(&mut spaces.cells).zip(&q.spaces) {
+                let mark = if room.void { "Boşluk" } else { "" }.to_owned();
+                shown.insert(3, mark.clone());
+                cells.insert(3, mark);
+            }
+        }
         // A later stale room must not be hidden by the first room's valid rule.
         // The warning goes to both the displayed table and the copied/exported cells.
         if q.spaces.iter().any(|r| r.boundary_break.is_some()) {
@@ -537,9 +549,14 @@ impl App {
             words::text_line(
                 Kind::Info,
                 format!(
-                    "{} mahal, toplam {}; {} duvar, {} uzunluk, {faces}; {} açıklık, {} m².",
+                    "{} mahal, toplam {}{}; {} duvar, {} uzunluk, {faces}; {} açıklık, {} m².",
                     q.spaces.len(),
                     f.area(t.space_area),
+                    if t.void_area > 0.0 {
+                        format!(" (boşluklar ayrı: {})", f.area(t.void_area))
+                    } else {
+                        String::new()
+                    },
                     q.walls.len(),
                     f.length(t.wall_length),
                     t.openings,

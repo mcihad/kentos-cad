@@ -5,6 +5,8 @@
   "files": [
     {"file": "railings.kcad", "sniff": "kcad", "content": "railings.json"},
     {"file": "broken/railings-in-schema-114.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "space-voids.kcad", "sniff": "kcad", "content": "space-voids.json"},
+    {"file": "broken/space-voids-in-schema-115.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "dimension-set-edges.kcad", "sniff": "kcad", "content": "dimension-set-edges.json"},
     {"file": "broken/dimension-set-edges-in-schema-113.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "dimension-sets.kcad", "sniff": "kcad", "content": "dimension-sets.json"},
@@ -99,7 +101,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-116.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-117.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

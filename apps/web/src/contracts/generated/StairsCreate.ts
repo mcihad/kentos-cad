@@ -3,10 +3,12 @@ import type { NewStair } from "./NewStair";
 
 /**
  * Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
- * (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`) are warnings.
+ * (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.
  *
- * Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
- * `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
- * Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`.
+ * Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the
+ * cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
+ * `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also
+ * `slots_exhausted`.
+ * Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
  */
 export type StairsCreate = { layerId: string, stairs: Array<NewStair>, color?: string, lineWeight?: number, expectedRevision?: string, };

@@ -1976,6 +1976,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Space(s) if s.space.void))
+    {
+        return crate::SCHEMA_WITH_SPACE_VOIDS;
+    }
     if objs.iter().any(|e| match e {
         Entity::Stair(s) => s.stair.railings.is_some(),
         Entity::Ramp(r) => r.ramp.railings.is_some(),

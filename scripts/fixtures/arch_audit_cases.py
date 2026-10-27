@@ -538,6 +538,9 @@ def spaces_findings(d, min_area, min_width):
         if e.get("broken"):
             what, repair = split(SPACE_WORDS[e["broken"]])
             out.append(finding("spaces", "arch_space_broken", f"{label}: {what}", repair, [uid[e["id"]]], at))
+        if e.get("void"):
+            # A void (a shaft, ADR 0708) is small and narrow by design.
+            continue
         area = F(0)
         perimeter = 0.0
         for part in e["parts"]:
@@ -813,6 +816,13 @@ def cases():
     flat = copy.deepcopy(d)
     flat["settings"].pop("arch")
     case("Projede kat yok: kat denetimi bulgu vermez", [asked(flat, {"checks": ["levels"]})], setup=flat)
+
+    # A shaft marked a void (ADR 0708): no small or narrow finding for it.
+    voided = copy.deepcopy(d)
+    for e in voided["entities"]:
+        if e["kind"] == "space" and e.get("name") == "Şaft":
+            e["void"] = True
+    case("Boşluk işaretli şaft küçük ya da dar mahal sayılmaz", [asked(voided, {"checks": ["spaces"]})], setup=voided)
 
     # An empty drawing.
     empty = copy.deepcopy(d)

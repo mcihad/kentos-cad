@@ -160,6 +160,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     scope: f.scope,
                     sources: f.sources.clone(),
                     boundary_break: f.broken,
+                    void: f.void,
                     area,
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
@@ -173,6 +174,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                         if !f.scope.is_project() { rule.push_str("; kaynaklar: yalnız atanmamış"); }
                         if let Some(why)=f.broken {
                             rule.push_str(&format!("; son geçerli sınır: {}",why.words()));
+                        }
+                        if f.void {
+                            rule.push_str("; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır");
                         }
                         rule
                     },
@@ -213,7 +217,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         }
     }
     out.totals = QuantityTotals {
-        space_area: out.spaces.iter().map(|s| s.area).sum(),
+        space_area: out.spaces.iter().filter(|s| !s.void).map(|s| s.area).sum(),
+        void_area: out.spaces.iter().filter(|s| s.void).map(|s| s.area).sum(),
         wall_length: out.walls.iter().map(|w| w.length).sum(),
         wall_net_area: out.walls.iter().filter_map(|w| w.net_area).sum(),
         openings: u32::try_from(out.openings.len()).unwrap_or(u32::MAX),

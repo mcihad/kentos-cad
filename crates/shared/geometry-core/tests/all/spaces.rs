@@ -121,3 +121,56 @@ fn spaces_are_found_and_measured_as_the_reference_says() {
         }
     }
 }
+
+/// A void's cross (docs/adr/0708): a rectangle's diagonals run corner to corner; an L's are kept inside it; a hole's
+/// part of them is left out.
+#[test]
+fn a_void_is_crossed_inside_its_parts() {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::arrangement::Area;
+    let ring = |pts: &[(f64, f64)]| Ring {
+        pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+        bulges: None,
+    };
+    let lines = |shapes: Vec<Shape>| -> Vec<(Vec2, Vec2)> {
+        shapes
+            .into_iter()
+            .map(|s| match s {
+                Shape::Line { a, b } => (a, b),
+                other => panic!("a line, not {other:?}"),
+            })
+            .collect()
+    };
+    let near = |p: Vec2, x: f64, y: f64| (p.x - x).abs() < 1e-12 && (p.y - y).abs() < 1e-12;
+    // A 0.8 × 0.6 shaft.
+    let shaft = Area { outer: ring(&[(1.0, 1.0), (1.8, 1.0), (1.8, 1.6), (1.0, 1.6)]), holes: vec![] };
+    let cross = lines(space::void_cross(&[shaft]));
+    assert_eq!(cross.len(), 2);
+    assert!(near(cross[0].0, 1.0, 1.0) && near(cross[0].1, 1.8, 1.6), "{cross:?}");
+    assert!(near(cross[1].0, 1.8, 1.0) && near(cross[1].1, 1.0, 1.6), "{cross:?}");
+    // An L (4 × 4 less its upper right 2 × 2): the rectangle's diagonal from (0, 0) leaves it at (2, 2); the other
+    // runs from (4, 0) to (2, 2) and again from (2, 2) to (0, 4).
+    let l = Area {
+        outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 2.0), (2.0, 2.0), (2.0, 4.0), (0.0, 4.0)]),
+        holes: vec![],
+    };
+    let cross = lines(space::void_cross(&[l]));
+    let length: f64 = cross
+        .iter()
+        .map(|(a, b)| kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y))
+        .sum();
+    assert!((length - 3.0 * 8f64.sqrt()).abs() < 1e-9, "{cross:?}");
+    // A 4 × 4 void with a 2 × 2 hole in its middle: each diagonal in two pieces.
+    let holed = Area {
+        outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)]),
+        holes: vec![ring(&[(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)])],
+    };
+    let cross = lines(space::void_cross(&[holed]));
+    assert_eq!(cross.len(), 4, "{cross:?}");
+    // The space's pieces carry the cross only when it is a void.
+    let room = space::Spec::default();
+    let shaft = Area { outer: ring(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]), holes: vec![] };
+    let plain = space::pieces(std::slice::from_ref(&shaft), &room, 50.0);
+    let void = space::pieces(&[shaft], &space::Spec { void: true, ..room }, 50.0);
+    assert_eq!(void.len(), plain.len() + 2);
+}

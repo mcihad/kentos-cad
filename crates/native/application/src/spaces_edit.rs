@@ -63,6 +63,9 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.ceiling {
         f.finishes.ceiling.clone_from(v);
     }
+    if let Some(v) = c.void {
+        f.void = v;
+    }
     f
 }
 

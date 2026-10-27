@@ -141,6 +141,10 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub finishes: Option<SpaceFinishes>,
+    /// A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub void: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
@@ -296,6 +300,10 @@ pub struct SpaceChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub ceiling: Option<Option<String>>,
+    /// A void or a room again (docs/adr/0708).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub void: Option<bool>,
 }
 
 /// What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
@@ -428,6 +436,10 @@ pub struct SpaceRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary_break: Option<crate::SpaceBreak>,
+    /// A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub void: bool,
     /// Its rings' area, m².
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
@@ -527,6 +539,10 @@ pub struct OpeningRow {
     pub area: Option<f64>,
 }
 
+fn is_zero(v: &f64) -> bool {
+    *v == 0.0
+}
+
 /// The rows' sums.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -534,8 +550,14 @@ pub struct OpeningRow {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct QuantityTotals {
+    /// The rooms' area, voids left out (docs/adr/0708).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub space_area: f64,
+    /// The voids' area: shafts, lift shafts, openings in the floor.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub void_area: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub wall_length: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]

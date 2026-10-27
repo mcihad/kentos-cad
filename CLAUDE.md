@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mahal boşluğu: şaft ve döşeme boşluğu (27 Ekim 2026; [ADR0708](docs/adr/0708-space-voids.md)).**
+  Mahalin isteğe bağlı `void`'u (KCAD şema 116, opt-in): planda parçanın içinde
+  kırpılmış çapraz (`geom::space::void_cross`), Metraj'da `spaceArea` dışı ve
+  ayrı `voidArea`, Boşluk sütunu; denetimde küçük/dar bulgusu yok. Mahal
+  aracında Boşluk (V), Öznitelikler'de Boşluk satırı; `cad.spaces.create/edit`.
+  Ortak durumlar bağımsız başvurulardan, KCAD/Python/araç testleri, gerçek GUI
+  resimleri. ARCH-ELEM-01 [~]: döşeme konturu, balkon/korkuluk, katlar arası
+  şaft ve çizelge toplamı açık.
+
 - **Aks ağı (27 Ekim 2026; [ADR0707](docs/adr/0707-grid-systems.md)).**
   `cad.grids.create`'in isteğe bağlı `system`'i: iki yönde aralık listeleri,
   açı, ilk adlar (1, A), uzatma (öntanımlı 1,5 m), balonlar ve kesişimlere

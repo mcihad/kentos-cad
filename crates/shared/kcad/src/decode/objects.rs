@@ -230,6 +230,7 @@ pub(super) struct Features {
     space_sources: bool,
     space_separators: bool,
     pub(super) space_choices: bool,
+    pub(super) space_voids: bool,
     pub(super) dimension_sets: bool,
     /// Schema 114: a dimension recipe's edge (docs/adr/0700).
     pub(super) dimension_set_edges: bool,
@@ -430,6 +431,7 @@ impl Features {
             space_sources: schema >= crate::SCHEMA_WITH_SPACE_SOURCES,
             space_separators: schema >= crate::SCHEMA_WITH_SPACE_SEPARATORS,
             space_choices: schema >= crate::SCHEMA_WITH_SPACE_CHOICES,
+            space_voids: schema >= crate::SCHEMA_WITH_SPACE_VOIDS,
             dimension_sets: schema >= crate::SCHEMA_WITH_DIMENSION_SETS,
             dimension_set_edges: schema >= crate::SCHEMA_WITH_DIMENSION_SET_EDGES,
             railings: schema >= crate::SCHEMA_WITH_RAILINGS,
@@ -1326,6 +1328,9 @@ pub(super) fn object(
                 let value = r.opaque()?;
                 if !has.space_sources && (value.get("sources").is_some() || value.get("broken").and_then(serde_json::Value::as_str)==Some("sourceUnavailable")) {
                     return Err(r.fail_at(Code::UnknownField,at,"mahalın seçilmiş kaynakları şema 110'dan beri yazılır"));
+                }
+                if !has.space_voids && value.get("void").is_some() {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalın boşluk işareti (void) şema 116'dan beri yazılır"));
                 }
                 if !has.space_scope && value.get("scope").is_some() {
                     return Err(r.fail_at(Code::UnknownField,at,"mahalın kaynak kapsamı şema 109'dan beri yazılır"));

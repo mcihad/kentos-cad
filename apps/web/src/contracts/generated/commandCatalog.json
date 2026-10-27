@@ -16838,6 +16838,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -28268,6 +28272,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -58293,6 +58301,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -75623,6 +75635,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -86219,6 +86235,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -96786,6 +96806,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -107395,6 +107419,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -117929,6 +117957,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -128459,6 +128491,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -139004,6 +139040,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -149854,6 +149894,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -165991,6 +166035,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -176730,6 +176778,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -187564,6 +187616,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -199613,6 +199669,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -210663,6 +210723,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -223030,6 +223094,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -233843,6 +233911,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -244409,6 +244481,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -255057,6 +255133,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -268845,6 +268925,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -282970,6 +283054,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -297238,6 +297326,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -308170,6 +308262,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -319480,6 +319576,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -330049,6 +330149,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -340643,6 +340747,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -351286,6 +351394,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -362081,6 +362193,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -372973,6 +373089,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -383899,6 +384019,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -394600,6 +394724,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -405493,6 +405621,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -415859,6 +415991,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -427589,6 +427725,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -437926,6 +438066,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -448625,6 +448769,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -451722,6 +451870,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -452127,6 +452279,13 @@
               "usage": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "void": {
+                "description": "A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.",
+                "type": [
+                  "boolean",
                   "null"
                 ]
               }
@@ -459996,6 +460155,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -462889,6 +463052,13 @@
                   "usage": {
                     "type": [
                       "string",
+                      "null"
+                    ]
+                  },
+                  "void": {
+                    "description": "A void or a room again (docs/adr/0708).",
+                    "type": [
+                      "boolean",
                       "null"
                     ]
                   },
@@ -470682,6 +470852,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -481020,6 +481194,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -483919,6 +484097,13 @@
                 "x-unit": "count"
               },
               "spaceArea": {
+                "description": "The rooms' area, voids left out (docs/adr/0708).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "voidArea": {
+                "description": "The voids' area: shafts, lift shafts, openings in the floor.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "area"
@@ -484081,6 +484266,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.",
+                "type": "boolean"
               },
               "volume": {
                 "format": "double",
@@ -484325,6 +484514,13 @@
                 "x-unit": "count"
               },
               "spaceArea": {
+                "description": "The rooms' area, voids left out (docs/adr/0708).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "voidArea": {
+                "description": "The voids' area: shafts, lift shafts, openings in the floor.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "area"
@@ -484487,6 +484683,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.",
+                "type": "boolean"
               },
               "volume": {
                 "format": "double",
@@ -492877,6 +493077,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -503670,6 +503874,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -514382,6 +514590,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -525053,6 +525265,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -535771,6 +535987,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -546089,6 +546309,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -556784,6 +557008,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -567266,6 +567494,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -577583,6 +577815,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -588373,6 +588609,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -598915,6 +599155,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -609232,6 +609476,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -620174,6 +620422,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -630499,6 +630751,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -674127,6 +674383,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -684788,6 +685048,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -695111,6 +695375,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -705906,6 +706174,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -716931,6 +717203,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -727284,6 +727560,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -738979,6 +739259,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -749707,6 +749991,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -760944,6 +761232,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -771864,6 +772156,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -783594,6 +783890,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -794579,6 +794879,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -806088,6 +806392,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -816970,6 +817278,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -827694,6 +828006,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -838620,6 +838936,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -849335,6 +849655,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -859954,6 +860278,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -870601,6 +870929,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -881170,6 +881502,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -891714,6 +892050,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -902303,6 +902643,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -912797,6 +913141,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -923406,6 +923754,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -934058,6 +934410,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -944699,6 +945055,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -955675,6 +956035,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -971581,6 +971945,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -982407,6 +982775,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -993705,6 +994077,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1004946,6 +1005322,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1016356,6 +1016736,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1027856,6 +1028240,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1038205,6 +1038593,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1049432,6 +1049824,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1127098,6 +1127494,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1181816,6 +1182216,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1193247,6 +1193651,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1203846,6 +1204254,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1214610,6 +1215022,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1227450,6 +1227866,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1238185,6 +1238605,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1248813,6 +1249237,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1259377,6 +1259805,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1269988,6 +1270420,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1280587,6 +1281023,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1291148,6 +1291588,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1301957,6 +1302401,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1312788,6 +1313236,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1323577,6 +1324029,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1334182,6 +1334638,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1344729,6 +1345189,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1355373,6 +1355837,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1366020,6 +1366488,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1376901,6 +1377373,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1387722,6 +1388198,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [
@@ -1398840,6 +1399320,10 @@
                   "null"
                 ]
               },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
+              },
               "wipeout": {
                 "anyOf": [
                   {
@@ -1409590,6 +1410074,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "void": {
+                "description": "A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area\nkept out of the spaces' total and summed apart (schema 116). Absent: a room.",
+                "type": "boolean"
               },
               "wipeout": {
                 "anyOf": [

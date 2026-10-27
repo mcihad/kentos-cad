@@ -71,6 +71,8 @@ pub struct Spec {
     pub method: Method,
     pub number: Option<String>,
     pub name: Option<String>,
+    /// A void (docs/adr/0708): drawn crossed.
+    pub void: bool,
 }
 
 fn word(v: &Json, name: &str) -> Option<String> {
@@ -81,7 +83,7 @@ fn word(v: &Json, name: &str) -> Option<String> {
 }
 
 impl crate::api::json::Flat for Spec {
-    const NAMES: &'static [&'static str] = &["seed", "method", "number", "name"];
+    const NAMES: &'static [&'static str] = &["seed", "method", "number", "name", "void"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         let method = match word(v, "method").as_deref() {
@@ -93,6 +95,7 @@ impl crate::api::json::Flat for Spec {
             method,
             number: word(v, "number"),
             name: word(v, "name"),
+            void: matches!(v.get("void"), Json::Bool(true)),
         })
     }
 
@@ -108,6 +111,9 @@ impl crate::api::json::Flat for Spec {
         }
         if let Some(n) = &self.name {
             field(out, first, "name", n.as_str());
+        }
+        if self.void {
+            field(out, first, "void", &true);
         }
     }
 }
@@ -312,7 +318,79 @@ fn text(p: Vec2, s: String, height: f64) -> Shape {
     }
 }
 
-/// A space's pieces at 1:`scale`: its rings and its label's lines, centred one under another.
+/// A void's cross (docs/adr/0708): for each part the two diagonals of the rectangle round it along its longest edge,
+/// kept where they run inside the part (its holes left out). A rectangular shaft's run corner to corner.
+pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
+    let mut out = Vec::new();
+    for part in parts {
+        let outer = crate::entity::polygon_ring(&part.outer.pts, part.outer.bulges.as_deref());
+        let holes: Vec<Vec<Vec2>> = part
+            .holes
+            .iter()
+            .map(|h| crate::entity::polygon_ring(&h.pts, h.bulges.as_deref()))
+            .collect();
+        let n = outer.len();
+        if n < 3 {
+            continue;
+        }
+        // The longest edge's direction, the first of equals.
+        let mut along = Vec2::new(0.0, 0.0);
+        let mut longest = 0.0;
+        for i in 0..n {
+            let (a, b) = (outer[i], outer[(i + 1) % n]);
+            let l = crate::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+            if l > longest {
+                longest = l;
+                along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+            }
+        }
+        if !(longest > 0.0) {
+            continue;
+        }
+        let across = Vec2::new(-along.y, along.x);
+        let o = outer[0];
+        let (mut u0, mut u1, mut v0, mut v1) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+        for p in &outer {
+            let (dx, dy) = (p.x - o.x, p.y - o.y);
+            let (u, v) = (dx * along.x + dy * along.y, dx * across.x + dy * across.y);
+            u0 = crate::jsmath::js_min(u0, u);
+            u1 = js_max(u1, u);
+            v0 = crate::jsmath::js_min(v0, v);
+            v1 = js_max(v1, v);
+        }
+        let at = |u: f64, v: f64| Vec2::new(o.x + along.x * u + across.x * v, o.y + along.y * u + across.y * v);
+        for (a, b) in [(at(u0, v0), at(u1, v1)), (at(u1, v0), at(u0, v1))] {
+            let mut ts = vec![0.0, 1.0];
+            for ring in std::iter::once(&outer).chain(&holes) {
+                let m = ring.len();
+                for i in 0..m {
+                    if let Some(h) =
+                        crate::geom::intersect::seg_seg(a, b, ring[i], ring[(i + 1) % m], 1e-12)
+                    {
+                        ts.push(h.t.clamp(0.0, 1.0));
+                    }
+                }
+            }
+            ts.sort_by(f64::total_cmp);
+            ts.dedup_by(|x, y| (*x - *y).abs() < 1e-9);
+            for w in ts.windows(2) {
+                let (t0, t1) = (w[0], w[1]);
+                let mid = Vec2::new(a.x + (b.x - a.x) * (t0 + t1) / 2.0, a.y + (b.y - a.y) * (t0 + t1) / 2.0);
+                let inside = crate::geometry::point_in_polygon(mid, &outer)
+                    && !holes.iter().any(|h| crate::geometry::point_in_polygon(mid, h));
+                if inside {
+                    out.push(Shape::Line {
+                        a: Vec2::new(a.x + (b.x - a.x) * t0, a.y + (b.y - a.y) * t0),
+                        b: Vec2::new(a.x + (b.x - a.x) * t1, a.y + (b.y - a.y) * t1),
+                    });
+                }
+            }
+        }
+    }
+    out
+}
+
+/// A space's pieces at 1:`scale`: its rings, a void's cross and its label's lines, centred one under another.
 pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
     let mut out: Vec<Shape> = parts
         .iter()
@@ -326,6 +404,9 @@ pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
             widths: None,
         })
         .collect();
+    if spec.void {
+        out.extend(void_cross(parts));
+    }
     // One text of its lines, centred on the pole: its lines grow together as the view asks (docs/adr/0205 §5).
     if let Some(at) = label_at(parts) {
         let h = LABEL_MM * scale / 1000.0;

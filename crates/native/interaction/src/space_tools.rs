@@ -64,6 +64,23 @@ fn drawn_space(e: &Entity, tone: Tone, out: &mut Preview) {
     let Entity::Space(s) = e else { return };
     out.strokes
         .extend(Outline::of(&shape(e), None, 2.0, tone).strokes);
+    // A void's cross (docs/adr/0708), as the drawing shows it.
+    if s.space.void {
+        use kentos_geometry_core::geom::arrangement::{Area as CoreArea, Ring};
+        let ring = |r: &kentos_commands::SpaceRing| Ring {
+            pts: r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect(),
+            bulges: r.bulges.clone(),
+        };
+        let parts: Vec<CoreArea> = s
+            .space
+            .parts
+            .iter()
+            .map(|p| CoreArea { outer: ring(&p.outer), holes: p.holes.iter().map(ring).collect() })
+            .collect();
+        for line in kentos_geometry_core::geom::space::void_cross(&parts) {
+            out.strokes.extend(Outline::of(&line, None, 1.5, tone).strokes);
+        }
+    }
     out.areas.push(Area {
         rings: rings_of(&s.space.parts),
         fill: 0.16,
@@ -90,6 +107,8 @@ pub struct SpaceTool {
     number: Option<String>,
     name: Option<String>,
     usage: Option<String>,
+    /// Boşluk (docs/adr/0708): the space written is a void — a shaft, a lift shaft, an opening in the floor.
+    void: bool,
     level: crate::space_level::Choice,
     sources: crate::space_sources::Choice,
     /// Çiz: the boundary's corners so far.
@@ -145,6 +164,7 @@ impl SpaceTool {
             name: self.name.clone(),
             usage: self.usage.clone(),
             arch: self.level.arch(),
+            void: self.void.then_some(true),
             ..NewSpace::default()
         }
     }
@@ -219,11 +239,12 @@ impl SpaceTool {
         if points::written(result, cx).is_none() {
             return false;
         }
+        let kind = if self.void { "Boşluk" } else { "Mahal" };
         let what = match (&self.number, &self.name) {
-            (Some(n), Some(a)) => format!("Mahal {n} {a} oluşturuldu."),
-            (Some(n), None) => format!("Mahal {n} oluşturuldu."),
-            (None, Some(a)) => format!("Mahal “{a}” oluşturuldu."),
-            (None, None) => "Mahal oluşturuldu.".to_owned(),
+            (Some(n), Some(a)) => format!("{kind} {n} {a} oluşturuldu."),
+            (Some(n), None) => format!("{kind} {n} oluşturuldu."),
+            (None, Some(a)) => format!("{kind} “{a}” oluşturuldu."),
+            (None, None) => format!("{kind} oluşturuldu."),
         };
         cx.say(Level::Success, what);
         if let Some(n) = &self.number {
@@ -308,6 +329,7 @@ impl Tool for SpaceTool {
                 "K",
                 self.usage.clone().unwrap_or_else(|| "Yok".into()),
             )
+            .toggle("Boşluk", "V", self.void)
             .toggle("Çiz", "Ç", self.draw);
         if self.draw && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
@@ -374,6 +396,7 @@ impl Tool for SpaceTool {
             "N" => self.ask = Some(Ask::Number),
             "A" => self.ask = Some(Ask::Name),
             "K" => self.ask = Some(Ask::Usage),
+            "V" => self.void = !self.void,
             "L" => self.level.next(),
             "D" if !self.draw => {
                 self.columns = Some(match self.columns.unwrap_or(SpaceColumns::Net) {
@@ -439,6 +462,7 @@ impl Tool for SpaceTool {
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
             Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
+            Setting::toggle("V", "Boşluk (şaft)", self.void),
             Setting::choice(
                 "Ç",
                 "Sınır",
@@ -499,6 +523,7 @@ impl Tool for SpaceTool {
             "N" => self.number = text,
             "A" => self.name = text,
             "K" => self.usage = text,
+            "V" if matches!(value, "yes" | "no") => self.void = value == "yes",
             "Ç" if matches!(value, "find" | "draw") => {
                 if !self.pts.is_empty() && self.draw != (value == "draw") {
                     cx.say(
@@ -576,6 +601,7 @@ impl Tool for SpaceTool {
                 (Some(why), _) if !self.draw || self.pts.len() >= 2 => {
                     vec!["Mahal".to_owned(), why.clone()]
                 }
+                (_, Some(a)) if self.void => vec![format!("Boşluk · {}", format.area(a)), "Alanı mahal toplamına katılmaz".to_owned()],
                 (_, Some(a)) => vec![format!("Mahal · {}", format.area(a))],
                 _ => vec!["Mahal".to_owned()],
             },

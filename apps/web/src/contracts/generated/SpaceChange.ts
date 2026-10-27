@@ -23,4 +23,8 @@ method?: SpaceMethod,
 /**
  * Physical column deduction; absent keeps legacy wall-only areas.
  */
-columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?: number | null, floor?: string | null, wall?: string | null, ceiling?: string | null, };
+columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?: number | null, floor?: string | null, wall?: string | null, ceiling?: string | null, 
+/**
+ * A void or a room again (docs/adr/0708).
+ */
+void?: boolean, };

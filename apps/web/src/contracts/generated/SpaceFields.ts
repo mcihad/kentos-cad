@@ -39,4 +39,9 @@ method?: SpaceMethod, number?: string, name?: string, usage?: string, arch?: Arc
 /**
  * Floor to ceiling, metres; absent: its level's.
  */
-height?: number, finishes?: SpaceFinishes, broken?: SpaceBreak, };
+height?: number, finishes?: SpaceFinishes, 
+/**
+ * A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
+ * kept out of the spaces' total and summed apart (schema 116). Absent: a room.
+ */
+void?: boolean, broken?: SpaceBreak, };

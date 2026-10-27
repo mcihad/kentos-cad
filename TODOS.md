@@ -91,6 +91,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-ELEM-03 / ADR0707: `cad.grids.create`'in `system`'i (aks ağı ve
   kesişim kolonları). Web'in Aks ağı aracı (imleçle gelen ağ, İki nokta,
   “3*6” aralıklar) ve işleyicisi `cad.grids.create.system.json` ile sınanmalı.
+- ARCH-ELEM-01 / ADR0708: mahalin `void`'u (KCAD 116), çapraz, metrajın
+  `voidArea`'sı. Web'in mahal çizimi çaprazı, Metraj'ı Boşluk sütununu ve
+  Mahal aracı Boşluk seçeneğini göstermeli; `cad.spaces.*.json` ile sınanmalı.
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı

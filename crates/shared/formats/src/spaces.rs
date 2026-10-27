@@ -50,6 +50,7 @@ pub fn spec(s: &SpaceFields) -> Spec {
         method: method(s.method),
         number: s.number.clone(),
         name: s.name.clone(),
+        void: s.void,
     }
 }
 

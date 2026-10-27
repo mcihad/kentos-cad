@@ -36667,6 +36667,7 @@ class NewSpace(_Model):
         scope: Persistent source scope for a seeded room; drawn rooms use project only.
         seed: A point inside it: its boundary is found from the walls round it. Unit: length.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+        void: A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
     """
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
@@ -36681,6 +36682,7 @@ class NewSpace(_Model):
     seed: Vec2 | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
+    void: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36710,6 +36712,8 @@ class NewSpace(_Model):
             out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
+        if self.void is not UNSET:
+            out["void"] = self.void
         return out
 
     @classmethod
@@ -36728,6 +36732,7 @@ class NewSpace(_Model):
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
+            void=data.get("void", UNSET),
         )
 
 
@@ -45687,17 +45692,19 @@ class QmlImported(_Model):
 class QuantityTotals(_Model):
     """The rows' sums.
     Attributes:
-        space_area: Unit: area.
+        space_area: The rooms' area, voids left out (docs/adr/0708). Unit: area.
         wall_length: Unit: length.
         wall_net_area: Unit: area.
         openings: Unit: count.
         opening_area: Unit: area.
+        void_area: The voids' area: shafts, lift shafts, openings in the floor. Unit: area.
     """
     space_area: float
     wall_length: float
     wall_net_area: float
     openings: int
     opening_area: float
+    void_area: float | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -45706,6 +45713,8 @@ class QuantityTotals(_Model):
         out["wallNetArea"] = float(self.wall_net_area)
         out["openings"] = self.openings
         out["openingArea"] = float(self.opening_area)
+        if self.void_area is not UNSET:
+            out["voidArea"] = float(self.void_area)
         return out
 
     @classmethod
@@ -45716,6 +45725,7 @@ class QuantityTotals(_Model):
             wall_net_area=float(data["wallNetArea"]),
             openings=data["openings"],
             opening_area=float(data["openingArea"]),
+            void_area=float(data["voidArea"]) if "voidArea" in data else UNSET,
         )
 
 
@@ -52672,6 +52682,8 @@ class SpaceEntity(Entity):
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        void: A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
+            kept out of the spaces' total and summed apart (schema 116). Absent: a room.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
@@ -52704,6 +52716,7 @@ class SpaceEntity(Entity):
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     usage: str | None | Unset = UNSET
+    void: bool | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -52760,6 +52773,8 @@ class SpaceEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.usage is not UNSET:
             out["usage"] = self.usage
+        if self.void is not UNSET:
+            out["void"] = self.void
         if self.wipeout is not UNSET:
             out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
@@ -52795,6 +52810,7 @@ class SpaceEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             usage=data.get("usage", UNSET),
+            void=data.get("void", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
@@ -52810,6 +52826,8 @@ class SpaceFields(_Model):
         scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+        void: A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
+            kept out of the spaces' total and summed apart (schema 116). Absent: a room.
     """
     parts: list[SpacePart]
     arch: ArchInfo | Unset = UNSET
@@ -52824,6 +52842,7 @@ class SpaceFields(_Model):
     seed: Vec2 | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
+    void: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -52852,6 +52871,8 @@ class SpaceFields(_Model):
             out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
+        if self.void is not UNSET:
+            out["void"] = self.void
         return out
 
     @classmethod
@@ -52870,6 +52891,7 @@ class SpaceFields(_Model):
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
+            void=data.get("void", UNSET),
         )
 
 
@@ -52983,6 +53005,7 @@ class SpaceRow(_Model):
         columns: Persistent column policy; omitted for legacy/ignore rows.
         height: Unit: elevation.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+        void: A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
         volume: Unit: volume.
     """
     uid: str
@@ -53000,6 +53023,7 @@ class SpaceRow(_Model):
     scope: SpaceScope | SpaceScopeName | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
+    void: bool | Unset = UNSET
     volume: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -53029,6 +53053,8 @@ class SpaceRow(_Model):
             out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
+        if self.void is not UNSET:
+            out["void"] = self.void
         if self.volume is not UNSET:
             out["volume"] = None if self.volume is None else float(self.volume)
         return out
@@ -53051,6 +53077,7 @@ class SpaceRow(_Model):
             scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
+            void=data.get("void", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
         )
 
@@ -74914,6 +74941,7 @@ class SetSpacesOperation(SpacesOperation):
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
         scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
         sources: Explicit UUIDs; null clears the list and restores scope/level search.
+        void: A void or a room again (docs/adr/0708).
     """
     TAG_VALUE: ClassVar[str] = "set"
     ceiling: str | None | Unset = UNSET
@@ -74928,6 +74956,7 @@ class SetSpacesOperation(SpacesOperation):
     scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
+    void: bool | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -74956,6 +74985,8 @@ class SetSpacesOperation(SpacesOperation):
             out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
+        if self.void is not UNSET:
+            out["void"] = self.void
         if self.wall is not UNSET:
             out["wall"] = self.wall
         return out
@@ -74975,6 +75006,7 @@ class SetSpacesOperation(SpacesOperation):
             scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
+            void=data.get("void", UNSET),
             wall=data.get("wall", UNSET),
         )
 

@@ -8,6 +8,14 @@
 //! KENTOS_SHOTS_ONLY=mahal-serit,mahal-oda,mahal-arac,mahal-brut,mahal-oznitelikler,mahal-bol,mahal-metraj,mahal-metraj-duvar,mahal-kayip cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0708's shaft: walled in against the kitchen's outer wall with Bölme duvar 10; Mahal with Boşluk under
+//! the cursor inside it (the cross); the shaft written beside the rooms; Metraj with its Boşluk column and the voids
+//! summed apart; the shaft's Öznitelikler:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=saft-arac,saft-yazildi,saft-metraj,saft-oznitelikler cargo test -p kentos-desktop tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -152,8 +160,75 @@ fn lost(app: &mut App) {
     hover(app, [9.0, -1.0]);
 }
 
+/// The room with a shaft walled in against the kitchen's outer wall (0.65 × 1.10 m inside).
+fn with_shaft(app: &mut App) {
+    crate::opening_scenes::room(app, 50.0);
+    for (a, b) in [([7.0, 1.8], [6.2, 1.8]), ([6.2, 1.8], [6.2, 3.0]), ([6.2, 3.0], [7.0, 3.0])] {
+        crate::wall_scenes::wall_between(app, "Bölme duvar 10", a, b);
+    }
+    on_level(app);
+}
+
+/// Mahal with Boşluk, the cursor inside the shaft: the void it would write, crossed.
+fn shaft_tool(app: &mut App) {
+    with_shaft(app);
+    app.command_expanded = true;
+    run(app, "tool.space");
+    typed(app, "A");
+    typed(app, "Şaft");
+    typed(app, "V");
+    hover(app, [6.55, 2.4]);
+}
+
+/// The rooms and the shaft written: Z-01 Salon, Z-02 Mutfak round the shaft, S-01 Şaft crossed.
+fn shaft_written(app: &mut App) {
+    with_shaft(app);
+    run(app, "tool.space");
+    typed(app, "N");
+    typed(app, "Z-01");
+    typed(app, "A");
+    typed(app, "Salon");
+    click(app, [2.0, 2.5]);
+    typed(app, "A");
+    typed(app, "Mutfak");
+    click(app, [5.2, 2.5]);
+    typed(app, "N");
+    typed(app, "S-01");
+    typed(app, "A");
+    typed(app, "Şaft");
+    typed(app, "V");
+    click(app, [6.55, 2.4]);
+    typed(app, "");
+    hover(app, [9.0, -1.0]);
+}
+
+fn shaft_quantities(app: &mut App) {
+    shaft_written(app);
+    run(app, "arch.quantities");
+}
+
+/// The shaft selected: its Boşluk row.
+fn shaft_props(app: &mut App) {
+    shaft_written(app);
+    let shaft = app.document.as_ref().and_then(|d| {
+        d.model.entities().find_map(|e| match e {
+            kentos_commands::Entity::Space(s) if s.space.void => Some(Slot(e.base().id)),
+            _ => None,
+        })
+    });
+    if let Some(slot) = shaft {
+        app.selection.set([slot]);
+    }
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("saft-arac", shaft_tool),
+        ("saft-yazildi", shaft_written),
+        ("saft-metraj", shaft_quantities),
+        ("saft-oznitelikler", shaft_props),
         ("mahal-serit", ribbon),
         ("mahal-oda", written),
         ("mahal-arac", tool),

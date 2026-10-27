@@ -559,6 +559,10 @@ impl Audit<'_> {
                     None,
                 ));
             }
+            // A void (a shaft, docs/adr/0708) is small and narrow by design: no leftover-piece finding.
+            if s.void {
+                continue;
+            }
             let area = crate::spaces::area_of(&s.parts);
             let perimeter = crate::spaces::perimeter_of(&s.parts);
             if area < limits.min_area {

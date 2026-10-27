@@ -225,6 +225,11 @@ pub struct SpaceFields {
     #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceFinishes>", optional))]
     pub finishes: SpaceFinishes,
+    /// A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
+    /// kept out of the spaces' total and summed apart (schema 116). Absent: a room.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub void: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<SpaceBreak>,

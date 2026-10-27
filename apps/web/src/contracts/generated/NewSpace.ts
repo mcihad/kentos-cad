@@ -34,4 +34,8 @@ method?: SpaceMethod,
 /**
  * Physical column deduction; absent keeps legacy wall-only areas.
  */
-columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: ArchInfo, height?: number, finishes?: SpaceFinishes, attrs?: { [key in string]: string }, };
+columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: ArchInfo, height?: number, finishes?: SpaceFinishes, 
+/**
+ * A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
+ */
+void?: boolean, attrs?: { [key in string]: string }, };

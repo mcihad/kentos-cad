@@ -2226,6 +2226,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "space" and e.get("void") for e in entities):
+        # A space that is a void (docs/adr/0708).
+        return 116
     if any(e["kind"] in ("stair", "ramp") and "railings" in e for e in entities):
         # A stair's or a ramp's railings (docs/adr/0705).
         return 115
@@ -2856,7 +2859,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-116.kcad"] = container(root(cmap(parts), version=uint(116)))
+    files["schema-version-117.kcad"] = container(root(cmap(parts), version=uint(117)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4878,6 +4881,12 @@ def build():
     assert rp.count(b"\x67version\x18\x73") == 1
     out["railings.kcad"] = container(rp)
     out["broken/railings-in-schema-114.kcad"] = container(rp.replace(b"\x67version\x18\x73", b"\x67version\x18\x72"))
+    # Schema 116 (docs/adr/0708): a space that is a void.
+    voids = load("space-voids.json")
+    vp = document(voids)
+    assert vp.count(b"\x67version\x18\x74") == 1
+    out["space-voids.kcad"] = container(vp)
+    out["broken/space-voids-in-schema-115.kcad"] = container(vp.replace(b"\x67version\x18\x74", b"\x67version\x18\x73"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))
