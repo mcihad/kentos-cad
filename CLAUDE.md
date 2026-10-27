@@ -28,6 +28,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Açıklığın numarası yerleştirirken (27 Ekim 2026; [ADR0714](docs/adr/0714-opening-numbers-on-placement.md)).**
+  Revit'in Mark'ı gibi: Kapı/Pencere/Boşluk'un Numara (N) ayarı Otomatik (aynı
+  biçimin son numarasından artar, genişliği korur; yoksa K1/P1/B1), yazılan
+  numaradan sırayla, Yok; kullanılan atlanır; numara `cad.openings.create`
+  girdisinde. Etiketin yazısı zeminli: duvar üstündeki etiket okunur.
+
 - **Etkin kat (27 Ekim 2026; [ADR0713](docs/adr/0713-active-level.md)).**
   Archicad'in geçerli katı gibi: çizim zemin katta açılır (kotu 0, yoksa ilk);
   durum çubuğunun Kat hücresi ve yeni nesne çizen araçların ilk ayar satırı

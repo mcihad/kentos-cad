@@ -472,6 +472,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   örnekten tür/en, net pay/host önizlemesi; aynı native/Python/MCP komutu.
   40 yeni bağımsız ortak durum, mevcut durumların korunumu, gerçek düz/ters/yaylı
   GUI ve bağımsız kaydet/aç kontrolü. Kanıt: `docs/baseline/2026-10-25-architecture-openings/`.
+- [x] Numara dilimi [ADR0714](../docs/adr/0714-opening-numbers-on-placement.md):
+  Revit'in Mark'ı gibi yerleştirirken numara: kapı K1, K2…, pencere P1…, boşluk
+  B1…; yazılan numaradan sırayla, kullanılan atlanır, Yok numarasız; numara komut
+  girdisinde. Etiketin yazısı zeminli (duvar üstündeki kapı etiketi okunur).
+  3 araç testi, tam takımlar, gerçek GUI (`arac-daire-kapi-numara`, `-etiketler`).
 - [x] Yeni yöntemlerle tutamaç/host değişimi/kalınlık/bölme/undo birleşik native kabulü
   (ADR 0663): iki yöntem × düz/ters host; merkez tutamacı gerçek fare, tek undo/redo
   ve kaydet/aç ile doğrulandı. Karışık sıcak seçim kısmi yazmadan reddedilir;
@@ -1149,6 +1154,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-OPEN-01 / ADR0714 | Yerleştirirken numara (Otomatik K/P/B, yazılan numaradan sırayla, Yok) ve zeminli etiket yazısı; daire yürüyüşünde etiketler K1–K3/P1–P3 doldu. 3 araç testi, tam etkileşim/masaüstü takımları, gerçek GUI. | [x] Numara alt maddesi; odaya göre numara açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0713 | Etkin kat: zemin katta açılış, durum çubuğunda ve araç ayarlarında Kat menüsü; duvar, kolon, merdiven, rampa, aks ağı etkin kata; mahal/ayırıcı/iç zincir o katta duvar varken izler. Belgele'de Duvar ölçüleri ile İç ölçü zinciri tek “Ölçü ▾” (1440 px'te Proje paneli yazılı kaldı). 3+2 test, tam etkileşim (760) ve masaüstü (1343) takımı, gerçek GUI. | [~] İlk dilim; kat görünümü ve toplu kat atama açık |
 | 2026-10-27 | ARCH-SPACE-02 düzeltme / ADR0344 eki | Daire yürüyüşü (kabuk, bölmeler, açıklıklar, toplu mahal, Hepsini etiketle, ölçüler, iç zincir, Metraj, Denetim) gerçek GUI'de: etiketli mahal kendi yazısını da çiziyordu (alan iki kez) → etiket onun yazısı; şablonun boş satırları atılır; numarasız açıklığın boş etiketi `tag_empty` ile ve önizlemede söylenir. 164+29 durum yenilendi, çekirdek/araç testleri, resimler. Kalan bulgular: araçlar kat atamıyor (Denetim her duvarı işaretliyor), açıklıklar numarasız başlıyor. | [x] Üç kusur kapandı |
 | 2026-10-27 | ARCH-EDIT-01 / ADR0712 | Kolonun geçici ölçüsü: dört yanda paralel en yakın duvar yüzüne/kolon yanına net mesafe, sayıya bas-yaz-Enter kolonu kaydırır, mahal izler, akslara bağlı kolon nedenini hemen söyler; `cad.arch.edit` distance, `cad.columns.distances`. 22+23 durum, 3+4+2 test, Python/MCP, gerçek GUI resimleri; geçici ölçülerde maskeli sayı ve en yakın sayıya tıklama. | [~] Kolon dilimi; aksa mesafe, duvar boyu, kilitli referans açık |

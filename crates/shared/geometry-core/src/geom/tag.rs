@@ -274,7 +274,8 @@ pub fn pieces(at: Vec2, spec: &Spec, scale: f64) -> Vec<Piece> {
             rotation: 0.0,
             align: Some(TextAlign::MiddleCenter),
             width_factor: None,
-            mask: None,
+            // Over a mask of the drawing's ground: a door's tag on its wall stays readable (docs/adr/0714).
+            mask: Some(true),
             box_width: None,
             line_spacing: None,
             runs: None,

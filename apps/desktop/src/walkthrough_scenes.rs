@@ -105,6 +105,13 @@ fn openings(app: &mut App) {
     hover(app, [14.0, 11.0]);
 }
 
+/// docs/adr/0714: Kapı again by the north wall, its settings' Numara the next one (K4 after K1–K3).
+fn door_tool(app: &mut App) {
+    openings(app);
+    run(app, "tool.door");
+    hover(app, [6.0, 8.8]);
+}
+
 /// Toplu mahal bul: the rooms it found, before Enter.
 fn rooms_preview(app: &mut App) {
     openings(app);
@@ -254,6 +261,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("daire-bolme-onizleme", partition_preview),
         ("daire-bolmeler", partitions),
         ("daire-aciklik", openings),
+        ("daire-kapi-numara", door_tool),
         ("daire-mahal-onizleme", rooms_preview),
         ("daire-mahaller", rooms),
         ("daire-etiket-onizleme", tag_preview),

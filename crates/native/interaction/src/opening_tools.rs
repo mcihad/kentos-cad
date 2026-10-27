@@ -3,7 +3,8 @@
 //! step each, and the plan is the preview.
 //!
 //! - Kapı, Pencere, Boşluk: with the pointer by a wall, the opening the command would put there is drawn; a click
-//!   writes it and the tool stays. Tür (T) the type, Genişlik (E) a width over the type's, Yan (Y) the side it opens
+//!   writes it and the tool stays. Numara (N, docs/adr/0714): Otomatik numbers it after the last numbered opening of
+//!   its form (K3 → K4; none yet: K1, P1, B1), a number typed starts there, Yok leaves it unnumbered. Tür (T) the type, Genişlik (E) a width over the type's, Yan (Y) the side it opens
 //!   to (Otomatik: the pointer's side), Menteşe (M) its hinge's end, Uzaklık (U) its near jamb that far from the
 //!   wall's near end (a number; 0 or Esc takes it off), Orta (O) centred on the edge.
 //! - Açıklığı çevir: a click turns the side it opens to, Shift+click its hinge.
@@ -70,6 +71,10 @@ enum Ask {
 #[derive(Clone, Debug)]
 pub struct OpeningTool {
     form: OpeningForm,
+    /// What number the next opening takes (docs/adr/0714).
+    numbering: Numbering,
+    /// That number, as last worked out (the settings show it).
+    next: Option<String>,
     /// The type's id; none: the form's first.
     kind: Option<String>,
     width: Option<f64>,
@@ -89,6 +94,8 @@ impl OpeningTool {
     fn with(form: OpeningForm) -> Self {
         Self {
             form,
+            numbering: Numbering::Auto,
+            next: None,
             kind: None,
             width: None,
             side: None,
@@ -119,6 +126,74 @@ impl OpeningTool {
             OpeningForm::Window => "Pencere",
             OpeningForm::Opening => "Boşluk",
         }
+    }
+
+    /// The form's first number's prefix: Kapı K, Pencere P, Boşluk B.
+    fn prefix(&self) -> &'static str {
+        match self.form {
+            OpeningForm::Door => "K",
+            OpeningForm::Window => "P",
+            OpeningForm::Opening => "B",
+        }
+    }
+
+    /// The number the next opening takes (docs/adr/0714): none with Yok; the one typed, else after the last numbered
+    /// opening of its form (the highest slot), else the form's first; on until no opening of its form has it.
+    fn next_number(&self, doc: &kentos_domain::Document) -> Option<String> {
+        let mut used = std::collections::HashSet::new();
+        let mut last: Option<(u32, String)> = None;
+        for e in doc.entities() {
+            if let Entity::Opening(o) = e
+                && o.opening.form == self.form
+                && let Some(n) = o.opening.number.as_ref().filter(|n| !n.is_empty())
+            {
+                used.insert(n.clone());
+                if last.as_ref().is_none_or(|(id, _)| e.base().id > *id) {
+                    last = Some((e.base().id, n.clone()));
+                }
+            }
+        }
+        let mut number = match &self.numbering {
+            Numbering::Off => return None,
+            Numbering::Next(n) => n.clone(),
+            Numbering::Auto => last.map_or_else(|| format!("{}1", self.prefix()), |(_, n)| next_after(&n)),
+        };
+        // Bounded: as many steps as there are numbers in use and one more.
+        for _ in 0..=used.len() {
+            if !used.contains(&number) {
+                break;
+            }
+            number = next_after(&number);
+        }
+        Some(number)
+    }
+
+    /// Numara's words in the settings.
+    fn number_shown(&self) -> String {
+        match (&self.numbering, &self.next) {
+            (Numbering::Off, _) => "Yok".into(),
+            (Numbering::Next(n), _) => n.clone(),
+            (Numbering::Auto, Some(n)) => format!("{n} · otomatik"),
+            (Numbering::Auto, None) => "Otomatik".into(),
+        }
+    }
+
+    /// Numara (N) given: empty or “otomatik” Otomatik, “yok” or “-” none, else the number to start at.
+    fn set_numbering(&mut self, value: &str, cx: &mut Context<'_>) -> bool {
+        let value = js_trim(value);
+        let folded = value.to_lowercase();
+        self.numbering = if value.is_empty() || folded == "otomatik" || folded.ends_with("· otomatik") {
+            Numbering::Auto
+        } else if folded == "yok" || value == "-" {
+            Numbering::Off
+        } else if value.chars().count() > 128 {
+            cx.say(Level::Warn, "Numara en çok 128 karakter olabilir.");
+            return false;
+        } else {
+            Numbering::Next(value.to_owned())
+        };
+        self.see(cx);
+        true
     }
 
     /// The type chosen, or the form's first.
@@ -158,6 +233,8 @@ impl OpeningTool {
                 width: span.is_none().then_some(self.width).flatten(),
                 hand: Some(self.hand),
                 side: self.side,
+                // Numara (docs/adr/0714), explicit in the input (CMD-07).
+                number: self.next_number(cx.doc),
                 ..NewOpening::default()
             }],
             color: cx.draft.color_text(),
@@ -177,6 +254,7 @@ impl OpeningTool {
 
     /// The plan at the hover, drawn.
     fn see(&mut self, cx: &Context<'_>) {
+        self.next = self.next_number(cx.doc);
         self.drawn = Preview::default();
         self.why = None;
         self.placement.info.clear();
@@ -399,10 +477,21 @@ impl Tool for OpeningTool {
         let Some(input) = self.create_input(slot, at, cx) else {
             return;
         };
+        let number = input.openings.first().and_then(|o| o.number.clone());
         let result = openings_create::execute(&mut ExecutionContext::new(cx.doc), input);
         if points::written(result, cx).is_some() {
             self.placement.first = None;
-            cx.say(Level::Success, format!("{} eklendi.", self.label()));
+            // A number typed was the first: the next ones go on from it.
+            if matches!(self.numbering, Numbering::Next(_)) {
+                self.numbering = Numbering::Auto;
+            }
+            cx.say(
+                Level::Success,
+                match number {
+                    Some(n) => format!("{} {n} eklendi.", self.label()),
+                    None => format!("{} eklendi.", self.label()),
+                },
+            );
         }
         self.see(cx);
     }
@@ -622,6 +711,30 @@ enum Action {
     Flip,
     Move,
     Number,
+}
+
+/// What number a placed opening takes (docs/adr/0714).
+#[derive(Clone, Debug, Default, PartialEq)]
+enum Numbering {
+    /// After the last numbered opening of its form (K3 → K4), else the form's first (K1, P1, B1).
+    #[default]
+    Auto,
+    /// None.
+    Off,
+    /// This one; the next ones on from it.
+    Next(String),
+}
+
+/// `n` with its trailing number one up, as wide as it was (K-07 → K-08, K9 → K10, K-99 → K-100); one without a
+/// number (or one too long to count) with 1 after it.
+pub(crate) fn next_after(n: &str) -> String {
+    let digits = n.chars().rev().take_while(char::is_ascii_digit).count();
+    // ASCII digits: as many bytes as letters.
+    let (head, tail) = n.split_at(n.len() - digits);
+    match tail.parse::<u128>() {
+        Ok(v) if !tail.is_empty() => format!("{head}{:0width$}", v + 1, width = tail.len()),
+        _ => format!("{n}1"),
+    }
 }
 
 /// Açıklığı çevir, Açıklığı taşı, Numarala.

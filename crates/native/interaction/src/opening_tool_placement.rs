@@ -233,6 +233,8 @@ impl OpeningTool {
         distance.editable = !self.middle;
         let mut rows = vec![
             Setting::choice("T", "Tür", self.option_choices("T")),
+            // Numara (docs/adr/0714): Otomatik, a number to start at, Yok.
+            Setting::text("N", "Numara", self.number_shown()),
             Setting::text("E", "Genişlik", f.length(self.width.unwrap_or(kind.width))),
             Setting::choice(
                 "O",
@@ -289,6 +291,9 @@ impl OpeningTool {
         rows
     }
     pub(super) fn apply_settings(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if key == "N" {
+            return self.set_numbering(value, cx);
+        }
         if matches!(key, "B" | "F" | "R" | "A") {
             return self.placement_configure(key, value, cx);
         }
