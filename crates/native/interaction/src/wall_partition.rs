@@ -1,4 +1,6 @@
-//! Measured partition: picks references; native command owns every construction coordinate.
+//! Measured partition: picks references; native command owns every construction coordinate. The side follows the
+//! pointer (the source edge's side it is on) until Sol or Sağ is chosen; the preview's distance is a dimension with its
+//! number (docs/adr/0657's 27 October addendum).
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Stroke, Tag};
 use crate::tool_settings::{Setting, choices};
@@ -14,6 +16,8 @@ pub struct Partition {
     candidates: Vec<(WallEdgeRef, String)>,
     mode: u8,
     side: PartitionSide,
+    /// Sol or Sağ was chosen: the pointer no longer moves the side.
+    side_chosen: bool,
     measure: PartitionMeasure,
     distance: f64,
     anchor: f64,
@@ -116,9 +120,24 @@ impl Partition {
                     false,
                     [4.0, 4.0],
                 ));
-                self.drawn
-                    .strokes
-                    .push(Stroke::solid(output.dimension.map(map).to_vec(), false));
+                // The distance as a dimension with its number over a mask, as the temporary dimensions.
+                let [a, b] = output.dimension.map(map);
+                if (b.x - a.x).hypot(b.y - a.y) > 1e-9 {
+                    let height = cx.view.world_length(12.0);
+                    let entity = crate::opening_distance::dimension(a, b, 0.0, height);
+                    let drawn = crate::wall_dimensions::dimension_preview(
+                        &entity,
+                        &cx.format(),
+                        cx.doc.settings().drawing_font,
+                    );
+                    self.drawn.strokes.extend(drawn.strokes);
+                    self.drawn.texts.extend(
+                        drawn
+                            .texts
+                            .into_iter()
+                            .map(|t| crate::tool::TextGhost { mask: true, ..t }),
+                    );
+                }
                 self.drawn.tag = Some(Tag {
                     at: map(output.dimension[1]),
                     lines: vec![
@@ -198,6 +217,25 @@ impl Partition {
             })
             .collect()
     }
+    /// The source edge's side `p` is on (its path's left or right), when there is a source.
+    fn side_of(&self, p: Vec2, cx: &Context<'_>) -> Option<PartitionSide> {
+        let r = self.source.as_ref()?;
+        let Some(Entity::Wall(w)) = kentos_domain::Uuid::parse_str(&r.wall)
+            .ok()
+            .and_then(|u| cx.doc.slot_of(u))
+            .and_then(|s| cx.doc.get(s))
+        else {
+            return None;
+        };
+        let pts = &w.wall.pts;
+        let (a, b) = (pts.get(r.edge)?, pts.get((r.edge + 1) % pts.len())?);
+        let cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+        (cross != 0.0).then_some(if cross > 0.0 {
+            PartitionSide::Left
+        } else {
+            PartitionSide::Right
+        })
+    }
     fn write(&mut self, cx: &mut Context<'_>) {
         let Some(input) = self.input_for(cx) else {
             cx.say(
@@ -272,6 +310,12 @@ impl Tool for Partition {
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover = Some(p.raw);
+        // The side the pointer is on, until one is chosen.
+        if !self.side_chosen
+            && let Some(side) = self.side_of(p.raw, cx)
+        {
+            self.side = side;
+        }
         self.see(cx)
     }
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -387,8 +431,14 @@ impl Tool for Partition {
                 "Y",
                 "Kaynağın yanı",
                 choices(
-                    &[("left", "Sol"), ("right", "Sağ")],
-                    if self.side == PartitionSide::Left {
+                    &[
+                        ("pointer", "İmlecin yanı"),
+                        ("left", "Sol"),
+                        ("right", "Sağ"),
+                    ],
+                    if !self.side_chosen {
+                        "pointer"
+                    } else if self.side == PartitionSide::Left {
                         "left"
                     } else {
                         "right"
@@ -482,12 +532,20 @@ impl Tool for Partition {
                 };
                 true
             }
+            ("Y", "pointer") => {
+                self.side_chosen = false;
+                if let Some(side) = self.hover.and_then(|p| self.side_of(p, cx)) {
+                    self.side = side;
+                }
+                true
+            }
             ("Y", "left" | "right") => {
                 self.side = if value == "left" {
                     PartitionSide::Left
                 } else {
                     PartitionSide::Right
                 };
+                self.side_chosen = true;
                 true
             }
             ("B", "source" | "between" | "length") => {

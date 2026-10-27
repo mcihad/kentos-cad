@@ -99,6 +99,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kolonda `along`/`center` yerleri. Web'in İç ölçü zinciri aracı (kesen çizgi,
   zincirin yeri, Enter kesen çizgide), `columns.ts`'in kural biti ve izleme
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-DRAW-02 / ADR0657 eki: Ölçülü bölme'de yan imleçle (İmlecin yanı),
+  önizlemede sayılı ölçü.
 - ARCH-OPEN-01 / ADR0714: Kapı/Pencere/Boşluk araçlarının Numara (N) ayarı
   (Otomatik K1/P1/B1 ve son numaradan artırma, yazılan numara, Yok) ve
   etiket yazısının maskesi web'de de olmalı.

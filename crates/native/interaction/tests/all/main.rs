@@ -111,6 +111,7 @@ mod column_distance;
 mod tagged_spaces;
 mod active_level;
 mod opening_numbers;
+mod partition_side;
 mod casework;
 mod grid_system;
 mod space_void;

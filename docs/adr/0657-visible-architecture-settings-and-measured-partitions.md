@@ -111,3 +111,16 @@ yolları dış istekteki `wall.*` alanlarına taşınır.
 Web UI ADR 0228 gereği bekler; ortak katalog ve SDK üretilir, WASM derlenir.
 Web arayüz testleri çalıştırılmaz. Global zoom/titreme performansı, tüm mimari
 araçların yeniden tasarımı, kalıcı kısıtlar ve yaylı bölme bu kabulün dışındadır.
+
+## 27 Ekim 2026 eki: yan imleçle, uzaklık ölçüyle
+
+Daire yürüyüşünde (ADR 0344'ün 27 Ekim eki) Ölçülü bölme'nin “Kaynağın yanı: Sol/Sağ” seçimi duvarın çizildiği yöne
+bağlıydı; kullanıcı yolun yönünü bilmeden tahmin ediyordu, önizlemedeki uzaklık da sayısız düz bir çizgiydi.
+
+- **İmlecin yanı** (varsayılan): kaynak kenar seçildikten sonra bölme imlecin kenarın hangi yanında olduğuna gider (AutoCAD'in
+  Ötele'si gibi). Sol ya da Sağ seçilince imleç artık yanı değiştirmez; İmlecin yanı yeniden seçilebilir. Komut değişmedi:
+  yan girdide açıktır (`side`).
+- Önizlemedeki uzaklık, geçici ölçüler gibi, sayısı zeminli bir ölçüdür (net ya da eksen, Uzaklık türüne göre).
+
+Doğrulama: `cargo test -p kentos-interaction --test all partition_side` (imlecin batısında ve doğusunda bölme, seçilen Sol
+imleçle değişmez, önizlemede zeminli sayı); resim `KENTOS_SHOTS_ONLY=daire-bolme-onizleme`.
