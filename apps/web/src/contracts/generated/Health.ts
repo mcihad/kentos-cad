@@ -11,4 +11,9 @@ commit?: string,
 /**
  * `CONTRACTS_VERSION` of this build.
  */
-contracts: number, };
+contracts: number, 
+/**
+ * Supported project.changes envelope versions. Absent on older servers: no
+ * opt-in capability, so a client must not send architectural dimension recipes.
+ */
+projectChangesVersions?: Array<number>, };

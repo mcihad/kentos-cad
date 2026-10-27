@@ -70,6 +70,8 @@ pub struct Spatial {
     store: Store,
     /// The scale a sheet's map draws the walls at, none: the drawing's (docs/adr/0339 §4).
     wall_scale: Option<f64>,
+    /// Ephemeral model view denominator; never changes the project's paper scale.
+    screen_wall_scale: Option<f64>,
     sheet_view:Option<kentos_native_application::viewport_scope::Viewport>,
     sheet_layers:Option<HashSet<String>>,
     /// The document's changes the store has taken.
@@ -138,6 +140,26 @@ impl Spatial {
         self.wall_scale = scale;
     }
 
+    pub fn has_screen_wall_scale(&self) -> bool {
+        self.screen_wall_scale.is_some()
+    }
+
+    /// Rebuild only when the chosen detail changes; a camera move does not edit the document.
+    pub fn set_screen_wall_scale(&mut self, doc: &Document, scale: Option<f64>) {
+        let previous = self
+            .screen_wall_scale
+            .map(|_| self.store.wall_view().detail);
+        self.screen_wall_scale = scale.filter(|scale| scale.is_finite() && *scale > 0.0);
+        let view = match (self.wall_scale, self.screen_wall_scale) {
+            (Some(scale), _) => kentos_native_application::walls::view_at(doc.settings(), scale),
+            (None, Some(scale)) => {
+                kentos_native_application::walls::screen_view(doc.settings(), scale, previous)
+            }
+            _ => kentos_native_application::walls::view_of(doc.settings()),
+        };
+        self.store.set_wall_view(view);
+    }
+
     pub fn has_sheet_view(&self) -> bool {
         self.sheet_view.is_some()
     }
@@ -191,7 +213,14 @@ impl Spatial {
     fn wall_view_of(&self, doc: &Document) -> kentos_geometry_core::geom::wall::View {
         match self.wall_scale {
             Some(scale) => kentos_native_application::walls::view_at(doc.settings(), scale),
-            None => kentos_native_application::walls::view_of(doc.settings()),
+            None => match self.screen_wall_scale {
+                Some(scale) => kentos_native_application::walls::screen_view(
+                    doc.settings(),
+                    scale,
+                    Some(self.store.wall_view().detail),
+                ),
+                None => kentos_native_application::walls::view_of(doc.settings()),
+            },
         }
     }
 

@@ -17,14 +17,22 @@ use kentos_contracts::Entity;
 
 use crate::document::Document;
 use crate::history::Op;
-use crate::identity::Slot;
+use crate::identity::{Slot, new_uid};
 use crate::store::Stored;
+
+/// All derived changes, including source-driven membership changes.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct FollowerDelta {
+    pub added: Vec<(Slot, Entity)>,
+    pub updated: Vec<(Slot, Entity)>,
+    pub removed: Vec<Slot>,
+}
 
 impl Document {
     /// Whether anything in the drawing follows other objects (a linked text,
     /// an associative hatch or dimension): when not, no change carries any.
     pub fn can_follow(&self) -> bool {
-        self.store.has_links() || self.store.has_ties()
+        self.store.has_links() || self.store.has_ties() || !self.dimension_sets.is_empty()
     }
 
     /// The objects that would follow `changes` (each a slot and the object it
@@ -33,23 +41,58 @@ impl Document {
     /// ends. A changed object that follows too (a dimension one of whose points
     /// is tied) is among them. Nothing is written.
     pub fn followers(&self, changes: &[(Slot, Entity)]) -> Vec<(Slot, Entity)> {
-        if !self.may_follow(changes) {
-            return Vec::new();
-        }
-        self.reading_copy().followers_here(changes)
+        self.followers_delta(changes).updated
     }
 
-    /// [`Document::followers`] on `scratch`, a copy of this drawing the
-    /// caller keeps between calls (a tool's preview at every move), left as it
-    /// was; the copy is made the first time it is needed or when it is not
-    /// this drawing's as it is now (another generation).
     pub fn followers_with(
         &self,
         scratch: &mut Option<Document>,
         changes: &[(Slot, Entity)],
     ) -> Vec<(Slot, Entity)> {
-        if !self.may_follow(changes) {
-            return Vec::new();
+        self.followers_delta_with(scratch, changes).updated
+    }
+
+    pub fn followers_delta(&self, changes: &[(Slot, Entity)]) -> FollowerDelta {
+        self.preview_followers(changes, &[], &[])
+    }
+
+    pub fn followers_delta_with(
+        &self,
+        scratch: &mut Option<Document>,
+        changes: &[(Slot, Entity)],
+    ) -> FollowerDelta {
+        self.preview_followers_with(scratch, changes, &[], &[])
+    }
+
+    /// Derived geometry of an edit, insertion or deletion. Added source identities are virtual and
+    /// exist only in the scratch drawing; executing a command allocates its real persistent identities.
+    pub fn preview_followers(
+        &self,
+        updates: &[(Slot, Entity)],
+        adds: &[Entity],
+        removes: &[Slot],
+    ) -> FollowerDelta {
+        if adds.is_empty() && removes.is_empty() && !self.may_follow(updates) {
+            return FollowerDelta::default();
+        }
+        if !self.can_follow() {
+            return FollowerDelta::default();
+        }
+        self.reading_copy().followers_here(updates, adds, removes)
+    }
+
+    pub fn preview_followers_with(
+        &self,
+        scratch: &mut Option<Document>,
+        updates: &[(Slot, Entity)],
+        adds: &[Entity],
+        removes: &[Slot],
+    ) -> FollowerDelta {
+        if adds.is_empty() && removes.is_empty() && !self.may_follow(updates) {
+            return FollowerDelta::default();
+        }
+        if !self.can_follow() {
+            return FollowerDelta::default();
         }
         let current = scratch
             .as_ref()
@@ -58,8 +101,8 @@ impl Document {
             *scratch = Some(self.reading_copy());
         }
         match scratch {
-            Some(copy) => copy.followers_here(changes),
-            None => Vec::new(),
+            Some(copy) => copy.followers_here(updates, adds, removes),
+            None => FollowerDelta::default(),
         }
     }
 
@@ -82,7 +125,10 @@ impl Document {
                 Entity::Tag(_) => true,
                 _ => false,
             };
-            self.store.linked_to(before.uid).next().is_some()
+            (!self.dimension_sets.is_empty()
+                && (matches!(&*before.entity, Entity::Wall(_) | Entity::Opening(_))
+                    || self.dimension_set_of_item(before.uid).is_some()))
+                || self.store.linked_to(before.uid).next().is_some()
                 || self.store.tied_to(before.uid).next().is_some()
                 || ties(&before.entity)
                 || ties(after)
@@ -91,8 +137,41 @@ impl Document {
 
     /// Applies `changes`, follows them as a step's end would, reads what
     /// followed and takes it all back.
-    fn followers_here(&mut self, changes: &[(Slot, Entity)]) -> Vec<(Slot, Entity)> {
-        let mut ops: Vec<Op> = Vec::with_capacity(changes.len());
+    fn followers_here(
+        &mut self,
+        changes: &[(Slot, Entity)],
+        adds: &[Entity],
+        removes: &[Slot],
+    ) -> FollowerDelta {
+        if self.next_slot + adds.len() as u64 > u64::from(u32::MAX) + 1 {
+            return FollowerDelta::default();
+        }
+        let first_slot = self.next_slot;
+        let clock = self.store.preview_clock();
+        let candidates = self.store.wall_candidates.clone();
+        let relocated = self.relocated.clone();
+        let relocated_ends = self.relocated_ends.clone();
+        // Preview writes are invisible even to readers holding the scratch drawing's change mark.
+        let journal = std::mem::take(&mut self.history.journal);
+        let mut ops: Vec<Op> = Vec::with_capacity(changes.len() + adds.len() + removes.len());
+        for slot in removes {
+            if let Some(stored) = self.store.get(*slot).cloned() {
+                let op = Op::Remove(stored);
+                self.apply_op(&op);
+                ops.push(op);
+            }
+        }
+        for entity in adds {
+            let mut entity = entity.clone();
+            entity.base_mut().id = self.next_slot as u32;
+            self.next_slot += 1;
+            let op = Op::Add(Stored {
+                uid: new_uid(),
+                entity: Arc::new(entity),
+            });
+            self.apply_op(&op);
+            ops.push(op);
+        }
         let mut latest: HashMap<Slot, Stored> = HashMap::new();
         for (slot, entity) in changes {
             let Some(before) = latest.get(slot).or_else(|| self.store.get(*slot)).cloned() else {
@@ -112,21 +191,44 @@ impl Document {
         }
         let mark = ops.len();
         self.follow_into(&mut ops);
-        // The last of each slot, in the order they first came.
-        let mut order: Vec<Slot> = Vec::new();
-        let mut last: HashMap<Slot, Entity> = HashMap::new();
+        // First and final states of each derived slot. A new source itself belongs to the
+        // caller's input; only new followers are emitted as added geometry.
+        let mut order = Vec::new();
+        let mut initial: HashMap<Slot, Option<Arc<Entity>>> = HashMap::new();
         for op in &ops[mark..] {
-            if let Op::Update { after, .. } = op {
-                let slot = after.slot();
-                if last.insert(slot, (*after.entity).clone()).is_none() {
-                    order.push(slot);
+            let (slot, before) = match op {
+                Op::Add(s) => (s.slot(), None),
+                Op::Remove(s) => (s.slot(), Some(s.entity.clone())),
+                Op::Update { before, .. } => (before.slot(), Some(before.entity.clone())),
+                _ => continue,
+            };
+            initial.entry(slot).or_insert_with(|| {
+                order.push(slot);
+                before
+            });
+        }
+        let mut delta = FollowerDelta::default();
+        for slot in order {
+            let before = initial.remove(&slot).flatten();
+            let after = self.get(slot);
+            match (before, after) {
+                (None, Some(after)) => delta.added.push((slot, after.clone())),
+                (Some(_), None) => delta.removed.push(slot),
+                (Some(before), Some(after)) if *before != *after => {
+                    delta.updated.push((slot, after.clone()))
                 }
+                _ => {}
             }
         }
+        let end_slot = self.next_slot;
         self.revert(&ops);
-        order
-            .into_iter()
-            .filter_map(|s| last.remove(&s).map(|e| (s, e)))
-            .collect()
+        self.store
+            .restore_preview_clock(clock, first_slot, end_slot);
+        self.store.wall_candidates = candidates;
+        self.next_slot = first_slot;
+        self.relocated = relocated;
+        self.relocated_ends = relocated_ends;
+        self.history.journal = journal;
+        delta
     }
 }

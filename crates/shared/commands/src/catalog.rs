@@ -8344,6 +8344,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         }];
+    // Recipe metadata and its source/member objects travel in the same transaction (ADR0695).
+    let mut live_changes = commands[0].clone();
+    live_changes.version = crate::PROJECT_CHANGES_DIMENSION_SETS_VERSION;
+    live_changes.title = "Proje değişiklikleri ve ilişkili ölçüler".into();
+    live_changes.summary.push_str(" v2 dimensionSets tarifini, kaynak ve üye nesneleriyle aynı transaction içinde kabul eder; boş liste tarifleri kaldırır. v1 dimensionSets alanını reddeder. Sunucu desteği /v1/health projectChangesVersions ile öğrenilir.");
+    commands.push(live_changes);
+    commands.push(CommandDescriptor {
+        id: crate::CAD_DIMENSION_SETS_CREATE.into(), version: crate::CAD_DIMENSION_SETS_VERSION,
+        title: "Duvar ölçüleri oluştur".into(), summary: "Tek iki uçlu düz duvarın gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften ölçer. Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur. Kapalı, çok parçalı ve yaylı duvar işlemden önce reddedilir.".into(), aliases: vec![],
+        effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
+        requires: vec![CommandRequirement::Document], permissions: vec![],
+        undo: CommandUndo::Step, cost: CommandCost::Instant,
+        input: schema::<crate::DimensionSetsCreateInput>(), output: schema::<crate::DimensionSetsChanged>(),
+        plan: Some(schema::<crate::DimensionSetsPlan>()), capabilities: None,
+        examples: vec![CommandExample { title: "Duvar ölçüleri oluştur".into(), input: json!({"layerId":"olcu","wall":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002","at":{"x":5.0,"y":-1.0},"face":"left","rows":["openings","overall"],"openings":"ends","gapMm":7.5}), output: None }],
+    });
+    commands.push(CommandDescriptor {
+        id: crate::CAD_DIMENSION_SETS_EDIT.into(), version: crate::CAD_DIMENSION_SETS_VERSION,
+        title: "Duvar ölçülerini düzenle".into(), summary: "Tarifi, grup veya sıra yerini değiştirir. move at metre, rowOffset metre ve seçilen gerçek yüz bazlıdır. set yüz/sıra/açıklık politikası/kağıt aralığı/belge stili/katman değiştirir. restoreHidden bastırılan parçaları, resetText yalnız yazı yerini, resetRows sıra yerlerini geri getirir. detach tarifi kaldırıp ilişkili ölçüleri bırakır; delete tarif ve üyeleri tek adımda siler.".into(), aliases: vec![],
+        effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
+        requires: vec![CommandRequirement::Document], permissions: vec![],
+        undo: CommandUndo::Step, cost: CommandCost::Instant,
+        input: schema::<crate::DimensionSetsEditInput>(), output: schema::<crate::DimensionSetsChanged>(),
+        plan: Some(schema::<crate::DimensionSetsPlan>()), capabilities: None,
+        examples: vec![CommandExample { title: "Duvar ölçülerini düzenle".into(), input: json!({"id":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3009","operation":{"kind":"set","gapMm":10.0}}), output: None }],
+    });
+    commands.push(CommandDescriptor {
+        id: crate::CAD_DIMENSION_SETS_QUERY.into(), version: crate::CAD_DIMENSION_SETS_VERSION,
+        title: "Duvar ölçü gruplarını sorgula".into(), summary: "Kalıcı tarif, kaynak, üyelik, bastırılan parçalar, elle taşınan sıra yerleri ve kopuk durumunu okur. ids veya wall ile süzülür; boş girdi bütün grupları verir. Belgeye ve geçmişe yazmaz.".into(), aliases: vec![],
+        effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
+        requires: vec![CommandRequirement::Document], permissions: vec![],
+        undo: CommandUndo::None, cost: CommandCost::Instant,
+        input: schema::<crate::DimensionSetsQueryInput>(), output: schema::<crate::DimensionSetsQueried>(),
+        plan: Some(schema::<crate::DimensionSetsQueried>()), capabilities: None,
+        examples: vec![CommandExample { title: "Duvar ölçü gruplarını sorgula".into(), input: json!({}), output: None }],
+    });
     commands.extend(protocol_commands());
     for d in &mut commands {
         if d.capabilities.is_none() {
@@ -10595,6 +10631,18 @@ mod tests {
                     }
                     crate::CAD_DIMENSIONS_REASSOCIATE => {
                         serde_json::from_value::<crate::DimensionsReassociate>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_DIMENSION_SETS_CREATE => {
+                        serde_json::from_value::<crate::DimensionSetsCreateInput>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_DIMENSION_SETS_EDIT => {
+                        serde_json::from_value::<crate::DimensionSetsEditInput>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_DIMENSION_SETS_QUERY => {
+                        serde_json::from_value::<crate::DimensionSetsQueryInput>(e.input.clone())
                             .map(|_| ())
                     }
                     crate::CAD_DIMENSIONS_CREATE => {

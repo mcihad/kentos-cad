@@ -42,7 +42,7 @@ use crate::modify::{GHOST_DASH, MAX_GHOSTS};
 use crate::points::{self, wire};
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
+use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, TextGhost, Tone, Tool};
 
 /// The stretch tool's id: its command is `tool.stretch`.
 pub const ID: &str = "stretch";
@@ -52,9 +52,6 @@ pub const LABEL: &str = "Esnet";
 const DRAG_THRESHOLD: f64 = 4.0;
 /// The window's dash and gap once drawn, logical pixels (the web's `[5, 4]`).
 const WINDOW_DASH: [f32; 2] = [5.0, 4.0];
-/// The objects that follow: dotted, so they read apart from the stretched ones.
-const DEPENDENT_DASH: [f32; 2] = [2.0, 3.0];
-
 /// What the tool waits for.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum Stage {
@@ -82,6 +79,7 @@ pub struct Stretch {
     /// The objects as they would be: outlines and point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
+    texts: Vec<TextGhost>,
     /// A copy of the drawing the plan follows the tied objects on, kept between moves (docs/adr/0297 §3).
     scratch: Option<kentos_domain::Document>,
     done: bool,
@@ -251,6 +249,7 @@ impl Stretch {
     fn refresh(&mut self, cx: &Context<'_>) {
         self.ghosts.clear();
         self.marks.clear();
+        self.texts.clear();
         let Some(window) = self.window.filter(|_| !self.done) else {
             return;
         };
@@ -296,10 +295,15 @@ impl Stretch {
             self.ghosts.extend(outline.strokes);
             self.marks.extend(outline.marks);
         }
-        for e in output.dependents.iter().take(MAX_GHOSTS) {
-            let outline = Outline::of(&shape(e), Some(DEPENDENT_DASH), 1.0, Tone::Snap);
-            self.ghosts.extend(outline.strokes);
-        }
+        let followers = kentos_commands::DerivedEntitiesPlan {
+            added: output.added,
+            updated: output.dependents,
+            removed: output.removed,
+        };
+        let mut preview = Preview::default();
+        crate::wall_dimensions::append_followers(&mut preview, &followers, cx);
+        self.ghosts.extend(preview.strokes);
+        self.texts.extend(preview.texts);
     }
 }
 
@@ -440,6 +444,7 @@ impl Tool for Stretch {
         strokes.extend(self.ghosts.iter().cloned());
         let mut preview = Preview {
             marks: self.marks.clone(),
+            texts: self.texts.clone(),
             ..Preview::default()
         };
         if let (Some(base), Some(hover)) = (self.base, self.hover) {

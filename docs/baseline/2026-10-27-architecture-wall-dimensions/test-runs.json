@@ -1,0 +1,4306 @@
+[
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "native-combined",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-contracts",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-cloud",
+      "--lib",
+      "--tests"
+    ],
+    "startedUtc": "20261026T230528Z",
+    "seconds": 1305.714,
+    "exitCode": 0,
+    "rawLogPath": "native-20261026T230528Z.log",
+    "bytes": 255351,
+    "sha256": "e7d5445ef961f0d53901859135fa6b98f661a1d9c6684197ea92958947e5e128",
+    "suiteCount": 41,
+    "totals": {
+      "passed": 3645,
+      "failed": 0,
+      "ignored": 43
+    },
+    "packages": {
+      "kentos-cloud": {
+        "suites": 4,
+        "passed": 113,
+        "failed": 0,
+        "ignored": 1
+      },
+      "kentos-commands": {
+        "suites": 1,
+        "passed": 854,
+        "failed": 0,
+        "ignored": 0
+      },
+      "kentos-contracts": {
+        "suites": 3,
+        "passed": 1093,
+        "failed": 0,
+        "ignored": 1
+      },
+      "kentos-domain": {
+        "suites": 4,
+        "passed": 115,
+        "failed": 0,
+        "ignored": 0
+      },
+      "kentos-headless": {
+        "suites": 3,
+        "passed": 81,
+        "failed": 0,
+        "ignored": 1
+      },
+      "kentos-interaction": {
+        "suites": 3,
+        "passed": 785,
+        "failed": 0,
+        "ignored": 6
+      },
+      "kentos-kcad": {
+        "suites": 4,
+        "passed": 218,
+        "failed": 0,
+        "ignored": 2
+      },
+      "kentos-mcp": {
+        "suites": 17,
+        "passed": 78,
+        "failed": 0,
+        "ignored": 0
+      },
+      "kentos-native-application": {
+        "suites": 2,
+        "passed": 308,
+        "failed": 0,
+        "ignored": 32
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-cloud",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_cloud-6a2f568977a5c763",
+        "passed": 107,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-cloud",
+        "target": "tests/dimension_set_capability.rs",
+        "artifact": "target/debug/deps/dimension_set_capability-bcf1c431e2de7489",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-cloud",
+        "target": "tests/download_resume.rs",
+        "artifact": "target/debug/deps/download_resume-077c11233bc7b2eb",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-cloud",
+        "target": "tests/replica_perf.rs",
+        "artifact": "target/debug/deps/replica_perf-dea8b109e6b2120e",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-commands",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_commands-f3613df22371c8bd",
+        "passed": 854,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-contracts",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_contracts-f5f2f4ce41dfa0f5",
+        "passed": 1051,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-contracts",
+        "target": "tests/all/main.rs",
+        "artifact": "target/debug/deps/all-992f4134c7be4f72",
+        "passed": 32,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-contracts",
+        "target": "tests/settings.rs",
+        "artifact": "target/debug/deps/settings-96b12df887301aa1",
+        "passed": 10,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-domain",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_domain-a402b187a6e2f4c1",
+        "passed": 10,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-domain",
+        "target": "tests/all/main.rs",
+        "artifact": "target/debug/deps/all-001579178c07953d",
+        "passed": 78,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-domain",
+        "target": "tests/document.rs",
+        "artifact": "target/debug/deps/document-3ebce438ec246685",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-domain",
+        "target": "tests/sheet_history.rs",
+        "artifact": "target/debug/deps/sheet_history-b929daefc1b1927e",
+        "passed": 5,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-headless",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_headless-2e04f17e72b9ad90",
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-headless",
+        "target": "tests/gis.rs",
+        "artifact": "target/debug/deps/gis-e38a6bc3e487327a",
+        "passed": 6,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-headless",
+        "target": "tests/headless.rs",
+        "artifact": "target/debug/deps/headless-5455d6c1f3f73689",
+        "passed": 64,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_interaction-2d9dd01128e40e1a",
+        "passed": 64,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/all/main.rs",
+        "artifact": "target/debug/deps/all-b80f062babced7d8",
+        "passed": 721,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "artifact": "target/debug/deps/perf-665a529f34c3ed34",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 5,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_kcad-4d6ce346ffbf4a9f",
+        "passed": 6,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "unittests src/bin/kcad.rs",
+        "artifact": "target/debug/deps/kcad-2d7b6efda7486be4",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "tests/all/main.rs",
+        "artifact": "target/debug/deps/all-e71f6f0b1ab3daae",
+        "passed": 212,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "tests/measure.rs",
+        "artifact": "target/debug/deps/measure-6f277e87ceaad28c",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 2,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_mcp-3dcb21bb54986ee2",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "unittests src/main.rs",
+        "artifact": "target/debug/deps/kentos_mcp-428c3d7f67ef1f7f",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/acceptance.rs",
+        "artifact": "target/debug/deps/acceptance-7c18113946c67921",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/dimension_sets.rs",
+        "artifact": "target/debug/deps/dimension_sets-62a7f36073ffd278",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/jobs.rs",
+        "artifact": "target/debug/deps/jobs-5e20fcd8aca0994c",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/mcp.rs",
+        "artifact": "target/debug/deps/mcp-d2aa3e7be34e9034",
+        "passed": 31,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/opening_array.rs",
+        "artifact": "target/debug/deps/opening_array-d69d9622a1bfc17a",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/opening_placement.rs",
+        "artifact": "target/debug/deps/opening_placement-dbfc012b0ce107c9",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/room_choices.rs",
+        "artifact": "target/debug/deps/room_choices-47a4cbc5ab8335d2",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/source_relations.rs",
+        "artifact": "target/debug/deps/source_relations-b4b2fe6669a78fdd",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/space_levels.rs",
+        "artifact": "target/debug/deps/space_levels-c47cb33672435e60",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/space_number_check.rs",
+        "artifact": "target/debug/deps/space_number_check-56f5b7ca177ea7b3",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/spaces_discover.rs",
+        "artifact": "target/debug/deps/spaces_discover-960807c8356bbcfa",
+        "passed": 6,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/spaces_number.rs",
+        "artifact": "target/debug/deps/spaces_number-f6afa17b48cd000f",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/tag_net_area.rs",
+        "artifact": "target/debug/deps/tag_net_area-61d2843205ccb83c",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/tag_refresh.rs",
+        "artifact": "target/debug/deps/tag_refresh-1cc846d9f63b778d",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-mcp",
+        "target": "tests/wall_contours.rs",
+        "artifact": "target/debug/deps/wall_contours-8805303f9e27fff0",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "unittests src/lib.rs",
+        "artifact": "target/debug/deps/kentos_native_application-e570c2befb833995",
+        "passed": 67,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "artifact": "target/debug/deps/all-87e3997a6da50af0",
+        "passed": 241,
+        "failed": 0,
+        "ignored": 32,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "ignored": [
+      {
+        "package": "kentos-cloud",
+        "target": "tests/replica_perf.rs",
+        "record": "test the_local_copy_of_a_large_project ... ignored, a measurement, run by hand in release mode"
+      },
+      {
+        "package": "kentos-contracts",
+        "target": "unittests src/lib.rs",
+        "record": "test entity_merge::tests::merge_timing ... ignored, a timing, run on its own in release"
+      },
+      {
+        "package": "kentos-headless",
+        "target": "tests/gis.rs",
+        "record": "test gis_timing ... ignored, timing, run by hand: cargo test --release -p kentos-headless --test gis gis_timing -- --ignored --nocapture"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/all/main.rs",
+        "record": "test splitting::cleanup_time_on_a_big_drawing ... ignored, a timing, run by hand"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "record": "test budgets_on_a_million_parcels ... ignored, a measurement: run by hand in release"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "record": "test charts_on_a_large_layer ... ignored, a measurement: run by hand in release"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "record": "test label_texts_on_a_large_layer ... ignored, a measurement: run by hand in release"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "record": "test layer_filter_on_a_large_layer ... ignored, a measurement: run by hand in release"
+      },
+      {
+        "package": "kentos-interaction",
+        "target": "tests/perf.rs",
+        "record": "test store_sync_and_queries_on_a_large_drawing ... ignored, a measurement: run by hand in release"
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "tests/measure.rs",
+        "record": "test a_large_drawing ... ignored, a measurement, run by hand in release mode"
+      },
+      {
+        "package": "kentos-kcad",
+        "target": "tests/measure.rs",
+        "record": "test a_large_drawing_through_the_browsers_columns ... ignored, a measurement, run by hand in release mode"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test address_spellings::address_spellings_timing ... ignored, a timing, run on its own in release"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test array_assoc::edit_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test array_assoc::explode_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test array_assoc::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test audit_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test cleanup_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test clipboard_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test compare_timing::compare_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test curves_edit::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test dataset_timing::dataset_timing ... ignored, a measurement, run by hand"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test divide::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test forms_timing::forms_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test gml_timing::gml_timing ... ignored, timing, run by hand in release (docs/adr/0545)"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test gpkg_tiles_timing::gpkg_tiles_timing ... ignored, a timing, run on its own in release"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test info_templates::timing ... ignored, timing; run with --ignored --nocapture in release"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test join_source_timing::join_source_timing ... ignored, a measurement, run by hand"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test kinds_timing::kinds_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test layers_find_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test lengthen::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test library_files::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test match_props::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test object_source_timing::object_source_timing ... ignored, süre ölçümü: --release ve --ignored ile"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test order_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test parquet_timing::parquet_timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test profile_files::mapped_migrate_timing ... ignored, a timing, run on its own in release"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test profile_files::migrate_timing ... ignored, a timing, run on its own in release"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test provider_timing::provider_timing ... ignored, a measurement, run by hand"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test sensors_timing::sensors_timing ... ignored, a measurement, run by hand"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test source_relations::page_timing ... ignored, timing, run by hand"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test standards_cmd::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test stretch_ties::timing ... ignored, a timing, run on purpose"
+      },
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "record": "test tables_cmd::timing ... ignored, a timing, run on purpose"
+      }
+    ],
+    "scope": "Captured native stage only; excludes latest desktop ADR0697 UX changes, fresh Python-native and real PostGIS acceptance.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "server-postgis",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-application",
+      "--test",
+      "project_dimension_sets",
+      "--",
+      "--nocapture"
+    ],
+    "startedUtc": "20261026T232841Z",
+    "seconds": 376.944,
+    "exitCode": 0,
+    "rawLogPath": "server-20261026T232841Z.log",
+    "bytes": 1645,
+    "sha256": "03b3ab9cbc82755b2cd0ea2036dd84f67fb97475088dd1998e70748b490d050a",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    "packages": {
+      "kentos-application": {
+        "suites": 1,
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-application",
+        "target": "tests/project_dimension_sets.rs",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "tests": [
+      "test committed_v1_source_retry_replays_after_v2_adds_recipe_ownership ... ok",
+      "test plot_scale_requires_an_atomic_correct_default_row_cache ... ok",
+      "test plot_scale_keeps_explicit_first_and_broken_rows_usable_without_a_cache_write ... ok",
+      "test v1_cannot_drop_metadata_and_v2_commits_members_in_one_revision ... ok"
+    ],
+    "ignored": [],
+    "scope": "Real PostgreSQL18/PostGIS3.6.4 using this task's isolated disposable QA container only.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "desktop-initial-failed",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedUtc": "20261026T235157Z",
+    "seconds": 460.049,
+    "exitCode": 101,
+    "rawLogPath": "desktop-20261026T235157Z.log",
+    "bytes": 163502,
+    "sha256": "459f77a8802018c758916531dd5eec51018f13687a735663a6f402390df4b9bc",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 1337,
+      "failed": 4,
+      "ignored": 228
+    },
+    "packages": {
+      "kentos-desktop": {
+        "suites": 1,
+        "passed": 1337,
+        "failed": 4,
+        "ignored": 228
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-desktop",
+        "target": "unittests src/main.rs",
+        "passed": 1337,
+        "failed": 4,
+        "ignored": 228,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "ignored": [
+      {
+        "test": "app_menu::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "architecture_settings::tests::a_batched_pan_moves_out_and_back_without_editing_the_drawing",
+        "reason": "GPU native event-batch regression; run serially",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "architecture_settings::tests::precision_opening_gpu_matrix_and_raw_pointer_pan",
+        "reason": "GPU acceptance matrix; run serially and inspect the PNGs",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "attachments_tests::a_card_opens_in_a_frame",
+        "reason": "timing; run with --ignored --nocapture in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "bottom::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::convert::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::edgematch::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::fieldbook::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::fit::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::network::tests::screens",
+        "reason": "pictures for the owner",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "charts::tests::painting_100000_points",
+        "reason": "a measurement: run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "clipboard::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_forms_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_in_its_states",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_with_import_and_atlas_jobs",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_with_processing_jobs",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::cells_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::file_follow_tests::revision_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::live_run::cloud_live",
+        "reason": "a real KentOS server: apps/desktop/scripts/cloud-live.sh",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::live_run::jobs_live",
+        "reason": "a real KentOS server: apps/desktop/scripts/jobs-live.sh",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::share_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::action_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::tree_locked_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::upload_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "dataset_window::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "drawing_menus::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "event_links_window::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::area_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::atlas_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::csv_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::dimension_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::drawing_import::scale::tests::import_scale_user_dwg_screens",
+        "reason": "GPU import unit controls with local user DWG, run explicitly",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::fgb_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::field_send_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gis_derivation_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gis_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gml_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gnss_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::neighbour_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::reconcile_group_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::reconcile_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::source_status_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::table_source_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::validity_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tiles_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::kml_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::package_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::parquet_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::postgis_tests::a_real_database_is_listed_and_bound",
+        "reason": "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::postgis_tests::screens",
+        "reason": "writes pictures to .run/shots",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::server_work_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::leader_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::ncz_screens",
+        "reason": "pictures and timings for the owner, with a real file, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::unit_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::flow_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::world_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::joins_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::kinds_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::outgoing_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::write_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::whole_tests::whole_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "grids::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "hover_card::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "icon_tour::icon_tour",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "icons::screens::icon_edges",
+        "reason": "a picture for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "label_picture::tests::timing",
+        "reason": "a timing, run on purpose",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "label_probe::label_probe",
+        "reason": "a probe on a file of one's own, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "label_probe::label_quality",
+        "reason": "a probe on a file of one's own, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::annotation_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::dimension_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::file_paint",
+        "reason": "a measurement on a file of one's own, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::leader_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::perf",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::text_extras_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layer_snap::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layer_tree::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layering::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layout_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "map_crs_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "marks::crosshair_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "measure_probe_tests::measure_probe",
+        "reason": "a probe run by hand with KENTOS_PROBE_FILE",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "message_log_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "networks::read_tests::timing",
+        "reason": "timings, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "networks::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "opening::tests::local_cad_files_open_save_and_reopen_without_changing_the_sources",
+        "reason": "local user CAD files; run explicitly with KENTOS_CAD_OPEN_SAMPLES",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "overlap_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "paragraph_editor::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::architecture::moving_preview",
+        "reason": "architectural runtime measurement; run manually in release with an isolated file",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::child",
+        "reason": "run by perf::kcad in a process of its own",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::clouds::clouds",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::file::file",
+        "reason": "a measurement on a file of one's own, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::frame::frame",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::frame::view_parts",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::kcad",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::memory::memory_stages",
+        "reason": "a measurement; run by hand (see the module's comment)",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::services::services",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::services::services_style_split",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "point_calc::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "points::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "preview::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::batch_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::convert_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::designer::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::environment_tests::screens",
+        "reason": "pictures: cargo test -p kentos-desktop processing::environment_tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::generalize_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::generate_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::geometry_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::layer_tools_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::lrs_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::proximity_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::query_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::sampling_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::server_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::sink_tests::screens",
+        "reason": "pictures: cargo test -p kentos-desktop processing::sink_tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::table_points_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::tests::panel_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::transfer_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::choices::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::custom_crs::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::heights::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::heights::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::survey::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::unit_change::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::unit_change::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::variables::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::wizard::tests::axes_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::wizard::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::a_hundred_thousand_objects_build_the_panel_quickly",
+        "reason": "timing; run with --ignored --nocapture in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::block_attribute_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke",
+        "reason": "single complex CAD object timing; run explicitly without concurrent benchmarks",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::a_real_agent_draws_on_the_open_drawing_through_mcp",
+        "reason": "needs the kentos-mcp program (cargo build -p kentos-mcp)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_completes_and_shows_signatures",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_runs_the_script_and_shows_where_it_failed",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_writes_the_open_drawing",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::round_trips",
+        "reason": "a measurement, needs a Python with the kentos package",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "rasters::tests::first_view_of_a_large_cog",
+        "reason": "timings, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_bar::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_keys::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_panels::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_search::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_search::tests::user_model_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::tip_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::typeface_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "screen_scale::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "second_crs::tests::custom_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "second_crs::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::construction_area_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::semantic_tool_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::split_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "settings_look_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "settings_view::tests::settings_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet07_tools_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet08_analytic_paper_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet09_viewport_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet10_precision_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet11_exact_scale_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet12_clipping_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet13_model_scope_screens",
+        "reason": "GPU images, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet14_named_view_screens",
+        "reason": "GPU images and independent PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet15_annotation_layer_screens",
+        "reason": "GPU images and PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet16_original_identity_screens",
+        "reason": "GPU images, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet17_multipage_set_screens",
+        "reason": "GPU images and PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet18_page_setup_screens",
+        "reason": "GPU page setup window, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet19_plot_profile_screens",
+        "reason": "GPU profile choice window, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet20_plot_ink_screens",
+        "reason": "GPU plot ink controls and real PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet23_print_preview_screens",
+        "reason": "GPU print preview controls, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet24_calibration_screens",
+        "reason": "GPU calibration sheet and common native output, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet25_publish_screens",
+        "reason": "GPU publication controls and asynchronous job, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet26_drawing_set_screens",
+        "reason": "GPU drawing set editor and live output, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_package_publish_screens",
+        "reason": "GPU complete delivery publication controls, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_preflight_native_screens",
+        "reason": "GPU native preflight report, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_snapshot_source_report_screens",
+        "reason": "GPU source revision report, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::transaction_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_library::tests::a_template_made_on_the_desktop_reaches_another_account_and_another_device",
+        "reason": "needs a running API and its accounts; run by hand",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_library::tests::an_organisation_s_library_is_live_for_two_people",
+        "reason": "needs a running API, its accounts and their organisation; run by hand",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_comparison_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_pdf_files",
+        "reason": "files for the acceptance tools, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step5_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step6_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step8_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step9_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "shortcuts::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "snap_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sources::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "statistics::source_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::designer::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::perf::perf",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "style::perf::temporal",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::layer_style_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::legend_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::manager_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::settings_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::svgedit::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "template_editor::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "templates_panel::tests::panel_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "templates_panel::tests::ribbon_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "text_field::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "tools_screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "topology::tests::screens",
+        "reason": "",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": "Source comment+Snapshot writes .run/shots/topoloji-*; #[ignore] has no reason text."
+      },
+      {
+        "test": "topology_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ui_screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::cad_open_and_property_input",
+        "reason": "CAD source and property-input GPU acceptance; run explicitly",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::contextual_tabs",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::donut_command_and_echo",
+        "reason": "GPU acceptance and screenshots; run by hand",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::python_echo",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::ribbon_tabs",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::ribbon_widths",
+        "reason": "a measure for the arrangement, run by hand",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::right_click_menus",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::scale_and_type",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::scale_probe",
+        "reason": "a probe for the owner's scale report, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::selection_and_menus",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "vertices::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop vertices::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "view_commands::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "viewport::highlight::tests::highlight_costs_on_a_large_drawing",
+        "reason": "a measurement: run by hand in release, with a GPU",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      }
+    ],
+    "ignoredCategories": {
+      "manual-image-snapshot-generation": 162,
+      "gpu-explicit-serial-acceptance": 27,
+      "manual-performance-measurement": 23,
+      "external-server-api-postgis": 5,
+      "manual-file-probe-artifact": 6,
+      "python-or-mcp-runtime": 5
+    },
+    "failedTests": [
+      "app_menu::layout_tests::short_large_text_menu_keeps_footer_visible_and_wheel_reaches_project_settings",
+      "history::text::tests::the_titles_are_the_catalog_s",
+      "ribbon_tests::every_tab_fits_1100_pixels_without_scrolling",
+      "wall_styles::layout_tests::short_large_wall_styles_scrolls_the_right_form_and_left_list_without_hiding_actions"
+    ],
+    "scope": "Historical failed full run; not acceptance.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "layout-target-serial",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad",
+      "short_large",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "startedUtc": "20261027T000149Z",
+    "seconds": 212.341,
+    "exitCode": 0,
+    "rawLogPath": "layout-target-20261027T000149Z.log",
+    "bytes": 1270,
+    "sha256": "11697e23ad4acc9877c1c0f7cfc2ce2b067594501d3d015d77b14e6639b003a4",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    "packages": {
+      "kentos-desktop": {
+        "suites": 1,
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-desktop",
+        "target": "unittests src/main.rs",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 1567
+      }
+    ],
+    "ignored": [],
+    "ignoredCategories": {},
+    "failedTests": [],
+    "scope": "Two serial layout targets only; does not replace the failed full run.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "ui-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-ui",
+      "--features",
+      "snapshot",
+      "--lib",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedUtc": "20261027T000751Z",
+    "seconds": 185.377,
+    "exitCode": 0,
+    "rawLogPath": "ui-20261027T000751Z.log",
+    "bytes": 23816,
+    "sha256": "9d2172b9d006d90617fb4300595b26185622b0897cf3f9530f2c0cfcbf3d25f5",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 289,
+      "failed": 0,
+      "ignored": 0
+    },
+    "packages": {
+      "kentos-ui": {
+        "suites": 1,
+        "passed": 289,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-ui",
+        "target": "unittests src/lib.rs",
+        "passed": 289,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "ignored": [],
+    "ignoredCategories": {},
+    "failedTests": [],
+    "scope": "Final source-frozen test run; GUI and Python gates remain separate.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "desktop-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedUtc": "20261027T001700Z",
+    "seconds": 325.652,
+    "exitCode": 0,
+    "rawLogPath": "desktop-20261027T001700Z.log",
+    "bytes": 137786,
+    "sha256": "9bb42a0126adc924c6d753798f3615201da7ed3b5e04e766a712d3e223177e3b",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 1341,
+      "failed": 0,
+      "ignored": 228
+    },
+    "packages": {
+      "kentos-desktop": {
+        "suites": 1,
+        "passed": 1341,
+        "failed": 0,
+        "ignored": 228
+      }
+    },
+    "suites": [
+      {
+        "package": "kentos-desktop",
+        "target": "unittests src/main.rs",
+        "passed": 1341,
+        "failed": 0,
+        "ignored": 228,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "ignored": [
+      {
+        "test": "app_menu::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "architecture_settings::tests::a_batched_pan_moves_out_and_back_without_editing_the_drawing",
+        "reason": "GPU native event-batch regression; run serially",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "architecture_settings::tests::precision_opening_gpu_matrix_and_raw_pointer_pan",
+        "reason": "GPU acceptance matrix; run serially and inspect the PNGs",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "attachments_tests::a_card_opens_in_a_frame",
+        "reason": "timing; run with --ignored --nocapture in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "bottom::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::convert::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::edgematch::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::fieldbook::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::fit::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::network::tests::screens",
+        "reason": "pictures for the owner",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "calc::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "charts::tests::painting_100000_points",
+        "reason": "a measurement: run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "clipboard::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_forms_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_in_its_states",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_with_import_and_atlas_jobs",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_jobs_tests::screens::the_tab_with_processing_jobs",
+        "reason": "pictures",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::catalog_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::cells_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::file_follow_tests::revision_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::live_run::cloud_live",
+        "reason": "a real KentOS server: apps/desktop/scripts/cloud-live.sh",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::live_run::jobs_live",
+        "reason": "a real KentOS server: apps/desktop/scripts/jobs-live.sh",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::share_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::action_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::tree_locked_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "cloud::tests::upload_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "dataset_window::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "drawing_menus::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "event_links_window::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::area_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::atlas_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::csv_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::dimension_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::drawing_import::scale::tests::import_scale_user_dwg_screens",
+        "reason": "GPU import unit controls with local user DWG, run explicitly",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::fgb_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::field_send_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gis_derivation_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gis_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gml_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gnss_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::neighbour_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::reconcile_group_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::reconcile_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::source_status_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::table_source_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tests::validity_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::gpkg_tiles_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::kml_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::package_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::parquet_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::postgis_tests::a_real_database_is_listed_and_bound",
+        "reason": "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::postgis_tests::screens",
+        "reason": "writes pictures to .run/shots",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::server_work_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::leader_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::ncz_screens",
+        "reason": "pictures and timings for the owner, with a real file, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "exchange::tests::unit_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::flow_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "expression::tests::world_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::joins_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::kinds_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::outgoing_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::tests::write_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "features::whole_tests::whole_screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "grids::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "hover_card::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "icon_tour::icon_tour",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "icons::screens::icon_edges",
+        "reason": "a picture for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "label_picture::tests::timing",
+        "reason": "a timing, run on purpose",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "label_probe::label_probe",
+        "reason": "a probe on a file of one's own, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "label_probe::label_quality",
+        "reason": "a probe on a file of one's own, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::annotation_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::dimension_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::file_paint",
+        "reason": "a measurement on a file of one's own, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::leader_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::perf",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "labels::text_extras_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layer_snap::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layer_tree::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layering::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "layout_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "map_crs_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "marks::crosshair_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "measure_probe_tests::measure_probe",
+        "reason": "a probe run by hand with KENTOS_PROBE_FILE",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "message_log_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "networks::read_tests::timing",
+        "reason": "timings, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "networks::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "opening::tests::local_cad_files_open_save_and_reopen_without_changing_the_sources",
+        "reason": "local user CAD files; run explicitly with KENTOS_CAD_OPEN_SAMPLES",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "overlap_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "paragraph_editor::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::architecture::moving_preview",
+        "reason": "architectural runtime measurement; run manually in release with an isolated file",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::child",
+        "reason": "run by perf::kcad in a process of its own",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::clouds::clouds",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::file::file",
+        "reason": "a measurement on a file of one's own, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::frame::frame",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::frame::view_parts",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::kcad",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::memory::memory_stages",
+        "reason": "a measurement; run by hand (see the module's comment)",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::services::services",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "perf::services::services_style_split",
+        "reason": "a measurement, run by hand in release mode",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "point_calc::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "points::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "preview::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::batch_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::convert_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::designer::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::environment_tests::screens",
+        "reason": "pictures: cargo test -p kentos-desktop processing::environment_tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::generalize_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::generate_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::geometry_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::layer_tools_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::lrs_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::proximity_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::query_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::sampling_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::server_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::sink_tests::screens",
+        "reason": "pictures: cargo test -p kentos-desktop processing::sink_tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::table_points_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::tests::panel_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "processing::transfer_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::choices::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::custom_crs::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::heights::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::heights::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::survey::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::unit_change::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::unit_change::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::variables::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::wizard::tests::axes_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "project::wizard::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::a_hundred_thousand_objects_build_the_panel_quickly",
+        "reason": "timing; run with --ignored --nocapture in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::block_attribute_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke",
+        "reason": "single complex CAD object timing; run explicitly without concurrent benchmarks",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "properties::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::a_real_agent_draws_on_the_open_drawing_through_mcp",
+        "reason": "needs the kentos-mcp program (cargo build -p kentos-mcp)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_completes_and_shows_signatures",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_runs_the_script_and_shows_where_it_failed",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::real_python_writes_the_open_drawing",
+        "reason": "needs a Python with the kentos package (pnpm py:test)",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::round_trips",
+        "reason": "a measurement, needs a Python with the kentos package",
+        "category": "python-or-mcp-runtime",
+        "sourceNote": null
+      },
+      {
+        "test": "python::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "rasters::tests::first_view_of_a_large_cog",
+        "reason": "timings, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_bar::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_keys::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_panels::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_search::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_search::tests::user_model_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::tip_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ribbon_tests::typeface_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "screen_scale::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "second_crs::tests::custom_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "second_crs::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::construction_area_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::semantic_tool_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "semantic_tool_tests::split_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "settings_look_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "settings_view::tests::settings_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet07_tools_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet08_analytic_paper_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet09_viewport_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet10_precision_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet11_exact_scale_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet12_clipping_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet13_model_scope_screens",
+        "reason": "GPU images, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet14_named_view_screens",
+        "reason": "GPU images and independent PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet15_annotation_layer_screens",
+        "reason": "GPU images and PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet16_original_identity_screens",
+        "reason": "GPU images, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet17_multipage_set_screens",
+        "reason": "GPU images and PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet18_page_setup_screens",
+        "reason": "GPU page setup window, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet19_plot_profile_screens",
+        "reason": "GPU profile choice window, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet20_plot_ink_screens",
+        "reason": "GPU plot ink controls and real PDF, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet23_print_preview_screens",
+        "reason": "GPU print preview controls, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet24_calibration_screens",
+        "reason": "GPU calibration sheet and common native output, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet25_publish_screens",
+        "reason": "GPU publication controls and asynchronous job, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet26_drawing_set_screens",
+        "reason": "GPU drawing set editor and live output, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_package_publish_screens",
+        "reason": "GPU complete delivery publication controls, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_preflight_native_screens",
+        "reason": "GPU native preflight report, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::sheet_snapshot_source_report_screens",
+        "reason": "GPU source revision report, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_book::tests::transaction_screens",
+        "reason": "GPU pictures, run alone",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_library::tests::a_template_made_on_the_desktop_reaches_another_account_and_another_device",
+        "reason": "needs a running API and its accounts; run by hand",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "sheet_library::tests::an_organisation_s_library_is_live_for_two_people",
+        "reason": "needs a running API, its accounts and their organisation; run by hand",
+        "category": "external-server-api-postgis",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_comparison_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_pdf_files",
+        "reason": "files for the acceptance tools, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step5_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step6_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step8_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sheets::tests::sheet_step9_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "shortcuts::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "snap_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "sources::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "statistics::source_tests::screens",
+        "reason": "pictures, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::designer::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::perf::perf",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "style::perf::temporal",
+        "reason": "a measurement, run by hand in release",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::layer_style_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::legend_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::manager_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::screens::settings_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "style::svgedit::screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "template_editor::tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "templates_panel::tests::panel_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "templates_panel::tests::ribbon_screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "text_field::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "tools_screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "topology::tests::screens",
+        "reason": "",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": "Source comment+Snapshot writes .run/shots/topoloji-*; #[ignore] has no reason text."
+      },
+      {
+        "test": "topology_tests::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ui_screens::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::cad_open_and_property_input",
+        "reason": "CAD source and property-input GPU acceptance; run explicitly",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::contextual_tabs",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::donut_command_and_echo",
+        "reason": "GPU acceptance and screenshots; run by hand",
+        "category": "gpu-explicit-serial-acceptance",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::python_echo",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::ribbon_tabs",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::ribbon_widths",
+        "reason": "a measure for the arrangement, run by hand",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::right_click_menus",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::scale_and_type",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::scale_probe",
+        "reason": "a probe for the owner's scale report, run by hand",
+        "category": "manual-file-probe-artifact",
+        "sourceNote": null
+      },
+      {
+        "test": "ux_screens::selection_and_menus",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "vertices::tests::screens",
+        "reason": "writes pictures: cargo test -p kentos-desktop vertices::tests::screens -- --ignored --nocapture",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "view_commands::screens",
+        "reason": "pictures for the owner, run by hand",
+        "category": "manual-image-snapshot-generation",
+        "sourceNote": null
+      },
+      {
+        "test": "viewport::highlight::tests::highlight_costs_on_a_large_drawing",
+        "reason": "a measurement: run by hand in release, with a GPU",
+        "category": "manual-performance-measurement",
+        "sourceNote": null
+      }
+    ],
+    "ignoredCategories": {
+      "manual-image-snapshot-generation": 162,
+      "gpu-explicit-serial-acceptance": 27,
+      "manual-performance-measurement": 23,
+      "external-server-api-postgis": 5,
+      "manual-file-probe-artifact": 6,
+      "python-or-mcp-runtime": 5
+    },
+    "failedTests": [],
+    "scope": "Final source-frozen test run; GUI and Python gates remain separate.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "python-initial-failed",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests"
+    ],
+    "startedUtc": "20261027T003836Z",
+    "seconds": 273.373,
+    "runnerSeconds": 270.359,
+    "exitCode": 1,
+    "rawLogPath": "python-20261027T003836Z.log",
+    "bytes": 17875,
+    "sha256": "fee9ec219287f37777ea6962a7143be64370a27ecb1d85d7f2a9565c068b17c9",
+    "suiteCount": 1,
+    "executedTests": 366,
+    "totals": {
+      "passed": 364,
+      "failed": 2,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-python",
+        "target": "python/tests unittest discover",
+        "passed": 364,
+        "failed": 2,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "packages": {
+      "kentos-python": {
+        "suites": 1,
+        "passed": 364,
+        "failed": 2,
+        "ignored": 0
+      }
+    },
+    "ignored": [],
+    "failedTests": [
+      "test_every_case_through_the_typed_layer (test_command_cases.CommandCases.test_every_case_through_the_typed_layer)",
+      "test_group_metadata_plan_identity_rows_suppression_and_file_reopen (test_wall_dimension_sets.WallDimensionSets.test_group_metadata_plan_identity_rows_suppression_and_file_reopen)"
+    ],
+    "scope": "Initial fresh-extension suite: two test-harness assumptions failed (dimensionSets expectation support and UNSET optional row_places); preserved as a failed stage.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "python-full",
+    "command": [
+      ".run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests"
+    ],
+    "startedUtc": "20261027T004848Z",
+    "seconds": 272.891,
+    "runnerSeconds": 270.116,
+    "exitCode": 0,
+    "rawLogPath": "python-20261027T004848Z.log",
+    "bytes": 8090,
+    "sha256": "a2221c1a3135e9077311e4176416eae6ea624abc99b3254683f108a86f6bf09c",
+    "suiteCount": 1,
+    "executedTests": 366,
+    "totals": {
+      "passed": 366,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-python",
+        "target": "python/tests unittest discover",
+        "passed": 366,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ],
+    "packages": {
+      "kentos-python": {
+        "suites": 1,
+        "passed": 366,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "ignored": [],
+    "failedTests": [],
+    "scope": "Fresh-extension full366 Python tests passed after only the two harness assumptions were corrected. Does not validate the subsequent server-only stale-geometry fix.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "api-health",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-api",
+      "health_answers_without_a_database_and_carries_a_request_id"
+    ],
+    "startedUtc": "20261027T003848Z",
+    "seconds": 2504.68,
+    "exitCode": 0,
+    "rawLogPath": "api-20261027T003848Z.log",
+    "bytes": 5926,
+    "sha256": "ce8318428d713fa121577b6466548c3ae12edb93d0cb023fb35ecc50e21ca41c",
+    "suiteCount": 3,
+    "totals": {
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-api",
+        "target": "unittests src/main.rs",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 65,
+        "seconds": 0.0
+      },
+      {
+        "package": "kentos-api",
+        "target": "tests/job_run.rs",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 21,
+        "seconds": 0.0
+      },
+      {
+        "package": "kentos-api",
+        "target": "tests/job_run_db.rs",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 10,
+        "seconds": 0.0
+      }
+    ],
+    "packages": {
+      "kentos-api": {
+        "suites": 3,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "tests": [
+      "test http::tests::health_answers_without_a_database_and_carries_a_request_id ... ok"
+    ],
+    "ignored": [],
+    "failedTests": [],
+    "scope": "One real API health unit test; no database needed. Other API integration targets had zero selected tests (96 filtered in total), so this is not a full API suite.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "server-final-guard-initial-failed",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-application",
+      "--test",
+      "project_dimension_sets",
+      "--",
+      "--nocapture"
+    ],
+    "startedUtc": "20261027T012044Z",
+    "seconds": 557.811,
+    "exitCode": 101,
+    "rawLogPath": "server-20261027T012044Z.log",
+    "bytes": 2571,
+    "sha256": "1f9a604ab2507c7164850755210bf964a903fd900b4d42d178a459e5e9a6787c",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 6,
+      "failed": 1,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-application",
+        "target": "tests/project_dimension_sets.rs",
+        "passed": 6,
+        "failed": 1,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0,
+        "seconds": 2.11
+      }
+    ],
+    "packages": {
+      "kentos-application": {
+        "suites": 1,
+        "passed": 6,
+        "failed": 1,
+        "ignored": 0
+      }
+    },
+    "tests": [
+      "test rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_members ... FAILED",
+      "test plot_scale_requires_an_atomic_correct_default_row_cache ... ok",
+      "test v1_cannot_drop_metadata_and_v2_commits_members_in_one_revision ... ok",
+      "test new_and_deleted_opening_require_complete_interval_membership ... ok",
+      "test committed_v1_source_retry_replays_after_v2_adds_recipe_ownership ... ok",
+      "test plot_scale_keeps_explicit_first_and_broken_rows_usable_without_a_cache_write ... ok",
+      "test same_recipe_v2_refuses_stale_healthy_source_cache_atomically ... ok"
+    ],
+    "ignored": [],
+    "failedTests": [
+      "rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_members"
+    ],
+    "scope": "Real PostGIS seven-test target failed on a test expectation: ideal angle versus actual stored face direction at large coordinates. Production tolerance was unchanged; failed log retained.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "server-final-guard",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-application",
+      "--test",
+      "project_dimension_sets",
+      "--",
+      "--nocapture"
+    ],
+    "startedUtc": "20261027T031302Z",
+    "seconds": 16.974,
+    "exitCode": 0,
+    "rawLogPath": "server-20261027T031302Z.log",
+    "bytes": 1366,
+    "sha256": "9044cf30cac4000d5fc8085dbe2fce2db9ffc8bdf419d2d408547c90eab2f92e",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 7,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-application",
+        "target": "tests/project_dimension_sets.rs",
+        "passed": 7,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0,
+        "seconds": 2.26
+      }
+    ],
+    "packages": {
+      "kentos-application": {
+        "suites": 1,
+        "passed": 7,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "tests": [
+      "test committed_v1_source_retry_replays_after_v2_adds_recipe_ownership ... ok",
+      "test v1_cannot_drop_metadata_and_v2_commits_members_in_one_revision ... ok",
+      "test new_and_deleted_opening_require_complete_interval_membership ... ok",
+      "test same_recipe_v2_refuses_stale_healthy_source_cache_atomically ... ok",
+      "test plot_scale_keeps_explicit_first_and_broken_rows_usable_without_a_cache_write ... ok",
+      "test rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_members ... ok",
+      "test plot_scale_requires_an_atomic_correct_default_row_cache ... ok"
+    ],
+    "ignored": [],
+    "failedTests": [],
+    "scope": "Real PostGIS full seven-test dimension-set guard target. Same-recipe stale source geometry, opening membership, rotated/right-face/centre and large-coordinate caches, plot-scale cache and v1 idempotency covered.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "fixtures-native-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "fixtures",
+      "--",
+      "--nocapture"
+    ],
+    "startedUtc": "20261027T031418Z",
+    "seconds": 450.618,
+    "exitCode": 0,
+    "rawLogPath": "fixtures-native-20261027T031418Z.log",
+    "bytes": 2491,
+    "sha256": "0a0845fa5a9c96e9af4eb2d1649cef9ac81f3b0d589165be44b86d3fe863ea6e",
+    "suiteCount": 1,
+    "totals": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [
+      {
+        "package": "kentos-native-application",
+        "target": "tests/all/main.rs",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 271
+      }
+    ],
+    "scope": "Both desktop command fixture runners passed after the query setup fixture local-slot correction;271 unrelated tests filtered.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "clippy-initial-failed",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-contracts",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-cloud",
+      "-p",
+      "kentos-application",
+      "-p",
+      "kentos-api",
+      "-p",
+      "kentos-ui",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-python",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedUtc": "20261027T032149Z",
+    "seconds": 532.203,
+    "exitCode": 101,
+    "rawLogPath": "clippy-20261027T032149Z.log",
+    "bytes": 5997,
+    "sha256": "d188170eb6c654260bd7f1d022c4f5616582414c224b9c934998f08ccdd6aaee",
+    "suiteCount": 0,
+    "totals": {
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [],
+    "scope": "Failed strict lint gate: three new source-key expect calls, cache event expect and map_entry. Rules were not relaxed; later fixes require another strict run.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "clippy-20261027T033219Z",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-contracts",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-cloud",
+      "-p",
+      "kentos-application",
+      "-p",
+      "kentos-api",
+      "-p",
+      "kentos-ui",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-python",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedUtc": "20261027T033219Z",
+    "seconds": 490.236,
+    "exitCode": 101,
+    "rawLogPath": "clippy-20261027T033219Z.log",
+    "bytes": 6795,
+    "sha256": "2cf51602fbb2ab38840e6ba2ada881a347342cfbd9a6bca0248b255a4b9fd36b",
+    "suiteCount": 0,
+    "totals": {
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [],
+    "scope": "Closed stage; compilation/lint-only stages execute zero tests. Prior failures remain recorded. This stage is not whole-feature acceptance.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "clippy-20261027T034059Z",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-contracts",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-cloud",
+      "-p",
+      "kentos-application",
+      "-p",
+      "kentos-api",
+      "-p",
+      "kentos-ui",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-python",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedUtc": "20261027T034059Z",
+    "seconds": 265.053,
+    "exitCode": 101,
+    "rawLogPath": "clippy-20261027T034059Z.log",
+    "bytes": 5009,
+    "sha256": "d36dfbf8f98fe13e2a6855b36b96cdfa6a75f277faf668c98ea4fd1d915ac296",
+    "suiteCount": 0,
+    "totals": {
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [],
+    "scope": "Closed stage; compilation/lint-only stages execute zero tests. Prior failures remain recorded. This stage is not whole-feature acceptance.",
+    "completeFeatureAcceptance": false
+  },
+  {
+    "format": "kentos.test-run-summary",
+    "version": 1,
+    "stage": "clippy-20261027T034614Z",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-contracts",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-headless",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-cloud",
+      "-p",
+      "kentos-application",
+      "-p",
+      "kentos-api",
+      "-p",
+      "kentos-ui",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-python",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedUtc": "20261027T034614Z",
+    "seconds": 25.623,
+    "exitCode": 101,
+    "rawLogPath": "clippy-20261027T034614Z.log",
+    "bytes": 2918,
+    "sha256": "f9140bb911d1f22be1fa94837e03f54571a8200f93eabbee781f2b19b84529ae",
+    "suiteCount": 0,
+    "totals": {
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    "suites": [],
+    "scope": "Closed stage; compilation/lint-only stages execute zero tests. Prior failures remain recorded. This stage is not whole-feature acceptance.",
+    "completeFeatureAcceptance": false
+  }
+]

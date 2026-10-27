@@ -125,6 +125,7 @@ fn copy_check(doc: &Document, input: &EntitiesCopy) -> Result<Clip, Stop> {
         checks::point(base, "Taban noktasının", "base")?;
     }
     let found = checks::named(doc, &input.uids)?;
+    crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
     // The exchange's rules prune the layer tree, keep the placed blocks and the library items by what the objects
     // name; a representative of each layer, symbol, picture and block they use tells them as much as all of them,
     // and costs no JSON of the rest (docs/adr/0309 §6). The objects themselves stay typed.

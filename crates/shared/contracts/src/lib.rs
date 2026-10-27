@@ -33,6 +33,7 @@ pub mod annotation_scale;
 pub mod annotative;
 pub mod api;
 pub mod assoc_array;
+pub mod dimension_set;
 pub mod arch;
 pub mod opening;
 pub mod space;
@@ -150,6 +151,7 @@ pub use annotation_scale::*;
 pub use annotative::*;
 pub use api::*;
 pub use assoc_array::*;
+pub use dimension_set::*;
 pub use arch::*;
 pub use opening::*;
 pub use space::*;
@@ -266,3 +268,6 @@ pub use paper_scale::PaperScaleRatio;
 
 mod sheet_info;
 pub use sheet_info::DrawingInfo;
+
+mod derived_entities;
+pub use derived_entities::DerivedEntitiesPlan;

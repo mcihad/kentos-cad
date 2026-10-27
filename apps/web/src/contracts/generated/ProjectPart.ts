@@ -5,4 +5,4 @@
  * blocks: project metadata touched by a command. `undo.outside` identifies
  * which parts are outside its undo step (ADR 0590).
  */
-export type ProjectPart = "name" | "settings" | "styles" | "sheets" | "layerFlags" | "constraints";
+export type ProjectPart = "name" | "settings" | "styles" | "sheets" | "layerFlags" | "constraints" | "dimensionSets";

@@ -213,6 +213,24 @@ impl Inner {
         }
     }
 
+    /// A capability check precedes the write; an old server must never accept a
+    /// create and quietly drop recipes it does not understand.
+    async fn require_dimension_sets(&self) -> Result<(), ApiFailure> {
+        let b = self.request(Method::GET, self.url("/v1/health")?, HEALTH_TIMEOUT);
+        match self.json::<Health>(b, HEALTH_TIMEOUT).await {
+            Ok(health)
+                if health
+                    .project_changes_versions
+                    .contains(&kentos_contracts::PROJECT_CHANGES_DIMENSION_SETS_VERSION) =>
+            {
+                Ok(())
+            }
+            Ok(_) => Err(dimension_sets_unavailable()),
+            Err(error) if error.status == 404 => Err(dimension_sets_unavailable()),
+            Err(error) => Err(error),
+        }
+    }
+
     fn json_body<B: Serialize>(b: RequestBuilder, body: &B) -> Result<RequestBuilder, ApiFailure> {
         let bytes = serde_json::to_vec(body)
             .map_err(|e| ApiFailure::local(format!("İstek yazılamadı: {e}")))?;
@@ -383,6 +401,28 @@ pub fn hex_sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
+fn dimension_sets_unavailable() -> ApiFailure {
+    ApiFailure::new(426, "server_feature_unavailable",
+        "Sunucu mimari ölçü dizilerini saklamayı desteklemiyor. Yerel çiziminiz korundu; buluta kaydetmek için sunucuyu güncelleyin.")
+        .with_path("dimensionSets")
+}
+
+fn envelope_needs_dimension_sets(envelope: &CommandEnvelope) -> bool {
+    match envelope.command_name.as_str() {
+        kentos_contracts::PROJECT_CHANGES => envelope
+            .input
+            .get("project")
+            .and_then(|p| p.get("dimensionSets"))
+            .is_some(),
+        kentos_contracts::PROJECT_CREATE => envelope
+            .input
+            .get("dimensionSets")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|sets| !sets.is_empty()),
+        _ => false,
+    }
+}
+
 impl Cloud {
     /// A connection to the server at `server` (`https://kentos.kurum.gov.tr`,
     /// `http://127.0.0.1:8787`), not signed in. Nothing is sent yet.
@@ -450,6 +490,12 @@ impl Cloud {
             let b = inner.request(Method::GET, url?, HEALTH_TIMEOUT);
             inner.json(b, HEALTH_TIMEOUT).await
         })
+    }
+
+    pub(crate) fn require_dimension_sets(
+        &self,
+    ) -> impl Future<Output = Result<(), ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move { inner.require_dimension_sets().await })
     }
 
     /// How this server signs people in (`GET /v1/auth/config`).
@@ -716,6 +762,9 @@ impl Cloud {
         envelope: CommandEnvelope,
     ) -> impl Future<Output = Result<O, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
+            if envelope_needs_dimension_sets(&envelope) {
+                inner.require_dimension_sets().await?;
+            }
             let tenant = Uuid::parse_str(&envelope.tenant_id)
                 .map_err(|_| ApiFailure::local("Komutun kurum kimliği geçersiz."))?;
             let project = Uuid::parse_str(&envelope.project_id)
@@ -733,6 +782,9 @@ impl Cloud {
         envelope: CommandEnvelope,
     ) -> impl Future<Output = Result<O, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
+            if envelope_needs_dimension_sets(&envelope) {
+                inner.require_dimension_sets().await?;
+            }
             let tenant = Uuid::parse_str(&envelope.tenant_id)
                 .map_err(|_| ApiFailure::local("Komutun kurum kimliği geçersiz."))?;
             let url = inner.url(&format!("/v1/tenants/{tenant}/commands"))?;
@@ -750,6 +802,9 @@ impl Cloud {
         key: Uuid,
     ) -> impl Future<Output = Result<ProjectInfo, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
+            if !input.dimension_sets.is_empty() {
+                inner.require_dimension_sets().await?;
+            }
             let url = inner.url(&format!("/v1/tenants/{tenant}/projects"))?;
             let b = inner
                 .request(Method::POST, url, TIMEOUT)

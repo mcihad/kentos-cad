@@ -105,6 +105,7 @@ impl Document {
             sheets,
             requests,
             arrays,
+            dimension_sets,
             constraints,
             ..
         } = snapshot;
@@ -140,6 +141,14 @@ impl Document {
                 return Err(why);
             }
             doc.constraints = Arc::new(constraints);
+        }
+        if !dimension_sets.is_empty() {
+            let list: Vec<_> = dimension_sets.iter().collect();
+            if let Some(why) = doc.dimension_sets_refused(&list) {
+                return Err(why);
+            }
+            doc.dimension_sets = dimension_sets.into_iter().map(Arc::new).collect();
+            doc.normalize_dimension_set_sources();
         }
         Ok(doc)
     }
@@ -180,6 +189,7 @@ impl Document {
             migrated_from: parts.migrated_from,
             sheets: parts.sheets.map(Arc::new),
             arrays: Vec::new(),
+            dimension_sets: Vec::new(),
             constraints: Default::default(),
             layers: LayerTree::new(layers, &active_layer),
             store,
@@ -253,6 +263,11 @@ impl Document {
             sheets: self.sheets.as_deref().cloned(),
             requests: self.requests(),
             arrays: self.arrays.iter().map(|a| (**a).clone()).collect(),
+            dimension_sets: self
+                .dimension_sets
+                .iter()
+                .map(|set| (**set).clone())
+                .collect(),
         };
         (head, objects)
     }
@@ -288,6 +303,7 @@ impl Document {
             sheets: None,
             requests: Vec::new(),
             arrays: Vec::new(),
+            dimension_sets: Vec::new(),
         }
     }
 

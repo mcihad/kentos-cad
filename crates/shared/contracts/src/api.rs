@@ -20,4 +20,13 @@ pub struct Health {
     pub commit: Option<String>,
     /// `CONTRACTS_VERSION` of this build.
     pub contracts: u32,
+    /// Supported project.changes envelope versions. Absent on older servers: no
+    /// opt-in capability, so a client must not send architectural dimension recipes.
+    #[serde(
+        default,
+        rename = "projectChangesVersions",
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
+    pub project_changes_versions: Vec<u32>,
 }

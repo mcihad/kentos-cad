@@ -260,6 +260,105 @@ pub fn check_constraints(set: &kentos_contracts::ConstraintSet, path: &str) -> A
     }
 }
 
+/// Architectural dimension recipes are never pruned during transfer: broken hosts remain repairable.
+pub fn check_dimension_sets(sets: &[kentos_contracts::DimensionSet], path: &str) -> AppResult<()> {
+    match kentos_contracts::dimension_sets_problem(sets) {
+        Some((i, why)) => Err(AppError::invalid_at(format!("{path}[{i}]"), why)),
+        None => Ok(()),
+    }
+}
+
+pub(crate) fn check_dimension_layers(
+    sets: &[kentos_contracts::DimensionSet],
+    layers: &[LayerNode],
+    path: &str,
+) -> AppResult<()> {
+    for (i, set) in sets.iter().enumerate() {
+        if !find_layer(layers, &set.layer_id)
+            .is_some_and(|(node, _)| node.kind == LayerNodeType::Layer)
+        {
+            return Err(AppError::invalid_at(
+                format!("{path}[{i}].layerId"),
+                "Otomatik ölçünün hedefi projede bir katman olmalı.",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// The final feature state of the same transaction must hold every active child.
+/// Sources may be missing (a retained broken recipe); active dimensions may not.
+pub(crate) async fn check_dimension_members(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+    project: Uuid,
+    sets: &[kentos_contracts::DimensionSet],
+    path: &str,
+) -> AppResult<()> {
+    let ids: Vec<Uuid> = sets
+        .iter()
+        .flat_map(|s| s.members.iter().map(|m| Uuid::from_bytes(m.uid.0)))
+        .collect();
+    if ids.is_empty() {
+        return Ok(());
+    }
+    let found: Vec<(Uuid, Option<Value>)> = sqlx::query_as("select id, cad_definition from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3) and kind = 'dimension'")
+        .bind(tenant).bind(project).bind(&ids).fetch_all(&mut **tx).await?;
+    let found: std::collections::HashMap<_, _> = found.into_iter().collect();
+    for (i, set) in sets.iter().enumerate() {
+        for (k, member) in set.members.iter().enumerate() {
+            if !found.contains_key(&Uuid::from_bytes(member.uid.0)) {
+                return Err(AppError::invalid_at(
+                    format!("{path}[{i}].members[{k}].uid"),
+                    "Otomatik ölçünün aktif üyesi aynı işlem sonunda bir ölçü nesnesi olmalı. Tarifi ve üyelerini birlikte gönderin.",
+                ));
+            }
+            let refs: Option<kentos_contracts::DimensionRefs> = found
+                .get(&Uuid::from_bytes(member.uid.0))
+                .and_then(Option::as_ref)
+                .and_then(|definition| definition.get("refs"))
+                .cloned()
+                .map(serde_json::from_value)
+                .transpose()
+                .map_err(|e| {
+                    AppError::invalid_at(
+                        format!("{path}[{i}].members[{k}]"),
+                        format!("Ölçünün kaynak başvuruları okunamadı: {e}"),
+                    )
+                })?;
+            let clean = |reference: &Option<kentos_contracts::SubRef>| {
+                reference.as_ref().map(|r| {
+                    let mut r = r.clone();
+                    r.broken = None;
+                    r
+                })
+            };
+            if !refs.is_some_and(|refs| {
+                clean(&refs.a) == Some(member.a.clone())
+                    && clean(&refs.b) == Some(member.b.clone())
+                    && refs.c.is_none()
+                    && refs.rule.is_none()
+            }) {
+                return Err(AppError::invalid_at(
+                    format!("{path}[{i}].members[{k}]"),
+                    "Ölçü üyesinin kaynak başvuruları tarifiyle aynı olmalı.",
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn dimension_sets_value(
+    sets: &[kentos_contracts::DimensionSet],
+) -> AppResult<Option<Value>> {
+    if sets.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(json(&sets)?))
+    }
+}
+
 /// The constraints as a column holds them: none when there are none.
 pub(crate) fn constraints_value(set: &kentos_contracts::ConstraintSet) -> AppResult<Option<Value>> {
     if set.is_empty() {
@@ -401,6 +500,18 @@ pub async fn create(
     check_sheets(input.sheets.as_ref(), "sheets")?;
     check_arrays(&input.arrays, "arrays")?;
     check_constraints(&input.constraints, "constraints")?;
+    check_dimension_sets(&input.dimension_sets, "dimensionSets")?;
+    check_dimension_layers(&input.dimension_sets, &input.layers, "dimensionSets")?;
+    if input
+        .dimension_sets
+        .iter()
+        .any(|set| !set.members.is_empty())
+    {
+        return Err(AppError::invalid_at(
+            "dimensionSets",
+            "Yeni proje henüz üye nesne içermez. Mimari ölçü dizilerini çizimin içeriğiyle aynı içe aktarma işleminde veya project.changes v2 ile gönderin.",
+        ));
+    }
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -426,8 +537,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage, sheets, arrays, constraints)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19)",
+                                     description, project_type, tags, storage, sheets, arrays, constraints, dimension_sets)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19, $20)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -448,6 +559,7 @@ pub async fn create(
     .bind(input.sheets.as_ref().map(json).transpose()?)
     .bind(arrays_value(&input.arrays)?)
     .bind(constraints_value(&input.constraints)?)
+    .bind(dimension_sets_value(&input.dimension_sets)?)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
@@ -543,7 +655,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
                 p.deleted_at is not null, p.storage, p.sheets,
-                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints)
+                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints, 'dimensionSets', p.dimension_sets)
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -581,6 +693,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         |name: &str, parts: &mut Value| Some(parts.get_mut(name)?.take()).filter(|v| !v.is_null());
     let arrays = part("arrays", &mut meta_parts);
     let constraints = part("constraints", &mut meta_parts);
+    let dimension_sets = part("dimensionSets", &mut meta_parts);
     if deleted {
         return Err(gone(&name));
     }
@@ -610,6 +723,11 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
             .map_err(bad)?
             .unwrap_or_default(),
         constraints: constraints
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?
+            .unwrap_or_default(),
+        dimension_sets: dimension_sets
             .map(serde_json::from_value)
             .transpose()
             .map_err(bad)?

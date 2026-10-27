@@ -42,6 +42,7 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::spaces_discover;
+use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 use kentos_native_application::spaces_separators;
 use kentos_native_application::spaces_number;
 use kentos_native_application::donut_create;
@@ -445,6 +446,41 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::DimensionSetsCreateInput {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "gapMm" => Some(&mut self.gap_mm),
+            _ => None,
+        }
+    }
+}
+impl Input for kentos_commands::DimensionSetsEditInput {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match &mut self.operation {
+            kentos_commands::DimensionSetEdit::Move { at, .. } => match path {
+                "operation.at.x" => Some(&mut at.x),
+                "operation.at.y" => Some(&mut at.y),
+                _ => None,
+            },
+            kentos_commands::DimensionSetEdit::RowOffset { offset, .. }
+                if path == "operation.offset" =>
+            {
+                Some(offset)
+            }
+            kentos_commands::DimensionSetEdit::Set { gap_mm, .. } if path == "operation.gapMm" => {
+                gap_mm.as_mut()
+            }
+            _ => None,
+        }
+    }
+}
+impl Input for kentos_commands::DimensionSetsQueryInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
 }
 
 // The constraint commands' numbers are in expressions, not the input's numbers (docs/adr/0335).
@@ -3619,6 +3655,17 @@ fn run_op(
         }};
     }
     match command {
+        kentos_commands::CAD_DIMENSION_SETS_CREATE => run!(
+            dimension_sets_create,
+            kentos_commands::DimensionSetsCreateInput
+        ),
+        kentos_commands::CAD_DIMENSION_SETS_EDIT => {
+            run!(dimension_sets_edit, kentos_commands::DimensionSetsEditInput)
+        }
+        kentos_commands::CAD_DIMENSION_SETS_QUERY => run!(
+            dimension_sets_query,
+            kentos_commands::DimensionSetsQueryInput
+        ),
         CAD_POLYGON_CREATE => run!(polygon, PolygonCreate),
         CAD_LINE_CREATE => run!(line, LineCreate),
         CAD_POLYLINE_CREATE => run!(polyline, PolylineCreate),
@@ -4634,6 +4681,21 @@ fn check(
             }
             // The drawing's associative arrays in order, each without its id (docs/adr/0300); the expected
             // block and items by `$blockOf:Ad` and `$uidOf:12`.
+            "dimensionSets" => {
+                let got = serde_json::to_value(
+                    doc.dimension_sets()
+                        .iter()
+                        .map(|s| &**s)
+                        .collect::<Vec<_>>(),
+                )
+                .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(
+                    &got,
+                    &fill(want, doc, state, at)?,
+                    "duvar ölçü grupları",
+                    at,
+                )?;
+            }
             "arrays" => {
                 let got: Vec<Value> = doc
                     .arrays()

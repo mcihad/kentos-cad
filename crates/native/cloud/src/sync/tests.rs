@@ -23,6 +23,7 @@ pub(super) fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -
         tenant: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000002").unwrap(),
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
+            dimension_sets: Vec::new(),
             constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
@@ -258,8 +259,8 @@ fn a_conflict_in_other_fields_is_merged_and_sent_again_over_theirs_and_a_clash_s
     let mut theirs = base.clone();
     theirs.base_mut().label = Some("ortak".into());
     let answer = |entity: Entity| {
-        ApiFailure::new(409, "conflict", "Nesne başkası tarafından değiştirildi.").with_conflicts(vec![
-            FeatureConflict {
+        ApiFailure::new(409, "conflict", "Nesne başkası tarafından değiştirildi.").with_conflicts(
+            vec![FeatureConflict {
                 id: uid.to_string(),
                 reason: ConflictReason::Changed,
                 expected: Some("1".into()),
@@ -269,8 +270,8 @@ fn a_conflict_in_other_fields_is_merged_and_sent_again_over_theirs_and_a_clash_s
                     version: "3".into(),
                     entity,
                 }),
-            },
-        ])
+            }],
+        )
     };
     let (after, merged) = sync.failed_in(&mut o.document, &answer(theirs));
     assert_eq!((after, merged), (After::Retry(Duration::ZERO), 1));
@@ -278,10 +279,15 @@ fn a_conflict_in_other_fields_is_merged_and_sent_again_over_theirs_and_a_clash_s
     assert_eq!(sync.state(), SaveState::Pending);
     assert_eq!(x_of(&o.document, uid), Some(486700.0));
     let slot = o.document.slot_of(uid).unwrap();
-    assert_eq!(o.document.get(slot).unwrap().base().label.as_deref(), Some("ortak"));
+    assert_eq!(
+        o.document.get(slot).unwrap().base().label.as_deref(),
+        Some("ortak")
+    );
     let env = sync.next(&o.document).unwrap();
     assert_eq!(
-        env.expected_versions.get(&uid.to_string()).map(String::as_str),
+        env.expected_versions
+            .get(&uid.to_string())
+            .map(String::as_str),
         Some("3")
     );
     // Both moved it, differently: the same field, a conflict as before.
@@ -688,7 +694,12 @@ fn an_object_changed_here_and_elsewhere_in_other_fields_is_merged_and_sent_over_
     let mut theirs = base.clone();
     theirs.base_mut().label = Some("ortak".into());
     theirs.base_mut().attrs.insert("Ada".into(), "101".into());
-    let incoming = sync.incoming(&page(vec![event(10, None, &[(id, FeatureOp::Update)], false)]));
+    let incoming = sync.incoming(&page(vec![event(
+        10,
+        None,
+        &[(id, FeatureOp::Update)],
+        false,
+    )]));
     let taken = sync
         .take_remote(
             &mut o.document,
@@ -706,12 +717,17 @@ fn an_object_changed_here_and_elsewhere_in_other_fields_is_merged_and_sent_over_
     let slot = o.document.slot_of(id).unwrap();
     let merged = o.document.get(slot).unwrap();
     assert_eq!(merged.base().label.as_deref(), Some("ortak"));
-    assert_eq!(merged.base().attrs.get("Ada").map(String::as_str), Some("101"));
+    assert_eq!(
+        merged.base().attrs.get("Ada").map(String::as_str),
+        Some("101")
+    );
     assert!(sync.conflicts().is_empty());
     assert_eq!(sync.version_of(id), Some("5"));
     let env = sync.next(&o.document).unwrap();
     assert_eq!(
-        env.expected_versions.get(&id.to_string()).map(String::as_str),
+        env.expected_versions
+            .get(&id.to_string())
+            .map(String::as_str),
         Some("5")
     );
     match &input(&env).features[0] {
@@ -736,7 +752,12 @@ fn an_object_whose_change_is_on_its_way_is_not_merged_but_a_conflict() {
     assert!(sync.next(&o.document).is_some());
     let mut theirs = base;
     theirs.base_mut().label = Some("ortak".into());
-    let incoming = sync.incoming(&page(vec![event(10, None, &[(id, FeatureOp::Update)], false)]));
+    let incoming = sync.incoming(&page(vec![event(
+        10,
+        None,
+        &[(id, FeatureOp::Update)],
+        false,
+    )]));
     let taken = sync
         .take_remote(
             &mut o.document,
@@ -2107,4 +2128,162 @@ fn an_edit_made_meanwhile_goes_over_the_servers_merge() {
             .map(String::as_str),
         Some("7")
     );
+}
+
+fn dimension_model() -> kentos_contracts::DocumentSnapshotV2 {
+    serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dimension-sets.json"
+    ))
+    .unwrap()
+}
+
+fn dimension_opened(model: kentos_contracts::DocumentSnapshotV2) -> Opened {
+    let mut o = editor();
+    o.document = Document::from_snapshot_v2(model).unwrap();
+    o.source = Source::Database {
+        versions: o
+            .document
+            .entities()
+            .map(|e| (o.document.uid(Slot(e.base().id)).unwrap(), "1".into()))
+            .collect(),
+        blocks: Vec::new(),
+    };
+    o
+}
+
+#[test]
+fn dimension_recipe_and_members_are_prioritised_together_before_unrelated_batch() {
+    let model = dimension_model();
+    let mut base = model.clone();
+    base.dimension_sets.clear();
+    base.entities.truncate(1);
+    base.uids.truncate(1);
+    let mut o = dimension_opened(base);
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let mut put: Vec<_> = (1..=BATCH + 20)
+        .map(|i| {
+            let mut uid = [0u8; 16];
+            uid[0] = 1;
+            uid[8..].copy_from_slice(&(i as u64).to_be_bytes());
+            let mut point = point(i as f64);
+            point.base_mut().layer_id = "0".into();
+            (Uuid::from_bytes(uid), point)
+        })
+        .collect();
+    let member = Uuid::from_bytes(model.uids[1].0);
+    put.push((member, model.entities[1].clone()));
+    o.document
+        .apply_external(kentos_domain::External {
+            put,
+            meta: Some(kentos_domain::ExternalMeta {
+                dimension_sets: Some(model.dimension_sets.clone()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .unwrap();
+    let command = sync.next(&o.document).unwrap();
+    assert_eq!(command.version, 2);
+    let changes = input(&command);
+    assert_eq!(
+        changes.project.unwrap().dimension_sets.unwrap(),
+        model.dimension_sets
+    );
+    assert!(
+        changes
+            .features
+            .iter()
+            .any(|c| matches!(c, FeatureChange::Create {id,..} if id == &member.to_string()))
+    );
+    assert_eq!(changes.features.len(), BATCH);
+    assert!(sync.pending() > BATCH);
+    // A queued v2 command survives draft serialization and retains exactly its request/key.
+    let draft = sync.draft(&o.document, "ayse").unwrap();
+    let mut again = dimension_opened({
+        let mut d = model.clone();
+        d.dimension_sets.clear();
+        d.entities.truncate(1);
+        d.uids.truncate(1);
+        d
+    });
+    let mut restarted = ProjectSync::new(&again).unwrap();
+    restarted
+        .restore(
+            &mut again.document,
+            serde_json::from_value(serde_json::to_value(draft).unwrap()).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(restarted.next(&again.document).unwrap(), command);
+}
+
+#[test]
+fn removing_the_last_recipe_uses_v2_even_when_the_wire_list_is_empty() {
+    let model = dimension_model();
+    let id = model.dimension_sets[0].id;
+    let mut o = dimension_opened(model);
+    let mut sync = ProjectSync::new(&o).unwrap();
+    assert!(o.document.remove_dimension_set(id).unwrap());
+    let command = sync.next(&o.document).unwrap();
+    assert_eq!(command.version, 2);
+    assert_eq!(
+        input(&command).project.unwrap().dimension_sets,
+        Some(Vec::new())
+    );
+}
+
+#[test]
+fn a_connected_dimension_group_above_the_server_limit_sends_no_partial_command() {
+    let mut model = dimension_model();
+    let template = model.entities[1].clone();
+    let source = model.dimension_sets[0].members[0].clone();
+    model.entities.truncate(1);
+    model.uids.truncate(1);
+    model.dimension_sets[0].members.clear();
+    model.dimension_sets[0].suppressed.clear();
+    let mut base = model.clone();
+    base.dimension_sets.clear();
+    let mut o = dimension_opened(base);
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let mut put = Vec::new();
+    for n in 0..=kentos_contracts::processing_job::PROJECT_CHANGES_MAX {
+        let mut uid = [0x55; 16];
+        uid[8..].copy_from_slice(&(n as u64 + 1).to_be_bytes());
+        let id = kentos_contracts::EntityId(uid);
+        let mut member = source.clone();
+        member.uid = id;
+        member.a.place = kentos_contracts::SubPlace::Vertex {
+            part: 0,
+            ring: 0,
+            index: n as u32,
+        };
+        member.b.place = kentos_contracts::SubPlace::Vertex {
+            part: 0,
+            ring: 0,
+            index: n as u32 + 1,
+        };
+        let mut entity = template.clone();
+        if let Entity::Dimension(d) = &mut entity {
+            d.refs = Some(Box::new(kentos_contracts::DimensionRefs {
+                a: Some(member.a.clone()),
+                b: Some(member.b.clone()),
+                ..Default::default()
+            }));
+        }
+        model.dimension_sets[0].members.push(member);
+        put.push((Uuid::from_bytes(uid), entity));
+    }
+    o.document
+        .apply_external(kentos_domain::External {
+            put,
+            meta: Some(kentos_domain::ExternalMeta {
+                dimension_sets: Some(model.dimension_sets),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .unwrap();
+    assert!(sync.next(&o.document).is_none());
+    assert_eq!(sync.state(), SaveState::Error);
+    assert!(sync.error.as_deref().unwrap().contains("5000"));
+    assert!(sync.inflight.is_none());
 }

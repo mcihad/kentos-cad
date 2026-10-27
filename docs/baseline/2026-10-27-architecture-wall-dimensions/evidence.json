@@ -1,0 +1,2788 @@
+{
+  "format": "kentos.architecture-wall-dimensions-evidence",
+  "version": 1,
+  "status": "draft-final-gates-pending",
+  "featureAccepted": false,
+  "wholeArchitectureAccepted": false,
+  "acceptanceGates": {
+    "native": "passed-in-captured-native-stage",
+    "pythonNative": "passed-in-recorded-full366-python-stage",
+    "mcp": "passed-in-captured-native-stage",
+    "headless": "passed-in-captured-native-stage",
+    "cloud": "passed-in-captured-native-stage",
+    "serverPostgis": "passed-in-final-seven-test-real-postgis-stage",
+    "guiMatrix": "partial",
+    "desktopLatestUx": "passed-in-final-desktop-and-ui-tests",
+    "guiLatestUx": "listed-live3-workflows-validated-matrix-partial",
+    "currentSourceBuild": "build3-source-drift-server-fix-and-final-domain-lint-fixes-build4-pending",
+    "apiHealth": "passed-one-targeted-health-test-other-targets-filtered"
+  },
+  "defaultRawEvidenceRoot": ".run/gui-evidence/2026-10-27-wall-dimensions",
+  "models": [
+    {
+      "path": "models/22-single-confirm.kcad",
+      "rawSource": "22-single-confirm.kcad",
+      "bytes": 4096,
+      "sha256": "f4ebf2604049ba3133a1d310de73c005a81fc11d8dfeb133e461250ab471ce54",
+      "build": "live-1"
+    },
+    {
+      "path": "models/23-undo.kcad",
+      "rawSource": "23-undo.kcad",
+      "bytes": 1837,
+      "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244",
+      "build": "live-1"
+    },
+    {
+      "path": "models/24-redo.kcad",
+      "rawSource": "24-redo.kcad",
+      "bytes": 4096,
+      "sha256": "f4ebf2604049ba3133a1d310de73c005a81fc11d8dfeb133e461250ab471ce54",
+      "build": "live-1"
+    },
+    {
+      "path": "models/28-width-200cm.kcad",
+      "rawSource": "28-width-200cm.kcad",
+      "bytes": 4096,
+      "sha256": "e7b69bca0f4d5e554bd170fa92596b2f35014a2fe2243050460b3f67d9a9b00b",
+      "build": "live-1"
+    },
+    {
+      "path": "models/29-opening-deleted.kcad",
+      "rawSource": "29-opening-deleted.kcad",
+      "bytes": 2780,
+      "sha256": "c2f007781703a010452488d27c16bab0d474e49d1a0ee4a014186f16acb2a848",
+      "build": "live-1"
+    },
+    {
+      "path": "models/33-opening-added.kcad",
+      "rawSource": "33-opening-added.kcad",
+      "bytes": 5412,
+      "sha256": "8efbcc035fe63caa8a7cc3f38a3373f0b1069e2b82c6a896870074d53bad856d",
+      "build": "live-1"
+    },
+    {
+      "path": "models/35-opening-position-7m.kcad",
+      "rawSource": "35-opening-position-7m.kcad",
+      "bytes": 5412,
+      "sha256": "ce69e848e2802a64e86feff3967ea7bb1eebf7323690c715062ae9388011384e",
+      "build": "live-1"
+    },
+    {
+      "path": "models/40-row-offset-3m.kcad",
+      "rawSource": "40-row-offset-3m.kcad",
+      "bytes": 5462,
+      "sha256": "6af8f7a6404daaa78e88fc38934ce953d1bc7db4c975e8fa6c00168d24dfe46f",
+      "build": "live-1"
+    },
+    {
+      "path": "models/41-one-member-hidden.kcad",
+      "rawSource": "41-one-member-hidden.kcad",
+      "bytes": 5147,
+      "sha256": "5b453ba7b03f4732e6b9dabbd32105576ba5ea99637bdc2e432f3e63c4f1f3fc",
+      "build": "live-1"
+    },
+    {
+      "path": "models/44-member-restored.kcad",
+      "rawSource": "44-member-restored.kcad",
+      "bytes": 5462,
+      "sha256": "5a62d13be14d1ca9b556a577c7ab83877216e2f17a8cc5c3f1050b4852982338",
+      "build": "live-1"
+    },
+    {
+      "path": "models/46-centers.kcad",
+      "rawSource": "46-centers.kcad",
+      "bytes": 4299,
+      "sha256": "ad24143f183d28ab34d9ee42c87fdb1a980fa8bc2d94f4903579d3b20b95d553",
+      "build": "live-1"
+    },
+    {
+      "path": "models/48-reopened.kcad",
+      "rawSource": "48-reopened.kcad",
+      "bytes": 4299,
+      "sha256": "ad24143f183d28ab34d9ee42c87fdb1a980fa8bc2d94f4903579d3b20b95d553",
+      "build": "live-1"
+    },
+    {
+      "path": "models/51-sheet.kcad",
+      "rawSource": "51-sheet.kcad",
+      "bytes": 13291,
+      "sha256": "3e6ca01acc2ef9ce713dd270afc9af9bbc0cba4f6d81a9a2ee7388880be21c7d",
+      "build": "live-1"
+    },
+    {
+      "path": "models/58-live2-cancel.kcad",
+      "rawSource": "58-live2-cancel.kcad",
+      "bytes": 1837,
+      "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244",
+      "build": "live-2"
+    },
+    {
+      "path": "models/64-live2-exact-distance.kcad",
+      "rawSource": "64-live2-exact-distance.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/65-live2-exact-distance-undo.kcad",
+      "rawSource": "65-live2-exact-distance-undo.kcad",
+      "bytes": 1837,
+      "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244",
+      "build": "live-2"
+    },
+    {
+      "path": "models/66-live2-exact-distance-redo.kcad",
+      "rawSource": "66-live2-exact-distance-redo.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/70-live2-cursor-cancel.kcad",
+      "rawSource": "70-live2-cursor-cancel.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/73-live2-style-100-close.kcad",
+      "rawSource": "73-live2-style-100-close.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-2"
+    },
+    {
+      "path": "models/76-live2-style-200.kcad",
+      "rawSource": "76-live2-style-200.kcad",
+      "bytes": 2228,
+      "sha256": "01085924272b38850de88fbcb1b39e0d399a77b90d5408aa062b49b6782074c2",
+      "build": "live-2"
+    },
+    {
+      "path": "models/78-live2-rejected-no-write.kcad",
+      "rawSource": "78-live2-rejected-no-write.kcad",
+      "bytes": 2228,
+      "sha256": "01085924272b38850de88fbcb1b39e0d399a77b90d5408aa062b49b6782074c2",
+      "build": "live-2"
+    },
+    {
+      "path": "models/80-live2-style-200-sheet.kcad",
+      "rawSource": "80-live2-style-200-sheet.kcad",
+      "bytes": 11214,
+      "sha256": "d8c769078ee0c135689d89f5d270a4af682d397f33040630b75ef909bce6b131",
+      "build": "live-2"
+    },
+    {
+      "path": "models/83-live2-navigation-no-write.kcad",
+      "rawSource": "83-live2-navigation-no-write.kcad",
+      "bytes": 11214,
+      "sha256": "d8c769078ee0c135689d89f5d270a4af682d397f33040630b75ef909bce6b131",
+      "build": "live-2"
+    },
+    {
+      "path": "models/88-live2-detached.kcad",
+      "rawSource": "88-live2-detached.kcad",
+      "bytes": 2977,
+      "sha256": "2f1a9e69332935d892ff67216c6847cb77f3c945416a19584e1f35c273628b35",
+      "build": "live-2"
+    },
+    {
+      "path": "models/89-live2-detach-undo.kcad",
+      "rawSource": "89-live2-detach-undo.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/90-live2-source-wall-deleted.kcad",
+      "rawSource": "90-live2-source-wall-deleted.kcad",
+      "bytes": 4166,
+      "sha256": "f1000cbe8565d2d7281280e9fe00d6e57139f57d994d28ad912cef9e4c99b38e",
+      "build": "live-2"
+    },
+    {
+      "path": "models/92-live2-source-delete-undo.kcad",
+      "rawSource": "92-live2-source-delete-undo.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/96-live2-whole-set-deleted.kcad",
+      "rawSource": "96-live2-whole-set-deleted.kcad",
+      "bytes": 1837,
+      "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244",
+      "build": "live-2"
+    },
+    {
+      "path": "models/97-live2-whole-delete-undo.kcad",
+      "rawSource": "97-live2-whole-delete-undo.kcad",
+      "bytes": 4096,
+      "sha256": "543cab9affc90f7d9e68499ed1577e807e97c68752380831deb31d768a7d21f8",
+      "build": "live-2"
+    },
+    {
+      "path": "models/125-live3-navigation-no-write.kcad",
+      "rawSource": "125-live3-navigation-no-write.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-3"
+    },
+    {
+      "path": "models/137-live3-style-manually-restored.kcad",
+      "rawSource": "137-live3-style-manually-restored.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-3"
+    },
+    {
+      "path": "models/141-live3-style-navigation-no-write.kcad",
+      "rawSource": "141-live3-style-navigation-no-write.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-3"
+    },
+    {
+      "path": "models/153-live3-single-confirm-created.kcad",
+      "rawSource": "153-live3-single-confirm-created.kcad",
+      "bytes": 4096,
+      "sha256": "c66c9961709e40306673bc344c027b9b8db4ab33e8d57ec63425c8e15dc38739",
+      "build": "live-3"
+    },
+    {
+      "path": "models/154-live3-single-undo.kcad",
+      "rawSource": "154-live3-single-undo.kcad",
+      "bytes": 1837,
+      "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244",
+      "build": "live-3"
+    },
+    {
+      "path": "models/155-live3-single-redo.kcad",
+      "rawSource": "155-live3-single-redo.kcad",
+      "bytes": 4096,
+      "sha256": "c66c9961709e40306673bc344c027b9b8db4ab33e8d57ec63425c8e15dc38739",
+      "build": "live-3"
+    },
+    {
+      "path": "models/130-live3-style-name-saved.kcad",
+      "rawSource": "130-live3-style-name-saved.kcad",
+      "bytes": 2231,
+      "sha256": "ba34192fc309c8c78d156101f79c29fca6cfde8dc98c763f1b9a1f07e5952e29",
+      "build": "live-3"
+    },
+    {
+      "path": "models/128-live3-wall-style-cancel.kcad",
+      "rawSource": "128-live3-wall-style-cancel.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-3"
+    },
+    {
+      "path": "models/156-live3-new-process-reopened.kcad",
+      "rawSource": "156-live3-new-process-reopened.kcad",
+      "bytes": 4096,
+      "sha256": "c66c9961709e40306673bc344c027b9b8db4ab33e8d57ec63425c8e15dc38739",
+      "build": "live-3"
+    },
+    {
+      "path": "models/164-live3-style-draft-cancelled.kcad",
+      "rawSource": "164-live3-style-draft-cancelled.kcad",
+      "bytes": 4096,
+      "sha256": "c66c9961709e40306673bc344c027b9b8db4ab33e8d57ec63425c8e15dc38739",
+      "build": "live-3"
+    },
+    {
+      "path": "models/165-long-style-seed.kcad",
+      "rawSource": "live-3/styles-long.kcad",
+      "bytes": 14600,
+      "sha256": "89b83eeb2140ebc5fd76c6fecbd354c331020f06fdb8d42e147d7c77ce8b2aad",
+      "build": "independent-pre-gui-seed"
+    },
+    {
+      "path": "models/176-live3-long-style-cancelled.kcad",
+      "rawSource": "176-live3-long-style-cancelled.kcad",
+      "bytes": 14600,
+      "sha256": "89b83eeb2140ebc5fd76c6fecbd354c331020f06fdb8d42e147d7c77ce8b2aad",
+      "build": "live-3"
+    },
+    {
+      "path": "models/183-normal-zoom-roundtrip.kcad",
+      "rawSource": "183-normal-zoom-roundtrip.kcad",
+      "bytes": 2228,
+      "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+      "build": "live-3"
+    }
+  ],
+  "builds": [
+    {
+      "id": "historical-before",
+      "path": "builds/before-build.json",
+      "bytes": 287,
+      "sha256": "0cef0e4258f29a2b9e4a317f5daf9a1cd0ad5dfdd45c3ac5e8344fff1886729e",
+      "binaryRelativeToRepo": ".run/KentOS Wall Styles Before QA.app/Contents/MacOS/kentos-cad-bin",
+      "binarySha256": "ceb373abcaf6796fdb0e656bf6fff1e2abc8619048edcaf400ee514c43f76f12",
+      "sourceFiles": 0,
+      "scope": "historical diagnostic only"
+    },
+    {
+      "id": "live-1",
+      "path": "builds/live-1-build.json",
+      "bytes": 18856,
+      "sha256": "2a92f435155cdf2893f8cb21131f1b50f10f651be15c0b57c31f165ce2894a75",
+      "binaryRelativeToRepo": ".run/KentOS Architecture Live 1 QA.app/Contents/MacOS/kentos-cad-bin",
+      "binarySha256": "496758b7624dd7026507938fc71fdb247d506f284c3fdd6becf21951cfd6a03c",
+      "sourceFiles": 159,
+      "scope": "frozen GUI build; not the current source tree"
+    },
+    {
+      "id": "live-2",
+      "path": "builds/live-2-build.json",
+      "bytes": 18856,
+      "sha256": "f55ccce28382b622c412dd16bb6e6c0205aabf56cb7172d641d347e73b5f1ce5",
+      "binaryRelativeToRepo": ".run/KentOS Architecture Live 2 QA.app/Contents/MacOS/kentos-cad-bin",
+      "binarySha256": "748a754e019f6cd7c7db2756f9601a886d47798986f82829792af69525578533",
+      "sourceFiles": 159,
+      "scope": "frozen GUI build; not the current source tree"
+    },
+    {
+      "id": "live-3",
+      "path": "builds/live-3-build.json",
+      "bytes": 20435,
+      "sha256": "853e56ae71682428065fe4c5c27336c302c23c3dbdd0d1d967ba18de7b5cea10",
+      "binaryRelativeToRepo": ".run/KentOS Architecture Live 3 QA.app/Contents/MacOS/kentos-cad-bin",
+      "binarySha256": "65a2fd393468dbb6bfb2a4e526cee97f092aa24cd1a6498119965ca33d379406",
+      "sourceFiles": 171,
+      "scope": "Final frozen GUI source; --check-current-sources targets this build."
+    }
+  ],
+  "images": [
+    {
+      "path": "01-before-style-fit.png",
+      "bytes": 472385,
+      "sha256": "628fb26c71b30317aed29bcf8bed4506f1b6dbd459c8fd70c72d75c4960d5acf",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "02-before-style-zoom-out.png",
+      "bytes": 618113,
+      "sha256": "b90334d51bcd17f4e2790f5620d0a555f12ba7dcdf0a2a1b7f486dd7c4309451",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "03-before-style-fit-restored.png",
+      "bytes": 474074,
+      "sha256": "ec58cc8b093a6250edb56b47f35c1465e93081609407451e591aada83993b652",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "04-before-style-close.png",
+      "bytes": 549542,
+      "sha256": "7856dd0d59222d8497b1586d5c81f2ccf5f29c379bc9f36f80137e0ea27675dd",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "05-before-style-100.png",
+      "bytes": 467764,
+      "sha256": "c66c63906c117f0f6a8e5a06e8d9b652e89407759bd41f766eb8987b150de34a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "06-before-style-100-close.png",
+      "bytes": 500582,
+      "sha256": "6ad6f86f3b62cca2fa1a99d07e6ea6c827170443fd5cc823dc23d46b5c68f636",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "07-before-style-manager.png",
+      "bytes": 532512,
+      "sha256": "33ca195fe5e905a7223f8bdfc67fc6cee84bb772bbc6cdecf3b5561bc22dfc32",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "08-before-explicit-detailed-100.png",
+      "bytes": 473296,
+      "sha256": "79ae69d056cf387bfc08a0e356b5a537e931c05874fa58f3d9a60ce792061f12",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "09-before-explicit-detailed-100-close.png",
+      "bytes": 504403,
+      "sha256": "91d0ac1a1a618b220d5469d3b17ff9d7f4c4c9eeaf1e01683a18d7e8812ae01e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "historical-diagnostic",
+      "build": "historical-before",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "10-after-auto-style-100-fit.png",
+      "bytes": 472118,
+      "sha256": "63ce0a035d48e6c531876158e4339cdd05ea2d709ce113ae5c6298127435ce84",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "unattributed-style-comparison-diagnostic",
+      "build": null,
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "11-after-auto-style-100-close.png",
+      "bytes": 508027,
+      "sha256": "2de6d682baaf619ce428bcb616fa21f2bf6c8bcab25b3e6a597624c36d49d3fb",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "unattributed-style-comparison-diagnostic",
+      "build": null,
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "12-after-style-100-out.png",
+      "bytes": 481746,
+      "sha256": "a1d1e80be22da7e2400abf3abad8cb97bf166694d41467299ee3b1edf4aade19",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "unattributed-style-comparison-diagnostic",
+      "build": null,
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "13-live-dimensions-seed.png",
+      "bytes": 532052,
+      "sha256": "258dd39011b5c630063e9fbcdc87c8d8295e6355276df8204a6e89f4dfceb8b4",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "14-live-architecture-ribbon.png",
+      "bytes": 522539,
+      "sha256": "33587e1af46c3b945bd22f013c7ea6b90f01f4520eef0b5b5a1c97f26867ce98",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "15-live-dimension-settings-pick.png",
+      "bytes": 532331,
+      "sha256": "79402c46a5423328e7e130ddc22610bebc7212ab9d3bae9677208fc3dd4722ec",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "16-live-dimension-source-preview.png",
+      "bytes": 540838,
+      "sha256": "acd804859c6791fa72d0a43bebc46deb8b50aed70d2f922c9ec96554303f656d",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "failed-source-pick-diagnostic",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "17-live-dimension-source-edge.png",
+      "bytes": 560917,
+      "sha256": "98f5f026e0c5524db38aab1232d666a90469d413e94ab53d50999f5d3d380496",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "18-live-dimension-spacing-settings.png",
+      "bytes": 555642,
+      "sha256": "684fea640408be95ffeea5231cfa8ca9daa0f96d908dbb9ffafe1ea7e5b28435",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "19-live-dimension-distance-preview.png",
+      "bytes": 585643,
+      "sha256": "1067f6e5eaa9728105aee79dc782de3a51ac789caf908c02777c6c4fa3a674ac",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "20-live-dimension-gap-preview.png",
+      "bytes": 581882,
+      "sha256": "3ec8f71363c379f5899ff618d4320a73d94fa59e4d746c3500022eae0332d04d",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "21-live-dimension-context-confirm.png",
+      "bytes": 590536,
+      "sha256": "156c53f6d03697d6739d5c5aad14d541b0562755f73c6d9e7638081030fb3552",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "known-bug-pointer-distance",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "22-live-dimension-single-confirm.png",
+      "bytes": 506931,
+      "sha256": "8e2be1a5a16c8392b2dc7594b9b42916e35327b13fdd6e52b1e96ca04bd95357",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "23-live-dimension-undo.png",
+      "bytes": 532477,
+      "sha256": "fefe6e12febca2ce2d39db51e1d1089a140426b744c7c5f7fe0e122ef22e2295",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "24-live-dimension-redo.png",
+      "bytes": 546831,
+      "sha256": "66c57870633351a6ab474ef3d8f96c663a85395e69beef7ae9c8d953ba6ac2f0",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "25-live-opening-inspector.png",
+      "bytes": 507667,
+      "sha256": "bb3a0fb0592bda35daffb2c71f6379897b15d1812815fa05c774091f817e48db",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "26-live-opening-width-settings.png",
+      "bytes": 473245,
+      "sha256": "38f1fd431abe2dc684c5f937da70324adc6cd9419012ebb58e7dc7344dddef8a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "27-live-opening-width-before.png",
+      "bytes": 481691,
+      "sha256": "dc1b555e9614528203e783266a59be60a6dfec119c909bc70f34f5330f636c60",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "28-live-opening-width-200cm.png",
+      "bytes": 482169,
+      "sha256": "d6dfcf04646c939b67484e9f3cbc16cc65ccdcad39ed8a80eb0961ea31f9a7cd",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "29-live-opening-delete.png",
+      "bytes": 537894,
+      "sha256": "0217361ee0f9d5fb301930545a500274c8e46548f668d415e4e5679dcc2145fe",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "30-live-window-add-settings.png",
+      "bytes": 562664,
+      "sha256": "a9c31f3eb08607226e7e1dee85f2166eab2800b32d1325cc92be6497520e9221",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "31-live-new-opening-preview.png",
+      "bytes": 587629,
+      "sha256": "bf19e4ef5da633a55791d0c088c973d838a89ed93bda408e949ad682ae2add6c",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "32-live-new-opening-preview-clear.png",
+      "bytes": 587691,
+      "sha256": "6ee81b9d2c71b24b3a8ca00c18070522eae199128d628e1f20ee741814406b74",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "33-live-new-opening-created.png",
+      "bytes": 549179,
+      "sha256": "d7a2a709e69122cb578da80041ebba65b644d6efa14dcd0597d97d9857a75258",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "34-live-second-opening-position.png",
+      "bytes": 478545,
+      "sha256": "44e69c6217f78ba186b2ba1b57f8ec12f131d4a1df01b4f43310aa133f1340d3",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "35-live-opening-position-7m.png",
+      "bytes": 500045,
+      "sha256": "8bb6e56ffd531e9b14f96543ed51c3a0fe37607183718d9fc2c1c8420a82c805",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "36-live-dimension-inspector.png",
+      "bytes": 503137,
+      "sha256": "af4fea418d10114d348cfe979a90e5e9671bbe1f2788a2a1a3c05d23b4d1fa74",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "37-live-dimension-row-controls.png",
+      "bytes": 494818,
+      "sha256": "4f3b5a4ff19afef95533a978bb1de44de8443b4f82ae1f72fa88deb915e1fadd",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "38-live-dimension-offset-controls.png",
+      "bytes": 504888,
+      "sha256": "0d5c1540f3dcb88fbf69aab86d7dcabbbdbaa8593a465a378042e0c787ac1544",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "39-live-dimension-geometry-controls.png",
+      "bytes": 491801,
+      "sha256": "52ef0051919c0d96acb941535429c0383847d745ba961e0f83deed919a897a93",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "40-live-overall-row-offset-3m.png",
+      "bytes": 513875,
+      "sha256": "88e7d8f6357f42bb18ec28261df13fa3a0bb19ccab6b417279a182d19b433fd7",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "41-live-hide-one-dimension.png",
+      "bytes": 574626,
+      "sha256": "10eaa421edd9257ac00486b0b19f5e0d0545adaa1d42149769e7bde23151078b",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "42-live-restore-group-settings.png",
+      "bytes": 499956,
+      "sha256": "3915c970b682686d814a84b7043cb72b4d72eec4ff6a55a46037a7ced34870e3",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "43-live-dimension-group-menu.png",
+      "bytes": 520139,
+      "sha256": "c827562cc753289089e23225129e9917725511f49ceafed32ce0589faf441737",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "44-live-restored-dimension.png",
+      "bytes": 521867,
+      "sha256": "8f5f5b450e8750ee1752896893bb642aa02ecf18dd4172cb76b362b0f95bd980",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "45-live-opening-dimension-reference-menu.png",
+      "bytes": 502260,
+      "sha256": "bacb480d667fa140c7b7d3542a65396335d796d30eebd9ba604ccffc002325d3",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "46-live-center-dimensions.png",
+      "bytes": 518822,
+      "sha256": "5293f809bd02b25752974d5fa645ba7daf69ab90328e9d078452e2dd66fef91a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "47-live-file-reopened.png",
+      "bytes": 536198,
+      "sha256": "9804cf4bc1b6abe3ce515aed4abe19eaba57881b997a5ac7161f0a986e9b6aca",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "48-live-reopened-fit.png",
+      "bytes": 561523,
+      "sha256": "ccd3b0f16e215b29f8126799691fe1cccdf29d440a0a1c7487a4a9c021ac2628",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "49-live-dimensions-zoom-in.png",
+      "bytes": 512509,
+      "sha256": "1bb7342ed84421abd5812b297727733d451e01d883e004ce67c19b46207a2d9c",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "50-live-dimensions-zoom-back.png",
+      "bytes": 557135,
+      "sha256": "e247977f509291574c914fc9960656c5f7acceec928547d0b192f116a12017e6",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "51-live-sheet-created.png",
+      "bytes": 403682,
+      "sha256": "8391e39772d804a6ca30373bd69523d04b5440a0bbfe287c880a95a09739191d",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "52-live-sheet-export-menu.png",
+      "bytes": 412931,
+      "sha256": "cb83f1c396453940df3c1b54295b4c85bf3c92a81e4ffedb25875bd1de32a166",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "53-live-sheet-pdf-options.png",
+      "bytes": 459292,
+      "sha256": "e022142017e119ff36736433d97d4cd0942aeab40d7699b7615b86115c142f4d",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "54-centers-a3-pdf-render.png",
+      "bytes": 53336,
+      "sha256": "1fce190f9fdaf288b07a335f03fec9703fe563f1f0617342effd6014790c77e2",
+      "mimeType": "image/png",
+      "width": 2100,
+      "height": 1486,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "54-live-sheet-pdf-saved.png",
+      "bytes": 403448,
+      "sha256": "ab10c58be69a367b09dd4b83a83ae53fbea6b272db8d321d8d20d4ffc6f2f961",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-1",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "55-live2-style-auto-100.png",
+      "bytes": 472118,
+      "sha256": "63ce0a035d48e6c531876158e4339cdd05ea2d709ce113ae5c6298127435ce84",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "56-live2-original-seed-fit.png",
+      "bytes": 530020,
+      "sha256": "9c70e635c78bd775e4cf8aff1d349fb9308bd9a1ef5dc60d957328b90a1b7d76",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "57-live2-wall-body-pick-fixed.png",
+      "bytes": 564301,
+      "sha256": "9312c97c086c7d08e1f4a82287e8171d847375dc3a1c72f63153f269f2ea2230",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "58-live2-preview-cancel.png",
+      "bytes": 530771,
+      "sha256": "0680153cd62b65b43f024a7350f7bd389856dc209a9cda3caecdee4a23277654",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "59-live2-target-layer-menu.png",
+      "bytes": 559682,
+      "sha256": "7fb26f95af7e6f0018187d6fbea128b917a2164bd035b9a537a8ac3d395df7f6",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "60-live2-distance-settings.png",
+      "bytes": 582168,
+      "sha256": "284ac07ec558b43b59de5eb588adb613c95638f1df6fbe918599177ba46daf84",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "61-live2-fixed-placement-controls.png",
+      "bytes": 577559,
+      "sha256": "cecf2ed7c35afa6d332fee65ab00fba4584e05830d9372f82cd8b915204d4e0e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "62-live2-exact-distance-preview.png",
+      "bytes": 586139,
+      "sha256": "2d4cbb7bbd8244b5de2acc2a58b7fc5c923e40c9501bd9d4c1bed524a515da53",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "63-live2-fixed-distance-context.png",
+      "bytes": 595649,
+      "sha256": "003d9dcca30c9f12a01f76a908902ffaa0cfd356d440214136b0d00308122ad1",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "64-live2-exact-distance.png",
+      "bytes": 513974,
+      "sha256": "ea317d8d504f7997894805385ad20b86660b9b2f8608b0fb392a4adccd1c5b51",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "65-live2-exact-distance-undo.png",
+      "bytes": 532848,
+      "sha256": "71e483e1cbcbbc08463305d944089600c5015d2b14297fc959bcce3e65aef828",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "66-live2-exact-distance-redo.png",
+      "bytes": 545891,
+      "sha256": "979b718ad36ebb3ecfdf205f4d5e3220ae004d0b26627b9962da3fd4248c5143",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "67-live2-mode-settings.png",
+      "bytes": 577829,
+      "sha256": "a2aa4b30aab53eb012c38ac6102a50709fbb97f936f67ac7b10a918dbd4547aa",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "68-live2-placement-choice.png",
+      "bytes": 590944,
+      "sha256": "36d8938104844b71249f6631fbe979fe8b2ece1f997d3e232e14d09dfb0ce26f",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "69-live2-cursor-placement.png",
+      "bytes": 607274,
+      "sha256": "d984fa1e0ce666bff47c658356537c5264e2e2961cdac6aa39254d33e1b2afde",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "71-live2-styles-100-fit.png",
+      "bytes": 478621,
+      "sha256": "dfb86a7ecd80d9e3f3c69caca686a0b3cc66efe42688ac9db709ffa962067c4c",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "72-live2-style-automatic-settings.png",
+      "bytes": 422012,
+      "sha256": "990eb222269d02cdbbd9039ef5a6d25af901fa6d0887a5789e89ceec6400f87b",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "73-live2-style-100-close.png",
+      "bytes": 555700,
+      "sha256": "997281d717d77829e31041b38812905d32f55fbc4a09a15bf254be765ce3f02a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "74-live2-style-100-detailed.png",
+      "bytes": 506311,
+      "sha256": "55eeb2fc0a1e18267cf35980fb763c8c1187d8662fa4b327113318d2b737dbdd",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "75-live2-style-100-light-close.png",
+      "bytes": 543728,
+      "sha256": "47968957e8f2f958aa0d7f872eb40216574fd93fb3e84f60be1982955f9f54aa",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "76-live2-style-200-fit.png",
+      "bytes": 508656,
+      "sha256": "2e68f7730208a208500717cfbcfb6ffad530b155d283de2607e91e58caa0bb4e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "77-live2-style-200-close.png",
+      "bytes": 538287,
+      "sha256": "e38ab6dd8f61a9910fd08ebbb6fd9872761629c47961c73f2b0a6e45cf45dea0",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "78-live2-multi-segment-rejection.png",
+      "bytes": 497204,
+      "sha256": "392d3e398d672d10175ec3bab6f50a0f73f4f61836d4dca9024e81ce63cbf0d2",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "79-live2-preselected-wall-preview.png",
+      "bytes": 517349,
+      "sha256": "898303bf7eefe6bdf64d97bda221c0d798d97e0f06d4593da70439fc23472d29",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "80-live2-style-200-sheet.png",
+      "bytes": 417096,
+      "sha256": "b5db0ffc448e7b88768286da2b81632cf229d1e8f55421c7ddca629710de25d7",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "81-live2-style-200-sheet-close.png",
+      "bytes": 354219,
+      "sha256": "f3aca5f5c5d12c3ee01c0ff21bb13b20b36f74cb02c49fb3172b0ba27441e9a3",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "82-live2-style-200-model-out.png",
+      "bytes": 481110,
+      "sha256": "ca2a941ad28330d323b275cdead20e1f222965369ccce281ce0d54c1a0e723fa",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "83-live2-sheet-after-model-navigation.png",
+      "bytes": 417093,
+      "sha256": "54b842679c2d551ed85bcca428c5b81caf88e4e13ba0718b03184d54e06dfb78",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "84-live2-light-dimensions-reopened.png",
+      "bytes": 577804,
+      "sha256": "4080fc83b1fb7f21f81a6240635fcbfe5fe094fc4c4da14da16b28af0131b3f9",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "85-live2-light-narrow.png",
+      "bytes": 384364,
+      "sha256": "f50e31a0d7106fc6a7ca291804a9c355196dd6fe8d63666cbd42fa1120f45565",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "86-live2-narrow-dimension-group.png",
+      "bytes": 330380,
+      "sha256": "c72ac88db0028ee47d04e59e7250f57421979c2fa541bd4181ad3df5a3d2dab6",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "87-live2-narrow-group-actions.png",
+      "bytes": 345040,
+      "sha256": "e8261c1f9f3f2c5f079fb98dfa80e527829899729b9fcdbe18fd0e60d6f357a0",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "88-live2-detached.png",
+      "bytes": 327425,
+      "sha256": "01244d2b66c53bac53bcbca33829198c888715afcda0a6ea8f6ed1f4f0f59908",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "90-live2-source-wall-deleted.png",
+      "bytes": 346129,
+      "sha256": "17f1b01180c080f47e0093f039443f0ed6ed324509c79560dd52c6034facdea6",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "91-live2-broken-source-inspector.png",
+      "bytes": 339030,
+      "sha256": "969252c41c2110a1ec90083e199cde940def25df7802968a97f2aa0dd22a0506",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "93-live2-font18-settings.png",
+      "bytes": 361795,
+      "sha256": "094a5eb027b49b7df26b463f5e237a212b322330783bd8069740c3be32d2326b",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "94-live2-light18-narrow-group.png",
+      "bytes": 345353,
+      "sha256": "c5fd9405a7bb1ac7548109475f1386559215ac6041bc06e16c17ca459771a7c8",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "95-live2-light18-narrow-actions.png",
+      "bytes": 362363,
+      "sha256": "a2cc23653a29553b471e86aacdf00ed1657bd1a065e395bbc67e4a02c73e04cd",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "96-live2-whole-set-deleted.png",
+      "bytes": 316823,
+      "sha256": "b2545fcfcde103ac063b3f91f9cb7406be54136408ae6a08a68d8fb7ff588672",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "98-live2-large-menu-diagnostic.png",
+      "bytes": 313630,
+      "sha256": "414922e852efcc76afb31dd173928139b3d6bf01b1014ed4e0d41d29ac374cf2",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "known-bug-menu-footer-outside-window",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "99-live2-light18-narrow-architecture.png",
+      "bytes": 319587,
+      "sha256": "4f1d49b594d9e948a2c4e3937cd842cc17258a42488a71eba062420689b7667f",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "100-live2-style50-light18-fit.png",
+      "bytes": 353789,
+      "sha256": "bc60c99a87e896e770ac5c931fe86739c04154c19c91a2b0ca78cdfd921108e2",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "101-live2-style50-light18-close.png",
+      "bytes": 327144,
+      "sha256": "4bdd007d9df29a49a05c691feadbdb6903607626db022642cf6c7458756806b4",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-light18-narrow-workflow-observation",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "102-live2-style-manager-light18.png",
+      "bytes": 347989,
+      "sha256": "6c0385c49bf4c8982ec3afb1b27f1d4d11f34dcf4a2e2970ef51177b7549ae5a",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "known-bug-style-dialog-footer-and-wheel",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "103-live2-style-manager-scroll-diagnostic.png",
+      "bytes": 348198,
+      "sha256": "6d5052e34e73cd8214daf6da71dcdce41f2f32e555c565c22eb38ffc1ac48b6d",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "known-bug-style-dialog-footer-and-wheel",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "104-live2-style-manager-cancel.png",
+      "bytes": 336751,
+      "sha256": "2d5d288ba5bab7cd82bfef17a97484aba4c53bc75e2cff6d56954ca43c907e45",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "diagnostic-style-dialog-Escape-return",
+      "build": "live-2",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "105-live3-default13-fit.png",
+      "bytes": 477438,
+      "sha256": "c2e3ede876ffa37af2e5167fc8f9f272042b3d347d496d560b737e05fde75d4a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "106-live3-ribbon-wide13.png",
+      "bytes": 477319,
+      "sha256": "c359836610a03e64ca588129a1d071a190316434f9684e3fa4bb7d370f1e237e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "107-live3-schedule-default.png",
+      "bytes": 496277,
+      "sha256": "29087b594125d75cac05eae05520dd4ae068c649b74ffab09a823276c6d1ceef",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "108-live3-schedule-options.png",
+      "bytes": 484826,
+      "sha256": "0825a653f3b5093517440b7e012a53849296e8a5e1848d63cc9af29a35beca80",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "109-live3-schedule-spaces.png",
+      "bytes": 496881,
+      "sha256": "3654ce6bb500375fdc642c533aaea2cf57c898196379cb700752663d7614a78d",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "110-live3-schedule-remembered.png",
+      "bytes": 496271,
+      "sha256": "bed94e7b86a08892d8666a087e9550e574538fcc77a42df42c33e62c5578cdd6",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "111-live3-menu-wide13.png",
+      "bytes": 521568,
+      "sha256": "bf9fb5377c72d72eb2fa5d08e12cc9f61be0dbc603593aebf4598a59ba07f730",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "112-live3-application-settings.png",
+      "bytes": 501124,
+      "sha256": "8eb54d7a16a467a29f203e35885e57d9ae0e758f8d13dd228c53da56967418ad",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "113-live3-font-setting.png",
+      "bytes": 487258,
+      "sha256": "70178eb835417a215571900fa8bef8a28cd439f50c79b62edfb0bc02896bed51",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "114-live3-font18-draft.png",
+      "bytes": 487452,
+      "sha256": "ced9281954cd1dbcd8fa400c49ca98e68b25acfe2aff0c1ca0b9d350fcabb290",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "115-live3-light18-wide.png",
+      "bytes": 506646,
+      "sha256": "a28ed649bd095770f7d67f15e2e2d52bee2f056b39c0d84188e4d9d164dcb077",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1726,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "116-live3-light18-narrow.png",
+      "bytes": 411146,
+      "sha256": "b6511feca26a272288fd98a5dd72f4a79dddb9982d7f70f48a5d8e36f2e8e8b4",
+      "mimeType": "image/jpeg",
+      "width": 2852,
+      "height": 1364,
+      "classification": "intermediate-wide-not-narrow-acceptance",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "117-live3-light18-narrow-menu-size.png",
+      "bytes": 340167,
+      "sha256": "276ba3eebecfbd3b2ab169329471dc4dd9def3044aff065b9281cf845c0b0239",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "118-live3-menu-light18-narrow.png",
+      "bytes": 327039,
+      "sha256": "3ddd686a985d531913fdd24d6cf70c0e76716c7e35aacd359738129b42578b22",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "119-live3-menu-wheel-project-settings.png",
+      "bytes": 313169,
+      "sha256": "95ac57622e1e6a84fb188206309d3bb499c612fecf2c6f544cf82684d5a1111e",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "120-live3-project-settings-reached.png",
+      "bytes": 331055,
+      "sha256": "cdf80eaa89ad99493ac471cf1792009e9f7b1480e15f87c2f6636cc9516120f8",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "121-live3-menu-keyboard-last.png",
+      "bytes": 334209,
+      "sha256": "132ea26313c620abb1c350e5740cce1d4f3f9ddd1d2c51e5ce4a5593fd1b5faf",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "122-live3-menu-keyboard-first.png",
+      "bytes": 329585,
+      "sha256": "7ce088d5ed884efff59ef0088a3ee5c9c06bdc2f6239fa68d8ee9728a997f11b",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "123-live3-project-settings-keyboard.png",
+      "bytes": 330579,
+      "sha256": "042a9ffc91211243ce8d1bc91dfee0fd07ba68171a6fcc856d3d109a7de53e9e",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "124-live3-footer-settings-reached.png",
+      "bytes": 370280,
+      "sha256": "c53ec6a2038c16d6c237f05696c730b19bba44323ff97b453a205d1730decdf1",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "125-live3-navigation-saved.png",
+      "bytes": 369481,
+      "sha256": "b5f155a07d301a65a8eceb56847d2149af9471b7ee9266f50cdc5d1d41232924",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "126-live3-wall-styles-light18-narrow.png",
+      "bytes": 346592,
+      "sha256": "cd0986d8cae9c5489de3c5b64c818d67706174b304576e42e92c8806a0017439",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "127-live3-wall-styles-wheel-preview.png",
+      "bytes": 342674,
+      "sha256": "457448615c6a7d2655c456b4006ce096c3fea3898e5c083a7ab6e18a3d8e8caf",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "128-live3-wall-style-cancel.png",
+      "bytes": 359117,
+      "sha256": "3a86c134210fc10a727c85189572c901d04dfe59a07719a74ed082ca278b25c9",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "129-live3-style-name-draft.png",
+      "bytes": 353233,
+      "sha256": "6971de2f34295958316e50baa56d966e154426a1e3db0db4528c1de91d27778d",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "130-live3-style-saved.png",
+      "bytes": 366084,
+      "sha256": "9b0f9a3f74585949ddad9c975bd4839e2017fe08a2a95520d564975a347d9f73",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "131-live3-style-undo.png",
+      "bytes": 359029,
+      "sha256": "4c0535b84ba12c5e984975f155ebc784075a85afb52c3e92cb0947faae590031",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "failed-undo-diagnostic",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "132-live3-style-redo.png",
+      "bytes": 359041,
+      "sha256": "d770da6fe1c4aedbffa703b4950ee2036dbef444373f5d6c63e33106fbd0e983",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "failed-undo-diagnostic",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "134-live3-style-toolbar-undo-diagnostic.png",
+      "bytes": 340996,
+      "sha256": "5d5151db6ad4366e3f9cf56c2ddb4fcd840eb3cea90fdae3cf3908a3024a2d46",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "failed-undo-diagnostic",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "136-live3-style-manual-restore-draft.png",
+      "bytes": 351129,
+      "sha256": "ee79558a3921421783c8e31fc2adefebfa904e193e7a947e2e277bfaf50597c9",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "manual-restoration-not-undo",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "137-live3-style-manually-restored.png",
+      "bytes": 365710,
+      "sha256": "9fde0789590e8a05d6f6d4ff53233cdb1aa41d9769dbb8edf2add295abfa495f",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "manual-restoration-not-undo",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "138-live3-restored-current-view.png",
+      "bytes": 341253,
+      "sha256": "7ee4efdcb648348fda4f614c99062e4b5d4421efa481a85c8b5cbccec1eb4b32",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "139-live3-style-fit.png",
+      "bytes": 360106,
+      "sha256": "3c5fb317cbae893f02c57b9d3e84e00b1bf023c031773432c5a36dec0b3f5750",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "140-live3-style-zoom.png",
+      "bytes": 346754,
+      "sha256": "54493122cd82332495bd917c62c6054f5ecfee70ff448f61a82d94c0cd0e7ab3",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "142-live3-dimension-seed.png",
+      "bytes": 342222,
+      "sha256": "ba7da4d75b76ac646a889b41cf355426d20406bb78ee9db24acce6c397ad43b9",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "143-live3-dimension-menu.png",
+      "bytes": 317635,
+      "sha256": "eed008009093e9a169ab9df9318de15e51fb83a322a72db57517a90cebfc332e",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "144-live3-dimension-wall-picked.png",
+      "bytes": 368549,
+      "sha256": "213e3088d2ed32f100cf11d6b9a058e10950a4b41f4042c70e80b087fd820173",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "145-live3-dimension-target-list.png",
+      "bytes": 348885,
+      "sha256": "e6b21db369a4080545bc804468929c6613e7f741d9026bad52dfb95c43c3a0c7",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "146-live3-dimension-settings-scroll.png",
+      "bytes": 378271,
+      "sha256": "a5113b692c8a1d02bbcdcf0db261ddac7cdcb730b94fe8e0a00160331f768a2e",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "147-live3-dimension-placement-settings.png",
+      "bytes": 362442,
+      "sha256": "2e4a492fa9854603e8385a7bb206daac235eca2c6933ab7ce6e127a68a132f34",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "148-live3-placement-mode-list.png",
+      "bytes": 358749,
+      "sha256": "91f9f652b1346d08da9b491546fa2ac37b43c66a644ea4a81c6436cb0a0e0fd8",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "149-live3-dimension-fixed-100cm.png",
+      "bytes": 356628,
+      "sha256": "0ff1e14712b65e85da2a5f6d19afeae2fcc113962fe5f90f00e5a35247c09533",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "150-live3-dimension-face-settings.png",
+      "bytes": 352962,
+      "sha256": "dd2b936563e2c6b6f5c90e732d06ea3c491f6535f471f33a8b09351996348b69",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "151-live3-dimension-face-list.png",
+      "bytes": 352859,
+      "sha256": "b9ece1def61244949824b618eb1a067729aaeaaaf92ea70557344c7965245048",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "152-live3-single-confirm-menu.png",
+      "bytes": 384456,
+      "sha256": "04a5cad516c3a8242bc2ec54511344a7697810c6c1d1edfc8fdc6ac4724898fc",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "153-live3-single-confirm-created.png",
+      "bytes": 363585,
+      "sha256": "2db412d144d2c40494daf27ef5e43eb1dc6804c93f0e6f28e298cb6359ce1404",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "154-live3-single-undo.png",
+      "bytes": 329565,
+      "sha256": "e51432d7af11d17b827cea642d74746a38fedbde9d5147ef60278fea017cbaa6",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "155-live3-single-redo.png",
+      "bytes": 337775,
+      "sha256": "af8d950643367c9d40cdc1866307476a8a4a66b394325d8a2b1d9de9e3f48d46",
+      "mimeType": "image/jpeg",
+      "width": 2202,
+      "height": 1364,
+      "classification": "partial-live3-workflow-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "156-live3-new-process-reopened.png",
+      "bytes": 578154,
+      "sha256": "6e8069fcd3a3ed10d562112d32b2d29b76c8615ed3582973c2aee1059fca028c",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-new-process-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "157-live3-menu-wide18.png",
+      "bytes": 525317,
+      "sha256": "499c46f567725df189f4008fc2d54fca272a33ae138fc6e40ed983a5aff88ab1",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide18-settings-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "158-live3-settings-wide18.png",
+      "bytes": 517587,
+      "sha256": "c86af944141471e86a61da86b2031205943d27018d31b9643fbdab7e336a0601",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide18-settings-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "159-live3-settings-font18.png",
+      "bytes": 493491,
+      "sha256": "2e51918c19f5046ebc3cb8303eb5461fbc938537cb40c0384ae0b6526d2555d3",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide18-settings-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "160-live3-font13-draft.png",
+      "bytes": 498049,
+      "sha256": "8612a2b0d905114c411a1f06d856b032aeee51c73e618a2abf470be00eb9536b",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide18-settings-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide",
+        "fontSizeDraft": 13
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "161-live3-wide13-normal.png",
+      "bytes": 591672,
+      "sha256": "c5f8e6af7c18af1e83dcdb01e9a622de736a77962a9419a559198cd170b4815e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide13-style-draft-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 13,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "162-live3-style-dialog-wide13.png",
+      "bytes": 550688,
+      "sha256": "313cef89c0ba3188f2388eaa824e7321109e8d367cd019a85424945f0c2d7c5e",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide13-style-draft-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 13,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "163-live3-style-editor-wide13.png",
+      "bytes": 604965,
+      "sha256": "7e2056ca6f5dc6a61f27c603d13fc7faf25929090d5009c8adbfe9229c634728",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide13-style-draft-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 13,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "164-live3-style-draft-cancelled.png",
+      "bytes": 594318,
+      "sha256": "0e7467488b982882de4b215afdf96e73d8e6f373d8a21e22d1b9909f3666f956",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-wide13-style-draft-observation",
+      "build": "live-3",
+      "appearanceObservation": {
+        "fontSizeActual": 13,
+        "window": "wide"
+      },
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "165-live3-settings-shortcut.png",
+      "bytes": 586606,
+      "sha256": "c5d5c31bb01d73b1744e724155815514828586d95e43a649d71a2837fcd5c807",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-settings-shortcut-no-effect",
+      "build": "live-3",
+      "scope": "Super-comma did not open settings; no acceptance.",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "166-live3-menu-normal13.png",
+      "bytes": 581096,
+      "sha256": "261096f92e14a130210763c6e275151d1d27d26268b629fcc52d6f8ed97904e2",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-menu13-observation",
+      "build": "live-3",
+      "scope": "Actual KentOS application menu at applied13px.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 13,
+        "window": "wide"
+      }
+    },
+    {
+      "path": "167-live3-font-setting-for-long-form.png",
+      "bytes": 589839,
+      "sha256": "f71e25cf75b7d0d7c93ae0a1e46bde0819bfe2e7d62f07667a03c6350f2633bc",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-wheel-outside-settings-bounds",
+      "build": "live-3",
+      "scope": "Wheel outside the scroll region made no change; not a scrolling acceptance.",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "168-live3-font-long-form-setting.png",
+      "bytes": 582386,
+      "sha256": "fbf0168b269b3ced7194cc949346b48a3e20d3555afed8b8ca88fc63810981f1",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-settings-inner-wheel-observation",
+      "build": "live-3",
+      "scope": "Actual wheel inside settings reveals font field.",
+      "fullFeatureAcceptance": false
+    },
+    {
+      "path": "169-live3-long-style-seed-open.png",
+      "bytes": 526602,
+      "sha256": "4d8596b6638d6c071783f8290e4330e45f2a9ffec3f13f661c4f621f6419b7fa",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "live3-long-style-seed-open-observation",
+      "build": "live-3",
+      "scope": "Pre-GUI known26styles/16components seed opened, applied18px wide.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "wide",
+        "windowWidthObserved": 2880,
+        "windowHeightObserved": 1720
+      }
+    },
+    {
+      "path": "170-live3-long-style-resize.png",
+      "bytes": 339313,
+      "sha256": "4fead3810430610740f7610ce567e6e7cefcc62d9bf40057e1890e5e59ce96b2",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-narrow18-observation",
+      "build": "live-3",
+      "scope": "Actual resize2204x1364, applied18px.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "171-live3-long-style-project-menu.png",
+      "bytes": 337000,
+      "sha256": "fb6be21fbbbe9266ff993ca77108026328db6bf5c1513a36937a8332fb8835dc",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-narrow18-menu-observation",
+      "build": "live-3",
+      "scope": "Project menu in actual2204x1364/18px window.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "172-live3-long-style-narrow18.png",
+      "bytes": 422867,
+      "sha256": "6db3f3c2773f6b9c1781c68ca58da198ae3aea999158701193c89586b27af0ba",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-narrow18-form-observation",
+      "build": "live-3",
+      "scope": "Long list26styles and first style16components; partial form observation.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "173-live3-long-style-inner-scroll.png",
+      "bytes": 409328,
+      "sha256": "e511d91bc484e3c35173040f652e76ac49e6e0a8feb99ba70fa6c0b48d0bc0dc",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-left-inner-scroll-observation",
+      "build": "live-3",
+      "scope": "Actual left inner wheel reaches QA24/builtin; right form remains at top.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "174-live3-long-style-outer-scroll.png",
+      "bytes": 338029,
+      "sha256": "10fe7317638a64df9b11828ec0cde4f007451b66afeb3b3d6e671e577f715ac9",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-right-outer-scroll-observation",
+      "build": "live-3",
+      "scope": "Actual right outer wheel reaches Ek12; header/preview/footer remain visible, left body being offscreen is expected.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "175-live3-last-component-edit-draft.png",
+      "bytes": 340207,
+      "sha256": "51c294313640131490f9361b7dea13cec25037b8b42afd6488be9e3239824ded",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-last-component-draft-observation",
+      "build": "live-3",
+      "scope": "Last component name draft SonbileşenQA then Tab; enabled Save remains a draft, not a saved edit.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "176-live3-long-style-cancelled.png",
+      "bytes": 358206,
+      "sha256": "71076cd4fea2c23dde92d6babdabb9ef3288c1c3acaa2d4da8c67f2f854b4c07",
+      "mimeType": "image/jpeg",
+      "width": 2204,
+      "height": 1364,
+      "classification": "live3-long-style-cancel-byte-equal-seed",
+      "build": "live-3",
+      "scope": "Actual Vazgeç and CmdS preserve exact pre-GUI KCAD bytes/SHA; see separately asserted model.",
+      "fullFeatureAcceptance": false,
+      "appearanceObservation": {
+        "fontSizeActual": 18,
+        "window": "narrow",
+        "windowWidthObserved": 2204,
+        "windowHeightObserved": 1364
+      }
+    },
+    {
+      "path": "177-resumed-native-window.png",
+      "bytes": 525311,
+      "sha256": "43c485bb655cb2e0b27b17bb55e1003c4f1abe5a074a4bc61b642e9c98f6eb7a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Resumed app initial wide18 view; not a continuation of176 long form."
+    },
+    {
+      "path": "178-resumed-zoom-out.png",
+      "bytes": 519356,
+      "sha256": "8b836e721762fdb5c38d8a419815b94d32d5b493a21e3aa0790e7dbfc1e1a53b",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Extreme two-page wheel; tiny entire scene covered by pointer. No renderer failure proven."
+    },
+    {
+      "path": "179-resumed-zoom-out-missing-walls.png",
+      "bytes": 529059,
+      "sha256": "bed50c74f38bcfad351e6da009f4595fc82df8fdc321f0d3d600f0135ee349df",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Diagnostic hover at the tiny scene; not a renderer failure."
+    },
+    {
+      "path": "180-resumed-fit-after-missing-walls.png",
+      "bytes": 526204,
+      "sha256": "a4b0bc36dfe569c95cd6a46032264e408dec305f9970a61bcb346318cae893cd",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Home fits the same three-source scene."
+    },
+    {
+      "path": "181-small-wheel-reproduction.png",
+      "bytes": 534366,
+      "sha256": "fdaf693b3c41b2dde3ff7cf8311f3907ab6b0863cbdfdb5edb3a0fafd410224a",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-gui-workflow",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Quarter-page wheel shows all three schematic walls."
+    },
+    {
+      "path": "182-far-zoom-pointer-outside.png",
+      "bytes": 514480,
+      "sha256": "356c1a75a60a5f789579053ce48cbaba71dc0ed4824958fe89ad2b615ad5ed0f",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "diagnostic-observation",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Pointer outside canvas reveals all three walls at about12pixels after extreme zoom."
+    },
+    {
+      "path": "183-normal-zoom-roundtrip-save.png",
+      "bytes": 536217,
+      "sha256": "797777e1a5c986e74f0eede7cbff419cbccb3ab15f29a8db6ff8e519f9bb1906",
+      "mimeType": "image/jpeg",
+      "width": 2880,
+      "height": 1720,
+      "classification": "partial-gui-workflow",
+      "build": "live-3",
+      "fullFeatureAcceptance": false,
+      "scope": "Home and quarter-page down/up roundtrip; component/hatch visible; save fully equals125."
+    }
+  ],
+  "pdfs": [
+    {
+      "path": "live-1/53-centers-a3.pdf",
+      "bytes": 30200,
+      "sha256": "42b8ee859b8023959833e5b39cd8fd6991374c7ef43059de5db02dbc75478b39",
+      "build": "live-1",
+      "scope": "local raw sheet output only; no tracked PDF"
+    }
+  ],
+  "limitations": [
+    "01–09 historical diagnostics;10–12 unassigned style comparison;16 failed source-pick diagnostic.",
+    "21 and initial22 retain the original pointer-distance defect. Fixed numeric acceptance is recorded separately at64 with live2.",
+    "33 is an actual free click8.000242248062015m;35 is the separate exact7m edit.",
+    "Only listed saved-model workflows are independently asserted; image hashes alone do not validate appearance or interaction.",
+    "GUI build proofs identify captured binaries/sources, not automatically the current working tree. --check-current-sources checks that explicitly.",
+    "Recorded native/Python/final-seven-test PostGIS and targeted API-health stages have separate factual results; Build4/current-source relationship and final pipeline remain pending. Complete feature acceptance remains false.",
+    "90/92 host deletion expectations come from the source-defined non-cascade behavior: opening/recipe hostGone, cached geometry kept, missing wall refs object_gone and extant opening refs no_such_place.",
+    "93–97 are light18/narrow partial observations.98 preserves the historical menu-footer overflow. Separate Live3 observations and final desktop/UI runs cover only their listed cases.",
+    "99–101 are partial Live2 observations.102/103 preserve the historical clipped style footer/right-wheel defect;104 is Escape return. Live3 wide13 and narrow18 long-form observations are separate later evidence, not a blanket appearance matrix.",
+    "Generic opening center-grip preview in select_opening consumes openings+added but drops output.followers; select keeps only the first Shape. Final semantic execute remains correct. This temporary preview limitation is outside complete0695 GUI acceptance.",
+    "Desktop run20261026T234254Z was intentionally interrupted by root SIGINT, exit-2; not a passed stage. Separate closed final desktop log is recorded with its real outcome.",
+    "Live3 sequence105–138 is inventoried, not blanket GUI acceptance.116 has intermediate2852px width and is not narrow acceptance.133/135 have KCAD snapshots only.",
+    "131–135 preserve failed Undo/Redo attempts.137 is manual restoration of the old name, not an Undo success.",
+    "Final desktop1341passed/0failed/228ignored and UI289passed/0failed/0ignored are recorded separately from the initial desktop1337passed/4failed/228ignored.",
+    "156 fresh-process open equals155.161–164 are applied13px wide style-form draft/cancel;160 is13px draft while18px is still active. Full appearance/platform matrix remains open.",
+    "165–176 preserve shortcut/outside-wheel diagnostics separately from actual inner/outer scroll observations.176 cancels the last-component draft and is byte-identical to the independently specified pre-GUI long seed; no successful edit-save/Undo is claimed.",
+    "Build3 remains the actual GUI source proof. The subsequent server-only stale-source-geometry guard passed seven real PostGIS tests but changes current sources; --check-current-sources must fail until a real Build4 proof and smoke are captured.",
+    "Python initial full366 suite had364passed/2failed harness checks; later full366 suite passed366/0. Both logs remain required; new server-only guard is outside that Python result."
+  ],
+  "testRunSummary": {
+    "path": "test-runs.json",
+    "bytes": 141416,
+    "sha256": "d863a184c8fe6c70ef8cd435ab1707ac8f6b69300497f8cb61206d2b98fd97ab"
+  },
+  "testLogs": [
+    {
+      "path": "native-20261026T230528Z.log",
+      "bytes": 255351,
+      "sha256": "e7d5445ef961f0d53901859135fa6b98f661a1d9c6684197ea92958947e5e128",
+      "stage": "native-combined",
+      "exitCode": 0
+    },
+    {
+      "path": "server-20261026T232841Z.log",
+      "bytes": 1645,
+      "sha256": "03b3ab9cbc82755b2cd0ea2036dd84f67fb97475088dd1998e70748b490d050a",
+      "stage": "server-postgis",
+      "exitCode": 0
+    },
+    {
+      "path": "desktop-20261026T234254Z.log",
+      "bytes": 2905,
+      "sha256": "36ac8cf6a2749e1f08a5db877a64fda421d7753f381bc22d886a0d68a882fabd",
+      "stage": "desktop-interrupted",
+      "exitCode": -2,
+      "classification": "diagnostic-interrupted",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "desktop-20261026T235157Z.log",
+      "bytes": 163502,
+      "sha256": "459f77a8802018c758916531dd5eec51018f13687a735663a6f402390df4b9bc",
+      "stage": "desktop-initial-failed",
+      "exitCode": 101,
+      "classification": "failed-regression-diagnostic",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "layout-target-20261027T000149Z.log",
+      "bytes": 1270,
+      "sha256": "11697e23ad4acc9877c1c0f7cfc2ce2b067594501d3d015d77b14e6639b003a4",
+      "stage": "layout-target-serial",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "ui-20261027T000751Z.log",
+      "bytes": 23816,
+      "sha256": "9d2172b9d006d90617fb4300595b26185622b0897cf3f9530f2c0cfcbf3d25f5",
+      "stage": "ui-final",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "desktop-20261027T001700Z.log",
+      "bytes": 137786,
+      "sha256": "9bb42a0126adc924c6d753798f3615201da7ed3b5e04e766a712d3e223177e3b",
+      "stage": "desktop-final",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "pybuild-20261027T002447Z.log",
+      "bytes": 930,
+      "sha256": "5b161246bba7b58db362efd576fcc42a7c97634773063909f6e9aece4bd8521c",
+      "stage": "python-native-build",
+      "exitCode": 0,
+      "classification": "completed-build-not-full-test-suite",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "python-20261027T003836Z.log",
+      "bytes": 17875,
+      "sha256": "fee9ec219287f37777ea6962a7143be64370a27ecb1d85d7f2a9565c068b17c9",
+      "stage": "python-initial-failed",
+      "exitCode": 1,
+      "classification": "failed-test-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "python-20261027T004848Z.log",
+      "bytes": 8090,
+      "sha256": "a2221c1a3135e9077311e4176416eae6ea624abc99b3254683f108a86f6bf09c",
+      "stage": "python-full",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "api-20261027T003848Z.log",
+      "bytes": 5926,
+      "sha256": "ce8318428d713fa121577b6466548c3ae12edb93d0cb023fb35ecc50e21ca41c",
+      "stage": "api-health",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "server-20261027T012044Z.log",
+      "bytes": 2571,
+      "sha256": "1f9a604ab2507c7164850755210bf964a903fd900b4d42d178a459e5e9a6787c",
+      "stage": "server-final-guard-initial-failed",
+      "exitCode": 101,
+      "classification": "failed-test-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "server-20261027T031302Z.log",
+      "bytes": 1366,
+      "sha256": "9044cf30cac4000d5fc8085dbe2fce2db9ffc8bdf419d2d408547c90eab2f92e",
+      "stage": "server-final-guard",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "fixtures-native-20261027T031418Z.log",
+      "bytes": 2491,
+      "sha256": "0a0845fa5a9c96e9af4eb2d1649cef9ac81f3b0d589165be44b86d3fe863ea6e",
+      "stage": "fixtures-native-final",
+      "exitCode": 0,
+      "classification": "passed-targeted-stage",
+      "acceptanceEligible": true
+    },
+    {
+      "path": "clippy-20261027T032149Z.log",
+      "bytes": 5997,
+      "sha256": "d188170eb6c654260bd7f1d022c4f5616582414c224b9c934998f08ccdd6aaee",
+      "stage": "clippy-initial-failed",
+      "exitCode": 101,
+      "classification": "failed-lint-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "clippy-20261027T033219Z.log",
+      "bytes": 6795,
+      "sha256": "2cf51602fbb2ab38840e6ba2ada881a347342cfbd9a6bca0248b255a4b9fd36b",
+      "stage": "clippy-20261027T033219Z",
+      "exitCode": 101,
+      "classification": "failed-check-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "clippy-20261027T034059Z.log",
+      "bytes": 5009,
+      "sha256": "d36dfbf8f98fe13e2a6855b36b96cdfa6a75f277faf668c98ea4fd1d915ac296",
+      "stage": "clippy-20261027T034059Z",
+      "exitCode": 101,
+      "classification": "failed-check-stage",
+      "acceptanceEligible": false
+    },
+    {
+      "path": "clippy-20261027T034614Z.log",
+      "bytes": 2918,
+      "sha256": "f9140bb911d1f22be1fa94837e03f54571a8200f93eabbee781f2b19b84529ae",
+      "stage": "clippy-20261027T034614Z",
+      "exitCode": 101,
+      "classification": "failed-check-stage",
+      "acceptanceEligible": false
+    }
+  ],
+  "testInfrastructure": {
+    "name": "kentos-cad-architecture-qa-751e437a",
+    "image": "postgis/postgis@sha256:c48eb5172cfb005ee094a522fe69f27f1ee9e184ba649fe068520a597fa30409",
+    "boundHost": "127.0.0.1",
+    "port": 5434,
+    "storage": "bounded tmpfs; no host volume",
+    "state": "removed-after-tests",
+    "otherDatabaseChanges": false,
+    "finalSevenTestStageCleanup": {
+      "isolatedOwnContainerRemovedReportedByRoot": true,
+      "existing5432And5433UnchangedReportedByRoot": true,
+      "rawLog": "server-20261027T031302Z.log"
+    }
+  },
+  "formatAudit": {
+    "path": "format-scope.json",
+    "bytes": 13482,
+    "sha256": "6cbdbd54dd18fbf96968b14aa7a4ac6048cd6be5e020d2593010223b62b87dda",
+    "globalRustfmtPassed": false
+  },
+  "observations": [
+    {
+      "path": "observations/101-style50-navigation-verification.json",
+      "bytes": 244,
+      "sha256": "5396c27c9c6e67153a877ac68f843c0638f20d2446df01bd0782d9264b7a29f5",
+      "scope": "Independent full source-style document equals original1:100 fixture with only plotScale50. No new frozen GUI model is claimed.",
+      "rawModelPath": "fixture/styles-50.kcad",
+      "rawModelSha256": "f05fcf6b1f1fcb2a4fd07a442d345dbe50b59640ce4c5590d69b887d2c8ece08"
+    },
+    {
+      "path": "observations/129-expected-style-rename.json",
+      "bytes": 4780,
+      "sha256": "bb62f0695005b5c762f93f2fe96a54c3abd0af80a4cf6ac70d4b840ea69573c8",
+      "scope": "Root supplied expected style rename; case validation pending."
+    },
+    {
+      "path": "observations/125-navigation-verification.json",
+      "bytes": 220,
+      "sha256": "199de68e3884d1c5cd990980711eb4d71489fdbd04884ae0d343de7c13118096",
+      "scope": "Independent provided-case receipt; explicit manual-vs-Undo and default7.5mm semantics retained."
+    },
+    {
+      "path": "observations/137-manual-restore-verification.json",
+      "bytes": 96,
+      "sha256": "371a7c1503c94c00fb97ae3f4748b97cc5ad1419da4162d50ab8c05b42b7b198",
+      "scope": "Independent provided-case receipt; explicit manual-vs-Undo and default7.5mm semantics retained."
+    },
+    {
+      "path": "observations/155-live3-model-verification.json",
+      "bytes": 407,
+      "sha256": "ee45a6dd0e7441b7d1368780d73261439ed58451dbdafa99c97c950d3fb68ec0",
+      "scope": "Independent provided-case receipt; explicit manual-vs-Undo and default7.5mm semantics retained."
+    },
+    {
+      "path": "observations/156-new-process-verification.json",
+      "bytes": 391,
+      "sha256": "c0abf1562f23a2d8e2cd0d980cd0d437db52247d5aa2509dd48d76cd1bdcf6af",
+      "scope": "Full-document fresh-process/draft-cancel receipt; does not convert manual137 restoration into Undo."
+    },
+    {
+      "path": "observations/164-style-cancel-verification.json",
+      "bytes": 146,
+      "sha256": "24d10d81090f79f65950c55b851675f8f9a9f3e3a388b1ec2d824f48add7bbdf",
+      "scope": "Full-document fresh-process/draft-cancel receipt; does not convert manual137 restoration into Undo."
+    },
+    {
+      "path": "observations/165-long-style-seed.json",
+      "bytes": 312,
+      "sha256": "7b2d555a231b3bec9fd24a04b4ca9231457370a338e607d312079bf9bfc952e8",
+      "scope": "Pre-GUI seed identity and full byte-equal cancel receipt; no style-save or Undo acceptance."
+    },
+    {
+      "path": "observations/176-long-style-verification.json",
+      "bytes": 227,
+      "sha256": "259fafc245e8f113581f76f8bd12ae1feb84c13fc6173ce56ef27253f1478fe6",
+      "scope": "Pre-GUI seed identity and full byte-equal cancel receipt; no style-save or Undo acceptance."
+    },
+    {
+      "path": "observations/183-normal-zoom-verification.json",
+      "bytes": 345,
+      "sha256": "eaf449b56fa7696c59f176e8b451ec4b4c3576fed0f40f88af6869cda171b825",
+      "scope": "Independent full KCAD read and byte comparison to original100 fixture; extreme-wheel false alarm explicitly retained."
+    }
+  ],
+  "interruptedRuns": [
+    {
+      "stage": "desktop",
+      "startedUtc": "20261026T234254Z",
+      "seconds": 469.869,
+      "exitCode": -2,
+      "reason": "Root deliberately sent SIGINT; no successful test result",
+      "rawLogPath": "desktop-20261026T234254Z.log",
+      "bytes": 2905,
+      "sha256": "36ac8cf6a2749e1f08a5db877a64fda421d7753f381bc22d886a0d68a882fabd",
+      "acceptanceEligible": false
+    }
+  ],
+  "currentSourceBuild": "live-3",
+  "supplementalModels": [
+    {
+      "path": "models/131-live3-style-undo.kcad",
+      "rawSource": "131-live3-style-undo.kcad",
+      "bytes": 2231,
+      "sha256": "ba34192fc309c8c78d156101f79c29fca6cfde8dc98c763f1b9a1f07e5952e29",
+      "build": "live-3",
+      "classification": "failed-undo-diagnostic",
+      "note": "Undo attempt failed; filename is not a claim that undo worked.",
+      "geometryAccepted": false
+    },
+    {
+      "path": "models/132-live3-style-redo.kcad",
+      "rawSource": "132-live3-style-redo.kcad",
+      "bytes": 2231,
+      "sha256": "ba34192fc309c8c78d156101f79c29fca6cfde8dc98c763f1b9a1f07e5952e29",
+      "build": "live-3",
+      "classification": "failed-undo-diagnostic",
+      "note": "Redo attempt after failed undo; not acceptance.",
+      "geometryAccepted": false
+    },
+    {
+      "path": "models/133-live3-style-restored.kcad",
+      "rawSource": "133-live3-style-restored.kcad",
+      "bytes": 2231,
+      "sha256": "ba34192fc309c8c78d156101f79c29fca6cfde8dc98c763f1b9a1f07e5952e29",
+      "build": "live-3",
+      "classification": "failed-undo-diagnostic",
+      "note": "KCAD only; no screenshot exists for this number.",
+      "geometryAccepted": false
+    },
+    {
+      "path": "models/135-live3-style-toolbar-undo-diagnostic.kcad",
+      "rawSource": "135-live3-style-toolbar-undo-diagnostic.kcad",
+      "bytes": 2231,
+      "sha256": "ba34192fc309c8c78d156101f79c29fca6cfde8dc98c763f1b9a1f07e5952e29",
+      "build": "live-3",
+      "classification": "failed-undo-diagnostic",
+      "note": "Toolbar undo diagnostic; KCAD only for135.",
+      "geometryAccepted": false
+    }
+  ],
+  "verificationCorrections": [
+    {
+      "case": "153-155",
+      "issue": "Initial one-off expectation used10mm instead of the actual default7.5mm and looked for layer instead of wire layerId.",
+      "resolution": "Expected geometry explicitly uses documented default7.5mm, plotScale50 and1m fixed distance: offsets1/1/1/1.375. Production source was not changed for this correction.",
+      "productionDefect": false
+    },
+    {
+      "case": "server-final-guard-rotated-large-coordinate",
+      "issue": "Initial fixture expected ideal53.13010235415599deg; stored physical-face endpoints give53.1301023558235deg (delta about1.6675e-9deg).",
+      "resolution": "Only the expected test angle now comes from atan2 of actual stored face endpoints. Production tolerance was not widened. Failed six-pass/one-fail stage remains recorded; subsequent full seven-test PostGIS stage passed.",
+      "productionToleranceChanged": false,
+      "rawFailedLog": "server-20261027T012044Z.log",
+      "rawPassedLog": "server-20261027T031302Z.log"
+    }
+  ],
+  "buildRuns": [
+    {
+      "stage": "python-native-editable-build",
+      "rawLogPath": "pybuild-20261027T002447Z.log",
+      "bytes": 930,
+      "sha256": "5b161246bba7b58db362efd576fcc42a7c97634773063909f6e9aece4bd8521c",
+      "exitCode": 0,
+      "secondsReportedByRoot": 797,
+      "scope": "Fresh abi3 wheel/editable install succeeded; separate full Python outcomes are preserved in test-runs.json."
+    }
+  ],
+  "processEvents": [
+    {
+      "case": "156",
+      "kind": "fresh-native-open",
+      "priorProcessStoppedReportedByRoot": true,
+      "pid": 38939,
+      "build": "live-3",
+      "receipt": "observations/156-new-process-verification.json",
+      "fullModelEquals": "155"
+    }
+  ]
+}

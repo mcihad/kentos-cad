@@ -24,6 +24,8 @@ use kentos_render_wgpu::{
 mod compose;
 #[path = "gpu/compose_timing.rs"]
 mod compose_timing;
+#[path = "gpu/hatch.rs"]
+mod hatch;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -452,6 +454,7 @@ fn on_a_real_gpu() {
     hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(&mut gpu);
     a_kept_picture_is_composed_again_with_the_hover_over_it(&mut gpu);
     compose::layer_composition_and_effects_match_the_reference(&mut gpu);
+    hatch::dense_hairlines_do_not_disappear(&mut gpu);
 }
 
 /// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run

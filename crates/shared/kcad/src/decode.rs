@@ -291,6 +291,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut requests_ = None;
     let mut arrays_ = None;
     let mut constraints_ = None;
+    let mut dimension_sets_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
@@ -322,6 +323,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "constraints" if has.constraints => constraints_ = Some(constraints(r)?),
+            "dimensionSets" if has.dimension_sets => dimension_sets_ = Some(dimension_sets(r)?),
             "migratedFrom" => migrated_from = Some(source(r)?),
             _ => return Err(unknown(r)),
         }
@@ -360,6 +362,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         None => Default::default(),
     };
     Ok(DocumentSnapshotV2 {
+        dimension_sets: dimension_sets_.unwrap_or_default(),
         constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -379,6 +382,34 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         requests: requests_.unwrap_or_default(),
         arrays,
     })
+}
+
+fn dimension_sets(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::DimensionSet>, KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let sets: Vec<kentos_contracts::DimensionSet> =
+        serde_json::from_value(value.clone()).map_err(|e| {
+            r.fail_at(
+                Code::BadValue,
+                at,
+                &format!("mimari ölçü dizileri okunamadı: {e}"),
+            )
+        })?;
+    if sets.is_empty() || serde_json::to_value(&sets).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "ölçü dizisi listesi boş veya yazıcının kanonik biçiminde değil",
+        ));
+    }
+    if let Some((index, why)) = kentos_contracts::dimension_sets_problem(&sets) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("dimensionSets[{index}]: {why}"),
+        ));
+    }
+    Ok(sets)
 }
 
 /// Schema 73's constraints (docs/adr/0334): the contract value read whole, exactly as the writer writes it (no
@@ -1056,7 +1087,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, "boş mimari ayar yazılmaz"));
                 }
                 if !has.space_choices && a.has_space_choices() {
-                    return Err(r.fail_at(Code::UnknownField, at, "projenin mahal listeleri ve kat önekleri şema 112'den beri yazılır"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin mahal listeleri ve kat önekleri şema 112'den beri yazılır",
+                    ));
                 }
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
@@ -1716,7 +1751,9 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                         return Err(r.fail_at(
                             Code::BadValue,
                             at,
-                            &format!("katmanın türü “{other}” değil: point, line, area ya da annotation"),
+                            &format!(
+                                "katmanın türü “{other}” değil: point, line, area ya da annotation"
+                            ),
                         ));
                     }
                 });
@@ -1813,7 +1850,12 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
             "fields" if has.layer_fields => {
-                fields = Some(layer_fields(r, has.forms, has.field_kinds, has.withheld_fields)?)
+                fields = Some(layer_fields(
+                    r,
+                    has.forms,
+                    has.field_kinds,
+                    has.withheld_fields,
+                )?)
             }
             "service" if has.services => service = Some(services::service_layer(r)?),
             "feed" if has.services => feed = Some(services::feature_feed(r)?),

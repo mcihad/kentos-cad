@@ -178,6 +178,7 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
     let v1 = content::new_project(o)?;
     Document::from_v2(
         DocumentSnapshotV2 {
+            dimension_sets: Vec::new(),
             constraints: Default::default(),
             format: v1.format,
             version: DOCUMENT_VERSION_2,

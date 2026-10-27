@@ -606,11 +606,14 @@ pub const SCHEMA_WITH_SPACE_SOURCES: u32 = 110;
 pub const SCHEMA_WITH_SPACE_SEPARATORS: u32 = 111;
 /// Schema 112 (docs/adr/0690): optional project room names, usages and level prefixes.
 pub const SCHEMA_WITH_SPACE_CHOICES: u32 = 112;
+/// Schema 113: persistent architectural dimension recipes, layout overrides and members.
+/// Only nonempty dimensionSets require it; older readers refuse instead of dropping recipes.
+pub const SCHEMA_WITH_DIMENSION_SETS: u32 = 113;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 111] = [
+pub const SCHEMAS: [u32; 112] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -722,6 +725,7 @@ pub const SCHEMAS: [u32; 111] = [
     SCHEMA_WITH_SPACE_SOURCES,
     SCHEMA_WITH_SPACE_SEPARATORS,
     SCHEMA_WITH_SPACE_CHOICES,
+    SCHEMA_WITH_DIMENSION_SETS,
 ];
 
 /// The file a drawing is saved as.

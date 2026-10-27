@@ -78,6 +78,66 @@ class ConnectionTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.server.close()
 
+    def test_dimension_recipe_create_and_changes_refuse_old_health_before_post(self) -> None:
+        conn = cad.Connection(self.server.url, token="tok-123")
+        cases = [
+            (conn.tenant(TENANT), "project.create", 1, {"dimensionSets": []}),
+            (conn.tenant(TENANT), "project.create", 1, {"dimensionSets": [{"id": "recipe"}]}),
+            (conn.project(PROJECT["id"], tenant=TENANT), "project.changes", 2, {"features": [], "project": {"dimensionSets": []}}),
+            (conn.project(PROJECT["id"], tenant=TENANT), "project.changes", 2, {"features": [], "project": {"dimensionSets": None}}),
+        ]
+        for health in [{"status": "ok"}, {"projectChangesVersions": [1]}, {"projectChangesVersions": None}]:
+            self.server.replies["/v1/health"] = (200, health, {})
+            for target, command, version, payload in cases:
+                with self.subTest(command=command, health=health, payload=payload):
+                    before = len(self.server.requests)
+                    with self.assertRaises(cad.ServerError) as error:
+                        target._command(command, version, payload, None, "same-key")
+                    self.assertEqual(error.exception.code, "server_feature_unavailable")
+                    self.assertEqual(error.exception.path, "dimensionSets")
+                    self.assertEqual(len(self.server.requests), before + 1)
+                    self.assertEqual(self.server.requests[-1]["method"], "GET")
+                    self.assertEqual(self.server.requests[-1]["path"], "/v1/health")
+        del self.server.replies["/v1/health"]
+        with self.assertRaises(cad.ServerError) as error:
+            cases[0][0]._command("project.create", 1, {"dimensionSets": []}, None, "same-key")
+        self.assertEqual(error.exception.code, "server_feature_unavailable")
+        self.assertTrue(conn.signed_in)
+
+    def test_dimension_recipe_supported_health_preserves_key_versions_and_session(self) -> None:
+        conn = cad.Connection(self.server.url, token="tok-123")
+        self.server.replies["/v1/health"] = (200, {"projectChangesVersions": [1, 2]}, {})
+        path = f"/v1/tenants/{TENANT}/projects/{PROJECT['id']}/commands"
+        self.server.replies[path] = (200, {"received": True}, {})
+        target = conn.project(PROJECT["id"], tenant=TENANT)
+        payload = {"features": [], "project": {"dimensionSets": []}}
+        self.assertEqual(target._command("project.changes", 2, payload, {"@project": "8"}, "same-key"), {"received": True})
+        self.assertEqual([r["method"] for r in self.server.requests], ["GET", "POST"])
+        sent = self.server.requests[-1]
+        self.assertEqual(sent["body"]["version"], 2)
+        self.assertEqual(sent["body"]["input"], payload)
+        self.assertEqual(sent["body"]["idempotencyKey"], "same-key")
+        self.assertEqual(sent["body"]["expectedVersions"], {"@project": "8"})
+        for request in self.server.requests:
+            self.assertEqual(request["headers"]["cookie"], "kentos_session=tok-123")
+            self.assertEqual(request["headers"]["x-kentos-client"], "python")
+        self.assertEqual(conn.timeout, 30.0)
+        # Ordinary queued requests use v1 without probing old-server capabilities.
+        self.server.requests.clear()
+        target._command("project.changes", 1, {"features": []}, None, "old-key")
+        self.assertEqual(len(self.server.requests), 1)
+        self.assertEqual(self.server.requests[0]["method"], "POST")
+        self.assertEqual(self.server.requests[0]["body"]["version"], 1)
+
+    def test_capability_probe_uses_the_existing_unauthorized_session_flow(self) -> None:
+        conn = cad.Connection(self.server.url, token="expired")
+        self.server.replies["/v1/health"] = (401, {"error": "unauthenticated", "message": "Oturum bitti"}, {})
+        target = conn.project(PROJECT["id"], tenant=TENANT)
+        with self.assertRaises(cad.NotSignedIn):
+            target._command("project.changes", 2, {"features": [], "project": {"dimensionSets": []}}, None, "same-key")
+        self.assertFalse(conn.signed_in)
+        self.assertEqual([r["method"] for r in self.server.requests], ["GET"])
+
     def test_a_command_goes_as_the_servers_envelope_with_the_session(self) -> None:
         conn = cad.Connection.login(self.server.url, " ayse ", "parola")
         self.assertTrue(conn.signed_in)

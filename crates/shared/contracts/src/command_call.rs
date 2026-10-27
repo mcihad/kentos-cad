@@ -151,6 +151,10 @@ pub struct CallExpectations {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<String>,
+    /// The persistent automatic architectural dimension recipes' stamp.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dimension_sets: Option<String>,
     /// The id of the plan the write must equal (a `plan` call's `planId`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -232,6 +236,8 @@ pub enum ProjectPart {
     LayerFlags,
     /// The drawing's constraints and parameters (docs/adr/0334, 0336).
     Constraints,
+    /// Source-driven architectural dimension rows and their membership.
+    DimensionSets,
 }
 
 /// What a plan or a write touched (docs/adr/0253 §5), from the write itself.
@@ -261,6 +267,10 @@ pub struct CommandSummary {
     pub layers: NodeChanges,
     /// Block definitions added, changed and removed, by id.
     pub blocks: NodeChanges,
+    /// Persistent automatic dimension recipe identities. Absent for legacy commands that touch none.
+    #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
+    pub dimension_sets: NodeChanges,
     /// The project's parts that changed; `undo.outside` identifies those not restored by undo.
     pub project: Vec<ProjectPart>,
     pub undo: UndoInfo,
@@ -353,6 +363,9 @@ pub struct StateStamps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub constraints: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dimension_sets: Option<String>,
 }
 
 /// What computed a result: the command, its version, the numeric policy and
@@ -479,7 +492,11 @@ pub struct CallRecord {
     pub created: Vec<String>,
     pub changed: Vec<String>,
     pub removed: Vec<String>,
-    /// Whether a list was cut at [`JOURNAL_IDS`].
+    /// Metadata identities are separate from object ids so replay can map create → edit.
+    #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
+    pub dimension_sets: NodeChanges,
+    /// Whether an object list was cut at [`JOURNAL_IDS`].
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub truncated: bool,

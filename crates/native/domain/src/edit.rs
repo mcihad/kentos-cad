@@ -214,7 +214,7 @@ impl Document {
     /// slots are skipped. Returns how many were removed.
     pub fn remove(&mut self, slots: &[Slot]) -> usize {
         let mut seen = HashSet::new();
-        let ops: Vec<Op> = slots
+        let mut ops: Vec<Op> = slots
             .iter()
             .filter_map(|slot| self.store.get(*slot))
             .filter(|stored| seen.insert(stored.slot()))
@@ -222,6 +222,19 @@ impl Document {
             .map(Op::Remove)
             .collect();
         let removed = ops.len();
+        let editing = self.dimension_set_pending_members();
+        if !editing.is_empty() {
+            let violations: Vec<_> = ops
+                .iter()
+                .filter_map(|op| match op {
+                    Op::Remove(s) if editing.contains(&s.uid) => {
+                        Some(Op::DimensionSetViolation { uid: s.uid })
+                    }
+                    _ => None,
+                })
+                .collect();
+            ops.extend(violations);
+        }
         self.record(ops, labels::REMOVE);
         removed
     }
@@ -1243,10 +1256,14 @@ impl Document {
     pub fn set_settings(&mut self, settings: ProjectSettings) {
         let settings = settings.sanitized();
         if self.settings != settings {
+            let scale_changed = self.settings.plot_scale != settings.plot_scale;
             let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
             self.settings = settings;
             self.refresh_viewmarks();
             self.refresh_derived_tags();
+            if scale_changed {
+                self.refresh_dimension_set_rows();
+            }
             self.mark_edited();
             self.after_part(ProjectPart::Settings, framed, true, base);
         }

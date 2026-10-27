@@ -110,6 +110,10 @@ async fn health() -> Json<Health> {
         version: env!("CARGO_PKG_VERSION").into(),
         commit: option_env!("KENTOS_COMMIT").map(str::to_string),
         contracts: CONTRACTS_VERSION,
+        project_changes_versions: vec![
+            kentos_contracts::PROJECT_CHANGES_VERSION,
+            kentos_contracts::PROJECT_CHANGES_DIMENSION_SETS_VERSION,
+        ],
     })
 }
 

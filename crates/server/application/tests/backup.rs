@@ -35,6 +35,7 @@ fn sha(bytes: &[u8]) -> String {
 async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: "Dosya".into(),
         settings: s.settings,

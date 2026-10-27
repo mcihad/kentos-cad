@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ._runtime import decode, dumps
-from .errors import NotSignedIn, Unreachable, server_error
+from .errors import NotSignedIn, ServerError, Unreachable, server_error
 from .types import ProjectSummary
 
 SESSION_COOKIE = "kentos_session"
@@ -135,14 +135,42 @@ class Connection:
         body: Any = None,
         *,
         query: Mapping[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> Any:
         if query:
             path = f"{path}?{urllib.parse.urlencode(query)}"
         text = None if body is None else dumps(body)
-        response = self._send(method, path, text)
+        response = self._send(method, path, text, timeout=timeout)
         with response:
             data = response.read()
         return json.loads(data) if data else None
+
+    def _dimension_sets_preflight(self, command: str, input: Any) -> None:
+        if not isinstance(input, Mapping):
+            return
+        if command == "project.changes":
+            project = input.get("project")
+            needed = isinstance(project, Mapping) and "dimensionSets" in project
+        elif command == "project.create":
+            needed = "dimensionSets" in input
+        else:
+            needed = False
+        if not needed:
+            return
+        unavailable = ServerError(
+            426, "server_feature_unavailable",
+            "Sunucu mimari ölçü dizilerini saklamayı desteklemiyor. Yerel çiziminiz korundu; buluta kaydetmek için sunucuyu güncelleyin.",
+            path="dimensionSets",
+        )
+        try:
+            health = self._request("GET", "/v1/health", timeout=min(self.timeout, 4.0))
+        except ServerError as error:
+            if error.status == 404:
+                raise unavailable from None
+            raise
+        versions = health.get("projectChangesVersions") if isinstance(health, Mapping) else None
+        if not isinstance(versions, list) or not any(type(version) is int and version == 2 for version in versions):
+            raise unavailable
 
     def _put_file(self, path: str, source: Any, size: int) -> Any:
         """Sends a file's bytes as one streamed body (``source``: an open binary file) and gives the answer."""
@@ -188,6 +216,7 @@ class Connection:
         *,
         session: bool = True,
         accept: str = "application/json",
+        timeout: float | None = None,
     ) -> Any:
         headers = {"Accept": accept, "x-kentos-client": CLIENT}
         if body is not None:
@@ -201,7 +230,7 @@ class Connection:
             headers=headers,
         )
         try:
-            return urllib.request.urlopen(request, timeout=self.timeout)
+            return urllib.request.urlopen(request, timeout=self.timeout if timeout is None else timeout)
         except urllib.error.HTTPError as e:
             with e:
                 raw = e.read()
@@ -518,6 +547,7 @@ class ProjectRef:
         expected_versions: Mapping[str, str] | None,
         idempotency_key: str | None,
     ) -> Any:
+        self.connection._dimension_sets_preflight(command, input)
         tenant = urllib.parse.quote(self.tenant_id, safe="")
         project = urllib.parse.quote(self.project_id, safe="")
         return self.connection._request(
@@ -542,6 +572,7 @@ class TenantRef:
         expected_versions: Mapping[str, str] | None,
         idempotency_key: str | None,
     ) -> Any:
+        self.connection._dimension_sets_preflight(command, input)
         tenant = urllib.parse.quote(self.tenant_id, safe="")
         return self.connection._request(
             "POST",

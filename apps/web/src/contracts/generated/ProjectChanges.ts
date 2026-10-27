@@ -4,7 +4,8 @@ import type { FeatureChange } from "./FeatureChange";
 import type { ProjectPatch } from "./ProjectPatch";
 
 /**
- * Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata.
+ * Input of `project.changes`: v1 for legacy changes, v2 when architectural
+ * dimension recipes accompany one atomic feature/metadata commit.
  */
 export type ProjectChanges = { features: Array<FeatureChange>, project?: ProjectPatch, 
 /**

@@ -5,6 +5,7 @@
 mod arrays;
 mod constraints;
 mod dimension_ties;
+mod dimension_sets;
 mod exchange;
 mod external;
 mod field_ids;

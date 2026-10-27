@@ -1,0 +1,8 @@
+{
+  "reader": "tools/kcad/kcad.py",
+  "matchesPreGuiSeedSha256": true,
+  "sha256": "89b83eeb2140ebc5fd76c6fecbd354c331020f06fdb8d42e147d7c77ce8b2aad",
+  "lastComponentDraftCancelled": true,
+  "styles": 26,
+  "components": 16
+}

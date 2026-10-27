@@ -124,6 +124,7 @@ async fn project_of(
         &db.app,
         &ayse,
         ProjectCreate {
+            dimension_sets: Vec::new(),
             constraints: Default::default(),
             name: name.into(),
             settings: doc.settings.clone(),

@@ -423,10 +423,13 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Diziye alınacak nesne verilmedi.")?;
     check_layout(&input.layout)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
+    // Neither ordinary copies nor associative block inserts carry a source recipe graph yet.
+    let found = checks::objects(doc, &input.uids)?;
+    crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
     let mut sources = Vec::new();
     let mut originals = Vec::new();
     let mut locked = Vec::new();
-    for (_, entity, uid) in checks::objects(doc, &input.uids)? {
+    for (_, entity, uid) in found {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
             continue;

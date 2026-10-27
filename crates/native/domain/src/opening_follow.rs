@@ -147,7 +147,9 @@ impl Document {
             .store
             .tied_to(uid)
             .filter_map(|slot| match &*self.store.get(slot)?.entity {
-                Entity::Opening(o) if o.opening.host == host => Some((slot, o.opening.clone())),
+                Entity::Opening(o) if Uuid::parse_str(&o.opening.host).ok() == Some(uid) => {
+                    Some((slot, o.opening.clone()))
+                }
                 _ => None,
             })
             .collect();

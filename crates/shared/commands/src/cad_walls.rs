@@ -620,6 +620,14 @@ pub struct WallsEdit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsEdited {
+    /// Derived source-following preview changes; absent when none. New identities are provisional.
+    #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
+    )]
+    pub followers: crate::DerivedEntitiesPlan,
+
     /// The walls as written, in the input's order (Birleştir: the one they became).
     pub walls: Vec<Entity>,
     /// The new walls (Böl: each second part).

@@ -33,6 +33,7 @@ use crate::document::Document;
 use crate::history::{Op, Step};
 use crate::identity::{Slot, Uuid};
 use crate::layers::LayerFlags;
+use crate::store::Stored;
 
 /// What a step kept of what is no undo step, the first time it wrote it.
 #[derive(Clone, Debug)]
@@ -52,12 +53,15 @@ pub(crate) struct Frame {
     calls: usize,
     /// Whether this step opened the transaction.
     opened: bool,
+    /// Derived offset cache writes are reported in their order but never enter model undo.
+    dimension_cache: Vec<(usize, Stored, Stored)>,
 }
 
 impl Frame {
     /// What `inner` kept that this frame did not: an inner step that
     /// succeeded leaves its writes to this one to take back.
     fn absorb(&mut self, inner: Frame) {
+        self.dimension_cache.extend(inner.dimension_cache);
         if self.name.is_none() {
             self.name = inner.name;
         }
@@ -167,6 +171,11 @@ pub struct StepReport {
     pub blocks: IdChanges<BlockId>,
     /// The associative arrays it added, changed or removed (docs/adr/0300).
     pub arrays: IdChanges<kentos_contracts::ArrayId>,
+    pub dimension_sets: IdChanges<kentos_contracts::DimensionSetId>,
+    /// Forbidden user writes found before source reconciliation; checked by the atomic seal.
+    pub dimension_set_violations: Vec<Uuid>,
+    /// Trusted derived row offsets outside undo; the settings that cause them are reported separately.
+    pub dimension_set_cached: Vec<Uuid>,
     /// Whether it changed the constraints or the parameter table (docs/adr/0334).
     pub constraints: bool,
     /// The block definitions it added, changed or removed: their first
@@ -238,6 +247,7 @@ impl Document {
             mark,
             calls: self.calls.waiting(),
             opened,
+            dimension_cache: Vec::new(),
         };
         self.history.frames.push(frame);
         let value = match body(self) {
@@ -328,6 +338,7 @@ impl Document {
         if reverted > 0 || restored {
             self.refresh_viewmarks();
             self.refresh_derived_tags();
+            self.refresh_dimension_set_rows_quietly();
             self.mark_changed();
         }
     }
@@ -496,7 +507,7 @@ impl Document {
                 }
             }
             // The constraints change only in undo steps (`Op::Constraints`), which the ops report.
-            ProjectPart::Constraints => {}
+            ProjectPart::Constraints | ProjectPart::DimensionSets => {}
         }
         true
     }
@@ -511,7 +522,36 @@ impl Document {
             .pending
             .as_ref()
             .map_or(&[][..], |s| &s.ops[frame.mark.min(s.ops.len())..]);
-        let mut report = report_of_ops(ops);
+        let mut report = if frame.dimension_cache.is_empty() {
+            report_of_ops(ops)
+        } else {
+            let mut events = frame.dimension_cache.iter().peekable();
+            let mut all = Vec::with_capacity(ops.len() + frame.dimension_cache.len());
+            for (index, op) in ops.iter().enumerate() {
+                while let Some((_, before, after)) =
+                    events.next_if(|(at, _, _)| *at <= frame.mark + index)
+                {
+                    all.push(Op::Update {
+                        before: before.clone(),
+                        after: after.clone(),
+                    });
+                }
+                all.push(op.clone());
+            }
+            for (_, before, after) in events {
+                all.push(Op::Update {
+                    before: before.clone(),
+                    after: after.clone(),
+                });
+            }
+            report_of_ops(&all)
+        };
+        let mut cached = std::collections::HashSet::new();
+        for (_, _, after) in &frame.dimension_cache {
+            if cached.insert(after.uid) {
+                report.dimension_set_cached.push(after.uid);
+            }
+        }
         if let Some(name) = &frame.name
             && *name != self.name
         {
@@ -552,6 +592,13 @@ impl Document {
         }
         report
     }
+
+    pub(crate) fn note_dimension_row_cache(&mut self, before: Stored, after: Stored) {
+        let at = self.history.pending.as_ref().map_or(0, |p| p.ops.len());
+        if let Some(frame) = self.history.frames.last_mut() {
+            frame.dimension_cache.push((at, before, after));
+        }
+    }
 }
 
 /// What `ops` changed, an object once (its first before, its last after).
@@ -587,6 +634,19 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
         }
     };
     for op in ops {
+        if matches!(
+            op,
+            Op::DimensionSetAdd { .. }
+                | Op::DimensionSetRemove { .. }
+                | Op::DimensionSetUpdate { .. }
+        ) {
+            if !report.parts.contains(&ProjectPart::DimensionSets) {
+                report.parts.push(ProjectPart::DimensionSets);
+            }
+            if !report.undo_parts.contains(&ProjectPart::DimensionSets) {
+                report.undo_parts.push(ProjectPart::DimensionSets);
+            }
+        }
         match op {
             Op::Add(s) => touch(&mut report, s.uid, s.slot(), None, Some(&s.entity)),
             Op::Remove(s) => touch(&mut report, s.uid, s.slot(), Some(&s.entity), None),
@@ -642,6 +702,14 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
             Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
             Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
+            Op::DimensionSetAdd { set, .. } => report.dimension_sets.add(set.id),
+            Op::DimensionSetRemove { set, .. } => report.dimension_sets.remove(set.id),
+            Op::DimensionSetUpdate { after, .. } => report.dimension_sets.change(after.id),
+            Op::DimensionSetViolation { uid } => {
+                if !report.dimension_set_violations.contains(uid) {
+                    report.dimension_set_violations.push(*uid);
+                }
+            }
             Op::Constraints { .. } => {
                 report.constraints = true;
                 if !report.parts.contains(&ProjectPart::Constraints) {

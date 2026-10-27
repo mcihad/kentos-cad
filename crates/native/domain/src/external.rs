@@ -53,6 +53,8 @@ pub struct ExternalMeta {
     pub sheets: Option<Option<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300 §5), whole; none: they stay.
     pub arrays: Option<Vec<AssocArray>>,
+    /// Architectural automatic dimension recipes, whole; missing hosts retain their recipe and warning.
+    pub dimension_sets: Option<Vec<kentos_contracts::DimensionSet>>,
     /// The constraints and parameters (docs/adr/0336 §3), whole; none: they stay.
     pub constraints: Option<kentos_contracts::ConstraintSet>,
 }
@@ -142,6 +144,7 @@ impl Document {
             );
         }
         let mut ops = Vec::with_capacity(change.put.len() + change.remove.len());
+        let mut next_slot = self.next_slot;
         let mut slots = HashSet::new();
         // The layers the change puts objects on (the web's `onLayers`).
         let on_layers: HashSet<String> = change
@@ -154,8 +157,8 @@ impl Document {
                 Some(slot) => slot,
                 None => {
                     // Checked above: every new object has a slot left.
-                    let slot = Slot(u32::try_from(self.next_slot).unwrap_or(u32::MAX));
-                    self.next_slot += 1;
+                    let slot = Slot(u32::try_from(next_slot).unwrap_or(u32::MAX));
+                    next_slot += 1;
                     slot
                 }
             };
@@ -184,6 +187,31 @@ impl Document {
                 ops.push(Op::Remove(stored.clone()));
             }
         }
+        // Validate source recipes against the complete prospective objects and layer tree. In a cloud
+        // commit a new recipe and its new members arrive together; validate before writing either.
+        if !self.dimension_sets.is_empty()
+            || change
+                .meta
+                .as_ref()
+                .is_some_and(|m| m.dimension_sets.is_some())
+        {
+            let mut probe = self.reading_copy();
+            for op in &ops {
+                probe.apply_op(op);
+            }
+            if let Some(meta) = &change.meta {
+                if let Some(layers) = &meta.layers {
+                    probe.layers = LayerTree::new(layers.clone(), self.layers.active());
+                }
+                if let Some(sets) = &meta.dimension_sets {
+                    probe.dimension_sets = sets.iter().cloned().map(Arc::new).collect();
+                }
+            }
+            let sets: Vec<_> = probe.dimension_sets.iter().map(|s| &**s).collect();
+            if let Some(why) = probe.dimension_sets_refused(&sets) {
+                return Err(why);
+            }
+        }
         let blocks_changed = blocks.as_ref().is_some_and(|(_, c, _)| !c.is_empty());
         let changed = !ops.is_empty() || change.meta.is_some() || blocks_changed;
         // The definitions before the objects: an insert that comes is placed with them.
@@ -194,6 +222,7 @@ impl Document {
             self.blocks = next;
             forget_blocks = Some((changed, gone));
         }
+        self.next_slot = next_slot;
         for op in &ops {
             self.apply_op(op);
         }
@@ -235,8 +264,12 @@ impl Document {
             if let Some(arrays) = meta.arrays {
                 self.take_arrays(&arrays);
             }
+            if let Some(sets) = meta.dimension_sets {
+                self.take_dimension_sets(&sets);
+            }
         }
         self.forget_history_of(&slots, &named);
+        self.normalize_dimension_set_sources();
         if let Some((changed, gone)) = forget_blocks {
             self.forget_block_history(&changed, &gone);
         }
@@ -280,5 +313,24 @@ impl Document {
             .collect();
         self.arrays = next;
         self.forget_array_history();
+    }
+
+    fn take_dimension_sets(&mut self, sets: &[kentos_contracts::DimensionSet]) {
+        if self.dimension_sets.len() == sets.len()
+            && self.dimension_sets.iter().zip(sets).all(|(a, b)| **a == *b)
+        {
+            return;
+        }
+        self.dimension_sets = sets
+            .iter()
+            .map(|set| {
+                self.dimension_sets
+                    .iter()
+                    .find(|old| ***old == *set)
+                    .cloned()
+                    .unwrap_or_else(|| Arc::new(set.clone()))
+            })
+            .collect();
+        self.forget_dimension_set_history();
     }
 }

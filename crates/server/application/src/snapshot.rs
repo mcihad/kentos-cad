@@ -44,6 +44,7 @@ pub struct DrawingMeta {
     pub sheets: Option<kentos_contracts::ProjectSheets>,
     /// The associative arrays (docs/adr/0300).
     pub arrays: Vec<kentos_contracts::AssocArray>,
+    pub dimension_sets: Vec<kentos_contracts::DimensionSet>,
     /// The constraints and parameters (docs/adr/0336 §3).
     pub constraints: kentos_contracts::ConstraintSet,
 }
@@ -60,6 +61,7 @@ impl DrawingMeta {
             blocks: doc.blocks.clone(),
             sheets: doc.sheets.clone(),
             arrays: doc.arrays.clone(),
+            dimension_sets: doc.dimension_sets.clone(),
             constraints: doc.constraints.clone(),
         }
     }
@@ -197,6 +199,7 @@ type SnapshotRow = (
     Option<Value>,
     Option<Value>,
     Option<Value>,
+    Option<Value>,
 );
 
 /// The drawing of the project in scope, its data revision and its event
@@ -210,7 +213,7 @@ pub async fn read(
         "select p.name, p.settings, p.layers, p.active_layer, p.origin_x, p.origin_y, p.home_view, p.styles, p.data_revision,
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.storage, p.deleted_at is not null, p.sheets, p.arrays, p.constraints
+                p.storage, p.deleted_at is not null, p.sheets, p.arrays, p.constraints, p.dimension_sets
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -233,6 +236,7 @@ pub async fn read(
         sheets,
         arrays,
         constraints,
+        dimension_sets,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -281,7 +285,14 @@ pub async fn read(
         .unwrap_or_default();
     let present: std::collections::HashSet<EntityId> = uids.iter().copied().collect();
     let constraints = kentos_contracts::constraints_kept(&constraints, &present);
+    let dimension_sets: Vec<kentos_contracts::DimensionSet> = dimension_sets
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(bad)?
+        .unwrap_or_default();
+    crate::projects::check_dimension_sets(&dimension_sets, "dimensionSets")?;
     let doc = DocumentSnapshotV2 {
+        dimension_sets,
         constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,

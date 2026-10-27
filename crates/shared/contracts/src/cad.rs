@@ -490,12 +490,19 @@ pub struct EntitiesDeleted {
 }
 
 /// What `cad.entities.delete` would delete (plan mode); nothing is deleted.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesDeletePlan {
+    /// Derived changes when sources disappear; absent when there are none.
+    #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
+    )]
+    pub followers: crate::DerivedEntitiesPlan,
     /// The ids execute would delete, in the input's order.
     pub removed: Vec<String>,
     /// The ids it would leave in place because their layer is locked.

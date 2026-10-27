@@ -26,9 +26,11 @@ struct AreaOut {
   let gap = st.a.z * k;
   var a: f32;
   if (gap < 3.0) {
-    // An even tint that fades from the hairline look to the paper's coverage (see the GLSL twin).
+    // A zero-width stroke is a device-pixel hairline, not a zero-area physical line.
+    // Average its visible coverage when individual lines can no longer be resolved.
+    // Positive physical widths keep the existing paper-coverage transition.
     let hair = min(1.0, 2.0 * halfW / max(gap, 1e-4));
-    let paper = min(1.0, st.a.w / max(st.a.z, 1e-9));
+    let paper = select(hair, min(1.0, st.a.w / max(st.a.z, 1e-9)), st.a.w > 0.0);
     a = mix(paper, hair, clamp((gap - 1.0) / 2.0, 0.0, 1.0));
   } else {
     let u = dot(p, n) - st.b.x;

@@ -1139,6 +1139,47 @@ DimensionRuleName = Literal["curve", "edges", "pair"]
 """The names of :class:`DimensionRule`, for a plain string."""
 
 
+class DimensionSetBreak(_StrEnum):
+    """Why a recipe cannot currently generate a trustworthy complete chain."""
+    HOST_GONE = "hostGone"
+    UNSUPPORTED_WALL = "unsupportedWall"
+    OPENING_UNPLACED = "openingUnplaced"
+
+
+DimensionSetBreakName = Literal["hostGone", "unsupportedWall", "openingUnplaced"]
+"""The names of :class:`DimensionSetBreak`, for a plain string."""
+
+
+class DimensionSetFace(_StrEnum):
+    """A real wall face, relative to the direction of its source path."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+DimensionSetFaceName = Literal["left", "right"]
+"""The names of :class:`DimensionSetFace`, for a plain string."""
+
+
+class DimensionSetOpenings(_StrEnum):
+    """Opening references are rough jamb corners, or their actual centre."""
+    ENDS = "ends"
+    CENTERS = "centers"
+
+
+DimensionSetOpeningsName = Literal["ends", "centers"]
+"""The names of :class:`DimensionSetOpenings`, for a plain string."""
+
+
+class DimensionSetRow(_StrEnum):
+    """The adjacent wall/opening intervals, or the source wall's whole length."""
+    OPENINGS = "openings"
+    OVERALL = "overall"
+
+
+DimensionSetRowName = Literal["openings", "overall"]
+"""The names of :class:`DimensionSetRow`, for a plain string."""
+
+
 class DimensionStyle(_StrEnum):
     """A dimension's kind (none: aligned). The last five came with KCAD schema 9
     (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
@@ -6386,6 +6427,34 @@ class DimensionMeasure(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> DimensionMeasure:
         return _variant(_DIMENSION_MEASURE, "DimensionMeasure", "kind", data).from_json(data)
+
+
+class DimensionSetEdit(_Union):
+    """Explicit group/row operations; an individual dimension's source geometry
+    cannot silently escape or overwrite its owning recipe.
+
+    One of:
+
+    - :class:`MoveDimensionSetEdit` (``kind: move``)
+    - :class:`RowOffsetDimensionSetEdit` (``kind: rowOffset``)
+    - :class:`SetDimensionSetEdit` (``kind: set``)
+    - :class:`RestoreHiddenDimensionSetEdit` (``kind: restoreHidden``)
+    - :class:`DetachDimensionSetEdit` (``kind: detach``)
+    - :class:`DeleteDimensionSetEdit` (``kind: delete``)
+    - :class:`ResetTextDimensionSetEdit` (``kind: resetText``)
+    - :class:`ResetRowsDimensionSetEdit` (``kind: resetRows``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetEdit:
+        return _variant(_DIMENSION_SET_EDIT, "DimensionSetEdit", "kind", data).from_json(data)
 
 
 class Division(_Union):
@@ -16125,6 +16194,34 @@ class DerivationTable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DerivedEntitiesPlan(_Model):
+    """Derived preview geometry only. New entities' ids/references are provisional;
+    only the executing command assigns real persistent ids.
+    """
+    added: list[Entity] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+    updated: list[Entity] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        if self.updated is not UNSET:
+            out["updated"] = [e0.to_json() for e0 in self.updated]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivedEntitiesPlan:
+        return cls(
+            added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+            updated=[Entity.from_json(e0) for e0 in data["updated"]] if "updated" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DetachedTable(_Model):
     """A table whose link was broken.
     Attributes:
@@ -16526,6 +16623,134 @@ class DimensionEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class DimensionLook(_Model):
+    """A dimension's look from its style (docs/adr/0183 §3): the style it follows,
+    its arrowheads, its parts' sizes (times its value's height), where its
+    value stands and how the value is written. All absent: the look dimensions
+    always had, the value in the project's unit and decimals.
+    Attributes:
+        arrow: Its arrowheads; absent: oblique ticks.
+        arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
+            `DEFAULT_ARROW` for the others. Unit: 1.
+        decimals: A length's, a coordinate's or a slope's decimals; absent: the
+            project's length decimals (a slope's 2). Angles keep the project's. Unit: count.
+        dim_line_color: The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+            the object's (docs/adr/0205 §6).
+        dim_line_type: The dimension line's type; absent: continuous.
+        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline. Unit: paper-mm.
+        dim_style: The project's dimension style it follows, by its id; absent: Standart.
+        ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`. Unit: 1.
+        ext_color: The extension lines' colour; absent: the object's.
+        ext_line_type: The extension lines' type; absent: continuous.
+        ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`. Unit: 1.
+        ext_weight: The extension lines' weight, paper mm; absent: a hairline. Unit: paper-mm.
+        font: The value's typeface; absent: the project's.
+        options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+            their value when the style changes. Empty: each field follows while it holds the style's old value.
+        prefix: Written before the value (and its kind's own prefix).
+        suffix: Written after the value.
+        text_color: The value's colour; absent: the object's.
+        text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
+        text_place: Where the value stands; absent: over the line.
+        unit: The unit lengths and coordinates are written in; absent: the project's.
+    """
+    arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
+    arrow_size: float | None | Unset = UNSET
+    decimals: int | None | Unset = UNSET
+    dim_line_color: str | None | Unset = UNSET
+    dim_line_type: LineType | LineTypeName | None | Unset = UNSET
+    dim_line_weight: float | None | Unset = UNSET
+    dim_style: str | None | Unset = UNSET
+    ext_beyond: float | None | Unset = UNSET
+    ext_color: str | None | Unset = UNSET
+    ext_line_type: LineType | LineTypeName | None | Unset = UNSET
+    ext_offset: float | None | Unset = UNSET
+    ext_weight: float | None | Unset = UNSET
+    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    options: DimensionOptions | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
+    prefix: str | None | Unset = UNSET
+    suffix: str | None | Unset = UNSET
+    text_color: str | None | Unset = UNSET
+    text_gap: float | None | Unset = UNSET
+    text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
+    unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.arrow is not UNSET:
+            out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.arrow_size is not UNSET:
+            out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.dim_line_color is not UNSET:
+            out["dimLineColor"] = self.dim_line_color
+        if self.dim_line_type is not UNSET:
+            out["dimLineType"] = None if self.dim_line_type is None else _enum_out(self.dim_line_type)
+        if self.dim_line_weight is not UNSET:
+            out["dimLineWeight"] = None if self.dim_line_weight is None else float(self.dim_line_weight)
+        if self.dim_style is not UNSET:
+            out["dimStyle"] = self.dim_style
+        if self.ext_beyond is not UNSET:
+            out["extBeyond"] = None if self.ext_beyond is None else float(self.ext_beyond)
+        if self.ext_color is not UNSET:
+            out["extColor"] = self.ext_color
+        if self.ext_line_type is not UNSET:
+            out["extLineType"] = None if self.ext_line_type is None else _enum_out(self.ext_line_type)
+        if self.ext_offset is not UNSET:
+            out["extOffset"] = None if self.ext_offset is None else float(self.ext_offset)
+        if self.ext_weight is not UNSET:
+            out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
+        if self.font is not UNSET:
+            out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
+        if self.prefix is not UNSET:
+            out["prefix"] = self.prefix
+        if self.suffix is not UNSET:
+            out["suffix"] = self.suffix
+        if self.text_color is not UNSET:
+            out["textColor"] = self.text_color
+        if self.text_gap is not UNSET:
+            out["textGap"] = None if self.text_gap is None else float(self.text_gap)
+        if self.text_place is not UNSET:
+            out["textPlace"] = None if self.text_place is None else _enum_out(self.text_place)
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionLook:
+        return cls(
+            arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
+            arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            decimals=data.get("decimals", UNSET),
+            dim_line_color=data.get("dimLineColor", UNSET),
+            dim_line_type=UNSET if "dimLineType" not in data else None if data["dimLineType"] is None else _enum_in(LineType, data["dimLineType"]),
+            dim_line_weight=UNSET if "dimLineWeight" not in data else None if data["dimLineWeight"] is None else float(data["dimLineWeight"]),
+            dim_style=data.get("dimStyle", UNSET),
+            ext_beyond=UNSET if "extBeyond" not in data else None if data["extBeyond"] is None else float(data["extBeyond"]),
+            ext_color=data.get("extColor", UNSET),
+            ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
+            ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
+            ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
+            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
+            prefix=data.get("prefix", UNSET),
+            suffix=data.get("suffix", UNSET),
+            text_color=data.get("textColor", UNSET),
+            text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
+            text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionOptions(_Model):
     """A dimension's options (docs/adr/0321 §1, §2): all absent, the dimension as it always was.
     Attributes:
@@ -16645,6 +16870,324 @@ class DimensionRefs(_Model):
             b=UNSET if "b" not in data else None if data["b"] is None else SubRef.from_json(data["b"]),
             c=UNSET if "c" not in data else None if data["c"] is None else SubRef.from_json(data["c"]),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(DimensionRule, data["rule"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSet(_Model):
+    """A live recipe with stable member identities and separate layout overrides.
+    Attributes:
+        at: First row placement in the world plane; never inferred from render lines. Unit: length.
+        gap_mm: Paper millimetres; model distance is gapMm * plotScale / 1000. Unit: paper-mm.
+        height: Unit: length.
+        look: The new members' starting template; existing members retain manual looks.
+        suppressed: Explicitly removed segments stay removed until the user restores them.
+    """
+    id: str
+    wall: str
+    face: DimensionSetFace | DimensionSetFaceName
+    rows: list[DimensionSetRow | DimensionSetRowName]
+    openings: DimensionSetOpenings | DimensionSetOpeningsName
+    layer_id: str
+    at: Vec2
+    gap_mm: float
+    height: float
+    look: DimensionLook
+    broken: DimensionSetBreak | DimensionSetBreakName | None | Unset = UNSET
+    members: list[DimensionSetMember] | Unset = UNSET
+    row_places: list[DimensionSetRowPlace] | Unset = UNSET
+    suppressed: list[DimensionSetSegment] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["wall"] = self.wall
+        out["face"] = _enum_out(self.face)
+        out["rows"] = [_enum_out(e0) for e0 in self.rows]
+        out["openings"] = _enum_out(self.openings)
+        out["layerId"] = self.layer_id
+        out["at"] = _vec2_out(self.at)
+        out["gapMm"] = float(self.gap_mm)
+        out["height"] = float(self.height)
+        out["look"] = self.look.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.members is not UNSET:
+            out["members"] = [e0.to_json() for e0 in self.members]
+        if self.row_places is not UNSET:
+            out["rowPlaces"] = [e0.to_json() for e0 in self.row_places]
+        if self.suppressed is not UNSET:
+            out["suppressed"] = [e0.to_json() for e0 in self.suppressed]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSet:
+        return cls(
+            id=data["id"],
+            wall=data["wall"],
+            face=_enum_in(DimensionSetFace, data["face"]),
+            rows=[_enum_in(DimensionSetRow, e0) for e0 in data["rows"]],
+            openings=_enum_in(DimensionSetOpenings, data["openings"]),
+            layer_id=data["layerId"],
+            at=Vec2.from_json(data["at"]),
+            gap_mm=float(data["gapMm"]),
+            height=float(data["height"]),
+            look=DimensionLook.from_json(data["look"]),
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(DimensionSetBreak, data["broken"]),
+            members=[DimensionSetMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
+            row_places=[DimensionSetRowPlace.from_json(e0) for e0 in data["rowPlaces"]] if "rowPlaces" in data else UNSET,
+            suppressed=[DimensionSetSegment.from_json(e0) for e0 in data["suppressed"]] if "suppressed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetMember(_Model):
+    """An active segment's ordinary dimension. Unchanged active pairs keep this id."""
+    uid: str
+    row: DimensionSetRow | DimensionSetRowName
+    a: SubRef
+    b: SubRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["row"] = _enum_out(self.row)
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetMember:
+        return cls(
+            uid=data["uid"],
+            row=_enum_in(DimensionSetRow, data["row"]),
+            a=SubRef.from_json(data["a"]),
+            b=SubRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetRowPlace(_Model):
+    """A row manually placed in world coordinates; source edits keep this override.
+    Attributes:
+        at: Unit: length.
+    """
+    row: DimensionSetRow | DimensionSetRowName
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = _enum_out(self.row)
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetRowPlace:
+        return cls(
+            row=_enum_in(DimensionSetRow, data["row"]),
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetSegment(_Model):
+    """A semantic segment, independent of its current order and coordinates."""
+    row: DimensionSetRow | DimensionSetRowName
+    a: SubRef
+    b: SubRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = _enum_out(self.row)
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetSegment:
+        return cls(
+            row=_enum_in(DimensionSetRow, data["row"]),
+            a=SubRef.from_json(data["a"]),
+            b=SubRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsChanged(_Model):
+    set: str
+    uids: list[str]
+    created: list[str]
+    removed: list[str]
+    changed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["uids"] = list(self.uids)
+        out["created"] = list(self.created)
+        out["removed"] = list(self.removed)
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsChanged:
+        return cls(
+            set=data["set"],
+            uids=list(data["uids"]),
+            created=list(data["created"]),
+            removed=list(data["removed"]),
+            changed=list(data["changed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsCreateInput(_Model):
+    """Create a live chain on one straight wall face. Wire geometry is metres;
+    gapMm is paper millimetres and uses the existing project plotScale once.
+    Attributes:
+        at: Unit: length.
+        dimension_style: Existing project style name; absent means Standart.
+        gap_mm: Unit: paper-mm.
+    """
+    layer_id: str
+    wall: str
+    at: Vec2
+    dimension_style: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
+    gap_mm: float = 7.5
+    openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS
+    rows: list[DimensionSetRow | DimensionSetRowName] = field(default_factory=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']]))
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["wall"] = self.wall
+        out["at"] = _vec2_out(self.at)
+        if self.dimension_style is not UNSET:
+            out["dimensionStyle"] = self.dimension_style
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["face"] = _enum_out(self.face)
+        out["gapMm"] = float(self.gap_mm)
+        out["openings"] = _enum_out(self.openings)
+        out["rows"] = [_enum_out(e0) for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsCreateInput:
+        return cls(
+            layer_id=data["layerId"],
+            wall=data["wall"],
+            at=Vec2.from_json(data["at"]),
+            dimension_style=data.get("dimensionStyle", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
+            gap_mm=float(data["gapMm"]) if "gapMm" in data else 7.5,
+            openings=_enum_in(DimensionSetOpenings, data["openings"]) if "openings" in data else DimensionSetOpenings.ENDS,
+            rows=[_enum_in(DimensionSetRow, e0) for e0 in data["rows"]] if "rows" in data else (lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsEditInput(_Model):
+    id: str
+    operation: DimensionSetEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsEditInput:
+        return cls(
+            id=data["id"],
+            operation=DimensionSetEdit.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsPlan(_Model):
+    """
+    Attributes:
+        uids: Existing active member ids in this proposal; new members receive ids only on write.
+    """
+    entities: list[Entity]
+    spans: list[DimensionSetSegment]
+    removed: list[str]
+    uids: list[str]
+    revision: str
+    set: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        out["spans"] = [e0.to_json() for e0 in self.spans]
+        out["removed"] = list(self.removed)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        if self.set is not UNSET:
+            out["set"] = self.set
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsPlan:
+        return cls(
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            spans=[DimensionSetSegment.from_json(e0) for e0 in data["spans"]],
+            removed=list(data["removed"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+            set=data.get("set", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsQueried(_Model):
+    sets: list[DimensionSet]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsQueried:
+        return cls(
+            sets=[DimensionSet.from_json(e0) for e0 in data["sets"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetsQueryInput(_Model):
+    ids: list[str] | Unset = UNSET
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.ids is not UNSET:
+            out["ids"] = list(self.ids)
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsQueryInput:
+        return cls(
+            ids=list(data["ids"]) if "ids" in data else UNSET,
+            wall=data.get("wall", UNSET),
         )
 
 
@@ -18851,12 +19394,14 @@ class EntitiesDeletePlan(_Model):
             `expectedRevision` to delete exactly these, or nothing.
         attachments: The attachments that would go with the objects (docs/adr/0440 §1). Unit: count.
         followed: What the project's relations would do to the children (docs/adr/0440 §1).
+        followers: Derived changes when sources disappear; absent when there are none.
     """
     removed: list[str]
     locked: list[str]
     revision: str
     attachments: int | Unset = UNSET
     followed: list[RelationFollowed] | Unset = UNSET
+    followers: DerivedEntitiesPlan | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -18867,6 +19412,8 @@ class EntitiesDeletePlan(_Model):
             out["attachments"] = self.attachments
         if self.followed is not UNSET:
             out["followed"] = [e0.to_json() for e0 in self.followed]
+        if self.followers is not UNSET:
+            out["followers"] = self.followers.to_json()
         return out
 
     @classmethod
@@ -18877,6 +19424,7 @@ class EntitiesDeletePlan(_Model):
             revision=data["revision"],
             attachments=data.get("attachments", UNSET),
             followed=[RelationFollowed.from_json(e0) for e0 in data["followed"]] if "followed" in data else UNSET,
+            followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
         )
 
 
@@ -20416,21 +20964,29 @@ class EntitiesStretchPlan(_Model):
     Attributes:
         stretched: The objects as they would be, with their slots.
         followed: The neighbours as they would be.
+        added: Source-driven new dependents, with provisional identities (ADR0695).
         dependents: The objects tied to them as they would follow (docs/adr/0297 §3): associative dimensions, associative
             hatches, linked texts; absent: none.
+        removed: Source-driven removed dependents, by persistent id.
     """
     stretched: list[Entity]
     followed: list[Entity]
     revision: str
+    added: list[Entity] | Unset = UNSET
     dependents: list[Entity] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["stretched"] = [e0.to_json() for e0 in self.stretched]
         out["followed"] = [e0.to_json() for e0 in self.followed]
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
         if self.dependents is not UNSET:
             out["dependents"] = [e0.to_json() for e0 in self.dependents]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
         return out
 
     @classmethod
@@ -20439,7 +20995,9 @@ class EntitiesStretchPlan(_Model):
             stretched=[Entity.from_json(e0) for e0 in data["stretched"]],
             followed=[Entity.from_json(e0) for e0 in data["followed"]],
             revision=data["revision"],
+            added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             dependents=[Entity.from_json(e0) for e0 in data["dependents"]] if "dependents" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
 
@@ -36821,10 +37379,12 @@ class OpeningsEdited(_Model):
     Attributes:
         openings: The openings as written, in their order.
         added: The new openings (Kopyala).
+        followers: Derived source-following preview changes; absent when none. New identities are provisional.
     """
     openings: list[Entity]
     revision: str
     added: list[Entity] | Unset = UNSET
+    followers: DerivedEntitiesPlan | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36832,6 +37392,8 @@ class OpeningsEdited(_Model):
         out["revision"] = self.revision
         if self.added is not UNSET:
             out["added"] = [e0.to_json() for e0 in self.added]
+        if self.followers is not UNSET:
+            out["followers"] = self.followers.to_json()
         return out
 
     @classmethod
@@ -36840,6 +37402,7 @@ class OpeningsEdited(_Model):
             openings=[Entity.from_json(e0) for e0 in data["openings"]],
             revision=data["revision"],
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
         )
 
 
@@ -36848,14 +37411,18 @@ class OpeningsPlan(_Model):
     """What `cad.openings.create` would write (plan mode).
     Attributes:
         openings: The openings as they would be stored, their `id` 0.
+        followers: Derived source-following preview changes; absent when none. New identities are provisional.
     """
     openings: list[Entity]
     revision: str
+    followers: DerivedEntitiesPlan | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["openings"] = [e0.to_json() for e0 in self.openings]
         out["revision"] = self.revision
+        if self.followers is not UNSET:
+            out["followers"] = self.followers.to_json()
         return out
 
     @classmethod
@@ -36863,6 +37430,7 @@ class OpeningsPlan(_Model):
         return cls(
             openings=[Entity.from_json(e0) for e0 in data["openings"]],
             revision=data["revision"],
+            followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
         )
 
 
@@ -43020,7 +43588,8 @@ class ProjectCatalogChange(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ProjectChanges(_Model):
-    """Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata.
+    """Input of `project.changes`: v1 for legacy changes, v2 when architectural
+    dimension recipes accompany one atomic feature/metadata commit.
     Attributes:
         blocks: Block definitions made, replaced or removed (docs/adr/0144 §5), in
             the same commit as the objects: an insert may place a block this
@@ -43090,6 +43659,7 @@ class ProjectCreate(_Model):
         arrays: The project's associative arrays (docs/adr/0300); absent: none.
         constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
         description: The catalog's description (docs/adr/0028); absent: none.
+        dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
         home_view: Unit: length.
         project_type: Absent: the general type (`cad`).
         sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
@@ -43106,6 +43676,7 @@ class ProjectCreate(_Model):
     arrays: list[AssocArray] | Unset = UNSET
     constraints: ConstraintSet | Unset = UNSET
     description: str | None | Unset = UNSET
+    dimension_sets: list[DimensionSet] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     project_type: ProjectType | ProjectTypeName | None | Unset = UNSET
     sheets: ProjectSheets | None | Unset = UNSET
@@ -43126,6 +43697,8 @@ class ProjectCreate(_Model):
             out["constraints"] = self.constraints.to_json()
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.dimension_sets is not UNSET:
+            out["dimensionSets"] = [e0.to_json() for e0 in self.dimension_sets]
         if self.home_view is not UNSET:
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
         if self.project_type is not UNSET:
@@ -43150,6 +43723,7 @@ class ProjectCreate(_Model):
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
             description=data.get("description", UNSET),
+            dimension_sets=[DimensionSet.from_json(e0) for e0 in data["dimensionSets"]] if "dimensionSets" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(ProjectType, data["projectType"]),
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
@@ -43386,6 +43960,7 @@ class ProjectInfo(_Model):
             answer without them has none.
         constraints: A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
             none.
+        dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
         home_view: Unit: length.
         sheets: A database project's sheet book and its pictures (docs/adr/0251); an
             older server's answer without it has none.
@@ -43412,6 +43987,7 @@ class ProjectInfo(_Model):
     arrays: list[AssocArray] | Unset = UNSET
     blocks: list[BlockRecord] | Unset = UNSET
     constraints: ConstraintSet | Unset = UNSET
+    dimension_sets: list[DimensionSet] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     sheets: ProjectSheets | None | Unset = UNSET
     storage: ProjectStorage | ProjectStorageName = ProjectStorage.DATABASE
@@ -43440,6 +44016,8 @@ class ProjectInfo(_Model):
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.constraints is not UNSET:
             out["constraints"] = self.constraints.to_json()
+        if self.dimension_sets is not UNSET:
+            out["dimensionSets"] = [e0.to_json() for e0 in self.dimension_sets]
         if self.home_view is not UNSET:
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
         if self.sheets is not UNSET:
@@ -43469,6 +44047,7 @@ class ProjectInfo(_Model):
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
+            dimension_sets=[DimensionSet.from_json(e0) for e0 in data["dimensionSets"]] if "dimensionSets" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
             storage=_enum_in(ProjectStorage, data["storage"]) if "storage" in data else ProjectStorage.DATABASE,
@@ -43660,6 +44239,8 @@ class ProjectPatch(_Model):
             rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
         constraints: The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
             contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
+        dimension_sets: Architectural dimension recipes, whole; an empty list explicitly removes all recipes.
+            Requires project.changes version 2, in the same transaction as member changes.
         sheets: The sheet book and its pictures, whole (docs/adr/0251); null: the
             project has none any more. Held to the file format's rules
             (`sheets_problem`).
@@ -43667,6 +44248,7 @@ class ProjectPatch(_Model):
     active_layer: str | None | Unset = UNSET
     arrays: list[AssocArray] | None | Unset = UNSET
     constraints: ConstraintSet | None | Unset = UNSET
+    dimension_sets: list[DimensionSet] | None | Unset = UNSET
     layers: list[LayerNode] | None | Unset = UNSET
     name: str | None | Unset = UNSET
     settings: ProjectSettings | None | Unset = UNSET
@@ -43681,6 +44263,8 @@ class ProjectPatch(_Model):
             out["arrays"] = None if self.arrays is None else [e0.to_json() for e0 in self.arrays]
         if self.constraints is not UNSET:
             out["constraints"] = None if self.constraints is None else self.constraints.to_json()
+        if self.dimension_sets is not UNSET:
+            out["dimensionSets"] = None if self.dimension_sets is None else [e0.to_json() for e0 in self.dimension_sets]
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else [e0.to_json() for e0 in self.layers]
         if self.name is not UNSET:
@@ -43699,6 +44283,7 @@ class ProjectPatch(_Model):
             active_layer=data.get("activeLayer", UNSET),
             arrays=UNSET if "arrays" not in data else None if data["arrays"] is None else [AssocArray.from_json(e0) for e0 in data["arrays"]],
             constraints=UNSET if "constraints" not in data else None if data["constraints"] is None else ConstraintSet.from_json(data["constraints"]),
+            dimension_sets=UNSET if "dimensionSets" not in data else None if data["dimensionSets"] is None else [DimensionSet.from_json(e0) for e0 in data["dimensionSets"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else [LayerNode.from_json(e0) for e0 in data["layers"]],
             name=data.get("name", UNSET),
             settings=UNSET if "settings" not in data else None if data["settings"] is None else ProjectSettings.from_json(data["settings"]),
@@ -59457,11 +60042,13 @@ class WallsEdited(_Model):
     Attributes:
         walls: The walls as written, in the input's order (Birleştir: the one they became).
         added: The new walls (Böl: each second part).
+        followers: Derived source-following preview changes; absent when none. New identities are provisional.
         removed: The walls gone, by their ids (Birleştir: all but the first).
     """
     walls: list[Entity]
     revision: str
     added: list[Entity] | Unset = UNSET
+    followers: DerivedEntitiesPlan | Unset = UNSET
     removed: list[str] | Unset = UNSET
     styles_added: list[str] | Unset = UNSET
 
@@ -59471,6 +60058,8 @@ class WallsEdited(_Model):
         out["revision"] = self.revision
         if self.added is not UNSET:
             out["added"] = [e0.to_json() for e0 in self.added]
+        if self.followers is not UNSET:
+            out["followers"] = self.followers.to_json()
         if self.removed is not UNSET:
             out["removed"] = list(self.removed)
         if self.styles_added is not UNSET:
@@ -59483,6 +60072,7 @@ class WallsEdited(_Model):
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
         )
@@ -64264,6 +64854,171 @@ class ElevationDimensionMeasure(DimensionMeasure):
             a=MeasuredPoint.from_json(data["a"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class MoveDimensionSetEdit(DimensionSetEdit):
+    """
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "move"
+    at: Vec2
+    row: DimensionSetRow | DimensionSetRowName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "move"}
+        out["at"] = _vec2_out(self.at)
+        if self.row is not UNSET:
+            out["row"] = None if self.row is None else _enum_out(self.row)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveDimensionSetEdit:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            row=UNSET if "row" not in data else None if data["row"] is None else _enum_in(DimensionSetRow, data["row"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RowOffsetDimensionSetEdit(DimensionSetEdit):
+    """
+    Attributes:
+        offset: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rowOffset"
+    row: DimensionSetRow | DimensionSetRowName
+    offset: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rowOffset"}
+        out["row"] = _enum_out(self.row)
+        out["offset"] = float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RowOffsetDimensionSetEdit:
+        return cls(
+            row=_enum_in(DimensionSetRow, data["row"]),
+            offset=float(data["offset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetDimensionSetEdit(DimensionSetEdit):
+    """
+    Attributes:
+        gap_mm: Unit: paper-mm.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    dimension_style: str | None | Unset = UNSET
+    face: DimensionSetFace | DimensionSetFaceName | None | Unset = UNSET
+    gap_mm: float | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    openings: DimensionSetOpenings | DimensionSetOpeningsName | None | Unset = UNSET
+    rows: list[DimensionSetRow | DimensionSetRowName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.dimension_style is not UNSET:
+            out["dimensionStyle"] = self.dimension_style
+        if self.face is not UNSET:
+            out["face"] = None if self.face is None else _enum_out(self.face)
+        if self.gap_mm is not UNSET:
+            out["gapMm"] = None if self.gap_mm is None else float(self.gap_mm)
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.openings is not UNSET:
+            out["openings"] = None if self.openings is None else _enum_out(self.openings)
+        if self.rows is not UNSET:
+            out["rows"] = None if self.rows is None else [_enum_out(e0) for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetDimensionSetEdit:
+        return cls(
+            dimension_style=data.get("dimensionStyle", UNSET),
+            face=UNSET if "face" not in data else None if data["face"] is None else _enum_in(DimensionSetFace, data["face"]),
+            gap_mm=UNSET if "gapMm" not in data else None if data["gapMm"] is None else float(data["gapMm"]),
+            layer_id=data.get("layerId", UNSET),
+            openings=UNSET if "openings" not in data else None if data["openings"] is None else _enum_in(DimensionSetOpenings, data["openings"]),
+            rows=UNSET if "rows" not in data else None if data["rows"] is None else [_enum_in(DimensionSetRow, e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RestoreHiddenDimensionSetEdit(DimensionSetEdit):
+    """Restore only explicitly suppressed intervals; preserve manual text placement."""
+    TAG_VALUE: ClassVar[str] = "restoreHidden"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "restoreHidden"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RestoreHiddenDimensionSetEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachDimensionSetEdit(DimensionSetEdit):
+    """Remove the recipe, keeping its ordinary, individually associative dimensions."""
+    TAG_VALUE: ClassVar[str] = "detach"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachDimensionSetEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteDimensionSetEdit(DimensionSetEdit):
+    """Remove the recipe and all its active dimensions together."""
+    TAG_VALUE: ClassVar[str] = "delete"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "delete"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteDimensionSetEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetTextDimensionSetEdit(DimensionSetEdit):
+    TAG_VALUE: ClassVar[str] = "resetText"
+    row: DimensionSetRow | DimensionSetRowName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resetText"}
+        if self.row is not UNSET:
+            out["row"] = None if self.row is None else _enum_out(self.row)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetTextDimensionSetEdit:
+        return cls(
+            row=UNSET if "row" not in data else None if data["row"] is None else _enum_in(DimensionSetRow, data["row"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetRowsDimensionSetEdit(DimensionSetEdit):
+    """Clear manual row placements; return to the group's original first-row placement."""
+    TAG_VALUE: ClassVar[str] = "resetRows"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resetRows"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetRowsDimensionSetEdit:
+        return cls()
 
 
 @dataclass(kw_only=True, slots=True)
@@ -76063,6 +76818,9 @@ _DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, 
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure, "centerMark": CenterMarkDimensionMeasure, "centerLine": CenterLineDimensionMeasure, "elevation": ElevationDimensionMeasure}
 
 
+_DIMENSION_SET_EDIT: dict[str, type[DimensionSetEdit]] = {"move": MoveDimensionSetEdit, "rowOffset": RowOffsetDimensionSetEdit, "set": SetDimensionSetEdit, "restoreHidden": RestoreHiddenDimensionSetEdit, "detach": DetachDimensionSetEdit, "delete": DeleteDimensionSetEdit, "resetText": ResetTextDimensionSetEdit, "resetRows": ResetRowsDimensionSetEdit}
+
+
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
 
 
@@ -76781,6 +77539,7 @@ __all__ = [
     "DecurveCurveEdit",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
+    "DeleteDimensionSetEdit",
     "DeleteFeatureChange",
     "DeleteRowsTableEdit",
     "DeleteUcsTo",
@@ -76794,7 +77553,9 @@ __all__ = [
     "DerivationStatusName",
     "DerivationTable",
     "DeriveWork",
+    "DerivedEntitiesPlan",
     "DetachArchOperation",
+    "DetachDimensionSetEdit",
     "DetachMasterPaperOp",
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
@@ -76815,6 +77576,7 @@ __all__ = [
     "DimensionEntityGeometry",
     "DimensionFit",
     "DimensionFitName",
+    "DimensionLook",
     "DimensionMeasure",
     "DimensionOptions",
     "DimensionPoint",
@@ -76823,6 +77585,25 @@ __all__ = [
     "DimensionRefs",
     "DimensionRule",
     "DimensionRuleName",
+    "DimensionSet",
+    "DimensionSetBreak",
+    "DimensionSetBreakName",
+    "DimensionSetEdit",
+    "DimensionSetFace",
+    "DimensionSetFaceName",
+    "DimensionSetMember",
+    "DimensionSetOpenings",
+    "DimensionSetOpeningsName",
+    "DimensionSetRow",
+    "DimensionSetRowName",
+    "DimensionSetRowPlace",
+    "DimensionSetSegment",
+    "DimensionSetsChanged",
+    "DimensionSetsCreateInput",
+    "DimensionSetsEditInput",
+    "DimensionSetsPlan",
+    "DimensionSetsQueried",
+    "DimensionSetsQueryInput",
     "DimensionStyle",
     "DimensionStyleDef",
     "DimensionStyleName",
@@ -77593,6 +78374,7 @@ __all__ = [
     "MosaicSource",
     "MoveBlockAction",
     "MoveControlCurveEdit",
+    "MoveDimensionSetEdit",
     "MoveFitCurveEdit",
     "MoveGuidePaperOp",
     "MoveItemsPaperOp",
@@ -78276,11 +79058,14 @@ __all__ = [
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
+    "ResetRowsDimensionSetEdit",
+    "ResetTextDimensionSetEdit",
     "ReshapeShapeWork",
     "ResizeItemPaperOp",
     "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
+    "RestoreHiddenDimensionSetEdit",
     "RetargetViewMarksOperation",
     "RetireCodeMigrationStep",
     "RevcloudCreate",
@@ -78296,6 +79081,7 @@ __all__ = [
     "RotateTransform",
     "RotateUcsTo",
     "RowHeightTableEdit",
+    "RowOffsetDimensionSetEdit",
     "RubberLink",
     "RubbersheetTransform",
     "RunInput",
@@ -78362,6 +79148,7 @@ __all__ = [
     "SetArchOperation",
     "SetAtlasPaperOp",
     "SetCellTableEdit",
+    "SetDimensionSetEdit",
     "SetDrawingInfoPaperOp",
     "SetDrawingSetPaperOp",
     "SetExportPaperOp",

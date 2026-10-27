@@ -35,7 +35,7 @@ def contains(expected: Any, actual: Any, where: str = "") -> None:
 
 class Coverage(unittest.TestCase):
     def test_every_command_has_its_wrapper_under_its_name(self) -> None:
-        self.assertEqual(sorted(cad.COMMANDS), sorted(c["id"] for c in COMMANDS))
+        self.assertEqual(sorted(cad.COMMANDS), sorted({c["id"] for c in COMMANDS}))
         for c in COMMANDS:
             w = cad.command(c["id"])
             parts = c["id"].split(".")
@@ -47,7 +47,13 @@ class Coverage(unittest.TestCase):
             # A Python keyword gets a trailing underscore (cad.entities.break: entities.break_).
             name = parts[-1] + "_" if keyword.iskeyword(parts[-1]) else parts[-1]
             self.assertIs(getattr(obj, name), w, c["id"])
-            self.assertEqual((w.id, w.version, w.title), (c["id"], c["version"], c["title"]))
+            versions = tuple(sorted(entry["version"] for entry in COMMANDS if entry["id"] == c["id"]))
+            if len(versions) > 1:
+                self.assertEqual(c["id"], "project.changes")
+                self.assertEqual(w.version, 1)
+                self.assertEqual(w.supported_versions, versions)
+            else:
+                self.assertEqual((w.id, w.version, w.title), (c["id"], c["version"], c["title"]))
             self.assertEqual(w.input_type.__name__, c["input"]["title"])
             self.assertEqual(w.output_type.__name__, c["output"]["title"])
             local = "desktop" in c["hosts"]

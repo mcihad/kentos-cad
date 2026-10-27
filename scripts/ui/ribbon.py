@@ -231,8 +231,11 @@ CAD = [
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
-        P("Belgele", "tag", [S("tool.tag"), S("arch.quantities"), S("tool.scheduleOpenings"),
-            S("tool.scheduleSpaces"), S("tool.viewSection"), S("tool.viewElevation")],
+        P("Belgele", "tag", [L("tool.wallDimensions"), S("tool.tag"), S("arch.quantities"),
+            {"key": "archSchedules", "size": "small", "split": [
+                {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
+                {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
+            ]}, S("tool.viewSection"), S("tool.viewElevation")],
           overflow=["tool.tagAll", "tool.viewDetail", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
         P("Proje", "archSettings", [S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
@@ -515,7 +518,7 @@ CONTEXTUAL = [
     {"id": "ctx.wall", "label": "Duvar", "kinds": ["wall"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Duvar", "wall", [L("view.properties"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
+        P("Duvar", "wall", [L("tool.wallDimensions"), L("view.properties"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
             S("tool.wallTrim"), S("tool.wallFlip"), S("tool.wallRestyle"), S("arch.wallJoinCheck")]),
         P("Açıklık", "door", [S("tool.door"), S("tool.window"), S("tool.opening"), S("tool.tag")]),
     ]},

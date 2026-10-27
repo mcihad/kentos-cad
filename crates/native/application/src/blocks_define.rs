@@ -131,6 +131,7 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let named = checks::named(doc, &input.uids)?;
+    reject_owned_dimension_members(doc, &input.uids)?;
     no_tables(&named)?;
     let mut block = BlockDefinition {
         dynamic: None,
@@ -165,6 +166,32 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
         checked.warnings = r.warnings;
     }
     Ok(checked)
+}
+
+/// Clip v1 and block/array definitions cannot yet carry a dimension recipe's complete source graph.
+/// Refuse the selection before making any copy instead of silently turning automatic members into
+/// independently drawn annotations. Detaching the recipe is the explicit, undoable escape hatch.
+pub(crate) fn reject_owned_dimension_members(doc: &Document, uids: &[String]) -> Result<(), Stop> {
+    let owned: std::collections::HashSet<Uuid> = doc
+        .dimension_sets()
+        .iter()
+        .flat_map(|set| {
+            set.members
+                .iter()
+                .map(|member| Uuid::from_bytes(member.uid.0))
+        })
+        .collect();
+    if owned.is_empty() {
+        return Ok(());
+    }
+    for (i, uid) in uids.iter().enumerate() {
+        if Uuid::parse_str(uid).is_ok_and(|uid| owned.contains(&uid)) {
+            return Err(Stop::failed(error("dimension_set_owned",
+                "Seçimde otomatik ölçü grubuna ait ölçü var. Grubun kaynak ilişkileri bu kopyalama işleminde taşınamıyor. Önce Özellikler panelinden “Diziyi bağımsız ölçülere dönüştür” işlemini kullanın veya otomatik ölçüleri seçimden çıkarın.".into(),
+                Some(format!("uids[{i}]")))));
+        }
+    }
+    Ok(())
 }
 
 /// A unitless definition's numbers made the drawing's units (docs/adr/0315 §4): its geometry, metres as the

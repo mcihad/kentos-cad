@@ -1,0 +1,336 @@
+{
+  "format": "kentos.format-scope",
+  "version": 1,
+  "mode": "read-only baseline comparison, then selected new-hunk-only normalization",
+  "baseCommit": "b793dd770c85d7357b0e7f2ad6277600df79f81d",
+  "rustfmtVersion": "rustfmt 1.9.0-stable (ac68faa20c 2026-05-25)",
+  "counts": {
+    "touchedRustFiles": 162,
+    "newFiles": 20,
+    "newStrictFailures": 0,
+    "trackedCurrentStrictFailures": 57,
+    "filesWithNewOrChangedDebt": 45,
+    "changedDuringAudit": 0,
+    "headTrackedStrictFailures": 45,
+    "currentFormatHunks": 783,
+    "identicalHeadFormatHunks": 633,
+    "newOrChangedContextHunks": 150
+  },
+  "newStrictFiles": [
+    {
+      "path": "apps/desktop/src/app_menu/layout_tests.rs",
+      "sha256": "3cf56ba294e522186b23fe4628ec96e008f130548732abc91fb494184d892314",
+      "strictFormatted": true
+    },
+    {
+      "path": "apps/desktop/src/properties/rows/dimension_set.rs",
+      "sha256": "2af982b752c84b8266a7501cf3ca584a46e0648a77362bfbbed07d757bd02faa",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/application/src/dimension_sets.rs",
+      "sha256": "79f47deb388daf519996297cfcd0f36010586ecd97fdec29ef2e5a1cadde615a",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/application/tests/all/dimension_set_copy.rs",
+      "sha256": "3c62f8c6e20270ccda82024e1eaa4b3ede4e47dc1e3cdbbb33c15f119d6698f9",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/application/tests/all/dimension_sets.rs",
+      "sha256": "8049703e2a6f20db46318381dcafde9cc88cbe543b3f1fa233707932537f6c2a",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/cloud/tests/dimension_set_capability.rs",
+      "sha256": "58172243aa088a3748fc204fca9d35bf09eb9b1edbe10d74e7bc8b747f29d1ec",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/domain/src/dimension_sets.rs",
+      "sha256": "62ee160b84393df6ac1bf5358f64cedd35aa204d3e673b2c307f94f086a3541d",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/domain/tests/all/dimension_sets.rs",
+      "sha256": "581153b428ac745f48c70880e93b2f1492125aa247dae0b79cfd6fbf1ab025d5",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/headless/tests/headless/dimension_set_exports.rs",
+      "sha256": "4c05d335d3b3eead509e774d018a7e536a13d8fae3f25df8e057906e2a52a7b5",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/interaction/src/wall_dimensions.rs",
+      "sha256": "1aae48350605ac7d3306a1f8798bc5a7fda09d63d275c5c048ea1947f93d11af",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/interaction/tests/all/wall_dimensions.rs",
+      "sha256": "2e816857c47afdabfd35c137dba7d8309cffd63dd9838b9f991448bf8ca116b1",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/interaction/tests/all/wall_display.rs",
+      "sha256": "5bcdaa77a2f6a04cb7643512a916cfebf0db0761c6bea4b3f549f759ff98da6e",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/native/mcp/tests/dimension_sets.rs",
+      "sha256": "93b28469e8dcd4a9600e7f3ed1f8ba75a56bb074d397f2635ccf9332a08d2585",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/render/wgpu/tests/gpu/hatch.rs",
+      "sha256": "e576a8e6ad6f58d7796d92eab7b4af58ad981bbdcf742ce035c1d536f247304a",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/server/application/tests/project_dimension_sets.rs",
+      "sha256": "7f728da1d7bd3657a7f0eefe33689c7edddf846842907d610d221b49d0c51dd3",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/shared/commands/src/cad_dimension_sets.rs",
+      "sha256": "7787be72bbdec8da5bb7530a81e31f6c88c34ae7ef815fa7d9a74b0f8d30e1cd",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/shared/contracts/src/derived_entities.rs",
+      "sha256": "6e8678982fc258462345d99b2513f4d013a543bb2246aceaff9f5255742557a7",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/shared/contracts/src/dimension_set.rs",
+      "sha256": "62da9ec7654e396c32170c61da74a516eb8c145c2d1a30361dc548792e42cfac",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/shared/geometry-core/src/ops/dimension_set.rs",
+      "sha256": "578e3cb4aff96b345d84d7837274fd6e8a53cff9cba3f9edb0458d127a6d8416",
+      "strictFormatted": true
+    },
+    {
+      "path": "crates/shared/kcad/tests/all/dimension_sets.rs",
+      "sha256": "b7392d95708d6e6d5d8918ac0acebc0edd7b4418f41d01af8b0501d8f211cccd",
+      "strictFormatted": true
+    }
+  ],
+  "headCleanNowUnformatted": [
+    "crates/native/application/src/call.rs",
+    "crates/native/application/src/delete.rs",
+    "crates/native/application/src/openings_create.rs",
+    "crates/native/application/src/openings_edit.rs",
+    "crates/native/application/src/replay.rs",
+    "crates/native/application/src/stretch.rs",
+    "crates/native/domain/src/calls.rs",
+    "crates/native/domain/src/dimension_ties.rs",
+    "crates/native/domain/src/external.rs",
+    "crates/native/domain/src/history.rs",
+    "crates/native/domain/src/integrity.rs",
+    "crates/native/domain/src/opening_follow.rs",
+    "crates/native/domain/src/step.rs",
+    "crates/native/domain/tests/all/main.rs",
+    "crates/native/interaction/src/opening_tools.rs",
+    "crates/shared/commands/src/cad_openings.rs",
+    "crates/shared/commands/src/cad_walls.rs",
+    "crates/shared/contracts/src/cad.rs"
+  ],
+  "identicalLegacyDebtFiles": [
+    "apps/api/src/http/mod.rs",
+    "apps/desktop/src/app.rs",
+    "apps/desktop/src/app_menu/mod.rs",
+    "crates/native/application/src/array.rs",
+    "crates/native/application/src/clipboard_cmd.rs",
+    "crates/native/application/src/transform.rs",
+    "crates/native/domain/tests/all/steps.rs",
+    "crates/native/headless/src/file_commands.rs",
+    "crates/native/headless/tests/headless.rs",
+    "crates/native/interaction/src/tool.rs",
+    "crates/shared/kcad/src/decode/objects.rs",
+    "crates/shared/kcad/tests/all/main.rs"
+  ],
+  "rawLog": {
+    "path": "rustfmt-check.log",
+    "bytes": 438994,
+    "sha256": "6bdf9a939344a3762079cc68891a3ac56bcec8a9a7eb8925b77776f979628602"
+  },
+  "globalRustfmtPassed": false,
+  "sourceFilesRewritten": 35,
+  "generatedTypescript": "33 canonical ts-rs files copied byte for byte by root. Whitespace warnings were not trimmed by hand.",
+  "methodLimit": "Identical raw→formatted hunk pairs are counted as inherited. Unmatched pairs may combine new formatting debt and changed surrounding inherited debt; the18 previously clean files prove a new contribution.",
+  "narrowNormalization": {
+    "candidateFiles": 45,
+    "changedFiles": 35,
+    "safeHunks": 114,
+    "mixedHunks": 16,
+    "outsideChangedLinesHunks": 20,
+    "protectedMenuSourcesUnchanged": true,
+    "allCanonicalRustfmtResultsUnchanged": true,
+    "preservedHeadHunksAfter": 633,
+    "remainingFormattingHunks": 669,
+    "remainingNewOrChangedContextHunks": 36,
+    "remainingTrackedStrictFailures": 40,
+    "remainingFiles": [
+      "apps/desktop/src/architecture_settings.rs",
+      "crates/native/application/src/lib.rs",
+      "crates/native/application/src/registry.rs",
+      "crates/native/application/tests/all/capabilities.rs",
+      "crates/native/application/tests/all/fixtures.rs",
+      "crates/native/application/tests/all/main.rs",
+      "crates/native/domain/src/lib.rs",
+      "crates/native/domain/tests/all/main.rs",
+      "crates/native/interaction/src/lib.rs",
+      "crates/native/interaction/tests/all/main.rs",
+      "crates/shared/commands/src/lib.rs",
+      "crates/shared/contracts/src/lib.rs"
+    ],
+    "protectedSourceHashes": {
+      "apps/desktop/src/app_menu/keys.rs": "a55e13373ba03a241a9e0cabbd0f5f142f88ed65af1dcf9e52c7d43e1360e988",
+      "apps/desktop/src/app_menu/mod.rs": "d7d4607b0c43afd431d724e30e3ac8bce6809771bb83bebdfb50dcec6651ad84",
+      "crates/ui/src/widget/app_menu.rs": "b73f9e53feaf915ab3ec7c624e13e1123829460e749015eede8ee157e63142de"
+    },
+    "sourceFrozen": true
+  },
+  "latestReadOnlyAudit": {
+    "path": "format-current-audit.json",
+    "bytes": 88888,
+    "sha256": "881428d4d14db528f68edad3c87edb5018a86d5b64f964869ec84c8b85cbfdfc",
+    "counts": {
+      "touchedRustFiles": 165,
+      "newFiles": 21,
+      "newStrictFailures": 0,
+      "trackedCurrentStrictFailures": 41,
+      "filesWithNewOrChangedDebt": 12,
+      "changedDuringAudit": 0
+    },
+    "currentFormatHunks": 672,
+    "identicalHeadFormatHunks": 636,
+    "remainingNewOrChangedContextHunks": 36,
+    "remainingFiles": [
+      "apps/desktop/src/architecture_settings.rs",
+      "crates/native/application/src/lib.rs",
+      "crates/native/application/src/registry.rs",
+      "crates/native/application/tests/all/capabilities.rs",
+      "crates/native/application/tests/all/fixtures.rs",
+      "crates/native/application/tests/all/main.rs",
+      "crates/native/domain/src/lib.rs",
+      "crates/native/domain/tests/all/main.rs",
+      "crates/native/interaction/src/lib.rs",
+      "crates/native/interaction/tests/all/main.rs",
+      "crates/shared/commands/src/lib.rs",
+      "crates/shared/contracts/src/lib.rs"
+    ],
+    "newStrictFiles": [
+      {
+        "path": "apps/desktop/src/app_menu/layout_tests.rs",
+        "sha256": "fe24fede9740f210c566db2aee3d17b1f6b6b45b202daebd1fca7e1c24eebeff",
+        "strictFormatted": true
+      },
+      {
+        "path": "apps/desktop/src/properties/rows/dimension_set.rs",
+        "sha256": "2af982b752c84b8266a7501cf3ca584a46e0648a77362bfbbed07d757bd02faa",
+        "strictFormatted": true
+      },
+      {
+        "path": "apps/desktop/src/wall_styles_layout_tests.rs",
+        "sha256": "ea9fbf35a55dac6c2ccd5c747da0a6c758d1772ffa9a7874a894a83e41f75477",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/application/src/dimension_sets.rs",
+        "sha256": "28731f399ed262b5845535589a33ad7a8cf6ea902f6596f9ce7d9626892e8e2a",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/application/tests/all/dimension_set_copy.rs",
+        "sha256": "3c62f8c6e20270ccda82024e1eaa4b3ede4e47dc1e3cdbbb33c15f119d6698f9",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/application/tests/all/dimension_sets.rs",
+        "sha256": "8049703e2a6f20db46318381dcafde9cc88cbe543b3f1fa233707932537f6c2a",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/cloud/tests/dimension_set_capability.rs",
+        "sha256": "58172243aa088a3748fc204fca9d35bf09eb9b1edbe10d74e7bc8b747f29d1ec",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/domain/src/dimension_sets.rs",
+        "sha256": "4f1febd5d44846555c3007e4eda0ed67de1abc5159be046ed13477d974cdae1a",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/domain/tests/all/dimension_sets.rs",
+        "sha256": "581153b428ac745f48c70880e93b2f1492125aa247dae0b79cfd6fbf1ab025d5",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/headless/tests/headless/dimension_set_exports.rs",
+        "sha256": "4c05d335d3b3eead509e774d018a7e536a13d8fae3f25df8e057906e2a52a7b5",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/interaction/src/wall_dimensions.rs",
+        "sha256": "f407fe6e3a6b86909e036eadc70d5fe2186822d5157296d5ef04705ecf1e9639",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/interaction/tests/all/wall_dimensions.rs",
+        "sha256": "2e816857c47afdabfd35c137dba7d8309cffd63dd9838b9f991448bf8ca116b1",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/interaction/tests/all/wall_display.rs",
+        "sha256": "5bcdaa77a2f6a04cb7643512a916cfebf0db0761c6bea4b3f549f759ff98da6e",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/native/mcp/tests/dimension_sets.rs",
+        "sha256": "93b28469e8dcd4a9600e7f3ed1f8ba75a56bb074d397f2635ccf9332a08d2585",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/render/wgpu/tests/gpu/hatch.rs",
+        "sha256": "e576a8e6ad6f58d7796d92eab7b4af58ad981bbdcf742ce035c1d536f247304a",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/server/application/tests/project_dimension_sets.rs",
+        "sha256": "830b070866a27dfb7d9c74ce39cd5f018906b016f7fb461a3c1a6bc379d0398c",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/shared/commands/src/cad_dimension_sets.rs",
+        "sha256": "7787be72bbdec8da5bb7530a81e31f6c88c34ae7ef815fa7d9a74b0f8d30e1cd",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/shared/contracts/src/derived_entities.rs",
+        "sha256": "6e8678982fc258462345d99b2513f4d013a543bb2246aceaff9f5255742557a7",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/shared/contracts/src/dimension_set.rs",
+        "sha256": "62da9ec7654e396c32170c61da74a516eb8c145c2d1a30361dc548792e42cfac",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/shared/geometry-core/src/ops/dimension_set.rs",
+        "sha256": "578e3cb4aff96b345d84d7837274fd6e8a53cff9cba3f9edb0458d127a6d8416",
+        "strictFormatted": true
+      },
+      {
+        "path": "crates/shared/kcad/tests/all/dimension_sets.rs",
+        "sha256": "b7392d95708d6e6d5d8918ac0acebc0edd7b4418f41d01af8b0501d8f211cccd",
+        "strictFormatted": true
+      }
+    ],
+    "sourceFilesRewrittenByThisAudit": 0,
+    "globalRustfmtPassed": false
+  }
+}

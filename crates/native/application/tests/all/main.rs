@@ -17,6 +17,8 @@ mod catalog;
 mod change_effects;
 mod cleanup_cmd;
 mod clipboard_cmd;
+mod dimension_set_copy;
+mod dimension_sets;
 mod compare_timing;
 mod cog;
 mod create;

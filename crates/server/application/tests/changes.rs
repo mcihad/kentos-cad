@@ -57,6 +57,7 @@ fn unlocked(nodes: &[kentos_contracts::LayerNode]) -> Vec<kentos_contracts::Laye
 async fn new_project(db: &TestDb, who: &Access) -> Uuid {
     let s = sample();
     let input = ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: "Örnek".into(),
         settings: s.settings,

@@ -46,6 +46,8 @@ use kentos_commands::{
     XrefsEdit, XrefsList,
 };
 use serde_json::Value;
+use kentos_commands::{DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsQueryInput};
+use crate::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 
 use crate::addresses_check;
 use crate::addresses_normalize;
@@ -382,6 +384,9 @@ macro_rules! by_command {
                 $then!(dimensions_reassociate, DimensionsReassociate)
             }
             kentos_commands::CAD_DIMENSIONS_CREATE => $then!(dimensions_create, DimensionsCreate),
+            kentos_commands::CAD_DIMENSION_SETS_CREATE => $then!(dimension_sets_create, DimensionSetsCreateInput),
+            kentos_commands::CAD_DIMENSION_SETS_EDIT => $then!(dimension_sets_edit, DimensionSetsEditInput),
+            kentos_commands::CAD_DIMENSION_SETS_QUERY => $then!(dimension_sets_query, DimensionSetsQueryInput),
             kentos_commands::CAD_DIMENSIONS_EDIT => $then!(dimensions_edit, DimensionsEdit),
             kentos_commands::CAD_DIMENSIONS_QUERY => $then!(dimensions_query, DimensionsQuery),
             kentos_commands::CAD_FONTS_REPORT => $then!(fonts_report, FontsReport),

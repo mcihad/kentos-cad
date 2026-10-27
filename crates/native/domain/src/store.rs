@@ -424,6 +424,20 @@ impl Store {
         self.uids.reserve(n);
     }
 
+    /// Preview additions are temporary, unlike undone real additions. Restore their allocation clock
+    /// and remove their vacated places after reverting, without cloning the full indexed store.
+    pub(crate) fn preview_clock(&self) -> u64 {
+        self.next_seq
+    }
+    pub(crate) fn restore_preview_clock(&mut self, clock: u64, first: u64, end: u64) {
+        for id in first..end {
+            if let Ok(id) = u32::try_from(id) {
+                self.vacated.remove(&Slot(id));
+            }
+        }
+        self.next_seq = clock;
+    }
+
     /// An object into its layer's list; the layer's id is copied only for
     /// a layer not listed yet (a run adds hundreds of thousands at once).
     fn list(&mut self, layer: &str, seq: u64, slot: Slot) {

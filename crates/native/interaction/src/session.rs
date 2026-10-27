@@ -80,6 +80,7 @@ pub const TOOLS: &[&str] = &[
     wall_from_lines::ID,
     wall_rectangle::ID,
     crate::wall_partition::ID,
+    crate::wall_dimensions::ID,
     // The wall edits by a click (docs/adr/0340 §6).
     wall_edit_tools::SPLIT_ID,
     wall_edit_tools::JOIN_ID,
@@ -461,6 +462,9 @@ impl Session {
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
+            crate::wall_dimensions::ID => {
+                Box::new(crate::wall_dimensions::WallDimensions::default())
+            }
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
             wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
             wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),

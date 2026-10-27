@@ -1,0 +1,5613 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.dimensionsets.create",
+  "commandVersion": 1,
+  "title": "Kalıcı otomatik mimari ölçü dizileri: create",
+  "note": "ADR0695. Bağımsız kardinal yüz/pervaz hesabı; V2 sabit UUID seed; üretici KentOS kodunu çalıştırmaz. Yeni kimlikler yalnız yazma anında atanır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kalıcı mimari ölçü dizileri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "hidden",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "locked",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "group",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center"
+      },
+      {
+        "kind": "opening",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "host": "0192f5a1-6000-7000-8000-000000000001",
+        "at": 4.0,
+        "width": 1.0,
+        "form": "opening",
+        "place": [
+          {
+            "x": 3.5,
+            "y": 0.125
+          },
+          {
+            "x": 3.5,
+            "y": -0.125
+          },
+          {
+            "x": 4.5,
+            "y": 0.125
+          },
+          {
+            "x": 4.5,
+            "y": -0.125
+          }
+        ]
+      }
+    ],
+    "uids": [
+      "0192f5a1-6000-7000-8000-000000000001",
+      "0192f5a1-6000-7000-8000-000000000004"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Plan: sol yüz ve iki sıra",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: sağ yüz, dışa aşağı sıralar",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": -1.0
+            },
+            "face": "right"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": -0.125
+                  },
+                  "offset": -0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": -0.125
+                  },
+                  "offset": -0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 3
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": -0.125
+                  },
+                  "offset": -0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 3
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": -0.125
+                  },
+                  "offset": -1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 3
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 3
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yalnız açıklık aralıkları",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "openings"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yalnız toplam",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "overall"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: sıraların kullanıcı sırası",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "overall",
+              "openings"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: açıklık merkezlerinden",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "openings": "centers"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "center"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.0,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "center"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "center"
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "center"
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: açıklık yokken yüzün bütünü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: ters yönlü batıya duvar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": -8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000001",
+            "at": 4.0,
+            "width": 1.0,
+            "form": "opening",
+            "place": [
+              {
+                "x": -3.5,
+                "y": -0.125
+              },
+              {
+                "x": -3.5,
+                "y": 0.125
+              },
+              {
+                "x": -4.5,
+                "y": -0.125
+              },
+              {
+                "x": -4.5,
+                "y": 0.125
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000004"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": -3.5,
+                    "y": -0.125
+                  },
+                  "offset": -1.125,
+                  "style": "linear",
+                  "angle": 180.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -3.5,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": -4.5,
+                    "y": -0.125
+                  },
+                  "offset": -1.125,
+                  "style": "linear",
+                  "angle": 180.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -4.5,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": -8.0,
+                    "y": -0.125
+                  },
+                  "offset": -1.125,
+                  "style": "linear",
+                  "angle": 180.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": -8.0,
+                    "y": -0.125
+                  },
+                  "offset": -1.5,
+                  "style": "linear",
+                  "angle": 180.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: düşey kuzey duvar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000001",
+            "at": 4.0,
+            "width": 1.0,
+            "form": "opening",
+            "place": [
+              {
+                "x": -0.125,
+                "y": 3.5
+              },
+              {
+                "x": 0.125,
+                "y": 3.5
+              },
+              {
+                "x": -0.125,
+                "y": 4.5
+              },
+              {
+                "x": 0.125,
+                "y": 4.5
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000004"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": -1.0,
+              "y": 4.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -0.125,
+                    "y": 0.0
+                  },
+                  "b": {
+                    "x": -0.125,
+                    "y": 3.5
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -0.125,
+                    "y": 3.5
+                  },
+                  "b": {
+                    "x": -0.125,
+                    "y": 4.5
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -0.125,
+                    "y": 4.5
+                  },
+                  "b": {
+                    "x": -0.125,
+                    "y": 8.0
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": -0.125,
+                    "y": 0.0
+                  },
+                  "b": {
+                    "x": -0.125,
+                    "y": 8.0
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: düşey güneye duvar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.0,
+                "y": -8.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000001",
+            "at": 4.0,
+            "width": 1.0,
+            "form": "opening",
+            "place": [
+              {
+                "x": 0.125,
+                "y": -3.5
+              },
+              {
+                "x": -0.125,
+                "y": -3.5
+              },
+              {
+                "x": 0.125,
+                "y": -4.5
+              },
+              {
+                "x": -0.125,
+                "y": -4.5
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000004"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 1.0,
+              "y": -4.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.125,
+                    "y": 0.0
+                  },
+                  "b": {
+                    "x": 0.125,
+                    "y": -3.5
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": -90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.125,
+                    "y": -3.5
+                  },
+                  "b": {
+                    "x": 0.125,
+                    "y": -4.5
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": -90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.125,
+                    "y": -4.5
+                  },
+                  "b": {
+                    "x": 0.125,
+                    "y": -8.0
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": -90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.125,
+                    "y": 0.0
+                  },
+                  "b": {
+                    "x": 0.125,
+                    "y": -8.0
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": -90.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: büyük dünya koordinatları",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000.0,
+                "y": 4400000.0
+              },
+              {
+                "x": 500008.0,
+                "y": 4400000.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000001",
+            "at": 4.0,
+            "width": 1.0,
+            "form": "opening",
+            "place": [
+              {
+                "x": 500003.5,
+                "y": 4400000.125
+              },
+              {
+                "x": 500003.5,
+                "y": 4399999.875
+              },
+              {
+                "x": 500004.5,
+                "y": 4400000.125
+              },
+              {
+                "x": 500004.5,
+                "y": 4399999.875
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000004"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 500004.0,
+              "y": 4400001.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 500000.0,
+                    "y": 4400000.125
+                  },
+                  "b": {
+                    "x": 500003.5,
+                    "y": 4400000.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 500003.5,
+                    "y": 4400000.125
+                  },
+                  "b": {
+                    "x": 500004.5,
+                    "y": 4400000.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 500004.5,
+                    "y": 4400000.125
+                  },
+                  "b": {
+                    "x": 500008.0,
+                    "y": 4400000.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 500000.0,
+                    "y": 4400000.125
+                  },
+                  "b": {
+                    "x": 500008.0,
+                    "y": 4400000.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: kâğıt aralığı 6mm",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "gapMm": 6.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.175,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: plotScale100 aralığı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "host": "0192f5a1-6000-7000-8000-000000000001",
+            "at": 4.0,
+            "width": 1.0,
+            "form": "opening",
+            "place": [
+              {
+                "x": 3.5,
+                "y": 0.125
+              },
+              {
+                "x": 3.5,
+                "y": -0.125
+              },
+              {
+                "x": 4.5,
+                "y": 0.125
+              },
+              {
+                "x": 4.5,
+                "y": -0.125
+              }
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000004"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "gapMm": 8.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.25,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.25,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.25,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.25,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.675,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur ve tek geri/ileri: overall",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "overall"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "$any",
+              "uids": [
+                "$any"
+              ],
+              "created": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur ve tek geri/ileri: openings",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "openings"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "$any",
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "created": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              },
+              "4": {
+                "height": 0.125,
+                "a": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                }
+              },
+              "5": {
+                "height": 0.125,
+                "a": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              },
+              "4": {
+                "height": 0.125,
+                "a": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                }
+              },
+              "5": {
+                "height": 0.125,
+                "a": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur ve tek geri/ileri: openings,overall",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "openings",
+              "overall"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "$any",
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "created": [
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              },
+              "4": {
+                "height": 0.125,
+                "a": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                }
+              },
+              "5": {
+                "height": 0.125,
+                "a": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              },
+              "6": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.25,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "3": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              },
+              "4": {
+                "height": 0.125,
+                "a": {
+                  "x": 3.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                }
+              },
+              "5": {
+                "height": 0.125,
+                "a": {
+                  "x": 4.5,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              },
+              "6": {
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.25,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: gapMm=0.0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "gapMm": 0.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Ölçü dizisinin yeri sonlu, aralığı ve yazı yüksekliği pozitif olmalı.",
+              "path": "operation"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: gapMm=-1.0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "gapMm": -1.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Ölçü dizisinin yeri sonlu, aralığı ve yazı yüksekliği pozitif olmalı.",
+              "path": "operation"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: rows=[]",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Ölçü dizisinin sıraları boş veya yineleniyor.",
+              "path": "operation"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: rows=['overall', 'overall']",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "rows": [
+              "overall",
+              "overall"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Ölçü dizisinin sıraları boş veya yineleniyor.",
+              "path": "operation"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false,
+            "dimensionSets": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: hedef missing",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "missing",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“missing” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: hedef locked",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "locked",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: hedef group",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "group",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kaynak 0192f5a1-6000-7000-8000-00000000ffff",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-00000000ffff",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Kaynak duvar bulunamadı. Başka bir duvar seçin.",
+              "path": "wall"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kaynak 0192f5a1-6000-7000-8000-000000000004",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000004",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Bu araç şu anda iki uçlu düz duvarı ölçer. Kapalı, çok parçalı veya yaylı duvar desteklenmiyor.",
+              "path": "wall"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli hedef planında görünür uyarı",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "hidden",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "hidden",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "hidden",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 3.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "hidden",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 4.5,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 0.875,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000004",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "hidden",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "offset": 1.25,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                },
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000004",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: dimensionStyle Kayıp",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "dimensionStyle": "Kayıp"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_style",
+              "message": "“Kayıp” adlı ölçü stili yok. Projenin ölçü stillerinden birinin adını verin ya da alanı kaldırın (Standart).",
+              "path": "dimensionStyle"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: expectedRevision 07",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: expectedRevision 999",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat sonlu değil",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "0",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "at": {
+              "x": 4.0,
+              "y": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçü sırasının yeri doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "at.x"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          },
+          "nonFinite": {
+            "at.x": "NaN"
+          }
+        }
+      ]
+    }
+  ]
+}

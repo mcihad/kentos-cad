@@ -14,6 +14,10 @@ pub struct Setting {
     pub editable: bool,
     /// A full-width wrapped explanation, never an editable cell.
     pub note: bool,
+    /// Only actual warnings use the warning colour; explanatory hints remain quiet.
+    pub warn: bool,
+    /// A two-state setting shown directly rather than hidden in a choice menu.
+    pub toggle: bool,
 }
 impl Setting {
     pub fn text(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
@@ -24,6 +28,8 @@ impl Setting {
             choices: Vec::new(),
             editable: true,
             note: false,
+            warn: false,
+            toggle: false,
         }
     }
     pub fn choice(key: &'static str, label: &'static str, choices: Vec<OptionChoice>) -> Self {
@@ -39,14 +45,39 @@ impl Setting {
             choices,
             editable: true,
             note: false,
+            warn: false,
+            toggle: false,
         }
     }
     pub fn read_only(mut self) -> Self {
         self.editable = false;
         self
     }
+    pub fn toggle(key: &'static str, label: &'static str, on: bool) -> Self {
+        Self {
+            toggle: true,
+            ..Self::choice(
+                key,
+                label,
+                choices(
+                    &[("yes", "Açık"), ("no", "Kapalı")],
+                    if on { "yes" } else { "no" },
+                ),
+            )
+        }
+    }
     pub fn notice(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
-        Self { note: true, ..Self::text(key, label, value).read_only() }
+        Self {
+            note: true,
+            warn: true,
+            ..Self::text(key, label, value).read_only()
+        }
+    }
+    pub fn hint(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
+        Self {
+            note: true,
+            ..Self::text(key, label, value).read_only()
+        }
     }
 }
 pub fn choices(items: &[(&str, &str)], selected: &str) -> Vec<OptionChoice> {

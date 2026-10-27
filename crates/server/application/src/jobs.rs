@@ -28,11 +28,11 @@ use std::time::Duration;
 
 use kentos_contracts::{
     CheckpointCreate, CommandEnvelope, ImportFormat, PROJECT_ATLAS_JOB, PROJECT_CHANGES,
-    PROJECT_CHANGES_VERSION, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION,
-    PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB, PROJECT_IMPORT_JOB, PROJECT_META_KEY,
-    PROJECT_PROCESSING_JOB, ProcessingJobInput, ProcessingJobMode, ProcessingJobResult,
-    ProjectAtlasInput, ProjectAtlasResult, ProjectExportInput, ProjectImportInput,
-    ProjectImportResult, ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+    PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB,
+    PROJECT_EXPORT_JOB, PROJECT_IMPORT_JOB, PROJECT_META_KEY, PROJECT_PROCESSING_JOB,
+    ProcessingJobInput, ProcessingJobMode, ProcessingJobResult, ProjectAtlasInput,
+    ProjectAtlasResult, ProjectExportInput, ProjectImportInput, ProjectImportResult,
+    ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
     SERVER_JOB_CPU_DEFAULT_SECONDS, SERVER_JOB_INPUT_MAX_DEFAULT, SERVER_JOB_KINDS,
     SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
     SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob, ServerJobArtifact,
@@ -1623,7 +1623,7 @@ async fn commit_staged(
     }
     let envelope = CommandEnvelope {
         command_name: PROJECT_CHANGES.into(),
-        version: PROJECT_CHANGES_VERSION,
+        version: staged.delta.changes().command_version(),
         tenant_id: claim.tenant.to_string(),
         project_id: claim.project.to_string(),
         request_id: format!("job-{}", claim.id),

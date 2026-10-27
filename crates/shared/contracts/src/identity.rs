@@ -169,6 +169,12 @@ pub struct BlockId(pub [u8; 16]);
 #[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct ArrayId(pub [u8; 16]);
 
+/// A persistent architectural dimension recipe's id; ordinary member dimensions keep their own ids.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct DimensionSetId(pub [u8; 16]);
+
 /// A constraint's persistent id (docs/adr/0334): given when the constraint is made (UUIDv7), kept while it holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -179,6 +185,7 @@ uuid_impls!(EntityId);
 uuid_impls!(ProjectId);
 uuid_impls!(BlockId);
 uuid_impls!(ArrayId);
+uuid_impls!(DimensionSetId);
 uuid_impls!(ConstraintId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
@@ -420,6 +427,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         ..
     } = snapshot;
     Ok(DocumentSnapshotV2 {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,

@@ -79,6 +79,7 @@ fn row(command: &str) -> CallRecord {
         created: Vec::new(),
         changed: Vec::new(),
         removed: Vec::new(),
+        dimension_sets: Default::default(),
         truncated: false,
         warnings: Vec::new(),
         parts: Vec::new(),

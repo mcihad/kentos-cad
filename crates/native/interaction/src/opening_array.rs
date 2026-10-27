@@ -116,6 +116,7 @@ impl Array {
         }
         match openings_edit::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, .. } => {
+                crate::wall_dimensions::append_followers(&mut self.drawn, &output.followers, cx);
                 for e in &output.added {
                     self.drawn.strokes.extend(
                         Outline::of(&shape(e), Some([4.0, 3.0]), 1.5, Tone::Accent).strokes,

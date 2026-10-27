@@ -1452,6 +1452,10 @@
       "icon": "tag",
       "items": [
        {
+        "command": "tool.wallDimensions",
+        "size": "large"
+       },
+       {
         "command": "tool.tag",
         "size": "small"
        },
@@ -1460,12 +1464,20 @@
         "size": "small"
        },
        {
-        "command": "tool.scheduleOpenings",
-        "size": "small"
-       },
-       {
-        "command": "tool.scheduleSpaces",
-        "size": "small"
+        "key": "archSchedules",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.scheduleOpenings",
+          "title": "Çizelge",
+          "label": "Kapı ve pencere çizelgesi"
+         },
+         {
+          "command": "tool.scheduleSpaces",
+          "title": "Çizelge",
+          "label": "Mahal çizelgesi"
+         }
+        ]
        },
        {
         "command": "tool.viewSection",
@@ -5233,6 +5245,10 @@
      "label": "Duvar",
      "icon": "wall",
      "items": [
+      {
+       "command": "tool.wallDimensions",
+       "size": "large"
+      },
       {
        "command": "view.properties",
        "size": "large"

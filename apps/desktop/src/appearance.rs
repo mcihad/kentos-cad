@@ -101,6 +101,10 @@ impl App {
 
     /// Reads the look from the settings: theme, accent, typefaces, size, background.
     pub(crate) fn apply_appearance(&mut self) {
+        // A font-sensitive test may already hold this on the same thread;
+        // another test's App::boot must not reset its global font mid-layout.
+        #[cfg(test)]
+        let _typography = tests::TYPOGRAPHY.lock();
         let s = &self.settings;
         let word = |key: &str| s.effective(key).as_str().unwrap_or_default().to_owned();
         self.mode = match word("appearance.theme").as_str() {
@@ -158,7 +162,7 @@ impl App {
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use std::sync::Mutex;
+    use parking_lot::ReentrantMutex;
 
     use kentos_ui::theme::typography::{self, Family, Typography};
     use kentos_ui::theme::{Accent, Mode};
@@ -170,8 +174,10 @@ pub(crate) mod tests {
     use crate::viewport::Canvas;
 
     /// The interface's typography is KentOS UI's, one for the whole process:
-    /// tests that change it or measure text take this lock.
-    pub(crate) static TYPOGRAPHY: Mutex<()> = Mutex::new(());
+    /// Tests that measure text hold this for the whole interaction; test-only
+    /// apply_appearance also takes it, including nested App boot on this thread.
+    /// Do not join a worker that applies appearance while holding this guard.
+    pub(crate) static TYPOGRAPHY: ReentrantMutex<()> = ReentrantMutex::new(());
 
     /// A look's preference chosen as Uygulama ayarları chooses it.
     fn choose(app: &mut App, key: &str, value: Value) {

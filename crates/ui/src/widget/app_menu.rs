@@ -21,14 +21,17 @@
 //! uygulama yürütür: seçili satırı [`Entry::current`] ve
 //! [`Item::current`] gösterir.
 
+use iced::advanced::graphics::futures::MaybeSend;
+use iced::advanced::widget::{Id, Operation, operation::Scrollable};
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, mouse_area, row, space};
-use iced::{Center, Element, Fill, Point};
+use iced::widget::{Column, button, column, container, mouse_area, row, scrollable, space};
+use iced::{Center, Element, Fill, Point, Rectangle, Task, Vector};
 
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::theme::typography;
+use crate::widget::fit::Fit;
 use crate::widget::{horizontal_divider, overlay, ribbon, vertical_divider};
 
 const WIDTH: f32 = 680.0;
@@ -36,6 +39,7 @@ const COMMAND_COLUMN: f32 = 290.0;
 const ENTRY_HEIGHT: f32 = 50.0;
 const ENTRY_GAP: f32 = 2.0;
 const PADDING: f32 = 6.0;
+const NAVIGATION_ID: &str = "kentos-app-menu-navigation";
 /// Komut simgesinin zemini (DESIGN.md §7.1.1: 34 px).
 const ICON_TILE: f32 = 34.0;
 
@@ -112,7 +116,7 @@ impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message
             Column::with_children(menu.entries.into_iter().map(Element::from)).spacing(ENTRY_GAP);
 
         let body = row![
-            container(entries)
+            container(scrollable(entries).id(NAVIGATION_ID).height(Fill))
                 .width(typography::scaled(COMMAND_COLUMN))
                 .height(Fill)
                 .padding(PADDING)
@@ -139,7 +143,10 @@ impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message
             footer = footer.push(label::caption(note));
         }
 
-        let mut panel = Column::new();
+        // Reserve the header and footer before limiting the body to the
+        // window below the ribbon. A normal Column lays out the fixed body
+        // first and can leave the footer outside a short window at large text.
+        let mut panel = Fit::new();
 
         if let Some(header) = menu.header {
             panel = panel
@@ -153,7 +160,7 @@ impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message
         }
 
         let panel = container(
-            panel.push(body).push(horizontal_divider()).push(
+            panel.push_elastic(body).push(horizontal_divider()).push(
                 container(footer)
                     .padding([8, 10])
                     .width(Fill)
@@ -169,6 +176,44 @@ impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message
             menu.on_dismiss,
         )
     }
+}
+
+/// Keep keyboard navigation visible without resetting the pointer's scroll.
+/// The operation uses the actual viewport height, including large-text layouts.
+pub fn reveal_navigation<Message: MaybeSend + 'static>(index: usize) -> Task<Message> {
+    struct Reveal(usize);
+    impl Operation for Reveal {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+
+        fn scrollable(
+            &mut self,
+            id: Option<&Id>,
+            bounds: Rectangle,
+            _: Rectangle,
+            translation: Vector,
+            state: &mut dyn Scrollable,
+        ) {
+            if id != Some(&Id::new(NAVIGATION_ID)) {
+                return;
+            }
+            let top = self.0 as f32 * (typography::scaled(ENTRY_HEIGHT) + ENTRY_GAP);
+            let bottom = top + typography::scaled(ENTRY_HEIGHT);
+            let offset = if top < translation.y {
+                top
+            } else if bottom > translation.y + bounds.height {
+                bottom - bounds.height
+            } else {
+                return;
+            };
+            state.scroll_to(iced::widget::scrollable::AbsoluteOffset {
+                x: None,
+                y: Some(offset),
+            });
+        }
+    }
+    iced::advanced::widget::operate(Reveal(index)).discard()
 }
 
 /// Menünün solundaki büyük komut: ikon, başlık ve tek satırlık açıklama.

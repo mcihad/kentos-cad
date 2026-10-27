@@ -50,6 +50,7 @@ class Expected:
     sheets: str | None = None
     plan: str | None = None
     """A plan's id (``Outcome.plan_id``): the write must equal that plan."""
+    dimension_sets: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -57,6 +58,8 @@ class Expected:
             value = getattr(self, key)
             if value is not None:
                 out[key] = value
+        if self.dimension_sets is not None:
+            out["dimensionSets"] = self.dimension_sets
         if self.objects:
             out["objects"] = dict(self.objects)
         if self.blocks:
@@ -75,6 +78,7 @@ class Stamps:
     settings: str | None = None
     styles: str | None = None
     sheets: str | None = None
+    dimension_sets: str | None = None
 
     @classmethod
     def from_json(cls, raw: Mapping[str, Any] | None) -> Stamps:
@@ -87,6 +91,7 @@ class Stamps:
             settings=raw.get("settings"),
             styles=raw.get("styles"),
             sheets=raw.get("sheets"),
+            dimension_sets=raw.get("dimensionSets"),
         )
 
 
@@ -115,6 +120,8 @@ class Summary:
     stamps: Stamps
     """The stamps after."""
     algorithm: dict[str, Any]
+    dimension_sets: dict[str, list[str]] = field(default_factory=dict)
+    """Automatic dimension recipes added, changed or removed, by persistent id."""
 
     @classmethod
     def from_json(cls, raw: Mapping[str, Any]) -> Summary:
@@ -135,6 +142,7 @@ class Summary:
             sources=Stamps.from_json(raw.get("sources")),
             stamps=Stamps.from_json(raw.get("stamps")),
             algorithm=dict(raw.get("algorithm") or {}),
+            dimension_sets={k: list(v) for k, v in (raw.get("dimensionSets") or {}).items()},
         )
 
 

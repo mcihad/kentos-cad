@@ -35,7 +35,9 @@ pub struct Fault {
 impl Document {
     /// What the step reported would leave broken; none when nothing.
     pub fn faults(&self, report: &StepReport) -> Vec<Fault> {
-        let mut out = Vec::new();
+        let mut out = self.dimension_set_faults(report);
+        let cached: std::collections::HashSet<_> =
+            report.dimension_set_cached.iter().copied().collect();
         // A Veri girişi's project (docs/adr/0411 §5): existing records' attributes alone.
         if self.object_policy == crate::document::ObjectPolicy::AttributesOnly {
             for change in &report.objects {
@@ -43,6 +45,12 @@ impl Document {
                     (Some(before), Some(after)) => {
                         let mut probe = after.clone();
                         probe.base_mut().attrs = before.base().attrs.clone();
+                        if cached.contains(&change.uid)
+                            && let (Entity::Dimension(p), Entity::Dimension(b)) =
+                                (&mut probe, before)
+                        {
+                            p.offset = b.offset;
+                        }
                         probe == *before
                     }
                     _ => false,

@@ -75,6 +75,9 @@ struct PartStamps {
     styles: String,
     sheets: String,
     constraints: String,
+    dimension_sets: String,
+    plot_scale: f64,
+    had_dimension_sets: bool,
 }
 
 impl PartStamps {
@@ -85,6 +88,9 @@ impl PartStamps {
             styles: doc.styles_stamp(),
             sheets: doc.sheets_stamp(),
             constraints: doc.constraints_stamp(),
+            dimension_sets: doc.dimension_sets_stamp(),
+            plot_scale: doc.settings().plot_scale,
+            had_dimension_sets: !doc.dimension_sets().is_empty(),
         }
     }
 }
@@ -367,6 +373,26 @@ fn row_of(
         created,
         changed,
         removed,
+        dimension_sets: NodeChanges {
+            added: report
+                .dimension_sets
+                .added
+                .iter()
+                .map(|id| id.to_text())
+                .collect(),
+            changed: report
+                .dimension_sets
+                .changed
+                .iter()
+                .map(|id| id.to_text())
+                .collect(),
+            removed: report
+                .dimension_sets
+                .removed
+                .iter()
+                .map(|id| id.to_text())
+                .collect(),
+        },
         truncated,
         warnings: warnings.to_vec(),
         parts: report.parts.clone(),
@@ -421,6 +447,7 @@ fn part_stamps(doc: &Document, parts: &[ProjectPart], into: &mut StateStamps) {
             ProjectPart::Sheets => into.sheets = Some(doc.sheets_stamp()),
             ProjectPart::LayerFlags => into.layers = Some(doc.layers_stamp()),
             ProjectPart::Constraints => into.constraints = Some(doc.constraints_stamp()),
+            ProjectPart::DimensionSets => into.dimension_sets = Some(doc.dimension_sets_stamp()),
         }
     }
 }
@@ -561,7 +588,33 @@ fn summarize(
         changed: report.blocks.changed.iter().map(|b| b.to_text()).collect(),
         removed: report.blocks.removed.iter().map(|b| b.to_text()).collect(),
     };
+    summary.dimension_sets = NodeChanges {
+        added: report
+            .dimension_sets
+            .added
+            .iter()
+            .map(|id| id.to_text())
+            .collect(),
+        changed: report
+            .dimension_sets
+            .changed
+            .iter()
+            .map(|id| id.to_text())
+            .collect(),
+        removed: report
+            .dimension_sets
+            .removed
+            .iter()
+            .map(|id| id.to_text())
+            .collect(),
+    };
     summary.project = report.parts.clone();
+    let scale_reads_dimensions = parts.plot_scale != doc.settings().plot_scale
+        && (parts.had_dimension_sets || !doc.dimension_sets().is_empty());
+    if scale_reads_dimensions {
+        // Even an all-manual/fixed-row recipe is a read dependency of the scale operation.
+        summary.sources.dimension_sets = Some(parts.dimension_sets.clone());
+    }
     // The write's own undo step: an outermost one, not inside a group, that changed what undo takes back.
     let undoable = !report.objects.is_empty()
         || !report.layers.is_empty()
@@ -595,6 +648,9 @@ fn summarize(
             ProjectPart::Constraints => {
                 summary.sources.constraints = Some(parts.constraints.clone())
             }
+            ProjectPart::DimensionSets => {
+                summary.sources.dimension_sets = Some(parts.dimension_sets.clone())
+            }
         }
     }
     part_stamps(doc, &changed_parts, &mut summary.stamps);
@@ -626,6 +682,20 @@ fn summarize(
             "sheets": summary.stamps.sheets,
         },
     });
+    // Optional metadata stays out of legacy plan fingerprints. Hash the new recipe JSON only
+    // after replacing fresh set/member identities; raw stamps would make plan and execute differ.
+    if changed_parts.contains(&ProjectPart::DimensionSets) || scale_reads_dimensions {
+        essence["sources"]["dimensionSets"] = json!(parts.dimension_sets);
+    }
+    if changed_parts.contains(&ProjectPart::DimensionSets) {
+        essence["result"]["dimensionSets"] = serde_json::to_value(
+            doc.dimension_sets()
+                .iter()
+                .map(|s| &**s)
+                .collect::<Vec<_>>(),
+        )
+        .unwrap_or(Value::Null);
+    }
     let fresh: BTreeMap<String, String> = new_uids
         .iter()
         .enumerate()
@@ -635,6 +705,14 @@ fn summarize(
                 .iter()
                 .enumerate()
                 .map(|(i, b)| (b.clone(), format!("#b{i}"))),
+        )
+        .chain(
+            report
+                .dimension_sets
+                .added
+                .iter()
+                .enumerate()
+                .map(|(i, id)| (id.to_text(), format!("#d{i}"))),
         )
         .collect();
     if !fresh.is_empty() {
@@ -756,6 +834,7 @@ fn call_fault(envelope: &CallEnvelope) -> Option<CallAnswer> {
         ("settings", &e.settings),
         ("styles", &e.styles),
         ("sheets", &e.sheets),
+        ("dimensionSets", &e.dimension_sets),
     ] {
         if let Some(v) = v
             && !is_hex(v, 16)
@@ -809,6 +888,11 @@ fn expectation_fault(doc: &Document, e: &CallExpectations) -> Option<CallAnswer>
         ("styles", &e.styles, doc.styles_stamp()),
         ("sheets", &e.sheets, doc.sheets_stamp()),
         ("constraints", &e.constraints, doc.constraints_stamp()),
+        (
+            "dimensionSets",
+            &e.dimension_sets,
+            doc.dimension_sets_stamp(),
+        ),
     ] {
         if let Some(want) = want
             && *want != have

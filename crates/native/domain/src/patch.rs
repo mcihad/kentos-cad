@@ -148,6 +148,7 @@ impl Document {
             }
         }
         if edited {
+            self.refresh_dimension_set_rows();
             self.mark_edited();
         }
         let call = row.map(|row| self.calls.queue(row, request));

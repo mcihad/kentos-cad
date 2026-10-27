@@ -87,6 +87,12 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("file.export.block", "dimension_set_owned", "Dosya yazımı ve mevcut dosyanın korunumu headless dimension_set_exports.rs içinde gerçek validate/plan/execute + açık detach sonrası byte doğrulamasıyla sınanır (ADR0695)."),
+    ("cad.entities.copy", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
+    ("cad.entities.array", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
+    ("cad.entities.transform", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
+    ("cad.blocks.define", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
+
     ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679)."),
     ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679)."),
     ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679)."),

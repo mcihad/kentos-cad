@@ -134,6 +134,8 @@ pub mod table_schedule;
 pub mod tables_edit;
 pub mod texts_edit;
 pub mod dimensions_reassociate;
+pub mod dimension_sets;
+pub use dimension_sets::{create as dimension_sets_create, edit as dimension_sets_edit, query as dimension_sets_query};
 pub mod divide;
 mod edge_commands;
 pub mod edit;
@@ -405,6 +407,9 @@ use kentos_commands::{
 /// list equal to the catalog's commands marked `desktop`, as the server's
 /// `SERVER_COMMANDS` is kept to those marked `server`.
 pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
+    (kentos_commands::CAD_DIMENSION_SETS_CREATE, kentos_commands::CAD_DIMENSION_SETS_VERSION),
+    (kentos_commands::CAD_DIMENSION_SETS_EDIT, kentos_commands::CAD_DIMENSION_SETS_VERSION),
+    (kentos_commands::CAD_DIMENSION_SETS_QUERY, kentos_commands::CAD_DIMENSION_SETS_VERSION),
     (CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION),
     (CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION),
     (CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION),

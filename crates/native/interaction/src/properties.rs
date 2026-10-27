@@ -728,8 +728,20 @@ pub(crate) fn said<T>(result: CommandResult<T>) -> Vec<String> {
 pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
     use kentos_commands::{DimensionPoint, DimensionsReassociate, PointBinding};
     use kentos_native_application::dimensions_reassociate;
+    let sets: std::collections::BTreeSet<_> = slots
+        .iter()
+        .filter_map(|slot| {
+            doc.uid(*slot)
+                .and_then(|uid| doc.dimension_set_of_item(uid))
+                .map(|(set, _)| set.id)
+        })
+        .collect();
     let inputs: Vec<DimensionsReassociate> = slots
         .iter()
+        .filter(|slot| {
+            doc.uid(**slot)
+                .is_none_or(|uid| doc.dimension_set_of_item(uid).is_none())
+        })
         .filter_map(|&slot| match doc.get(slot) {
             Some(Entity::Dimension(d)) => {
                 let refs = d.refs.as_ref()?;
@@ -755,6 +767,20 @@ pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
         .collect();
     let group = doc.begin_group(dimensions_reassociate::LABEL);
     let mut out = Vec::new();
+    for id in sets {
+        // Recipe ownership must be removed explicitly before a source follower can run again.
+        let input = kentos_commands::DimensionSetsEditInput {
+            id,
+            operation: kentos_commands::DimensionSetEdit::Detach,
+            expected_revision: None,
+        };
+        out.extend(said(
+            kentos_native_application::dimension_sets_edit::execute(
+                &mut ExecutionContext::new(doc),
+                input,
+            ),
+        ));
+    }
     for input in inputs {
         out.extend(said(dimensions_reassociate::execute(
             &mut ExecutionContext::new(doc),

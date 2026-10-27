@@ -18,6 +18,9 @@ mod cad_open;
 #[path = "headless/walls_rectangle.rs"]
 mod walls_rectangle;
 
+#[path = "headless/dimension_set_exports.rs"]
+mod dimension_set_exports;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

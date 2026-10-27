@@ -733,6 +733,10 @@ pub struct Memory {
     /// longer has is Standart.
     pub text_style: Option<kentos_domain::Uuid>,
     pub dimension_style: Option<kentos_domain::Uuid>,
+    /// Wall dimension tool preferences; paper spacing stays in mm, never drawing units.
+    pub wall_dimensions_gap_mm: f64,
+    pub wall_dimensions_rows: u8,
+    pub wall_dimensions_centers: bool,
     /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
     /// style) (docs/adr/0339 §6).
     pub wall_width: f64,
@@ -1139,6 +1143,9 @@ impl Default for Memory {
             last_dimension: None,
             text_style: None,
             dimension_style: None,
+            wall_dimensions_gap_mm: 7.5,
+            wall_dimensions_rows: 3,
+            wall_dimensions_centers: false,
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,

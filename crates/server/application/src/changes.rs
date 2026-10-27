@@ -42,8 +42,9 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     BlockChange, BlockDefinition, BlockId, CommandEnvelope, CommitResult, ConflictReason,
     EventBlock, EventFeature, EventRecord, FeatureChange, FeatureConflict, FeatureOp, LayerNode,
-    LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_META_KEY, ProjectChanges,
-    ProjectPermission, ProjectSettings, block_key,
+    LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_DIMENSION_SETS_VERSION,
+    PROJECT_CHANGES_VERSION, PROJECT_META_KEY, ProjectChanges, ProjectPermission, ProjectSettings,
+    block_key,
 };
 use kentos_formats::blocks::Placing;
 use serde_json::Value;
@@ -488,6 +489,359 @@ pub async fn commit(
     Ok(result)
 }
 
+/// Validate the persisted cache against the bounded final source graph. This is the
+/// shared pure wall/opening/row geometry, not a server edit, solver or identity allocator.
+/// Appearance, text and manual row placement remain client-owned input.
+async fn check_dimension_rows(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    sets: &[kentos_contracts::DimensionSet],
+    previous: &[kentos_contracts::DimensionSet],
+    scale: f64,
+    full_recipe: bool,
+    features: &[FeatureChange],
+) -> AppResult<()> {
+    use kentos_contracts::{
+        DimensionSetFace, DimensionSetOpenings, DimensionSetRow, DimensionStyle, Entity, EntityId,
+        OpeningAnchor, SubPlace, SubRef,
+    };
+    use kentos_geometry_core::geom::{opening, wall};
+    use kentos_geometry_core::ops::dimension_set::{self as core, Frame};
+    use kentos_geometry_core::vec2::Vec2;
+    if sets.is_empty() {
+        return Ok(());
+    }
+    let ids: HashSet<Uuid> = sets
+        .iter()
+        .flat_map(|set| {
+            std::iter::once(Uuid::from_bytes(set.wall.0)).chain(
+                set.members
+                    .iter()
+                    .map(|member| Uuid::from_bytes(member.uid.0)),
+            )
+        })
+        .collect();
+    let records = current_copies(tx, access, &ids.into_iter().collect::<Vec<_>>()).await?;
+    let hosts: Vec<String> = sets.iter().map(|set| set.wall.to_text()).collect();
+    // The final opening state is needed too: a newly inserted opening may not
+    // appear in the old recipe at all. UUID order is deterministic; coincident
+    // jamb references are matched by their resolved point, not that order.
+    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id=$1 and project_id=$2 and kind='opening' and lower(cad_definition->>'host')=any($3) order by id"
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(hosts)
+    .fetch_all(&mut **tx)
+    .await?;
+    let mut by_host: HashMap<EntityId, Vec<(EntityId, kentos_contracts::OpeningFields)>> =
+        HashMap::new();
+    for row in rows {
+        let record = record(row)?;
+        let Entity::Opening(entity) = record.entity else {
+            continue;
+        };
+        if let (Some(host), Some(uid)) = (
+            EntityId::parse(&entity.opening.host),
+            EntityId::parse(&record.id),
+        ) {
+            by_host.entry(host).or_default().push((uid, entity.opening));
+        }
+    }
+    let p = |point: kentos_contracts::Vec2| Vec2::new(point.x, point.y);
+    let mid = |a: Vec2, b: Vec2| Vec2::new(a.x + (b.x - a.x) * 0.5, a.y + (b.y - a.y) * 0.5);
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * a.abs().max(b.abs());
+    let same_point = |a: kentos_contracts::Vec2, b: Vec2| close(a.x, b.x) && close(a.y, b.y);
+    let row = |row| match row {
+        DimensionSetRow::Openings => core::Row::Openings,
+        DimensionSetRow::Overall => core::Row::Overall,
+    };
+    let bits = |value: f64| if value == 0. { 0 } else { value.to_bits() };
+    let geometric_key = |row: DimensionSetRow, a: Vec2, b: Vec2| {
+        (row.name(), [bits(a.x), bits(a.y), bits(b.x), bits(b.y)])
+    };
+    let source_key = |row: DimensionSetRow, a: &SubRef, b: &SubRef| {
+        serde_json::to_string(&(row, a, b)).expect("validated source references")
+    };
+    let previous: BTreeMap<_, _> = previous.iter().map(|set| (set.id, set)).collect();
+    let written: HashMap<_, _> = features
+        .iter()
+        .enumerate()
+        .filter_map(|(i, change)| {
+            let id = match change {
+                FeatureChange::Create { id, .. }
+                | FeatureChange::Update { id, .. }
+                | FeatureChange::Edit { id, .. }
+                | FeatureChange::Delete { id } => id,
+            };
+            Some((Uuid::parse_str(id).ok()?, i))
+        })
+        .collect();
+    for (i, set) in sets.iter().enumerate() {
+        let Some(record) = records.get(&Uuid::from_bytes(set.wall.0)) else {
+            continue;
+        };
+        let Entity::Wall(entity) = &record.entity else {
+            continue;
+        };
+        let w = &entity.wall;
+        if w.closed
+            || w.pts.len() != 2
+            || w.bulges
+                .as_ref()
+                .is_some_and(|b| b.iter().any(|b| *b != 0.))
+        {
+            continue; // An actually unsupported source retains its last geometry.
+        }
+        let spec = kentos_formats::walls::spec(w);
+        let Ok(lines) = wall::lines(
+            &w.pts.iter().copied().map(p).collect::<Vec<_>>(),
+            w.bulges.as_deref(),
+            &spec,
+        ) else {
+            continue;
+        };
+        let part = match set.face {
+            DimensionSetFace::Left => 0,
+            DimensionSetFace::Right => lines.len().saturating_sub(1),
+        };
+        let Some(face) = lines.get(part).filter(|line| line.pts.len() == 2) else {
+            continue;
+        };
+        let line = [face.pts[0], face.pts[1]];
+        if Frame::new(line).is_err() {
+            continue;
+        }
+        let path = opening::wall_path(
+            &w.pts.iter().copied().map(p).collect::<Vec<_>>(),
+            w.bulges.as_deref(),
+            false,
+        );
+        let mut openings = Vec::new();
+        let mut jambs_by_uid = HashMap::new();
+        let mut frozen = false;
+        let mut stale_source = false;
+        if set.rows.contains(&DimensionSetRow::Openings) {
+            let sources = by_host.get(&set.wall).map_or(&[][..], Vec::as_slice);
+            if sources
+                .iter()
+                .any(|(_, source)| source.broken.is_some() || source.place.len() != 4)
+            {
+                continue;
+            }
+            if sources.len() > kentos_contracts::DIMENSION_SET_MEMBERS_MAX {
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members"),
+                    "Kaynağın açıklıkları otomatik ölçü segment sınırını aşıyor.",
+                ));
+            }
+            for (uid, source) in sources {
+                if source.broken.is_some() || source.place.len() != 4 {
+                    frozen = true;
+                    break;
+                }
+                let anchor = match source.anchor {
+                    OpeningAnchor::Start => opening::Anchor::Start,
+                    OpeningAnchor::Center => opening::Anchor::Center,
+                    OpeningAnchor::End => opening::Anchor::End,
+                };
+                let (lo, hi) = opening::span(source.at, anchor, source.width);
+                let Some(jambs) = path
+                    .as_ref()
+                    .and_then(|path| opening::jambs(path, &spec, lo, hi))
+                else {
+                    frozen = true;
+                    break;
+                };
+                // A moved host requires its opening's own cache in the same
+                // transaction; otherwise even correctly referenced dimensions
+                // could follow stale jambs which only look healthy.
+                if !source
+                    .place
+                    .iter()
+                    .copied()
+                    .zip(jambs)
+                    .all(|(a, b)| same_point(a, b))
+                {
+                    stale_source = true;
+                }
+                jambs_by_uid.insert(*uid, jambs);
+                openings.push(core::Opening {
+                    source: openings.len() + 1,
+                    jambs,
+                });
+            }
+        }
+        if frozen {
+            continue;
+        }
+        let Ok(spans) = core::plan(
+            line,
+            part,
+            match set.face {
+                DimensionSetFace::Left => core::Face::Left,
+                DimensionSetFace::Right => core::Face::Right,
+            },
+            &openings,
+            match set.openings {
+                DimensionSetOpenings::Ends => core::Openings::Ends,
+                DimensionSetOpenings::Centers => core::Openings::Centers,
+            },
+            &set.rows.iter().copied().map(row).collect::<Vec<_>>(),
+            p(set.at),
+            set.gap_mm * scale / 1000.,
+            &set.row_places
+                .iter()
+                .map(|place| (row(place.row), p(place.at)))
+                .collect::<Vec<_>>(),
+        ) else {
+            continue;
+        };
+        if stale_source {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].wall"),
+                "Kaynak açıklığın pervazları güncel duvar geometrisiyle uyuşmuyor. Kaynak duvarı, açıklıklarını ve ölçü üyelerini aynı işlemde yeniden üretin.",
+            ));
+        }
+        let resolve = |reference: &SubRef| -> Option<Vec2> {
+            if reference.uid == set.wall {
+                return match reference.place {
+                    SubPlace::Vertex {
+                        part: q,
+                        ring: 0,
+                        index,
+                    } if q as usize == part && index < 2 => Some(line[index as usize]),
+                    _ => None,
+                };
+            }
+            let jambs = jambs_by_uid.get(&reference.uid)?;
+            match (&set.openings, reference.place) {
+                (DimensionSetOpenings::Centers, SubPlace::Center) => {
+                    Some(mid(mid(jambs[0], jambs[1]), mid(jambs[2], jambs[3])))
+                }
+                (
+                    DimensionSetOpenings::Ends,
+                    SubPlace::Vertex {
+                        part: 0,
+                        ring: 0,
+                        index,
+                    },
+                ) if (set.face == DimensionSetFace::Left && [0, 2].contains(&index))
+                    || (set.face == DimensionSetFace::Right && [1, 3].contains(&index)) =>
+                {
+                    Some(jambs[index as usize])
+                }
+                _ => None,
+            }
+        };
+        let hidden: HashSet<_> = set
+            .suppressed
+            .iter()
+            .filter_map(|segment| {
+                Some(geometric_key(
+                    segment.row,
+                    resolve(&segment.a)?,
+                    resolve(&segment.b)?,
+                ))
+            })
+            .collect();
+        let mut active = HashMap::new();
+        let old: HashMap<_, _> = previous
+            .get(&set.id)
+            .into_iter()
+            .flat_map(|old| &old.members)
+            .map(|member| (source_key(member.row, &member.a, &member.b), member.uid))
+            .collect();
+        for (k, member) in set.members.iter().enumerate() {
+            let Some((a, b)) = resolve(&member.a).zip(resolve(&member.b)) else {
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members[{k}]"),
+                    "Ölçü üyesi seçilen yüzün güncel duvar/açıklık kaynağını ölçmeli.",
+                ));
+            };
+            let key = source_key(member.row, &member.a, &member.b);
+            if old.get(&key).is_some_and(|uid| *uid != member.uid) {
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members[{k}].uid"),
+                    "Değişmeyen aktif kaynak çiftinin ölçü kimliği korunmalı.",
+                ));
+            }
+            if active
+                .insert(geometric_key(member.row, a, b), (k, member))
+                .is_some()
+            {
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members[{k}]"),
+                    "Aynı sıradaki kaynak aralığı birden fazla aktif üyeyle yinelenemez.",
+                ));
+            }
+        }
+        for span in spans {
+            let row = match span.row {
+                core::Row::Openings => DimensionSetRow::Openings,
+                core::Row::Overall => DimensionSetRow::Overall,
+            };
+            let key = geometric_key(row, span.a.at, span.b.at);
+            let Some((k, member)) = active.remove(&key) else {
+                if hidden.contains(&key) {
+                    continue;
+                }
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members"),
+                    "Güncel kaynağın ölçü üyeliği eksik. Yeni ve kaldırılan açıklık aralıklarını tam tarifle aynı işlemde yeniden üretin.",
+                ));
+            };
+            let Some(record) = records.get(&Uuid::from_bytes(member.uid.0)) else {
+                continue;
+            };
+            let Entity::Dimension(d) = &record.entity else {
+                continue;
+            };
+            let field = if !same_point(d.a, span.a.at) {
+                Some("a")
+            } else if !same_point(d.b, span.b.at) {
+                Some("b")
+            } else if !close(d.offset, span.offset) {
+                Some("offset")
+            } else if d.style != Some(DimensionStyle::Linear)
+                || !d.angle.is_some_and(|a| close(a, span.angle))
+                || d.c.is_some()
+                || d.za.is_some()
+                || d.zb.is_some()
+            {
+                Some("style")
+            } else {
+                None
+            };
+            let Some(field) = field else { continue };
+            if !full_recipe {
+                return Err(AppError::invalid_at(
+                    "project.dimensionSets",
+                    "Kaynak veya çizim ölçeği ölçü geometrisini değiştiriyor. Tam ölçü tarifini ve değişen üyelerini project.changes v2 ile aynı işlemde gönderin.",
+                ));
+            }
+            let written = written.get(&Uuid::from_bytes(member.uid.0)).copied();
+            let Some(written) = written else {
+                return Err(AppError::invalid_at(
+                    format!("project.dimensionSets[{i}].members[{k}].uid"),
+                    "Güncel kaynağın veya çizim ölçeğinin değiştirdiği ölçü üyesi aynı işlemde yazılmalı.",
+                ));
+            };
+            return Err(AppError::invalid_at(
+                format!("features[{written}].entity.{field}"),
+                "Ölçü geometrisi güncel kaynak ve sıra tarifiyle uyuşmuyor. Üyeleri tam tariften yeniden üretin.",
+            ));
+        }
+        if !active.is_empty() {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].members"),
+                "Kaynakta artık bulunmayan ölçü aralıkları aynı işlemde kaldırılmalı.",
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// [`commit`] inside a transaction the caller owns and commits (docs/adr/0559 §2: a server job's commit and its
 /// finish are one transaction, so a lost lease takes the commit back). `at_revision`: the project must be at this data
 /// revision under the lock, else nothing is written and the answer is a conflict with the project's revision.
@@ -506,9 +860,14 @@ pub(crate) async fn commit_in(
             envelope.command_name
         )));
     }
-    if envelope.version != PROJECT_CHANGES_VERSION {
+    if ![
+        PROJECT_CHANGES_VERSION,
+        PROJECT_CHANGES_DIMENSION_SETS_VERSION,
+    ]
+    .contains(&envelope.version)
+    {
         return Err(AppError::invalid(format!(
-            "{PROJECT_CHANGES} komutunun {} sürümü desteklenmiyor (desteklenen: {PROJECT_CHANGES_VERSION}).",
+            "{PROJECT_CHANGES} komutunun {} sürümü desteklenmiyor (desteklenen: {PROJECT_CHANGES_VERSION}, {PROJECT_CHANGES_DIMENSION_SETS_VERSION}).",
             envelope.version
         )));
     }
@@ -517,6 +876,18 @@ pub(crate) async fn commit_in(
     let key = envelope.idempotency_key.as_str();
     let input: ProjectChanges = serde_json::from_value(envelope.input.clone())
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))?;
+    if envelope.version == PROJECT_CHANGES_VERSION
+        && envelope
+            .input
+            .get("project")
+            .and_then(|p| p.get("dimensionSets"))
+            .is_some()
+    {
+        return Err(AppError::invalid_at(
+            "project.dimensionSets",
+            "Mimari ölçü dizileri project.changes sürüm 2 gerektirir; sürüm 1 bu alanı taşıyamaz.",
+        ));
+    }
     // An `edit` is an update made from the client's last known copy (docs/adr/0648 §1): judged as an update, its base
     // kept for the merge a moved version asks for.
     let (input, bases) = split_bases(input);
@@ -528,14 +899,66 @@ pub(crate) async fn commit_in(
 
     // 1. Lock the project: commits of one project happen one after another.
     let now = lock(tx, access).await?;
+    // 2. A committed request keeps its answer even if later commits add source ownership,
+    // archive the project or otherwise change what a new write would be allowed to do.
+    let text = idempotency::request_text(&envelope);
+    if let Some(mut result) =
+        idempotency::earlier::<CommitResult>(tx, &now, &envelope, &text).await?
+    {
+        result.replayed = true;
+        return Ok(result);
+    }
     let project = now.project;
-    let (srid, layers, meta_version, data_revision, old_name, storage): (i32, Value, i64, i64, String, String) = sqlx::query_as(
-        "select srid, layers, meta_version, data_revision, name, storage from kentos.project where tenant_id = $1 and id = $2",
+    let (srid, layers, meta_version, data_revision, old_name, storage, stored_dimension_sets): (i32, Value, i64, i64, String, String, Option<Value>) = sqlx::query_as(
+        "select srid, layers, meta_version, data_revision, name, storage, dimension_sets from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(project)
     .fetch_one(&mut **tx)
     .await?;
+    let stored_dimension_sets: Vec<kentos_contracts::DimensionSet> = stored_dimension_sets
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(|e| AppError::invalid(format!("Mimari ölçü dizileri okunamadı: {e}")))?
+        .unwrap_or_default();
+    if input
+        .project
+        .as_ref()
+        .is_none_or(|patch| patch.dimension_sets.is_none())
+        && !stored_dimension_sets.is_empty()
+    {
+        let mut touches =
+            kentos_contracts::dimension_sets_touched(&stored_dimension_sets, &input.features);
+        if !touches {
+            // Deleting/rehosting an old opening can affect a broken recipe even
+            // when that opening has no active member in its cached source list.
+            let ids: Vec<Uuid> = input
+                .features
+                .iter()
+                .filter_map(|change| {
+                    let id = match change {
+                        FeatureChange::Create { id, .. }
+                        | FeatureChange::Update { id, .. }
+                        | FeatureChange::Edit { id, .. }
+                        | FeatureChange::Delete { id } => id,
+                    };
+                    Uuid::parse_str(id).ok()
+                })
+                .collect();
+            let hosts: Vec<String> = stored_dimension_sets
+                .iter()
+                .map(|set| set.wall.to_text())
+                .collect();
+            touches = sqlx::query_scalar("select exists(select 1 from kentos.feature where tenant_id=$1 and project_id=$2 and id=any($3) and kind='opening' and cad_definition->>'host'=any($4))")
+                .bind(access.tenant).bind(project).bind(&ids).bind(&hosts).fetch_one(&mut **tx).await?;
+        }
+        if touches {
+            return Err(AppError::invalid_at(
+                "project.dimensionSets",
+                "Bu değişiklik otomatik ölçü dizisinin kaynağına veya üyesine dokunuyor. Tarifi ve bağlı nesneleri project.changes v2 ile aynı işlemde gönderin.",
+            ));
+        }
+    }
     // A file project's content is its revisions (docs/adr/0031): objects are not written one by one.
     if storage == "file" {
         return Err(AppError::invalid(format!(
@@ -545,14 +968,6 @@ pub(crate) async fn commit_in(
     // The version a created object gets: this commit's data revision (the module's comment says why).
     let created_version = data_revision + 1;
 
-    // 2. The same key again: the stored answer, or a refusal if the request differs.
-    let text = idempotency::request_text(&envelope);
-    if let Some(mut result) =
-        idempotency::earlier::<CommitResult>(tx, &now, &envelope, &text).await?
-    {
-        result.replayed = true;
-        return Ok(result);
-    }
     if now.deleted {
         return Err(gone(&now.name));
     }
@@ -718,6 +1133,9 @@ pub(crate) async fn commit_in(
     // So do the associative arrays, but for their blocks and objects (docs/adr/0300 §5).
     if let Some(arrays) = &patch.arrays {
         crate::projects::check_arrays(arrays, "project.arrays")?;
+    }
+    if let Some(sets) = &patch.dimension_sets {
+        crate::projects::check_dimension_sets(sets, "project.dimensionSets")?;
     }
     // So do the constraints, but for the objects they name (docs/adr/0336 §3).
     if let Some(set) = &patch.constraints {
@@ -1183,6 +1601,36 @@ pub(crate) async fn commit_in(
         &written,
     )
     .await?;
+    let retained_sets: Vec<kentos_contracts::DimensionSet> = match &patch.dimension_sets {
+        Some(sets) => sets.clone(),
+        None => stored_dimension_sets.clone(),
+    };
+    if patch.dimension_sets.is_some()
+        || patch
+            .settings
+            .as_ref()
+            .is_some_and(|settings| settings.plot_scale != stored_settings.plot_scale)
+    {
+        check_dimension_rows(
+            tx,
+            access,
+            &retained_sets,
+            &stored_dimension_sets,
+            settings_after.plot_scale,
+            patch.dimension_sets.is_some(),
+            &input.features,
+        )
+        .await?;
+    }
+    crate::projects::check_dimension_layers(&retained_sets, &tree, "project.dimensionSets")?;
+    crate::projects::check_dimension_members(
+        tx,
+        access.tenant,
+        project,
+        &retained_sets,
+        "project.dimensionSets",
+    )
+    .await?;
     let (new_revision, new_meta): (i64, i64) = sqlx::query_as(
         "update kentos.project set
             data_revision = data_revision + 1,
@@ -1192,6 +1640,7 @@ pub(crate) async fn commit_in(
             sheets = case when $11 then $12 else sheets end,
             arrays = case when $13 then $14 else arrays end,
             constraints = case when $15 then $16 else constraints end,
+            dimension_sets = case when $17 then $18 else dimension_sets end,
             catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
@@ -1232,6 +1681,8 @@ pub(crate) async fn commit_in(
             .transpose()?
             .flatten(),
     )
+    .bind(patch.dimension_sets.is_some())
+    .bind(patch.dimension_sets.as_deref().map(crate::projects::dimension_sets_value).transpose()?.flatten())
     .fetch_one(&mut **tx)
     .await?;
     // The project row has been locked since the revision was read: created objects carry this commit's.

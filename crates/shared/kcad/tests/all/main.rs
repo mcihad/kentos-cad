@@ -11,6 +11,7 @@ mod blocks;
 mod columns;
 mod compose;
 mod dimension_refs;
+mod dimension_sets;
 mod dimensions;
 mod elevations;
 mod filters;

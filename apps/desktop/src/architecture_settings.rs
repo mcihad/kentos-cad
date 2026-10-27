@@ -8,7 +8,7 @@ use iced::widget::{column, container, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_ui::label;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
-use kentos_ui::widget::{EditCell, Menu};
+use kentos_ui::widget::{EditCell, Menu, Switch};
 
 pub(crate) const PROPERTIES_SCROLL: &str = "drawing-properties";
 
@@ -53,13 +53,30 @@ impl App {
             if setting.note {
                 sheet = sheet.note(column![
                     label::strong(setting.label),
-                    label::body(setting.value).style(kentos_ui::style::text::warning).width(Fill),
+                    label::body(setting.value).style(if setting.warn {
+                        kentos_ui::style::text::warning
+                    } else {
+                        kentos_ui::style::text::muted
+                    }).width(Fill),
                 ].spacing(4).width(Fill));
                 continue;
             }
             let key = setting.key;
             let cell: Element<'_, Message> = if !setting.editable {
                 property_grid::value(format!("{} (sabit)", setting.value), false, None)
+            } else if setting.toggle {
+                let on = setting
+                    .choices
+                    .iter()
+                    .any(|choice| choice.typed == "yes" && choice.checked);
+                Switch::new(on, move |on| {
+                    Message::ToolSetting(Commit {
+                        tool,
+                        key,
+                        value: if on { "yes" } else { "no" }.into(),
+                    })
+                })
+                .into()
             } else if setting.choices.is_empty() {
                 EditCell::new(setting.value, move |value| {
                     Message::ToolSetting(Commit { tool, key, value })

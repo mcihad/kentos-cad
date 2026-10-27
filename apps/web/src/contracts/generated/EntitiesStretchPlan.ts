@@ -6,6 +6,14 @@ import type { Entity } from "./Entity";
  */
 export type EntitiesStretchPlan = { 
 /**
+ * Source-driven new dependents, with provisional identities (ADR0695).
+ */
+added?: Array<Entity>, 
+/**
+ * Source-driven removed dependents, by persistent id.
+ */
+removed?: Array<string>, 
+/**
  * The objects as they would be, with their slots.
  */
 stretched: Array<Entity>, 

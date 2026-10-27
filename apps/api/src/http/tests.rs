@@ -98,6 +98,7 @@ async fn health_answers_without_a_database_and_carries_a_request_id() {
         (h.status.as_str(), h.contracts),
         ("ok", kentos_contracts::CONTRACTS_VERSION)
     );
+    assert_eq!(h.project_changes_versions, vec![1, 2]);
     assert!(headers.contains_key("x-request-id"));
     // Everything else says the database is missing, as JSON.
     let (status, _, body) = send(&app, Request::get("/v1/me").body(Body::empty()).unwrap()).await;

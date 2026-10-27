@@ -41,6 +41,10 @@ sheets?: string,
  */
 constraints?: string, 
 /**
+ * The persistent automatic architectural dimension recipes' stamp.
+ */
+dimensionSets?: string, 
+/**
  * The id of the plan the write must equal (a `plan` call's `planId`).
  */
 plan?: string, };

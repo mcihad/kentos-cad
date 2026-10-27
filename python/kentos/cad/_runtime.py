@@ -360,7 +360,15 @@ class ServerCommand(Generic[I, O]):
     ) -> O:
         if not isinstance(input, self.input_type):
             raise TypeError(f"{self.id} girdisi {self.input_type.__name__} olmalı, {type(input).__name__} değil.")
-        data = target._command(self.id, self.version, input.to_json(), expected_versions, idempotency_key)
+        payload = input.to_json()
+        version = self.version
+        # This additive metadata field cannot safely cross a v1 server. Keep
+        # legacy requests on v1; [] is an explicit clear and still requires v2.
+        if self.id == "project.changes":
+            project = payload.get("project")
+            if isinstance(project, Mapping) and "dimensionSets" in project:
+                version = 2
+        data = target._command(self.id, version, payload, expected_versions, idempotency_key)
         return decode(self.output_type, data, self.id)  # type: ignore[no-any-return]
 
     def __repr__(self) -> str:

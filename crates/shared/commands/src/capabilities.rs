@@ -216,6 +216,37 @@ const LOOK: &[&str] = &["invalid_line_weight"];
 
 const ENTRIES: &[Entry] = &[
     Entry {
+        id: "cad.dimensionsets.create",
+        refusals: &[
+            &["invalid_dimension_set", "unknown_style", "not_finite"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.dimensionsets.edit",
+        refusals: &[
+            &[
+                "invalid_dimension_set",
+                "dimension_set_not_found",
+                "unknown_style",
+                "not_finite",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.dimensionsets.query",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.polygon.create",
         refusals: &[
             &[
@@ -741,7 +772,9 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.transform",
-        refusals: &[&["invalid_space_separator"],
+        refusals: &[
+            &["dimension_set_owned"],
+            &["invalid_space_separator"],
             OBJECTS,
             &[
                 "not_finite",
@@ -844,6 +877,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.entities.array",
         refusals: &[
+            &["dimension_set_owned"],
             OBJECTS,
             &[
                 "not_finite",
@@ -878,12 +912,15 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.copy",
-        refusals: &[&[
-            "no_entities",
-            "invalid_uid",
-            "not_finite",
-            "entity_not_found",
-        ]],
+        refusals: &[
+            &["dimension_set_owned"],
+            &[
+                "no_entities",
+                "invalid_uid",
+                "not_finite",
+                "entity_not_found",
+            ],
+        ],
         warnings: &["constraints_not_copied"],
         targets: none,
     },
@@ -1198,6 +1235,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.blocks.define",
         refusals: &[
+            &["dimension_set_owned"],
             OBJECTS,
             &[
                 "empty_name",
@@ -5100,6 +5138,7 @@ const ENTRIES: &[Entry] = &[
         id: "file.export.block",
         refusals: &[&[
             "invalid_file_path",
+            "dimension_set_owned",
             "file_exists",
             "no_block",
             "unknown_block",

@@ -369,6 +369,8 @@ SCHEMA_WITH_SPACE_SOURCES = 110
 SCHEMA_WITH_SPACE_SEPARATORS = 111
 # Schema 112 (docs/adr/0690): the project's room names, usages and level prefixes.
 SCHEMA_WITH_SPACE_CHOICES = 112
+# Schema 113: persistent architectural dimension recipes, JSON-shaped maps.
+SCHEMA_WITH_DIMENSION_SETS = 113
 MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
@@ -613,7 +615,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3119,6 +3121,7 @@ class _Schema:
         self.space_sources = version >= SCHEMA_WITH_SPACE_SOURCES
         self.space_separators = version >= SCHEMA_WITH_SPACE_SEPARATORS
         self.space_choices = version >= SCHEMA_WITH_SPACE_CHOICES
+        self.dimension_sets = version >= SCHEMA_WITH_DIMENSION_SETS
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -3192,6 +3195,7 @@ class _Schema:
                 **({"requests": (self.requests_, False)} if self.requests else {}),
                 **({"arrays": (self.arrays_, False)} if self.arrays else {}),
                 **({"constraints": (self.constraints_, False)} if self.constraints else {}),
+                **({"dimensionSets": (self.dimension_sets_, False)} if self.dimension_sets else {}),
             }
         )(v)
         # Schema 53's rules (docs/adr/0300 §1), once the blocks and the objects are known.
@@ -3257,9 +3261,104 @@ class _Schema:
             out["arrays"] = d["arrays"]
         if "constraints" in d:
             out["constraints"] = d["constraints"]
+        if "dimensionSets" in d:
+            out["dimensionSets"] = d["dimensionSets"]
         if "requests" in d:
             out["requests"] = d["requests"]
         return out
+
+    def dimension_sets_(self, v):
+        """Schema 113: JSON-shaped ids/points, recipes and stable ordinary member ids.
+
+        A recipe is preserved when a host disappears; shape validation deliberately
+        does not prune unresolved sources. Object/layer integrity is the application's.
+        """
+        try:
+            return self.dimension_sets_checked(v)
+        except KcadError as error:
+            # This JSON-shaped root field has one shape-error code, like the Rust reader.
+            raise KcadError("bad_value", error.message) from error
+
+    def dimension_sets_checked(self, v):
+        def uid(value):
+            value = self.text(value)
+            if not UUID_TEXT.fullmatch(value) or value == "00000000-0000-0000-0000-000000000000":
+                self.fail("bad_value", "ölçü dizisinin kimliği dolu, küçük harfli UUID olmalı")
+            return value
+        row = self.enum(("openings", "overall"))
+        def source(value):
+            def place(value):
+                if type(value) is not dict:
+                    self.fail("bad_value", "kaynak yeri harita olmalı")
+                kind = value.get("kind")
+                table = {"kind": (self.enum(("vertex", "center")), True)}
+                if kind == "vertex":
+                    table.update({key:(self.uint(32), True) for key in ("part", "ring", "index")})
+                result = self.fields(table)(value)
+                if any(result.get(key, 0) > SUBREF_INDEX_LIMIT for key in ("part", "ring", "index")):
+                    self.fail("bad_value", "kaynak yerinin sırası çok büyük")
+                return result
+            return self.fields({"uid": (uid, True), "place": (place, True)})(value)
+        def look(value):
+            table = {
+                "dimStyle": (self.style_id, False), "arrow": (self.enum(DIMENSION_ARROWS), False),
+                "arrowSize": (self.size(True), False), "extOffset": (self.size(False), False),
+                "extBeyond": (self.size(False), False), "textGap": (self.size(False), False),
+                "textPlace": (self.enum(("centre",)), False), "decimals": (self.decimals, False),
+                "unit": (self.enum(("mm", "cm", "m", "in", "ft")), False),
+                "prefix": (self.affix("prefix"), False), "suffix": (self.affix("suffix"), False),
+                "font": (self.enum(DRAWING_FONTS), False), "dimLineColor": (self.dimension_colour("dimLineColor"), False),
+                "dimLineWeight": (self.dimension_weight("dimLineWeight"), False), "dimLineType": (self.enum(LINE_TYPES), False),
+                "extColor": (self.dimension_colour("extColor"), False), "extWeight": (self.dimension_weight("extWeight"), False),
+                "extLineType": (self.enum(LINE_TYPES), False), "textColor": (self.dimension_colour("textColor"), False),
+                "options": (self.dimension_options, False), "overrides": (self.overrides_of(DIMENSION_OVERRIDES), False),
+            }
+            return self.fields(table)(value)
+        segment = {"row": (row, True), "a": (source, True), "b": (source, True)}
+        def nonempty_array(check):
+            def read(value):
+                result = self.array(check)(value)
+                if not result:
+                    self.fail("bad_value", "boş isteğe bağlı liste yazılmaz")
+                return result
+            return read
+        sets = nonempty_array(self.fields({
+            "id": (uid, True), "wall": (uid, True), "face": (self.enum(("left", "right")), True),
+            "rows": (self.array(row), True), "openings": (self.enum(("ends", "centers")), True),
+            "layerId": (self.text, True), "at": (self.json_point, True), "gapMm": (self.float, True),
+            "height": (self.float, True), "look": (look, True),
+            "rowPlaces": (nonempty_array(self.fields({"row": (row, True), "at": (self.json_point, True)})), False),
+            "members": (nonempty_array(self.fields({**segment, "uid": (uid, True)})), False),
+            "suppressed": (nonempty_array(self.fields(segment)), False),
+            "broken": (self.enum(("hostGone", "unsupportedWall", "openingUnplaced")), False),
+        }))(v)
+        if len(sets) > 10000:
+            self.fail("bad_value", "çok fazla ölçü dizisi")
+        ids, member_ids = set(), set()
+        for item in sets:
+            if item["id"] in ids or not item["layerId"] or not 1 <= len(item["rows"]) <= 2 or len(set(item["rows"])) != len(item["rows"]):
+                self.fail("bad_value", "ölçü dizisinin kimliği, katmanı veya sıraları geçersiz")
+            ids.add(item["id"])
+            if item["gapMm"] <= 0 or item["height"] <= 0:
+                self.fail("bad_value", "aralık ve yazı yüksekliği pozitif olmalı")
+            places = [p["row"] for p in item.get("rowPlaces", [])]
+            if len(set(places)) != len(places):
+                self.fail("bad_value", "elle sıra yeri yineleniyor")
+            members = item.get("members", [])
+            segments = members + item.get("suppressed", [])
+            if len(segments) > 10000:
+                self.fail("bad_value", "çok fazla ölçü segmenti")
+            keys = set()
+            for k, part in enumerate(segments):
+                key = json.dumps({n:part[n] for n in ("row", "a", "b")}, sort_keys=True)
+                if part["a"] == part["b"] or key in keys or (k < len(members) and part["row"] not in item["rows"]):
+                    self.fail("bad_value", "ölçü segmenti geçersiz veya yineleniyor")
+                keys.add(key)
+            for part in members:
+                if part["uid"] in member_ids:
+                    self.fail("bad_value", "ölçü üyesi yineleniyor")
+                member_ids.add(part["uid"])
+        return sets
 
     # Schema 53's associative arrays (docs/adr/0300 §1): read field by field (true flags only, a layout's own fields
     # only), then checked against the blocks and the objects.

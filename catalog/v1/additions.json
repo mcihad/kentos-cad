@@ -1796,6 +1796,19 @@
       "status": "implemented"
     },
     {
+      "id": "tool.wallDimensions",
+      "title": "Duvar ölçüleri",
+      "icon": "dimension",
+      "description": "Seçilen tek düz duvarın açıklıklarını ve toplam boyunu iki ölçü sırası olarak yerleştirir. İmleçle yüzü ve konumu seçin; katman, stil, açıklık uçları veya merkezleri ve kağıt üzerindeki sıra aralığı görünür ayarlardan değişir. Duvara yeni açıklık eklenince ölçü dizisi de güncellenir. Çok kenarlı, kapalı veya yaylı duvarlar henüz desteklenmez.",
+      "aliases": [
+        "DUVAROLCU",
+        "WALLDIMENSIONS"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",

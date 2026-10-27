@@ -138,7 +138,15 @@ impl SheetMaps {
         view: &kentos_sheet::display::MapViewPrim,
         main: &Spatial,
     ) -> Option<Rc<Scaled>> {
-        let unscoped = main.has_sheet_view();
+        // A model camera can draw more detail than this paper map, even at the same plot scale.
+        // Such a map gets its own index so screen navigation cannot change paper/PDF output (ADR 0696).
+        let unscoped = main.has_sheet_view()
+            || (drawing.model.has_scale_dependent_geometry()
+                && main.store().wall_view()
+                    != kentos_native_application::walls::view_at(
+                        drawing.model.settings(),
+                        view.scale,
+                    ));
         let scale = view.scale;
         let annotation = view.annotation_denominator();
         let key = (
@@ -1733,6 +1741,56 @@ mod tests {
 
     use super::*;
     use crate::files_testing::app_with_drawing;
+
+    #[test]
+    fn paper_at_the_project_scale_never_reuses_a_more_detailed_model_camera_index() {
+        use kentos_geometry_core::geom::wall::Detail;
+        let mut app = app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let model = &mut app.document.as_mut().unwrap().model;
+        let mut settings = model.settings().clone();
+        settings.plot_scale = 100.;
+        settings.arch = None;
+        model.set_settings(settings);
+        model
+            .add_many(
+                vec![
+                    serde_json::from_value(serde_json::json!({
+                        "kind":"wall","id":0,"layerId":"cizim","attrs":{},"width":0.2,
+                        "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}]
+                    }))
+                    .unwrap(),
+                ],
+                "test wall",
+            )
+            .unwrap();
+        let doc = app.document.as_ref().unwrap();
+        let before = doc.model.to_snapshot_v2();
+        let mut main = Spatial::of(&doc.model);
+        main.set_screen_wall_scale(&doc.model, Some(20.));
+        assert_eq!(main.store().wall_view().detail, Detail::Detailed);
+        let view: kentos_sheet::display::MapViewPrim =
+            serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
+        let maps = SheetMaps::default();
+        let copied = maps
+            .scaled(doc, &view, &main)
+            .expect("separate paper index despite equal project scale");
+        let (_, paper) = copied.view.as_ref().unwrap();
+        assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
+        assert_eq!(paper.store().wall_view().scale, 100.);
+        main.set_screen_wall_scale(&doc.model, Some(10.));
+        let again = maps.scaled(doc, &view, &main).unwrap();
+        assert!(
+            Rc::ptr_eq(&copied, &again),
+            "camera motion does not rebuild the paper cache"
+        );
+        assert_eq!(doc.model.to_snapshot_v2(), before);
+        main.set_screen_wall_scale(&doc.model, None);
+        assert!(
+            maps.scaled(doc, &view, &main).is_none(),
+            "matching ordinary paper index may still be shared"
+        );
+    }
 
     /// docs/adr/0636 §2: the copy a map at another scale draws from holds the rows round a bound layer's part too.
     #[test]

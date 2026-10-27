@@ -45,6 +45,7 @@ fn unlock(layers: &mut [LayerNode]) {
 
 fn create_input(source: &DocumentSnapshotV2, name: &str, layers: Vec<LayerNode>) -> ProjectCreate {
     ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: name.into(),
         settings: source.settings.clone(),

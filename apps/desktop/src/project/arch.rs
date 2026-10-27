@@ -51,7 +51,7 @@ const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
 ];
 
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
-    (None, "Ölçeğe göre"),
+    (None, "Otomatik"),
     (Some(WallDetail::Schematic), "Şematik"),
     (Some(WallDetail::Standard), "Standart"),
     (Some(WallDetail::Detailed), "Ayrıntılı"),
@@ -241,7 +241,7 @@ pub(super) fn view<'a>(
             .spacing(6)
             .push(container(details).width(typography::scaled(200.0)))
             .push(label::caption(
-                "Ölçeğe göre: 1:30 ve daha büyükte ayrıntılı (bileşenler ve taramaları), 1:75'e dek standart, daha küçükte şematik (dolgu). Paftanın haritası kendi ölçeğiyle çizer.",
+                "Otomatik: modelde yaklaştıkça duvar bileşenleri görünür. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek standart, daha küçükte şematik gösterilir. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
             )),
     );
     let read_now = read(rows, detail, method, None);

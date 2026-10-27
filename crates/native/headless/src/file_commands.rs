@@ -352,6 +352,13 @@ pub fn block_drawing(
                         &format!("uids[{i}]"),
                     ));
                 }
+                if doc.dimension_set_of_item(u).is_some() {
+                    return Err(refuse(
+                        "dimension_set_owned",
+                        "Seçimde otomatik duvar ölçü grubuna ait ölçü var. WBLOCK kaynak tarifini taşımaz. Önce grubu bağımsızlaştırın veya ölçü üyelerini seçimden çıkarın. Grubu korumak için çizimi KCAD olarak kaydedin.",
+                        &format!("uids[{i}]"),
+                    ));
+                }
                 uids.push(EntityId(*u.as_bytes()));
             }
             (uids, doc.name().to_owned(), input.base)

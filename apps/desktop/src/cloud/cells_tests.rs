@@ -17,6 +17,7 @@ fn health(contracts: u32) -> Health {
         version: "0.9.0".into(),
         commit: Some("4d67c97af7fe8fa6".into()),
         contracts,
+        project_changes_versions: Vec::new(),
     }
 }
 

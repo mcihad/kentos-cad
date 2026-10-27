@@ -1,0 +1,8 @@
+{
+  "fullModelEquals155": true,
+  "reader": "tools/kcad/kcad.py",
+  "currentProcess": [
+    "38939 Tue Oct 27 03:39:32 2026     /Users/cihad/Projects/kentos-cad/.run/KentOS Architecture Live 3 QA.app/Contents/MacOS/kentos-cad-bin /Users/cihad/Projects/kentos-cad/.run/gui-evidence/2026-10-27-wall-dimensions/live-3/styles-100.kcad"
+  ],
+  "verifiedUtc": "2026-10-27T00:40:08.899846+00:00"
+}

@@ -64,6 +64,7 @@ pub(crate) fn write(
     layout: &ArrayLayout,
     label: &str,
 ) -> Result<Made, Stop> {
+    crate::blocks_define::reject_owned_dimension_members(doc, sources)?;
     let found: Vec<(Slot, Entity)> = sources
         .iter()
         .filter_map(|u| Uuid::parse_str(u).ok())

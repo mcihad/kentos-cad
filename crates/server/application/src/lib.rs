@@ -55,6 +55,10 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::PROJECT_CHANGES_VERSION,
     ),
     (
+        kentos_contracts::PROJECT_CHANGES,
+        kentos_contracts::PROJECT_CHANGES_DIMENSION_SETS_VERSION,
+    ),
+    (
         kentos_contracts::PROJECT_SHARE,
         kentos_contracts::PROJECT_SHARE_VERSION,
     ),

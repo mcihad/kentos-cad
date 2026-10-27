@@ -21,12 +21,15 @@
 //! tag beside the cursor. None of the geometry is computed here.
 
 use kentos_commands::{
-    ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Transform,
+    ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Entity,
+    Transform,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape_with};
 use kentos_geometry_core::tools::point_input::Tracking;
+use kentos_native_application::geometry::{shape, with_shape};
 use kentos_native_application::{ExecutionContext, array, transform};
 
 use crate::Vec2;
@@ -204,6 +207,9 @@ pub struct Modify<S: Stages> {
     /// Where the transform would put the selection: outlines and point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
+    /// Source-driven dimension membership, computed in a reversible document preview.
+    followers: Preview,
+    follower_scratch: Option<kentos_domain::Document>,
     /// Written and left (the web's `ctx.tools.exit()` after a transform).
     done: bool,
 }
@@ -219,6 +225,8 @@ impl<S: Stages> Modify<S> {
             selected: 0,
             ghosts: Vec::new(),
             marks: Vec::new(),
+            followers: Preview::default(),
+            follower_scratch: None,
             done: false,
         }
     }
@@ -236,6 +244,7 @@ impl<S: Stages> Modify<S> {
         self.stages.see(cx);
         self.ghosts.clear();
         self.marks.clear();
+        self.followers = Preview::default();
         self.selected = cx.selection.len();
         if self.picking || self.done {
             return;
@@ -255,6 +264,65 @@ impl<S: Stages> Modify<S> {
             .store()
             .transform_outlines(&ids, &affines, MAX_GHOSTS);
         (self.ghosts, self.marks) = ghosts(&paths);
+        // Existing copy/array previews stay unchanged. The domain owns all derived
+        // membership; the same shared matrix kernel supplies only the source edits.
+        if !cx.doc.dimension_sets().is_empty()
+            && matches!(
+                self.stages.id(),
+                "move" | "rotate" | "scale" | "mirror" | "align"
+            )
+            && let [matrix] = affines.as_slice()
+        {
+            let changes: Vec<_> = cx
+                .selection
+                .ids()
+                .iter()
+                .take(MAX_GHOSTS)
+                .filter_map(|&slot| {
+                    let entity = cx.doc.get(slot)?;
+                    if !matches!(entity, Entity::Wall(_) | Entity::Opening(_))
+                        || cx.doc.layers().is_locked(&entity.base().layer_id)
+                    {
+                        return None;
+                    }
+                    with_shape(
+                        entity,
+                        transform_shape_with(&shape(entity), matrix, TextPolicy::Readable),
+                    )
+                    .map(|after| (slot, after))
+                })
+                .collect();
+            let delta =
+                cx.doc
+                    .preview_followers_with(&mut self.follower_scratch, &changes, &[], &[]);
+            for (_, entity) in delta.updated.iter().chain(&delta.added).take(MAX_GHOSTS) {
+                if matches!(entity, Entity::Dimension(_)) {
+                    let mut preview = crate::wall_dimensions::dimension_preview(
+                        entity,
+                        &cx.format(),
+                        cx.doc.settings().drawing_font,
+                    );
+                    for stroke in &mut preview.strokes {
+                        stroke.tone = crate::tool::Tone::Snap;
+                    }
+                    self.followers.strokes.extend(preview.strokes);
+                    self.followers.texts.extend(preview.texts);
+                }
+            }
+            for slot in delta.removed.iter().take(MAX_GHOSTS) {
+                if let Some(entity) = cx.doc.get(*slot) {
+                    self.followers.strokes.extend(
+                        crate::edge::Outline::of(
+                            &shape(entity),
+                            Some([2., 3.]),
+                            1.0,
+                            crate::tool::Tone::Danger,
+                        )
+                        .strokes,
+                    );
+                }
+            }
+        }
     }
 
     fn after(&mut self, flow: Flow, cx: &Context<'_>) {
@@ -537,6 +605,7 @@ impl<S: Stages> Tool for Modify<S> {
             };
         }
         let mut strokes = self.ghosts.clone();
+        strokes.extend(self.followers.strokes.iter().cloned());
         let overlay = self.stages.overlay();
         strokes.extend(overlay.strokes);
         if let (Some(a), Some(hover)) = (self.stages.anchor(), self.hover) {
@@ -550,6 +619,7 @@ impl<S: Stages> Tool for Modify<S> {
             strokes,
             marks: self.marks.clone(),
             markers: overlay.markers,
+            texts: self.followers.texts.clone(),
             tag,
             tracking: self.hover.and(self.tracking),
             ..Preview::default()

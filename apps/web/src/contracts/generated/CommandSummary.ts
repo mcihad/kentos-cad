@@ -44,6 +44,10 @@ layers: NodeChanges,
  */
 blocks: NodeChanges, 
 /**
+ * Persistent automatic dimension recipe identities. Absent for legacy commands that touch none.
+ */
+dimensionSets?: NodeChanges, 
+/**
  * The project's parts that changed; `undo.outside` identifies those not restored by undo.
  */
 project: Array<ProjectPart>, undo: UndoInfo, 

@@ -86,6 +86,7 @@ fn unlocked(nodes: &[LayerNode]) -> Vec<LayerNode> {
 async fn sample_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: name.into(),
         settings: s.settings,

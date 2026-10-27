@@ -132,6 +132,14 @@ pub struct EntitiesStretched {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesStretchPlan {
+    /// Source-driven new dependents, with provisional identities (ADR0695).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub added: Vec<Entity>,
+    /// Source-driven removed dependents, by persistent id.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub removed: Vec<String>,
     /// The objects as they would be, with their slots.
     pub stretched: Vec<Entity>,
     /// The neighbours as they would be.

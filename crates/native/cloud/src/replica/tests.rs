@@ -30,6 +30,7 @@ fn opened(storage: ProjectStorage) -> Opened {
         tenant: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000002").unwrap(),
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
+            dimension_sets: Vec::new(),
             constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
@@ -175,6 +176,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
     replica
         .append(&BaseStep {
             meta: Some(BaseMeta {
+                dimension_sets: Vec::new(),
                 constraints: Default::default(),
                 version: "6".into(),
                 name: "Ada 5".into(),
@@ -433,4 +435,38 @@ fn block_definitions_are_kept_with_their_versions_step_by_step() {
     let again = replica.load().unwrap().unwrap();
     assert_eq!(again.document.blocks().len(), 2);
     drop(dir);
+}
+
+#[test]
+fn offline_copy_preserves_dimension_recipes_member_ids_and_layout() {
+    let model: kentos_contracts::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dimension-sets.json"
+    ))
+    .unwrap();
+    let mut o = opened(ProjectStorage::Database);
+    o.document = Document::from_snapshot_v2(model.clone()).unwrap();
+    o.info.dimension_sets = model.dimension_sets.clone();
+    o.info.layers = model.layers;
+    o.info.active_layer = model.active_layer;
+    o.info.settings = model.settings;
+    o.source = Source::Database {
+        versions: o
+            .document
+            .entities()
+            .map(|e| (o.document.uid(Slot(e.base().id)).unwrap(), "1".into()))
+            .collect(),
+        blocks: Vec::new(),
+    };
+    let (dir, store) = store();
+    let mut replica = open(&store, &o);
+    replica.reset(&o).unwrap();
+    let back = replica.load().unwrap().unwrap();
+    assert_eq!(
+        back.document.to_snapshot_v2().dimension_sets,
+        model.dimension_sets
+    );
+    assert_eq!(back.info.dimension_sets, model.dimension_sets);
+    assert_eq!(by_uid(&back.document), by_uid(&o.document));
+    drop(replica);
+    let _ = fs::remove_dir_all(dir);
 }

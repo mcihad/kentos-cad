@@ -1,0 +1,5592 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.dimensionsets.edit",
+  "commandVersion": 1,
+  "title": "Kalıcı otomatik mimari ölçü dizileri: edit",
+  "note": "ADR0695. Bağımsız kardinal yüz/pervaz hesabı; V2 sabit UUID seed; üretici KentOS kodunu çalıştırmaz. Yeni kimlikler yalnız yazma anında atanır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kalıcı mimari ölçü dizileri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "hidden",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "locked",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "group",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center"
+      },
+      {
+        "kind": "dimension",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.125
+        },
+        "b": {
+          "x": 8.0,
+          "y": 0.125
+        },
+        "height": 0.125,
+        "offset": 1.875,
+        "refs": {
+          "a": {
+            "uid": "0192f5a1-6000-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            }
+          },
+          "b": {
+            "uid": "0192f5a1-6000-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          }
+        },
+        "style": "linear",
+        "angle": 0.0
+      }
+    ],
+    "uids": [
+      "0192f5a1-6000-7000-8000-000000000001",
+      "0192f5a1-6000-7000-8000-000000000002"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "dimensionSets": [
+      {
+        "id": "0192f5a1-6000-7000-8000-000000000003",
+        "wall": "0192f5a1-6000-7000-8000-000000000001",
+        "face": "left",
+        "rows": [
+          "openings",
+          "overall"
+        ],
+        "openings": "ends",
+        "layerId": "0",
+        "at": {
+          "x": 0.0,
+          "y": 1.0
+        },
+        "gapMm": 7.0,
+        "height": 0.125,
+        "look": {
+          "dimLineColor": "#112233",
+          "arrowSize": 0.8
+        },
+        "rowPlaces": [
+          {
+            "row": "overall",
+            "at": {
+              "x": 2.0,
+              "y": 2.0
+            }
+          }
+        ],
+        "members": [
+          {
+            "uid": "0192f5a1-6000-7000-8000-000000000002",
+            "row": "overall",
+            "a": {
+              "uid": "0192f5a1-6000-7000-8000-000000000001",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 0
+              }
+            },
+            "b": {
+              "uid": "0192f5a1-6000-7000-8000-000000000001",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 1
+              }
+            }
+          }
+        ],
+        "suppressed": [
+          {
+            "row": "openings",
+            "a": {
+              "uid": "0192f5a1-6000-7000-8000-000000000001",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 0
+              }
+            },
+            "b": {
+              "uid": "0192f5a1-6000-7000-8000-000000000001",
+              "place": {
+                "kind": "vertex",
+                "part": 0,
+                "ring": 0,
+                "index": 1
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Plan: sıra yeri",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "move",
+              "row": "overall",
+              "at": {
+                "x": 2.0,
+                "y": 4.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 2,
+                  "layerId": "0",
+                  "attrs": {},
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "height": 0.125,
+                  "offset": 3.875,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  "style": "linear",
+                  "angle": 0.0
+                }
+              ],
+              "spans": [
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current",
+              "set": "0192f5a1-6000-7000-8000-000000000003"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grubu dünya düzleminde bir metre taşı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "move",
+              "at": {
+                "x": 0.0,
+                "y": 2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 2.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 3.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız toplam sırasını taşı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "move",
+              "row": "overall",
+              "at": {
+                "x": 2.0,
+                "y": 4.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 3.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 4.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yüzden2m sıra uzaklığı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "rowOffset",
+              "row": "overall",
+              "offset": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 2.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.125
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yüzün ters tarafında eksi2m sıra uzaklığı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "rowOffset",
+              "row": "overall",
+              "offset": -2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": -2.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": -1.875
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elle sıra yerlerini sıfırla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "resetRows"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.225,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık metadata değişir, elle sıra yeri korunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "gapMm": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 8.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız toplam sırasına geç",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "rows": [
+                "overall"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizlenmiş açıklık sırası tek başına, aktif ölçü kalmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "rows": [
+                "openings"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [],
+              "created": [],
+              "removed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1
+            ],
+            "fields": {},
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bastırılmış aralığı geri getir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "restoreHidden"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "created": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "fields": {
+              "3": {
+                "layerId": "0",
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 0.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                "dimLineColor": "#112233",
+                "arrowSize": 0.8
+              },
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "$uidOf:3",
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sağ fiziksel yüze geç, kaynak anahtarı değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "face": "right"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "created": [
+                "$any",
+                "$any"
+              ],
+              "removed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4
+            ],
+            "fields": {
+              "3": {
+                "layerId": "0",
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": -0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": -0.125
+                },
+                "offset": 1.125,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                "dimLineColor": "#112233",
+                "arrowSize": 0.8
+              },
+              "4": {
+                "layerId": "0",
+                "height": 0.125,
+                "a": {
+                  "x": 0.0,
+                  "y": -0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": -0.125
+                },
+                "offset": 2.125,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                "dimLineColor": "#112233",
+                "arrowSize": 0.8
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "right",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "$uidOf:3",
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "uid": "$uidOf:4",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynak seçiminde merkez modu metadata korunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "openings": "centers"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "centers",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: sağ yüz yeni öğeler ve eski UUID silinmesi",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "face": "right"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": -0.125
+                  },
+                  "offset": 1.125,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "0",
+                  "attrs": {},
+                  "height": 0.125,
+                  "a": {
+                    "x": 0.0,
+                    "y": -0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": -0.125
+                  },
+                  "offset": 2.125,
+                  "style": "linear",
+                  "angle": 0.0,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 1,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                }
+              ],
+              "spans": [
+                {
+                  "row": "openings",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 1,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "uids": [],
+              "revision": "$current",
+              "set": "0192f5a1-6000-7000-8000-000000000003"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "detach: plan, tek geri adım",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "entities": [],
+              "spans": [],
+              "removed": [],
+              "uids": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "detach: execute, tek geri adım",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete: plan, tek geri adım",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "delete"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "entities": [],
+              "spans": [],
+              "removed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete: execute, tek geri adım",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "delete"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [],
+              "created": [],
+              "removed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1
+            ],
+            "dimensionSets": [],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yerini sıfırla: plan",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.125
+            },
+            "b": {
+              "x": 8.0,
+              "y": 0.125
+            },
+            "height": 0.125,
+            "offset": 1.875,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "b": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "style": "linear",
+            "angle": 0.0,
+            "textShift": {
+              "along": 0.3,
+              "across": 0.2
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "face": "left",
+            "rows": [
+              "openings",
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "0",
+            "at": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {
+              "dimLineColor": "#112233",
+              "arrowSize": 0.8
+            },
+            "rowPlaces": [
+              {
+                "row": "overall",
+                "at": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ],
+            "members": [
+              {
+                "uid": "0192f5a1-6000-7000-8000-000000000002",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "suppressed": [
+              {
+                "row": "openings",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "resetText",
+              "row": "overall"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 2,
+                  "layerId": "0",
+                  "attrs": {},
+                  "a": {
+                    "x": 0.0,
+                    "y": 0.125
+                  },
+                  "b": {
+                    "x": 8.0,
+                    "y": 0.125
+                  },
+                  "height": 0.125,
+                  "offset": 1.875,
+                  "refs": {
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  },
+                  "style": "linear",
+                  "angle": 0.0
+                }
+              ],
+              "spans": [
+                {
+                  "row": "overall",
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "removed": [],
+              "uids": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yerini sıfırla: execute",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.125
+            },
+            "b": {
+              "x": 8.0,
+              "y": 0.125
+            },
+            "height": 0.125,
+            "offset": 1.875,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "b": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "style": "linear",
+            "angle": 0.0,
+            "textShift": {
+              "along": 0.3,
+              "across": 0.2
+            }
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "face": "left",
+            "rows": [
+              "openings",
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "0",
+            "at": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {
+              "dimLineColor": "#112233",
+              "arrowSize": 0.8
+            },
+            "rowPlaces": [
+              {
+                "row": "overall",
+                "at": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ],
+            "members": [
+              {
+                "uid": "0192f5a1-6000-7000-8000-000000000002",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "suppressed": [
+              {
+                "row": "openings",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "resetText",
+              "row": "overall"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "textShift": null
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stili değiştir, mevcut üyeye aynı görünüş/ölçü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "dimensionStyles": [
+            {
+              "id": "arch",
+              "name": "Mimari",
+              "height": 3.0
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.125
+            },
+            "b": {
+              "x": 8.0,
+              "y": 0.125
+            },
+            "height": 0.125,
+            "offset": 1.875,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "b": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "style": "linear",
+            "angle": 0.0
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "face": "left",
+            "rows": [
+              "openings",
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "0",
+            "at": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {
+              "dimLineColor": "#112233",
+              "arrowSize": 0.8
+            },
+            "rowPlaces": [
+              {
+                "row": "overall",
+                "at": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ],
+            "members": [
+              {
+                "uid": "0192f5a1-6000-7000-8000-000000000002",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "suppressed": [
+              {
+                "row": "openings",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "dimensionStyle": "Mimari"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "0",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.15,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                },
+                "dimStyle": "arch"
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.15,
+                "look": {
+                  "dimStyle": "arch"
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hedef katmanı değiştir, yer ve kaynak aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "layerId": "hidden"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "set": "0192f5a1-6000-7000-8000-000000000003",
+              "uids": [
+                "$any"
+              ],
+              "created": [],
+              "removed": [],
+              "changed": [
+                "0192f5a1-6000-7000-8000-000000000002"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "layerId": "hidden",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "height": 0.125,
+                "offset": 1.875,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-6000-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "hidden",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "dimensionSets": [
+              {
+                "id": "0192f5a1-6000-7000-8000-000000000003",
+                "wall": "0192f5a1-6000-7000-8000-000000000001",
+                "face": "left",
+                "rows": [
+                  "openings",
+                  "overall"
+                ],
+                "openings": "ends",
+                "layerId": "0",
+                "at": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "gapMm": 7.0,
+                "height": 0.125,
+                "look": {
+                  "dimLineColor": "#112233",
+                  "arrowSize": 0.8
+                },
+                "rowPlaces": [
+                  {
+                    "row": "overall",
+                    "at": {
+                      "x": 2.0,
+                      "y": 2.0
+                    }
+                  }
+                ],
+                "members": [
+                  {
+                    "uid": "0192f5a1-6000-7000-8000-000000000002",
+                    "row": "overall",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ],
+                "suppressed": [
+                  {
+                    "row": "openings",
+                    "a": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-6000-7000-8000-000000000001",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "fields": {
+              "2": {
+                "a": {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                "b": {
+                  "x": 8.0,
+                  "y": 0.125
+                },
+                "offset": 1.875
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen grup yazmadan ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-00000000ffff",
+            "operation": {
+              "kind": "delete"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "dimension_set_not_found",
+              "message": "Ölçü grubu bulunamadı; yeniden seçin.",
+              "path": "id"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş sıra listesi atomik ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "rows": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_dimension_set",
+              "message": "Ölçü dizisinin sıraları boş veya yineleniyor.",
+              "path": "operation"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli ölçü katmanında detach ret",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kalıcı mimari ölçü dizileri",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hidden",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "locked",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "group",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.125
+            },
+            "b": {
+              "x": 8.0,
+              "y": 0.125
+            },
+            "height": 0.125,
+            "offset": 1.875,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "b": {
+                "uid": "0192f5a1-6000-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "style": "linear",
+            "angle": 0.0
+          }
+        ],
+        "uids": [
+          "0192f5a1-6000-7000-8000-000000000001",
+          "0192f5a1-6000-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "wall": "0192f5a1-6000-7000-8000-000000000001",
+            "face": "left",
+            "rows": [
+              "openings",
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "0",
+            "at": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {
+              "dimLineColor": "#112233",
+              "arrowSize": 0.8
+            },
+            "rowPlaces": [
+              {
+                "row": "overall",
+                "at": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ],
+            "members": [
+              {
+                "uid": "0192f5a1-6000-7000-8000-000000000002",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "suppressed": [
+              {
+                "row": "openings",
+                "a": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-6000-7000-8000-000000000001",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“0” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: dimensionStyle Kayıp",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "dimensionStyle": "Kayıp"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_style",
+              "message": "“Kayıp” adlı ölçü stili yok. Projenin ölçü stillerinden birinin adını verin ya da alanı kaldırın (Standart).",
+              "path": "dimensionStyle"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: layerId missing",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "layerId": "missing"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“missing” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: layerId group",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "layerId": "group"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: expectedRevision 07",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "gapMm": 8.0
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: expectedRevision 999",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "set",
+              "gapMm": 8.0
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıra konumu sonlu değil",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "id": "0192f5a1-6000-7000-8000-000000000003",
+            "operation": {
+              "kind": "move",
+              "at": {
+                "x": 2.0,
+                "y": 4.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçü sırasının yeri doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "operation.at.x"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "revision": "same",
+            "canUndo": false,
+            "dirty": false
+          },
+          "nonFinite": {
+            "operation.at.x": "NaN"
+          }
+        }
+      ]
+    }
+  ]
+}

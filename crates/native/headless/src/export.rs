@@ -88,6 +88,26 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     // parameters and actions.
     let (variants, mut notes) =
         kentos_native_application::block_variants::plain_for_export(doc.blocks(), &mut entities);
+    let chosen_slots: std::collections::HashSet<_> = entities.iter().map(|e| e.base().id).collect();
+    let recipe_count = doc
+        .dimension_sets()
+        .iter()
+        .filter(|set| {
+            set.members.iter().any(|member| {
+                doc.slot_of(kentos_domain::Uuid::from_bytes(member.uid.0))
+                    .is_some_and(|slot| chosen_slots.contains(&slot.0))
+            })
+        })
+        .count();
+    if recipe_count > 0 {
+        notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning), details: Vec::new(),
+            what: "İlişkili duvar ölçü grubu".into(),
+            count: u32::try_from(recipe_count).unwrap_or(u32::MAX),
+            reason: "Ölçülerin mevcut geometrisi yazıldı; duvar ölçü grubunun kaynak tarifi ve otomatik üye ekleme/kaldırma davranışı DXF'e yazılmaz. Grubu korumak için KCAD olarak kaydedin.".into(),
+            lines: Vec::new(),
+        });
+    }
     // Annotative annotations (docs/adr/0323 §5): DXF gets each as its own scale draws it.
     let scaled = entities
         .iter()

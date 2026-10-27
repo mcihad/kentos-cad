@@ -229,6 +229,7 @@ fn meta_of(info: &ProjectInfo) -> ExternalMeta {
         sheets: Some(info.sheets.clone()),
         arrays: Some(info.arrays.clone()),
         constraints: Some(info.constraints.clone()),
+        dimension_sets: Some(info.dimension_sets.clone()),
     }
 }
 

@@ -1,0 +1,7 @@
+{
+  "modelEqualOriginalFixture": true,
+  "bytesEqualOriginalFixture": true,
+  "modelSha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+  "diagnostic178179": "Extreme two-page wheel reduced the complete scene to about12pixels beneath the cursor;182 pointer-outside shows it, not a renderer loss.",
+  "build": "live-3"
+}

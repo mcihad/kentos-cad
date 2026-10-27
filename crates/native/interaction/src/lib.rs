@@ -273,6 +273,7 @@ pub mod viewmark_tools;
 pub mod wall_from_lines;
 pub mod wall_rectangle;
 pub mod wall_partition;
+pub mod wall_dimensions;
 pub mod tool_settings;
 
 pub use clipboard::Clipboard;

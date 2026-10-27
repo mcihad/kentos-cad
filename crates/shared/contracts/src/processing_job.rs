@@ -512,6 +512,31 @@ pub fn delta(
         patch.arrays = Some(after.arrays.clone());
         metadata = true;
     }
+    let touches_dimension_sources =
+        crate::cloud::dimension_sets_touched(&before.dimension_sets, &features)
+            || crate::cloud::dimension_sets_touched(&after.dimension_sets, &features)
+            || features.iter().any(|change| {
+                let id = match change {
+                    FeatureChange::Create { id, .. }
+                    | FeatureChange::Update { id, .. }
+                    | FeatureChange::Edit { id, .. }
+                    | FeatureChange::Delete { id } => id,
+                };
+                let Some(uid) = EntityId::parse(id) else {
+                    return false;
+                };
+                let Some(Entity::Opening(opening)) = was.get(&uid).copied() else {
+                    return false;
+                };
+                before
+                    .dimension_sets
+                    .iter()
+                    .any(|set| set.wall.to_text() == opening.opening.host)
+            });
+    if touches_dimension_sources || !same(&before.dimension_sets, &after.dimension_sets) {
+        patch.dimension_sets = Some(after.dimension_sets.clone());
+        metadata = true;
+    }
     if !same(&before.constraints, &after.constraints) {
         patch.constraints = Some(after.constraints.clone());
         metadata = true;

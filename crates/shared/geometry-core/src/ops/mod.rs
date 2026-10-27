@@ -18,6 +18,7 @@ pub mod curve_cuts;
 pub mod data_search;
 pub mod de9im;
 pub mod derive;
+pub mod dimension_set;
 pub mod edge_labels;
 pub mod edge_shift;
 pub mod edgematch;

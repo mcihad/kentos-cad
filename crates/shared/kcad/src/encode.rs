@@ -290,7 +290,9 @@ impl<'d> Encoder<'d> {
             return Err(self.fail(said.code, &said.what));
         }
         // Schema 32's links (docs/adr/0208 §2), as a reader checks them.
-        if let Some(fault) = self.objs.service_fault(&doc.layers, &doc.settings.connections)
+        if let Some(fault) = self
+            .objs
+            .service_fault(&doc.layers, &doc.settings.connections)
         {
             match fault {
                 kentos_contracts::ServiceLinkFault::Object { index } => {
@@ -328,6 +330,7 @@ impl<'d> Encoder<'d> {
             + usize::from(doc.migrated_from.is_some())
             + usize::from(doc.sheets.is_some())
             + usize::from(!doc.requests.is_empty())
+            + usize::from(!doc.dimension_sets.is_empty())
             + usize::from(!doc.constraints.is_empty());
         self.open(7 + optional, true)?;
         // name (4), arrays blocks layers origin sheets styles (6), entities homeView requests settings (8),
@@ -406,6 +409,19 @@ impl<'d> Encoder<'d> {
         if let Some(source) = &doc.migrated_from {
             self.key("migratedFrom");
             self.at(Seg::Name("migratedFrom"), |e| e.source(source))?;
+        }
+        if !doc.dimension_sets.is_empty() {
+            self.key("dimensionSets");
+            self.at(Seg::Name("dimensionSets"), |e| {
+                if let Some((index, why)) =
+                    kentos_contracts::dimension_sets_problem(&doc.dimension_sets)
+                {
+                    return Err(e.fail(Code::BadValue, &format!("[{index}]: {why}")));
+                }
+                let value = serde_json::to_value(&doc.dimension_sets)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         self.close();
         Ok(())
@@ -1960,6 +1976,9 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if !doc.dimension_sets.is_empty() {
+        return crate::SCHEMA_WITH_DIMENSION_SETS;
+    }
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
@@ -2020,8 +2039,7 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_SPACE_CHOICES;
     }
     // Schema 111 (docs/adr/0679): a polyline's virtual room separator role.
-    let separator =
-        |e: &Entity| matches!(e, Entity::Polyline(p) | Entity::Polygon(p) if p.space_separator.is_some());
+    let separator = |e: &Entity| matches!(e, Entity::Polyline(p) | Entity::Polygon(p) if p.space_separator.is_some());
     if objs.iter().any(separator) || doc.blocks.iter().any(|b| b.entities.iter().any(separator)) {
         return crate::SCHEMA_WITH_SPACE_SEPARATORS;
     }

@@ -153,6 +153,7 @@ async fn scenario(storage: ProjectStorage) {
     // A makes and saves their 18 uygulaması project, and names the moment.
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: "Ada 101 — 18 uygulaması".into(),
         settings: s.settings,

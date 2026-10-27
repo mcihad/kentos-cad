@@ -280,6 +280,7 @@ mod tests {
             version: "0.1.0".into(),
             commit: None,
             contracts,
+            project_changes_versions: Vec::new(),
         };
         assert_eq!(app.server_text(), "bağlı değil", "not asked yet");
         app.server_checked(Ok(health(CONTRACTS_VERSION)));
@@ -348,6 +349,7 @@ fn screens() {
                             version: "0.1.0".into(),
                             commit: Some("0123456789abcdef".into()),
                             contracts: CONTRACTS_VERSION,
+                            project_changes_versions: Vec::new(),
                         }));
                         app.update(Message::Run("help.about"))
                     }
@@ -379,6 +381,7 @@ fn screens() {
                             version: "0.1.0".into(),
                             commit: None,
                             contracts: CONTRACTS_VERSION,
+                            project_changes_versions: Vec::new(),
                         }));
                         app.output("Sunucuya soruluyor: http://127.0.0.1:8787…");
                         app.server_checked(Err(

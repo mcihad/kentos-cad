@@ -1,0 +1,26 @@
+{
+  "reader": "tools/kcad/kcad.py",
+  "cases": [
+    "153",
+    "154",
+    "155"
+  ],
+  "sourcesAndUnrelatedMetadataUnchanged": true,
+  "defaultGapMm": 7.5,
+  "fixedDistanceMetres": 1.0,
+  "lengthsMetres": [
+    3.5,
+    1.0,
+    5.5,
+    10.0
+  ],
+  "offsetsMetres": [
+    1.0,
+    1.0,
+    1.0,
+    1.375
+  ],
+  "oneUndoEquals58": true,
+  "oneRedoEquals153": true,
+  "styleNavigation141Equals125": true
+}

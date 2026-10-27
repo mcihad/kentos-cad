@@ -529,6 +529,7 @@ impl Replica {
                         snapshot.sheets = m.sheets;
                         snapshot.arrays = m.arrays;
                         snapshot.constraints = m.constraints;
+                        snapshot.dimension_sets = m.dimension_sets;
                     }
                     if let Some(list) = step.blocks {
                         head.blocks = list
@@ -572,6 +573,7 @@ impl Replica {
             info.sheets = snapshot.sheets.clone();
             info.arrays = snapshot.arrays.clone();
             info.constraints = snapshot.constraints.clone();
+            info.dimension_sets = snapshot.dimension_sets.clone();
             info.meta_version = head.meta_version;
         }
         info.event_cursor = head.cursor;

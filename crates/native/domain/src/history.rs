@@ -229,6 +229,24 @@ pub(crate) enum Op {
         before: Arc<AssocArray>,
         after: Arc<AssocArray>,
     },
+    DimensionSetAdd {
+        index: usize,
+        set: Arc<kentos_contracts::DimensionSet>,
+    },
+    DimensionSetRemove {
+        index: usize,
+        set: Arc<kentos_contracts::DimensionSet>,
+    },
+    DimensionSetUpdate {
+        before: Arc<kentos_contracts::DimensionSet>,
+        after: Arc<kentos_contracts::DimensionSet>,
+        /// Exact private child operations; metadata elsewhere in a transaction grants no authority.
+        writes: Vec<(Uuid, Arc<Entity>, Arc<Entity>)>,
+    },
+    /// Evidence of a forbidden user edit, even if another operation subsequently hid that edit.
+    DimensionSetViolation {
+        uid: Uuid,
+    },
     /// Only the metadata installed by an explicit architectural package (ADR 0659).
     TemplateSettings {
         before: Box<crate::template_settings::TemplateSettings>,
@@ -459,6 +477,27 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::DimensionSetAdd { index, set } => Op::DimensionSetRemove {
+                index: *index,
+                set: set.clone(),
+            },
+            Op::DimensionSetRemove { index, set } => Op::DimensionSetAdd {
+                index: *index,
+                set: set.clone(),
+            },
+            Op::DimensionSetUpdate {
+                before,
+                after,
+                writes,
+            } => Op::DimensionSetUpdate {
+                before: after.clone(),
+                after: before.clone(),
+                writes: writes
+                    .iter()
+                    .map(|(uid, b, a)| (*uid, a.clone(), b.clone()))
+                    .collect(),
+            },
+            Op::DimensionSetViolation { uid } => Op::DimensionSetViolation { uid: *uid },
             Op::BlockRemove { index, block } => Op::BlockAdd {
                 index: *index,
                 block: block.clone(),
@@ -673,6 +712,7 @@ impl Document {
             if changed {
                 self.refresh_viewmarks();
                 self.refresh_derived_tags();
+                self.refresh_dimension_set_rows();
                 self.mark_changed();
             }
         }
@@ -719,6 +759,7 @@ impl Document {
         if !undone.is_empty() {
             self.refresh_viewmarks();
             self.refresh_derived_tags();
+            self.refresh_dimension_set_rows();
             self.mark_changed();
         }
     }
@@ -807,6 +848,7 @@ impl Document {
         self.history.redo.push(step);
         self.refresh_viewmarks();
         self.refresh_derived_tags();
+        self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
     }
@@ -826,6 +868,7 @@ impl Document {
         self.history.undo.push_back(step);
         self.refresh_viewmarks();
         self.refresh_derived_tags();
+        self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
     }
@@ -959,6 +1002,9 @@ impl Document {
         // After the arrays: the leaders' tips and content blocks (docs/adr/0326 §2, §3), before the dimensions tied to them.
         let leaders = self.follow_leaders(ops);
         ops.extend(leaders);
+        // Recipes see the settled real wall faces and opening jambs, including new/rehosted openings.
+        let sets = self.follow_dimension_sets(ops);
+        ops.extend(sets);
         // After the hatches: a dimension follows the places its points name.
         let relocated = std::mem::take(&mut self.relocated);
         let ends = std::mem::take(&mut self.relocated_ends);
@@ -1050,6 +1096,7 @@ impl Document {
             step.ops.iter().any(|op| match op {
                 Op::Add(s) | Op::Remove(s) => hit(s),
                 Op::Update { before, .. } => hit(before),
+                Op::DimensionSetViolation { uid } => uids.contains(uid),
                 Op::LayerStyle { .. }
                 | Op::LayerFields { .. }
                 | Op::LayerService { .. }
@@ -1073,6 +1120,9 @@ impl Document {
                 | Op::ArrayAdd { .. }
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
+                | Op::DimensionSetAdd { .. }
+                | Op::DimensionSetRemove { .. }
+                | Op::DimensionSetUpdate { .. }
                 | Op::ImportMetadata { .. }
                 | Op::TemplateSettings { .. }
                 | Op::Sheets { .. }
@@ -1168,6 +1218,21 @@ impl Document {
                 matches!(
                     op,
                     Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. }
+                )
+            })
+        };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
+    }
+
+    pub(crate) fn forget_dimension_set_history(&mut self) {
+        let touches = |step: &Step| {
+            step.ops.iter().any(|op| {
+                matches!(
+                    op,
+                    Op::DimensionSetAdd { .. }
+                        | Op::DimensionSetRemove { .. }
+                        | Op::DimensionSetUpdate { .. }
                 )
             })
         };
@@ -1282,6 +1347,13 @@ impl Document {
                 self.apply_array_op(op);
                 return;
             }
+            Op::DimensionSetAdd { .. }
+            | Op::DimensionSetRemove { .. }
+            | Op::DimensionSetUpdate { .. } => {
+                self.apply_dimension_set_op(op);
+                return;
+            }
+            Op::DimensionSetViolation { .. } => return,
             Op::Sheets { after, .. } => {
                 self.sheets.clone_from(after);
                 return;

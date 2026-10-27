@@ -18,6 +18,9 @@ use crate::project_catalog::{ProjectState, ProjectType};
 /// Name and version of the one lasting edit command of Faz B.
 pub const PROJECT_CHANGES: &str = "project.changes";
 pub const PROJECT_CHANGES_VERSION: u32 = 1;
+/// Architectural dimension recipe metadata needs a server that explicitly accepts it.
+/// Version 1 stays valid for old queues but cannot carry dimensionSets.
+pub const PROJECT_CHANGES_DIMENSION_SETS_VERSION: u32 = 2;
 /// Prefix of a block definition's key in `expectedVersions`, `CommitResult`
 /// and conflicts (`block:<id>`, docs/adr/0144 §5): objects are named by
 /// their ids, the metadata by `@project`.
@@ -478,6 +481,13 @@ pub struct ProjectCreate {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// Persistent architectural dimension recipes; older responses without this field have none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
+    )]
+    pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// The project's constraints and parameters (docs/adr/0336 §3); absent: none.
     #[serde(
         default,
@@ -545,6 +555,13 @@ pub struct ProjectInfo {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// Persistent architectural dimension recipes; older responses without this field have none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
+    )]
+    pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
     /// none.
     #[serde(
@@ -623,7 +640,8 @@ pub struct FeaturePage {
 
 // ── The project.changes command ──────────────────────────────────────────
 
-/// Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata.
+/// Input of `project.changes`: v1 for legacy changes, v2 when architectural
+/// dimension recipes accompany one atomic feature/metadata commit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -640,6 +658,54 @@ pub struct ProjectChanges {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockChange>>", optional))]
     pub blocks: Vec<BlockChange>,
+}
+
+impl ProjectChanges {
+    /// Version 2 is required even by an empty list: it explicitly clears recipes.
+    pub fn command_version(&self) -> u32 {
+        if self
+            .project
+            .as_ref()
+            .is_some_and(|p| p.dimension_sets.is_some())
+        {
+            PROJECT_CHANGES_DIMENSION_SETS_VERSION
+        } else {
+            PROJECT_CHANGES_VERSION
+        }
+    }
+}
+
+/// Whether a feature command touches a recipe's host, active child, source
+/// reference, or an opening being placed on its source wall. Older clients
+/// must not change these while omitting the ownership metadata.
+pub fn dimension_sets_touched(sets: &[crate::DimensionSet], features: &[FeatureChange]) -> bool {
+    let mut ids = std::collections::HashSet::new();
+    let walls: std::collections::HashSet<_> = sets.iter().map(|s| s.wall).collect();
+    for set in sets {
+        ids.insert(set.wall);
+        for member in &set.members {
+            ids.extend([member.uid, member.a.uid, member.b.uid]);
+        }
+        for segment in &set.suppressed {
+            ids.extend([segment.a.uid, segment.b.uid]);
+        }
+    }
+    let opening_on_host = |entity: &Entity| {
+        matches!(entity, Entity::Opening(o)
+        if crate::EntityId::parse(&o.opening.host).is_some_and(|id| walls.contains(&id)))
+    };
+    features.iter().any(|change| {
+        let (id, entity, base) = match change {
+            FeatureChange::Create { id, entity } | FeatureChange::Update { id, entity } => {
+                (id, Some(entity), None)
+            }
+            FeatureChange::Edit { id, entity, base } => (id, Some(entity), Some(&**base)),
+            FeatureChange::Delete { id } => (id, None, None),
+        };
+        crate::EntityId::parse(id).is_some_and(|id| ids.contains(&id))
+            || entity.is_some_and(opening_on_host)
+            || base.is_some_and(opening_on_host)
+    })
 }
 
 /// A change of one block definition. An update replaces it whole and a
@@ -738,6 +804,14 @@ pub struct ProjectPatch {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Option<Vec<crate::assoc_array::AssocArray>>,
+    /// Architectural dimension recipes, whole; an empty list explicitly removes all recipes.
+    /// Requires project.changes version 2, in the same transaction as member changes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
+    )]
+    pub dimension_sets: Option<Vec<crate::dimension_set::DimensionSet>>,
     /// The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
     /// contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1209,5 +1283,45 @@ mod tests {
         assert_eq!(GrantRole::from_name("owner"), None);
         assert!(serde_json::from_value::<GrantRole>(serde_json::json!("owner")).is_err());
         assert_eq!(ProjectRole::from_name("admin"), None);
+    }
+}
+
+#[cfg(test)]
+mod dimension_set_transfer_tests {
+    use super::*;
+    use crate::{DocumentSnapshotV2, Entity};
+    fn model() -> DocumentSnapshotV2 {
+        serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dimension-sets.json"
+        ))
+        .unwrap()
+    }
+    #[test]
+    fn source_and_member_changes_require_full_metadata_even_when_recipe_itself_is_unchanged() {
+        let before = model();
+        let mut after = before.clone();
+        if let Entity::Wall(w) = &mut after.entities[0] {
+            w.wall.pts[1].x = 10.;
+        }
+        if let Entity::Dimension(d) = &mut after.entities[1] {
+            d.b.x = 10.;
+        }
+        let delta = crate::processing_job::delta(&before, &after).unwrap();
+        assert_eq!(delta.changes().command_version(), 2);
+        assert_eq!(
+            delta.project.unwrap().dimension_sets,
+            Some(before.dimension_sets.clone())
+        );
+        let member = FeatureChange::Delete {
+            id: before.uids[1].to_text(),
+        };
+        assert!(dimension_sets_touched(&before.dimension_sets, &[member]));
+        let unrelated = FeatureChange::Delete {
+            id: "0192f5a1-ffff-7000-8000-000000000001".into(),
+        };
+        assert!(!dimension_sets_touched(
+            &before.dimension_sets,
+            &[unrelated]
+        ));
     }
 }

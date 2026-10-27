@@ -447,22 +447,28 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &OpeningsEdit) -> CommandResult<Op
 /// [`plan`] on a document: what the opening tools draw as their preview.
 pub fn plan_in(doc: &Document, input: &OpeningsEdit) -> CommandResult<OpeningsEdited> {
     match check(doc, input) {
-        Ok(work) => CommandResult::Completed {
-            output: OpeningsEdited {
-                openings: work
-                    .updates
-                    .into_iter()
-                    .map(|(_, e, _)| Entity::Opening(e))
-                    .collect(),
-                added: work
-                    .added
-                    .into_iter()
-                    .map(|(e, _)| Entity::Opening(e))
-                    .collect(),
-                revision: doc.revision().to_string(),
-            },
-            warnings: Vec::new(),
-        },
+        Ok(work) => {
+            let updates: Vec<_> = work
+                .updates
+                .into_iter()
+                .map(|(s, e, _)| (s, Entity::Opening(e)))
+                .collect();
+            let added: Vec<_> = work
+                .added
+                .into_iter()
+                .map(|(e, _)| Entity::Opening(e))
+                .collect();
+            let followers = crate::dimension_sets::derived(doc, &updates, &added, &[]);
+            CommandResult::Completed {
+                output: OpeningsEdited {
+                    openings: updates.into_iter().map(|(_, e)| e).collect(),
+                    added,
+                    followers,
+                    revision: doc.revision().to_string(),
+                },
+                warnings: Vec::new(),
+            }
+        }
         Err(stop) => stop.into(),
     }
 }
@@ -525,6 +531,7 @@ fn write_execute(
     let added = slots.iter().filter_map(|s| doc.get(*s).cloned()).collect();
     CommandResult::Completed {
         output: OpeningsEdited {
+            followers: Default::default(),
             openings,
             added,
             revision: doc.revision().to_string(),

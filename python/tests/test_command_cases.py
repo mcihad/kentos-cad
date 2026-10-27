@@ -18,6 +18,7 @@ import os
 import math
 import re
 import hashlib
+import importlib.util
 import shutil
 import tempfile
 import unittest
@@ -39,6 +40,11 @@ os.environ["KENTOS_GRID_DIR"] = str(_GRIDS)
 import kentos.cad as cad  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+# Read the actual persisted metadata, independently of the command being tested.
+_KCAD_SPEC = importlib.util.spec_from_file_location("command_case_kcad", ROOT / "tools/kcad/kcad.py")
+assert _KCAD_SPEC is not None and _KCAD_SPEC.loader is not None
+_KCAD = importlib.util.module_from_spec(_KCAD_SPEC)
+_KCAD_SPEC.loader.exec_module(_KCAD)
 # `KENTOS_CASES_ONLY=cad.rasters,cad.walls` runs only the files whose names hold one of the words (the desktop's rule).
 ONLY = [w for w in os.environ.get("KENTOS_CASES_ONLY", "").split(",") if w]
 FILES = sorted(p for p in (ROOT / "fixtures/commands/v1").glob("*.json") if not ONLY or any(w in p.name for w in ONLY))
@@ -330,6 +336,11 @@ class Case:
                     a.pop("id")
                     got.append(a)
                 same(got, self.block_ids(want, at), f"{at}: arrays")
+            elif key == "dimensionSets":
+                # Every persisted recipe field, including identities, row places,
+                # suppressed segments and broken sources (docs/adr/0695).
+                _, snapshot = _KCAD.read(self.doc.to_bytes())
+                same(snapshot.get("dimensionSets", []), self.fill(want, at), f"{at}: dimensionSets", within)
             elif key == "blockIds":
                 for name, id in want.items():
                     block = self.block_named(name)

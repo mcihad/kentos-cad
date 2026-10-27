@@ -7,4 +7,4 @@ export type StateStamps = {
 /**
  * The document's revision, decimal text.
  */
-revision?: string, objects?: { [key in string]: string }, blocks?: { [key in string]: string }, layers?: string, settings?: string, styles?: string, sheets?: string, constraints?: string, };
+revision?: string, objects?: { [key in string]: string }, blocks?: { [key in string]: string }, layers?: string, settings?: string, styles?: string, sheets?: string, constraints?: string, dimensionSets?: string, };

@@ -126,6 +126,9 @@ pub enum Event {
     DimensionAxis(Vec<Slot>, f64),
     /// İlişki ▾'s Serbest bırak: the dimensions' points let go (docs/adr/0249 §3).
     DimensionFree(Vec<Slot>),
+    /// A live wall dimension chain's selection, layout or recipe action.
+    DimensionSet(Slot, &'static str),
+    DimensionSetValue(Slot, &'static str, String),
     /// A dimension edit through `cad.dimensions.edit` (docs/adr/0321 §4): its options, its value home, its breaks off.
     DimensionEdit(Vec<Slot>, DimensionOp),
     /// Stile döndür (docs/adr/0322 §5): the objects take their style's values again.
@@ -191,6 +194,7 @@ pub enum Field {
     PointX(Slot),
     PointY(Slot),
     DimensionOffset(Slot),
+    DimensionSetGap(Slot),
     DimensionHeight(Slot),
     /// A dimension's own text; empty, the measured value again.
     DimensionText(Slot),
@@ -625,6 +629,45 @@ impl App {
             self.selection.set([slot]);
             return;
         }
+        if let Event::DimensionSet(slot, action @ ("select" | "row" | "source")) = event {
+            let Some(model) = self.document.as_ref().map(|doc| &doc.model) else {
+                return;
+            };
+            let Some((set, index)) = model
+                .uid(slot)
+                .and_then(|uid| model.dimension_set_of_item(uid))
+            else {
+                return;
+            };
+            let row = set.members[index].row;
+            let slots: Vec<_> = if action == "source" {
+                set.wall
+                    .to_text()
+                    .parse()
+                    .ok()
+                    .and_then(|uid| model.slot_of(uid))
+                    .into_iter()
+                    .collect()
+            } else {
+                set.members
+                    .iter()
+                    .filter(|member| action == "select" || member.row == row)
+                    .filter_map(|member| {
+                        member
+                            .uid
+                            .to_text()
+                            .parse()
+                            .ok()
+                            .and_then(|uid| model.slot_of(uid))
+                    })
+                    .collect()
+            };
+            self.selection.set(slots);
+            if action == "source" {
+                self.zoom_selection();
+            }
+            return;
+        }
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -801,6 +844,16 @@ impl App {
                 })
             }
             Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
+            Event::DimensionSet(slot, action) => dimension_set_action(model, slot, action),
+            Event::DimensionSetValue(slot, field, value) => {
+                if matches!(field, "dimensionStyle" | "layerId") {
+                    let mut operation = serde_json::json!({"kind":"set"});
+                    operation[field] = serde_json::json!(value);
+                    dimension_set_edit(model, slot, operation)
+                } else {
+                    Vec::new()
+                }
+            }
             Event::DimensionEdit(slots, op) => {
                 use kentos_commands::DimensionEdit as E;
                 properties::edit_dimensions(model, &slots, |uids| match op {
@@ -880,6 +933,67 @@ impl App {
     }
 }
 
+/// A member points at its recipe; the shared command owns all edits and undo.
+fn dimension_set_edit(
+    model: &mut kentos_domain::Document,
+    slot: Slot,
+    operation: serde_json::Value,
+) -> Vec<String> {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let Some((set, _)) = model
+        .uid(slot)
+        .and_then(|uid| model.dimension_set_of_item(uid))
+    else {
+        return Vec::new();
+    };
+    let input = serde_json::json!({"id":set.id.to_string(),"operation":operation,"expectedRevision":model.revision().to_string()});
+    match registry::run(
+        &mut ExecutionContext::new(model),
+        "cad.dimensionsets.edit",
+        CallOp::Execute,
+        input,
+    ) {
+        Ok(value) if value["status"] == "completed" => value["warnings"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|w| w["message"].as_str().map(str::to_owned))
+            .collect(),
+        Ok(value) => vec![
+            value["error"]["message"]
+                .as_str()
+                .unwrap_or(
+                    "Ölçü dizisi değiştirilemedi; kaynağı ve katman kilitlerini kontrol edin.",
+                )
+                .into(),
+        ],
+        Err(error) => vec![error.message],
+    }
+}
+
+fn dimension_set_action(
+    model: &mut kentos_domain::Document,
+    slot: Slot,
+    action: &str,
+) -> Vec<String> {
+    use serde_json::json;
+    let row = model
+        .uid(slot)
+        .and_then(|uid| model.dimension_set_of_item(uid))
+        .map(|(set, index)| set.members[index].row.name());
+    let operation = match action {
+        "left" | "right" => json!({"kind":"set","face":action}),
+        "ends" | "centers" => json!({"kind":"set","openings":action}),
+        "both" => json!({"kind":"set","rows":["openings","overall"]}),
+        "openings" | "overall" => json!({"kind":"set","rows":[action]}),
+        "rowText" => json!({"kind":"resetText","row":row}),
+        "resetRows" | "restoreHidden" | "resetText" | "detach" | "delete" => json!({"kind":action}),
+        _ => return Vec::new(),
+    };
+    dimension_set_edit(model, slot, operation)
+}
+
 /// `cad.entities.set`'s input for the objects in `slots`, nothing set yet.
 fn set_input(
     model: &kentos_domain::Document,
@@ -946,6 +1060,29 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             Some(f.to_metres(web_number(text)))
         }
     };
+    if let Field::DimensionSetGap(slot) = field {
+        let typed = text.trim().strip_suffix("mm").unwrap_or(text.trim()).trim();
+        return match kentos_geometry_core::tools::point_text::parse_number(typed) {
+            Some(mm) if mm.is_finite() && mm > 0.0 && mm <= 1000.0 =>
+                dimension_set_edit(model, *slot, serde_json::json!({"kind":"set","gapMm":mm})),
+            _ => vec!["Kağıt üzerinde 0'dan büyük, en çok 1000 mm bir sıra aralığı girin; örneğin 7.5 mm.".into()],
+        };
+    }
+    if let Field::DimensionOffset(slot) = field
+        && let Some((set, index)) = model
+            .uid(*slot)
+            .and_then(|uid| model.dimension_set_of_item(uid))
+    {
+        let row = set.members[index].row.name();
+        return match length(text) {
+            Some(offset) if offset.is_finite() => dimension_set_edit(
+                model,
+                *slot,
+                serde_json::json!({"kind":"rowOffset","row":row,"offset":offset}),
+            ),
+            _ => vec!["Bu sıranın duvar yüzüne uzaklığını girin; örneğin 40 cm.".into()],
+        };
+    }
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         // Typed in the project's unit; emptied or 0, none (docs/adr/0258 §2).
@@ -1460,6 +1597,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionZb(_)
         | Field::DimensionRound(_)
         | Field::DimensionTolerance(..) => return Vec::new(),
+        Field::DimensionSetGap(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

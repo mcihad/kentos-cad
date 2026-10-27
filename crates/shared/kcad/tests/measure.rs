@@ -67,6 +67,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         uids.push(EntityId(id));
     }
     DocumentSnapshotV2 {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         format: "kentos.document".into(),
         version: 2,

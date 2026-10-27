@@ -21,6 +21,7 @@ mod arch;
 pub(crate) mod attachments;
 pub(crate) mod cloud;
 mod dimension;
+mod dimension_set;
 pub(crate) mod params;
 pub(crate) mod raster;
 
@@ -1725,6 +1726,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             }
         }
         Entity::Dimension(d) => {
+            let set_member = doc
+                .model
+                .uid(slot)
+                .and_then(|uid| doc.model.dimension_set_of_item(uid));
             let style = d.style.unwrap_or(DimensionStyle::Aligned);
             geo.push(Row::text(
                 "Tür",
@@ -1802,9 +1807,21 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                             DimensionStyle::Radius | DimensionStyle::Diameter => "Dışa uzantı",
                             DimensionStyle::Jogged => "Kırık uzaklığı",
                             DimensionStyle::CenterMark | DimensionStyle::CenterLine => "Uzantı",
-                            _ => "Ötelenme",
+                            _ => {
+                                if set_member.is_some() {
+                                    "Sıra uzaklığı"
+                                } else {
+                                    "Ötelenme"
+                                }
+                            }
                         },
-                        d.offset,
+                        set_member
+                            .and_then(|(set, index)| {
+                                doc.model
+                                    .dimension_set_row_offset(set, set.members[index].row)
+                                    .ok()
+                            })
+                            .unwrap_or(d.offset),
                     )
                     .editor(number(Field::DimensionOffset(slot))),
                 );
@@ -1826,6 +1843,24 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             ]);
             // Zemin, an ordinate's axis, a slope's elevations, an arc length's radius and angle (docs/adr/0147 §7).
             let mut own = dimension::rows(&[d], &ids, locked, &f);
+            if set_member.is_some() {
+                // Letting go is explicit for a recipe; freeing just one reference would be recreated.
+                if let Some(relation) = own.iter_mut().find(|row| row.label == "İlişki") {
+                    relation.editor = Some(Editor::Select {
+                        text: relation.value.clone(),
+                        swatch: None,
+                        icon: None,
+                        items: vec![Choice::Action {
+                            label: "Diziyi bağımsız ölçülere dönüştür",
+                            icon: "dimension",
+                            message: (!locked).then_some(Message::Properties(Event::DimensionSet(
+                                slot, "detach",
+                            ))),
+                        }],
+                    });
+                }
+                geo.extend(dimension_set::rows(doc, slot, locked));
+            }
             // İlişki right under its kind: whether the dimension follows its objects (docs/adr/0249 §3).
             if let Some(i) = own.iter().position(|r| r.label == "İlişki") {
                 geo.insert(1.min(geo.len()), own.remove(i));
@@ -3340,6 +3375,27 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             .filter(|d| open.contains(&d.base.id))
             .map(|d| Slot(d.base.id))
             .collect();
+        if let Some(&first) = slots.first()
+            && let Some((set, _)) = doc
+                .model
+                .uid(first)
+                .and_then(|uid| doc.model.dimension_set_of_item(uid))
+            && slots.iter().all(|slot| {
+                doc.model
+                    .uid(*slot)
+                    .and_then(|uid| doc.model.dimension_set_of_item(uid))
+                    .is_some_and(|(other, _)| other.id == set.id)
+            })
+        {
+            let mut rows = dimension_set::rows(doc, first, any_locked);
+            // A chain selection can contain both rows; its first member is not the whole selection's row.
+            rows.retain(|row| row.label != "Sıra");
+            sections.push(Section {
+                id: "dimension-set",
+                title: "Duvar ölçüleri".into(),
+                rows,
+            });
+        }
         sections.push(Section {
             id: "dimensions",
             title: if dims.len() == objects.len() {

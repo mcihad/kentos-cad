@@ -1,0 +1,8 @@
+{
+  "fixture": ".run/gui-evidence/2026-10-27-wall-dimensions/live-3/styles-long.kcad",
+  "sha256": "89b83eeb2140ebc5fd76c6fecbd354c331020f06fdb8d42e147d7c77ce8b2aad",
+  "projectStyles": 26,
+  "firstStyleComponents": 16,
+  "sourcesUnchanged": true,
+  "purpose": "native long inner/outer scroll and cancel only"
+}

@@ -64,6 +64,11 @@ macro_rules! codes {
 }
 
 codes! {
+    // Persistent wall dimension recipes (ADR0695).
+    INVALID_DIMENSION_SET = "invalid_dimension_set", Failed, false, "Ölçü grubu tarifi veya kaynak yüzü geçersiz; desteklenen düz duvar, sıra ve yer seçin.";
+    DIMENSION_SET_NOT_FOUND = "dimension_set_not_found", Failed, false, "Ölçü grubu artık yok; yeniden seçin.";
+    DIMENSION_SET_OWNED = "dimension_set_owned", Failed, false, "Ölçü bir grubun üyesi; grup komutuyla düzenleyin veya önce bağımsız ölçülere dönüştürün.";
+
     // ── Shapes and numbers ──────────────────────────────────────────────
     /// A closed area with fewer than 3 corners (`cad.polygon.create`).
     TOO_FEW_CORNERS = "too_few_corners", Failed, false, "Kapalı alanın en az üç köşesi olmalı.";

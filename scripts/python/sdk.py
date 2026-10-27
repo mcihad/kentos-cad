@@ -837,11 +837,31 @@ class Command:
     plan: str | None
     path: list[str]  # the module path under kentos.cad
     attr: str  # the wrapper's name in its module
+    versions: tuple[int, ...] = ()  # all explicitly supported wire versions
 
 
 def commands_of(catalog: dict) -> list[Command]:
     out = []
-    for c in catalog["commands"]:
+    by_id: dict[str, list[dict]] = {}
+    for entry in catalog["commands"]:
+        by_id.setdefault(entry["id"], []).append(entry)
+    for identity, entries in by_id.items():
+        versions = tuple(sorted(entry["version"] for entry in entries))
+        if len(set(versions)) != len(versions):
+            raise Fail(f"{identity}: duplicate command identity/version {versions}")
+        if len(entries) > 1:
+            # One stable Python attribute per identity. project.changes v1
+            # remains the default; only its dimensionSets payload opts into v2.
+            # Do not silently switch every existing script to the latest version.
+            if identity != "project.changes" or versions != (1, 2):
+                raise Fail(f"{identity}: multiple versions need an explicit wrapper policy: {versions}")
+            c = next(entry for entry in entries if entry["version"] == 1)
+            other = next(entry for entry in entries if entry["version"] == 2)
+            for key in ("input", "output", "plan", "hosts", "requires"):
+                if c.get(key) != other.get(key):
+                    raise Fail(f"{identity}: version 2 changes {key}; one shared typed wrapper is insufficient")
+        else:
+            c = entries[0]
         parts = c["id"].split(".")
         if parts[0] == "cad":
             parts = parts[1:]
@@ -871,6 +891,7 @@ def commands_of(catalog: dict) -> list[Command]:
                 plan=c["plan"]["title"] if "plan" in c else None,
                 path=path,
                 attr=attr,
+                versions=versions,
             )
         )
     return out
@@ -969,6 +990,8 @@ def emit_command(em: Emit, c: Command) -> str:
     lines.append("    __slots__ = ()")
     lines.append(f'    id = "{c.id}"')
     lines.append(f"    version = {c.version}")
+    if len(c.versions) > 1:
+        lines.append(f"    supported_versions = {c.versions!r}")
     lines.append(f"    title = {q(c.title)}")
     lines.append(f'    scope = "{c.scope}"')
     lines.append(f"    input_type = {c.input}")
@@ -976,6 +999,9 @@ def emit_command(em: Emit, c: Command) -> str:
     if c.local:
         lines.append(f"    plan_type = {c.plan}")
     call_doc = f"{head}\n\n{arg_doc}\n\nReturns:\n    {c.output}"
+    if c.id == "project.changes" and len(c.versions) > 1:
+        call_doc += "\n\nUses v1 for ordinary changes; project.dimensionSets (including an empty list) opts into v2."
+
     if c.local:
         call_doc += (
             "\n\nRaises:\n    CommandFailed, NeedsInput, RevisionConflict: the command's refusal;"
@@ -1078,6 +1104,14 @@ def emit_modules(model: Model, commands: list[Command]) -> dict[Path, str]:
             lines.append("from typing import TYPE_CHECKING, Any  # noqa: F401")
             lines.append("")
             rt = ["UNSET", "CommandNote", "Unset", "_opt"]
+            # Nonempty enum-list defaults decode into fresh enum lists in the
+            # wrapper, just as they do in its dataclass's default factory.
+            if any(
+                f.has_default and "_enum_in(" in em.default_literal(f)
+                for c in cmds
+                for f in model.structs[c.input].fields
+            ):
+                rt.append("_enum_in")
             rt.append("LocalCommand" if any(c.local for c in cmds) else "")
             rt.append("Outcome" if any(c.local for c in cmds) else "")
             rt.append("ServerCommand" if any(not c.local for c in cmds) else "")
@@ -1143,11 +1177,9 @@ def referenced_hints(em: Emit, model: Model, cmds: list[Command]) -> set[str]:
 
     for c in cmds:
         for f in model.structs[c.input].fields:
+            # Walk the type, never parse a literal's spelling as an import:
+            # a decimal default such as 7.5 is not a type named "7".
             walk(f.type)
-            if f.has_default:
-                lit = em.default_literal(f)
-                if "." in lit and not is_factory(lit):
-                    names.add(lit.split(".")[0])
     return names
 
 

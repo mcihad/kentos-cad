@@ -203,6 +203,7 @@ impl OpeningTool {
         };
         match openings_create::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, .. } => {
+                crate::wall_dimensions::append_followers(&mut self.drawn, &output.followers, cx);
                 for e in &output.openings {
                     let o = Outline::of(&shape(e), None, 2.0, Tone::Accent);
                     self.drawn.strokes.extend(o.strokes);
@@ -709,6 +710,38 @@ impl OpeningEditTool {
             let o = Outline::of(&shape(e), Some([6.0, 4.0]), 2.5, Tone::Accent);
             out.strokes.extend(o.strokes);
         }
+        if self.action == Action::Move
+            && let (Some(source), Some((wall, at))) = (self.picked, self.hover)
+            && let (Some(uid), Some(to)) = (cx.doc.uid(source), cx.doc.uid(wall))
+        {
+            let input = OpeningsEdit {
+                uids: vec![uid.to_string()],
+                operation: OpeningsOperation::Rehost {
+                    to: to.to_string(),
+                    point: Some(points::wire(at)),
+                },
+                expected_revision: None,
+            };
+            match openings_edit::plan_in(cx.doc, &input) {
+                CommandResult::Completed { output, .. } => {
+                    for entity in &output.openings {
+                        out.strokes
+                            .extend(Outline::of(&shape(entity), None, 2.0, Tone::Accent).strokes);
+                    }
+                    crate::wall_dimensions::append_followers(&mut out, &output.followers, cx);
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    out.tag = Some(Tag {
+                        at,
+                        lines: crate::wall_dimensions::wrapped(&error.message),
+                    });
+                    out.tag_tone = Tone::Danger;
+                }
+                _ => {}
+            }
+        }
         self.drawn = out;
     }
 }
@@ -759,6 +792,7 @@ impl Tool for OpeningEditTool {
         let hit = Self::of_kind(p.raw, cx, want_opening);
         cx.selection.set_hover(hit);
         self.hover = hit.map(|s| (s, p.raw));
+        self.see(cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -893,9 +927,11 @@ impl Tool for OpeningEditTool {
 
     fn preview(&self, _format: &Format) -> Preview {
         Preview {
-            tag: self.hover.map(|(_, at)| Tag {
-                at,
-                lines: vec![self.name().to_owned(), self.step().to_owned()],
+            tag: self.drawn.tag.clone().or_else(|| {
+                self.hover.map(|(_, at)| Tag {
+                    at,
+                    lines: vec![self.name().to_owned(), self.step().to_owned()],
+                })
             }),
             ..self.drawn.clone()
         }

@@ -2697,6 +2697,7 @@ dependencies = [
  "kentos-svg-core",
  "kentos-ui",
  "miniz_oxide 0.9.1",
+ "parking_lot",
  "png 0.18.1",
  "resvg",
  "rfd",

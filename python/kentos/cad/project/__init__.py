@@ -15,6 +15,7 @@ from ..types import (  # noqa: F401
     Bounds,
     CommitResult,
     ConstraintSet,
+    DimensionSet,
     EmptyInput,
     FeatureChange,
     GrantRole,
@@ -122,6 +123,7 @@ class _ProjectChanges(ServerCommand[ProjectChanges, CommitResult]):
     __slots__ = ()
     id = "project.changes"
     version = 1
+    supported_versions = (1, 2)
     title = "Proje değişiklikleri"
     scope = "project"
     input_type = ProjectChanges
@@ -158,6 +160,8 @@ class _ProjectChanges(ServerCommand[ProjectChanges, CommitResult]):
 
         Returns:
             CommitResult
+
+        Uses v1 for ordinary changes; project.dimensionSets (including an empty list) opts into v2.
 
         Raises:
             ServerError: the server's refusal (its code, message and field).
@@ -274,6 +278,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
         arrays: Sequence[AssocArray] | Unset = UNSET,
         constraints: ConstraintSet | Unset = UNSET,
         description: str | None | Unset = UNSET,
+        dimension_sets: Sequence[DimensionSet] | Unset = UNSET,
         home_view: Bounds | None | Unset = UNSET,
         project_type: ProjectType | ProjectTypeName | None | Unset = UNSET,
         sheets: ProjectSheets | None | Unset = UNSET,
@@ -300,6 +305,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             arrays: The project's associative arrays (docs/adr/0300); absent: none.
             constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
             description: The catalog's description (docs/adr/0028); absent: none.
+            dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
             home_view: Unit: length.
             project_type: Absent: the general type (`cad`).
             sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
@@ -330,6 +336,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             arrays=_opt(arrays, lambda x: list(x)),
             constraints=constraints,
             description=description,
+            dimension_sets=_opt(dimension_sets, lambda x: list(x)),
             home_view=home_view,
             project_type=project_type,
             sheets=sheets,

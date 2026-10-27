@@ -93,6 +93,8 @@ pub fn plan_with(
                 stretched: Vec::new(),
                 followed: Vec::new(),
                 dependents: Vec::new(),
+                added: Vec::new(),
+                removed: Vec::new(),
                 revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
@@ -102,12 +104,14 @@ pub fn plan_with(
         CommandResult::Completed { output, warnings } => {
             let mut stretched = output.changed;
             let mut followed = stretched.split_off(checked.stretched.min(stretched.len()));
-            let dependents = carried(doc, scratch, &mut stretched, &mut followed);
+            let (dependents, added, removed) = carried(doc, scratch, &mut stretched, &mut followed);
             CommandResult::Completed {
                 output: EntitiesStretchPlan {
                     stretched,
                     followed,
                     dependents,
+                    added,
+                    removed,
                     revision: output.revision,
                 },
                 warnings: [checked.warnings, warnings].concat(),
@@ -159,6 +163,7 @@ fn write_execute(
                 let mut stretched = output.changed;
                 let mut followed = stretched.split_off(checked.stretched.min(stretched.len()));
                 carried(cx.doc, &mut None, &mut stretched, &mut followed)
+                    .0
                     .iter()
                     .filter_map(|e| cx.doc.uid(Slot(e.base().id)).map(|u| u.to_string()))
                     .collect()
@@ -209,15 +214,22 @@ fn carried(
     scratch: &mut Option<Document>,
     stretched: &mut [Entity],
     followed: &mut [Entity],
-) -> Vec<Entity> {
+) -> (Vec<Entity>, Vec<Entity>, Vec<String>) {
     let changes: Vec<(Slot, Entity)> = stretched
         .iter()
         .chain(followed.iter())
         .map(|e| (Slot(e.base().id), e.clone()))
         .collect();
-    let after = doc.followers_with(scratch, &changes);
+    let delta = doc.preview_followers_with(scratch, &changes, &[], &[]);
+    let added = delta.added.into_iter().map(|(_, e)| e).collect();
+    let removed = delta
+        .removed
+        .into_iter()
+        .filter_map(|s| doc.uid(s).map(|u| u.to_string()))
+        .collect();
+    let after = delta.updated;
     if after.is_empty() {
-        return Vec::new();
+        return (Vec::new(), added, removed);
     }
     let mut at: HashMap<u32, Entity> = after.into_iter().map(|(s, e)| (s.0, e)).collect();
     for e in stretched.iter_mut().chain(followed.iter_mut()) {
@@ -227,7 +239,7 @@ fn carried(
     }
     let mut rest: Vec<Entity> = at.into_values().collect();
     rest.sort_by_key(|e| doc.place(Slot(e.base().id)));
-    rest
+    (rest, added, removed)
 }
 
 /// What of an object follows the objects it is tied to (docs/adr/0297 §2).

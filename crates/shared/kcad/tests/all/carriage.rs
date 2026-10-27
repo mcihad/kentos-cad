@@ -277,6 +277,7 @@ fn every_part_of_the_snapshot_is_carried_alone() {
     // The contract's own list: a field added to the snapshot is named here before it is carried.
     let _ = |s: DocumentSnapshotV2| {
         let DocumentSnapshotV2 {
+            dimension_sets: _,
             format: _,
             version: _,
             name: _,

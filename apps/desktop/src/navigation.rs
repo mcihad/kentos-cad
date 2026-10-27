@@ -40,6 +40,31 @@ fn clock() -> Duration {
 }
 
 impl App {
+    /// Camera detail is a model-view choice. Paper maps keep their own view and scale.
+    pub(crate) fn follow_wall_view(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = !self.sheet_tab
+            && self.sheets.model_scope().is_none()
+            && doc.model.settings().workspace == Some(kentos_commands::Workspace::Cad);
+        if model
+            && doc
+                .model
+                .settings()
+                .arch
+                .as_ref()
+                .and_then(|arch| arch.detail)
+                .is_none()
+            && self.viewport.moving()
+            && self.spatial.has_screen_wall_scale()
+        {
+            return;
+        }
+        let scale = model.then(|| self.viewport.camera.screen_scale());
+        self.spatial.set_screen_wall_scale(&doc.model, scale);
+    }
+
     pub(crate) fn navigation_command(&mut self, id: &'static str) -> Task<Message> {
         match id {
             "view.previous" => self.view_back(),
@@ -160,6 +185,50 @@ mod tests {
     use crate::files_testing::{app_with_drawing, drawing, last_said};
     use crate::layering::Event as LayerEvent;
     use crate::viewport::Event;
+
+    #[test]
+    fn model_wall_detail_follows_settled_zoom_and_preserves_project_settings() {
+        use kentos_geometry_core::geom::wall::Detail;
+        for plot in [100., 200.] {
+            let mut app = app_with_drawing();
+            crate::files_testing::make_cad(&mut app);
+            let model = &mut app.document.as_mut().unwrap().model;
+            let mut settings = model.settings().clone();
+            settings.plot_scale = plot;
+            settings.arch = None;
+            model.set_settings(settings);
+            let before = model.to_snapshot_v2();
+            app.viewport.camera.zoom_to_screen_scale(200.);
+            app.follow_wall_view();
+            assert_eq!(app.spatial.store().wall_view().detail, Detail::Schematic);
+            let _ = app.update(Message::Viewport(Event::Zoomed {
+                factor: 10.,
+                at: Point::new(0., 0.),
+            }));
+            assert_eq!(
+                app.spatial.store().wall_view().detail,
+                Detail::Schematic,
+                "wheel motion holds the current detail"
+            );
+            let _ = app.update(Message::Viewport(Event::Settled));
+            assert_eq!(app.spatial.store().wall_view().detail, Detail::Detailed);
+            assert_eq!(app.spatial.store().wall_view().scale, plot);
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before
+            );
+            app.sheet_tab = true;
+            app.follow_wall_view();
+            assert_eq!(
+                app.spatial.store().wall_view().detail,
+                Detail::Schematic,
+                "paper mode does not use camera detail"
+            );
+            app.sheet_tab = false;
+            app.follow_wall_view();
+            assert_eq!(app.spatial.store().wall_view().detail, Detail::Detailed);
+        }
+    }
 
     fn run(app: &mut App, id: &'static str) {
         let _ = app.update(Message::Run(id));

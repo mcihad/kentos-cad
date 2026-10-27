@@ -414,6 +414,8 @@ impl App {
 
 mod cloud;
 mod keys;
+#[cfg(test)]
+mod layout_tests;
 mod panes;
 #[cfg(test)]
 mod tests;

@@ -1,0 +1,7 @@
+{
+  "case": "125 menu/schedule/keyboard/settings navigation",
+  "modelUnchanged": true,
+  "reader": "tools/kcad/kcad.py",
+  "sha256": "a7896bd06e85d5954bb23c1d732fe61e5b6288ab051a7b2eea3f7d02f346a094",
+  "entities": 3
+}

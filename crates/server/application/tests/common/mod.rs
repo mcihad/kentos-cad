@@ -55,6 +55,7 @@ pub async fn personal(db: &TestDb, actor: &Actor) -> Access {
 pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         name: name.into(),
         settings: s.settings,

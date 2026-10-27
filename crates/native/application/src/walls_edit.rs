@@ -720,8 +720,16 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
     match check(cx.doc, input) {
         Ok(work) => {
             let warnings = warnings(cx.doc, &work);
+            let updates: Vec<_> = work
+                .updates
+                .iter()
+                .map(|(s, w)| (*s, Entity::Wall(w.clone())))
+                .collect();
+            let adds: Vec<_> = work.added.iter().cloned().map(Entity::Wall).collect();
+            let followers = crate::dimension_sets::derived(cx.doc, &updates, &adds, &work.removed);
             CommandResult::Completed {
                 output: WallsEdited {
+                    followers,
                     walls: work
                         .updates
                         .iter()
@@ -807,6 +815,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
     let added = slots.iter().filter_map(|s| doc.get(*s).cloned()).collect();
     CommandResult::Completed {
         output: WallsEdited {
+            followers: Default::default(),
             walls: entities,
             added,
             removed,

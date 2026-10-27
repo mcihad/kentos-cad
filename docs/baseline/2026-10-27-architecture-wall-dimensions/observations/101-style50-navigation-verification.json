@@ -1,0 +1,8 @@
+{
+  "case": "1:50 light18 narrow fit-close-fit-save",
+  "modelUnchanged": true,
+  "independentReader": "tools/kcad/kcad.py",
+  "sha256": "f05fcf6b1f1fcb2a4fd07a442d345dbe50b59640ce4c5590d69b887d2c8ece08",
+  "entities": 3,
+  "plotScale": 50.0
+}

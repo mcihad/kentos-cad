@@ -1698,6 +1698,7 @@ impl App {
         self.follow_ucs();
         // The sheets follow the project and the drawing (sheets.rs).
         self.follow_sheets();
+        self.follow_wall_view();
         self.follow_selection_layers();
         // Follow selection before rebuilding keyboard targets for the visible tab.
         self.follow_selection_tab();

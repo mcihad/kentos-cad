@@ -618,7 +618,7 @@ impl App {
         let can_save = problem.is_none() && self.wall_styles_changed();
         let window = overlay::modal(
             Frame_::new(TITLE)
-                .push(body)
+                .scroll(body)
                 .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
                 .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
                 .width(860.0),
@@ -837,6 +837,10 @@ impl App {
             .into()
     }
 }
+
+#[cfg(test)]
+#[path = "wall_styles_layout_tests.rs"]
+mod layout_tests;
 
 /// A row's small button: its icon, enabled or not.
 fn small(glyph: &'static str, enabled: bool, on: Message) -> Element<'static, Message> {

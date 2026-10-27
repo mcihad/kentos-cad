@@ -105,6 +105,7 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
     // A CBS project: one without a type would be asked it on opening (docs/adr/0165 §1).
     s.settings.workspace = Some(kentos_commands::Workspace::Gis);
     ProjectInfo {
+        dimension_sets: Vec::new(),
         constraints: Default::default(),
         blocks: Vec::new(),
         id: PROJECT.into(),

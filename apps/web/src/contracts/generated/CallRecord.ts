@@ -5,6 +5,7 @@ import type { CallKind } from "./CallKind";
 import type { CallStatus } from "./CallStatus";
 import type { CommandWarning } from "./CommandWarning";
 import type { FileEffect } from "./FileEffect";
+import type { NodeChanges } from "./NodeChanges";
 import type { ProjectPart } from "./ProjectPart";
 
 /**
@@ -41,7 +42,11 @@ seed?: bigint,
  */
 created: Array<string>, changed: Array<string>, removed: Array<string>, 
 /**
- * Whether a list was cut at [`JOURNAL_IDS`].
+ * Metadata identities are separate from object ids so replay can map create → edit.
+ */
+dimensionSets?: NodeChanges, 
+/**
+ * Whether an object list was cut at [`JOURNAL_IDS`].
  */
 truncated?: boolean, 
 /**

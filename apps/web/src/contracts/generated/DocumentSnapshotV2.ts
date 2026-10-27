@@ -3,6 +3,7 @@ import type { AssocArray } from "./AssocArray";
 import type { BlockDefinition } from "./BlockDefinition";
 import type { Bounds } from "./Bounds";
 import type { ConstraintSet } from "./ConstraintSet";
+import type { DimensionSet } from "./DimensionSet";
 import type { Entity } from "./Entity";
 import type { EntityId } from "./EntityId";
 import type { LayerNode } from "./LayerNode";
@@ -58,6 +59,11 @@ sheets?: ProjectSheets,
  * The associative arrays (docs/adr/0300), in the order they were made; none when the drawing has none.
  */
 arrays?: Array<AssocArray>, 
+/**
+ * Persistent architectural dimension recipes and their ordinary member identities.
+ * Absent/empty keeps the previous document encoding unchanged.
+ */
+dimensionSets?: Array<DimensionSet>, 
 /**
  * The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
  * has none.

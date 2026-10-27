@@ -81,6 +81,7 @@ fn document(compact: &Value) -> DocumentSnapshotV2 {
         })
         .collect();
     DocumentSnapshotV2 {
+        dimension_sets: Vec::new(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name: compact["name"].as_str().expect("a name").to_owned(),

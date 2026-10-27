@@ -77,6 +77,12 @@ impl Document {
         stamp_of(&serde_json::to_value(&*self.constraints).unwrap_or(Value::Null))
     }
 
+    /// The complete recipe state, including suppressed segments and manual row placement.
+    pub fn dimension_sets_stamp(&self) -> String {
+        let sets: Vec<_> = self.dimension_sets.iter().map(|s| &**s).collect();
+        stamp_of(&serde_json::to_value(sets).unwrap_or(Value::Null))
+    }
+
     /// The sheet book's stamp.
     pub fn sheets_stamp(&self) -> String {
         let value = match self.sheets.as_deref() {

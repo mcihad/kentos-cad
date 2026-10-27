@@ -54,16 +54,21 @@ pub fn plan(
     input: &EntitiesDelete,
 ) -> CommandResult<EntitiesDeletePlan> {
     match check(cx.doc, input) {
-        Ok(checked) => CommandResult::Completed {
-            output: EntitiesDeletePlan {
-                removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
-                locked: checked.locked,
-                followed: checked.followed,
-                attachments: checked.attachments,
-                revision: cx.doc.revision().to_string(),
-            },
-            warnings: checked.warnings,
-        },
+        Ok(checked) => {
+            let slots: Vec<_> = checked.removed.iter().map(|(s, _)| *s).collect();
+            let followers = crate::dimension_sets::derived(cx.doc, &[], &[], &slots);
+            CommandResult::Completed {
+                output: EntitiesDeletePlan {
+                    followers,
+                    removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
+                    locked: checked.locked,
+                    followed: checked.followed,
+                    attachments: checked.attachments,
+                    revision: cx.doc.revision().to_string(),
+                },
+                warnings: checked.warnings,
+            }
+        }
         Err(stop) => stop.into(),
     }
 }

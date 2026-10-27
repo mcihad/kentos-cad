@@ -18,6 +18,131 @@ use crate::selecting::tests::{click, objects};
 const E: f64 = 487000.0;
 const N: f64 = 4420000.0;
 
+fn wall_dimension_set() -> (App, Slot, Slot) {
+    use kentos_commands::{CallOp, DrawingUnit};
+    use kentos_native_application::{ExecutionContext, registry};
+    use serde_json::json;
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let model = &mut app.document.as_mut().unwrap().model;
+    let mut settings = model.settings().clone();
+    settings.drawing_unit = Some(DrawingUnit::Mm);
+    settings.srid = 0;
+    model.set_settings(settings);
+    let wall = Slot(add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"wall","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}],"width":0.3,"offset":1.2
+        }))
+        .unwrap(),
+    ));
+    let model = &mut app.document.as_mut().unwrap().model;
+    let uid = model.uid(wall).unwrap().to_string();
+    let result=registry::run(&mut ExecutionContext::new(model),"cad.dimensionsets.create",CallOp::Execute,json!({
+        "wall":uid,"layerId":"parsel","at":{"x":10.,"y":2.4},"rows":["openings","overall"],"openings":"centers","gapMm":7.5
+    })).unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    let member = model.dimension_sets()[0].members[0]
+        .uid
+        .to_text()
+        .parse()
+        .unwrap();
+    let member = model.slot_of(member).unwrap();
+    app.selection.set([member]);
+    (app, wall, member)
+}
+
+#[test]
+fn wall_dimension_inspector_uses_face_offset_moves_one_row_and_preserves_text() {
+    let (mut app, _, member) = wall_dimension_set();
+    let shown: Vec<_> = rows(&app).into_iter().flat_map(|(_, rows)| rows).collect();
+    assert!(shown.iter().any(|row| row.label == "Ölçü dizisi"));
+    assert!(shown.iter().any(|row| row.label == "Sıra uzaklığı"));
+    assert!(
+        shown
+            .iter()
+            .any(|row| row.label == "Sıra aralığı" && row.unit.as_deref() == Some("mm · kağıtta"))
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionText(member), "Özel <>".into()),
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionOffset(member), "40 cm".into()),
+    );
+    let model = &app.document.as_ref().unwrap().model;
+    let (set, index) = model
+        .dimension_set_of_item(model.uid(member).unwrap())
+        .unwrap();
+    assert!(
+        (model
+            .dimension_set_row_offset(set, set.members[index].row)
+            .unwrap()
+            - 0.4)
+            .abs()
+            < 1e-10
+    );
+    assert_eq!(
+        dimension_of(&app, member.0).text.as_deref(),
+        Some("Özel <>")
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionSetGap(member), "12 mm".into()),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.dimension_sets()[0].gap_mm,
+        12.
+    );
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionSetGap(member), "12 cm".into()),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+}
+
+#[test]
+fn wall_dimension_set_selection_is_read_only_and_release_removes_recipe_ownership() {
+    let (mut app, wall, member) = wall_dimension_set();
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::DimensionSet(member, "select"));
+    assert_eq!(app.selection.len(), 2);
+    assert!(
+        rows(&app)
+            .iter()
+            .any(|(section, _)| section == "Duvar ölçüleri")
+    );
+    event(&mut app, Event::DimensionSet(member, "row"));
+    assert_eq!(app.selection.ids(), [member]);
+    event(&mut app, Event::DimensionSet(member, "source"));
+    assert_eq!(app.selection.ids(), [wall]);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    app.selection.set([member]);
+    event(&mut app, Event::DimensionFree(vec![member]));
+    let model = &app.document.as_ref().unwrap().model;
+    assert!(model.dimension_sets().is_empty());
+    assert!(matches!(model.get(member), Some(Entity::Dimension(_))));
+    assert!(
+        model
+            .dimension_set_of_item(model.uid(member).unwrap())
+            .is_none()
+    );
+    assert!(undo_label(&mut app).is_some());
+    assert_eq!(
+        app.document.as_ref().unwrap().model.dimension_sets().len(),
+        1
+    );
+}
+
 fn rows(app: &App) -> Vec<(String, Vec<Row>)> {
     let doc = app.document.as_ref().expect("open");
     app.properties_panel(doc)

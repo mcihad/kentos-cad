@@ -616,6 +616,9 @@ pub fn text_policy(transform: &Transform) -> TextPolicy {
 
 fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Dönüştürülecek nesne verilmedi.")?;
+    if input.copy.unwrap_or(false) {
+        crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
+    }
     let how = check_transform(&input.transform)?;
     // A mirror's texts (docs/adr/0292): readable unless asked otherwise.
     let policy = text_policy(&input.transform);

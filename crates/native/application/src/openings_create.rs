@@ -39,16 +39,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &OpeningsCreate) -> CommandResult<
 /// [`plan`] on a document: what the door, window and opening tools draw as their preview.
 pub fn plan_in(doc: &Document, input: &OpeningsCreate) -> CommandResult<OpeningsPlan> {
     match check(doc, input) {
-        Ok((warnings, made)) => CommandResult::Completed {
-            output: OpeningsPlan {
-                openings: made
-                    .into_iter()
-                    .map(|(f, a)| openings::entity(base(input, a), f))
-                    .collect(),
-                revision: doc.revision().to_string(),
-            },
-            warnings,
-        },
+        Ok((warnings, made)) => {
+            let openings: Vec<Entity> = made
+                .into_iter()
+                .map(|(f, a)| openings::entity(base(input, a), f))
+                .collect();
+            let followers = crate::dimension_sets::derived(doc, &[], &openings, &[]);
+            CommandResult::Completed {
+                output: OpeningsPlan {
+                    openings,
+                    followers,
+                    revision: doc.revision().to_string(),
+                },
+                warnings,
+            }
+        }
         Err(stop) => stop.into(),
     }
 }

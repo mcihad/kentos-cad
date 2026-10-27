@@ -338,6 +338,11 @@ pub fn project_create(doc: &Document, name: &str, storage: ProjectStorage) -> Pr
         styles: doc.styles().clone(),
         sheets: doc.sheets().cloned(),
         arrays: doc.arrays().iter().map(|a| (**a).clone()).collect(),
+        dimension_sets: doc
+            .dimension_sets()
+            .iter()
+            .map(|set| (**set).clone())
+            .collect(),
         constraints: doc.constraints().clone(),
         description: None,
         project_type: None,
@@ -379,6 +384,13 @@ pub fn upload_new_watched(
         // A file the server would never take creates no project.
         checked_size(bytes.len())?;
         let storage = create.storage.unwrap_or_default();
+        let mut create = create;
+        if !create.dimension_sets.is_empty() {
+            cloud.require_dimension_sets().await?;
+            // Content import installs recipes and member features in one transaction.
+            // The empty shell must not advertise recipes whose features are not there yet.
+            create.dimension_sets.clear();
+        }
         let made = retrying(|| cloud.create_project(tenant, create.clone(), key)).await?;
         let project = Uuid::parse_str(&made.id).map_err(|_| {
             ApiFailure::unreadable(

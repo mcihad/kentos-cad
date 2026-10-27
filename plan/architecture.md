@@ -204,6 +204,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [ ] Diğer giriş bileşenlerinin bütün araç/alan odağı klavye matrisi ve
   §10'daki tam boyut/font/tema kabulü. Tab sırası bu dilimde yeniden
   tasarlanmadı; kusurun ilk hangi commit'te başladığı araştırılmadı.
+- [ ] Duvar stili kaydı tabloyu ve izleyen duvar/açıklık/etiket/çizelge/ölçüleri
+  tek geri alınabilir adımda tutmalı. 27 Ekim gerçek GUI 130'da ad kaydı doğru,
+  131–135'te yalnız ad değişiminin geri alınması başarısızdır; bu mevcut kusur
+  menü/form kaydırma kabulünden ayrı açık tutulur. Stil kimliği bazında geri
+  uygulama ilişkisiz sonradan edinilmiş stilleri korumalı; daha yeni yerel/uzak
+  aynı stil veya ad çakışmasını ezmemeli. Ret/iptal yarım kayıt veya geçmiş
+  kaybı bırakmamalı; Python/MCP ve gerçek tek Undo/Redo tam modelle sınanmalı.
+  [AutoCAD transaction rollback](https://help.autodesk.com/cloudhelp/2026/ENU/OARX-DevGuide-Managed/files/GUID-C3DE4301-EAC3-4745-A434-9F28EE87AB73.htm)
+  ve [Qt komut grupları](https://doc.qt.io/qt-6/qundostack.html) tek işlem ve
+  geri alma grubu için karşılaştırma dayanağıdır; KentOS kimlik/çatışma
+  politikası kendi tasarım kararıdır. [Tanısal kayıt](../docs/baseline/2026-10-27-architecture-wall-dimensions/README.md).
 
 ### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 
@@ -695,6 +706,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [~]
 
+- [~] İlk kalıcı sıra dilimi: doğrusal tek duvarın sol/sağ yüzü, açıklık
+  uçları/merkezleri ve toplam; görünür ayarlar, tek onay, kalıcı üyelik,
+  sıra/metin yerleşimi, Python/MCP, KCAD ve atomik bulut eşitleme.
+  [ADR0695](../docs/adr/0695-associative-wall-dimension-sets.md) uygulanıyor;
+  otomatik test ve gerçek arayüz kabulü tamamlanmadan bitmiş sayılmaz.
+  Kapalı/çok parçalı cephe, mahal/çekirdek ve çoklu pafta kapsamı açıktır.
+- [~] Kullanıcının bildirdiği duvar stili görünürlüğü regresyonu:
+  1:100 otomatik ayrıntıda yaklaşınca bileşenlerin gelmemesi ve yoğun
+  GPU taramanın kaybolması [ADR0696](../docs/adr/0696-model-wall-detail-and-dense-hairlines.md)
+  ile ele alınıyor. Model gösterimi/pafta ölçeği ayrılır; gerçek GUI,
+  GPU ve pafta/PDF karşılaştırması tamamlanmadan kabul edilmiş sayılmaz.
 - [x] İlk altyapı: açıklığın gerçek jamb köşeleri/başlangıç/merkez/bitiş
   noktalarına mevcut ilişkili ölçüyü bağla; kapı eni/konumu/host değişimi,
   kopuk bağ ve tek undo/redo. [ADR0694](../docs/adr/0694-opening-dimension-places.md)

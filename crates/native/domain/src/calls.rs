@@ -214,6 +214,7 @@ fn bare(kind: CallKind, label: &str, base: u64, revision: u64) -> CallRecord {
         created: Vec::new(),
         changed: Vec::new(),
         removed: Vec::new(),
+        dimension_sets: Default::default(),
         truncated: false,
         relax_constraints: false,
         warnings: Vec::new(),
@@ -233,6 +234,7 @@ fn part_label(part: ProjectPart) -> &'static str {
         ProjectPart::Sheets => "Pafta kitabı",
         ProjectPart::LayerFlags => "Katmanlar",
         ProjectPart::Constraints => "Kısıtlar",
+        ProjectPart::DimensionSets => "Otomatik ölçüler",
     }
 }
 
@@ -254,6 +256,37 @@ impl Document {
                 row.created = created;
                 row.changed = changed;
                 row.removed = removed;
+                if last.ops.iter().any(|op| {
+                    matches!(
+                        op,
+                        Op::DimensionSetAdd { .. }
+                            | Op::DimensionSetRemove { .. }
+                            | Op::DimensionSetUpdate { .. }
+                    )
+                }) {
+                    let report = crate::step::report_of(&last.ops);
+                    row.dimension_sets = kentos_contracts::NodeChanges {
+                        added: report
+                            .dimension_sets
+                            .added
+                            .iter()
+                            .map(|id| id.to_text())
+                            .collect(),
+                        changed: report
+                            .dimension_sets
+                            .changed
+                            .iter()
+                            .map(|id| id.to_text())
+                            .collect(),
+                        removed: report
+                            .dimension_sets
+                            .removed
+                            .iter()
+                            .map(|id| id.to_text())
+                            .collect(),
+                    };
+                    row.parts.push(ProjectPart::DimensionSets);
+                }
                 row.truncated = truncated;
                 row.step = step;
                 self.calls.given += 1;

@@ -2,6 +2,7 @@
 import type { AssocArray } from "./AssocArray";
 import type { Bounds } from "./Bounds";
 import type { ConstraintSet } from "./ConstraintSet";
+import type { DimensionSet } from "./DimensionSet";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectSettings } from "./ProjectSettings";
 import type { ProjectSheets } from "./ProjectSheets";
@@ -22,6 +23,10 @@ sheets?: ProjectSheets,
  * The project's associative arrays (docs/adr/0300); absent: none.
  */
 arrays?: Array<AssocArray>, 
+/**
+ * Persistent architectural dimension recipes; older responses without this field have none.
+ */
+dimensionSets?: Array<DimensionSet>, 
 /**
  * The project's constraints and parameters (docs/adr/0336 §3); absent: none.
  */

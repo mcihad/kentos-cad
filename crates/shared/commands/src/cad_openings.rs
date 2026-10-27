@@ -194,6 +194,14 @@ pub struct OpeningsCreated {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsPlan {
+    /// Derived source-following preview changes; absent when none. New identities are provisional.
+    #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
+    )]
+    pub followers: crate::DerivedEntitiesPlan,
+
     /// The openings as they would be stored, their `id` 0.
     pub openings: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -464,6 +472,14 @@ pub struct OpeningsEdit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct OpeningsEdited {
+    /// Derived source-following preview changes; absent when none. New identities are provisional.
+    #[serde(default, skip_serializing_if = "crate::DerivedEntitiesPlan::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<crate::DerivedEntitiesPlan>", optional)
+    )]
+    pub followers: crate::DerivedEntitiesPlan,
+
     /// The openings as written, in their order.
     pub openings: Vec<Entity>,
     /// The new openings (Kopyala).

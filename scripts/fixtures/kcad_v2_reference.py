@@ -2176,6 +2176,7 @@ def document(d):
             "projectId": (lambda u: blob(uid_bytes(u)), False),
             "sheets": (sheets, False),
             "arrays": (assoc_arrays, False),
+            "dimensionSets": (opaque, False),
             # Schema 73 (docs/adr/0334): the constraints and the parameter table, as their JSON.
             "constraints": (opaque, False),
             "requests": (requests, False),
@@ -2188,10 +2189,10 @@ def document(d):
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
     assert d.get("constraints", {None: None}), "boş kısıt kümesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d)))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, bool(d.get("dimensionSets")))))
 
 
-def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False, has_constraints=False):
+def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False, has_constraints=False, has_dimension_sets=False):
     """The oldest schema that holds the drawing: 53 with associative arrays (docs/adr/0300), 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
@@ -2223,6 +2224,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if has_dimension_sets:
+        return 113
     if any((settings or {}).get("arch", {}).get(key) for key in ("spaceNames", "spaceUsages", "spaceNumberPrefixes")):
         return 112
     if any("spaceSeparator" in e for e in entities) or any("spaceSeparator" in e for b in (blocks or []) for e in b["entities"]):
@@ -2845,7 +2848,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-113.kcad"] = container(root(cmap(parts), version=uint(113)))
+    files["schema-version-114.kcad"] = container(root(cmap(parts), version=uint(114)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4841,6 +4844,20 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 113: source selection, layout, members and suppression all persist.
+    dimension_sets = load("dimension-sets.json")
+    dp = document(dimension_sets)
+    out["dimension-sets.kcad"] = container(dp)
+    out["broken/dimension-sets-in-schema-112.kcad"] = container(dp.replace(b"\x67version\x18\x71", b"\x67version\x18\x70"))
+    def dim_bad(name, change):
+        d = copy.deepcopy(dimension_sets)
+        change(d["dimensionSets"])
+        out["broken/dimension-sets-" + name + ".kcad"] = container(document(d))
+    dim_bad("duplicate", lambda sets: sets.append(copy.deepcopy(sets[0])))
+    dim_bad("gap-zero", lambda sets: sets[0].update(gapMm=0.0))
+    dim_bad("member-twice", lambda sets: sets[0]["members"].append(copy.deepcopy(sets[0]["members"][0])))
+    dim_bad("source-path", lambda sets: sets[0]["members"][0]["a"].update(path=[0]))
+    dim_bad("unknown", lambda sets: sets[0].update(unknown=True))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

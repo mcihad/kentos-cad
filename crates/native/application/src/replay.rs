@@ -145,6 +145,14 @@ fn run_row(
             for (old, new) in row.created.iter().zip(&summary.added) {
                 mapped.insert(old.clone(), new.clone());
             }
+            for (old, new) in row
+                .dimension_sets
+                .added
+                .iter()
+                .zip(&summary.dimension_sets.added)
+            {
+                mapped.insert(old.clone(), new.clone());
+            }
             let mut differences = Vec::new();
             for (what, then, now) in [
                 ("yapılan", row.created.len(), summary.added.len()),
@@ -153,6 +161,27 @@ fn run_row(
             ] {
                 if then != now && !row.truncated {
                     differences.push(format!("{what} nesne {then} yerine {now}"));
+                }
+            }
+            for (what, then, now) in [
+                (
+                    "yapılan otomatik ölçü grubu",
+                    row.dimension_sets.added.len(),
+                    summary.dimension_sets.added.len(),
+                ),
+                (
+                    "değişen otomatik ölçü grubu",
+                    row.dimension_sets.changed.len(),
+                    summary.dimension_sets.changed.len(),
+                ),
+                (
+                    "silinen otomatik ölçü grubu",
+                    row.dimension_sets.removed.len(),
+                    summary.dimension_sets.removed.len(),
+                ),
+            ] {
+                if then != now {
+                    differences.push(format!("{what} {then} yerine {now}"));
                 }
             }
             if codes_of(&row.warnings) != codes_of(&warnings) {

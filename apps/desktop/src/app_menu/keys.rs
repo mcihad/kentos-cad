@@ -55,7 +55,10 @@ impl App {
                                 Target::Pane(p) => p,
                                 Target::Command(_) => Pane::Overview,
                             };
-                            return self.show_pane(pane, Some(Focus::Nav(next)));
+                            return Task::batch([
+                                self.show_pane(pane, Some(Focus::Nav(next))),
+                                kentos_ui::widget::app_menu::reveal_navigation(next),
+                            ]);
                         }
                     }
                 }
@@ -77,6 +80,9 @@ impl App {
                         .position(|n| n.target == Target::Pane(pane))
                         .or(nav.first().copied());
                     s.focus = back.map(Focus::Nav);
+                    if let Some(back) = back {
+                        return kentos_ui::widget::app_menu::reveal_navigation(back);
+                    }
                 }
             }
             Some(Named::Enter | Named::Space) => match focus {

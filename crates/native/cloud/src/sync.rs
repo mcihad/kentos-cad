@@ -9,8 +9,9 @@
 //! - **What may differ** is followed through the document's change journal
 //!   (`Document::changes_since`), slot by slot; the persistent id of a slot
 //!   is remembered, so a removed object is named too.
-//! - **One command at a time** (`project.changes` v1, at most [`BATCH`]
-//!   objects and the metadata): [`ProjectSync::next`] gives it, and the same
+//! - **One command at a time** (`project.changes` v1, ordinarily at most [`BATCH`]
+//!   objects and the metadata; connected architectural dimension changes use v2
+//!   and stay atomic up to the server's 5000-object limit): [`ProjectSync::next`] gives it, and the same
 //!   one, same idempotency key, again until it is answered, so a lost answer
 //!   never commits it twice.
 //! - **Refusals** as on the web: a conflict stops sending until the user
@@ -29,8 +30,8 @@ use std::time::Duration;
 
 use kentos_contracts::{
     BlockId, BlockRecord, CommandEnvelope, CommitResult, ConflictReason, Entity, FeatureChange,
-    FeatureRecord, LayerNode, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges,
-    ProjectPatch, ProjectSettings, ProjectSheets, ProjectStyles,
+    FeatureRecord, LayerNode, PROJECT_CHANGES, ProjectChanges, ProjectPatch, ProjectSettings,
+    ProjectSheets, ProjectStyles,
 };
 use kentos_domain::{ChangeMark, Changes, Document, Slot};
 use std::sync::Arc;
@@ -171,6 +172,7 @@ struct Meta {
     sheets: Option<Arc<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300 §5), shared with the drawing's.
     arrays: Vec<Arc<kentos_contracts::AssocArray>>,
+    dimension_sets: Vec<Arc<kentos_contracts::DimensionSet>>,
     /// The constraints and parameters (docs/adr/0336 §3).
     constraints: kentos_contracts::ConstraintSet,
 }
@@ -184,6 +186,7 @@ impl Meta {
             styles: doc.styles().clone(),
             sheets: doc.sheets_shared().cloned(),
             arrays: doc.arrays().to_vec(),
+            dimension_sets: doc.dimension_sets().to_vec(),
             constraints: doc.constraints().clone(),
         }
     }
@@ -210,6 +213,14 @@ impl Meta {
         }
         if doc.arrays() != self.arrays.as_slice() {
             patch.arrays = Some(doc.arrays().iter().map(|a| (**a).clone()).collect());
+        }
+        if doc.dimension_sets() != self.dimension_sets.as_slice() {
+            patch.dimension_sets = Some(
+                doc.dimension_sets()
+                    .iter()
+                    .map(|set| (**set).clone())
+                    .collect(),
+            );
         }
         if *doc.constraints() != self.constraints {
             patch.constraints = Some(doc.constraints().clone());
@@ -555,11 +566,70 @@ impl ProjectSync {
             return Some(f.envelope.clone());
         }
         self.observe(doc);
-        let full = if self.sends_meta() {
+        let mut full = if self.sends_meta() {
             self.meta_base.patch(doc)
         } else {
             None
         };
+        // Recipes and their source/member edits form one transaction. Prioritise
+        // that connected work before unrelated edits rather than splitting at BATCH.
+        let mut dimension_ids = BTreeSet::new();
+        for set in self
+            .meta_base
+            .dimension_sets
+            .iter()
+            .chain(doc.dimension_sets())
+        {
+            dimension_ids.insert(Uuid::from_bytes(set.wall.0));
+            for member in &set.members {
+                dimension_ids.insert(Uuid::from_bytes(member.uid.0));
+                dimension_ids.insert(Uuid::from_bytes(member.a.uid.0));
+                dimension_ids.insert(Uuid::from_bytes(member.b.uid.0));
+            }
+            for segment in &set.suppressed {
+                dimension_ids.insert(Uuid::from_bytes(segment.a.uid.0));
+                dimension_ids.insert(Uuid::from_bytes(segment.b.uid.0));
+            }
+        }
+        let dimension_walls: HashSet<_> = self
+            .meta_base
+            .dimension_sets
+            .iter()
+            .chain(doc.dimension_sets())
+            .map(|s| s.wall.to_text())
+            .collect();
+        for (id, tracked) in &self.known {
+            if matches!(&tracked.entity, Entity::Opening(o) if dimension_walls.contains(&o.opening.host))
+            {
+                dimension_ids.insert(*id);
+            }
+        }
+        for entity in doc.entities() {
+            if matches!(entity, Entity::Opening(o) if dimension_walls.contains(&o.opening.host))
+                && let Some(id) = doc.uid(Slot(entity.base().id))
+            {
+                dimension_ids.insert(id);
+            }
+        }
+        let atomic_dimensions = full.as_ref().is_some_and(|p| p.dimension_sets.is_some())
+            || self
+                .dirty
+                .iter()
+                .any(|id| dimension_ids.contains(id) && self.plan(doc, *id).is_some());
+        if atomic_dimensions {
+            if !self.can_edit_meta {
+                self.state = SaveState::Error;
+                self.error = Some("Mimari ölçü dizileri üyeleriyle birlikte kaydedilmelidir; proje düzenleme yetkisi gerekli.".into());
+                return None;
+            }
+            full.get_or_insert_with(ProjectPatch::default)
+                .dimension_sets = Some(
+                doc.dimension_sets()
+                    .iter()
+                    .map(|set| (**set).clone())
+                    .collect(),
+            );
+        }
         // A tree without a removed layer is refused while the server holds an
         // object on that layer that the same command neither deletes nor
         // moves off: those changes go first and the tree with the last of
@@ -572,16 +642,47 @@ impl ProjectSync {
         // Block definitions: made and changed ones first, inner before outer, in
         // commands of at most BATCH changes; removed ones once every object goes.
         let (upserts, deletes) = self.ordered_blocks(doc, self.plan_blocks(doc));
-        let mut blocks: Vec<PlannedBlock> = upserts.iter().take(BATCH).cloned().collect();
-        let order = leaving
+        let required: BTreeSet<_> = if atomic_dimensions {
+            self.dirty
+                .iter()
+                .filter(|id| dimension_ids.contains(id))
+                .chain(leaving.iter())
+                .copied()
+                .filter(|id| self.plan(doc, *id).is_some())
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
+        let limit = if atomic_dimensions {
+            let max = kentos_contracts::processing_job::PROJECT_CHANGES_MAX;
+            if required.len() > max {
+                self.state = SaveState::Error;
+                self.error = Some(format!(
+                    "Mimari ölçü dizisinin {} bağlı değişikliği tek işlemde saklanmalı; sunucunun sınırı {max}. Hiçbir parçası gönderilmedi.",
+                    required.len()
+                ));
+                return None;
+            }
+            BATCH.max(required.len())
+        } else {
+            BATCH
+        };
+        let block_room = limit.saturating_sub(required.len());
+        let mut blocks: Vec<PlannedBlock> = upserts.iter().take(block_room).cloned().collect();
+        let order = required
             .iter()
-            .chain(self.dirty.iter().filter(|id| !leaving.contains(id)));
+            .chain(leaving.iter().filter(|id| !required.contains(id)))
+            .chain(
+                self.dirty
+                    .iter()
+                    .filter(|id| !required.contains(id) && !leaving.contains(id)),
+            );
         let mut planned = Vec::new();
         let mut settled = Vec::new();
         let mut seen = 0;
         let waiting = self.dirty.len().max(leaving.len());
         for &id in order {
-            if planned.len() + blocks.len() >= BATCH {
+            if planned.len() + blocks.len() >= limit {
                 break;
             }
             seen += 1;
@@ -594,10 +695,13 @@ impl ProjectSync {
             self.dirty.remove(&id);
         }
         if seen >= waiting && blocks.len() == upserts.len() {
-            let room = BATCH.saturating_sub(planned.len() + blocks.len());
+            let room = limit.saturating_sub(planned.len() + blocks.len());
             blocks.extend(deletes.into_iter().take(room));
         }
-        let patch = if seen < leaving.len() { None } else { full };
+        let leaving_ready = leaving
+            .iter()
+            .all(|id| self.plan(doc, *id).is_none() || planned.iter().any(|p| p.id() == *id));
+        let patch = if leaving_ready { full } else { None };
         if planned.is_empty() && blocks.is_empty() && patch.is_none() {
             if self.state != SaveState::ReadOnly {
                 self.state = SaveState::Saved;
@@ -633,7 +737,7 @@ impl ProjectSync {
             self.tenant,
             self.project,
             PROJECT_CHANGES,
-            PROJECT_CHANGES_VERSION,
+            input.command_version(),
             Uuid::new_v4(),
             expected,
             serde_json::to_value(&input).unwrap_or_default(),
@@ -659,7 +763,12 @@ impl ProjectSync {
     /// The objects the server merged with someone else's newer version (docs/adr/0648 §2), taken into the drawing: the
     /// server's copy where the object was not edited since it was sent, else that edit put over it field by field (an
     /// edit clashing with the merge stays as it is and goes next). The count taken.
-    pub fn merged_in(&mut self, doc: &mut Document, result: &CommitResult, sent: &[(Uuid, Entity)]) -> usize {
+    pub fn merged_in(
+        &mut self,
+        doc: &mut Document,
+        result: &CommitResult,
+        sent: &[(Uuid, Entity)],
+    ) -> usize {
         let mut taken = 0;
         for record in &result.merged {
             let Ok(id) = Uuid::parse_str(&record.id) else {
@@ -811,9 +920,11 @@ impl ProjectSync {
             if c.reason != ConflictReason::Changed {
                 continue;
             }
-            let (Some(theirs), Some(version), Ok(id)) =
-                (c.current.as_ref(), c.actual.as_ref(), Uuid::parse_str(&c.id))
-            else {
+            let (Some(theirs), Some(version), Ok(id)) = (
+                c.current.as_ref(),
+                c.actual.as_ref(),
+                Uuid::parse_str(&c.id),
+            ) else {
                 continue;
             };
             let (Some(mine), Some(base)) = (current(doc, id), self.known.get(&id)) else {

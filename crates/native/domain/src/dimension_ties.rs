@@ -230,11 +230,21 @@ impl Document {
         }
         // The definitions before the step and now, built once when a piece is followed.
         let mut definitions: Option<(Blocks, Blocks)> = None;
+        let managed: HashSet<Uuid> = self
+            .dimension_sets()
+            .iter()
+            .flat_map(|s| s.members.iter().map(|m| Uuid::from_bytes(m.uid.0)))
+            .collect();
         let mut out = Vec::new();
         for slot in slots {
             let Some(current) = self.store.get(slot).cloned() else {
                 continue;
             };
+            // The recipe follows these as complete rows, preserving their world annotation line.
+            // It also owns the reference edits; the ordinary follower must not detach an illegal edit.
+            if managed.contains(&current.uid) {
+                continue;
+            }
             let Entity::Dimension(d) = &*current.entity else {
                 continue;
             };

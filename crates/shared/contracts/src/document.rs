@@ -1003,6 +1003,14 @@ pub struct DocumentSnapshotV2 {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// Persistent architectural dimension recipes and their ordinary member identities.
+    /// Absent/empty keeps the previous document encoding unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
+    )]
+    pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
     /// The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
     /// has none.
     #[serde(
