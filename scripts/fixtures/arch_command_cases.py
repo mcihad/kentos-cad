@@ -19,6 +19,12 @@ run are the drawing reference's (`arch_cases.py`). The rules, as the ADR gives t
   untagged columns take `tagStart` and on;
 - `cad.stairs.create`, `cad.ramps.create`: their numbers, fields (`invalid_stair`, `invalid_ramp`), level; how they
   fit are warnings after the layer's: the drawing reference's checks and, a level with a height, `stair_rise_level`;
+  a stair drawn from its height (docs/adr/0704 §1): riserHeight with height, maxRiser without it, a height or
+  maxRiser not above 0 or above 100, more than 400 risers refused (`invalid_stair`); its risers given or
+  ⌈height / maxRiser − 10⁻⁹⌉ (maxRiser 0.175 unless given), each height / risers; a cut height with a cut refused,
+  else its cut ⌊cutHeight / riser + 10⁻⁹⌋ within 1 and the risers; fitted, its last point along its last segment to
+  its last riser of a line long enough for all (the drawing reference's `fit_end`, exact), refused when that riser is
+  not past the last turn; given risers over a given maxRiser `stair_riser_high`;
 - `cad.arch.edit`: the ids, these kinds only, the operation's fields (each for its kinds: `field_not_for_kind`), their
   numbers, each object's fields again; Numarala one kind of grids or columns; Akslara bağla and Bağı kopar columns only;
   the revision; a locked layer refusing all;
@@ -641,14 +647,112 @@ def columns_create(d, inp, conflict=False):
     return finish(inp, conflict, made, [])
 
 
-def stair_fields(n):
-    s = {"pts": n["pts"], "width": n["width"], "risers": n["risers"], "riserHeight": n["riserHeight"], "tread": n["tread"]}
+def stair_fields(n, risers=None, riser=None):
+    s = {"pts": n["pts"], "width": n["width"], "risers": n.get("risers", 0) if risers is None else risers,
+         "riserHeight": n.get("riserHeight", 0.0) if riser is None else riser, "tread": n["tread"]}
     for k in ("landing", "cut", "arch"):
         if n.get(k) is not None:
             s[k] = n[k]
     if n.get("numbering"):
         s["numbering"] = True
     return s
+
+
+DEFAULT_MAX_RISER = 0.175
+
+
+def designed(n, at):
+    """docs/adr/0704 §1: the risers and their height, as given or from the height; then the highest riser a given count
+    exceeds. A refusal instead when the fields do not hold."""
+    code = "invalid_stair"
+    h = n.get("height")
+    if h is None:
+        if n.get("maxRiser") is not None:
+            return refusal(code, "En fazla rıht yalnız yükseklikle kullanılır; merdivenin yüksekliğini verin.", f"{at}.maxRiser")
+        return (n.get("risers", 0), n.get("riserHeight", 0.0), None)
+    if n.get("riserHeight", 0.0) != 0.0:
+        return refusal(code, "Yükseklik verildi; rıht yüksekliği ondan hesaplanır. Rıht yüksekliğini vermeyin ya da yüksekliği kaldırın.", f"{at}.riserHeight")
+    r = positive(h, "height", "Merdivenin yüksekliği", 100, code, at)
+    if r:
+        return r
+    top = n.get("maxRiser", DEFAULT_MAX_RISER)
+    r = positive(top, "maxRiser", "En fazla rıht", 100, code, at)
+    if r:
+        return r
+    count = n["risers"] if n.get("risers", 0) > 0 else math.ceil(h / top - 1e-9)
+    if n.get("risers", 0) == 0 and count > 400:
+        return refusal(code, f"{fixed(h, 3)} m yükseklik en fazla {fixed(top, 3)} m rıhtla {count} rıht ister; en çok 400 olur. Rıhtı yükseltin ya da yüksekliği bölün.", f"{at}.height")
+    riser = h / count
+    high = top if n.get("risers", 0) > 0 and n.get("maxRiser") is not None and riser > top + 1e-9 else None
+    return (count, riser, high)
+
+
+def js_hypot(a, b):
+    """`Math.hypot(a, b)` as the core computes it (crates/shared/geometry-core/src/jsmath.rs): scaled, compensated."""
+    xs = [abs(a), abs(b)]
+    m = max(xs)
+    if m == 0.0:
+        return 0.0
+    total, comp = 0.0, 0.0
+    for x in xs:
+        q = x / m
+        summand = q * q - comp
+        pre = total + summand
+        comp = (pre - total) - summand
+        total = pre
+    return math.sqrt(total) * m
+
+
+def float_fit_end(pts, width, count, tread, land):
+    """The fitted end in the core's floating-point steps (geom::arch::stair_fit_end), so that the stored points are the
+    document's bit for bit; `fit_end` in the drawing reference gives the exact point it must lie within 10⁻⁹ of."""
+    eps = 1e-9
+    n = len(pts)
+    (px, py), (lx, ly) = pts[-2], pts[-1]
+    dx, dy = lx - px, ly - py
+    length = js_hypot(dx, dy)
+    ux, uy = dx / length, dy / length
+    reach = (float(count) + 1.0) * tread + float(n) * land
+    far = pts[:-1] + [(px + ux * reach, py + uy * reach)]
+    at = [0.0]
+    for (ax, ay), (bx, by) in zip(far, far[1:]):
+        at.append(at[-1] + js_hypot(bx - ax, by - ay))
+    start, total = at[n - 2], at[-1]
+    lands = []
+    for k in range(1, n - 1):
+        a, b = max(at[k] - land / 2.0, 0.0), min(at[k] + land / 2.0, total)
+        if lands and a - lands[-1][1] < tread - eps:
+            lands[-1] = (lands[-1][0], max(lands[-1][1], b))
+        else:
+            lands.append((a, b))
+    stations, missing, s = [], 0, 0.0
+    for _ in range(count):
+        for a, b in lands:
+            if a + eps < s < b - eps:
+                s = b
+                break
+        if s > total + eps:
+            missing += 1
+        else:
+            stations.append(s)
+        s += tread
+    if missing or not stations or stations[-1] - start <= eps:
+        return None
+    t = stations[-1] - start
+    return (px + ux * t, py + uy * t)
+
+
+def fitted(s, at):
+    pts = [(p["x"], p["y"]) for p in s["pts"]]
+    land = s.get("landing", s["width"])
+    got = float_fit_end(pts, s["width"], s["risers"], s["tread"], land)
+    exact = ac.fit_end(fpts(s["pts"]), F(s["width"]), s["risers"], F(s["tread"]), F(land))
+    assert (got is None) == (exact is None), (got, exact)
+    if got is None:
+        return refusal("invalid_stair", "Son kol rıhtlara göre bitirilemiyor: rıhtlar son kola varmadan bitiyor. Son dönüşü başa yaklaştırın, rıht ekleyin ya da son kolu tıklanan yerde bitirin.", f"{at}.fit")
+    assert abs(got[0] - float(exact[0])) <= 1e-9 and abs(got[1] - float(exact[1])) <= 1e-9, (got, exact)
+    # The stored points (the core's floats) and the exact ones the warnings are reckoned on.
+    return s["pts"][:-1] + [{"x": got[0], "y": got[1]}], s["pts"][:-1] + [{"x": exact[0], "y": exact[1]}]
 
 
 def stairs_create(d, inp, conflict=False):
@@ -658,15 +762,43 @@ def stairs_create(d, inp, conflict=False):
     for i, n in enumerate(inp["stairs"]):
         at = f"stairs[{i}]"
         r = points_not_finite(n["pts"], at) or finite_each(
-            [(n["width"], "width", "Genişlik"), (n["riserHeight"], "riserHeight", "Rıht yüksekliği"),
-             (n["tread"], "tread", "Basamak derinliği"), (n.get("landing"), "landing", "Sahanlık")], at)
+            [(n["width"], "width", "Genişlik"), (n.get("riserHeight", 0.0), "riserHeight", "Rıht yüksekliği"),
+             (n["tread"], "tread", "Basamak derinliği"), (n.get("landing"), "landing", "Sahanlık"),
+             (n.get("height"), "height", "Yükseklik"), (n.get("maxRiser"), "maxRiser", "En fazla rıht"),
+             (n.get("cutHeight"), "cutHeight", "Kesme yüksekliği")], at)
         if r:
             return r, None
-        s = stair_fields(n)
-        r = stair_problem(s, at) or level_check(s.get("arch"), f"{at}.arch.level")
+        design = designed(n, at)
+        if "status" in design:
+            return design, None
+        risers, riser, high = design
+        if n.get("cutHeight") is not None and n.get("cut") is not None:
+            return refusal("invalid_stair", "Kesme çizgisi ya rıhtla (cut) ya yükseklikle (cutHeight) verilir; ikisini birden vermeyin.", f"{at}.cutHeight"), None
+        s = stair_fields(n, risers, riser)
+        r = stair_problem(s, at)
         if r:
             return r, None
-        warnings += stair_warnings(s, at)
+        if n.get("cutHeight") is not None:
+            r = positive(n["cutHeight"], "cutHeight", "Kesme yüksekliği", 100, "invalid_stair", at)
+            if r:
+                return r, None
+            s["cut"] = int(min(max(math.floor(n["cutHeight"] / s["riserHeight"] + 1e-9), 1), s["risers"]))
+        exact = s
+        if n.get("fit") is True:
+            pts = fitted(s, at)
+            if isinstance(pts, dict):
+                return pts, None
+            s["pts"] = pts[0]
+            exact = {**s, "pts": pts[1]}
+            r = stair_problem(s, at)
+            if r:
+                return r, None
+        r = level_check(s.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        warnings += stair_warnings(exact, at)
+        if high is not None:
+            warnings.append({"code": "stair_riser_high", "message": f"{s['risers']} rıhtla rıht {fixed(s['riserHeight'], 3)} m; en fazla {fixed(high, 3)} m verildi. Rıht sayısını artırın ya da boş bırakın (yükseklikten hesaplanır).", "path": at})
         made.append(s)
     return finish(inp, conflict, made, warnings)
 
@@ -924,6 +1056,52 @@ def stair_cases():
         ("olmayan kat reddedilir", stair(arch={"level": "yok"}), {}),
     ])
     common_refusals(c, STAIRS, stair())
+    return c.cases
+
+
+def design(**kw):
+    """docs/adr/0704: a stair drawn from its height, fitted to its risers."""
+    s = {"pts": [P(0, 30), P(5, 30)], "width": 1.2, "height": 3.0, "tread": 0.28, "fit": True}
+    s.update(kw)
+    for k in [k for k, v in s.items() if v is None]:
+        del s[k]
+    return {"layerId": "merdiven", "stairs": [s]}
+
+
+def design_cases():
+    c = Cases()
+    life(c, STAIRS, design(), "Yükseklikten düz merdiven, yola sığar")
+    for name, inp in [
+        ("3,00 m ve en fazla 18 cm rıht: 17 rıht", design(maxRiser=0.18)),
+        ("verilen 20 rıht: rıht yüksekliği yükseklikten", design(risers=20)),
+        ("verilen rıht en fazla rıhtı aşarsa stair_riser_high uyarısı", design(risers=15, maxRiser=0.18)),
+        ("tam bölünen 2,80 m / 17,5 cm: 16 rıht, fazladan rıht yok", design(height=2.8)),
+        ("kesme yüksekliği 1,10 m: kesme 6. rıhtta", design(cutHeight=1.1, numbering=True)),
+        ("ilk rıhttan alçak kesme yüksekliği: kesme 1. rıhtta", design(cutHeight=0.1)),
+        ("merdivenden yüksek kesme yüksekliği: kesme son rıhtta", design(cutHeight=5.0)),
+        ("L merdiven: son kol rıhtlara göre biter", design(pts=[P(0, 30), P(3, 30), P(3, 33)], width=1.0)),
+        ("U merdiven, kollar arası dar: tek sahanlık, son kol rıhtlara göre", design(pts=[P(0, 30), P(3, 30), P(3, 31.3), P(0, 31.3)])),
+        ("kısa yol yola sığdırılınca uzar", design(pts=[P(0, 30), P(2, 30)])),
+        ("ters yöne çizilen merdiven yola sığar", design(pts=[P(10, 30), P(9, 30)])),
+        ("eğik (3-4-5) merdiven yola sığar", design(pts=[P(0, 30), P(0.75, 31)])),
+        ("sığdırmasız kısa yol stair_short uyarısıyla yazılır", design(pts=[P(0, 30), P(2, 30)], fit=None)),
+        ("zemin kattan 3,06 m: 18 × 17 cm, stair_rise_level yok", design(height=3.06, arch={"level": "zemin"})),
+    ]:
+        c.add(name, [create_step(Drawing(), STAIRS, "execute", inp)])
+    c.add("plan yükseklikten hesaplanan merdiveni gösterir", [create_step(Drawing(), STAIRS, "plan", design(cutHeight=1.1))])
+    refusals(c, STAIRS, [
+        ("yükseklikle rıht yüksekliği birlikte reddedilir", design(riserHeight=0.17), {}),
+        ("yüksekliksiz en fazla rıht reddedilir", design(height=None, risers=18, riserHeight=0.17, maxRiser=0.18), {}),
+        ("sıfır yükseklik reddedilir", design(height=0.0), {}),
+        ("sıfır en fazla rıht reddedilir", design(maxRiser=0.0), {}),
+        ("400'den çok rıht isteyen yükseklik reddedilir", design(height=80.0, maxRiser=0.1), {}),
+        ("kesme rıhtı ve kesme yüksekliği birlikte reddedilir", design(cut=6, cutHeight=1.1), {}),
+        ("eksi kesme yüksekliği reddedilir", design(cutHeight=-1.0), {}),
+        ("rıhtlar son kola varmadan biterse sığdırma reddedilir", design(pts=[P(0, 30), P(8, 30), P(8, 32)]), {}),
+        ("sonsuz yükseklik reddedilir", design(), {"non_finite": {"stairs[0].height": "NaN"}}),
+        ("sonsuz kesme yüksekliği reddedilir", design(cutHeight=1.1), {"non_finite": {"stairs[0].cutHeight": "Infinity"}}),
+        ("rıhtı da yüksekliği de olmayan merdiven reddedilir", design(height=None), {}),
+    ])
     return c.cases
 
 
@@ -1254,6 +1432,7 @@ def files():
         "cad.grids.create.json": document(GRIDS, "Aks: tek aks, seri, etiketlerin sırası, balonlar, yaylı aks; doğrulama, plan, yazma, geri alma, retler", grid_cases()),
         "cad.columns.create.json": document(COLUMNS, "Kolon: merkezden, akslara bağlı, aks kesişimleri, etiketler; aksla gitmek; retler", column_cases()),
         "cad.stairs.create.json": document(STAIRS, "Merdiven: düz, L, U; sahanlık, kesme, numaralar; denetimlerin uyarıları; retler", stair_cases()),
+        "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }

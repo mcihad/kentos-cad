@@ -8,6 +8,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=aks-serit,aks-sistem,aks-arac,kolon-arac,kolon-oznitelikler,merdiven-arac,merdiven-denetim,rampa,aks-numarala,aks-izleme cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=merdiven-yukseklik,merdiven-l,merdiven-u,merdiven-u-yazildi,merdiven-sigmaz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # docs/adr/0704
 //! ```
 //!
 //! Test code only.
@@ -16,7 +17,7 @@ use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 
 use crate::app::{App, Message};
-use crate::tools_scenes::{click, hover, run, typed};
+use crate::tools_scenes::{E, N, click, hover, run, typed};
 use crate::tools_screens::Scene;
 use crate::wall_scenes::{fit, opened};
 
@@ -133,10 +134,12 @@ fn stair_tool(app: &mut App) {
     hover(app, [15.5, 4.0]);
 }
 
-/// A straight stair too short for its risers, selected: its Denetim rows.
+/// A straight stair of 15 risers given for 3 m (0.20 m each: 2R+G 0.68 m), selected: its Denetim rows.
 fn stair_checks(app: &mut App) {
     grids(app);
     run(app, "tool.stair");
+    typed(app, "S");
+    typed(app, "15");
     click(app, [13.0, 1.0]);
     click(app, [13.0, 4.0]);
     typed(app, "");
@@ -144,6 +147,79 @@ fn stair_checks(app: &mut App) {
     app.selection.set([Slot(8)]);
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+}
+
+/// The view on `min`–`max` (metres from the grid's origin), the layers folded so that the tool's settings stand whole.
+fn close_on(app: &mut App, min: [f64; 2], max: [f64; 2]) {
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E + min[0],
+            min_y: N + min[1],
+            max_x: E + max[0],
+            max_y: N + max[1],
+        },
+        24.0,
+    );
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+}
+
+/// docs/adr/0704: Merdiven from its height: one click, the cursor past where the stair ends. 18 risers of 0.167 m for
+/// 3.00 m, the flight ending at its last riser however far the cursor is, the risers past the 1.10 m cut dashed; the
+/// tool's settings beside.
+fn stair_height(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    click(app, [2.0, 0.6]);
+    close_on(app, [-1.0, -0.6], [7.0, 7.4]);
+    hover(app, [2.0, 6.6]);
+}
+
+/// An L with its numbers: the turn clicked, the second flight ending at the last riser.
+fn stair_l(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    typed(app, "N");
+    click(app, [6.8, 1.0]);
+    click(app, [9.4, 1.0]);
+    close_on(app, [5.6, -0.6], [12.6, 6.4]);
+    hover(app, [9.4, 5.4]);
+}
+
+/// A U whose flights are a width apart (1.20 m wide, 1.30 m between their lines): one landing across both, no riser
+/// between the turns; the last flight ending at the last riser.
+fn stair_u(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    click(app, [13.0, 0.6]);
+    click(app, [13.0, 3.6]);
+    click(app, [14.3, 3.6]);
+    close_on(app, [11.0, -0.8], [17.0, 5.2]);
+    hover(app, [14.3, 0.1]);
+}
+
+/// The U written by its fourth click, numbered, selected.
+fn stair_u_written(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    typed(app, "N");
+    for p in [[13.0, 0.6], [13.0, 3.6], [14.3, 3.6], [14.3, 0.2]] {
+        click(app, p);
+    }
+    typed(app, "");
+    app.selection.set([Slot(8)]);
+    close_on(app, [11.4, -0.6], [15.9, 4.8]);
+    hover(app, [16.6, -0.4]);
+}
+
+/// An L whose first flight holds every riser: the tag says why in red and nothing is written.
+fn stair_no_fit(app: &mut App) {
+    grids(app);
+    run(app, "tool.stair");
+    click(app, [0.6, 1.0]);
+    click(app, [8.6, 1.0]);
+    close_on(app, [-0.6, -1.0], [10.4, 6.0]);
+    hover(app, [8.6, 3.8]);
 }
 
 /// Rampa: 0.6 m up an L, 8 % given; the cursor at its end.
@@ -199,6 +275,11 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("kolon-oznitelikler", column_props),
         ("merdiven-arac", stair_tool),
         ("merdiven-denetim", stair_checks),
+        ("merdiven-yukseklik", stair_height),
+        ("merdiven-l", stair_l),
+        ("merdiven-u", stair_u),
+        ("merdiven-u-yazildi", stair_u_written),
+        ("merdiven-sigmaz", stair_no_fit),
         ("rampa", ramp_tool),
         ("aks-numarala", numbering),
         ("aks-izleme", following),

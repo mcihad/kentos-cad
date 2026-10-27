@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Yükseklikten 2B merdiven (27 Ekim 2026; [ADR0704](docs/adr/0704-stairs-from-height.md)).**
+  `cad.stairs.create` isteğe bağlı `height`/`maxRiser` (rıht sayısı ⌈H/Rmax⌉,
+  öntanımlı 0,175 m), `cutHeight` ve `fit` (son kol son rıhtta biter) alır;
+  saklanan nesne ve KCAD aynı. Arada basamak sığmayan iki dönüş tek sahanlık;
+  kesmenin üstü kesikli. Araç bir tıklama+yönle, görünür ayarlarla, komutun
+  planını çizer. 30+14 ortak durum bağımsız başvurudan, 3 araç testi, gerçek
+  GUI resimleri. ARCH-STAIR-01 [~]: kat görünümü, döner merdiven, kat
+  yüksekliğine bağlılık ve kurum profili açık. Öntanımlılar yönetmelik değildir.
+
 - **Mimari proje denetimi (27 Ekim 2026; [ADR0703](docs/adr/0703-architectural-project-audit.md)).**
   Salt okunur `cad.arch.audit` ve alt panelin Denetim sekmesi: birleşmeyen duvar
   (`cad.walls.joins`'un bulguları), öbür duvara `maxGap` kala biten ve birbirini

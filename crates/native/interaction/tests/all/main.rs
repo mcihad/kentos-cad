@@ -102,3 +102,4 @@ mod space_discover;
 mod space_columns;
 
 mod space_number;
+mod stair_design;

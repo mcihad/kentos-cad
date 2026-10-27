@@ -9,6 +9,10 @@
 //! grids (columns: `invalid_uid`, `entity_not_found`, `not_a_grid`, `grids_parallel`), its fields (the kind's
 //! `invalid_…`), its level (`level_not_found`); 3. the line weight; 4. the expected revision; 5. the layer; 6. the
 //! attributes. How a stair's or a ramp's fields fit are warnings, never a refusal.
+//!
+//! A stair may be drawn from its height (docs/adr/0704 §1): its risers given or as many as keep each under its highest
+//! riser, each `height / risers` high; its cut from a cut height; its walking line fitted to end at its last riser.
+//! The stored stair is as before: its points (fitted), its risers, their height and its cut.
 
 use std::collections::BTreeMap;
 
@@ -549,14 +553,25 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
                 (Some(n.riser_height), "riserHeight", "Rıht yüksekliği"),
                 (Some(n.tread), "tread", "Basamak derinliği"),
                 (n.landing, "landing", "Sahanlık"),
+                (n.height, "height", "Yükseklik"),
+                (n.max_riser, "maxRiser", "En fazla rıht"),
+                (n.cut_height, "cutHeight", "Kesme yüksekliği"),
             ],
             &at,
         )?;
-        let s = StairFields {
+        let (risers, riser_height, high) = designed(n, &at)?;
+        if n.cut_height.is_some() && n.cut.is_some() {
+            return Err(fail(
+                codes::INVALID_STAIR,
+                "Kesme çizgisi ya rıhtla (cut) ya yükseklikle (cutHeight) verilir; ikisini birden vermeyin.".into(),
+                &format!("{at}.cutHeight"),
+            ));
+        }
+        let mut s = StairFields {
             pts: n.pts.clone(),
             width: n.width,
-            risers: n.risers,
-            riser_height: n.riser_height,
+            risers,
+            riser_height,
             tread: n.tread,
             landing: n.landing,
             cut: n.cut,
@@ -564,8 +579,30 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
             arch: n.arch.clone().unwrap_or_default(),
         };
         stair_valid(&s, &at)?;
+        if let Some(h) = n.cut_height {
+            positive_or(h, "cutHeight", "Kesme yüksekliği", &at)?;
+            // The last riser wholly under the cut plane; at least the first, at most the last.
+            let under = (h / s.riser_height + 1e-9).floor();
+            s.cut = Some(under.clamp(1.0, f64::from(s.risers)) as u32);
+        }
+        if n.fit == Some(true) {
+            s.pts = fitted(&s, &at)?;
+            stair_valid(&s, &at)?;
+        }
         crate::walls::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         warnings.extend(stair_warnings(doc, &s, &at));
+        if let Some(max) = high {
+            warnings.push(CommandWarning {
+                code: codes::STAIR_RISER_HIGH.into(),
+                message: format!(
+                    "{} rıhtla rıht {} m; en fazla {} m verildi. Rıht sayısını artırın ya da boş bırakın (yükseklikten hesaplanır).",
+                    s.risers,
+                    kentos_geometry_core::display::fixed(s.riser_height, 3),
+                    kentos_geometry_core::display::fixed(max, 3)
+                ),
+                path: Some(at.clone()),
+            });
+        }
         made.push((
             at,
             n.attrs.clone(),
@@ -581,6 +618,85 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
         &input.color,
         warnings,
     )
+}
+
+/// `v` above zero and at most 100, else `invalid_stair` at the field in the fields' own words.
+fn positive_or(v: f64, field: &str, whose: &str, at: &str) -> Result<(), Stop> {
+    if v.is_finite() && v > 0.0 && v <= 100.0 {
+        return Ok(());
+    }
+    Err(fail(
+        codes::INVALID_STAIR,
+        format!("{whose} {v}; sıfırdan büyük, en çok 100 olmalı."),
+        &format!("{at}.{field}"),
+    ))
+}
+
+/// A stair's risers and their height (docs/adr/0704 §1): as given, or from its height: its risers given or as many as
+/// keep each under its highest riser, each `height / risers` high. Third, the highest riser a given count exceeds.
+fn designed(n: &kentos_commands::NewStair, at: &str) -> Result<(u32, f64, Option<f64>), Stop> {
+    let Some(h) = n.height else {
+        if n.max_riser.is_some() {
+            return Err(fail(
+                codes::INVALID_STAIR,
+                "En fazla rıht yalnız yükseklikle kullanılır; merdivenin yüksekliğini verin.".into(),
+                &format!("{at}.maxRiser"),
+            ));
+        }
+        return Ok((n.risers, n.riser_height, None));
+    };
+    if n.riser_height != 0.0 {
+        return Err(fail(
+            codes::INVALID_STAIR,
+            "Yükseklik verildi; rıht yüksekliği ondan hesaplanır. Rıht yüksekliğini vermeyin ya da yüksekliği kaldırın."
+                .into(),
+            &format!("{at}.riserHeight"),
+        ));
+    }
+    positive_or(h, "height", "Merdivenin yüksekliği", at)?;
+    let max = n.max_riser.unwrap_or(kentos_commands::DEFAULT_MAX_RISER);
+    positive_or(max, "maxRiser", "En fazla rıht", at)?;
+    let count = if n.risers > 0 {
+        f64::from(n.risers)
+    } else {
+        (h / max - 1e-9).ceil()
+    };
+    if n.risers == 0 && count > f64::from(kentos_commands::MAX_RISERS) {
+        return Err(fail(
+            codes::INVALID_STAIR,
+            format!(
+                "{} m yükseklik en fazla {} m rıhtla {count} rıht ister; en çok {} olur. Rıhtı yükseltin ya da yüksekliği bölün.",
+                kentos_geometry_core::display::fixed(h, 3),
+                kentos_geometry_core::display::fixed(max, 3),
+                kentos_commands::MAX_RISERS
+            ),
+            &format!("{at}.height"),
+        ));
+    }
+    let riser = h / count;
+    let high = (n.risers > 0 && n.max_riser.is_some() && riser > max + 1e-9).then_some(max);
+    Ok((count as u32, riser, high))
+}
+
+/// The stair's walking line ending at its last riser (docs/adr/0704 §1), its last point moved along its last segment.
+fn fitted(s: &StairFields, at: &str) -> Result<Vec<Vec2>, Stop> {
+    let shape = kentos_formats::arch_elements::core_stair(s);
+    let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
+        unreachable!("core_stair makes a stair");
+    };
+    let Some(end) = arch::stair_fit_end(pts, stair) else {
+        return Err(fail(
+            codes::INVALID_STAIR,
+            "Son kol rıhtlara göre bitirilemiyor: rıhtlar son kola varmadan bitiyor. Son dönüşü başa yaklaştırın, rıht ekleyin ya da son kolu tıklanan yerde bitirin."
+                .into(),
+            &format!("{at}.fit"),
+        ));
+    };
+    let mut out = s.pts.clone();
+    if let Some(last) = out.last_mut() {
+        *last = Vec2 { x: end.x, y: end.y };
+    }
+    Ok(out)
 }
 
 fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {

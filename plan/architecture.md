@@ -842,7 +842,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: sıra atlama, yinelenen aks, negatif yön, kolon dönüşü, kilitli katman,
   referans kopması ve ölçü/çizelge güncellemesi.
 
-### ARCH-STAIR-01 — Kullanılabilir 2B merdiven tasarımı [ ]
+### ARCH-STAIR-01 — Kullanılabilir 2B merdiven tasarımı [~]
+
+- [x] Yükseklikten tasarım dilimi [ADR0704](../docs/adr/0704-stairs-from-height.md):
+  `cad.stairs.create` toplam yükseklik ve en yüksek rıhttan rıht sayısını
+  (ya da verilen sayıdan rıht yüksekliğini), plan kesme yüksekliğinden kesmeyi
+  bulur; son kol son rıhtta biter (`fit`). Kolları bir eni kadar aralıklı U'nun
+  iki dönüşü tek sahanlık; kesmenin üstündeki rıhtlar kesikli. Araç bir
+  tıklama ve yönle çalışır, değerler Öznitelikler'de görünür, önizleme komutun
+  planıdır (rıhtlar, sahanlık, kesme, ok). Revit/Archicad/Vectorworks
+  araştırıldı; öntanımlılar yönetmelik değeri değildir. 30 yeni ortak durum
+  ve çekirdekte 14 merdiven durumu bağımsız başvurudan, 3 araç testi, gerçek
+  GUI resimleri (`.run/shots/arac-merdiven-*`). Kat görünümü, dairesel/döner
+  merdiven, kat yüksekliğine bağlı izleme ve kurum profili açık.
 
 - Düz/L/U ve sahanlık; toplam yükseklik, rıht sayısı, basamak derinliği, kol eni;
   değiştirilen parametre ve sabit tutulan kural açık olsun.

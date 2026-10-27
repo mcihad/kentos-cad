@@ -940,7 +940,8 @@ impl Input for kentos_commands::ColumnsCreate {
 }
 
 impl Input for kentos_commands::StairsCreate {
-    /// `stairs[0].tread`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
+    /// `stairs[0].tread`, `.width`, `.height`, `.cutHeight`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343,
+    /// docs/adr/0704).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -950,6 +951,8 @@ impl Input for kentos_commands::StairsCreate {
         match rest {
             "tread" => Some(&mut s.tread),
             "width" => Some(&mut s.width),
+            "height" => s.height.as_mut(),
+            "cutHeight" => s.cut_height.as_mut(),
             _ => named_point(&mut s.pts, "pts", rest),
         }
     }

@@ -1692,6 +1692,8 @@ codes! {
     STAIR_STEP_RULE = "stair_step_rule", Warning, false, "2 × rıht + basamak 0,60–0,65 m dışında (Blondel oranı; yalnız bilgi, yönetmelik denetimi değildir).";
     /// Risers that do not make the level's height.
     STAIR_RISE_LEVEL = "stair_rise_level", Warning, false, "Rıht sayısı × rıht yüksekliği katın yüksekliğini tutmuyor.";
+    /// Given risers above the given highest riser (docs/adr/0704 §1).
+    STAIR_RISER_HIGH = "stair_riser_high", Warning, false, "Verilen rıht sayısıyla rıht, verilen en yüksek rıhttan yüksek; rıht sayısını artırın ya da hesaplatın.";
     /// A ramp's given slope not its rise over its sloped length.
     RAMP_SLOPE_MISMATCH = "ramp_slope_mismatch", Warning, false, "Rampanın verilen eğimi yüksekliğinin eğimli uzunluğuna oranından 0,1 puandan çok farklı.";
     /// A ramp whose landings take its whole length.

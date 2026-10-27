@@ -504985,7 +504985,7 @@
           },
           "NewStair": {
             "additionalProperties": false,
-            "description": "One stair to draw.",
+            "description": "One stair to draw. Its risers are given (`risers`, `riserHeight`) or drawn from its `height` (docs/adr/0704):\n`risers` given or as many as keep each riser under `maxRiser`, each `height / risers` high.",
             "properties": {
               "arch": {
                 "anyOf": [
@@ -505016,8 +505016,42 @@
                 ],
                 "x-unit": "index"
               },
+              "cutHeight": {
+                "description": "The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "fit": {
+                "description": "True: its last point moves along its last segment so that its walking line ends at its last riser.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Its whole rise, the risers drawn from it (docs/adr/0704 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "landing": {
                 "description": "A landing's length at a turn; absent: the width.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "maxRiser": {
+                "description": "The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`.",
                 "format": "double",
                 "type": [
                   "number",
@@ -505040,11 +505074,15 @@
                 "x-unit": "length"
               },
               "riserHeight": {
+                "default": 0.0,
+                "description": "A riser's height; 0 or absent with `height` (which gives it: `height / risers`).",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
               "risers": {
+                "default": 0,
+                "description": "Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`.",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -505065,8 +505103,6 @@
             "required": [
               "pts",
               "width",
-              "risers",
-              "riserHeight",
               "tread"
             ],
             "type": "object"
@@ -505092,7 +505128,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit\n(`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`) are warnings.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_stair`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.\nWarnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`.",
+        "description": "Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit\n(`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the\ncut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,\n`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also\n`slots_exhausted`.\nWarnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.",
         "properties": {
           "color": {
             "type": [
@@ -515473,7 +515509,8 @@
           "stair_short",
           "stair_long",
           "stair_step_rule",
-          "stair_rise_level"
+          "stair_rise_level",
+          "stair_riser_high"
         ]
       },
       "examples": [
@@ -1427638,6 +1427675,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Rıht sayısı × rıht yüksekliği katın yüksekliğini tutmuyor."
+    },
+    {
+      "code": "stair_riser_high",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Verilen rıht sayısıyla rıht, verilen en yüksek rıhttan yüksek; rıht sayısını artırın ya da hesaplatın."
     },
     {
       "code": "ramp_slope_mismatch",

@@ -545,6 +545,46 @@ fn left(d: Vec2) -> Vec2 {
     Vec2::new(-d.y, d.x)
 }
 
+/// A stair's landings (docs/adr/0704 §2): the walking line's at its turns, two that leave less than a tread between
+/// them made one, so that no riser falls between them (a U-stair's flights a width apart share one landing).
+pub fn stair_landings(walk: &Walk, spec: &StairSpec) -> Vec<(f64, f64)> {
+    let mut out: Vec<(f64, f64)> = Vec::new();
+    for (a, b) in walk.landings(spec.landing()) {
+        match out.last_mut() {
+            Some(last) if a - last.1 < spec.tread - EPS => last.1 = crate::jsmath::js_max(last.1, b),
+            _ => out.push((a, b)),
+        }
+    }
+    out
+}
+
+/// Where a stair's walking line ends to hold its risers exactly (docs/adr/0704 §1, `fit`): its last point moved along
+/// its last segment so that the line ends at its last riser. None when the risers end before that segment begins (or
+/// at its start), or the fields hold no riser or tread.
+pub fn stair_fit_end(pts: &[Vec2], spec: &StairSpec) -> Option<Vec2> {
+    let n = pts.len();
+    if n < 2 || !(spec.risers >= 1.0 && spec.tread > 0.0) {
+        return None;
+    }
+    let (prev, last) = (pts[n - 2], pts[n - 1]);
+    let d = unit(Vec2::new(last.x - prev.x, last.y - prev.y));
+    if d.x == 0.0 && d.y == 0.0 {
+        return None;
+    }
+    let start = Walk::of(&pts[..n - 1]).length();
+    // Far enough for every riser past every landing: the line's end cuts no landing short.
+    let reach = (spec.risers + 1.0) * spec.tread + n as f64 * spec.landing();
+    let mut far = pts.to_vec();
+    far[n - 1] = Vec2::new(prev.x + d.x * reach, prev.y + d.y * reach);
+    let (stations, missing) = riser_stations(&Walk::of(&far), spec);
+    let end = *stations.last()?;
+    if missing > 0 || end - start <= EPS {
+        return None;
+    }
+    let t = end - start;
+    Some(Vec2::new(prev.x + d.x * t, prev.y + d.y * t))
+}
+
 /// The walking line's band, `half` each side, mitred at the turns: its left side from the start, then its right side
 /// back.
 pub fn band(pts: &[Vec2], half: f64) -> Vec<Vec2> {
@@ -598,7 +638,7 @@ fn across(walk: &Walk, s: f64, half: f64) -> Shape {
 /// The arc lengths of a stair's risers in order, as many as its walking line holds (docs/adr/0343 §2): from its start
 /// a tread apart; a riser that falls inside a landing moves to the landing's end. Then the risers that do not fit.
 pub fn riser_stations(walk: &Walk, spec: &StairSpec) -> (Vec<f64>, u32) {
-    let landings = walk.landings(spec.landing());
+    let landings = stair_landings(walk, spec);
     let total = walk.length();
     let mut out = Vec::new();
     let mut s = 0.0;
@@ -645,8 +685,8 @@ fn arrow(walk: &Walk, from: f64, to: f64, scale: f64) -> Vec<Shape> {
     ]
 }
 
-/// A stair's pieces at 1:`scale`: its band, its landings' edges, its risers up to its cut, the cut line, the arrow and
-/// the numbers.
+/// A stair's pieces at 1:`scale`: its band, its landings' edges, its risers (dashed past its cut), the cut line, the
+/// arrow and the numbers below the cut.
 pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -655,7 +695,7 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
     let walk = Walk::of(pts);
     let half = spec.width / 2.0;
     out.push(piece(polygon(band(pts, half))));
-    for (a, b) in walk.landings(spec.landing()) {
+    for (a, b) in stair_landings(&walk, spec) {
         out.push(piece(across(&walk, a, half)));
         out.push(piece(across(&walk, b, half)));
     }
@@ -664,8 +704,13 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
         .cut
         .map(|c| (if c > 1.0 { c as usize } else { 1 }).min(stations.len()));
     let shown = cut.unwrap_or(stations.len());
-    for &s in &stations[..shown] {
-        out.push(piece(across(&walk, s, half)));
+    for (i, &s) in stations.iter().enumerate() {
+        let mut riser = piece(across(&walk, s, half));
+        if i >= shown {
+            // Above the cut plane (docs/adr/0704 §3): dashed, as plans draw what lies over it.
+            riser.stroke.line_type = Some("dashed".into());
+        }
+        out.push(riser);
     }
     let end = match cut {
         Some(c) if c > 0 => {

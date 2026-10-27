@@ -6,8 +6,10 @@
 //!   (“6 6 4.5”): the first grid's two points, then a click on the side the others go.
 //! - Kolon: a click its centre; near where two grids cross it stands there, tied to them. Biçim (B), En (E), Boy (Y),
 //!   Döndür (D), Etiket (K); Aks kesişimleri (A) puts one at every crossing of the grids shown.
-//! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. Genişlik (G), Rıht sayısı (S), Rıht
-//!   (R), Basamak (D), Sahanlık (H); a ramp's Yükseklik (Y) and Eğim (E). Their checks are said, never refused.
+//! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y): En fazla
+//!   rıht (R), Rıht sayısı (S, else from the height), Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar
+//!   (N); its last flight ends at its last riser (docs/adr/0704). A ramp's Yükseklik (Y) and Eğim (E). Their checks
+//!   are said, never refused; the same values are in the tool's settings pane.
 //! - Aksları numarala: Başlangıç (B), then the grids clicked in order; Enter writes.
 
 use kentos_commands::{
@@ -30,7 +32,8 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, TextGhost, Tone, Tool};
+use crate::tool_settings::Setting;
 
 pub const GRID_ID: &str = "grid";
 pub const COLUMN_ID: &str = "column";
@@ -100,11 +103,13 @@ enum Ask {
     Depth,
     Turn,
     Risers,
-    Riser,
     Tread,
     Landing,
     Rise,
     Slope,
+    Height,
+    MaxRiser,
+    Cut,
 }
 
 fn ask_words(ask: Ask) -> &'static str {
@@ -114,8 +119,10 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Width => "genişliği yazın",
         Ask::Depth => "boyu yazın",
         Ask::Turn => "dönüşü derece olarak yazın",
-        Ask::Risers => "rıht sayısını yazın",
-        Ask::Riser => "rıht yüksekliğini yazın",
+        Ask::Risers => "rıht sayısını yazın (0: yükseklikten hesaplanır)",
+        Ask::Height => "merdivenin yüksekliğini yazın (iki kat arası)",
+        Ask::MaxRiser => "en yüksek rıhtı yazın",
+        Ask::Cut => "planın kesme yüksekliğini yazın (0: kesme yok)",
         Ask::Tread => "basamak derinliğini yazın",
         Ask::Landing => "sahanlığın boyunu yazın",
         Ask::Rise => "yükseklik farkını yazın",
@@ -683,14 +690,22 @@ impl Tool for ColumnTool {
 
 // ── Merdiven ve Rampa ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// Merdiven or Rampa: a walking line of two to four points and its values.
+/// Merdiven or Rampa: a walking line of two to four points and its values. A stair is drawn from its height
+/// (docs/adr/0704): its risers as many as keep each under the highest riser unless given, its last flight ending at
+/// its last riser, its cut line at the plan's cut height; the preview is the command's plan, risers and all.
 #[derive(Clone, Debug)]
 pub struct FlightTool {
     ramp: bool,
     width: f64,
+    /// A stair's whole rise, its highest riser, its risers (0: from the height), its tread, its cut height.
+    height: f64,
+    max_riser: f64,
     risers: u32,
-    riser: f64,
     tread: f64,
+    cut: Option<f64>,
+    numbering: bool,
+    /// The last flight ends at the last riser (else where it was clicked).
+    fit: bool,
     landing: Option<f64>,
     rise: f64,
     slope: Option<f64>,
@@ -700,6 +715,35 @@ pub struct FlightTool {
     drawn: Preview,
     why: Option<String>,
     notes: Vec<String>,
+    /// The planned stair: its risers, a riser's height, its tread and its walking line's length.
+    design: Option<(u32, f64, f64, f64)>,
+}
+
+/// The plan of a stair or ramp drawn as the preview: its pieces as strokes (dashed past a stair's cut), its numbers
+/// as ghost texts.
+fn flight_drawn(entities: &[Entity], scale: f64, out: &mut Preview) {
+    for e in entities {
+        for piece in arch::pieces(&shape(e), scale) {
+            match &piece.shape {
+                kentos_geometry_core::entity::Shape::Text {
+                    p, text, height, ..
+                } => out.texts.push(TextGhost {
+                    p: *p,
+                    text: text.clone(),
+                    height: *height,
+                    rotation: 0.0,
+                    align: Some(kentos_geometry_core::text::TextAlign::MiddleCenter),
+                    mask: false,
+                    face: Default::default(),
+                    width_factor: 1.0,
+                }),
+                other => {
+                    let dash = (piece.stroke.line_type.as_deref() == Some("dashed")).then_some([5.0, 4.0]);
+                    out.strokes.extend(Outline::of(other, dash, 1.5, Tone::Accent).strokes);
+                }
+            }
+        }
+    }
 }
 
 impl FlightTool {
@@ -707,9 +751,13 @@ impl FlightTool {
         Self {
             ramp: false,
             width: 1.2,
-            risers: 18,
-            riser: 0.17,
+            height: 3.0,
+            max_riser: kentos_commands::DEFAULT_MAX_RISER,
+            risers: 0,
             tread: 0.28,
+            cut: Some(1.1),
+            numbering: false,
+            fit: true,
             landing: None,
             rise: 0.5,
             slope: None,
@@ -719,6 +767,7 @@ impl FlightTool {
             drawn: Preview::default(),
             why: None,
             notes: Vec::new(),
+            design: None,
         }
     }
 
@@ -785,9 +834,13 @@ impl FlightTool {
                     pts: points::wire_all(pts),
                     width: self.width,
                     risers: self.risers,
-                    riser_height: self.riser,
                     tread: self.tread,
+                    height: Some(self.height),
+                    max_riser: Some(self.max_riser),
+                    cut_height: self.cut,
+                    fit: self.fit.then_some(true),
                     landing: self.landing,
+                    numbering: self.numbering.then_some(true),
                     ..NewStair::default()
                 }],
                 color,
@@ -797,7 +850,14 @@ impl FlightTool {
             if write {
                 let result = stairs_create::execute(&mut ExecutionContext::new(cx.doc), input);
                 if points::written(result, cx).is_some() {
-                    cx.say(Level::Success, "Merdiven çizildi.");
+                    cx.say(
+                        Level::Success,
+                        if self.fit {
+                            "Merdiven çizildi; son kol son rıhtta bitti."
+                        } else {
+                            "Merdiven çizildi."
+                        },
+                    );
                 }
                 return (Vec::new(), None, Vec::new());
             }
@@ -809,14 +869,101 @@ impl FlightTool {
         self.drawn = Preview::default();
         self.why = None;
         self.notes.clear();
+        self.design = None;
         let pts = self.line(true);
         if pts.len() < 2 {
             return;
         }
         let (made, why, notes) = self.run(&pts, cx, false);
-        drawn(&made, &mut self.drawn);
+        flight_drawn(&made, cx.doc.settings().plot_scale, &mut self.drawn);
+        self.design = made.iter().find_map(|e| match e {
+            Entity::Stair(s) => {
+                let walk: Vec<kentos_geometry_core::vec2::Vec2> = s
+                    .stair
+                    .pts
+                    .iter()
+                    .map(|p| kentos_geometry_core::vec2::Vec2::new(p.x, p.y))
+                    .collect();
+                Some((
+                    s.stair.risers,
+                    s.stair.riser_height,
+                    s.stair.tread,
+                    arch::Walk::of(&walk).length(),
+                ))
+            }
+            _ => None,
+        });
         self.why = why;
         self.notes = notes;
+    }
+
+    /// The planned stair in words: its risers and their height, its tread, the step rule, its walking line.
+    fn design_words(&self, f: &Format) -> Vec<String> {
+        let Some((risers, riser, tread, run)) = self.design else {
+            return Vec::new();
+        };
+        vec![
+            format!("{risers} rıht × {}, basamak {}", f.length(riser), f.length(tread)),
+            format!("2R+G {} · yürüme çizgisi {}", f.length(2.0 * riser + tread), f.length(run)),
+        ]
+    }
+
+    /// Applies one setting's value: the stair's or the ramp's own; false when it does not read.
+    fn apply(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let words = upper_tr(js_trim(value));
+        let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
+        match key {
+            "G" => length(cx).map(|v| self.width = v).is_some(),
+            "H" if words.is_empty() || words.starts_with("GEN") => {
+                self.landing = None;
+                true
+            }
+            "H" => length(cx).map(|v| self.landing = Some(v)).is_some(),
+            "Y" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.rise = v).is_some(),
+            "E" if self.ramp => parse_number(value)
+                .filter(|v| *v > 0.0)
+                .map(|v| self.slope = Some(v))
+                .is_some(),
+            "Y" => length(cx).map(|v| self.height = v).is_some(),
+            "R" => length(cx).map(|v| self.max_riser = v).is_some(),
+            "S" if words.is_empty() || words.starts_with("HES") => {
+                self.risers = 0;
+                true
+            }
+            "S" => parse_number(value)
+                .filter(|v| *v >= 0.0 && *v <= f64::from(kentos_commands::MAX_RISERS) && v.fract() == 0.0)
+                .map(|v| self.risers = v as u32)
+                .is_some(),
+            "D" => length(cx).map(|v| self.tread = v).is_some(),
+            "K" if words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0) => {
+                self.cut = None;
+                true
+            }
+            "K" => length(cx).map(|v| self.cut = Some(v)).is_some(),
+            "U" => match words.as_str() {
+                w if w == "FIT" || w.starts_with("RIHT") => {
+                    self.fit = true;
+                    true
+                }
+                w if w == "CLICKED" || w.starts_with("TIKLA") => {
+                    self.fit = false;
+                    true
+                }
+                _ => false,
+            },
+            "N" => match words.as_str() {
+                "YES" | "AÇIK" | "EVET" => {
+                    self.numbering = true;
+                    true
+                }
+                "NO" | "KAPALI" | "HAYIR" => {
+                    self.numbering = false;
+                    true
+                }
+                _ => false,
+            },
+            _ => false,
+        }
     }
 }
 
@@ -853,32 +1000,45 @@ impl Tool for FlightTool {
         if let Some(ask) = self.ask {
             return Prompt::new(self.name(), ask_words(ask)).option("Geri", "G");
         }
-        let step = match self.pts.len() {
-            0 => "yürüme çizgisinin başına tıklayın",
-            1 => "sonraki noktaya tıklayın",
-            _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
-        };
         let n = |v: f64| v.to_string();
-        let mut p = Prompt::new(self.name(), step).option_with("Genişlik", "G", n(self.width));
         if self.ramp {
-            p = p.option_with("Yükseklik", "Y", n(self.rise)).option_with(
-                "Eğim",
-                "E",
-                self.slope
-                    .map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
-            );
-        } else {
-            p = p
-                .option_with("Rıht sayısı", "S", self.risers.to_string())
-                .option_with("Rıht", "R", n(self.riser))
-                .option_with("Basamak", "D", n(self.tread));
+            let step = match self.pts.len() {
+                0 => "orta çizginin başına tıklayın",
+                1 => "sonraki noktaya tıklayın",
+                _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
+            };
+            return Prompt::new(self.name(), step)
+                .option_with("Genişlik", "G", n(self.width))
+                .option_with("Yükseklik", "Y", n(self.rise))
+                .option_with(
+                    "Eğim",
+                    "E",
+                    self.slope.map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
+                )
+                .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
+                .option("Bitir", "Enter");
         }
-        p.option_with(
-            "Sahanlık",
-            "H",
-            self.landing.map_or_else(|| "Genişlik kadar".into(), n),
-        )
-        .option("Bitir", "Enter")
+        let step = match self.pts.len() {
+            0 => "yürüme çizgisinin başına tıklayın (çıkış buradan)",
+            1 if self.fit => "çıkış yönüne ya da dönüşe tıklayın; son kol rıhtlara göre biter",
+            1 => "çıkış yönüne ya da dönüşe tıklayın",
+            _ => "dönüşe tıklayın ya da Enter ile bitirin",
+        };
+        Prompt::new(self.name(), step)
+            .option_with("Yükseklik", "Y", n(self.height))
+            .option_with("En fazla rıht", "R", n(self.max_riser))
+            .option_with(
+                "Rıht sayısı",
+                "S",
+                if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+            )
+            .option_with("Basamak", "D", n(self.tread))
+            .option_with("Genişlik", "G", n(self.width))
+            .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
+            .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
+            .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+            .option_with("Son kol", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" })
+            .option("Bitir", "Enter")
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -911,33 +1071,21 @@ impl Tool for FlightTool {
                 self.ask = None;
                 return true;
             }
-            let ok = match ask {
-                Ask::Risers => parse_number(text)
-                    .filter(|v| *v >= 1.0 && v.fract() == 0.0)
-                    .map(|v| self.risers = v as u32)
-                    .is_some(),
-                Ask::Slope => parse_number(text)
-                    .filter(|v| *v > 0.0)
-                    .map(|v| self.slope = Some(v))
-                    .is_some(),
-                Ask::Rise => cx.typed_length(text).map(|v| self.rise = v).is_some(),
-                _ => match cx.typed_length(text).filter(|v| *v > 0.0) {
-                    Some(v) => {
-                        match ask {
-                            Ask::Width => self.width = v,
-                            Ask::Riser => self.riser = v,
-                            Ask::Tread => self.tread = v,
-                            _ => self.landing = Some(v),
-                        }
-                        true
-                    }
-                    None => false,
-                },
+            let field = match ask {
+                Ask::Width => "G",
+                Ask::Landing => "H",
+                Ask::Rise | Ask::Height => "Y",
+                Ask::Slope => "E",
+                Ask::MaxRiser => "R",
+                Ask::Risers => "S",
+                Ask::Tread => "D",
+                Ask::Cut => "K",
+                _ => "",
             };
-            if !ok {
+            if !self.apply(field, text, cx) {
                 cx.say(
                     Level::Warn,
-                    "Değer okunamadı; sıfırdan büyük bir sayı yazın.",
+                    "Değer okunamadı; sıfırdan büyük bir sayı yazın (Rıht sayısı: 0 hesaplanır, Kesme: 0 yok).",
                 );
                 return true;
             }
@@ -950,9 +1098,21 @@ impl Tool for FlightTool {
             "H" => Some(Ask::Landing),
             "Y" if self.ramp => Some(Ask::Rise),
             "E" if self.ramp => Some(Ask::Slope),
+            "Y" => Some(Ask::Height),
+            "R" if !self.ramp => Some(Ask::MaxRiser),
             "S" if !self.ramp => Some(Ask::Risers),
-            "R" if !self.ramp => Some(Ask::Riser),
             "D" if !self.ramp => Some(Ask::Tread),
+            "K" if !self.ramp => Some(Ask::Cut),
+            "N" if !self.ramp => {
+                self.numbering = !self.numbering;
+                self.see(cx);
+                return true;
+            }
+            "U" if !self.ramp => {
+                self.fit = !self.fit;
+                self.see(cx);
+                return true;
+            }
             _ => {
                 if let Some(p) = cx.typed_point(text, self.pts.last().copied(), self.hover) {
                     return self.accept_point(p, cx);
@@ -961,6 +1121,78 @@ impl Tool for FlightTool {
             }
         };
         true
+    }
+
+    fn settings(&self, f: &Format) -> Vec<Setting> {
+        let landing = self.landing.map_or_else(|| "Genişlik kadar".into(), |v| f.length(v));
+        if self.ramp {
+            return vec![
+                Setting::text("G", "Genişlik", f.length(self.width)),
+                Setting::text("Y", "Yükseklik farkı", f.length(self.rise)),
+                Setting::text(
+                    "E",
+                    "Eğim (%)",
+                    self.slope.map_or_else(|| "Hesaplanır".into(), |s| s.to_string()),
+                ),
+                Setting::text("H", "Sahanlık", landing),
+            ];
+        }
+        let mut rows = vec![
+            Setting::text("Y", "Yükseklik", f.length(self.height)),
+            Setting::text("R", "En fazla rıht", f.length(self.max_riser)),
+            Setting::text(
+                "S",
+                "Rıht sayısı",
+                if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+            ),
+            Setting::text("D", "Basamak", f.length(self.tread)),
+            Setting::text("G", "Genişlik", f.length(self.width)),
+            Setting::text("H", "Sahanlık", landing),
+            Setting::text("K", "Kesme yüksekliği", self.cut.map_or_else(|| "Yok".into(), |v| f.length(v))),
+            Setting::toggle("N", "Basamak numaraları", self.numbering),
+            Setting::choice(
+                "U",
+                "Son kol",
+                crate::tool_settings::choices(
+                    &[("fit", "Rıhtlara göre biter"), ("clicked", "Tıklanan yerde biter")],
+                    if self.fit { "fit" } else { "clicked" },
+                ),
+            ),
+        ];
+        let words = self.design_words(f);
+        if !words.is_empty() {
+            rows.push(Setting::hint("T", "Tasarım", words.join("; ")));
+        }
+        rows.push(Setting::hint(
+            "P",
+            "Profil",
+            "En fazla rıht, basamak ve kesme KentOS'un öntanımlı değerleridir; yönetmelik denetimi değildir.",
+        ));
+        rows
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        self.settings(&Format::default())
+            .into_iter()
+            .find(|s| s.key == key)
+            .map_or_else(Vec::new, |s| s.choices)
+    }
+
+    fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure(key, value, cx)
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if self.apply(key, value, cx) {
+            self.ask = None;
+            self.see(cx);
+            return true;
+        }
+        cx.say(
+            Level::Warn,
+            "Değer uygulanmadı: uzunluklar sıfırdan büyük; Rıht sayısı 0 (hesaplanır) ile 400 arası tam sayı; Kesme 0 ya da Yok ile kapanır.",
+        );
+        false
     }
 
     fn takes_words(&self) -> bool {
@@ -989,7 +1221,7 @@ impl Tool for FlightTool {
         Flow::Exit
     }
 
-    fn preview(&self, _format: &Format) -> Preview {
+    fn preview(&self, format: &Format) -> Preview {
         let mut out = self.drawn.clone();
         out.path = self.line(true);
         out.tag = self.hover.map(|at| {
@@ -997,6 +1229,7 @@ impl Tool for FlightTool {
             if let Some(why) = &self.why {
                 lines.push(why.clone());
             } else {
+                lines.extend(self.design_words(format));
                 lines.extend(self.notes.iter().take(2).cloned());
             }
             Tag { at, lines }

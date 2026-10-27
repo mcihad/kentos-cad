@@ -66,13 +66,27 @@ fn arch_elements_draw_as_the_reference_says() {
                 assert_eq!(f64::from(missing), e["missing"].as_f64().unwrap(), "{name}: sığmayan");
                 assert_eq!(codes(&arch::stair_checks(pts, stair)), want_codes(&e["codes"]), "{name}");
                 points(&arch::band(pts, stair.width / 2.0), &e["band"], name);
-                let lands = walk.landings(stair.landing());
+                let lands = arch::stair_landings(&walk, stair);
                 let want = e["landings"].as_array().unwrap();
                 assert_eq!(lands.len(), want.len(), "{name}: sahanlıklar");
                 for ((a, b), w) in lands.iter().zip(want) {
                     close(*a, w[0].as_f64().unwrap(), name);
                     close(*b, w[1].as_f64().unwrap(), name);
                 }
+                // docs/adr/0704 §1, §3: the fitted end, the risers dashed past the cut.
+                match (arch::stair_fit_end(pts, stair), e["fit"].as_array()) {
+                    (Some(p), Some(w)) => {
+                        close(p.x, w[0].as_f64().unwrap(), name);
+                        close(p.y, w[1].as_f64().unwrap(), name);
+                    }
+                    (None, None) => {}
+                    (got, want) => panic!("{name}: sığdırma {got:?}, beklenen {want:?}"),
+                }
+                let dashed = arch::stair_pieces(pts, stair, 50.0)
+                    .iter()
+                    .filter(|p| p.stroke.line_type.as_deref() == Some("dashed"))
+                    .count();
+                assert_eq!(dashed as u64, e["dashed"].as_u64().unwrap(), "{name}: kesikli rıhtlar");
             }
             Shape::Ramp { pts, ramp } => {
                 let run = arch::ramp_run(&arch::Walk::of(pts), ramp);

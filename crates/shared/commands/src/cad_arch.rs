@@ -318,7 +318,12 @@ pub struct ColumnsPlan {
     pub revision: String,
 }
 
-/// One stair to draw.
+/// The riser height a stair's count keeps under when it is drawn from its `height` and no `maxRiser` is given
+/// (docs/adr/0704 §1): KentOS's default, not a regulation's value.
+pub const DEFAULT_MAX_RISER: f64 = 0.175;
+
+/// One stair to draw. Its risers are given (`risers`, `riserHeight`) or drawn from its `height` (docs/adr/0704):
+/// `risers` given or as many as keep each riser under `maxRiser`, each `height / risers` high.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -330,13 +335,38 @@ pub struct NewStair {
     pub pts: Vec<Vec2>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
+    /// Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`.
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub risers: u32,
+    /// A riser's height; 0 or absent with `height` (which gives it: `height / risers`).
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub riser_height: f64,
     /// A tread's depth along the walking line.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tread: f64,
+    /// Its whole rise, the risers drawn from it (docs/adr/0704 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub max_riser: Option<f64>,
+    /// The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub cut_height: Option<f64>,
+    /// True: its last point moves along its last segment so that its walking line ends at its last riser.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fit: Option<bool>,
     /// A landing's length at a turn; absent: the width.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -359,11 +389,13 @@ pub struct NewStair {
 }
 
 /// Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
-/// (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`) are warnings.
+/// (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
-/// `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
-/// Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`.
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the
+/// cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
+/// `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also
+/// `slots_exhausted`.
+/// Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

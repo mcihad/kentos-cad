@@ -36467,33 +36467,40 @@ class NewSpaceSeparator(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class NewStair(_Model):
-    """One stair to draw.
+    """One stair to draw. Its risers are given (`risers`, `riserHeight`) or drawn from its `height` (docs/adr/0704):
+    `risers` given or as many as keep each riser under `maxRiser`, each `height / risers` high.
     Attributes:
         pts: Its walking line, up from its first point: two points straight, three an L, four a U. Unit: length.
         width: Unit: length.
-        risers: Unit: count.
-        riser_height: Unit: length.
         tread: A tread's depth along the walking line. Unit: length.
         cut: The riser its cut line stands at; absent: none. Unit: index.
+        cut_height: The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`). Unit: length.
+        fit: True: its last point moves along its last segment so that its walking line ends at its last riser.
+        height: Its whole rise, the risers drawn from it (docs/adr/0704 §1). Unit: length.
         landing: A landing's length at a turn; absent: the width. Unit: length.
+        max_riser: The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`. Unit: length.
+        riser_height: A riser's height; 0 or absent with `height` (which gives it: `height / risers`). Unit: length.
+        risers: Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`. Unit: count.
     """
     pts: list[Vec2]
     width: float
-    risers: int
-    riser_height: float
     tread: float
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     cut: int | None | Unset = UNSET
+    cut_height: float | None | Unset = UNSET
+    fit: bool | None | Unset = UNSET
+    height: float | None | Unset = UNSET
     landing: float | None | Unset = UNSET
+    max_riser: float | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
+    riser_height: float = 0.0
+    risers: int = 0
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         out["width"] = float(self.width)
-        out["risers"] = self.risers
-        out["riserHeight"] = float(self.riser_height)
         out["tread"] = float(self.tread)
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
@@ -36501,10 +36508,20 @@ class NewStair(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.cut is not UNSET:
             out["cut"] = self.cut
+        if self.cut_height is not UNSET:
+            out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
+        if self.fit is not UNSET:
+            out["fit"] = self.fit
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
+        if self.max_riser is not UNSET:
+            out["maxRiser"] = None if self.max_riser is None else float(self.max_riser)
         if self.numbering is not UNSET:
             out["numbering"] = self.numbering
+        out["riserHeight"] = float(self.riser_height)
+        out["risers"] = self.risers
         return out
 
     @classmethod
@@ -36512,14 +36529,18 @@ class NewStair(_Model):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             width=float(data["width"]),
-            risers=data["risers"],
-            riser_height=float(data["riserHeight"]),
             tread=float(data["tread"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             cut=data.get("cut", UNSET),
+            cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
+            fit=data.get("fit", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            max_riser=UNSET if "maxRiser" not in data else None if data["maxRiser"] is None else float(data["maxRiser"]),
             numbering=data.get("numbering", UNSET),
+            riser_height=float(data["riserHeight"]) if "riserHeight" in data else 0.0,
+            risers=data["risers"] if "risers" in data else 0,
         )
 
 
@@ -54274,11 +54295,13 @@ class StairEntity(Entity):
 @dataclass(kw_only=True, slots=True)
 class StairsCreate(_Model):
     """Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
-    (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`) are warnings.
+    (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.
 
-    Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
-    `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
-    Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`.
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the
+    cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
+    `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also
+    `slots_exhausted`.
+    Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
     Attributes:
         line_weight: Unit: paper-mm.
     """

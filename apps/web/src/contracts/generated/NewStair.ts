@@ -3,17 +3,42 @@ import type { ArchInfo } from "./ArchInfo";
 import type { Vec2 } from "./Vec2";
 
 /**
- * One stair to draw.
+ * One stair to draw. Its risers are given (`risers`, `riserHeight`) or drawn from its `height` (docs/adr/0704):
+ * `risers` given or as many as keep each riser under `maxRiser`, each `height / risers` high.
  */
 export type NewStair = { 
 /**
  * Its walking line, up from its first point: two points straight, three an L, four a U.
  */
-pts: Array<Vec2>, width: number, risers: number, riserHeight: number, 
+pts: Array<Vec2>, width: number, 
+/**
+ * Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`.
+ */
+risers?: number, 
+/**
+ * A riser's height; 0 or absent with `height` (which gives it: `height / risers`).
+ */
+riserHeight?: number, 
 /**
  * A tread's depth along the walking line.
  */
 tread: number, 
+/**
+ * Its whole rise, the risers drawn from it (docs/adr/0704 §1).
+ */
+height?: number, 
+/**
+ * The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`.
+ */
+maxRiser?: number, 
+/**
+ * The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`).
+ */
+cutHeight?: number, 
+/**
+ * True: its last point moves along its last segment so that its walking line ends at its last riser.
+ */
+fit?: boolean, 
 /**
  * A landing's length at a turn; absent: the width.
  */

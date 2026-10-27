@@ -9,8 +9,11 @@ so every length is an exact fraction; a turn's angle is checked as floats within
 - A column's rectangle: (±w/2, ±d/2) turned by its rotation about its centre.
 - A stair's band: the walking line offset half its width each side, mitred at the turns; the landings: at each turn,
   its length along the walking line, half each side; the risers: from 0 a tread apart, one that falls strictly inside a
-  landing moved to its end, one past the walking line's end not fitting. Checks: stair_short (risers not fitting),
-  stair_long (length past the last riser), stair_step_rule (2 × riser + tread outside 0.60–0.65 m).
+  landing moved to its end, one past the walking line's end not fitting; two landings leaving less than a tread
+  between them are one (docs/adr/0704 §2). Checks: stair_short (risers not fitting), stair_long (length past the last
+  riser), stair_step_rule (2 × riser + tread outside 0.60–0.65 m). Fitted (ADR 0704 §1): the last point moved along
+  the last segment to the last riser of a line long enough for all, none when that riser is not past the last turn.
+  Past its cut riser a stair's risers are drawn dashed (ADR 0704 §3).
 - A ramp's sloped run: its length less its landings; its slope rise / run × 100; ramp_slope_mismatch beyond 0.1 points;
   its levels “+base” and “+base+rise” with two decimals.
 """
@@ -54,16 +57,32 @@ def landings(pts, at, land):
     return [(max(at[k] - land / 2, F(0)), min(at[k] + land / 2, s)) for k in range(1, len(pts) - 1)]
 
 
+# The core's tolerance (docs/adr/0343 §2): a riser within it of a landing's ends is not inside it, one within it past
+# the walking line's end still fits; two landings within it of a tread apart stay two.
+EPS = F(1, 10**9)
+
+
+def stair_landings(pts, at, land, tread):
+    """A stair's: consecutive landings with less than a tread between them make one."""
+    out = []
+    for a, b in landings(pts, at, land):
+        if out and a - out[-1][1] < tread - EPS:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
 def risers(pts, width, count, tread, land):
     at = walk(pts)
-    lands = landings(pts, at, land)
+    lands = stair_landings(pts, at, land, tread)
     out, missing, s = [], 0, F(0)
     for _ in range(count):
         for a, b in lands:
-            if a < s < b:
+            if a + EPS < s < b - EPS:
                 s = b
                 break
-        if s > at[-1]:
+        if s > at[-1] + EPS:
             missing += 1
         else:
             out.append(s)
@@ -131,7 +150,21 @@ def column_case(name, at, width, depth, rotation):
     return {"name": name, "shape": shape, "scale": 100.0, "expect": {"corners": corners}}
 
 
-def stair_case(name, pts, width, count, riser, tread, land=None):
+def fit_end(pts, width, count, tread, land):
+    """The last point moved along the last segment to the last riser of a line long enough for every riser."""
+    prev = pts[-2]
+    d = unit(prev, pts[-1])
+    start = walk(pts[:-1])[-1]
+    reach = (count + 1) * tread + len(pts) * land
+    far = pts[:-1] + [(prev[0] + d[0] * reach, prev[1] + d[1] * reach)]
+    st, missing, _ = risers(far, width, count, tread, land)
+    if missing or not st or st[-1] - start <= EPS:
+        return None
+    t = st[-1] - start
+    return (prev[0] + d[0] * t, prev[1] + d[1] * t)
+
+
+def stair_case(name, pts, width, count, riser, tread, land=None, cut=None):
     land_len = land if land is not None else width
     st, missing, at = risers(pts, width, count, tread, land_len)
     codes = []
@@ -146,10 +179,15 @@ def stair_case(name, pts, width, count, riser, tread, land=None):
              "risers": count, "riserHeight": float(riser), "tread": float(tread)}
     if land is not None:
         shape["landing"] = float(land)
+    if cut is not None:
+        shape["cut"] = cut
+    fit = fit_end(pts, width, count, tread, land_len)
+    shown = len(st) if cut is None else min(max(cut, 1), len(st))
     return {"name": name, "shape": shape, "scale": 50.0,
             "expect": {"stations": [float(s) for s in st], "missing": missing, "codes": codes,
                        "band": [fl(p) for p in band(pts, width / 2)],
-                       "landings": [[float(a), float(b)] for a, b in landings(pts, at, land_len)]}}
+                       "landings": [[float(a), float(b)] for a, b in stair_landings(pts, at, land_len, tread)],
+                       "fit": fl(fit) if fit else None, "dashed": len(st) - shown}}
 
 
 def level(v):
@@ -201,6 +239,21 @@ def cases():
         stair_case("U merdiven, iki dönüş", [P(0, 0), P(3, 0), P(3, 2), P(0, 2)], F(1), 18, F(17, 100), F(28, 100)),
         stair_case("Eğik düz merdiven (3-4-5)", [P(0, 0), P(F(12, 5), F(16, 5))], F(1), 13, F(17, 100), F(3, 10)),
         stair_case("L merdiven, kısa sahanlık", [P(0, 0), P(2, 0), P(2, 2)], F(1), 12, F(16, 100), F(3, 10), F(1, 2)),
+        # ADR 0704: a U-stair's flights a width apart (1.2 + 0.1 gap): one landing across both, no riser between.
+        stair_case("U merdiven, kollar arası dar: tek sahanlık", [P(0, 0), P(3, 0), P(3, F(13, 10)), P(0, F(13, 10))],
+                   F(6, 5), 18, F(1, 6), F(7, 25)),
+        stair_case("U merdiven, sahanlıklar üst üste: tek sahanlık", [P(0, 0), P(3, 0), P(3, 1), P(0, 1)],
+                   F(6, 5), 18, F(1, 6), F(7, 25)),
+        stair_case("U merdiven, aralarında tam bir basamak: iki sahanlık", [P(0, 0), P(3, 0), P(3, F(37, 25)), P(0, F(37, 25))],
+                   F(6, 5), 18, F(1, 6), F(7, 25)),
+        stair_case("Düz merdiven, kesmeden sonra kesikli rıhtlar", [P(0, 0), P(F(119, 25), 0)], F(6, 5), 18, F(1, 6),
+                   F(7, 25), cut=6),
+        stair_case("L merdiven, yola sığmayan uç (son kol kısa)", [P(0, 0), P(F(14, 5), 0), P(F(14, 5), 1)], F(1), 18,
+                   F(1, 6), F(7, 25)),
+        stair_case("L merdiven, rıhtlar dönüşten önce biter: sığdırılamaz", [P(0, 0), P(6, 0), P(6, 2)], F(1), 12,
+                   F(1, 6), F(7, 25)),
+        stair_case("Eğik (3-4-5) düz merdiven, uzun yol", [P(0, 0), P(F(24, 5), F(32, 5))], F(1), 10, F(17, 100),
+                   F(3, 10)),
         ramp_case("Düz rampa, eğim verilmiş ve uyuyor", [P(0, 0), P(10, 0)], F(3, 2), F(1, 2), slope=5),
         ramp_case("Düz rampa, eğimsiz", [P(0, 0), P(8, 0)], F(3, 2), F(2, 5)),
         ramp_case("L rampa, eğim uymuyor", [P(0, 0), P(6, 0), P(6, 6)], F(3, 2), F(3, 5), slope=6),

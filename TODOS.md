@@ -76,6 +76,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Denetim sekmesi. Web dönüşünde sekme (grup, eşikler, satıra basınca seç ve
   yakınlaş, Düzelt ile bulgunun `fix.step`'i, yeniden denetim) aynı ortak
   durumlarla (`cad.arch.audit.json`) sınanmalı.
+- ARCH-STAIR-01 / ADR0704: `cad.stairs.create`'in `height`, `maxRiser`,
+  `cutHeight`, `fit` alanları; birleşen sahanlık ve kesmenin üstünde kesikli
+  rıhtlar. Web'in Merdiven aracı yükseklikten çalışmalı (görünür ayarlar, son
+  kol rıhtlara göre, planı önizleme) ve `cad.stairs.create.design.json` ile
+  sınanmalı; web'in çizicisi kesikli parça çizgi tipini göstermeli.
 
 - ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
   başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı

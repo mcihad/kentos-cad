@@ -1905,6 +1905,7 @@ const ENTRIES: &[Entry] = &[
             "stair_long",
             "stair_step_rule",
             "stair_rise_level",
+            "stair_riser_high",
         ],
         targets: none,
     },
