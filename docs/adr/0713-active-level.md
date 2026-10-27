@@ -68,3 +68,23 @@ söyleyen oturum durumu. Kat görünümü (yalnız etkin katı gösterme, öbür
   cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture`: aracın Kat satırı ve menüsü,
   1. katta çizilen duvarın Öznitelikler'i, Toplu mahal bul'un “Zemin kat (etkin kat)”ı, daire yürüyüşünde Denetim'in
   “Bulgu yok”u (önce dört kat bulgusu).
+
+## 27 Ekim 2026 eki: merdivenin yüksekliği katın
+
+Daire yürüyüşünde (ADR 0344'ün 27 Ekim eki) merdiven etkin kata (Zemin kat, kat yüksekliği 3,06 m) yazıldı, ama aracın
+Yükseklik'i 3,00 m'de kaldı: önizleme “18 rıht × 0.167 m = 3.000 m; katın yüksekliği 3.060 m” uyarısını veriyordu
+(`stair_rise_level`, ADR 0704 §1) ve kullanıcı katın yüksekliğini elle yazmak zorundaydı. ADR 0704'ün araştırması
+(Revit: rıht sayısı iki kat arasındaki yükseklikten gelir) bunu söylüyordu; araç katı bilmiyordu.
+
+Karar:
+
+- Merdiven ve Döner merdiven araçlarının Yükseklik'i, yazılmadıkça etkin katın yüksekliğidir (katın yüksekliği
+  biliniyorsa); ayarlarda “3.060 m · katın”, komut satırında “3.06 (katın)” yazar. Etkin kat değişince izler.
+- Yazılan yükseklik araç oturumu boyunca kalır; boş ya da “kat” yazmak katın yüksekliğine döner. Yüksekliği bilinmeyen
+  katta ya da etkin kat yokken eskisi gibi aracın kendi değeri (3,00 m).
+- Komut değişmez: araç yüksekliği `cad.stairs.create`'in `height`'ına açıkça yazar (CMD-07); Python ve MCP yüksekliği
+  kendileri verir. Rampanın Yükseklik farkı katı izlemez (rampa bir katı nadiren aşar).
+
+Doğrulama: `cargo test -p kentos-interaction --test all active_level` (katın 3,06 m'si 18 × 0,17 m; yazılan 2,80 m kalır,
+“kat” döner; yüksekliksiz katta 3,000 m) ve merdiven testleri; resim `KENTOS_SHOTS_ONLY=daire-merdiven`: uyarısız tasarım
+“18 rıht × 0.170 m”.

@@ -319,6 +319,10 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   (eski katsız çizimler bozulmaz), elle seçilen kat kalır. Daire yürüyüşünde
   Denetim'in dört “katı yok” bulgusu kalktı. Etkileşim/masaüstü testleri ve
   gerçek GUI resimleri (`.run/shots/arac-kat-*`).
+- [x] Merdivenin yüksekliği katın (ADR0713 eki): Merdiven ve Döner merdiven'in
+  Yükseklik'i yazılmadıkça etkin katın yüksekliği (“3.060 m · katın”), yazılan
+  kalır, boş/“kat” döner; daire yürüyüşündeki `stair_rise_level` uyarısı kalktı.
+  Etkileşim testi ve gerçek GUI (`arac-daire-merdiven`).
 
 - Kat görünümü: etkin katın nesneleri tam, öbür katlarınkiler soluk ya da gizli
   (Archicad Ghost Story, Revit Underlay); etkin katın dosyaya yazılması.
@@ -1154,6 +1158,8 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-UX-04 / ADR0713 eki | Merdivenin Yükseklik'i etkin katın yüksekliği (yazılmadıkça; “kat” döner): daire yürüyüşündeki 3,000/3,060 m `stair_rise_level` uyarısı kalktı. Etkileşim testi, merdiven testleri, gerçek GUI. | [x] Kat yüksekliği alt maddesi |
+| 2026-10-27 | ARCH-DOC-02 düzeltme / ADR0344 eki | Kapı ve pencere çizelgesinin Duvar sütunu stilsiz duvarda boştu (Duvar aracı Stil: Yok başlar): artık duvarın kalınlığı çizim birimiyle (“0.250 m”). Yeni ortak durum (37), gerçek GUI (`arac-daire-cizelge-yazildi`). | [x] Kusur kapandı |
 | 2026-10-27 | ARCH-DRAW-02 düzeltme / ADR0657 eki | Ölçülü bölme'nin yanı imleçle (Sol/Sağ seçilene dek), önizlemedeki uzaklık sayılı ölçü. 2 araç testi, gerçek GUI. | [x] Kullanılabilirlik kusuru kapandı |
 | 2026-10-27 | ARCH-OPEN-01 / ADR0714 | Yerleştirirken numara (Otomatik K/P/B, yazılan numaradan sırayla, Yok) ve zeminli etiket yazısı; daire yürüyüşünde etiketler K1–K3/P1–P3 doldu. 3 araç testi, tam etkileşim/masaüstü takımları, gerçek GUI. | [x] Numara alt maddesi; odaya göre numara açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0713 | Etkin kat: zemin katta açılış, durum çubuğunda ve araç ayarlarında Kat menüsü; duvar, kolon, merdiven, rampa, aks ağı etkin kata; mahal/ayırıcı/iç zincir o katta duvar varken izler. Belgele'de Duvar ölçüleri ile İç ölçü zinciri tek “Ölçü ▾” (1440 px'te Proje paneli yazılı kaldı). 3+2 test, tam etkileşim (760) ve masaüstü (1343) takımı, gerçek GUI. | [~] İlk dilim; kat görünümü ve toplu kat atama açık |

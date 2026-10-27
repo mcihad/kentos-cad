@@ -253,7 +253,13 @@ def value(d, i, place, attr=None):
         if place == "area":
             return ("area", f["width"] * h) if h is not None else None
         if place == "wall":
-            return text(wall.get("style")) if wall else None
+            if not wall:
+                return None
+            if wall.get("style"):
+                return ("text", wall["style"])
+            # An unstyled wall: its thickness in the drawing's unit, said (ADR 0344's 27 October addendum).
+            ratio = {"m": 1, "cm": 100, "mm": 1000, "in": 1 / 0.0254, "ft": 1 / 0.3048}[d.drawing_unit]
+            return ("text", f"{fixed(wall['width'] * ratio, 3)} {d.drawing_unit}")
         if place == "level":
             return text(level_name(wall.get("arch"))) if wall else None
         if place == "phase":
@@ -1478,6 +1484,13 @@ def screate_cases():
     d = Drawing()
     made = screate_step(d, "execute", {"layerId": "cizelge", "at": P(0, -20), "of": "spaces", "total": True})
     c.add("mahal taşınınca çizelgesi aynı kalır", [made, *move(d, [3], 1.0, 0.0)])
+    # An unstyled wall's openings say its thickness (ADR 0344's 27 October addendum).
+    d = Drawing()
+    d.objs[1][2].pop("style")
+    setup = copy.deepcopy(SETUP)
+    next(e for e in setup["entities"] if e["id"] == 1).pop("style")
+    c.cases.append({"name": "stilsiz duvardaki açıklıkların Duvar sütunu duvarın kalınlığını söyler", "setup": setup,
+                    "steps": copy.deepcopy(PRELUDE) + [screate_step(d, "execute", one)]})
     return c.cases
 
 # ── Çizelgeyi düzenle ──────────────────────────────────────────────────────────────────────────────────────────

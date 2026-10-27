@@ -214,9 +214,15 @@ impl Document {
                     "sill" => Some(Length(x.sill.unwrap_or(0.0))),
                     "head" => x.head.map(Length),
                     "area" => height.map(|h| Area(x.width * h)),
-                    "wall" => wall
-                        .and_then(|w| w.style)
-                        .map(|s| Text(self.wall_style_name(Some(&s)))),
+                    // An unstyled wall says its thickness, with its unit (docs/adr/0344's 27 October addendum).
+                    "wall" => wall.map(|w| match w.style.filter(|s| !s.is_empty()) {
+                        Some(s) => Text(self.wall_style_name(Some(&s))),
+                        None => Text(format!(
+                            "{} {}",
+                            self.arch_value_text(&Length(w.width), false),
+                            crate::text_fields::unit_name(self.settings().drawing_unit.unwrap_or_default())
+                        )),
+                    }),
                     "level" => wall.and_then(|w| self.level_name(&w.arch)).map(Text),
                     "phase" => wall
                         .and_then(|w| w.arch.phase)

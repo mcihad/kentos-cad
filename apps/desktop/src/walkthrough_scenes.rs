@@ -1,11 +1,12 @@
 //! A walk through an apartment plan the way an architect draws it, one picture a step, to find what the tools do
 //! wrong together (not one at a time): the shell with Dikdörtgen duvar (12 × 9 m clear, 25 cm), two Ölçülü bölme
 //! partitions, doors and windows, Toplu mahal bul, Hepsini etiketle, Duvar ölçüleri round the shell, an İç ölçü
-//! zinciri across the rooms, the Metraj and the Denetim. `tools_screens` takes them in both themes at 1440×900 and
+//! zinciri across the rooms, Mahalleri numarala, a kitchen run, a stair, the door and window schedule, the Metraj and
+//! the Denetim. `tools_screens` takes them in both themes at 1440×900 and
 //! 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=daire-kabuk,daire-bolme-onizleme,daire-bolmeler,daire-aciklik,daire-mahal-onizleme,daire-mahaller,daire-etiket-onizleme,daire-etiketler,daire-olculer,daire-ic-olcu,daire-metraj,daire-denetim cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=daire-kabuk,daire-bolme-onizleme,daire-bolmeler,daire-aciklik,daire-mahal-onizleme,daire-mahaller,daire-etiket-onizleme,daire-etiketler,daire-olculer,daire-ic-olcu,daire-numara,daire-numaralandi,daire-mutfak,daire-merdiven,daire-cizelge,daire-cizelge-yazildi,daire-metraj,daire-denetim cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -217,6 +218,61 @@ fn on_first_floor(app: &mut App) {
     hover(app, [14.0, 11.0]);
 }
 
+/// Mahalleri numarala: the rooms clicked in turn (west, south-east, north-east), the preview before Enter.
+fn numbering(app: &mut App) {
+    tagged(app);
+    run(app, "tool.spaceNumber");
+    for p in [[2.0, 4.5], [8.0, 2.5], [8.0, 7.0]] {
+        click(app, p);
+    }
+    hover(app, [14.0, 11.0]);
+}
+
+/// Enter: the rooms numbered, their tags following.
+fn numbered(app: &mut App) {
+    numbering(app);
+    typed(app, "");
+    app.selection.clear();
+    hover(app, [14.0, 11.0]);
+}
+
+/// Mutfak dizisi along the north-east room's north wall, the cabinets toward the room.
+fn kitchen(app: &mut App) {
+    numbered(app);
+    run(app, "tool.casework");
+    click(app, [4.6, 9.0]);
+    click(app, [8.2, 9.0]);
+    hover(app, [6.0, 8.0]);
+}
+
+/// The kitchen written; a straight stair in the west room, its preview.
+fn stair(app: &mut App) {
+    kitchen(app);
+    click(app, [6.0, 8.0]);
+    typed(app, "");
+    run(app, "tool.stair");
+    click(app, [0.6, 1.0]);
+    hover(app, [0.6, 6.0]);
+}
+
+/// The stair written; Kapı ve pencere çizelgesi hanging from the pointer east of the plan.
+fn schedule(app: &mut App) {
+    stair(app);
+    click(app, [0.6, 6.0]);
+    typed(app, "");
+    run(app, "tool.scheduleOpenings");
+    hover(app, [13.5, 9.0]);
+}
+
+/// The schedule placed; Esc leaves the tool (Enter would start the next one).
+fn scheduled(app: &mut App) {
+    schedule(app);
+    click(app, [13.5, 9.0]);
+    app.cancel();
+    app.selection.clear();
+    hover(app, [14.0, -2.0]);
+}
+
 /// Metraj over it all.
 fn quantities(app: &mut App) {
     interior(app);
@@ -268,6 +324,12 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("daire-etiketler", tagged),
         ("daire-olculer", dimensions),
         ("daire-ic-olcu", interior),
+        ("daire-numara", numbering),
+        ("daire-numaralandi", numbered),
+        ("daire-mutfak", kitchen),
+        ("daire-merdiven", stair),
+        ("daire-cizelge", schedule),
+        ("daire-cizelge-yazildi", scheduled),
         ("daire-metraj", quantities),
         ("daire-denetim", audit),
     ]

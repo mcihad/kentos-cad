@@ -6,7 +6,8 @@
 //!   (“6 6 4.5”): the first grid's two points, then a click on the side the others go.
 //! - Kolon: a click its centre; near where two grids cross it stands there, tied to them. Biçim (B), En (E), Boy (Y),
 //!   Döndür (D), Etiket (K); Aks kesişimleri (A) puts one at every crossing of the grids shown.
-//! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y): En fazla
+//! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y; Etkin
+//!   kat's height until one is typed, docs/adr/0713): En fazla
 //!   rıht (R), Rıht sayısı (S, else from the height), Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar
 //!   (N); its last flight ends at its last riser (docs/adr/0704). A ramp's Yükseklik (Y) and Eğim (E). Their checks
 //!   are said, never refused; the same values are in the tool's settings pane. Biçim (B) Döner, and Döner merdiven
@@ -715,6 +716,10 @@ pub struct FlightTool {
     width: f64,
     /// A stair's whole rise, its highest riser, its risers (0: from the height), its tread, its cut height.
     height: f64,
+    /// The rise was typed (Y): Etkin kat's height is no longer followed (docs/adr/0713's 27 October addendum).
+    height_typed: bool,
+    /// Etkin kat's floor-to-floor height, as last seen: the stair's rise until one is typed.
+    level_height: Option<f64>,
     max_riser: f64,
     risers: u32,
     tread: f64,
@@ -794,6 +799,8 @@ impl FlightTool {
             arc_design: None,
             width: 1.2,
             height: 3.0,
+            height_typed: false,
+            level_height: None,
             max_riser: kentos_commands::DEFAULT_MAX_RISER,
             risers: 0,
             tread: 0.28,
@@ -833,6 +840,41 @@ impl FlightTool {
             spiral: true,
             width: 1.0,
             ..Self::stair()
+        }
+    }
+
+    /// A stair's rise: typed, else Etkin kat's height (docs/adr/0713's 27 October addendum), else its default.
+    fn stair_height(&self) -> f64 {
+        self.followed_height().unwrap_or(self.height)
+    }
+
+    /// Etkin kat's height while the stair follows it.
+    fn followed_height(&self) -> Option<f64> {
+        if self.height_typed { None } else { self.level_height }
+    }
+
+    /// Sees Etkin kat's height (a positive, finite floor to floor).
+    fn see_level(&mut self, cx: &Context<'_>) {
+        self.level_height = cx
+            .level
+            .and_then(|id| {
+                cx.doc
+                    .settings()
+                    .arch
+                    .as_ref()?
+                    .levels
+                    .iter()
+                    .find(|l| l.id == id)?
+                    .height
+            })
+            .filter(|h| h.is_finite() && *h > 0.0 && *h <= 100.0);
+    }
+
+    /// The stair's rise in the settings: Etkin kat's, said so.
+    fn height_words(&self, f: &Format) -> String {
+        match self.followed_height() {
+            Some(h) => format!("{} · katın", f.length(h)),
+            None => f.length(self.height),
         }
     }
 
@@ -970,7 +1012,7 @@ impl FlightTool {
                     width: self.width,
                     risers: self.risers,
                     tread: self.tread,
-                    height: Some(self.height),
+                    height: Some(self.stair_height()),
                     max_riser: Some(self.max_riser),
                     cut_height: self.cut,
                     fit: self.fit.then_some(true),
@@ -1005,6 +1047,7 @@ impl FlightTool {
     }
 
     fn see(&mut self, cx: &mut Context<'_>) {
+        self.see_level(cx);
         self.drawn = Preview::default();
         self.why = None;
         self.notes.clear();
@@ -1143,7 +1186,17 @@ impl FlightTool {
                 .filter(|v| *v > 0.0)
                 .map(|v| self.slope = Some(v))
                 .is_some(),
-            "Y" => length(cx).map(|v| self.height = v).is_some(),
+            // Empty or Kat: Etkin kat's height again (docs/adr/0713's 27 October addendum).
+            "Y" if words.is_empty() || words.contains("KAT") => {
+                self.height_typed = false;
+                true
+            }
+            "Y" => length(cx)
+                .map(|v| {
+                    self.height = v;
+                    self.height_typed = true;
+                })
+                .is_some(),
             "R" => length(cx).map(|v| self.max_riser = v).is_some(),
             "S" if words.is_empty() || words.starts_with("HES") => {
                 self.risers = 0;
@@ -1253,6 +1306,11 @@ impl Tool for FlightTool {
         self.pts.len()
     }
 
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see_level(cx);
+        Flow::Stay
+    }
+
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.pts.pop().is_some() {
             self.turned = 0.0;
@@ -1277,7 +1335,11 @@ impl Tool for FlightTool {
             };
             return Prompt::new(self.name(), step)
                 .option_with("Biçim", "B", "Döner")
-                .option_with("Yükseklik", "Y", n(self.height))
+                .option_with(
+                    "Yükseklik",
+                    "Y",
+                    self.followed_height().map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
+                )
                 .option_with("En fazla rıht", "R", n(self.max_riser))
                 .option_with(
                     "Rıht sayısı",
@@ -1320,7 +1382,11 @@ impl Tool for FlightTool {
         };
         Prompt::new(self.name(), step)
             .option_with("Biçim", "B", "Düz, L, U")
-            .option_with("Yükseklik", "Y", n(self.height))
+            .option_with(
+                    "Yükseklik",
+                    "Y",
+                    self.followed_height().map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
+                )
             .option_with("En fazla rıht", "R", n(self.max_riser))
             .option_with(
                 "Rıht sayısı",
@@ -1352,6 +1418,7 @@ impl Tool for FlightTool {
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        self.see_level(cx);
         if self.spiralling() {
             // Its centre, its start, then the end of its turn (docs/adr/0709).
             match self.pts.len() {
@@ -1506,7 +1573,7 @@ impl Tool for FlightTool {
                     if self.curved { "curved" } else { "straight" },
                 ),
             ),
-            Setting::text("Y", "Yükseklik", f.length(self.height)),
+            Setting::text("Y", "Yükseklik", self.height_words(f)),
             Setting::text("R", "En fazla rıht", f.length(self.max_riser)),
             Setting::text(
                 "S",
@@ -1587,6 +1654,7 @@ impl Tool for FlightTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see_level(cx);
         if self.spiralling() {
             if self.pts.len() == 2 {
                 self.write_arc(cx);

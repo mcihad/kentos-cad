@@ -73,3 +73,11 @@ numarasını gösterir; kaynak numara sahnede kalır. Son altı etkileşim testi
 clippy/derleme, koyu/açık 18 px geniş/dar gerçek fare testi ve tek Enter /
 Diğer→Uygula / Escape / undo ile bağımsız KCAD kontrolü geçmiştir (43–52).
 Genel etiket yerleştirme, kamera, ölçek ve renderer davranışı değişmemiştir.
+
+## 27 Ekim 2026 eki: önerilen numaranın okunuşu
+
+Daire yürüyüşünde (ADR 0344'ün 27 Ekim eki) dar odanın önerilen numarası (“→ Z-001”) etiket noktasının sağına
+yazıldığından bölme duvarına taşıyor, duvarın çizgisi yazının içinden geçiyordu. Karar: önerilen numara etiketin üstünde
+ortalanır (yazının yaklaşık genişliğiyle) ve önizlemenin bütün kısa yazıları (`Preview::labels`) haritanın işaretleri gibi
+zeminin rengindeki haleyle çizilir: altından geçen çizgi yazıyı kesmez. Komut ve önizlemenin planı değişmedi. Doğrulama:
+mahal numaralama testleri (7) ve resim `KENTOS_SHOTS_ONLY=daire-numara`.

@@ -137,3 +137,10 @@ Doğrulama: 164+29 etiket durumu bağımsız başvurudan yeniden yazıldı (`tag
 `cargo test -p kentos-geometry-core --test all spaces` (etiketli mahal yazısız, yeniden konunca da), `cargo test -p
 kentos-interaction --test all tagged_spaces` (etiket konunca yazı gider, belge yeniden okununca da, geri alınınca döner),
 `kentos-contracts`'ın `a_fill_drops_its_empty_lines`'ı; resimler `KENTOS_SHOTS_ONLY=daire-etiket-onizleme,daire-etiketler`.
+
+Aynı yürüyüşün devamında (Kapı ve pencere çizelgesi) dördüncü kusur: **Duvar sütunu boş.** Sütun açıklığın duvarının
+stilinin adını yazar; Duvar aracı stilsiz başlar (Stil: Yok), çizilen duvarların stili yoktu, sütun her satırda boştu.
+Karar: stilsiz duvarda sütun duvarın kalınlığını çizim birimiyle yazar (“0.250 m”): stilin yokluğunda duvarı tanıtan
+değer odur. Stilli duvar eskisi gibi stilinin adıdır. (Üreticilerin kapı/pencere listelerinde duvar kalınlığı için resmî
+belge bulunamadı; karar KentOS'undur.) Doğrulama: `cad.schedules.create`'e yeni
+ortak durum (stilsiz duvardaki iki açıklık “0.200 m”, 37 durum; `tag_command_cases.py`), resim `daire-cizelge-yazildi`.

@@ -140,12 +140,14 @@ impl Number {
                         let number = s.space.number.clone().unwrap_or_default();
                         self.last.clone_from(&number);
                         if let Some(p) = cx.doc.tag_anchor(e) {
+                            let text = format!("→ {number}");
+                            // About its middle over the room's tag (a UI letter is some 6.6 px wide at 11 px), so that
+                            // a narrow room's stays inside it; the room's present number is still drawn underneath.
+                            let half = text.chars().count() as f32 * 3.3;
                             self.drawn.labels.push(Label {
                                 at: Vec2::new(p.x, p.y),
-                                // The original room number is still drawn underneath.
-                                // Keep the proposed label short at large UI text sizes.
-                                text: format!("→ {number}"),
-                                offset: [8., -28.],
+                                text,
+                                offset: [-half, -28.],
                                 tone: Tone::Accent,
                             });
                         }

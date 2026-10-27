@@ -101,3 +101,58 @@ fn a_room_follows_the_active_level_only_while_it_has_walls() {
     assert!(b.run(|s, cx| s.configure("L", "id:kat-1", cx)));
     assert_eq!(shown(&b), "1. kat");
 }
+
+/// docs/adr/0713's 27 October addendum: a stair rises Etkin kat's height until one is typed; empty or Kat follows it
+/// again. A level with no height leaves the tool's own.
+#[test]
+fn a_stair_rises_the_active_levels_height() {
+    let mut b = bench("wall");
+    let mut s = b.doc.settings().clone();
+    s.arch = Some(
+        serde_json::from_value(serde_json::json!({
+            "levels": [
+                {"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.06},
+                {"id": "kat-1", "name": "1. kat", "elevation": 3.06}
+            ]
+        }))
+        .unwrap(),
+    );
+    b.doc.set_settings(s);
+    b.session.exit();
+    b.level = Some("zemin".into());
+    let shown = |b: &Bench| {
+        b.session
+            .settings(&Default::default())
+            .into_iter()
+            .find(|r| r.key == "Y")
+            .map(|r| r.value)
+            .unwrap()
+    };
+    let rise = |e: &Entity| match e {
+        Entity::Stair(s) => f64::from(s.stair.risers) * s.stair.riser_height,
+        other => panic!("a stair: {other:?}"),
+    };
+    b.start("stair");
+    assert_eq!(shown(&b), "3.060 m · katın");
+    b.click(0., 0.);
+    b.click(6., 0.);
+    b.confirm();
+    let first = b.doc.revision();
+    assert!((rise(b.newest()) - 3.06).abs() < 1e-9, "{}", rise(b.newest()));
+    // No stair_rise_level: the stair's rise is its level's.
+    // A typed height is kept; Kat follows the level again.
+    assert!(b.run(|s, cx| s.configure("Y", "2.80", cx)));
+    assert_eq!(shown(&b), "2.800 m");
+    b.click(0., 4.);
+    b.click(6., 4.);
+    b.confirm();
+    assert!(b.doc.revision() > first);
+    assert!((rise(b.newest()) - 2.8).abs() < 1e-9);
+    assert!(b.run(|s, cx| s.configure("Y", "kat", cx)));
+    assert_eq!(shown(&b), "3.060 m · katın");
+    // 1. kat has no height: the tool's own.
+    b.session.exit();
+    b.level = Some("kat-1".into());
+    b.start("stair");
+    assert_eq!(shown(&b), "3.000 m");
+}

@@ -24,6 +24,9 @@ use kentos_ui::widget::beside;
 use crate::app::Message;
 use crate::marks::Marks;
 
+/// A preview label's halo, logical pixels (the map's marks').
+const LABEL_HALO: f32 = 1.5;
+
 /// The value field as it shows: what is typed, where, what can be typed,
 /// the lock the number is for and the locks held (docs/adr/0166 §6).
 pub struct FieldView<'a> {
@@ -546,18 +549,28 @@ impl canvas::Program<Message> for Draft {
                 (accent.scale_alpha(0.65), self.halo),
             );
         }
-        // Short texts beside points: a reference line's start “A” (docs/adr/0057).
+        // Short texts beside points: a reference line's start “A” (docs/adr/0057), a room's number to come
+        // (docs/adr/0653). Over eight copies in the halo's colour, as the map's marks: a line under one does not cross it.
         for label in &self.preview.labels {
             let at = self.screen(label.at);
-            frame.fill_text(canvas::Text {
+            let text = |position: Point, color: Color| canvas::Text {
                 content: label.text.clone(),
-                position: Point::new(at.x + label.offset[0], at.y + label.offset[1]),
-                color: tone(label.tone),
+                position,
+                color,
                 size: iced::Pixels(typography::scaled(11.0)),
                 font: typography::ui_strong(),
                 align_y: iced::alignment::Vertical::Bottom,
                 ..canvas::Text::default()
-            });
+            };
+            let position = Point::new(at.x + label.offset[0], at.y + label.offset[1]);
+            for i in 0..8 {
+                let a = i as f32 * std::f32::consts::FRAC_PI_4;
+                frame.fill_text(text(
+                    position + Vector::new(a.cos() * LABEL_HALO, a.sin() * LABEL_HALO),
+                    self.halo,
+                ));
+            }
+            frame.fill_text(text(position, tone(label.tone)));
         }
         // The objects picked for a tangent circle: a 9 px square where each was clicked.
         for p in &self.preview.squares {
