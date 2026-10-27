@@ -339,7 +339,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   artık geometrik (soluk kat kenetlenmiyordu, düzeldi). Testler ve gerçek GUI
   (`arac-pafta-kat-*`).
 - Etkin katın dosyaya yazılması; her kat için pafta seti (ARCH-DOC-04).
-- Katsız çizilmiş nesnelere Denetim'den toplu kat atama (önizlemeli, tek undo).
+- [x] Kat ver [ADR0717](../docs/adr/0717-assign-levels.md): `cad.levels.assign` (yer
+  değişmez; Archicad'in Relink Home Story'si gibi). Denetim'in kat bulgularının Düzelt'i
+  etkin katı verir; Kata ver (n) ▾: Seç ve göster (önizleme), sonra bir kat, hepsi tek
+  adımda. Öznitelikler'de karışık mimari seçimde ortak Kat. Mahal yeni katında kapanmazsa
+  uyarı; mahal ayırıcı da kat denetiminde. 32+41 ortak durum, testler ve gerçek GUI
+  (`arac-denetim-kat*`).
 - Kabul: çok katlı plan, kat silme/yeniden adlandırma, eski katsız çizim, kat
   değişince araçların önizlemesi, Python/MCP girdisinde açık kat.
 
@@ -1171,6 +1176,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-UX-04 / ADR0717 | Kat ver: `cad.levels.assign` (katsızlar ya da verilen mimari nesneler, kilitli atlanır, mahal yeni katında yeniden bulunur, kapanmazsa `arch_space_broken`); Denetim'de kat bulgusunun Düzelt'i etkin katı verir, Kata ver ▾ (Seç ve göster, tek adım); Öznitelikler'de karışık seçimde ortak Kat; ayırıcı kat denetiminde. Ortak durum koşucusunun yığın taşması düzeldi (komut başına çerçeve). 32+41 durum, uygulama/etkileşim/masaüstü (1346)/MCP takımları, clippy, Python, gerçek GUI. | [x] Toplu kat atama alt maddesi |
 | 2026-10-27 | ARCH-UX-04 / ADR0716 | Paftada kat: haritanın kendi Kat'ı ve Alt kat soluk (çekirdek `MapItem.level`, `setViewport.level`, `level_not_found`/`bad_level`, PDF ve masaüstü kâğıdı, ön denetim `map_level_missing`, denetçi); yerinde model düzenleme haritanın katıyla; görünüm penceresinin kapsamı geometrik (soluk kat kenetlenmiyordu). 56 ortak durum (10 yeni), 2+2+1+1 test, etkileşim (771)/pafta çekirdeği/çıktı/tasarımcı takımları, clippy, gerçek GUI. | [x] Pafta katı alt maddesi; toplu kat atama açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0715 | Kat görünümü: Bütün katlar / Yalnız etkin kat / Etkin kat ve alt kat (soluk, kenetlenir, seçilmez); nesnenin katı sözleşmede (`Entity::level`: açıklık duvarın, etiket nesnenin, kaplama mahalin, ölçü bağlarının); depoda seçilmez küme; tıklamada etkin kat önce (iki katlı dairede pencereler alt kata oturuyordu, düzeldi). Kat menüsü, hücre ikonu, Görünüm şeridi. 1+3+1 test, etkileşim (770)/çekirdek (282)/masaüstü (1344) takımları, clippy, gerçek GUI. | [~] Ekran dilimi; paftanın katı ve toplu kat atama açık |
 | 2026-10-27 | ARCH-UX-04 / ADR0713 eki | Merdivenin Yükseklik'i etkin katın yüksekliği (yazılmadıkça; “kat” döner): daire yürüyüşündeki 3,000/3,060 m `stair_rise_level` uyarısı kalktı. Etkileşim testi, merdiven testleri, gerçek GUI. | [x] Kat yüksekliği alt maddesi |

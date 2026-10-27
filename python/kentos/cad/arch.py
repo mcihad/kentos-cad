@@ -34,7 +34,10 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number),
     tags (tag_target_gone), dimensions (arch_dimension_set_broken,
     arch_dimension_broken), columns (arch_column_grid_gone), viewmarks
-    (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve m²:
+    (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon,
+    merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
+    düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
+    olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²:
     maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair),
     nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve
     step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır,
@@ -55,6 +58,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         /,
         *,
         checks: Sequence[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
@@ -69,8 +73,11 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow),
         numbers (tag_duplicate_number), tags (tag_target_gone), dimensions
         (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone),
-        viewmarks (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve
-        m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair),
+        viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal,
+        kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
+        düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
+        olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²:
+        maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair),
         nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve
         step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır,
         tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
@@ -78,6 +85,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         Args:
             doc: The drawing it works on.
             checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
+            level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
+                absent: the project's ground level (the one at elevation 0, else its first).
             max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
             min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
             min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
@@ -95,6 +104,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         """
         return self.execute_input(doc, ArchAudit(
             checks=_opt(checks, lambda x: list(x)),
+            level=level,
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
@@ -106,6 +116,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         /,
         *,
         checks: Sequence[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
@@ -115,6 +126,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         """
         return self.plan_input(doc, ArchAudit(
             checks=_opt(checks, lambda x: list(x)),
+            level=level,
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
@@ -126,6 +138,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         /,
         *,
         checks: Sequence[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
@@ -135,6 +148,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         """
         return self.validate_input(doc, ArchAudit(
             checks=_opt(checks, lambda x: list(x)),
+            level=level,
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
@@ -146,6 +160,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         /,
         *,
         checks: Sequence[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
@@ -160,6 +175,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         """
         return self.answer_input(doc, ArchAudit(
             checks=_opt(checks, lambda x: list(x)),
+            level=level,
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,

@@ -87,6 +87,10 @@ pub enum Event {
     Press(usize),
     /// Düzelt on the chosen finding.
     Fix,
+    /// Kata ver ▾'s Seç ve göster (docs/adr/0717 §2): every object without a level selected, the view on them.
+    ShowLevelless,
+    /// Kata ver ▾'s level: every object without a level given it, one step.
+    AssignLevel(String),
     Gap(usize),
     Area(usize),
     Width(usize),
@@ -191,6 +195,8 @@ impl App {
             max_gap: Some(self.arch_audit.max_gap),
             min_area: Some(self.arch_audit.min_area),
             min_width: Some(self.arch_audit.min_width),
+            // A level finding's Düzelt gives Etkin kat (docs/adr/0717 §3).
+            level: self.active_level(),
         }
     }
 
@@ -260,6 +266,8 @@ impl App {
                 }
             }
             Event::Fix => self.arch_audit_fix(),
+            Event::ShowLevelless => self.arch_audit_show_levelless(),
+            Event::AssignLevel(level) => self.arch_audit_assign_level(&level),
             Event::Gap(i) => {
                 self.arch_audit.max_gap = GAPS[i.min(GAPS.len() - 1)];
                 self.arch_audit_check();
@@ -350,6 +358,146 @@ impl App {
             }
         }
         self.arch_audit_check();
+    }
+
+    /// The level findings' objects of the last check.
+    fn arch_audit_levelless(&self) -> Vec<String> {
+        self.arch_audit.audited.as_ref().map_or_else(Vec::new, |a| {
+            a.findings
+                .iter()
+                .filter(|f| f.check == ArchAuditCheck::Levels)
+                .flat_map(|f| f.uids.iter().cloned())
+                .collect()
+        })
+    }
+
+    /// Kata ver ▾'s Seç ve göster: the objects without a level selected and the view on them, before any level is
+    /// given (docs/adr/0717 §2).
+    fn arch_audit_show_levelless(&mut self) {
+        let uids = self.arch_audit_levelless();
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let slots: Vec<Slot> = uids
+            .iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect();
+        let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
+        self.selection.set(slots);
+        if !ids.is_empty() {
+            self.navigating(|app| app.zoom_to_objects(&ids));
+        }
+    }
+
+    /// Kata ver ▾'s level: every object without a level given it through `cad.levels.assign`, one undo step; the
+    /// objects stay selected so the step shows; the drawing checked again.
+    fn arch_audit_assign_level(&mut self, level: &str) {
+        if self.arch_audit_stale() {
+            self.warn(STALE);
+            return;
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_LEVELS_ASSIGN,
+            CallOp::Execute,
+            serde_json::json!({ "level": level }),
+        );
+        match answer {
+            Ok(v) if v["status"] == "completed" => {
+                let given: Vec<Slot> = v["output"]["assigned"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|a| a["id"].as_u64())
+                    .map(|id| Slot(id as u32))
+                    .collect();
+                let name = doc
+                    .model
+                    .settings()
+                    .arch
+                    .as_ref()
+                    .and_then(|a| a.levels.iter().find(|l| l.id == level))
+                    .map_or_else(|| level.to_owned(), |l| l.name.clone());
+                let count = given.len();
+                self.selection.set(given);
+                self.say(
+                    Level::Success,
+                    format!("{count} nesnenin katı {name} oldu. Geri al ile dönülür."),
+                );
+                for w in v["warnings"].as_array().into_iter().flatten() {
+                    if let Some(m) = w["message"].as_str() {
+                        self.warn(m.to_owned());
+                    }
+                }
+            }
+            Ok(v) => {
+                let why = v["error"]["message"].as_str().unwrap_or("Kat verilemedi.");
+                self.warn(why.to_owned());
+                return;
+            }
+            Err(e) => {
+                self.warn(format!("Kat verilemedi: {e:?}"));
+                return;
+            }
+        }
+        self.arch_audit_check();
+    }
+
+    /// Kata ver ▾ while the check found objects without a level (docs/adr/0717 §2): Seç ve göster, then the project's
+    /// levels, Etkin kat marked; none otherwise.
+    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>> {
+        let count = self.arch_audit_levelless().len();
+        if count == 0 {
+            return None;
+        }
+        let levels: Vec<(String, String)> = self
+            .document
+            .as_ref()?
+            .model
+            .settings()
+            .arch
+            .as_ref()?
+            .levels
+            .iter()
+            .map(|l| (l.id.clone(), l.name.clone()))
+            .collect();
+        let active = self.active_level();
+        let stale = self.arch_audit_stale();
+        let face = row![
+            icon(from_web(Some("archSettings"))).size(14.0),
+            label::body(format!("Kata ver ({count})")),
+            icon(from_web(Some("chevronDown"))).size(12.0).tone(Tone::Muted),
+        ]
+        .spacing(6)
+        .align_y(Center);
+        let menu = move || {
+            let mut menu = kentos_ui::widget::Menu::new()
+                .header(format!("Katsız {count} nesne"))
+                .item("Seç ve göster", msg(Event::ShowLevelless))
+                .icon(from_web(Some("zoomSelection")))
+                .separator()
+                .header("Kata ver: hepsi tek adımda");
+            for (id, name) in &levels {
+                let words = if active.as_deref() == Some(id.as_str()) {
+                    format!("{name} · etkin kat")
+                } else {
+                    name.clone()
+                };
+                menu = menu.item(words, (!stale).then(|| msg(Event::AssignLevel(id.clone()))));
+            }
+            menu
+        };
+        Some(tip(
+            kentos_ui::widget::MenuButton::new(container(face).padding([4, 10]), menu),
+            Tip::new("Kata ver").body(
+                "Katsız ya da projede olmayan bir kattaki duvar, mahal, kolon, merdiven, rampa ve mahal ayırıcılara bir kat verir; yerleri değişmez. Seç ve göster önce onları seçer. Tek geri alma adımıdır.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        ))
     }
 
     /// The Denetim tab: its bar, a note when the check is old, the table.
@@ -515,7 +663,11 @@ impl App {
             Tip::new(FIX).body(fix_hint),
             iced::widget::tooltip::Position::Top,
         );
-        let end = row![label::muted(count), fix].spacing(10).align_y(Center);
+        let mut end = row![label::muted(count)].spacing(10).align_y(Center);
+        if let Some(levels) = self.arch_audit_levels_button() {
+            end = end.push(levels);
+        }
+        let end = end.push(fix);
         // Wide: one line. Narrow: the check, the group, the count and Düzelt first; the thresholds under them.
         let bar: Element<'_, Message> = if width >= typography::from_default(BAR_WIDTH) {
             row![start, limits, space::horizontal(), end]

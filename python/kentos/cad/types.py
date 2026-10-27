@@ -240,7 +240,7 @@ class ArchAuditCheck(_StrEnum):
     - ``dimensions``: Associative dimensions and dimension sets whose link broke.
     - ``columns``: Columns whose grids are gone.
     - ``viewmarks``: View marks whose target is gone.
-    - ``levels``: Walls, spaces, columns, stairs and ramps without a level while the project has levels.
+    - ``levels``: Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -10135,14 +10135,17 @@ class ArchAudit(_Model):
     the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
 
     Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-    zero, in the same order).
+    zero, in the same order), `level_not_found` (`level`).
     Attributes:
         checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
+        level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
+            absent: the project's ground level (the one at elevation 0, else its first).
         max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
         min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
         min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
     """
     checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
+    level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     min_area: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
@@ -10151,6 +10154,8 @@ class ArchAudit(_Model):
         out: dict[str, Any] = {}
         if self.checks is not UNSET:
             out["checks"] = [_enum_out(e0) for e0 in self.checks]
+        if self.level is not UNSET:
+            out["level"] = self.level
         if self.max_gap is not UNSET:
             out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
         if self.min_area is not UNSET:
@@ -10163,6 +10168,7 @@ class ArchAudit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchAudit:
         return cls(
             checks=[_enum_in(ArchAuditCheck, e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            level=data.get("level", UNSET),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
@@ -33762,6 +33768,102 @@ class LeadersPlan(_Model):
             leaders=[Entity.from_json(e0) for e0 in data["leaders"]],
             revision=data["revision"],
             removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LevelAssigned(_Model):
+    """One object given the level.
+    Attributes:
+        uid: Its persistent id.
+        id: Its id in the drawing. Unit: id.
+        kind: Its kind: `wall`, `space`, `grid`, `column`, `stair`, `ramp` or `polyline` (a room separator).
+        from_: The level it was on, by its id; absent: none.
+    """
+    uid: str
+    id: int
+    kind: str
+    from_: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["kind"] = self.kind
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelAssigned:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            kind=data["kind"],
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LevelsAssign(_Model):
+    """Input of `cad.levels.assign` v1 (“Kat ver”, docs/adr/0717): `level` given to the objects named by `uids` (walls,
+    spaces, grids, columns, stairs, ramps, room separators), or, without `uids`, to every wall, space, column, stair,
+    ramp and room separator on no level or on a level the project does not have. An object on `level` already is left
+    as it is; one on a locked layer is left out and counted (`layer_locked` warning), all of them locked is refused.
+
+    Refusals, in this order: `no_entities` (`uids` empty), `invalid_uid`, `entity_not_found`, `not_levelled` (an
+    opening, a tag, a line… has no level of its own), `level_not_found`, `invalid_revision`, `revision_conflict`,
+    `layer_locked`, `nothing_to_assign`. Warnings: `layer_locked`, `arch_space_broken` (a room its new level's walls do
+    not enclose, or one whose walls left its level: its last boundary kept).
+    Attributes:
+        level: The level given, by its id among the project's levels.
+        uids: The objects given it, by their persistent ids; absent: every object without a level of the project.
+    """
+    level: str
+    expected_revision: str | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelsAssign:
+        return cls(
+            level=data["level"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LevelsAssigned(_Model):
+    """Output of `cad.levels.assign` v1, its plan's too: the objects given the level, in the drawing's order.
+    Attributes:
+        level: The level given.
+    """
+    level: str
+    assigned: list[LevelAssigned]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["assigned"] = [e0.to_json() for e0 in self.assigned]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelsAssigned:
+        return cls(
+            level=data["level"],
+            assigned=[LevelAssigned.from_json(e0) for e0 in data["assigned"]],
+            revision=data["revision"],
         )
 
 
@@ -79682,9 +79784,12 @@ __all__ = [
     "LengthenEnd",
     "LengthenEndName",
     "LevelAdjustWork",
+    "LevelAssigned",
     "LevelMethod",
     "LevelMethodName",
     "LevelPaperMapLevelChoice",
+    "LevelsAssign",
+    "LevelsAssigned",
     "LibraryConflict",
     "LibraryConflictName",
     "LibraryEdit",

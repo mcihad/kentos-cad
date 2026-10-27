@@ -1077,6 +1077,12 @@ const FORMS: &[(&str, &str, Form)] = &[
         p.bulges=None;p.closed=false;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;p.space_separator=None;
     }),
     ("cad.dimensions.create", "space", curved_space),
+    // Kat ver: a polyline takes a level as a room separator (docs/adr/0717).
+    ("cad.levels.assign", "polyline", |e| {
+        if let kentos_commands::Entity::Polyline(p) = e {
+            p.space_separator = Some(Default::default());
+        }
+    }),
     ("cad.entities.hatch", "spline", |e| {
     if let kentos_commands::Entity::Spline(s) = e {
         s.closed = true;
@@ -1099,6 +1105,8 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     type Make = fn(&str) -> Value;
     let tries: &[(&str, Option<&str>, Make)] = &[
         ("cad.spaces.number",None,|u|json!({"uids":[u],"first":"TEST-001"})),
+        // A level the sample drawing lacks: a kind with a level is refused for it, another for its kind (docs/adr/0717).
+        ("cad.levels.assign", None, |u| json!({ "uids": [u], "level": "yok" })),
         ("cad.spaces.separators",Some("set"),|u|json!({"operation":{"kind":"set","uids":[u]}})),
         ("cad.spaces.separators",Some("clear"),|u|json!({"operation":{"kind":"clear","uids":[u]}})),
         (

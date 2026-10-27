@@ -47,7 +47,7 @@ pub enum ArchAuditCheck {
     Columns,
     /// View marks whose target is gone.
     Viewmarks,
-    /// Walls, spaces, columns, stairs and ramps without a level while the project has levels.
+    /// Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
     Levels,
 }
 
@@ -99,7 +99,7 @@ impl ArchAuditCheck {
 /// the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
 ///
 /// Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-/// zero, in the same order).
+/// zero, in the same order), `level_not_found` (`level`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -125,6 +125,11 @@ pub struct ArchAudit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_width: Option<f64>,
+    /// The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
+    /// absent: the project's ground level (the one at elevation 0, else its first).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
 }
 
 /// What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it

@@ -144,6 +144,25 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
     said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// Kat ▾ of several architectural objects (docs/adr/0717 §2): `level` given to them all through
+/// `cad.levels.assign`, one step “Kat ver” (the locked ones left out and counted); what to say.
+pub fn assign_level(doc: &mut Document, slots: &[Slot], level: &str) -> Vec<String> {
+    let uids: Vec<String> = slots
+        .iter()
+        .filter_map(|s| doc.uid(*s))
+        .map(|u| u.to_string())
+        .collect();
+    if uids.is_empty() {
+        return Vec::new();
+    }
+    let input = kentos_commands::LevelsAssign {
+        level: level.to_owned(),
+        uids: Some(uids),
+        expected_revision: None,
+    };
+    said(kentos_native_application::levels_assign::execute(&mut ExecutionContext::new(doc), input))
+}
+
 pub fn set_space_separator(doc:&mut Document,slot:Slot,arch:Option<kentos_commands::ArchInfo>)->Vec<String> {
     let Some(uid)=doc.uid(slot) else{return Vec::new()};
     let operation=match arch {

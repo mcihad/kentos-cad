@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Kat ver (27 Ekim 2026; [ADR0717](docs/adr/0717-assign-levels.md)).**
+  `cad.levels.assign`: verilen mimari nesnelere ya da (uids yoksa) Denetim'in katsız
+  saydıklarına projenin katı, yer değişmez, tek adım “Kat ver”; kilitli atlanır, mahal
+  yeni katında yeniden bulunur (kapanmazsa `arch_space_broken`, okuma kopyasında önceden).
+  Denetim'de kat bulgusunun Düzelt'i etkin katı (`cad.arch.audit`'in `level`'i), Kata ver ▾
+  (Seç ve göster, sonra kat); Öznitelikler'de karışık mimari seçimde ortak Kat. Ortak durum
+  koşucusu komut başına çerçevede (`run_typed`): bütün durumlar 2 MiB yığında geçer.
+
 - **Paftada kat (27 Ekim 2026; [ADR0716](docs/adr/0716-sheet-map-level.md)).**
   Pafta haritasının kendi Kat'ı (`MapItem.level`: `id`, `below`; Revit'in kat
   planı ve altlığı, görünüm kopyası yok): katın ve katsız nesneler, alt kat kâğıtta

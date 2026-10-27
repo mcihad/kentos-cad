@@ -6,7 +6,7 @@ import type { ArchAuditCheck } from "./ArchAuditCheck";
  * the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
  *
  * Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
- * zero, in the same order).
+ * zero, in the same order), `level_not_found` (`level`).
  */
 export type ArchAudit = { 
 /**
@@ -24,4 +24,9 @@ minArea?: number,
 /**
  * A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0.
  */
-minWidth?: number, };
+minWidth?: number, 
+/**
+ * The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
+ * absent: the project's ground level (the one at elevation 0, else its first).
+ */
+level?: string, };

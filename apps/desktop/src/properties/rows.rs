@@ -3230,6 +3230,31 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     rows.push(
         Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
     );
+    // Kat of several architectural objects, of one kind or of several (docs/adr/0717 §2): their shared level, else
+    // Çeşitli; a level chosen goes to them all in one step “Kat ver”.
+    let levels = doc.model.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+    if !levels.is_empty() && objects.iter().all(|e| kentos_native_application::levels_assign::levelled(e)) {
+        let first = objects[0].own_level();
+        let shared = objects.iter().all(|e| e.own_level() == first);
+        let name = |id: &str| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone());
+        let shown = if shared { first.map_or_else(|| "Yok".to_owned(), name) } else { "Çeşitli".to_owned() };
+        let items = levels
+            .iter()
+            .map(|l| {
+                pick(
+                    l.name.clone(),
+                    shared && first == Some(l.id.as_str()),
+                    Message::Properties(Event::Levels(ids.clone(), l.id.clone())),
+                )
+            })
+            .collect();
+        rows.push(Row::text("Kat", shown.clone()).editor(edit(Editor::Select {
+            text: shown,
+            swatch: None,
+            icon: None,
+            items,
+        })));
+    }
     let f = Format::of(doc.settings());
     // The vertices' elevations of the lines, polylines, areas and points (docs/adr/0142), all
     // together as one list, as the web's row takes them: the value when every vertex has the

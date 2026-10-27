@@ -2627,6 +2627,64 @@ fn several_objects_share_their_attributes_and_take_one_value() {
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
 }
 
+/// docs/adr/0717 §2: a wall and a column selected together share Kat (Çeşitli while their levels differ); a level
+/// chosen goes to both in one step “Kat ver”, Geri al takes it back.
+#[test]
+fn several_architectural_objects_take_one_level() {
+    use serde_json::json;
+    let mut app = objects();
+    {
+        let doc = app.document.as_mut().expect("open");
+        let mut s = doc.model.settings().clone();
+        s.arch = Some(
+            serde_json::from_value(json!({"levels": [
+                {"id": "zemin", "name": "Zemin kat", "elevation": 0.0},
+                {"id": "kat-1", "name": "1. kat", "elevation": 3.0}
+            ]}))
+            .expect("levels"),
+        );
+        doc.model.set_settings(s);
+    }
+    let wall: Entity = serde_json::from_value(json!({
+        "kind": "wall", "id": 0, "layerId": "0", "attrs": {},
+        "pts": [{"x": E, "y": N}, {"x": E + 5.0, "y": N}], "width": 0.2, "justify": "center",
+        "arch": {"level": "zemin"}
+    }))
+    .expect("a wall");
+    let column: Entity = serde_json::from_value(json!({
+        "kind": "column", "id": 0, "layerId": "0", "attrs": {},
+        "at": {"x": E + 10.0, "y": N}, "width": 0.4, "depth": 0.4
+    }))
+    .expect("a column");
+    let w = add(&mut app, wall);
+    let c = add(&mut app, column);
+    select(&mut app, &[w, c]);
+    assert_eq!(value(&app, "Ortak özellikler", "Kat"), "Çeşitli");
+    event(&mut app, Event::Levels(vec![Slot(w), Slot(c)], "kat-1".into()));
+    for slot in [w, c] {
+        assert_eq!(entity(&app, slot).own_level(), Some("kat-1"));
+    }
+    assert_eq!(value(&app, "Ortak özellikler", "Kat"), "1. kat");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Kat ver"));
+    assert_eq!(entity(&app, w).own_level(), Some("zemin"));
+    assert_eq!(entity(&app, c).own_level(), None);
+    // A line among them: no Kat row (it has no level of its own).
+    let line = add(
+        &mut app,
+        Entity::Line(LineEntity {
+            base: base("0"),
+            a: Wire { x: E, y: N + 3.0 },
+            b: Wire { x: E + 5.0, y: N + 3.0 },
+            za: None,
+            zb: None,
+            ma: None,
+            mb: None,
+        }),
+    );
+    select(&mut app, &[w, c, line]);
+    assert!(!has_row(&app, "Ortak özellikler", "Kat"));
+}
+
 /// The panel of a selection of 100 000 objects with attributes is built within a frame's budget (docs/adr/0286).
 #[test]
 #[ignore = "timing; run with --ignored --nocapture in release"]

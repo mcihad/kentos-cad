@@ -3951,7 +3951,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_ARCH_AUDIT.into(),
             version: crate::CAD_ARCH_AUDIT_VERSION,
             title: "Mimari denetim".into(),
-            summary: "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir."
+            summary: "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -3989,6 +3989,51 @@ pub fn catalog() -> CommandCatalog {
                     "revision": "7"
                 })),
             }],
+        },
+        // Kat ver (docs/adr/0717), held together by fixtures/commands/v1/cad.levels.assign.json.
+        CommandDescriptor {
+            id: crate::CAD_LEVELS_ASSIGN.into(),
+            version: crate::CAD_LEVELS_ASSIGN_VERSION,
+            title: "Kat ver".into(),
+            summary: "Mimari nesnelere projenin bir katını verir (docs/adr/0717); yerleri değişmez, tek geri alma adımı “Kat ver”. uids verilirse onlar (duvar, mahal, aks, kolon, merdiven, rampa, mahal ayırıcı; kapı, pencere, etiket, kaplama ve çizginin kendi katı yok: not_levelled), verilmezse katsız ya da projede olmayan bir kattaki bütün duvar, mahal, kolon, merdiven, rampa ve mahal ayırıcılar (Denetim'in arch_level_missing bulguları; akslar katsız kalabilir). Zaten o kattaki nesne değişmez; kilitli katmandakiler atlanır ve sayılır (layer_locked uyarısı), hepsi kilitliyse ret. Hiçbiri değişmeyecekse nothing_to_assign. Mahalın sınırı aynı adımda yeni katının duvarları arasında yeniden bulunur; kapanmayan ya da duvarları katından ayrılan mahal son sınırıyla kalır (arch_space_broken uyarısı). Plan kat verilecekleri (uid, id, kind, from) çizimin sırasıyla verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LevelsAssign>(),
+            output: schema::<crate::LevelsAssigned>(),
+            plan: Some(schema::<crate::LevelsAssigned>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Katsız duvar ve mahal zemin kata".into(),
+                    input: json!({ "level": "zemin" }),
+                    output: Some(json!({
+                        "level": "zemin",
+                        "assigned": [
+                            { "uid": "0192f5a1-7040-7000-8000-000000000001", "id": 1, "kind": "wall" },
+                            { "uid": "0192f5a1-7040-7000-8000-000000000002", "id": 2, "kind": "space" }
+                        ],
+                        "revision": "8"
+                    })),
+                },
+                CommandExample {
+                    title: "Seçili kolonu 1. kata taşı".into(),
+                    input: json!({ "level": "kat-1", "uids": ["0192f5a1-7040-7000-8000-000000000003"] }),
+                    output: Some(json!({
+                        "level": "kat-1",
+                        "assigned": [
+                            { "uid": "0192f5a1-7040-7000-8000-000000000003", "id": 3, "kind": "column", "from": "zemin" }
+                        ],
+                        "revision": "9"
+                    })),
+                },
+            ],
         },
         CommandDescriptor {
             id: crate::CAD_CASEWORK_RUN.into(),
@@ -10852,6 +10897,9 @@ mod tests {
                     crate::CAD_ARCH_AUDIT => {
                         serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LEVELS_ASSIGN => {
+                        serde_json::from_value::<crate::LevelsAssign>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CASEWORK_RUN => {
                         serde_json::from_value::<crate::CaseworkRun>(e.input.clone()).map(|_| ())
                     }
@@ -11913,6 +11961,10 @@ mod tests {
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_LEVELS_ASSIGN => {
+                            serde_json::from_value::<crate::LevelsAssigned>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_CASEWORK_RUN => {
                             serde_json::from_value::<crate::CaseworkBuilt>(output.clone())

@@ -77,7 +77,8 @@ SET_WORDS = {
     "unsupportedWall": "Ölçü dizisinin duvar kenarı artık ölçülemiyor (pahlı köşe, yay ya da olmayan kenar); ölçüler son yerlerinde duruyor.",
     "openingUnplaced": "Ölçü dizisinin bir açıklığı duvarına yerleşmiyor; ölçüler son yerlerinde duruyor.",
 }
-POSSESSIVE = {"wall": "Duvarın", "space": "Mahalın", "column": "Kolonun", "stair": "Merdivenin", "ramp": "Rampanın"}
+POSSESSIVE = {"wall": "Duvarın", "space": "Mahalın", "column": "Kolonun", "stair": "Merdivenin", "ramp": "Rampanın",
+              "polyline": "Mahal ayırıcının"}
 
 
 def split(words):
@@ -238,6 +239,9 @@ def drawing():
          "riserHeight": 0.175, "tread": 0.25, "arch": {"level": "zemin"}},
         {"kind": "ramp", **base(27, "mimari"), "pts": [P(40, 5), P(50, 5)], "width": 1.5, "rise": 0.5, "slope": 5.0,
          "arch": {"level": "kat-9"}},
+        # A room separator on no level (ADR 0717 §3): Denetim says it as a wall.
+        {"kind": "polyline", **base(29, "mimari"), "lineType": "dashed", "pts": [P(52, 0), P(52, 4)],
+         "spaceSeparator": {}},
     ]
     ds = {"id": SET, "wall": GONE["wall"], "face": "left", "rows": ["overall"], "openings": "ends", "layerId": "olcu",
           "at": P(20, -2.5), "gapMm": 7.0, "height": 0.125, "look": {},
@@ -672,16 +676,33 @@ def viewmarks_findings(d):
     return out
 
 
-def levels_findings(d):
+def own_level(e):
+    if e["kind"] == "polyline":
+        return (e.get("spaceSeparator") or {}).get("level")
+    return (e.get("arch") or {}).get("level")
+
+
+def fix_level(d, inp):
+    """The level a level finding's fix gives (ADR 0717 §3): the input's, else the ground level (elevation 0, else
+    the first); None without levels."""
+    levels = (d["settings"].get("arch") or {}).get("levels") or []
+    if inp.get("level") is not None:
+        return next((l for l in levels if l["id"] == inp["level"]), None)
+    return next((l for l in levels if l["elevation"] == 0.0), levels[0] if levels else None)
+
+
+def levels_findings(d, inp):
     levels = [l["id"] for l in ((d["settings"].get("arch") or {}).get("levels") or [])]
     if not levels:
         return []
     uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    locked = {l["id"] for l in d["layers"] if l["locked"]}
+    give = fix_level(d, inp)
     out = []
     for e in d["entities"]:
-        if e["kind"] not in POSSESSIVE:
+        if e["kind"] not in POSSESSIVE or (e["kind"] == "polyline" and "spaceSeparator" not in e):
             continue
-        level = (e.get("arch") or {}).get("level")
+        level = own_level(e)
         if level in levels:
             continue
         who = POSSESSIVE[e["kind"]]
@@ -692,7 +713,13 @@ def levels_findings(d):
             at = fx(e["at"])
         else:
             at = fx(e["pts"][0])
-        out.append(finding("levels", "arch_level_missing", message, "Öznitelikler'de Kat (L) seçin.", [uid[e["id"]]], at))
+        fix = None
+        if e["layerId"] not in locked:
+            fix = {"label": f"Katını {give['name']} yap",
+                   "step": step("cad.levels.assign", {"level": give["id"], "uids": [uid[e["id"]]]})}
+        out.append(finding("levels", "arch_level_missing", message,
+                           "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                           [uid[e["id"]]], at, fix))
     return out
 
 
@@ -714,7 +741,7 @@ def audit(d, inp):
             "dimensions": lambda: dimensions_findings(d),
             "columns": lambda: columns_findings(d),
             "viewmarks": lambda: viewmarks_findings(d),
-            "levels": lambda: levels_findings(d),
+            "levels": lambda: levels_findings(d, inp),
         }[g]()
     order = {g: i for i, g in enumerate(GROUPS)}
     code_order = {c: i for g in GROUPS for i, c in enumerate(CODES[g])}
@@ -722,12 +749,15 @@ def audit(d, inp):
     return {"findings": found, "revision": "$current"}
 
 
-def refused(inp):
+def refused(inp, d=None):
     for key, what in (("maxGap", "Boşluk eşiği"), ("minArea", "Küçük mahal eşiği"), ("minWidth", "Dar mahal eşiği")):
         v = inp.get(key)
         if v is not None and v < 0:
             unit = "m²" if key == "minArea" else "m"
             return refusal("invalid_arch_audit", f"{what} {num(float(v))} {unit}; sıfır ya da daha büyük olmalı.", key)
+    if d is not None and inp.get("level") is not None and fix_level(d, inp) is None:
+        return refusal("level_not_found", f"Projede “{inp['level']}” kimlikli kat yok. Katı Proje ayarları › Mimari'de "
+                                          f"ekleyin ya da var olan bir katı seçin.", "level")
     return None
 
 
@@ -776,6 +806,12 @@ def fixed(d, f):
         e = ents[inp["uids"][0]]
         e.pop("target", None)
         e.pop("broken", None)
+    elif cmd == "cad.levels.assign":
+        e = ents[inp["uids"][0]]
+        if e["kind"] == "polyline":
+            e["spaceSeparator"] = dict(e["spaceSeparator"], level=inp["level"])
+        else:
+            e["arch"] = dict(e.get("arch") or {}, level=inp["level"])
     return d
 
 
@@ -811,6 +847,17 @@ def cases():
             "op": "execute", "input": {key: 0.1}, "nonFinite": {key: "NaN"},
             "result": refusal("not_finite", f"{what} sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.", key),
             "expect": dict(SAME)}])
+
+    # ADR 0717 §3: the level fixes give the input's level; one the project lacks is refused.
+    case("Kat düzeltmesi girdinin katını verir: 1. kat", [asked(d, {"checks": ["levels"], "level": "kat-1"})])
+    for name, inp in (("Projede olmayan düzeltme katı reddedilir", {"level": "kat-9"}),
+                      ("Boş düzeltme katı reddedilir", {"checks": ["levels"], "level": ""})):
+        case(name, [{"op": "execute", "input": inp, "result": refused(inp, d), "expect": dict(SAME)}])
+    flat_level = copy.deepcopy(d)
+    flat_level["settings"].pop("arch")
+    case("Katsız projede düzeltme katı verilemez",
+         [{"op": "execute", "input": {"level": "zemin"}, "result": refused({"level": "zemin"}, flat_level),
+           "expect": dict(SAME)}], setup=flat_level)
 
     # Projede kat yoksa kat bulgusu yok.
     flat = copy.deepcopy(d)

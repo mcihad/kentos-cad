@@ -114,6 +114,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-UX-04 / ADR0716: Paftada kat. Web'in pafta kipi haritanın `level`'ini
   çizmeli (katın ve katsızlar, `below` ile alt kat yarım ton), denetçide Kat ve Alt
   kat soluk; görünüm penceresinin kapsamı geometrik (`touching_ring`).
+- ARCH-UX-04 / ADR0717: Kat ver. Web'in Denetim'i kat bulgularının düzeltmesini
+  (`cad.levels.assign`, etkin kat) ve Kata ver ▾'yi (Seç ve göster, tek adım), web'in
+  Öznitelikler'i karışık mimari seçimde ortak Kat satırını almalı.
 - ARCH-DOC-02 / ADR0344 eki: kapı ve pencere çizelgesinin Duvar sütunu stilsiz
   duvarda kalınlığı yazar; `cad.schedules.create.json`'un yeni durumuyla.
 - ARCH-SPACE-02 / ADR0344 eki (27 Ekim): etiketli mahal kendi yazısını çizmez

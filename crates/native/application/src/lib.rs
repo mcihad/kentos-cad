@@ -283,6 +283,7 @@ pub mod spaces_number;
 pub mod arch_elements;
 pub mod arch_edit;
 pub mod casework_run;
+pub mod levels_assign;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
 pub mod schedules;
@@ -833,6 +834,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_CASEWORK_RUN,
         kentos_commands::CAD_CASEWORK_RUN_VERSION,
+    ),
+    // Kat ver ([`levels_assign`], docs/adr/0717).
+    (
+        kentos_commands::CAD_LEVELS_ASSIGN,
+        kentos_commands::CAD_LEVELS_ASSIGN_VERSION,
     ),
     // Duvar, Çizgiden duvar, Duvarı düzenle and Duvar birleşimleri ([`walls_create`], [`walls_from_lines`], [`walls_edit`],
     // [`walls_joins`], docs/adr/0339, 0340).

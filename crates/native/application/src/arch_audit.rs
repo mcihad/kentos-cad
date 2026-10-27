@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
     ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck, ArchAuditFinding,
-    ArchAuditFix, ArchAudited, ChangesetStep, CommandResult, Entity, Vec2,
+    ArchAuditFix, ArchAudited, ArchLevel, ChangesetStep, CommandResult, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
@@ -822,60 +822,82 @@ impl Audit<'_> {
         out
     }
 
-    fn levels(&self) -> Vec<ArchAuditFinding> {
-        let levels: Vec<&str> = self
+    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a stair, a ramp or a room separator on no
+    /// level or on one the project lacks; each fixed by giving it `level` (`cad.levels.assign`) unless locked.
+    fn levels(&self, level: Option<&ArchLevel>) -> Vec<ArchAuditFinding> {
+        let levels = self
             .doc
             .settings()
             .arch
             .as_ref()
-            .map(|a| a.levels.iter().map(|l| l.id.as_str()).collect())
+            .map(|a| a.levels.as_slice())
             .unwrap_or_default();
-        if levels.is_empty() {
-            return Vec::new();
-        }
         let mut out = Vec::new();
         for e in self.doc.entities() {
-            let (who, level, at) = match e {
-                Entity::Wall(w) => (
-                    "Duvarın",
-                    &w.wall.arch.level,
-                    w.wall.pts.first().copied().map_or(V::new(0.0, 0.0), core),
-                ),
-                Entity::Space(s) => ("Mahalın", &s.space.arch.level, space_point(&s.space.parts)),
-                Entity::Column(c) => ("Kolonun", &c.column.arch.level, core(c.column.at)),
-                Entity::Stair(s) => (
-                    "Merdivenin",
-                    &s.stair.arch.level,
-                    s.stair.pts.first().copied().map_or(V::new(0.0, 0.0), core),
-                ),
-                Entity::Ramp(r) => (
-                    "Rampanın",
-                    &r.ramp.arch.level,
-                    r.ramp.pts.first().copied().map_or(V::new(0.0, 0.0), core),
-                ),
+            if !crate::levels_assign::lacks_level(e, levels) {
+                continue;
+            }
+            let first = |pts: &[Vec2]| pts.first().copied().map_or(V::new(0.0, 0.0), core);
+            let (who, at) = match e {
+                Entity::Wall(w) => ("Duvarın", first(&w.wall.pts)),
+                Entity::Space(s) => ("Mahalın", space_point(&s.space.parts)),
+                Entity::Column(c) => ("Kolonun", core(c.column.at)),
+                Entity::Stair(s) => ("Merdivenin", first(&s.stair.pts)),
+                Entity::Ramp(r) => ("Rampanın", first(&r.ramp.pts)),
+                Entity::Polyline(p) => ("Mahal ayırıcının", first(&p.pts)),
                 _ => continue,
             };
-            let message = match level {
-                Some(id) if levels.contains(&id.as_str()) => continue,
+            let message = match e.own_level() {
                 Some(id) => format!("{who} katı “{id}” projede yok."),
                 None => format!("{who} katı yok; projede {} kat var.", levels.len()),
             };
+            let fix = level.filter(|_| !self.locked(e)).map(|l| {
+                fix(
+                    format!("Katını {} yap", l.name),
+                    "cad.levels.assign",
+                    json!({"level": l.id, "uids": [self.uid_of(e)]}),
+                )
+            });
             out.push(finding(
                 ArchAuditCheck::Levels,
                 codes::ARCH_LEVEL_MISSING,
                 message,
-                "Öznitelikler'de Kat (L) seçin.",
+                "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                 vec![self.uid_of(e)],
                 at,
-                None,
+                fix,
             ));
         }
         out
     }
 }
 
+/// The level a level finding's fix gives: `level`, the project's (`level_not_found`), or the ground level (the one at
+/// elevation 0, else the first); none while the project has no levels.
+fn fix_level<'a>(doc: &'a Document, input: &ArchAudit) -> Result<Option<&'a ArchLevel>, Stop> {
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.as_slice())
+        .unwrap_or_default();
+    match &input.level {
+        Some(id) => match levels.iter().find(|l| &l.id == id) {
+            Some(l) => Ok(Some(l)),
+            None => Err(Stop::failed(error(
+                codes::LEVEL_NOT_FOUND,
+                kentos_commands::level_problem(Some(id), levels)
+                    .unwrap_or_else(|| format!("Projede “{id}” kimlikli kat yok.")),
+                Some("level".into()),
+            ))),
+        },
+        None => Ok(levels.iter().find(|l| l.elevation == 0.0).or(levels.first())),
+    }
+}
+
 fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
     let limits = limits(input)?;
+    let level = fix_level(doc, input)?;
     let audit = Audit { doc };
     let asked = |c: ArchAuditCheck| input.checks.is_empty() || input.checks.contains(&c);
     let mut findings = Vec::new();
@@ -892,7 +914,7 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
             ArchAuditCheck::Dimensions => audit.dimensions(),
             ArchAuditCheck::Columns => audit.columns(),
             ArchAuditCheck::Viewmarks => audit.viewmarks(),
-            ArchAuditCheck::Levels => audit.levels(),
+            ArchAuditCheck::Levels => audit.levels(level),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.
@@ -910,8 +932,8 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
     })
 }
 
-pub fn validate(_cx: &ExecutionContext<'_>, input: &ArchAudit) -> CommandResult<()> {
-    match limits(input) {
+pub fn validate(cx: &ExecutionContext<'_>, input: &ArchAudit) -> CommandResult<()> {
+    match limits(input).and_then(|_| fix_level(cx.doc, input).map(|_| ())) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),

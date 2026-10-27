@@ -104,6 +104,8 @@ pub enum Event {
     /// `cad.spaces.edit`.
     Space(Slot, kentos_commands::SpacesOperation),
     SpaceSeparator(Slot,bool),
+    /// Kat ▾ of several architectural objects (docs/adr/0717 §2): through `cad.levels.assign`.
+    Levels(Vec<Slot>, String),
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
     Arch(Slot, kentos_commands::ArchOperation),
@@ -792,6 +794,7 @@ impl App {
                 properties::set_space_separator(model,slot,arch)
             },
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
+            Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),
             Event::Parameter(slot, name, value) => {

@@ -732794,7 +732794,7 @@
       "id": "cad.arch.audit",
       "version": 1,
       "title": "Mimari denetim",
-      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -732854,7 +732854,7 @@
               },
               {
                 "const": "levels",
-                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
               }
             ]
@@ -732862,7 +732862,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order).",
+        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order), `level_not_found` (`level`).",
         "properties": {
           "checks": {
             "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
@@ -732870,6 +732870,13 @@
               "$ref": "#/$defs/ArchAuditCheck"
             },
             "type": "array"
+          },
+          "level": {
+            "description": "The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;\nabsent: the project's ground level (the one at elevation 0, else its first).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "maxGap": {
             "description": "A free wall end this near another wall's body, or another free end, is said; metres, at least 0.",
@@ -732949,7 +732956,7 @@
               },
               {
                 "const": "levels",
-                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
               }
             ]
@@ -733146,7 +733153,7 @@
               },
               {
                 "const": "levels",
-                "description": "Walls, spaces, columns, stairs and ramps without a level while the project has levels.",
+                "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
               }
             ]
@@ -733299,7 +733306,8 @@
       "capabilities": {
         "refusals": [
           "not_finite",
-          "invalid_arch_audit"
+          "invalid_arch_audit",
+          "level_not_found"
         ]
       },
       "examples": [
@@ -733344,6 +733352,257 @@
               }
             ],
             "revision": "7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.levels.assign",
+      "version": 1,
+      "title": "Kat ver",
+      "summary": "Mimari nesnelere projenin bir katını verir (docs/adr/0717); yerleri değişmez, tek geri alma adımı “Kat ver”. uids verilirse onlar (duvar, mahal, aks, kolon, merdiven, rampa, mahal ayırıcı; kapı, pencere, etiket, kaplama ve çizginin kendi katı yok: not_levelled), verilmezse katsız ya da projede olmayan bir kattaki bütün duvar, mahal, kolon, merdiven, rampa ve mahal ayırıcılar (Denetim'in arch_level_missing bulguları; akslar katsız kalabilir). Zaten o kattaki nesne değişmez; kilitli katmandakiler atlanır ve sayılır (layer_locked uyarısı), hepsi kilitliyse ret. Hiçbiri değişmeyecekse nothing_to_assign. Mahalın sınırı aynı adımda yeni katının duvarları arasında yeniden bulunur; kapanmayan ya da duvarları katından ayrılan mahal son sınırıyla kalır (arch_space_broken uyarısı). Plan kat verilecekleri (uid, id, kind, from) çizimin sırasıyla verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.levels.assign` v1 (“Kat ver”, docs/adr/0717): `level` given to the objects named by `uids` (walls,\nspaces, grids, columns, stairs, ramps, room separators), or, without `uids`, to every wall, space, column, stair,\nramp and room separator on no level or on a level the project does not have. An object on `level` already is left\nas it is; one on a locked layer is left out and counted (`layer_locked` warning), all of them locked is refused.\n\nRefusals, in this order: `no_entities` (`uids` empty), `invalid_uid`, `entity_not_found`, `not_levelled` (an\nopening, a tag, a line… has no level of its own), `level_not_found`, `invalid_revision`, `revision_conflict`,\n`layer_locked`, `nothing_to_assign`. Warnings: `layer_locked`, `arch_space_broken` (a room its new level's walls do\nnot enclose, or one whose walls left its level: its last boundary kept).",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "level": {
+            "description": "The level given, by its id among the project's levels.",
+            "type": "string"
+          },
+          "uids": {
+            "description": "The objects given it, by their persistent ids; absent: every object without a level of the project.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "level"
+        ],
+        "title": "LevelsAssign",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LevelAssigned": {
+            "description": "One object given the level.",
+            "properties": {
+              "from": {
+                "description": "The level it was on, by its id; absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its id in the drawing.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "id"
+              },
+              "kind": {
+                "description": "Its kind: `wall`, `space`, `grid`, `column`, `stair`, `ramp` or `polyline` (a room separator).",
+                "type": "string"
+              },
+              "uid": {
+                "description": "Its persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "id",
+              "kind"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.levels.assign` v1, its plan's too: the objects given the level, in the drawing's order.",
+        "properties": {
+          "assigned": {
+            "items": {
+              "$ref": "#/$defs/LevelAssigned"
+            },
+            "type": "array"
+          },
+          "level": {
+            "description": "The level given.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "level",
+          "assigned",
+          "revision"
+        ],
+        "title": "LevelsAssigned",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LevelAssigned": {
+            "description": "One object given the level.",
+            "properties": {
+              "from": {
+                "description": "The level it was on, by its id; absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its id in the drawing.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "id"
+              },
+              "kind": {
+                "description": "Its kind: `wall`, `space`, `grid`, `column`, `stair`, `ramp` or `polyline` (a room separator).",
+                "type": "string"
+              },
+              "uid": {
+                "description": "Its persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "id",
+              "kind"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.levels.assign` v1, its plan's too: the objects given the level, in the drawing's order.",
+        "properties": {
+          "assigned": {
+            "items": {
+              "$ref": "#/$defs/LevelAssigned"
+            },
+            "type": "array"
+          },
+          "level": {
+            "description": "The level given.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "level",
+          "assigned",
+          "revision"
+        ],
+        "title": "LevelsAssigned",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "wall",
+              "space",
+              "grid",
+              "column",
+              "stair",
+              "ramp",
+              "polyline"
+            ],
+            "refusedWith": "not_levelled",
+            "note": "Çoklu çizgi yalnız mahal ayırıcıysa kat alır."
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "not_levelled",
+          "level_not_found",
+          "nothing_to_assign",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked",
+          "arch_space_broken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Katsız duvar ve mahal zemin kata",
+          "input": {
+            "level": "zemin"
+          },
+          "output": {
+            "assigned": [
+              {
+                "id": 1,
+                "kind": "wall",
+                "uid": "0192f5a1-7040-7000-8000-000000000001"
+              },
+              {
+                "id": 2,
+                "kind": "space",
+                "uid": "0192f5a1-7040-7000-8000-000000000002"
+              }
+            ],
+            "level": "zemin",
+            "revision": "8"
+          }
+        },
+        {
+          "title": "Seçili kolonu 1. kata taşı",
+          "input": {
+            "level": "kat-1",
+            "uids": [
+              "0192f5a1-7040-7000-8000-000000000003"
+            ]
+          },
+          "output": {
+            "assigned": [
+              {
+                "from": "zemin",
+                "id": 3,
+                "kind": "column",
+                "uid": "0192f5a1-7040-7000-8000-000000000003"
+              }
+            ],
+            "level": "kat-1",
+            "revision": "9"
           }
         }
       ]
@@ -1456541,6 +1456800,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı."
+    },
+    {
+      "code": "not_levelled",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnenin kendi katı yok: kapı, pencere, etiket ve kaplama bağlı oldukları nesnenin katındadır; çizgi ve yazı katsızdır."
+    },
+    {
+      "code": "nothing_to_assign",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kat verilecek nesne yok: verilenler zaten bu katta ya da katsız mimari nesne yok."
     },
     {
       "code": "invalid_viewmark",

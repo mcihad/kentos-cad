@@ -660,6 +660,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.spaces.number"
             // A grid's, column's, stair's or ramp's fields changed; columns tied to grids move (docs/adr/0343 §4).
             | "cad.arch.edit"
+            // It changes objects' levels; a room's boundary is found again on its new level (docs/adr/0717).
+            | "cad.levels.assign"
             // A tag's template and frame changed (docs/adr/0344 §4); a schedule's cell written to its objects.
             | "cad.tags.edit"
             | "cad.schedules.edit"

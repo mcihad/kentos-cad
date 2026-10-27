@@ -810,6 +810,24 @@
         "arch": {
           "level": "kat-9"
         }
+      },
+      {
+        "kind": "polyline",
+        "id": 29,
+        "layerId": "mimari",
+        "attrs": {},
+        "lineType": "dashed",
+        "pts": [
+          {
+            "x": 52.0,
+            "y": 0.0
+          },
+          {
+            "x": 52.0,
+            "y": 4.0
+          }
+        ],
+        "spaceSeparator": {}
       }
     ],
     "uids": [
@@ -840,7 +858,8 @@
       "0192f5a1-7030-7000-8000-000000000018",
       "0192f5a1-7030-7000-8000-000000000019",
       "0192f5a1-7030-7000-8000-00000000001a",
-      "0192f5a1-7030-7000-8000-00000000001b"
+      "0192f5a1-7030-7000-8000-00000000001b",
+      "0192f5a1-7030-7000-8000-00000000001d"
     ],
     "styles": {
       "items": [],
@@ -1216,52 +1235,125 @@
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Duvarın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001c"
                   ],
                   "at": {
                     "x": 14.0,
                     "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Mahalın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000010"
                   ],
                   "at": {
                     "x": 21.5,
                     "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Kolonun katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000018"
                   ],
                   "at": {
                     "x": 34.0,
                     "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Rampanın katı “kat-9” projede yok.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001b"
                   ],
                   "at": {
                     "x": 40.0,
                     "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
                   }
                 }
               ],
@@ -1602,52 +1694,125 @@
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Duvarın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001c"
                   ],
                   "at": {
                     "x": 14.0,
                     "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Mahalın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000010"
                   ],
                   "at": {
                     "x": 21.5,
                     "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Kolonun katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000018"
                   ],
                   "at": {
                     "x": 34.0,
                     "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Rampanın katı “kat-9” projede yok.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001b"
                   ],
                   "at": {
                     "x": 40.0,
                     "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
                   }
                 }
               ],
@@ -2235,52 +2400,125 @@
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Duvarın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001c"
                   ],
                   "at": {
                     "x": 14.0,
                     "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Mahalın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000010"
                   ],
                   "at": {
                     "x": 21.5,
                     "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Kolonun katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000018"
                   ],
                   "at": {
                     "x": 34.0,
                     "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Rampanın katı “kat-9” projede yok.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001b"
                   ],
                   "at": {
                     "x": 40.0,
                     "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
                   }
                 }
               ],
@@ -2427,52 +2665,125 @@
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Duvarın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001c"
                   ],
                   "at": {
                     "x": 14.0,
                     "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Mahalın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000010"
                   ],
                   "at": {
                     "x": 21.5,
                     "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Kolonun katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000018"
                   ],
                   "at": {
                     "x": 34.0,
                     "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Rampanın katı “kat-9” projede yok.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001b"
                   ],
                   "at": {
                     "x": 40.0,
                     "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
                   }
                 }
               ],
@@ -2815,52 +3126,125 @@
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Duvarın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001c"
                   ],
                   "at": {
                     "x": 14.0,
                     "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Mahalın katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000010"
                   ],
                   "at": {
                     "x": 21.5,
                     "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Kolonun katı yok; projede 2 kat var.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-000000000018"
                   ],
                   "at": {
                     "x": 34.0,
                     "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
                   }
                 },
                 {
                   "check": "levels",
                   "code": "arch_level_missing",
                   "message": "Rampanın katı “kat-9” projede yok.",
-                  "repair": "Öznitelikler'de Kat (L) seçin.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
                   "uids": [
                     "0192f5a1-7030-7000-8000-00000000001b"
                   ],
                   "at": {
                     "x": 40.0,
                     "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
                   }
                 }
               ],
@@ -3399,6 +3783,1124 @@
           }
         }
       ]
+    },
+    {
+      "name": "Kat düzeltmesi girdinin katını verir: 1. kat",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ],
+            "level": "kat-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını 1. kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "kat-1",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını 1. kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "kat-1",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını 1. kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "kat-1",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını 1. kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "kat-1",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını 1. kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "kat-1",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projede olmayan düzeltme katı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "level": "kat-9"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “kat-9” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "level"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş düzeltme katı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ],
+            "level": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "level"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katsız projede düzeltme katı verilemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "level": "zemin"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “zemin” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "level"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Mimari denetim",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "closed": true,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 4.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 8.0
+              },
+              {
+                "x": 5.0,
+                "y": 4.14
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 7.0,
+                "y": 2.0
+              },
+              {
+                "x": 8.5,
+                "y": 2.0
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 8.53,
+                "y": 2.04
+              },
+              {
+                "x": 8.53,
+                "y": 3.5
+              }
+            ],
+            "width": 0.1,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 6,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 20.0,
+                "y": 0.0
+              },
+              {
+                "x": 24.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 7,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 24.0,
+                "y": 0.0
+              },
+              {
+                "x": 19.0,
+                "y": 1.125
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 8,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 14.0,
+                "y": 6.0
+              },
+              {
+                "x": 10.14,
+                "y": 6.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "opening",
+            "id": 9,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 2.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 1.55,
+                "y": 0.1
+              },
+              {
+                "x": 1.55,
+                "y": -0.1
+              },
+              {
+                "x": 2.45,
+                "y": 0.1
+              },
+              {
+                "x": 2.45,
+                "y": -0.1
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K01"
+          },
+          {
+            "kind": "opening",
+            "id": 10,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 6.0,
+            "width": 1.2,
+            "form": "window",
+            "place": [
+              {
+                "x": 5.4,
+                "y": 0.1
+              },
+              {
+                "x": 5.4,
+                "y": -0.1
+              },
+              {
+                "x": 6.6,
+                "y": 0.1
+              },
+              {
+                "x": 6.6,
+                "y": -0.1
+              }
+            ],
+            "number": "P01"
+          },
+          {
+            "kind": "opening",
+            "id": 11,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-00000000ff01",
+            "at": 8.5,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 8.05,
+                "y": 0.1
+              },
+              {
+                "x": 8.05,
+                "y": -0.1
+              },
+              {
+                "x": 8.95,
+                "y": 0.1
+              },
+              {
+                "x": 8.95,
+                "y": -0.1
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K02",
+            "broken": "hostGone"
+          },
+          {
+            "kind": "opening",
+            "id": 12,
+            "layerId": "mimari",
+            "attrs": {},
+            "host": "0192f5a1-7030-7000-8000-000000000001",
+            "at": 12.0,
+            "width": 0.9,
+            "form": "door",
+            "place": [
+              {
+                "x": 9.9,
+                "y": 1.5500000000000007
+              },
+              {
+                "x": 10.1,
+                "y": 1.5500000000000007
+              },
+              {
+                "x": 9.9,
+                "y": 2.4499999999999993
+              },
+              {
+                "x": 10.1,
+                "y": 2.4499999999999993
+              }
+            ],
+            "style": "kentos-kapi-90",
+            "number": "K01"
+          },
+          {
+            "kind": "space",
+            "id": 13,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 3.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 3.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "101",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 14,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 4.1
+                    },
+                    {
+                      "x": 4.95,
+                      "y": 4.1
+                    },
+                    {
+                      "x": 4.95,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "102",
+            "name": "Yatak odası",
+            "arch": {
+              "level": "zemin"
+            },
+            "broken": "lostEnclosure"
+          },
+          {
+            "kind": "space",
+            "id": 15,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 1.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 10.05
+                    },
+                    {
+                      "x": 1.0,
+                      "y": 10.05
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "103",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 16,
+            "layerId": "gizli",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 12.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 12.3,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 12.3,
+                      "y": 10.25
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 10.25
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "104",
+            "name": "Şaft",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 17,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 23.0,
+                      "y": 10.0
+                    },
+                    {
+                      "x": 23.0,
+                      "y": 13.0
+                    },
+                    {
+                      "x": 20.0,
+                      "y": 13.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "101",
+            "name": "Depo"
+          },
+          {
+            "kind": "tag",
+            "id": 18,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-000000000008",
+            "at": {
+              "x": 2.0,
+              "y": -0.6
+            },
+            "text": "K01"
+          },
+          {
+            "kind": "tag",
+            "id": 19,
+            "layerId": "kilitli",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-00000000ff02",
+            "at": {
+              "x": 6.0,
+              "y": -1.5
+            },
+            "text": "K09",
+            "broken": "targetGone"
+          },
+          {
+            "kind": "tag",
+            "id": 20,
+            "layerId": "mimari",
+            "attrs": {},
+            "of": "0192f5a1-7030-7000-8000-00000000ff03",
+            "at": {
+              "x": 31.0,
+              "y": -1.0
+            },
+            "text": "K10",
+            "broken": "targetGone"
+          },
+          {
+            "kind": "dimension",
+            "id": 21,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": -1.0
+            },
+            "b": {
+              "x": 10.0,
+              "y": -1.0
+            },
+            "height": 0.125,
+            "offset": -0.5,
+            "style": "linear",
+            "angle": 0.0,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-7030-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                },
+                "broken": "vertex_gone"
+              },
+              "b": {
+                "uid": "0192f5a1-7030-7000-8000-000000000001",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            }
+          },
+          {
+            "kind": "dimension",
+            "id": 22,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 20.0,
+              "y": -2.0
+            },
+            "b": {
+              "x": 24.0,
+              "y": -2.0
+            },
+            "height": 0.125,
+            "offset": -0.5,
+            "style": "linear",
+            "angle": 0.0,
+            "refs": {
+              "a": {
+                "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                },
+                "broken": "object_gone"
+              },
+              "b": {
+                "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                },
+                "broken": "object_gone"
+              }
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 23,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": -2.0
+              },
+              {
+                "x": 30.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "column",
+            "id": 24,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "grids": [
+              "0192f5a1-7030-7000-8000-000000000016",
+              "0192f5a1-7030-7000-8000-00000000ff05"
+            ],
+            "arch": {
+              "level": "zemin"
+            },
+            "broken": "gridGone"
+          },
+          {
+            "kind": "column",
+            "id": 25,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 34.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4
+          },
+          {
+            "kind": "viewmark",
+            "id": 26,
+            "layerId": "mimari",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": 0.0,
+                "y": -3.0
+              },
+              {
+                "x": 10.0,
+                "y": -3.0
+              }
+            ],
+            "mark": "A",
+            "target": {
+              "view": "kesit-a"
+            },
+            "broken": "targetGone"
+          },
+          {
+            "kind": "stair",
+            "id": 27,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 43.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "ramp",
+            "id": 28,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 5.0
+              },
+              {
+                "x": 50.0,
+                "y": 5.0
+              }
+            ],
+            "width": 1.5,
+            "rise": 0.5,
+            "slope": 5.0,
+            "arch": {
+              "level": "kat-9"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 29,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 52.0,
+                "y": 0.0
+              },
+              {
+                "x": 52.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {}
+          }
+        ],
+        "uids": [
+          "0192f5a1-7030-7000-8000-000000000001",
+          "0192f5a1-7030-7000-8000-000000000002",
+          "0192f5a1-7030-7000-8000-000000000003",
+          "0192f5a1-7030-7000-8000-000000000004",
+          "0192f5a1-7030-7000-8000-000000000005",
+          "0192f5a1-7030-7000-8000-000000000006",
+          "0192f5a1-7030-7000-8000-000000000007",
+          "0192f5a1-7030-7000-8000-00000000001c",
+          "0192f5a1-7030-7000-8000-000000000008",
+          "0192f5a1-7030-7000-8000-000000000009",
+          "0192f5a1-7030-7000-8000-00000000000a",
+          "0192f5a1-7030-7000-8000-00000000000b",
+          "0192f5a1-7030-7000-8000-00000000000c",
+          "0192f5a1-7030-7000-8000-00000000000d",
+          "0192f5a1-7030-7000-8000-00000000000e",
+          "0192f5a1-7030-7000-8000-00000000000f",
+          "0192f5a1-7030-7000-8000-000000000010",
+          "0192f5a1-7030-7000-8000-000000000011",
+          "0192f5a1-7030-7000-8000-000000000012",
+          "0192f5a1-7030-7000-8000-000000000013",
+          "0192f5a1-7030-7000-8000-000000000014",
+          "0192f5a1-7030-7000-8000-000000000015",
+          "0192f5a1-7030-7000-8000-000000000016",
+          "0192f5a1-7030-7000-8000-000000000017",
+          "0192f5a1-7030-7000-8000-000000000018",
+          "0192f5a1-7030-7000-8000-000000000019",
+          "0192f5a1-7030-7000-8000-00000000001a",
+          "0192f5a1-7030-7000-8000-00000000001b",
+          "0192f5a1-7030-7000-8000-00000000001d"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "dimensionSets": [
+          {
+            "id": "0192f5a1-7030-7000-8000-000000000500",
+            "wall": "0192f5a1-7030-7000-8000-00000000ff01",
+            "face": "left",
+            "rows": [
+              "overall"
+            ],
+            "openings": "ends",
+            "layerId": "olcu",
+            "at": {
+              "x": 20.0,
+              "y": -2.5
+            },
+            "gapMm": 7.0,
+            "height": 0.125,
+            "look": {},
+            "members": [
+              {
+                "uid": "0192f5a1-7030-7000-8000-000000000015",
+                "row": "overall",
+                "a": {
+                  "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                },
+                "b": {
+                  "uid": "0192f5a1-7030-7000-8000-00000000ff01",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "broken": "hostGone"
+          }
+        ]
+      }
     },
     {
       "name": "Projede kat yok: kat denetimi bulgu vermez",
@@ -4215,6 +5717,24 @@
             "arch": {
               "level": "kat-9"
             }
+          },
+          {
+            "kind": "polyline",
+            "id": 29,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 52.0,
+                "y": 0.0
+              },
+              {
+                "x": 52.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {}
           }
         ],
         "uids": [
@@ -4245,7 +5765,8 @@
           "0192f5a1-7030-7000-8000-000000000018",
           "0192f5a1-7030-7000-8000-000000000019",
           "0192f5a1-7030-7000-8000-00000000001a",
-          "0192f5a1-7030-7000-8000-00000000001b"
+          "0192f5a1-7030-7000-8000-00000000001b",
+          "0192f5a1-7030-7000-8000-00000000001d"
         ],
         "styles": {
           "items": [],
@@ -5156,6 +6677,24 @@
             "arch": {
               "level": "kat-9"
             }
+          },
+          {
+            "kind": "polyline",
+            "id": 29,
+            "layerId": "mimari",
+            "attrs": {},
+            "lineType": "dashed",
+            "pts": [
+              {
+                "x": 52.0,
+                "y": 0.0
+              },
+              {
+                "x": 52.0,
+                "y": 4.0
+              }
+            ],
+            "spaceSeparator": {}
           }
         ],
         "uids": [
@@ -5186,7 +6725,8 @@
           "0192f5a1-7030-7000-8000-000000000018",
           "0192f5a1-7030-7000-8000-000000000019",
           "0192f5a1-7030-7000-8000-00000000001a",
-          "0192f5a1-7030-7000-8000-00000000001b"
+          "0192f5a1-7030-7000-8000-00000000001b",
+          "0192f5a1-7030-7000-8000-00000000001d"
         ],
         "styles": {
           "items": [],
@@ -6931,6 +8471,455 @@
                         "operation": {
                           "kind": "detach"
                         }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_level_missing",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.levels.assign",
+          "input": {
+            "level": "zemin",
+            "uids": [
+              "0192f5a1-7030-7000-8000-00000000001c"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
                       }
                     }
                   }

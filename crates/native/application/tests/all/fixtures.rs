@@ -84,7 +84,7 @@ use kentos_native_application::{
     labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
     sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
@@ -1368,6 +1368,12 @@ impl Input for kentos_commands::DimensionsInterior {
 }
 
 impl Input for kentos_commands::ColumnsDistancesInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::LevelsAssign {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3725,6 +3731,37 @@ fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()>
     Ok(())
 }
 
+/// One command's `op` on the document, in a frame of its own: `run_op` names hundreds of commands, and in a debug
+/// build each one's input and answer would take room in that one frame at once (a deep case, a DWG read, ran out of
+/// a test thread's stack).
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn run_typed<I, V, P, O>(
+    op: &str,
+    doc: &mut Document,
+    input: Value,
+    step: &Value,
+    at: &str,
+    validate: impl FnOnce(&ExecutionContext<'_>, &I) -> V,
+    plan: impl FnOnce(&ExecutionContext<'_>, &I) -> P,
+    execute: impl FnOnce(&mut ExecutionContext<'_>, I) -> O,
+) -> Outcome<serde_json::Result<Value>>
+where
+    I: serde::de::DeserializeOwned + Input,
+    V: serde::Serialize,
+    P: serde::Serialize,
+    O: serde::Serialize,
+{
+    let mut input: I =
+        serde_json::from_value(input).map_err(|e| format!("{at}: girdi okunamadı: {e}"))?;
+    put_non_finite(&mut input, step, at)?;
+    Ok(match op {
+        "validate" => serde_json::to_value(validate(&ExecutionContext::new(doc), &input)),
+        "plan" => serde_json::to_value(plan(&ExecutionContext::new(doc), &input)),
+        _ => serde_json::to_value(execute(&mut ExecutionContext::new(doc), input)),
+    })
+}
+
 /// Runs `op` of the fixture's command on the document; its whole result as the wire carries it.
 fn run_op(
     command: &str,
@@ -3737,16 +3774,16 @@ fn run_op(
     // The step's input, read as the command's type, with its non-finite numbers put in.
     macro_rules! run {
         ($module:ident, $input:ty) => {{
-            let mut input: $input =
-                serde_json::from_value(input).map_err(|e| format!("{at}: girdi okunamadı: {e}"))?;
-            put_non_finite(&mut input, step, at)?;
-            match op {
-                "validate" => {
-                    serde_json::to_value($module::validate(&ExecutionContext::new(doc), &input))
-                }
-                "plan" => serde_json::to_value($module::plan(&ExecutionContext::new(doc), &input)),
-                _ => serde_json::to_value($module::execute(&mut ExecutionContext::new(doc), input)),
-            }
+            run_typed::<$input, _, _, _>(
+                op,
+                doc,
+                input,
+                step,
+                at,
+                |cx, i| $module::validate(cx, i),
+                |cx, i| $module::plan(cx, i),
+                |cx, i| $module::execute(cx, i),
+            )?
         }};
     }
     match command {
@@ -3952,6 +3989,9 @@ fn run_op(
         }
         kentos_commands::CAD_CASEWORK_RUN => {
             run!(casework_run, kentos_commands::CaseworkRun)
+        }
+        kentos_commands::CAD_LEVELS_ASSIGN => {
+            run!(levels_assign, kentos_commands::LevelsAssign)
         }
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)

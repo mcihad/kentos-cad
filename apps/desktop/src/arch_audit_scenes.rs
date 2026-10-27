@@ -6,6 +6,13 @@
 //! KENTOS_SHOTS_ONLY=denetim,denetim-bosluk,denetim-duzeltildi,denetim-geri-alindi,denetim-mahaller,denetim-temiz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! docs/adr/0717: the Katlar group (each finding's Düzelt gives Etkin kat), Kata ver ▾ open, Seç ve göster, every
+//! object without a level given Zemin kat in one step:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=denetim-katlar,denetim-kata-ver,denetim-katsizlar,denetim-kat-verildi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use serde_json::Value;
@@ -104,6 +111,33 @@ fn clean(app: &mut App) {
     run(app, "arch.audit");
 }
 
+/// The Katlar group (docs/adr/0717 §3): the objects without a level, the first one pressed, Düzelt giving Etkin kat.
+fn levels(app: &mut App) {
+    audited(app);
+    event(app, Event::Group(Some(kentos_commands::ArchAuditCheck::Levels)));
+    let row = row_of(app, "arch_level_missing");
+    event(app, Event::Press(row));
+}
+
+/// Kata ver ▾'s Seç ve göster: every object without a level selected, the view on them.
+fn levelless(app: &mut App) {
+    levels(app);
+    event(app, Event::ShowLevelless);
+}
+
+/// Kata ver ▾'s Zemin kat: every object without a level on Zemin kat in one step; the tab checked again.
+fn given(app: &mut App) {
+    levelless(app);
+    event(app, Event::AssignLevel("zemin".into()));
+}
+
+/// Kata ver ▾ open over the Katlar group.
+pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
+    vec![("denetim-kata-ver", levels, |s, app| {
+        crate::tools_screens::press_caption(s, app, "Kata ver (5)", false, false)
+    })]
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("denetim", audited),
@@ -112,5 +146,53 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("denetim-geri-alindi", undone),
         ("denetim-mahaller", spaces),
         ("denetim-temiz", clean),
+        ("denetim-katlar", levels),
+        ("denetim-katsizlar", levelless),
+        ("denetim-kat-verildi", given),
     ]
+}
+
+/// docs/adr/0717 §2: Kata ver ▾ selects what lacks a level, then gives every one the level chosen in one step that
+/// Geri al takes back; the Katlar group is empty after it, each finding's Düzelt gave Etkin kat.
+#[test]
+fn kata_ver_gives_every_object_without_a_level_one() {
+    let (mut app, _) = App::boot(None);
+    audited(&mut app);
+    let lacking = |app: &App| {
+        app.arch_audit
+            .audited
+            .as_ref()
+            .expect("audited")
+            .findings
+            .iter()
+            .filter(|f| f.check == kentos_commands::ArchAuditCheck::Levels)
+            .map(|f| (f.uids[0].clone(), f.fix.as_ref().map(|x| x.label.clone())))
+            .collect::<Vec<_>>()
+    };
+    let before = lacking(&app);
+    assert_eq!(before.len(), 5, "{before:?}");
+    // Etkin kat is Zemin kat (the level at 0): each Düzelt gives it.
+    assert!(before.iter().all(|(_, fix)| fix.as_deref() == Some("Katını Zemin kat yap")), "{before:?}");
+    event(&mut app, Event::ShowLevelless);
+    assert_eq!(app.selection.ids().len(), 5, "Seç ve göster selects them all");
+    let revision = app.document.as_ref().expect("a drawing").model.revision();
+    event(&mut app, Event::AssignLevel("kat-1".into()));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert!(doc.revision() > revision);
+    for (uid, _) in &before {
+        let slot = doc.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid")).expect("there");
+        assert_eq!(doc.get(slot).and_then(|e| e.own_level()), Some("kat-1"), "{uid}");
+    }
+    assert!(lacking(&app).is_empty(), "checked again");
+    assert_eq!(app.selection.ids().len(), 5, "the objects stay selected");
+    run(&mut app, "edit.undo");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let back: Vec<Option<String>> = before
+        .iter()
+        .map(|(uid, _)| {
+            let slot = doc.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid")).expect("there");
+            doc.get(slot).and_then(|e| e.own_level()).map(str::to_owned)
+        })
+        .collect();
+    assert!(back.iter().all(|l| l.as_deref() != Some("kat-1")), "one step: {back:?}");
 }

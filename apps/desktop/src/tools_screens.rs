@@ -149,6 +149,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::layer_type_scenes::pointed());
     all.extend(crate::arch_scenes::pointed());
     all.extend(crate::walkthrough_scenes::pointed());
+    all.extend(crate::arch_audit_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",

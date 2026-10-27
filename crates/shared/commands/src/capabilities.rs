@@ -1826,9 +1826,24 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.arch.audit",
-        refusals: &[&["not_finite", "invalid_arch_audit"]],
+        refusals: &[&["not_finite", "invalid_arch_audit", "level_not_found"]],
         warnings: &[],
         targets: none,
+    },
+    // Kat ver (docs/adr/0717): an object with a level of its own; a polyline only as a room separator.
+    Entry {
+        id: "cad.levels.assign",
+        refusals: &[OBJECTS, &["not_levelled", "level_not_found", "nothing_to_assign"], REVISION],
+        warnings: &["layer_locked", "arch_space_broken"],
+        targets: || {
+            vec![target(
+                None,
+                &["wall", "space", "grid", "column", "stair", "ramp", "polyline"],
+                &[],
+                Some("not_levelled"),
+                Some("Çoklu çizgi yalnız mahal ayırıcıysa kat alır."),
+            )]
+        },
     },
     Entry {
         id: "cad.casework.run",

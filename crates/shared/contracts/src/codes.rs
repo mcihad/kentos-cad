@@ -1772,6 +1772,13 @@ codes! {
     /// An audit threshold below zero.
     INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı.";
 
+    // ── Kat ver (docs/adr/0717) ─────────────────────────────────────────
+    /// An object given a level that has no level of its own: an opening, a tag or a finish is on its object's level;
+    /// a line or a text is on none.
+    NOT_LEVELLED = "not_levelled", Failed, false, "Nesnenin kendi katı yok: kapı, pencere, etiket ve kaplama bağlı oldukları nesnenin katındadır; çizgi ve yazı katsızdır.";
+    /// Nothing to give the level: the objects are on it already, or no object lacks a level.
+    NOTHING_TO_ASSIGN = "nothing_to_assign", Failed, false, "Kat verilecek nesne yok: verilenler zaten bu katta ya da katsız mimari nesne yok.";
+
     // ── View marks and finishes (docs/adr/0345) ─────────────────────────
     /// A view mark's fields that make none.
     INVALID_VIEWMARK = "invalid_viewmark", Failed, false, "İşaretin alanları bir görünüm işareti tanımlamıyor: kesit 2–32 nokta, görünüş ve detay tek nokta, detayın yarıçapı, en çok 16 harfli numara, 0–50 mm yazı yüksekliği.";
