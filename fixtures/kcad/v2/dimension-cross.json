@@ -1,0 +1,181 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kesen çizgiyle iç ölçü",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 0.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.2,
+      "justify": "center"
+    },
+    {
+      "kind": "column",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 2.0,
+        "y": 2.0
+      },
+      "width": 0.4
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.2,
+      "justify": "center"
+    },
+    {
+      "kind": "dimension",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 0.1,
+        "y": 2.0
+      },
+      "b": {
+        "x": 1.8,
+        "y": 2.0
+      },
+      "c": {
+        "x": -1.0,
+        "y": 2.0
+      },
+      "height": 0.125,
+      "offset": 0.0,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-6200-7000-8000-000000000001",
+          "place": {
+            "kind": "along",
+            "part": 1,
+            "ring": 0,
+            "index": 0,
+            "t": 0.5
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-6200-7000-8000-000000000002",
+          "place": {
+            "kind": "along",
+            "part": 0,
+            "ring": 0,
+            "index": 3,
+            "t": 0.5
+          }
+        },
+        "rule": "cross"
+      },
+      "style": "linear",
+      "angle": 0.0
+    },
+    {
+      "kind": "dimension",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 2.0,
+        "y": 2.0
+      },
+      "b": {
+        "x": 3.9,
+        "y": 2.0
+      },
+      "c": {
+        "x": -1.0,
+        "y": 2.0
+      },
+      "height": 0.125,
+      "offset": 0.5,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-6200-7000-8000-000000000002",
+          "place": {
+            "kind": "center"
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-6200-7000-8000-000000000003",
+          "place": {
+            "kind": "along",
+            "part": 0,
+            "ring": 0,
+            "index": 0,
+            "t": 0.5
+          }
+        },
+        "rule": "cross"
+      },
+      "style": "linear",
+      "angle": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-6200-7000-8000-000000000001",
+    "0192f5a1-6200-7000-8000-000000000002",
+    "0192f5a1-6200-7000-8000-000000000003",
+    "0192f5a1-6200-7000-8000-000000000004",
+    "0192f5a1-6200-7000-8000-000000000005"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

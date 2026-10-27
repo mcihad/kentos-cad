@@ -999,6 +999,7 @@ class CreateOperation(_StrEnum):
     - ``raster``: Raster ekle (docs/adr/0204 §8): a raster placed.
     - ``pointCloud``: Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
     - ``quickDimensions``: Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
+    - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -1034,9 +1035,10 @@ class CreateOperation(_StrEnum):
     RASTER = "raster"
     POINT_CLOUD = "pointCloud"
     QUICK_DIMENSIONS = "quickDimensions"
+    INTERIOR_DIMENSIONS = "interiorDimensions"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -1178,13 +1180,15 @@ class DimensionRule(_StrEnum):
     - ``curve``: A radius's, a diameter's, a jogged radius's, an arc length's or an arc's angle: the bound points are on one
     - ``edges``: An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where
     - ``pair``: An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle
+    - ``cross``: A linear dimension along a cut (docs/adr/0711): the cut runs through `c` in the dimension's direction; a point
     """
     CURVE = "curve"
     EDGES = "edges"
     PAIR = "pair"
+    CROSS = "cross"
 
 
-DimensionRuleName = Literal["curve", "edges", "pair"]
+DimensionRuleName = Literal["curve", "edges", "pair", "cross"]
 """The names of :class:`DimensionRule`, for a plain string."""
 
 
@@ -2107,6 +2111,36 @@ class InputState(_StrEnum):
 
 InputStateName = Literal["current", "changed", "gone"]
 """The names of :class:`InputState`, for a plain string."""
+
+
+class InteriorColumns(_StrEnum):
+    """What of a crossed column the chain measures (docs/adr/0711 §3).
+
+    - ``ends``: A rectangular column's sides the cut crosses; a round column's centre.
+    - ``centers``: Its centre.
+    - ``none``: Nothing.
+    """
+    ENDS = "ends"
+    CENTERS = "centers"
+    NONE = "none"
+
+
+InteriorColumnsName = Literal["ends", "centers", "none"]
+"""The names of :class:`InteriorColumns`, for a plain string."""
+
+
+class InteriorFaces(_StrEnum):
+    """The lines of a crossed wall the chain measures (docs/adr/0711 §3).
+
+    - ``outer``: Its two faces.
+    - ``skins``: Every line: the faces and the boundaries between its components (Archicad's “All Skins”).
+    """
+    OUTER = "outer"
+    SKINS = "skins"
+
+
+InteriorFacesName = Literal["outer", "skins"]
+"""The names of :class:`InteriorFaces`, for a plain string."""
 
 
 class InvitationState(_StrEnum):
@@ -17948,6 +17982,106 @@ class DimensionsEdited(_Model):
         return cls(
             changed=list(data["changed"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsInterior(_Model):
+    """An interior dimension chain along a cut (docs/adr/0711 §4).
+    Attributes:
+        from_: The cut's start. Unit: length.
+        to: The cut's end. Unit: length.
+        layer_id: The layer the dimensions go to.
+        at: Where the chain's line goes: through this point, along the cut; absent: on the cut. Unit: length.
+        attrs: GIS attributes, text in v1. Absent: none.
+        color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        columns: A crossed column's sides (`ends`, absent), its centre (`centers`) or nothing (`none`).
+        dimension_style: The project's dimension style by its name (docs/adr/0183); absent or “Standart”: Standart.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        faces: A crossed wall's faces (`outer`, absent) or every line between its components (`skins`).
+        height: The values' height; absent: the style's at the project's scale. Unit: length.
+        label: The text shown beside it. Absent: none.
+        level: Only the walls and columns of this architectural level (its id); absent: every one.
+        line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
+            is drawn with lines. Absent: the layer's. Unit: paper-mm.
+        mask: The values drawn over the drawing's background (Zemin, docs/adr/0147).
+        symbol: Its own symbol, a library item's id. Absent: the layer's style.
+        total: Also the overall dimension from the first to the last, one row further (8 paper millimetres), on `at`'s side.
+    """
+    from_: Vec2
+    to: Vec2
+    layer_id: str
+    at: Vec2 | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    columns: InteriorColumns | InteriorColumnsName | None | Unset = UNSET
+    dimension_style: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    faces: InteriorFaces | InteriorFacesName | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mask: bool | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    total: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["layerId"] = self.layer_id
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
+        if self.dimension_style is not UNSET:
+            out["dimensionStyle"] = self.dimension_style
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.faces is not UNSET:
+            out["faces"] = None if self.faces is None else _enum_out(self.faces)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsInterior:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            layer_id=data["layerId"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(InteriorColumns, data["columns"]),
+            dimension_style=data.get("dimensionStyle", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            faces=UNSET if "faces" not in data else None if data["faces"] is None else _enum_in(InteriorFaces, data["faces"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            label=data.get("label", UNSET),
+            level=data.get("level", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mask=data.get("mask", UNSET),
+            symbol=data.get("symbol", UNSET),
+            total=data.get("total", UNSET),
         )
 
 
@@ -78648,6 +78782,7 @@ __all__ = [
     "DimensionsEdit",
     "DimensionsEditPlan",
     "DimensionsEdited",
+    "DimensionsInterior",
     "DimensionsQuery",
     "DimensionsRead",
     "DimensionsReassociate",
@@ -79104,6 +79239,10 @@ __all__ = [
     "InsertsClipOperation",
     "InsertsClipped",
     "InspectedObject",
+    "InteriorColumns",
+    "InteriorColumnsName",
+    "InteriorFaces",
+    "InteriorFacesName",
     "IntersectAreaWork",
     "IntersectionConstruction",
     "InvertInsertsClipOperation",

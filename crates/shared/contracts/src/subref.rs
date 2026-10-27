@@ -114,6 +114,10 @@ pub enum DimensionRule {
     /// An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle
     /// of their starts to the middle of their ends, the second edge turned to run the first's way.
     Pair,
+    /// A linear dimension along a cut (docs/adr/0711): the cut runs through `c` in the dimension's direction; a point
+    /// naming a straight edge is where the edge's line crosses the cut, another place is where it is; the
+    /// dimension's line stays where it is in the world.
+    Cross,
 }
 
 impl DimensionRule {
@@ -123,6 +127,7 @@ impl DimensionRule {
             DimensionRule::Curve => "curve",
             DimensionRule::Edges => "edges",
             DimensionRule::Pair => "pair",
+            DimensionRule::Cross => "cross",
         }
     }
 }
@@ -268,7 +273,8 @@ impl DimensionRefs {
 
     /// What is wrong with the rule for a dimension of `style` (docs/adr/0320 §1); none when it fits: a curve's on a
     /// radius, a diameter or a jogged radius (`b` bound, not `a`, the centre), on an arc length or an angle (`a` and
-    /// `b` bound, not `c`); edges on an angle (`a` and `b` bound, not `c`).
+    /// `b` bound, not `c`); edges on an angle (`a` and `b` bound, not `c`); a cut on a linear dimension (`a` and `b`
+    /// bound, not `c`, docs/adr/0711).
     pub fn rule_problem(&self, style: Option<crate::DimensionStyle>) -> Option<String> {
         use crate::DimensionStyle as S;
         let rule = self.rule?;
@@ -280,10 +286,11 @@ impl DimensionRefs {
             DimensionRule::Curve => radial || matches!(style, Some(S::ArcLength | S::Angular)),
             DimensionRule::Edges => style == Some(S::Angular),
             DimensionRule::Pair => style == Some(S::CenterLine),
+            DimensionRule::Cross => style == Some(S::Linear),
         };
         if !fits {
             return Some(format!(
-                "“{}” kuralı bu ölçü türüne uymaz: eğri kuralı yarıçap, çap, kırıklı yarıçap, yay uzunluğu, açı ve merkez işaretinde, kenar kuralı açıda, çift kuralı eksen çizgisinde olur.",
+                "“{}” kuralı bu ölçü türüne uymaz: eğri kuralı yarıçap, çap, kırıklı yarıçap, yay uzunluğu, açı ve merkez işaretinde, kenar kuralı açıda, çift kuralı eksen çizgisinde, kesen çizgi kuralı doğrusal ölçüde olur.",
                 rule.name()
             ));
         }

@@ -122,6 +122,8 @@ pub mod curves_edit_cmd;
 pub mod delete;
 mod dimension;
 pub mod dimension_create;
+// İç ölçü zinciri (docs/adr/0711).
+pub mod dimension_interior;
 pub mod dimensions_edit;
 pub mod dimensions_query;
 pub mod fields_edit;
@@ -159,6 +161,7 @@ pub use cleanup_cmd::entities_cleanup;
 pub use clipboard_cmd::{entities_copy, entities_paste};
 pub use curves_edit_cmd::curves_edit;
 pub use dimension_create::dimensions_create;
+pub use dimension_interior::dimensions_interior;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use explode::entities_explode;
 pub use lengthen::entities_lengthen;
@@ -1026,6 +1029,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_DIMENSIONS_CREATE,
         kentos_commands::CAD_DIMENSIONS_CREATE_VERSION,
+    ),
+    // İç ölçü zinciri ([`dimensions_interior`], docs/adr/0711).
+    (
+        kentos_commands::CAD_DIMENSIONS_INTERIOR,
+        kentos_commands::CAD_DIMENSIONS_INTERIOR_VERSION,
     ),
     // A dimension's spacing, breaks, moved value, written value and options ([`dimensions_edit`], docs/adr/0321 §4).
     (

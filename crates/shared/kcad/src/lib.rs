@@ -618,11 +618,13 @@ pub const SCHEMA_WITH_RAILINGS: u32 = 115;
 pub const SCHEMA_WITH_SPACE_VOIDS: u32 = 116;
 /// Schema 117 (docs/adr/0709): a curved stair's `bulges`, written only when a stair is one.
 pub const SCHEMA_WITH_STAIR_ARCS: u32 = 117;
+/// Schema 118 (docs/adr/0711): a dimension's references' rule `cross`, written only when a dimension has it.
+pub const SCHEMA_WITH_DIMENSION_CROSS: u32 = 118;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 116] = [
+pub const SCHEMAS: [u32; 117] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -739,6 +741,7 @@ pub const SCHEMAS: [u32; 116] = [
     SCHEMA_WITH_RAILINGS,
     SCHEMA_WITH_SPACE_VOIDS,
     SCHEMA_WITH_STAIR_ARCS,
+    SCHEMA_WITH_DIMENSION_CROSS,
 ];
 
 /// The file a drawing is saved as.

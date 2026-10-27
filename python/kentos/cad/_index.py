@@ -44,6 +44,7 @@ COMMANDS: dict[str, Any] = {
     "cad.datasets.edit": datasets.edit,
     "cad.dimensions.create": dimensions.create,
     "cad.dimensions.edit": dimensions.edit,
+    "cad.dimensions.interior": dimensions.interior,
     "cad.dimensions.query": dimensions.query,
     "cad.dimensions.reassociate": dimensions.reassociate,
     "cad.dimensionsets.create": dimensionsets.create,

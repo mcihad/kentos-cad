@@ -238,6 +238,8 @@ pub(super) struct Features {
     railings: bool,
     /// Schema 117: a curved stair's arc (docs/adr/0709).
     stair_arcs: bool,
+    /// Schema 118: a dimension's references' rule `cross` (docs/adr/0711).
+    dimension_cross: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -438,6 +440,7 @@ impl Features {
             dimension_set_edges: schema >= crate::SCHEMA_WITH_DIMENSION_SET_EDGES,
             railings: schema >= crate::SCHEMA_WITH_RAILINGS,
             stair_arcs: schema >= crate::SCHEMA_WITH_STAIR_ARCS,
+            dimension_cross: schema >= crate::SCHEMA_WITH_DIMENSION_CROSS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -1542,6 +1545,7 @@ pub(super) fn object(
                     has.subref_extras,
                     has.dimension_rules,
                     has.dimension_marks,
+                    has.dimension_cross,
                 )?)
             }
             // Schema 65 (docs/adr/0324 §1): a text's indents, tabs and columns, as their JSON; checked with its box.
@@ -3444,6 +3448,7 @@ fn dimension_refs(
     extras: bool,
     rules: bool,
     pairs: bool,
+    crosses: bool,
 ) -> Result<DimensionRefs, KcadError> {
     let at = r.position();
     let mut refs = DimensionRefs::default();
@@ -3460,6 +3465,8 @@ fn dimension_refs(
                     "edges" => kentos_contracts::DimensionRule::Edges,
                     // Schema 62 (docs/adr/0322).
                     "pair" if pairs => kentos_contracts::DimensionRule::Pair,
+                    // Schema 118 (docs/adr/0711).
+                    "cross" if crosses => kentos_contracts::DimensionRule::Cross,
                     other => {
                         let words = format!("ölçünün başvuru kuralı “{other}” bilinmiyor");
                         return Err(r.fail_at(Code::BadValue, here, &words));

@@ -430,10 +430,11 @@ impl Document {
                     {
                         next.b = d.b
                     }
-                    DimensionRule::Curve => {}
+                    // A cut's edge points are its crossings; a point place's is where it went.
+                    DimensionRule::Curve | DimensionRule::Cross => {}
                 }
                 let prior = was.as_ref().unwrap_or(d);
-                self.apply_rule(rule, prior, &mut next, &next_refs, &changed);
+                self.apply_rule(rule, prior, d, &mut next, &mut next_refs, &changed);
             }
             // A level's elevation is its point's vertex's while it has one (docs/adr/0322).
             if d.style == Some(DimensionStyle::Elevation)
@@ -506,13 +507,15 @@ impl Document {
     /// The points a dimension's rule derives (docs/adr/0320 §1) from its bound places as the step left them: a
     /// curve's centre, or two edges' crossing and the arms along them (each arm's length and side as `was`, the
     /// dimension before the step, had them against its edge then). A place that broke, or a curve that is no longer
-    /// one, leaves the derived points where they were.
+    /// one, leaves the derived points where they were. A cut's (docs/adr/0711 §2) points are where their edges' lines
+    /// cross the cut through `c`, as `now` (the dimension as the step left it) has it; its line stays in the world.
     fn apply_rule(
         &self,
         rule: DimensionRule,
         was: &DimensionEntity,
+        now: &DimensionEntity,
         next: &mut DimensionEntity,
-        refs: &DimensionRefs,
+        refs: &mut DimensionRefs,
         changed: &Changed,
     ) {
         let live = |r: &Option<SubRef>| r.as_ref().filter(|r| r.live()).cloned();
@@ -634,6 +637,46 @@ impl Document {
                 let [s, e] = pair_axis(la, lb);
                 next.a = wire(s);
                 next.b = wire(e);
+            }
+            DimensionRule::Cross => {
+                let (Some(c), Some(angle)) = (now.c, now.angle) else {
+                    return;
+                };
+                let turn = angle * std::f64::consts::PI / 180.0;
+                let (ux, uy) = (cos(turn), sin(turn));
+                let c0 = kentos_geometry_core::Vec2::new(c.x, c.y);
+                let c1 = kentos_geometry_core::Vec2::new(c.x + ux, c.y + uy);
+                for name in ["a", "b"] {
+                    let Some(r) = reference_mut(refs, name).as_mut().filter(|r| r.live()) else {
+                        continue;
+                    };
+                    let Some(e) = self.object_now(r) else {
+                        continue;
+                    };
+                    // A point place (a column's centre) is where it is; an edge's point is where its line crosses the cut.
+                    let Some((p, q)) = edge_line(&e, core_place(r.place)) else {
+                        continue;
+                    };
+                    match line_line(p, q, c0, c1) {
+                        Some(hit) => {
+                            set_point(next, name, wire(hit.p));
+                            if let SubPlace::Along { t, .. } = &mut r.place
+                                && (0.0..=1.0).contains(&hit.t)
+                            {
+                                *t = hit.t;
+                            }
+                        }
+                        None => {
+                            // The edge turned along the cut: the point stays, its reference breaks.
+                            r.broken = Some(Reason::NoSuchPlace.code().to_owned());
+                            if let Some(p) = point_of(now, name) {
+                                set_point(next, name, p);
+                            }
+                        }
+                    }
+                }
+                // The line where it was: its offset from the point a is now at.
+                next.offset = now.offset - uy * (now.a.x - next.a.x) + ux * (now.a.y - next.a.y);
             }
         }
     }

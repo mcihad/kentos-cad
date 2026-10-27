@@ -80,7 +80,7 @@ use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
     annotations_write, arc, arch_audit, arch_edit, areas, casework_run, array, arrays_edit, assets_check, blocks_define,
     blocks_edit, changeset, circle, columns_create, constraints_edit, constraints_query,
-    constructions, create, crs_transform, curves_construct, curves_edit, delete, dimensions_create,
+    constructions, create, crs_transform, curves_construct, curves_edit, delete, dimensions_create, dimensions_interior,
     dimensions_edit, dimensions_query, dimensions_reassociate, divide, drawing_audit, edit,
     entities_boundary, entities_break, entities_chamfer, entities_cleanup, entities_copy,
     entities_explode, entities_extend, entities_fillet, entities_hatch, entities_join,
@@ -388,6 +388,7 @@ macro_rules! by_command {
                 $then!(dimensions_reassociate, DimensionsReassociate)
             }
             kentos_commands::CAD_DIMENSIONS_CREATE => $then!(dimensions_create, DimensionsCreate),
+            kentos_commands::CAD_DIMENSIONS_INTERIOR => $then!(dimensions_interior, kentos_commands::DimensionsInterior),
             kentos_commands::CAD_DIMENSION_SETS_CREATE => $then!(dimension_sets_create, DimensionSetsCreateInput),
             kentos_commands::CAD_DIMENSION_SETS_EDIT => $then!(dimension_sets_edit, DimensionSetsEditInput),
             kentos_commands::CAD_DIMENSION_SETS_QUERY => $then!(dimension_sets_query, DimensionSetsQueryInput),

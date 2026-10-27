@@ -10666,6 +10666,22 @@
    "tests": 1
   },
   {
+   "id": "tool.interiorDimensions",
+   "kind": "command",
+   "title": "İç ölçü zinciri",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.interior"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.interior",
+   "mcp": "cad.dimensions.interior",
+   "note": "Kesen çizginin iki ucu, zincirin yeri, duvar yüzleri ya da bütün katmanlar, kolon kenarları ya da merkezleri, toplam, kat, katman ve stil komuta gider; yüzleri ve ölçüleri komut bulur, önizleme aynı planı okur (ADR 0711).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.intersectPoint",
    "kind": "tool",
    "title": "Kesişim noktası",

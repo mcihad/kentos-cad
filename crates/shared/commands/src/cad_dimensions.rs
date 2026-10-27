@@ -259,6 +259,101 @@ pub struct DimensionsCreate {
     pub expected_revision: Option<String>,
 }
 
+/// Kesen çizgiyle iç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
+pub const CAD_DIMENSIONS_INTERIOR: &str = "cad.dimensions.interior";
+pub const CAD_DIMENSIONS_INTERIOR_VERSION: u32 = 1;
+
+/// The lines of a crossed wall the chain measures (docs/adr/0711 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum InteriorFaces {
+    /// Its two faces.
+    #[default]
+    Outer,
+    /// Every line: the faces and the boundaries between its components (Archicad's “All Skins”).
+    Skins,
+}
+
+/// What of a crossed column the chain measures (docs/adr/0711 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum InteriorColumns {
+    /// A rectangular column's sides the cut crosses; a round column's centre.
+    #[default]
+    Ends,
+    /// Its centre.
+    Centers,
+    /// Nothing.
+    None,
+}
+
+/// An interior dimension chain along a cut (docs/adr/0711 §4).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsInterior {
+    /// The cut's start.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    /// The cut's end.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+    /// Where the chain's line goes: through this point, along the cut; absent: on the cut.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Option<Vec2>,
+    /// A crossed wall's faces (`outer`, absent) or every line between its components (`skins`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub faces: Option<InteriorFaces>,
+    /// A crossed column's sides (`ends`, absent), its centre (`centers`) or nothing (`none`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<InteriorColumns>,
+    /// Also the overall dimension from the first to the last, one row further (8 paper millimetres), on `at`'s side.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub total: Option<bool>,
+    /// Only the walls and columns of this architectural level (its id); absent: every one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// The layer the dimensions go to.
+    pub layer_id: String,
+    /// The project's dimension style by its name (docs/adr/0183); absent or “Standart”: Standart.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dimension_style: Option<String>,
+    /// The values' height; absent: the style's at the project's scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// The values drawn over the drawing's background (Zemin, docs/adr/0147).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mask: Option<bool>,
+    /// The dimensions' colour, weight, attributes, label and symbol.
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub look: NewLook,
+    /// The document revision the input was prepared against, as decimal text. When given and the document is no
+    /// longer at it, nothing is written and the answer is `conflict`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Binds a dimension's points to places on objects again.
 pub const CAD_DIMENSIONS_REASSOCIATE: &str = "cad.dimensions.reassociate";
 pub const CAD_DIMENSIONS_REASSOCIATE_VERSION: u32 = 1;

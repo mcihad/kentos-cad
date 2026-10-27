@@ -1709,6 +1709,13 @@
       ],
       "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
     },
+    "tool.interiorDimensions": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.interior"
+      ],
+      "note": "Kesen çizginin iki ucu, zincirin yeri, duvar yüzleri ya da bütün katmanlar, kolon kenarları ya da merkezleri, toplam, kat, katman ve stil komuta gider; yüzleri ve ölçüleri komut bulur, önizleme aynı planı okur (ADR 0711)."
+    },
     "tool.wallDimensions": {
       "level": "semantic",
       "via": [

@@ -278,6 +278,8 @@ pub mod wall_from_lines;
 pub mod wall_rectangle;
 pub mod wall_partition;
 pub mod wall_dimensions;
+// İç ölçü zinciri (docs/adr/0711).
+pub mod interior_dims;
 pub mod tool_settings;
 
 pub use clipboard::Clipboard;

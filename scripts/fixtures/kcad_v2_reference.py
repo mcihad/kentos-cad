@@ -1878,9 +1878,10 @@ def subref(r):
 
 def dimension_refs(refs):
     """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field. Their `rule`
-    (schema 60, docs/adr/0320 §1): `curve` or `edges`; `pair` (schema 62, docs/adr/0322)."""
+    (schema 60, docs/adr/0320 §1): `curve` or `edges`; `pair` (schema 62, docs/adr/0322); `cross` (schema 118,
+    docs/adr/0711)."""
     assert any(k in refs for k in "abc"), "boş başvurular yazılmaz"
-    assert refs.get("rule", "curve") in ("curve", "edges", "pair"), refs
+    assert refs.get("rule", "curve") in ("curve", "edges", "pair", "cross"), refs
     return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False), "rule": (text, False)}, "refs"))
 
 
@@ -2226,6 +2227,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    crossed = lambda es: any(e["kind"] == "dimension" and e.get("refs", {}).get("rule") == "cross" for e in es)  # noqa: E731
+    if crossed(entities) or any(crossed(b["entities"]) for b in blocks or []):
+        # A dimension along a cut (docs/adr/0711).
+        return 118
     if any(e["kind"] == "stair" and "bulges" in e for e in entities):
         # A curved stair (docs/adr/0709).
         return 117
@@ -2862,7 +2867,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-118.kcad"] = container(root(cmap(parts), version=uint(118)))
+    files["schema-version-119.kcad"] = container(root(cmap(parts), version=uint(119)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4896,6 +4901,12 @@ def build():
     assert ap.count(b"\x67version\x18\x75") == 1
     out["stair-arcs.kcad"] = container(ap)
     out["broken/stair-arcs-in-schema-116.kcad"] = container(ap.replace(b"\x67version\x18\x75", b"\x67version\x18\x74"))
+    # Schema 118 (docs/adr/0711): a dimension along a cut.
+    crosses = load("dimension-cross.json")
+    cp = document(crosses)
+    assert cp.count(b"\x67version\x18\x76") == 1
+    out["dimension-cross.kcad"] = container(cp)
+    out["broken/dimension-cross-in-schema-117.kcad"] = container(cp.replace(b"\x67version\x18\x76", b"\x67version\x18\x75"))
     # Schema 112: independent project dictionaries; no existing room values change.
     choice = load("space-choices.json")
     out["space-choices.kcad"] = container(document(choice))

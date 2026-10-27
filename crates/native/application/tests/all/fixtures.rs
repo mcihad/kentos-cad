@@ -43,6 +43,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::spaces_discover;
 use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+use kentos_native_application::dimensions_interior;
 use kentos_native_application::spaces_separators;
 use kentos_native_application::spaces_number;
 use kentos_native_application::donut_create;
@@ -1342,6 +1343,23 @@ impl Input for kentos_commands::OpeningsEdit {
             Op::Copy { offsets } => list_number(offsets, "operation.offsets", path),
             // Mesafeyle taşı's `operation.distance` (docs/adr/0701).
             Op::Distance { distance, .. } => (path == "operation.distance").then_some(distance),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::DimensionsInterior {
+    /// `from.x`, `to.y`, `at.x`, `height`, `lineWeight`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "from.x" => Some(&mut self.from.x),
+            "from.y" => Some(&mut self.from.y),
+            "to.x" => Some(&mut self.to.x),
+            "to.y" => Some(&mut self.to.y),
+            "at.x" => self.at.as_mut().map(|p| &mut p.x),
+            "at.y" => self.at.as_mut().map(|p| &mut p.y),
+            "height" => self.height.as_mut(),
+            "lineWeight" => self.look.line_weight.as_mut(),
             _ => None,
         }
     }
@@ -3882,6 +3900,9 @@ fn run_op(
         }
         kentos_commands::CAD_DIMENSIONS_CREATE => {
             run!(dimensions_create, DimensionsCreate)
+        }
+        kentos_commands::CAD_DIMENSIONS_INTERIOR => {
+            run!(dimensions_interior, kentos_commands::DimensionsInterior)
         }
         kentos_commands::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_commands::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),

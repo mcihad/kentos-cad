@@ -739,6 +739,11 @@ pub struct Memory {
     pub wall_dimensions_centers: bool,
     /// Kenarlar → Bütün kenarlar (docs/adr/0700).
     pub wall_dimensions_around: bool,
+    /// İç ölçü zinciri's choices (docs/adr/0711 §5): every line of a wall, a column's ends (0), centres (1) or
+    /// nothing (2), the overall dimension.
+    pub interior_skins: bool,
+    pub interior_columns: u8,
+    pub interior_total: bool,
     /// Mutfak dizisi's module width, countertop depth (metres) and wall cabinets (docs/adr/0706).
     pub casework_module: f64,
     pub casework_depth: f64,
@@ -1162,6 +1167,9 @@ impl Default for Memory {
             wall_dimensions_rows: 3,
             wall_dimensions_centers: false,
             wall_dimensions_around: false,
+            interior_skins: false,
+            interior_columns: 0,
+            interior_total: false,
             casework_module: kentos_commands::DEFAULT_CASEWORK_MODULE,
             casework_depth: kentos_commands::DEFAULT_CASEWORK_DEPTH,
             casework_upper: false,

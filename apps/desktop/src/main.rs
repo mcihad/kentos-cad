@@ -456,6 +456,8 @@ mod wipeout_scenes;
 #[cfg(test)]
 mod wall_scenes;
 #[cfg(test)]
+mod interior_scenes;
+#[cfg(test)]
 mod opening_scenes;
 #[cfg(test)]
 mod space_scenes;

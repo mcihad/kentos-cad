@@ -1105,12 +1105,14 @@ impl Packer {
                         .enumerate()
                         .filter(|(_, r)| r.is_some())
                         .fold(0, |m, (i, _)| m | 1 << i);
-                    // The rule in bits 3 and 4 (docs/adr/0320 §1): the curve's 3, the edges' 4, the pair's both (docs/adr/0322).
+                    // The rule in bits 3 to 5 (docs/adr/0320 §1): the curve's 3, the edges' 4, the pair's both
+                    // (docs/adr/0322), the cut's 5 (docs/adr/0711).
                     let rule = match refs.rule {
                         None => 0,
                         Some(kentos_contracts::DimensionRule::Curve) => 1 << 3,
                         Some(kentos_contracts::DimensionRule::Edges) => 1 << 4,
                         Some(kentos_contracts::DimensionRule::Pair) => 3 << 3,
+                        Some(kentos_contracts::DimensionRule::Cross) => 1 << 5,
                     };
                     self.int(mask | rule);
                     for (_, r) in refs.each() {
@@ -2635,14 +2637,16 @@ fn geometry(
             // What its points follow (docs/adr/0249 §4).
             let refs = if flags & REFS != 0 {
                 let mask = c.int()?;
-                if mask & !31 != 0 {
+                if mask & !63 != 0 {
                     return Err(broken(&format!("ölçünün başvuru maskesi {mask}")));
                 }
-                let rule = match mask & 24 {
+                let rule = match mask & 56 {
+                    0 => None,
                     8 => Some(kentos_contracts::DimensionRule::Curve),
                     16 => Some(kentos_contracts::DimensionRule::Edges),
                     24 => Some(kentos_contracts::DimensionRule::Pair),
-                    _ => None,
+                    32 => Some(kentos_contracts::DimensionRule::Cross),
+                    _ => return Err(broken(&format!("ölçünün başvuru maskesi {mask}"))),
                 };
                 let mut slots = [None, None, None];
                 for (i, slot) in slots.iter_mut().enumerate() {

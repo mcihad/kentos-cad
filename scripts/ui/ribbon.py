@@ -238,7 +238,7 @@ CAD = [
             S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
-        P("Belgele", "tag", [L("tool.wallDimensions"), S("tool.tag"), S("arch.quantities"),
+        P("Belgele", "tag", [L("tool.wallDimensions"), S("tool.interiorDimensions"), S("tool.tag"), S("arch.quantities"),
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},

@@ -754,6 +754,15 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   `cad.dimensionsets.*` ortak durumları ve Kenarlar: Bu kenar / Bütün kenarlar,
   tek Enter, tek Geri al resimleri (`.run/shots/arac-olcu-*`). Yay kenar ve pahlı
   köşe açıklamalı rettir.
+- [x] Kesen çizgi yöntemi (Archicad iç ölçülendirmesi) [ADR0711](../docs/adr/0711-interior-dimension-chains.md):
+  `cad.dimensions.interior` kesen çizginin kestiği duvar yüzlerini (dış yüzler ya
+  da bütün katmanlar) ve kolonları (kenarlar ya da merkez) sırayla ölçen, ölçüleri
+  yüzlere `cross` kuralıyla bağlı zinciri tek adımda yazar; başka gövdenin içindeki
+  kesişim görünmez yüz sayılır, yay yüz atlanıp söylenir. Duvar kayınca değer
+  değişir, uzayıp kısalınca zincir çizgisi yerinde kalır (KCAD 118). 44 bağımsız
+  durum (Kaydır ve silme izlemesi dahil), Python/MCP, 5 çekirdek+4 araç testi,
+  gerçek GUI (`.run/shots/arac-ic-olcu-*`). Üyelik kalıcı değildir; açıklık, aks,
+  kiriş ve duvar ekseni noktası açık.
 - [ ] İlk otomatik üretimin desteklediği geometri açıkça daraltılmalı:
   doğrusal kaynak/yaylı kaynak ve kiriş/host boyunca mesafe aynı şey değildir.
   Desteklenmeyen yüz/kat/karma kaynağa tek işlemden önce açıklamalı ret verilmeli;
@@ -1113,3 +1122,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |
 | 2026-10-27 | ARCH-DIM-01 düzeltme / ADR0695 eki | Kullanıcı bildirimi: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazıyordu (açıklık sırası = toplam). Bir ölçü, sıraların sırasıyla kendinden önce çizilenle aynı iki yeri ölçüyorsa çizilmez; bastırılan parça sayılmaz. 109 ortak durum yenilendi, belge ve araç testleri, gerçek GUI resmi (`arac-olcu-aciksiz-duvar`). | [x] Kusur kapandı |
+| 2026-10-27 | ARCH-DIM-01 / ADR0711 | İç ölçü zinciri: kesen çizgi, duvar yüzleri/bütün katmanlar, kolon kenar/merkez, toplam, kat; `cross` kuralı (KCAD 118) ile duvar kayınca değer, uzayınca çizgi yerinde; duvar yüzü ve kolonda `along`/`center` yerleri. 44 durum, Python/MCP, 5+4 test, gerçek GUI resimleri. | [x] Kesen çizgi alt maddesi; kalıcı üyelik açık |

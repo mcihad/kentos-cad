@@ -187,6 +187,7 @@ fn family(shape: &Shape) -> u8 {
         Shape::Ellipse { .. } => 5,
         Shape::Wall { .. } => 7,
         Shape::Opening { .. } => 8,
+        Shape::Column { .. } => 9,
         _ => 6,
     }
 }
@@ -199,6 +200,40 @@ fn wall_line(shape: &Shape, part: usize) -> Option<(crate::geom::wall::Line, boo
     };
     let lines = crate::geom::wall::lines(pts, bulges.as_deref(), wall).ok()?;
     lines.into_iter().nth(part).map(|l| (l, wall.closed))
+}
+
+/// A wall's line `part`'s edge from vertex `index` (docs/adr/0711 §1): its ends and bulge.
+fn wall_edge(shape: &Shape, part: usize, index: usize) -> Option<(Vec2, Vec2, f64)> {
+    let (l, closed) = wall_line(shape, part)?;
+    let n = l.pts.len();
+    if index >= n || (!closed && index + 1 >= n) {
+        return None;
+    }
+    Some((l.pts[index], l.pts[(index + 1) % n], l.bulges[index]))
+}
+
+/// A rectangular column's corners in `column_corners`' order (docs/adr/0711 §1); none for a round one.
+fn column_corners(shape: &Shape) -> Option<Vec<Vec2>> {
+    match shape {
+        Shape::Column { at, column } if !column.round => {
+            Some(crate::geom::arch::column_corners(*at, column))
+        }
+        _ => None,
+    }
+}
+
+/// A rectangular column's edge from corner `index` to the next.
+fn column_edge(shape: &Shape, index: usize) -> Option<(Vec2, Vec2)> {
+    let c = column_corners(shape)?;
+    (index < c.len()).then(|| (c[index], c[(index + 1) % c.len()]))
+}
+
+/// The point at the fraction `t` of an edge from `a` to `b` with bulge `k`: along its chord, or its arc's sweep.
+fn on_edge(a: Vec2, b: Vec2, k: f64, t: f64) -> Vec2 {
+    match edge_arc(a, b, k) {
+        Some((c, r, a0, sw)) => point_on_circle(c, r, a0 + t * sw),
+        None => lerp(a, b, t),
+    }
 }
 
 // Broken openings retain their last jambs for display. Those cached coordinates
@@ -308,6 +343,31 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
             }
             Some(segment_mid(l.pts[index], l.pts[(index + 1) % n], l.bulges[index]))
         }
+        (Shape::Wall { .. }, Place::Along { part, ring: 0, index, t }) => {
+            if !(0.0..=1.0).contains(&t) {
+                return None;
+            }
+            let (a, b, k) = wall_edge(&e.shape, part, index)?;
+            Some(on_edge(a, b, k, t))
+        }
+        (Shape::Wall { .. }, _) => None,
+        // A column's centre, and a rectangular one's corners and edges (docs/adr/0711 §1).
+        (Shape::Column { at, .. }, Place::Center) => Some(*at),
+        (Shape::Column { .. }, Place::Vertex { part: 0, ring: 0, index }) => {
+            column_corners(&e.shape)?.get(index).copied()
+        }
+        (Shape::Column { .. }, Place::Mid { part: 0, ring: 0, index }) => {
+            let (a, b) = column_edge(&e.shape, index)?;
+            Some(lerp(a, b, 0.5))
+        }
+        (Shape::Column { .. }, Place::Along { part: 0, ring: 0, index, t }) => {
+            if !(0.0..=1.0).contains(&t) {
+                return None;
+            }
+            let (a, b) = column_edge(&e.shape, index)?;
+            Some(lerp(a, b, t))
+        }
+        (Shape::Column { .. }, _) => None,
         (_, Place::Vertex { part, ring, index }) => {
             ring_of(&e.shape, part, ring)?.pts.get(index).copied()
         }
@@ -406,6 +466,12 @@ fn vertex_places(shape: &Shape) -> Vec<(Place, Vec2)> {
                 for (index, p) in l.pts.into_iter().enumerate() {
                     out.push((Place::Vertex { part, ring: 0, index }, p));
                 }
+            }
+            return out;
+        }
+        Shape::Column { .. } => {
+            for (index, p) in column_corners(shape).unwrap_or_default().into_iter().enumerate() {
+                out.push((Place::Vertex { part: 0, ring: 0, index }, p));
             }
             return out;
         }
@@ -711,6 +777,28 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
             }
             Some(whole(clamp01(d / sw)))
         }
+        Shape::Wall { pts, bulges, wall } => {
+            let lines = crate::geom::wall::lines(pts, bulges.as_deref(), wall).ok()?;
+            lines.iter().enumerate().find_map(|(part, l)| {
+                let n = l.pts.len();
+                let edges = if wall.closed { n } else { n.saturating_sub(1) };
+                (0..edges).find_map(|index| {
+                    let (a, b, k) = (l.pts[index], l.pts[(index + 1) % n], l.bulges[index]);
+                    let t = match edge_arc(a, b, k) {
+                        Some((c, r, a0, sw)) => t_on_arc(c, r, a0, sw, at),
+                        None => t_on_segment(a, b, at),
+                    }?;
+                    Some(Place::Along { part, ring: 0, index, t })
+                })
+            })
+        }
+        Shape::Column { .. } => {
+            let c = column_corners(&e.shape)?;
+            (0..c.len()).find_map(|index| {
+                let t = t_on_segment(c[index], c[(index + 1) % c.len()], at)?;
+                Some(Place::Along { part: 0, ring: 0, index, t })
+            })
+        }
         _ => vertex_places(&e.shape).into_iter().find_map(|(p, _)| {
             let Place::Vertex { part, ring, index } = p else {
                 return None;
@@ -874,6 +962,38 @@ pub fn edge_line(e: &Entity, place: Place) -> Option<(Vec2, Vec2)> {
             let (a, b, k) = edge_of(&e.shape, part, ring, index)?;
             edge_arc(a, b, k).is_none().then_some((a, b))
         }
+        // A wall's line's straight edge, a rectangular column's edge (docs/adr/0711 §1).
+        (
+            Shape::Wall { .. },
+            Place::Along {
+                part,
+                ring: 0,
+                index,
+                ..
+            }
+            | Place::Mid {
+                part,
+                ring: 0,
+                index,
+            },
+        ) => {
+            let (a, b, k) = wall_edge(&e.shape, part, index)?;
+            edge_arc(a, b, k).is_none().then_some((a, b))
+        }
+        (
+            Shape::Column { .. },
+            Place::Along {
+                part: 0,
+                ring: 0,
+                index,
+                ..
+            }
+            | Place::Mid {
+                part: 0,
+                ring: 0,
+                index,
+            },
+        ) => column_edge(&e.shape, index),
         _ => None,
     }
 }

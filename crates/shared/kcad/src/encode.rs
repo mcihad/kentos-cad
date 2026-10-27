@@ -1976,6 +1976,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 118 (docs/adr/0711): a dimension (of the drawing or of a block) whose references follow a cut.
+    let crossed = |list: Objs<'_>| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Dimension(d)
+                if d.refs.as_ref().is_some_and(|r| r.rule == Some(kentos_contracts::DimensionRule::Cross)))
+        })
+    };
+    if crossed(objs) || doc.blocks.iter().any(|b| crossed(Objs::Plain(&b.entities))) {
+        return crate::SCHEMA_WITH_DIMENSION_CROSS;
+    }
     if objs
         .iter()
         .any(|e| matches!(e, Entity::Stair(s) if s.stair.bulges.is_some()))

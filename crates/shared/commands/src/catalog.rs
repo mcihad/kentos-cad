@@ -4100,6 +4100,54 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Kesen çizgiyle iç ölçü zinciri (docs/adr/0711), held together by fixtures/commands/v1/cad.dimensions.interior.json.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_INTERIOR.into(),
+            version: crate::CAD_DIMENSIONS_INTERIOR_VERSION,
+            title: "İç ölçü zinciri".into(),
+            summary: "from'dan to'ya kesen çizginin kestiği duvar yüzlerini ve kolonları sırayla ölçen doğrusal ölçü zincirini layerId'ye tek adımda yazar, adı “İç ölçü zinciri” (docs/adr/0711; Archicad'in iç ölçülendirmesi). \
+                      Duvarlarda faces outer (varsayılan) iki yüzü, skins bileşenler arasındaki her çizgiyi ölçer; kolonda columns ends (varsayılan) dikdörtgenin kesilen kenarlarını, centers merkezini, none hiçbirini (yuvarlak kolon her zaman merkezinden). Yalnız düz yüzler ölçülür: kesilen yay yüz atlanır, arch_curved_face_skipped uyarısıyla sayılır. \
+                      Başka bir duvarın ya da kolonun gövdesinin içinde kalan kesişim (köşe ve T birleşimi, duvara gömülü kolon) görünmez yüzdür, ölçülmez. Gizli ya da dondurulmuş katmandaki duvar ve kolon kesilmez; level verilirse yalnız o mimari katınkiler (yoksa level_not_found). \
+                      Noktalar kesen çizgi boyunca sıralanır, ardışık her çift bir ölçüdür (açısı kesen çizginin); en az iki nokta gerekir (no_dimension). Zincirin çizgisi at'den kesen çizgiye paralel geçer (yoksa kesen çizginin üstünde); total toplam ölçüyü bir sıra ötede (kâğıtta 8 mm) at'nin yanına ekler. \
+                      Her ölçünün iki ucu kestiği yüze bağlıdır, kuralı cross (kesen çizgi): duvar kaydırılınca değer değişir, duvar uzayıp kısalınca ölçü çizgisi yerinde kalır; yüzün doğrusu kesen çizgiye paralel olursa nokta kopar. dimensionStyle, height, mask ve görünüş cad.dimensions.create'inkidir. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsInterior>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç odayı soldan sağa kesen iç ölçü zinciri, kesen çizginin üstünde".into(),
+                    input: json!({
+                        "from": { "x": -1.0, "y": 2.0 },
+                        "to": { "x": 13.0, "y": 2.0 },
+                        "layerId": "olcu"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bütün katmanlar, kolon merkezleri ve toplam; zincir 1 m yukarıda".into(),
+                    input: json!({
+                        "from": { "x": -1.0, "y": 2.0 },
+                        "to": { "x": 13.0, "y": 2.0 },
+                        "at": { "x": 0.0, "y": 3.0 },
+                        "faces": "skins",
+                        "columns": "centers",
+                        "total": true,
+                        "layerId": "olcu"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // A dimension's spacing, breaks, moved value, written value and options (docs/adr/0321 §4), held together by
         // fixtures/commands/v1/cad.dimensions.edit.json; the desktop's alone while the web is paused.
         CommandDescriptor {
@@ -10598,6 +10646,9 @@ mod tests {
                     crate::CAD_WALLS_DISTANCES => {
                         serde_json::from_value::<crate::WallsDistancesInput>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DIMENSIONS_INTERIOR => {
+                        serde_json::from_value::<crate::DimensionsInterior>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_CREATE => {
                         serde_json::from_value::<crate::OpeningsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -11802,6 +11853,9 @@ mod tests {
                         }
                         crate::CAD_WALLS_DISTANCES => {
                             serde_json::from_value::<crate::WallsDistances>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_INTERIOR => {
+                            serde_json::from_value::<crate::EntitiesCreated>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_CREATE => {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone())

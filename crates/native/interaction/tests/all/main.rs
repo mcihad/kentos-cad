@@ -106,6 +106,7 @@ mod stair_design;
 mod spiral_stair;
 mod setting_choices;
 mod wall_distance;
+mod interior_dims;
 mod casework;
 mod grid_system;
 mod space_void;

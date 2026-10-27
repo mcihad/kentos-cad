@@ -31,6 +31,7 @@ mod geoprocess;
 mod golden;
 mod hatch;
 mod image;
+mod interior_dims;
 mod label_engine;
 mod label_stability;
 mod ghosts;

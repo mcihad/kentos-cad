@@ -1836,6 +1836,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.dimensions.interior",
+        refusals: &[
+            &["not_finite", "invalid_height", "level_not_found", "unknown_style", "no_dimension"],
+            LAYER,
+            LOOK,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "arch_curved_face_skipped"],
+        targets: || vec![target(None, &["wall", "column"], &[], None, None)],
+    },
+    Entry {
         id: "cad.walls.distances",
         refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_wall", "invalid_wall"]],
         warnings: &[],

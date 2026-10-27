@@ -109,6 +109,8 @@ pub enum CreateOperation {
     PointCloud,
     /// Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
     QuickDimensions,
+    /// İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
+    InteriorDimensions,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

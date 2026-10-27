@@ -94,6 +94,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-ELEM-01 / ADR0708: mahalin `void`'u (KCAD 116), çapraz, metrajın
   `voidArea`'sı. Web'in mahal çizimi çaprazı, Metraj'ı Boşluk sütununu ve
   Mahal aracı Boşluk seçeneğini göstermeli; `cad.spaces.*.json` ile sınanmalı.
+- ARCH-DIM-01 / ADR0711: `cad.dimensions.interior` (iç ölçü zinciri), ölçünün
+  `cross` kuralı (KCAD 118; tipli sütunlarda maskenin 5. biti), duvar yüzü ve
+  kolonda `along`/`center` yerleri. Web'in İç ölçü zinciri aracı (kesen çizgi,
+  zincirin yeri, Enter kesen çizgide), `columns.ts`'in kural biti ve izleme
+  `cad.dimensions.interior.json` ile sınanmalı.
 - ARCH-EDIT-01 / ADR0710: `cad.walls.edit`'in `shift`/`distance`'ı ve salt okunur
   `cad.walls.distances`. Web'in seçili duvarı iki yandaki net mesafeleri
   göstermeli, sayıya basıp yazınca kenarı kaydırmalı (köşe/T izler);

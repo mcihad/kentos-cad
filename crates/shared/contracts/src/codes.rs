@@ -1750,6 +1750,8 @@ codes! {
     ARCH_SPACE_NARROW = "arch_space_narrow", Warning, false, "Mahalın ortalama eni denetim eşiğinden küçük; dar bir artık parça olabilir.";
     /// An associative dimension point that lost its object.
     ARCH_DIMENSION_BROKEN = "arch_dimension_broken", Warning, false, "İlişkili ölçünün bir noktası izlediği nesneyi kaybetti.";
+    /// A curved wall face a cut crossed and the interior chain left out (docs/adr/0711 §3).
+    ARCH_CURVED_FACE_SKIPPED = "arch_curved_face_skipped", Warning, false, "Kesen çizginin kestiği yaylı duvar yüzü ölçülmedi; iç ölçü zinciri düz yüzleri ölçer.";
     /// A dimension set whose source broke.
     ARCH_DIMENSION_SET_BROKEN = "arch_dimension_set_broken", Warning, false, "Ölçü dizisinin kaynağı kopuk; ölçüler son yerlerinde duruyor.";
     /// A column whose grids are gone or no longer cross.

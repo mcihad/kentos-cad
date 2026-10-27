@@ -28,6 +28,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Kesen çizgiyle iç ölçü zinciri (27 Ekim 2026; [ADR0711](docs/adr/0711-interior-dimension-chains.md)).**
+  Archicad'in iç ölçülendirmesi: kesen çizginin kestiği duvar yüzleri (dış yüzler
+  ya da bütün katmanlar) ve kolonlar (kenar/merkez) sırayla doğrusal ölçü zinciri,
+  tek undo; başka gövdenin içindeki kesişim görünmez yüz, yay yüz atlanır ve
+  söylenir. Yeni `cross` kuralı (KCAD 118 opt-in): nokta yüzün doğrusunun kesen
+  çizgiyi kestiği yer, ölçü çizgisi dünyada yerinde; duvar kayınca değer değişir.
+  Duvar yüzü ve kolonda `along`/`center` yerleri. `cad.dimensions.interior`
+  (Python/MCP), çekirdek `ops::interior_dims`; 44 bağımsız durum (izleme dahil),
+  5 çekirdek+4 araç testi, gerçek GUI. Üyelik kalıcı değil; açıklık/aks açık.
+  Aynı gün: Duvar ölçüleri açıklıksız kenara aynı boyu iki kez yazmıyor (ADR0695 eki).
+
 - **Duvarın geçici ölçüsü (27 Ekim 2026; [ADR0710](docs/adr/0710-wall-temporary-distances.md)).**
   Seçili duvarın imlecin yakın olduğu düz kenarında iki yandaki en yakın paralel
   duvarın bakan yüzüne net mesafe; sayıya bas-yaz-Enter kenarı kendine dik

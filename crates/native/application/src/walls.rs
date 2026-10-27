@@ -340,7 +340,7 @@ pub(crate) fn core_shape(w: &kentos_commands::WallEntity) -> kentos_geometry_cor
 }
 
 /// The box of a wall's path grown by its body's reach and `grow`.
-fn reach_box(w: &WallFields, grow: f64) -> [f64; 4] {
+pub(crate) fn reach_box(w: &WallFields, grow: f64) -> [f64; 4] {
     let b = kentos_geometry_core::geom::wall::join_reach_bounds(
         w.pts
             .iter()

@@ -37,6 +37,7 @@ pub mod grips;
 pub mod hatch_region;
 pub mod holes;
 pub mod image;
+pub mod interior_dims;
 pub mod join;
 pub mod label_text;
 pub mod lengthen;

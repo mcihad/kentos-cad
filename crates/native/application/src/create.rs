@@ -186,6 +186,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::NetworkAdjust) => "Yatay ağ dengelemesi",
         // Hızlı ölçü (docs/adr/0147 §7, 0622 §9).
         Some(CreateOperation::QuickDimensions) => "Hızlı ölçü",
+        // İç ölçü zinciri (docs/adr/0711).
+        Some(CreateOperation::InteriorDimensions) => "İç ölçü zinciri",
     }
 }
 

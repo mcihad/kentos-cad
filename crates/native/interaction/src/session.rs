@@ -81,6 +81,8 @@ pub const TOOLS: &[&str] = &[
     wall_rectangle::ID,
     crate::wall_partition::ID,
     crate::wall_dimensions::ID,
+    // İç ölçü zinciri (docs/adr/0711 §5).
+    crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
     wall_edit_tools::SPLIT_ID,
     wall_edit_tools::JOIN_ID,
@@ -465,6 +467,7 @@ impl Session {
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
+            crate::interior_dims::ID => Box::new(crate::interior_dims::InteriorDimensions::default()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }

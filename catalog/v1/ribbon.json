@@ -1484,6 +1484,10 @@
         "size": "large"
        },
        {
+        "command": "tool.interiorDimensions",
+        "size": "small"
+       },
+       {
         "command": "tool.tag",
         "size": "small"
        },
