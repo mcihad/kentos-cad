@@ -778,6 +778,14 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   `cad.openings.distances` Python/MCP'de; 24+24 ortak durum bağımsız
   başvurudan; resimler `.run/shots/arac-gecici-olcu-*`. Duvar ve kolonun geçici
   ölçüsü, kilitli referans ve UCS kabulü açık.
+- [x] Duvar dilimi [ADR0710](../docs/adr/0710-wall-temporary-distances.md):
+  seçili duvarın imlecin yakın olduğu düz kenarının iki yanında en yakın paralel
+  duvarın bakan yüzüne net mesafe; sayıya basıp yazınca kenar kendine dik kayar,
+  köşedeki duvarın ucu, T ile saplanan duvarlar ve bitişik köşeler izler,
+  açıklıklar yerinde kalır, tek Geri al. `cad.walls.edit` `shift`/`distance` ve
+  salt okunur `cad.walls.distances` Python/MCP'de; 22+32 ortak durum bağımsız
+  başvurudan, 4 araç testi, resimler `.run/shots/arac-duvar-mesafe-*`. Kolonun
+  geçici ölçüsü, duvar boyu, kilitli referans ve UCS kabulü açık.
 
 - Seçili kapı/duvar/kolonun yakındaki referansa mesafesini göster; sayıya basıp
   hedef mesafe yazılabilsin. Sabit kalan taraf/ankraj açık olsun.
@@ -1101,5 +1109,6 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
 | 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |
+| 2026-10-27 | ARCH-EDIT-01 / ADR0710 | Duvarın geçici ölçüsü: iki yanda paralel duvara net mesafe, sayıya bas-yaz-Enter kenarı kaydırır, köşeler/T'ler/köşe noktaları izler, açıklıklar yerinde; `cad.walls.edit` shift/distance, `cad.walls.distances`. 22+32 durum, 4 araç testi, gerçek GUI resimleri. | [~] Duvar dilimi; kolon, duvar boyu ve kilitli referans açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0709 | Döner merdiven: yaylı yürüme çizgisi (KCAD 117), radyal rıhtlar, yay korkuluk, yayı son rıhtta bitiren `fit`, ayna; Döner merdiven aracı (merkez, başlangıç, imleçle yön). 10+26 durum, KCAD/Python/MCP, araç ve panel seçimi regresyon testleri; panelin Sağ/Tıklanan yerde seçimlerinin reddi düzeltildi; gerçek GUI resimleri. | [~] Döner dilimi; merkez direği ve karışık kol açık |
 | 2026-10-27 | ARCH-ELEM-01 / ADR0708 | Mahal boşluğu (şaft, asansör, döşeme boşluğu): `void` (KCAD 116), çapraz, Metraj'da ayrı toplam, denetim muafiyeti; Mahal aracı ve Öznitelikler. Ortak durumlar, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Boşluk dilimi; döşeme, balkon ve korkuluk açık |

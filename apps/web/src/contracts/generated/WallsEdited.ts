@@ -19,6 +19,10 @@ walls: Array<Entity>,
  */
 added?: Array<Entity>, 
 /**
+ * The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
+ */
+joined?: Array<Entity>, 
+/**
  * The walls gone, by their ids (Birleştir: all but the first).
  */
 removed?: Array<string>, stylesAdded?: Array<string>, revision: string, };

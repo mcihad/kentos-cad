@@ -397889,7 +397889,7 @@
       "id": "cad.walls.edit",
       "version": 1,
       "title": "Duvarı düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen duvarların kendi alanlarını değiştirir; tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri. operation.kind set: genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar yazılmaz. split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye; nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end); kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin kimliğiyle (ters yöndeki gövdesi yerinde çevrilir; walls_not_touching, walls_differ); uçları buluşursa kapanır. extend (Uzat): her duvarın ucu (end, verilmezse to duvarına yakın olanı) son kenarının doğrultusunda to duvarının yoluna dek; trim (Buda): her duvar to duvarının yolunu kestiği yerde kısalır, keep noktasına en yakın parça (verilmezse uzun olanı) kalır (wall_misses, wall_closed). flip (Çevir): yol ters döner, gövde yolun öbür yanına aynalanır, uçların birleşimi yer değiştirir. replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala döndürür. Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap, wall_join_crowded, wall_join_acute, wall_join_unresolved). Plan yazmadan duvarları gösterir.",
+      "summary": "Kalıcı kimlikleriyle verilen duvarların kendi alanlarını değiştirir; tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri. operation.kind set: genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar yazılmaz. split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye; nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end); kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin kimliğiyle (ters yöndeki gövdesi yerinde çevrilir; walls_not_touching, walls_differ); uçları buluşursa kapanır. extend (Uzat): her duvarın ucu (end, verilmezse to duvarına yakın olanı) son kenarının doğrultusunda to duvarının yoluna dek; trim (Buda): her duvar to duvarının yolunu kestiği yerde kısalır, keep noktasına en yakın parça (verilmezse uzun olanı) kalır (wall_misses, wall_closed). flip (Çevir): yol ters döner, gövde yolun öbür yanına aynalanır, uçların birleşimi yer değiştirir. replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala döndürür. shift (Kaydır, docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0) kendine dik by metre kayar (yolun soluna artı, sağına eksi); yanındaki köşeler bitişik kenarlar boyunca, yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın ucu da aynı noktaya), saplandığı duvar boyunca ya da serbestse dik kayar; kenara T ile saplanan duvarların uçları kendi doğrultularında izler; açıklıklar yerinde kalır, izleyen duvarlar çıktının joined'ındadır. distance (Mesafe): side (left ya da right) yanındaki en yakın paralel duvara net mesafe distance olacak kadar Kaydır (cad.walls.distances aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı doğrultudaki bitişik kenar ya da uç uca duvar, köşede birden çok duvar, kenarı yok eden ya da ters çeviren kaydırma invalid_wall; sıfır kaydırma nothing_to_set; izleyen duvar kilitli katmandaysa layer_locked. Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap, wall_join_crowded, wall_join_acute, wall_join_unresolved). Plan yazmadan duvarları gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -397934,6 +397934,14 @@
               "approved",
               "underConstruction",
               "built"
+            ],
+            "type": "string"
+          },
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
             ],
             "type": "string"
           },
@@ -398276,6 +398284,66 @@
                 },
                 "required": [
                   "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kaydır (docs/adr/0710): the one wall's straight edge `edge` (absent: its first) moved `by` square to itself, to\nits path's left (negative: to its right). The vertices beside it slide along their edges; a path end along the\nwall whose end meets it (that end following: a corner), along the wall it stands in (a tee) or square to it;\nthe ends of the walls standing in the edge slide with it. In one step, their openings in place.",
+                "properties": {
+                  "by": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "shift",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "by"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "distance",
+                    "type": "string"
+                  },
+                  "side": {
+                    "$ref": "#/$defs/DimensionSetFace"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "side",
+                  "distance"
                 ],
                 "type": "object"
               }
@@ -408662,6 +408730,13 @@
             "$ref": "#/$defs/DerivedEntitiesPlan",
             "description": "Derived source-following preview changes; absent when none. New identities are provisional."
           },
+          "joined": {
+            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "The walls gone, by their ids (Birleştir: all but the first).",
             "items": {
@@ -419045,6 +419120,13 @@
             "$ref": "#/$defs/DerivedEntitiesPlan",
             "description": "Derived source-following preview changes; absent when none. New identities are provisional."
           },
+          "joined": {
+            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "The walls gone, by their ids (Birleştir: all but the first).",
             "items": {
@@ -419264,6 +419346,14 @@
             ],
             "type": "string"
           },
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -419743,6 +419833,66 @@
                 },
                 "required": [
                   "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kaydır (docs/adr/0710): the one wall's straight edge `edge` (absent: its first) moved `by` square to itself, to\nits path's left (negative: to its right). The vertices beside it slide along their edges; a path end along the\nwall whose end meets it (that end following: a corner), along the wall it stands in (a tee) or square to it;\nthe ends of the walls standing in the edge slide with it. In one step, their openings in place.",
+                "properties": {
+                  "by": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "shift",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "by"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "distance",
+                    "type": "string"
+                  },
+                  "side": {
+                    "$ref": "#/$defs/DimensionSetFace"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "side",
+                  "distance"
                 ],
                 "type": "object"
               }
@@ -419812,6 +419962,14 @@
             ],
             "type": "string"
           },
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -420293,6 +420451,66 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Kaydır (docs/adr/0710): the one wall's straight edge `edge` (absent: its first) moved `by` square to itself, to\nits path's left (negative: to its right). The vertices beside it slide along their edges; a path end along the\nwall whose end meets it (that end following: a corner), along the wall it stands in (a tee) or square to it;\nthe ends of the walls standing in the edge slide with it. In one step, their openings in place.",
+                "properties": {
+                  "by": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "shift",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "by"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "distance",
+                    "type": "string"
+                  },
+                  "side": {
+                    "$ref": "#/$defs/DimensionSetFace"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "side",
+                  "distance"
+                ],
+                "type": "object"
               }
             ]
           }
@@ -420344,6 +420562,343 @@
         {
           "title": "Çizimin bütün duvarlarında birleşmeyenler",
           "input": {}
+        }
+      ]
+    },
+    {
+      "id": "cad.walls.distances",
+      "version": 1,
+      "title": "Duvarın mesafeleri",
+      "summary": "Kalıcı kimlikleri verilen duvarların düz kenarı edge'de (verilmezse 0) iki yanındaki net mesafeleri okur (docs/adr/0710): yolun soluna (left) ve sağına (right) kenarın yüzünden, aynı kattaki (duvarın kendi öbür kenarları da) ona paralel ve boyunca örtüşen en yakın düz duvar kenarının bakan yüzüne dik uzaklık; uid, edge ve face o duvarı ve yüzünü, from ve to örtüşmenin ortasında iki yüzdeki noktaları verir (metre). Paralel duvarı olmayan yan yoktur. Yay kenar ya da olmayan kenar invalid_wall. Belgeye yazmaz; kenarı kaydırmak için cad.walls.edit'in distance ya da shift işlemi.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.walls.distances` v1 (docs/adr/0710): the walls named, each measured on its straight edge `edge`\n(absent: its first). Read-only.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `invalid_wall` (no such edge, an arc).",
+        "properties": {
+          "edge": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "uids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "WallsDistancesInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "WallGap": {
+            "description": "One side's clear distance: square to the edge, from its face to the facing face of the nearest parallel wall.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "face": {
+                "$ref": "#/$defs/DimensionSetFace"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured, at the middle of where the two run side by side: on this face, on that one.",
+                "x-unit": "length"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The wall measured to, its edge and its face that faces this one.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "distance",
+              "uid",
+              "edge",
+              "face",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "WallGaps": {
+            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.",
+            "properties": {
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "left": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "right": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "edge"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.walls.distances` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/WallGaps"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls",
+          "revision"
+        ],
+        "title": "WallsDistances",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DimensionSetFace": {
+            "description": "A real wall face, relative to the direction of its source path.",
+            "enum": [
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "WallGap": {
+            "description": "One side's clear distance: square to the edge, from its face to the facing face of the nearest parallel wall.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "face": {
+                "$ref": "#/$defs/DimensionSetFace"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured, at the middle of where the two run side by side: on this face, on that one.",
+                "x-unit": "length"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The wall measured to, its edge and its face that faces this one.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "distance",
+              "uid",
+              "edge",
+              "face",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "WallGaps": {
+            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.",
+            "properties": {
+              "edge": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "left": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "right": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "edge"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.walls.distances` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/WallGaps"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls",
+          "revision"
+        ],
+        "title": "WallsDistances",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "wall"
+            ],
+            "refusedWith": "not_a_wall"
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_wall",
+          "invalid_wall"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Doğu duvarının iç ve dış yanındaki mesafeler",
+          "input": {
+            "uids": [
+              "0192f5a1-6000-7000-8000-000000000202"
+            ]
+          }
         }
       ]
     },

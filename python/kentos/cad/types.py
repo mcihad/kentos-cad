@@ -8664,6 +8664,8 @@ class WallsOperation(_Union):
     - :class:`ReplaceStyleWallsOperation` (``kind: replaceStyle``)
     - :class:`JoinsWallsOperation` (``kind: joins``)
     - :class:`ResetJoinsWallsOperation` (``kind: resetJoins``)
+    - :class:`ShiftWallsOperation` (``kind: shift``)
+    - :class:`DistanceWallsOperation` (``kind: distance``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -60413,6 +60415,76 @@ class WallFields(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallGap(_Model):
+    """One side's clear distance: square to the edge, from its face to the facing face of the nearest parallel wall.
+    Attributes:
+        distance: Unit: length.
+        uid: The wall measured to, its edge and its face that faces this one.
+        edge: Unit: index.
+        from_: Where it is measured, at the middle of where the two run side by side: on this face, on that one. Unit: length.
+        to: Unit: length.
+    """
+    distance: float
+    uid: str
+    edge: int
+    face: DimensionSetFace | DimensionSetFaceName
+    from_: Vec2
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["uid"] = self.uid
+        out["edge"] = self.edge
+        out["face"] = _enum_out(self.face)
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallGap:
+        return cls(
+            distance=float(data["distance"]),
+            uid=data["uid"],
+            edge=data["edge"],
+            face=_enum_in(DimensionSetFace, data["face"]),
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallGaps(_Model):
+    """A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.
+    Attributes:
+        edge: Unit: index.
+    """
+    uid: str
+    edge: int
+    left: WallGap | None | Unset = UNSET
+    right: WallGap | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["edge"] = self.edge
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else self.left.to_json()
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else self.right.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallGaps:
+        return cls(
+            uid=data["uid"],
+            edge=data["edge"],
+            left=UNSET if "left" not in data else None if data["left"] is None else WallGap.from_json(data["left"]),
+            right=UNSET if "right" not in data else None if data["right"] is None else WallGap.from_json(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallJoinIssue(_Model):
     """Walls that meet and do not join: the code, what is wrong and what resolves it, where, the walls, and the edit that
     resolves it (an end's join), to run as it is.
@@ -60748,6 +60820,53 @@ class WallsCreated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallsDistances(_Model):
+    """Output of `cad.walls.distances` v1."""
+    walls: list[WallGaps]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsDistances:
+        return cls(
+            walls=[WallGaps.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsDistancesInput(_Model):
+    """Input of `cad.walls.distances` v1 (docs/adr/0710): the walls named, each measured on its straight edge `edge`
+    (absent: its first). Read-only.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `invalid_wall` (no such edge, an arc).
+    Attributes:
+        edge: Unit: index.
+    """
+    uids: list[str]
+    edge: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsDistancesInput:
+        return cls(
+            uids=list(data["uids"]),
+            edge=data.get("edge", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallsEdit(_Model):
     """Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
     or none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:
@@ -60788,12 +60907,14 @@ class WallsEdited(_Model):
         walls: The walls as written, in the input's order (Birleştir: the one they became).
         added: The new walls (Böl: each second part).
         followers: Derived source-following preview changes; absent when none. New identities are provisional.
+        joined: The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
         removed: The walls gone, by their ids (Birleştir: all but the first).
     """
     walls: list[Entity]
     revision: str
     added: list[Entity] | Unset = UNSET
     followers: DerivedEntitiesPlan | Unset = UNSET
+    joined: list[Entity] | Unset = UNSET
     removed: list[str] | Unset = UNSET
     styles_added: list[str] | Unset = UNSET
 
@@ -60805,6 +60926,8 @@ class WallsEdited(_Model):
             out["added"] = [e0.to_json() for e0 in self.added]
         if self.followers is not UNSET:
             out["followers"] = self.followers.to_json()
+        if self.joined is not UNSET:
+            out["joined"] = [e0.to_json() for e0 in self.joined]
         if self.removed is not UNSET:
             out["removed"] = list(self.removed)
         if self.styles_added is not UNSET:
@@ -60818,6 +60941,7 @@ class WallsEdited(_Model):
             revision=data["revision"],
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
+            joined=[Entity.from_json(e0) for e0 in data["joined"]] if "joined" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
         )
@@ -77368,6 +77492,65 @@ class ResetJoinsWallsOperation(WallsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class ShiftWallsOperation(WallsOperation):
+    """Kaydır (docs/adr/0710): the one wall's straight edge `edge` (absent: its first) moved `by` square to itself, to
+    its path's left (negative: to its right). The vertices beside it slide along their edges; a path end along the
+    wall whose end meets it (that end following: a corner), along the wall it stands in (a tee) or square to it;
+    the ends of the walls standing in the edge slide with it. In one step, their openings in place.
+    Attributes:
+        by: Unit: length.
+        edge: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "shift"
+    by: float
+    edge: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "shift"}
+        out["by"] = float(self.by)
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftWallsOperation:
+        return cls(
+            by=float(data["by"]),
+            edge=data.get("edge", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DistanceWallsOperation(WallsOperation):
+    """Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to
+    the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.
+    Attributes:
+        distance: Unit: length.
+        edge: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "distance"
+    side: DimensionSetFace | DimensionSetFaceName
+    distance: float
+    edge: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "distance"}
+        out["side"] = _enum_out(self.side)
+        out["distance"] = float(self.distance)
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistanceWallsOperation:
+        return cls(
+            side=_enum_in(DimensionSetFace, data["side"]),
+            distance=float(data["distance"]),
+            edge=data.get("edge", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AttachXrefsOperation(XrefsOperation):
     """A drawing file attached (or overlaid) and placed once.
     Attributes:
@@ -77913,7 +78096,7 @@ _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMark
 _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
 
 
-_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation}
+_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation}
 
 
 _XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "paths": PathsXrefsOperation, "underlay": UnderlayXrefsOperation, "bind": BindXrefsOperation}
@@ -78476,6 +78659,7 @@ __all__ = [
     "DistanceConstraintRule",
     "DistanceOffsetBy",
     "DistanceOpeningsOperation",
+    "DistanceWallsOperation",
     "DistancesMeeting",
     "DistributePaperOp",
     "DivideBlock",
@@ -80063,6 +80247,7 @@ __all__ = [
     "SheetsPublished",
     "SheetsSet",
     "SheetsSetResult",
+    "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
     "ShpColumnAsText",
     "ShpColumnRenamed",
@@ -80482,6 +80667,8 @@ __all__ = [
     "WallEntity",
     "WallEntityGeometry",
     "WallFields",
+    "WallGap",
+    "WallGaps",
     "WallJoin",
     "WallJoinIssue",
     "WallJoinName",
@@ -80500,6 +80687,8 @@ __all__ = [
     "WallStyleDef",
     "WallsCreate",
     "WallsCreated",
+    "WallsDistances",
+    "WallsDistancesInput",
     "WallsEdit",
     "WallsEdited",
     "WallsFromLines",

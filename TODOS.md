@@ -94,6 +94,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ARCH-ELEM-01 / ADR0708: mahalin `void`'u (KCAD 116), çapraz, metrajın
   `voidArea`'sı. Web'in mahal çizimi çaprazı, Metraj'ı Boşluk sütununu ve
   Mahal aracı Boşluk seçeneğini göstermeli; `cad.spaces.*.json` ile sınanmalı.
+- ARCH-EDIT-01 / ADR0710: `cad.walls.edit`'in `shift`/`distance`'ı ve salt okunur
+  `cad.walls.distances`. Web'in seçili duvarı iki yandaki net mesafeleri
+  göstermeli, sayıya basıp yazınca kenarı kaydırmalı (köşe/T izler);
+  `cad.walls.distances.json` ve `cad.walls.edit.shift.json` ile sınanmalı.
 - ARCH-STAIR-01 / ADR0709: merdivenin `bulges`'ı (KCAD 117, döner merdiven).
   Web'in merdiven çizimi yaylı bandı, radyal rıhtları ve yay korkuluğu;
   Döner merdiven aracı (merkez, başlangıç, imleçle yön) ve işleyicisi

@@ -1836,6 +1836,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.walls.distances",
+        refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_wall", "invalid_wall"]],
+        warnings: &[],
+        targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
+    },
+    Entry {
         id: "cad.openings.distances",
         refusals: &[
             &["no_entities", "invalid_uid", "entity_not_found"],

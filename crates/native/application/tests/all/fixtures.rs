@@ -83,7 +83,7 @@ use kentos_native_application::{
     labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
     layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances,
     parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
     revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
     sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
@@ -1347,6 +1347,12 @@ impl Input for kentos_commands::OpeningsEdit {
     }
 }
 
+impl Input for kentos_commands::WallsDistancesInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::OpeningsDistancesInput {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -1387,7 +1393,8 @@ impl Input for kentos_commands::WallsJoins {
 }
 
 impl Input for kentos_commands::WallsEdit {
-    /// `operation.width`, `operation.offset`, `operation.height`; `operation.at.x` and `.y` of Böl.
+    /// `operation.width`, `operation.offset`, `operation.height`; `operation.at.x` and `.y` of Böl; `operation.by` of
+    /// Kaydır and `operation.distance` of Mesafe (docs/adr/0710).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::WallsOperation;
         let c = match &mut self.operation {
@@ -1398,6 +1405,8 @@ impl Input for kentos_commands::WallsEdit {
                     _ => None,
                 };
             }
+            WallsOperation::Shift { by, .. } => return (path == "operation.by").then_some(by),
+            WallsOperation::Distance { distance, .. } => return (path == "operation.distance").then_some(distance),
             WallsOperation::Set(c) => c,
             _ => return None,
         };
@@ -3902,6 +3911,9 @@ fn run_op(
         }
         kentos_commands::CAD_OPENINGS_DISTANCES => {
             run!(openings_distances, kentos_commands::OpeningsDistancesInput)
+        }
+        kentos_commands::CAD_WALLS_DISTANCES => {
+            run!(walls_distances, kentos_commands::WallsDistancesInput)
         }
         kentos_commands::CAD_ARCH_AUDIT => {
             run!(arch_audit, kentos_commands::ArchAudit)

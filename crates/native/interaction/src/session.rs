@@ -1374,7 +1374,7 @@ impl Session {
             && !p.shift
             && let Some(field) = self.select.temporary_at(p.screen, cx)
         {
-            self.run(Box::new(field));
+            self.run(field);
             self.activate(cx);
             self.pick_pressed = true;
             return;

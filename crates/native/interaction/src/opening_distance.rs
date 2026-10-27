@@ -49,7 +49,7 @@ fn v(p: kentos_commands::Vec2) -> Vec2 {
 }
 
 /// An aligned dimension from `a` to `b`, `offset` to its left, numbers `height` high: drawn, never written.
-fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
+pub(crate) fn dimension(a: Vec2, b: Vec2, offset: f64, height: f64) -> Entity {
     Entity::Dimension(kentos_commands::DimensionEntity {
         base: kentos_commands::EntityBase {
             look: Default::default(),

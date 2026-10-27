@@ -235,6 +235,7 @@ COMMANDS: dict[str, Any] = {
     "cad.views.edit": views.edit,
     "cad.walls.convert": walls.convert,
     "cad.walls.create": walls.create,
+    "cad.walls.distances": walls.distances,
     "cad.walls.edit": walls.edit,
     "cad.walls.joins": walls.joins,
     "cad.walls.partition": walls.partition,

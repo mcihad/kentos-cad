@@ -264,9 +264,11 @@ pub mod openings_create;
 pub mod opening_placement;
 pub mod openings_edit;
 pub mod opening_distances;
+pub mod wall_distances;
 // Mimari denetim (docs/adr/0703).
 pub mod arch_audit;
 pub use opening_distances::distances as openings_distances;
+pub use wall_distances::distances as walls_distances;
 pub mod spaces;
 pub mod spaces_create;
 pub mod spaces_discover;
@@ -805,6 +807,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_OPENINGS_DISTANCES,
         kentos_commands::CAD_OPENINGS_DISTANCES_VERSION,
+    ),
+    // Duvarın geçici ölçüleri ([`wall_distances`], docs/adr/0710).
+    (
+        kentos_commands::CAD_WALLS_DISTANCES,
+        kentos_commands::CAD_WALLS_DISTANCES_VERSION,
     ),
     // Mimari denetim ([`arch_audit`], docs/adr/0703).
     (

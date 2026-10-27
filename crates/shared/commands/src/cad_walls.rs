@@ -31,6 +31,10 @@ pub const CAD_WALLS_EDIT: &str = "cad.walls.edit";
 pub const CAD_WALLS_EDIT_VERSION: u32 = 1;
 pub const CAD_WALLS_JOINS: &str = "cad.walls.joins";
 pub const CAD_WALLS_JOINS_VERSION: u32 = 1;
+/// A wall's temporary distances (docs/adr/0710): the clear distance from each face of an edge to the nearest parallel
+/// wall.
+pub const CAD_WALLS_DISTANCES: &str = "cad.walls.distances";
+pub const CAD_WALLS_DISTANCES_VERSION: u32 = 1;
 /// The most walls one call writes.
 pub const MAX_WALLS: usize = 10_000;
 /// Fromlines' pairs: the widest wall two lines make, metres, when none is given.
@@ -586,6 +590,29 @@ pub enum WallsOperation {
     },
     /// Birleşimleri sıfırla: both ends by the rule, the cleanup on.
     ResetJoins,
+    /// Kaydır (docs/adr/0710): the one wall's straight edge `edge` (absent: its first) moved `by` square to itself, to
+    /// its path's left (negative: to its right). The vertices beside it slide along their edges; a path end along the
+    /// wall whose end meets it (that end following: a corner), along the wall it stands in (a tee) or square to it;
+    /// the ends of the walls standing in the edge slide with it. In one step, their openings in place.
+    Shift {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        edge: Option<u32>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        by: f64,
+    },
+    /// Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to
+    /// the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.
+    Distance {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        edge: Option<u32>,
+        side: crate::DimensionSetFace,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: f64,
+    },
 }
 
 /// Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
@@ -634,6 +661,10 @@ pub struct WallsEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
+    /// The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub joined: Vec<Entity>,
     /// The walls gone, by their ids (Birleştir: all but the first).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -729,6 +760,77 @@ pub struct WallJoinIssue {
 pub struct WallsJoined {
     pub joints: Vec<WallJoint>,
     pub issues: Vec<WallJoinIssue>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.walls.distances` v1 (docs/adr/0710): the walls named, each measured on its straight edge `edge`
+/// (absent: its first). Read-only.
+///
+/// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `invalid_wall` (no such edge, an arc).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallsDistancesInput {
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub edge: Option<u32>,
+}
+
+/// One side's clear distance: square to the edge, from its face to the facing face of the nearest parallel wall.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallGap {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    /// The wall measured to, its edge and its face that faces this one.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub edge: u32,
+    pub face: crate::DimensionSetFace,
+    /// Where it is measured, at the middle of where the two run side by side: on this face, on that one.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+}
+
+/// A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallGaps {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub edge: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub left: Option<WallGap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub right: Option<WallGap>,
+}
+
+/// Output of `cad.walls.distances` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallsDistances {
+    pub walls: Vec<WallGaps>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

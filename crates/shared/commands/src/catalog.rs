@@ -2046,6 +2046,7 @@ pub fn catalog() -> CommandCatalog {
                       split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye; nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end); kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin kimliğiyle (ters yöndeki gövdesi yerinde çevrilir; walls_not_touching, walls_differ); uçları buluşursa kapanır. \
                       extend (Uzat): her duvarın ucu (end, verilmezse to duvarına yakın olanı) son kenarının doğrultusunda to duvarının yoluna dek; trim (Buda): her duvar to duvarının yolunu kestiği yerde kısalır, keep noktasına en yakın parça (verilmezse uzun olanı) kalır (wall_misses, wall_closed). flip (Çevir): yol ters döner, gövde yolun öbür yanına aynalanır, uçların birleşimi yer değiştirir. \
                       replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala döndürür. \
+                      shift (Kaydır, docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0) kendine dik by metre kayar (yolun soluna artı, sağına eksi); yanındaki köşeler bitişik kenarlar boyunca, yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın ucu da aynı noktaya), saplandığı duvar boyunca ya da serbestse dik kayar; kenara T ile saplanan duvarların uçları kendi doğrultularında izler; açıklıklar yerinde kalır, izleyen duvarlar çıktının joined'ındadır. distance (Mesafe): side (left ya da right) yanındaki en yakın paralel duvara net mesafe distance olacak kadar Kaydır (cad.walls.distances aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı doğrultudaki bitişik kenar ya da uç uca duvar, köşede birden çok duvar, kenarı yok eden ya da ters çeviren kaydırma invalid_wall; sıfır kaydırma nothing_to_set; izleyen duvar kilitli katmandaysa layer_locked. \
                       Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap, wall_join_crowded, wall_join_acute, wall_join_unresolved). Plan yazmadan duvarları gösterir."
                 .into(),
             aliases: vec![],
@@ -2134,6 +2135,31 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Çizimin bütün duvarlarında birleşmeyenler".into(),
                 input: json!({}),
+                output: None,
+            }],
+        },
+        // Duvarın geçici ölçüleri (docs/adr/0710), held together by fixtures/commands/v1/cad.walls.distances.json.
+        CommandDescriptor {
+            id: crate::CAD_WALLS_DISTANCES.into(),
+            version: crate::CAD_WALLS_DISTANCES_VERSION,
+            title: "Duvarın mesafeleri".into(),
+            summary: "Kalıcı kimlikleri verilen duvarların düz kenarı edge'de (verilmezse 0) iki yanındaki net mesafeleri okur (docs/adr/0710): yolun soluna (left) ve sağına (right) kenarın yüzünden, aynı kattaki (duvarın kendi öbür kenarları da) ona paralel ve boyunca örtüşen en yakın düz duvar kenarının bakan yüzüne dik uzaklık; uid, edge ve face o duvarı ve yüzünü, from ve to örtüşmenin ortasında iki yüzdeki noktaları verir (metre). Paralel duvarı olmayan yan yoktur. Yay kenar ya da olmayan kenar invalid_wall. Belgeye yazmaz; kenarı kaydırmak için cad.walls.edit'in distance ya da shift işlemi."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsDistancesInput>(),
+            output: schema::<crate::WallsDistances>(),
+            plan: Some(schema::<crate::WallsDistances>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Doğu duvarının iç ve dış yanındaki mesafeler".into(),
+                input: json!({ "uids": ["0192f5a1-6000-7000-8000-000000000202"] }),
                 output: None,
             }],
         },
@@ -10569,6 +10595,9 @@ mod tests {
                     crate::CAD_WALLS_JOINS => {
                         serde_json::from_value::<crate::WallsJoins>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_WALLS_DISTANCES => {
+                        serde_json::from_value::<crate::WallsDistancesInput>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_CREATE => {
                         serde_json::from_value::<crate::OpeningsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -11770,6 +11799,9 @@ mod tests {
                         }
                         crate::CAD_WALLS_JOINS => {
                             serde_json::from_value::<crate::WallsJoined>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_WALLS_DISTANCES => {
+                            serde_json::from_value::<crate::WallsDistances>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_CREATE => {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone())

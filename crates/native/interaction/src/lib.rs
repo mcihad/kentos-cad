@@ -260,6 +260,7 @@ pub mod view_twist;
 pub mod wall;
 pub mod wall_edit_tools;
 pub mod opening_distance;
+pub mod wall_distance;
 pub mod opening_tools;
 pub mod opening_array;
 pub mod space_tools;

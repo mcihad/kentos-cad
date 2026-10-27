@@ -1,7 +1,9 @@
 //! `cad.walls.edit` v1 (docs/adr/0339 §5, 0340 §4): walls named by their persistent ids changed as one undo step
 //! “Duvarı düzenle”, all or none. Değiştir sets their own fields (Öznitelikler writes through it); Böl, Birleştir,
 //! Uzat, Buda and Çevir edit their paths; Stili değiştir gives the walls of one style another; Birleşim and
-//! Birleşimleri sıfırla set how their ends join. The shared cases are `fixtures/commands/v1/cad.walls.edit.json`.
+//! Birleşimleri sıfırla set how their ends join; Kaydır and Mesafe move one straight edge square to itself, what is
+//! joined to it following (docs/adr/0710, `wall_distances`). The shared cases are
+//! `fixtures/commands/v1/cad.walls.edit.json` and `cad.walls.edit.shift.json`.
 //!
 //! A style given takes its components, ends and fill (and its width when its components fix it); a style taken away
 //! leaves one plain body. A width the components do not fit, a face a new width, offset or path cannot draw, a level
@@ -36,6 +38,10 @@ struct Work {
     /// The openings the walls carry (docs/adr/0341 §3): each its slot, itself with its new place along its wall, and
     /// its wall: an updated one by its slot, or an added one by its place in `added`.
     openings: Vec<(Slot, OpeningEntity, Carrier)>,
+    /// Kaydır: how many of `updates` are the walls named (the rest followed); none: all.
+    named: Option<usize>,
+    /// Kaydır: the locked layer of a wall that would follow, refused after the walls named.
+    blocked: Option<String>,
 }
 
 /// The wall an opening goes into.
@@ -656,6 +662,25 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                 Ok(out)
             })?;
         }
+        WallsOperation::Shift { edge, by } => {
+            checks::finite(*by, "Kaydırma", "Sonlu bir uzunluk verin.", "operation.by")?;
+            shifted(doc, &walls_found, *edge, None, *by, &mut work)?;
+        }
+        WallsOperation::Distance {
+            edge,
+            side,
+            distance,
+        } => {
+            checks::finite(*distance, "Mesafe", "Sonlu bir uzunluk verin.", "operation.distance")?;
+            if *distance < 0.0 {
+                return Err(fail(
+                    codes::INVALID_WALL,
+                    format!("Mesafe {distance}; sıfır ya da daha büyük olmalı."),
+                    "operation.distance",
+                ));
+            }
+            shifted(doc, &walls_found, *edge, Some((*side, *distance)), 0.0, &mut work)?;
+        }
     }
     // The openings go with the walls whose paths changed (docs/adr/0341 §3).
     if matches!(
@@ -665,6 +690,8 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             | WallsOperation::Extend { .. }
             | WallsOperation::Trim { .. }
             | WallsOperation::Flip
+            | WallsOperation::Shift { .. }
+            | WallsOperation::Distance { .. }
     ) {
         work.openings = carry(doc, &work);
     }
@@ -686,7 +713,81 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             ));
         }
     }
+    if let Some(name) = &work.blocked {
+        return Err(fail(
+            codes::LAYER_LOCKED,
+            format!(
+                "Kaydırma “{name}” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın."
+            ),
+            "operation",
+        ));
+    }
     Ok(work)
+}
+
+/// Kaydır and Mesafe (docs/adr/0710): the one wall's edge moved `by`, or by as much as makes the gap on `target`'s side
+/// its distance; the wall first in `work.updates`, the walls that followed after it.
+fn shifted(
+    doc: &Document,
+    found: &[(usize, Slot, &WallEntity)],
+    edge: Option<u32>,
+    target: Option<(kentos_commands::DimensionSetFace, f64)>,
+    by: f64,
+    work: &mut Work,
+) -> Result<(), Stop> {
+    use kentos_geometry_core::ops::wall_shift;
+    let [(at, slot, wall)] = found else {
+        return Err(fail(
+            codes::INVALID_WALL,
+            "Kaydır ve Mesafe tek duvarla çalışır; bir duvar verin.".into(),
+            "uids",
+        ));
+    };
+    let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
+    let ins = walls.ins();
+    let k = edge.unwrap_or(0) as usize;
+    let gaps = wall_shift::gaps(&ins, 0, k).map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    let by = match target {
+        None => by,
+        Some((side, distance)) => {
+            let left = side == kentos_commands::DimensionSetFace::Left;
+            let Some(g) = gaps[usize::from(!left)] else {
+                return Err(fail(
+                    codes::INVALID_WALL,
+                    format!(
+                        "Duvarın {} yanında ona paralel bir duvar yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
+                        if left { "sol" } else { "sağ" }
+                    ),
+                    "operation.side",
+                ));
+            };
+            if left { g.distance - distance } else { distance - g.distance }
+        }
+    };
+    if by.abs() <= wall_shift::TIE {
+        return Err(fail(
+            codes::NOTHING_TO_SET,
+            "Duvar zaten bu konumda; kaydırılacak bir şey yok.".into(),
+            "operation",
+        ));
+    }
+    let moved = wall_shift::shift(&ins, 0, k, by).map_err(|why| fail(codes::INVALID_WALL, why, "operation"))?;
+    for m in moved {
+        let s = walls.slots[m.wall];
+        let Some(Entity::Wall(w)) = doc.get(s) else { continue };
+        if m.wall != 0 && work.blocked.is_none() && doc.layers().is_locked(&w.base.layer_id) {
+            let id = &w.base.layer_id;
+            work.blocked = Some(doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str()).to_owned());
+        }
+        let mut out = w.clone();
+        out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+        let path = format!("uids[{at}]");
+        walls::valid(&out.wall, &path)?;
+        walls::drawable(&out.wall, &path)?;
+        work.updates.push((s, out));
+    }
+    work.named = Some(1);
+    Ok(())
 }
 
 fn warnings(doc: &Document, work: &Work) -> Vec<kentos_commands::CommandWarning> {
@@ -720,18 +821,28 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
     match check(cx.doc, input) {
         Ok(work) => {
             let warnings = warnings(cx.doc, &work);
+            // The openings the walls carry with their new places (docs/adr/0341 §3), so that the preview of what
+            // follows is the step's (an opening whose wall's start moved keeps its place).
             let updates: Vec<_> = work
                 .updates
                 .iter()
                 .map(|(s, w)| (*s, Entity::Wall(w.clone())))
+                .chain(work.openings.iter().filter_map(|(s, o, c)| match c {
+                    Carrier::Kept(_) => Some((*s, Entity::Opening(o.clone()))),
+                    Carrier::Added(_) => None,
+                }))
                 .collect();
             let adds: Vec<_> = work.added.iter().cloned().map(Entity::Wall).collect();
             let followers = crate::dimension_sets::derived(cx.doc, &updates, &adds, &work.removed);
+            let named = work.named.unwrap_or(work.updates.len());
             CommandResult::Completed {
                 output: WallsEdited {
                     followers,
-                    walls: work
-                        .updates
+                    walls: work.updates[..named]
+                        .iter()
+                        .map(|(_, w)| Entity::Wall(w.clone()))
+                        .collect(),
+                    joined: work.updates[named..]
                         .iter()
                         .map(|(_, w)| Entity::Wall(w.clone()))
                         .collect(),
@@ -765,11 +876,12 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
     let warnings = warnings(cx.doc, &work);
     let removed = removed_uids(cx.doc, &work);
     let doc = &mut *cx.doc;
-    let entities: Vec<Entity> = work
+    let mut entities: Vec<Entity> = work
         .updates
         .iter()
         .map(|(_, w)| Entity::Wall(w.clone()))
         .collect();
+    let joined = entities.split_off(work.named.unwrap_or(entities.len()));
     let result = doc.transact(STEP, |d| {
         walls::take_styles(d, &work.styles);
         d.update_many(
@@ -817,6 +929,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
         output: WallsEdited {
             followers: Default::default(),
             walls: entities,
+            joined,
             added,
             removed,
             styles_added: work.styles.into_iter().map(|s| s.id).collect(),

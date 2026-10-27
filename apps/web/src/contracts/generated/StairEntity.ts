@@ -77,7 +77,12 @@ wipeout?: Wipeout,
 /**
  * Its walking line, up from its first point: two points straight, three an L, four a U.
  */
-pts: Array<Vec2>, width: number, risers: number, riserHeight: number, 
+pts: Array<Vec2>, 
+/**
+ * A curved (spiral) stair's walking line (docs/adr/0709, schema 117): two bulges, the first its arc's (the tangent
+ * of a quarter of its turn, counter-clockwise positive), the second 0; only on a two-point line. Absent: straight.
+ */
+bulges?: Array<number>, width: number, risers: number, riserHeight: number, 
 /**
  * A tread's depth along the walking line.
  */

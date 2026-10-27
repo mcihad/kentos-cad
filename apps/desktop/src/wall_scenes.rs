@@ -29,6 +29,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
 //! ```
 //!
 //! Test code only.
@@ -397,6 +398,47 @@ fn opening_distance_undone(app: &mut App) {
     hover(app, [2.0, 1.25]);
 }
 
+/// docs/adr/0710: the room's inner wall selected, the pointer beside it: its clear distances to the outer wall's inner
+/// faces on both sides.
+fn wall_distances(app: &mut App) {
+    room(app, 50.0);
+    app.selection.set([Slot(2)]);
+    hover(app, [3.6, 2.5]);
+}
+
+/// A click on the west number: its text field, the value ready.
+fn wall_distance_field(app: &mut App) {
+    wall_distances(app);
+    let n = app.session.temporary_numbers();
+    let west = n.iter().min_by(|a, b| a.x.total_cmp(&b.x)).copied().expect("a number");
+    click(app, [west.x - E, west.y - N]);
+}
+
+/// 3.60 typed, Enter: the inner wall 40 cm west, its ends sliding along the outer wall; its new distances.
+fn wall_distance_written(app: &mut App) {
+    wall_distance_field(app);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input("3.60".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
+    hover(app, [3.2, 2.5]);
+}
+
+/// The outer wall selected, the pointer by its east edge inside: that edge's distance to the inner wall.
+fn wall_distance_room(app: &mut App) {
+    room(app, 50.0);
+    app.selection.set([Slot(1)]);
+    hover(app, [6.6, 2.5]);
+}
+
+/// 3.00 typed for the east edge: the room 40 cm wider, its corners sliding along its edges, the inner wall in place.
+fn wall_distance_room_wider(app: &mut App) {
+    wall_distance_room(app);
+    let n = app.session.temporary_numbers();
+    click(app, [n[0].x - E, n[0].y - N]);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input("3.00".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
+    hover(app, [7.0, 2.5]);
+}
+
 /// Duvar ölçüleri on the closed room: the right edge under the pointer, its outer face, the window's jambs.
 fn dimensions_edge(app: &mut App) {
     closed_room(app);
@@ -459,6 +501,11 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("gecici-olcu-yazi-kutusu", opening_distance_field),
         ("gecici-olcu-tasindi", opening_distance_written),
         ("gecici-olcu-geri-alindi", opening_distance_undone),
+        ("duvar-mesafe", wall_distances),
+        ("duvar-mesafe-yazi-kutusu", wall_distance_field),
+        ("duvar-mesafe-kaydirildi", wall_distance_written),
+        ("duvar-mesafe-oda", wall_distance_room),
+        ("duvar-mesafe-oda-genisledi", wall_distance_room_wider),
         ("olcu-kenar", dimensions_edge),
         ("olcu-butun-kenarlar", dimensions_around),
         ("olcu-butun-kenarlar-yazildi", dimensions_around_written),

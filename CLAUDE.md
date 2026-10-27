@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Duvarın geçici ölçüsü (27 Ekim 2026; [ADR0710](docs/adr/0710-wall-temporary-distances.md)).**
+  Seçili duvarın imlecin yakın olduğu düz kenarında iki yandaki en yakın paralel
+  duvarın bakan yüzüne net mesafe; sayıya bas-yaz-Enter kenarı kendine dik
+  kaydırır, karşı duvar sabit, köşe/T/bitişik köşeler izler, açıklıklar yerinde,
+  tek undo. `cad.walls.edit` `shift`/`distance` ve salt okunur
+  `cad.walls.distances` (Python/MCP); çekirdek `ops::wall_shift`. 22+32 bağımsız
+  durum, 4 araç testi, gerçek GUI. Kolon, duvar boyu, kilitli referans açık.
+
 - **Döner merdiven (27 Ekim 2026; [ADR0709](docs/adr/0709-curved-stairs.md)).**
   Merdivenin iki noktalı yürüme çizgisi yay olabilir (`bulges`, KCAD 117 opt-in):
   rıhtlar yay boyunca radyal, bant ve korkuluk eş merkezli yay, `fit` yayı son
