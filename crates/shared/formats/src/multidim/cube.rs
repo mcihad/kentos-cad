@@ -133,6 +133,7 @@ pub struct CubeInfo {
     pub version: u8,
     /// The data set's own format when it was read as classic NetCDF (“NetCDF-4 (HDF5)”, “GRIB2”, “Zarr v3”;
     /// docs/adr/0645 §1).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<String>,
     pub grids: Vec<GridInfo>,
     pub meshes: Vec<MeshInfo>,
