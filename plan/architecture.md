@@ -831,8 +831,9 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   saplanan duvar ölçülmez ve söylenir (`dimension_set_wall_skipped`).
 - [x] Yaşam döngüsü Python/MCP'de aynı komutlarla: salt okunur plan, tek undo,
   KCAD 128 kaydet-aç, eski dosyaların baytları aynı; 70 bağımsız ortak durum Rust ve
-  Python tipli katmanından geçer. Veritabanında saklanan bulut projesi `span`'lı tarifi
-  açıkça reddeder (sunucunun ortak kuralla denetlemesi açık iş, TODOS.md).
+  Python tipli katmanından geçer. Veritabanında saklanan bulut projesinde sunucu tarifi
+  aynı ortak kuralla, proje kilidi altında planlayıp üyeliği ve ölçüleri denetler
+  (TODOS.md `PG-23`, ADR0729 §8; gerçek PostGIS testi ve bütün sunucu takımı).
   Güncel iş akışı karşılaştırması:
   [Archicad29 dış ölçü](https://help.graphisoft.com/AC/29/INT/_AC29_Help/070_Documentation/070_Documentation-49.htm)
   (seçilmiş duvar, yön, yer, toplam/dış geometri/yapı/açıklık, merkez-uç, yüz ve

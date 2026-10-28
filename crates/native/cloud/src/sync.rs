@@ -586,7 +586,8 @@ impl ProjectSync {
             .iter()
             .chain(doc.dimension_sets())
         {
-            dimension_ids.insert(Uuid::from_bytes(set.wall.0));
+            // A façade's or a space's every source (docs/adr/0729 §8), a wall's own recipe its wall.
+            dimension_ids.extend(set.sources().iter().map(|id| Uuid::from_bytes(id.0)));
             for member in &set.members {
                 dimension_ids.insert(Uuid::from_bytes(member.uid.0));
                 dimension_ids.insert(Uuid::from_bytes(member.a.uid.0));
@@ -602,7 +603,8 @@ impl ProjectSync {
             .dimension_sets
             .iter()
             .chain(doc.dimension_sets())
-            .map(|s| s.wall.to_text())
+            .flat_map(|s| s.sources())
+            .map(|id| id.to_text())
             .collect();
         for (id, tracked) in &self.known {
             if matches!(&tracked.entity, Entity::Opening(o) if dimension_walls.contains(&o.opening.host))

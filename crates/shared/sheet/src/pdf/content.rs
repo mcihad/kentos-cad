@@ -9,7 +9,7 @@
 use std::collections::BTreeMap;
 
 use pdf_writer::types::{LineCapStyle, LineJoinStyle, TextRenderingMode};
-use pdf_writer::{Content, Name, Ref, Str};
+use pdf_writer::{Content, Name, Ref, Str, TextStr};
 
 use super::fonts::Fonts;
 use crate::display::{ArcSeg, ClipPrim, ImagePrim, Seg, TextPrim};
@@ -486,7 +486,14 @@ impl<'a> Page<'a> {
             self.width((size / 5.0) as f32);
             self.join(LineJoinStyle::RoundJoin);
             self.dash(Vec::new());
+            // The halo is the same letters stroked under them: an empty replacement text (PDF 1.5's `ActualText`) keeps
+            // a reader (pdftotext, search, a screen reader) from taking them twice (docs/adr/0695's PDF gate).
+            self.c
+                .begin_marked_content_with_properties(Name(b"Span"))
+                .properties()
+                .actual_text(TextStr(""));
             show(&mut self.c, TextRenderingMode::Stroke);
+            self.c.end_marked_content();
         }
         self.alpha_for(alpha, 1.0);
         self.fill_rgb(rgb);

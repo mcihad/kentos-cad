@@ -1246,3 +1246,129 @@ async fn rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_memb
     }
     db.close().await;
 }
+
+fn facade_model() -> DocumentSnapshotV2 {
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/kcad/v2/dimension-set-spans.json"
+    ))
+    .unwrap()
+}
+
+/// docs/adr/0729 §8: a façade recipe commits with its members when they are the shared rule's plan of the sources as
+/// the transaction leaves them; a member left out, or a door moved under unchanged members, is refused and nothing is
+/// written.
+#[tokio::test]
+async fn a_facade_recipe_commits_only_with_the_shared_plan_of_its_sources() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 3)
+        .await
+        .unwrap();
+    let who = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let source = facade_model();
+    assert!(source.dimension_sets[0].span.is_some(), "a façade's recipe");
+    let created = projects::create(&db.app, &who, create(&source), None)
+        .await
+        .unwrap();
+    let project = Uuid::parse_str(&created.id).unwrap();
+    let by = open(&db, &who, project).await;
+    let features = |without: Option<&str>| -> Vec<FeatureChange> {
+        source
+            .uids
+            .iter()
+            .zip(&source.entities)
+            .filter(|(id, _)| Some(id.to_text().as_str()) != without)
+            .map(|(id, entity)| FeatureChange::Create {
+                id: id.to_text(),
+                entity: entity.clone(),
+            })
+            .collect()
+    };
+    // The overall member and its dimension left out: the plan still has the interval.
+    let mut short = source.dimension_sets.clone();
+    let gone = short[0].members.pop().unwrap();
+    let mut command = envelope(
+        &who,
+        project,
+        ProjectChanges {
+            features: features(Some(&gone.uid.to_text())),
+            blocks: Vec::new(),
+            project: Some(ProjectPatch {
+                dimension_sets: Some(short),
+                ..Default::default()
+            }),
+        },
+        &[("@project", &created.meta_version)],
+    );
+    command.version = 2;
+    let refused = changes::commit(&db.app, &by, command).await.unwrap_err();
+    assert_eq!(refused.path(), Some("project.dimensionSets[0].members"));
+    assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "0");
+    // The whole plan: committed, and back from the snapshot as written.
+    let mut command = envelope(
+        &who,
+        project,
+        ProjectChanges {
+            features: features(None),
+            blocks: Vec::new(),
+            project: Some(ProjectPatch {
+                dimension_sets: Some(source.dimension_sets.clone()),
+                ..Default::default()
+            }),
+        },
+        &[("@project", &created.meta_version)],
+    );
+    command.version = 2;
+    let committed = changes::commit(&db.app, &by, command).await.unwrap();
+    assert_eq!(committed.data_revision, "1");
+    let info = projects::info(&db.app, &by).await.unwrap();
+    assert_eq!(info.dimension_sets, source.dimension_sets);
+    let back = kentos_kcad::decode(&snapshot::snapshot(&db.app, &by).await.unwrap().bytes).unwrap();
+    assert_eq!(back.dimension_sets, source.dimension_sets);
+    // The door moved a metre east, its dimensions not: the members no longer measure the sources.
+    let (door_at, door) = source
+        .entities
+        .iter()
+        .enumerate()
+        .find(|(_, e)| matches!(e, kentos_contracts::Entity::Opening(_)))
+        .unwrap();
+    let door_uid = source.uids[door_at].to_text();
+    let mut moved = door.clone();
+    if let kentos_contracts::Entity::Opening(o) = &mut moved {
+        o.opening.at += 1.0;
+        for p in &mut o.opening.place {
+            p.x += 1.0;
+        }
+    }
+    let mut stale = envelope(
+        &who,
+        project,
+        ProjectChanges {
+            features: vec![FeatureChange::Update {
+                id: door_uid.clone(),
+                entity: moved,
+            }],
+            blocks: Vec::new(),
+            project: Some(ProjectPatch {
+                dimension_sets: Some(source.dimension_sets.clone()),
+                ..Default::default()
+            }),
+        },
+        &[
+            ("@project", &info.meta_version),
+            (&door_uid, &committed.versions[&door_uid]),
+        ],
+    );
+    stale.version = 2;
+    let refused = changes::commit(&db.app, &by, stale).await.unwrap_err();
+    assert!(
+        refused
+            .path()
+            .is_some_and(|p| p.starts_with("project.dimensionSets[0].members[")),
+        "{:?}",
+        refused.path()
+    );
+    assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "1");
+    db.close().await;
+}

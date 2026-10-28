@@ -574,3 +574,66 @@ fn a_space_clicked_is_measured_with_its_door() {
         .collect();
     assert_eq!(lengths, [0.9, 1.0, 1.9, 3.8], "west to east: the door in the room's south edge, its net length");
 }
+
+/// The source wall with a dimension set on it and a 1 m door at 5 m: the set's four members.
+fn measured_door() -> (Bench, Slot, Slot) {
+    let (mut b, wall) = source();
+    b.confirm();
+    b.selection.clear();
+    b.start("door");
+    assert!(configure(&mut b, "E", "1 m"));
+    b.click(5., 0.2);
+    b.confirm();
+    let door = b
+        .doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Opening(_)))
+        .last()
+        .map(|e| Slot(e.base().id))
+        .expect("the door");
+    assert_eq!(b.doc.dimension_sets()[0].members.len(), 4);
+    (b, wall, door)
+}
+
+fn texts(b: &Bench) -> Vec<String> {
+    b.session
+        .preview(&Default::default())
+        .map(|p| p.texts.into_iter().map(|t| t.text).collect())
+        .unwrap_or_default()
+}
+
+/// docs/adr/0695's open gate: the door dragged by its centre grip shows the dimensions that follow it, as they would
+/// be, before anything is written.
+#[test]
+fn an_opening_grip_previews_the_dimensions_that_follow_it() {
+    let (mut b, _, door) = measured_door();
+    b.selection.set([door]);
+    b.click(5., 0.);
+    assert!(b.session.grip_active());
+    let before = b.doc.to_snapshot_v2();
+    b.move_to(8., 0.);
+    let shown = texts(&b);
+    for value in ["7.500", "1.000", "11.500"] {
+        assert!(shown.iter().any(|t| t == value), "{value} in {shown:?}");
+    }
+    assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
+    b.click(8., 0.);
+    assert!(!b.session.grip_active());
+    assert_eq!(b.doc.dimension_sets()[0].members.len(), 4);
+}
+
+/// A wall's end dragged by its grip: its dimension set's members follow in the preview.
+#[test]
+fn a_wall_grip_previews_the_dimensions_that_follow_it() {
+    let (mut b, wall, _) = measured_door();
+    b.selection.set([wall]);
+    b.click(20., 0.);
+    assert!(b.session.grip_active());
+    let before = b.doc.to_snapshot_v2();
+    b.move_to(22., 0.);
+    let shown = texts(&b);
+    for value in ["16.500", "22.000"] {
+        assert!(shown.iter().any(|t| t == value), "{value} in {shown:?}");
+    }
+    assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
+}

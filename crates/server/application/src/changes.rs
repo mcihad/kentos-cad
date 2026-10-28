@@ -492,6 +492,7 @@ pub async fn commit(
 /// Validate the persisted cache against the bounded final source graph. This is the
 /// shared pure wall/opening/row geometry, not a server edit, solver or identity allocator.
 /// Appearance, text and manual row placement remain client-owned input.
+#[allow(clippy::too_many_arguments)]
 async fn check_dimension_rows(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
@@ -500,6 +501,7 @@ async fn check_dimension_rows(
     scale: f64,
     full_recipe: bool,
     features: &[FeatureChange],
+    tree: &[LayerNode],
 ) -> AppResult<()> {
     use kentos_contracts::{
         DimensionSetFace, DimensionSetOpenings, DimensionSetRow, DimensionStyle, Entity, EntityId,
@@ -514,7 +516,7 @@ async fn check_dimension_rows(
     let ids: HashSet<Uuid> = sets
         .iter()
         .flat_map(|set| {
-            std::iter::once(Uuid::from_bytes(set.wall.0)).chain(
+            set.sources().into_iter().map(|id| Uuid::from_bytes(id.0)).chain(
                 set.members
                     .iter()
                     .map(|member| Uuid::from_bytes(member.uid.0)),
@@ -580,6 +582,22 @@ async fn check_dimension_rows(
         })
         .collect();
     for (i, set) in sets.iter().enumerate() {
+        if set.span.is_some() {
+            check_span_rows(
+                tx,
+                access,
+                i,
+                set,
+                previous.get(&set.id).copied(),
+                scale,
+                full_recipe,
+                &written,
+                &records,
+                tree,
+            )
+            .await?;
+            continue;
+        }
         let Some(record) = records.get(&Uuid::from_bytes(set.wall.0)) else {
             continue;
         };
@@ -845,6 +863,171 @@ async fn check_dimension_rows(
                 "Kaynakta artık bulunmayan ölçü aralıkları aynı işlemde kaldırılmalı.",
             ));
         }
+    }
+    Ok(())
+}
+
+/// Whether a layer is shown: it and every group above it open and not frozen; an unknown one is (the desktop's rule).
+fn layer_shown(tree: &[LayerNode], id: &str) -> bool {
+    fn walk(nodes: &[LayerNode], id: &str, on: bool) -> Option<bool> {
+        for n in nodes {
+            let here = on && n.visible && n.frozen != Some(true);
+            if n.id == id {
+                return Some(here);
+            }
+            if let Some(found) = walk(&n.children, id, here) {
+                return Some(found);
+            }
+        }
+        None
+    }
+    walk(tree, id, true).unwrap_or(true)
+}
+
+/// A façade's or a space's members against the shared rule (docs/adr/0729 §8): its sources, every grid, the walls and
+/// openings in its box and its sources' openings, as this transaction leaves them, planned as the desktop plans them
+/// (`kentos_formats::dimension_spans`). Each planned interval has its member, an unchanged pair keeps its identity, a
+/// member measures what the plan measures; a source that cannot be planned keeps its last geometry (a broken recipe).
+#[allow(clippy::too_many_arguments)]
+async fn check_span_rows(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    i: usize,
+    set: &kentos_contracts::DimensionSet,
+    previous: Option<&kentos_contracts::DimensionSet>,
+    scale: f64,
+    full_recipe: bool,
+    written: &HashMap<Uuid, usize>,
+    records: &HashMap<Uuid, kentos_contracts::FeatureRecord>,
+    tree: &[LayerNode],
+) -> AppResult<()> {
+    use kentos_contracts::{DimensionSetSegment, DimensionStyle, Entity, EntityId, SubRef};
+    use kentos_formats::dimension_spans as spans;
+    let by_record = |id: EntityId| records.get(&Uuid::from_bytes(id.0)).map(|r| &r.entity);
+    let Some(reach) = spans::reach(set, &by_record) else {
+        return Ok(());
+    };
+    let sources: Vec<String> = set.sources().iter().map(|s| s.to_text()).collect();
+    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id=$1 and project_id=$2 and (kind='grid' \
+         or (kind in ('wall','opening') and (geom is null or geom && public.st_makeenvelope($3,$4,$5,$6,srid))) \
+         or (kind='opening' and lower(cad_definition->>'host')=any($7))) order by id"
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(reach[0])
+    .bind(reach[1])
+    .bind(reach[2])
+    .bind(reach[3])
+    .bind(&sources)
+    .fetch_all(&mut **tx)
+    .await?;
+    let found: Vec<(EntityId, kentos_contracts::FeatureRecord)> = rows
+        .into_iter()
+        .map(|row| {
+            let r = record(row)?;
+            let id = EntityId::parse(&r.id).ok_or_else(|| AppError::invalid("Nesne kimliği UUID değil."))?;
+            Ok((id, r))
+        })
+        .collect::<AppResult<_>>()?;
+    let near: Vec<spans::Near<'_>> = found
+        .iter()
+        .map(|(id, r)| spans::Near {
+            id: *id,
+            entity: &r.entity,
+            shown: layer_shown(tree, &r.entity.base().layer_id),
+        })
+        .collect();
+    let find = |id: EntityId| {
+        by_record(id).or_else(|| found.iter().find(|(f, _)| *f == id).map(|(_, r)| &r.entity))
+    };
+    let Ok(planned) = spans::plan(set, &find, &near, scale) else {
+        return Ok(());
+    };
+    let reference = |point: &kentos_geometry_core::ops::dimension_set::Point| SubRef {
+        uid: planned.sources[point.source],
+        place: spans::contract_place(point.place),
+        path: Vec::new(),
+        broken: None,
+    };
+    let key = |segment: &DimensionSetSegment| serde_json::to_string(segment).expect("finite source places");
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * a.abs().max(b.abs());
+    let at = |p: kentos_contracts::Vec2, q: kentos_geometry_core::vec2::Vec2| close(p.x, q.x) && close(p.y, q.y);
+    let old: HashMap<String, EntityId> = previous
+        .into_iter()
+        .flat_map(|old| &old.members)
+        .map(|m| (key(&m.segment()), m.uid))
+        .collect();
+    let mut members: HashMap<String, (usize, &kentos_contracts::DimensionSetMember)> = HashMap::new();
+    for (k, member) in set.members.iter().enumerate() {
+        let segment = member.segment();
+        if old.get(&key(&segment)).is_some_and(|uid| *uid != member.uid) {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].members[{k}].uid"),
+                "Değişmeyen aktif kaynak çiftinin ölçü kimliği korunmalı.",
+            ));
+        }
+        if members.insert(key(&segment), (k, member)).is_some() {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].members[{k}]"),
+                "Aynı sıradaki kaynak aralığı birden fazla aktif üyeyle yinelenemez.",
+            ));
+        }
+    }
+    for span in &planned.spans {
+        let segment = DimensionSetSegment {
+            row: spans::contract_row(span.row),
+            a: reference(&span.a),
+            b: reference(&span.b),
+        };
+        let Some((k, member)) = members.remove(&key(&segment)) else {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].members"),
+                "Güncel kaynakların ölçü üyeliği eksik. Cephenin ya da mahalin ölçülerini tam tariften aynı işlemde yeniden üretin.",
+            ));
+        };
+        let Some(Entity::Dimension(d)) = records.get(&Uuid::from_bytes(member.uid.0)).map(|r| &r.entity) else {
+            continue;
+        };
+        let field = if !at(d.a, span.a.at) {
+            Some("a")
+        } else if !at(d.b, span.b.at) {
+            Some("b")
+        } else if !close(d.offset, span.offset) {
+            Some("offset")
+        } else if d.style != Some(DimensionStyle::Linear)
+            || !d.angle.is_some_and(|a| close(a, span.angle))
+            || d.c.is_some()
+            || d.za.is_some()
+            || d.zb.is_some()
+        {
+            Some("style")
+        } else {
+            None
+        };
+        let Some(field) = field else { continue };
+        if !full_recipe {
+            return Err(AppError::invalid_at(
+                "project.dimensionSets",
+                "Kaynak veya çizim ölçeği ölçü geometrisini değiştiriyor. Tam ölçü tarifini ve değişen üyelerini project.changes v2 ile aynı işlemde gönderin.",
+            ));
+        }
+        let Some(w) = written.get(&Uuid::from_bytes(member.uid.0)).copied() else {
+            return Err(AppError::invalid_at(
+                format!("project.dimensionSets[{i}].members[{k}].uid"),
+                "Güncel kaynağın veya çizim ölçeğinin değiştirdiği ölçü üyesi aynı işlemde yazılmalı.",
+            ));
+        };
+        return Err(AppError::invalid_at(
+            format!("features[{w}].entity.{field}"),
+            "Ölçü geometrisi güncel kaynak ve sıra tarifiyle uyuşmuyor. Üyeleri tam tariften yeniden üretin.",
+        ));
+    }
+    if !members.is_empty() {
+        return Err(AppError::invalid_at(
+            format!("project.dimensionSets[{i}].members"),
+            "Kaynakta artık bulunmayan ölçü aralıkları aynı işlemde kaldırılmalı.",
+        ));
     }
     Ok(())
 }
@@ -1630,6 +1813,7 @@ pub(crate) async fn commit_in(
             settings_after.plot_scale,
             patch.dimension_sets.is_some(),
             &input.features,
+            &tree,
         )
         .await?;
     }

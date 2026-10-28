@@ -135,6 +135,9 @@ pub struct Select {
     /// The neighbours as the grip would leave them (Topolojik düzenleme,
     /// docs/adr/0160), for the preview.
     follow: Vec<Shape>,
+    /// What follows the grip's objects (a dimension set's members added, changed and removed; an opening, a space):
+    /// drawn with the preview, nothing written (docs/adr/0695, 0729).
+    followers: Preview,
     /// The pointer rests on the grip of a vertex with something to say: its
     /// tag beside the pointer (docs/adr/0142, 0160).
     hover_grip: Option<GripTag>,
@@ -614,6 +617,7 @@ impl Select {
         self.tracking = None;
         self.moved = None;
         self.follow.clear();
+        self.followers = Preview::default();
         self.ghosts.clear();
         self.marks.clear();
         self.mode_tag = None;
@@ -782,8 +786,9 @@ impl Select {
             if tag::mixed(&grips, cx) {
                 return;
             }
-            if let Some(planned) = opening::preview(&grips, dx, dy, g.modes.copy, cx) {
+            if let Some((planned, followers)) = opening::preview(&grips, dx, dy, g.modes.copy, cx) {
                 self.moved = planned.into_iter().next();
+                crate::wall_dimensions::append_followers(&mut self.followers, &followers, cx);
                 return;
             }
             let moved = stretched(cx.doc, &grips, dx, dy);
@@ -795,6 +800,20 @@ impl Select {
                 self.follow = neighbours::neighbours_of(cx, &edits)
                     .map(|n| n.shapes)
                     .unwrap_or_default();
+                // A wall's dimension rows, openings and spaces follow it in the same step: shown before it is written.
+                let updates: Vec<(Slot, kentos_commands::Entity)> =
+                    moved.iter().map(|(slot, _, after)| (*slot, after.clone())).collect();
+                let delta = cx.doc.preview_followers(&updates, &[], &[]);
+                let followers = kentos_commands::DerivedEntitiesPlan {
+                    added: delta.added.into_iter().map(|(_, e)| e).collect(),
+                    updated: delta.updated.into_iter().map(|(_, e)| e).collect(),
+                    removed: delta
+                        .removed
+                        .into_iter()
+                        .filter_map(|s| cx.doc.uid(s).map(|u| u.to_string()))
+                        .collect(),
+                };
+                crate::wall_dimensions::append_followers(&mut self.followers, &followers, cx);
             }
             // The first object as `moved`, the others with the neighbours: all alike, dashed.
             let mut shapes = edits.into_iter().map(|(_, _, after)| after);
@@ -883,6 +902,8 @@ impl Select {
         for shape in self.moved.iter().chain(&self.follow) {
             strokes.extend(Outline::of(shape, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
         }
+        // What follows them: dimensions, openings, spaces (docs/adr/0695, 0729).
+        strokes.extend(self.followers.strokes.iter().cloned());
         // A transform mode's ghosts of the selection (docs/adr/0280).
         strokes.extend(self.ghosts.iter().cloned());
         let from = g.modes.anchor();
@@ -896,6 +917,7 @@ impl Select {
         };
         Some(Preview {
             strokes,
+            texts: self.followers.texts.clone(),
             marks: self.marks.clone(),
             tag: (!lines.is_empty()).then_some(Tag { at, lines }),
             tracking: self.tracking,

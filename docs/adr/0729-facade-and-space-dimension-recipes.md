@@ -164,11 +164,17 @@ düzenlenir, seçili ölçünün “Sıra uzaklığı” en dış yüzden sayıl
 
 ### 8. Bulut
 
-Bu dilimde veritabanında saklanan projeye `span`'lı tarif yazılmaz: sunucu `project.changes`'in tarif denetiminde açık ret
-verir (yol `…[i].span`; “Projeyi dosya olarak saklayın ya da diziyi bağımsız ölçülere dönüştürün”), hiçbir şey yazılmaz.
-Dosya olarak saklanan bulut projesi tarifi KCAD 128 içinde olduğu gibi taşır. Kaynakları ve üyeleri bulmanın kuralı
-masaüstüyle sunucunun ortak modülündedir (`kentos_formats::dimension_spans`: aynı kutu, aynı kat, aynı sıralama); sunucunun
-bu kuralla aynı işlemde denetleyip yazması TODOS.md'de açık iştir.
+Dosya olarak saklanan bulut projesi tarifi KCAD 128 içinde olduğu gibi taşır. Veritabanında saklanan projede
+`project.changes` v2 `span`'lı tarifi masaüstünün kuralıyla, aynı işlemde ve proje kilidi altında denetler
+(`changes::check_span_rows`): tarifin kaynakları, bu işlemin bıraktığı hâliyle bütün akslar, tarifin kutusundaki duvar ve
+açıklıklar (PostGIS `geom && st_makeenvelope(...)`) ve kaynakların barındırdığı açıklıklar okunur; katmanın görünürlüğü
+masaüstünün kuralıdır (kendisi ve bütün üst grupları açık ve dondurulmamış; ağaçta olmayan gösterilir); plan ortak
+modülle kurulur (`kentos_formats::dimension_spans::plan`: aynı kutu, aynı kat, aynı sıralama). Her planlanan aralığın
+bir üyesi olmalı; değişmeyen kaynak çiftinin ölçü kimliği korunur; aynı aralık iki üyeyle yinelenmez; üyenin ölçüsü
+planın ölçtüğünü ölçer (iki nokta, sıra uzaklığı, açı, doğrusal biçim); kaynakta artık olmayan aralık aynı işlemde
+kalkar. Aksi atomik rettir, yol `project.dimensionSets[i].members…` ya da `features[w].entity.<alan>`, hiçbir şey
+yazılmaz. Planlanamayan tarif (eğik ya da silinmiş kaynak, kapanmayan mahal) son geometrisini korur (kopuk dizi, §5) ve
+üyeliği denetlenmez.
 
 ## Sınırlar
 
@@ -177,7 +183,6 @@ bu kuralla aynı işlemde denetleyip yazması TODOS.md'de açık iştir.
 - Sıralar dış cephe kuralıdır: kaynakların dışında, sıraların yanındaki uzak bir bakıcının gördüğü noktalar. Sıra binanın
   içine konursa köşe duvarlarının o yandaki uçları ölçülür (değerler doğrudur, uzatma çizgileri uzun olur); iç ölçü için
   ADR 0711'in kesen çizgisi kullanılır.
-- Veritabanında saklanan bulut projesinde `span`'lı tarif bu dilimde reddedilir (§8).
 - DXF/DWG'ye ölçülerin geometrisi gider, tarif ve üyelik gitmez (ADR 0695'in dışa aktarma sınırı aynen).
 
 ## Doğrulama

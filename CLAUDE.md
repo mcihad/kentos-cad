@@ -39,8 +39,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   tek duvar tarifi bölünürse cepheye döner, kimlik aynı çift ya da nanometre aralığı; karışık kat `mixedSources`.
   `cad.dimensionsets.edit`'in `Sources` ve `reference`'ı, `span`'lı tarifte sıra uzaklığı en dış yüzden. Araçta Kaynak
   türü (Duvar/Cephe/Mahal), Doğrultu, Ölçülen çizgi, Yanlar, Duvarlar/Akslar sırası; Öznitelikler'de kaynak ve sıralar.
-  Veritabanı projesi `span`'ı şimdilik açıkça reddeder (TODOS.md `PG-23`). 70 bağımsız ortak durum
-  (`dimension_spans_cases.py`).
+  Veritabanı projesinde sunucu `project.changes` v2'de tarifi aynı kuralla kilit altında planlar (`check_span_rows`:
+  kaynaklar, akslar, kutudaki duvar ve açıklıklar PostGIS'ten), üyelik eksik ya da ölçü kaymışsa atomik ret; masaüstünün
+  eşitlemesi bütün kaynakları bağlı sayar. 70 bağımsız ortak durum (`dimension_spans_cases.py`).
 
 - **Geçici ölçünün kalanı: aksa mesafe, duvar boyu, iki aday (28 Ekim 2026; [ADR0728](docs/adr/0728-temporary-distances-grids-length-references.md)).**
   Duvar, kolon ve açıklığın geçici ölçüsünde aks ikinci adaydır ve nesnenin ekseninden ölçülür (duvar kenarının iki

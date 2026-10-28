@@ -122,3 +122,19 @@ belgenin planındadır (`dimension_set_plan`), çekirdeğin sıra hesabı deği�
 duvar ya da dizi yeniden planlanınca kalkar; açılışta kendiliğinden silinmez. Doğrulama: `dimension_sets_command_cases.py`
 (109 ortak durum, kural başvuruda da), belge ve araç testleri (bir kenar tek ölçü, pencere silinince 4 üye gider 1 gelir,
 odanın dört kenarı dört ölçü).
+
+## Ek (28 Ekim 2026): kapanan kabul kapıları
+
+- **Tutamaçla önizleme:** açıklığın merkez tutamacı (`select_opening::preview`) ve duvarın Esnet/WallEdit tutamacı
+  sürüklenirken belgenin izleyicilerinin aynı hesabıyla (`Document::preview_followers`) bütün ölçü dizisi üyelerini
+  eklenen, değişen ve kalkan olarak önizler; değerler çizimin yazısıyla görünür, kalkanlar tehlike rengindedir; önizleme
+  hiçbir şey yazmaz (`wall_dimensions::an_opening_grip_previews_the_dimensions_that_follow_it`,
+  `a_wall_grip_previews_the_dimensions_that_follow_it`; etkileşim takımının 807 testi).
+- **PDF metni:** yazının halesi aynı harflerin altına konturla basılır; boş `ActualText`'li işaretli içerik (PDF 1.5)
+  okuyucuların onu ikinci kez almasını önler. `pdftotext -raw` eski ifraz paftasında 225 sözcük (hale yazıları iki
+  kez), yenisinde 161 sözcük verir; 64 halenin hepsi sarılıdır. Paftanın altın kaydı yenilendi
+  (`fixtures/sheet/v1/pdf/ifraz.json`), pafta ve çizici takımları geçer.
+- **Veritabanı:** `kentos-application`'ın bütün takımı gerçek PostGIS'te (`KENTOS_TEST_DB=required`) 189 testle geçer;
+  cephe ve mahal tarifinin sunucu denetimi ADR 0729 §8'dedir.
+
+Çoklu pafta, sığmayan yazının yeri, toplamın yuvarlama kuralı ve tam grafik kopyalama ADR 0730'dadır.
