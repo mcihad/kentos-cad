@@ -3,7 +3,8 @@
 //! tag's of docs/adr/0344 §5, written through `cad.tags.edit`.
 
 use kentos_commands::{
-    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnShape, Entity, GridBubbles, TagChange, TagShape,
+    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnAnchor, ColumnShape, Entity, GridBubbles, TagChange,
+    TagShape,
 };
 use kentos_domain::Slot;
 use kentos_interaction::{Format, fixed};
@@ -248,6 +249,12 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                         ArchField::BubbleSize,
                     )))),
             );
+            // Kesik aks (docs/adr/0725 §5): its ends on paper; empty or 0 the whole grid.
+            out.push(match x.ends {
+                Some(v) => Row::figure("Kesik uçlar", fixed(v, 1)).unit("mm"),
+                None => Row::text("Kesik uçlar", "Yok"),
+            }
+            .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Ends)))));
             if let [a, b] = x.pts.as_slice() {
                 out.push(
                     Row::figure("Uzunluk", f.length_bare((b.x - a.x).hypot(b.y - a.y)))
@@ -268,6 +275,9 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                             slot,
                             ArchChange {
                                 shape: Some(s),
+                                // An L takes legs half its sides until they are typed (docs/adr/0725 §3).
+                                legs: (s == ColumnShape::LShape && x.legs.is_none())
+                                    .then(|| [x.depth() / 2.0, x.width / 2.0]),
                                 ..Default::default()
                             },
                         ),
@@ -288,14 +298,39 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 x.width,
                 ArchField::Width,
             ));
-            if x.shape == ColumnShape::Rect {
+            if x.shape != ColumnShape::Round {
                 out.push(length("Boy", x.depth(), ArchField::Depth));
+            }
+            if let Some([a, b]) = x.legs {
+                out.push(length("Alt kol kalınlığı", a, ArchField::LegA));
+                out.push(length("Sol kol kalınlığı", b, ArchField::LegB));
+            }
+            if x.shape != ColumnShape::Round {
                 out.push(
                     Row::figure("Dönüş", fixed(x.rotation.to_degrees(), 2))
                         .unit("°")
                         .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Turn)))),
                 );
             }
+            // Hiza (docs/adr/0725 §2): which point of its box its place is; its place stays, its body moves.
+            let anchors = ColumnAnchor::ALL
+                .iter()
+                .map(|&a| {
+                    pick(
+                        a.label().to_owned(),
+                        a == x.anchor,
+                        set(
+                            slot,
+                            ArchChange {
+                                anchor: Some(a),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(Row::text("Hiza", x.anchor.label()).editor(edit(select(x.anchor.label().to_owned(), anchors))));
             out.push(text(
                 "Kolon türü",
                 x.kind.clone().unwrap_or_default(),

@@ -639,11 +639,14 @@ pub const SCHEMA_WITH_RAMP_LEVELS: u32 = 124;
 /// Schema 125 (docs/adr/0724): a stair whose rise is its level's height (`heightFromLevel`) or with a centre post
 /// (`post`), written only when one is.
 pub const SCHEMA_WITH_STAIR_LEVELS: u32 = 125;
+/// Schema 126 (docs/adr/0725): a gapped grid (`ends`), a column with an anchor (`anchor`), an L column (`lShape` and its
+/// `legs`), written only when one is.
+pub const SCHEMA_WITH_GRID_COLUMN_FORMS: u32 = 126;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 124] = [
+pub const SCHEMAS: [u32; 125] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -768,6 +771,7 @@ pub const SCHEMAS: [u32; 124] = [
     SCHEMA_WITH_SLABS,
     SCHEMA_WITH_RAMP_LEVELS,
     SCHEMA_WITH_STAIR_LEVELS,
+    SCHEMA_WITH_GRID_COLUMN_FORMS,
 ];
 
 /// The file a drawing is saved as.

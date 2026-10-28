@@ -26,6 +26,7 @@ pub fn core_grid(g: &GridFields) -> Shape {
                 GridBubbles::None => Bubbles::None,
             },
             bubble_size: g.bubble_size,
+            ends: g.ends,
         },
     }
 }
@@ -38,7 +39,9 @@ pub fn core_column(c: &ColumnFields) -> Shape {
             round: c.shape == ColumnShape::Round,
             width: c.width,
             depth: c.depth,
+            legs: c.legs,
             rotation: c.rotation,
+            anchor: c.anchor.unit(),
             fill: c.fill,
             tag: c.tag.clone(),
             place: c.place.clone(),
@@ -206,10 +209,15 @@ pub fn simple(e: &Entity) -> Option<Entity> {
     };
     Some(match e {
         Entity::Grid(g) => Entity::Polyline(path(&g.base, g.grid.pts.clone(), g.grid.bulges.clone())),
+        // Round its box's middle, whatever point its place is (docs/adr/0725 §2).
         Entity::Column(c) if c.column.shape == ColumnShape::Round => {
+            let Shape::Column { at, column } = core_column(&c.column) else {
+                return None;
+            };
+            let centre = kentos_geometry_core::geom::arch::column_center(at, &column);
             Entity::Circle(kentos_contracts::CircleEntity {
                 base: c.base.clone(),
-                c: c.column.at,
+                c: Vec2 { x: centre.x, y: centre.y },
                 r: c.column.width / 2.0,
             })
         }

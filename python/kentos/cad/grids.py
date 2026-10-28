@@ -17,6 +17,7 @@ from .types import (  # noqa: F401
     GridsCreated,
     GridsPlan,
     NewGrid,
+    RadialGridSystem,
 )
 
 if TYPE_CHECKING:
@@ -30,7 +31,16 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
     akslar: ilki from → to, her sonraki spacings'teki aralık kadar side (left, right)
     yana; ilk etiket start. Etiket verilmezse bir öncekinin sıradakidir: harfler A … H,
     J … N, P … Z, AA (I ve O atlanır), sayılar 1, 2 …; çağrının ilki çizimin son
-    aksından sonrakini, aks yoksa A alır. Aksın çizimi (kesikli çizgi, balonlar, etiket)
+    aksından sonrakini, aks yoksa A alır. radial (docs/adr/0725 §1): eğrisel aks ağı:
+    center'dan radyal akslar, ilki angle doğrultusunda, sonrakiler turns'teki açılar
+    kadar (radyan; hepsi aynı yöne, toplamı tam turdan az), center çevresinde yaylar,
+    ilki radius'ta, sonrakiler rings kadar dışarıda; her aks extension (öntanımlı 1.5 m)
+    kadar uzar: radyal ilk yaydan o kadar içeriden (merkezi geçmeden) son yaydan o kadar
+    dışarıya, yay kendi boyunca dış radyallerden öteye (kalan turun dörtte birini
+    geçmeden); etiketler radialStart (1) ve arcStart (A); columns kesişimlere yay yay
+    akslara bağlı kolonlar, eni radyal aksı boyunca.                       ends (aksın,
+    serinin, ağların): kesik aks, yalnız uçlarında kâğıtta bu kadar mm (0'dan büyük, en
+    çok 1000).                       Aksın çizimi (kesikli çizgi, balonlar, etiket)
     alanlarından türer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
     uyarıyla yazılır.
     """
@@ -53,6 +63,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         expected_revision: str | None | Unset = UNSET,
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        radial: RadialGridSystem | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
         system: GridSystem | None | Unset = UNSET,
         request_id: str | None = None,
@@ -64,8 +75,17 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         sonraki spacings'teki aralık kadar side (left, right) yana; ilk etiket start. Etiket
         verilmezse bir öncekinin sıradakidir: harfler A … H, J … N, P … Z, AA (I ve O
         atlanır), sayılar 1, 2 …; çağrının ilki çizimin son aksından sonrakini, aks yoksa A
-        alır. Aksın çizimi (kesikli çizgi, balonlar, etiket) alanlarından türer. Katman
-        açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        alır. radial (docs/adr/0725 §1): eğrisel aks ağı: center'dan radyal akslar, ilki
+        angle doğrultusunda, sonrakiler turns'teki açılar kadar (radyan; hepsi aynı yöne,
+        toplamı tam turdan az), center çevresinde yaylar, ilki radius'ta, sonrakiler rings
+        kadar dışarıda; her aks extension (öntanımlı 1.5 m) kadar uzar: radyal ilk yaydan o
+        kadar içeriden (merkezi geçmeden) son yaydan o kadar dışarıya, yay kendi boyunca dış
+        radyallerden öteye (kalan turun dörtte birini geçmeden); etiketler radialStart (1)
+        ve arcStart (A); columns kesişimlere yay yay akslara bağlı kolonlar, eni radyal aksı
+        boyunca.                       ends (aksın, serinin, ağların): kesik aks, yalnız
+        uçlarında kâğıtta bu kadar mm (0'dan büyük, en çok 1000).
+        Aksın çizimi (kesikli çizgi, balonlar, etiket) alanlarından türer. Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.
@@ -74,6 +94,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             expected_revision:
             grids:
             line_weight: Unit: paper-mm.
+            radial:
             series:
             system:
             request_id: Names this write: sent again with the same call it is answered as
@@ -94,6 +115,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             expected_revision=expected_revision,
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
+            radial=radial,
             series=series,
             system=system,
         ), request_id=request_id, expected=expected)
@@ -108,6 +130,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         expected_revision: str | None | Unset = UNSET,
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        radial: RadialGridSystem | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
         system: GridSystem | None | Unset = UNSET,
     ) -> GridsPlan:
@@ -120,6 +143,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             expected_revision=expected_revision,
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
+            radial=radial,
             series=series,
             system=system,
         ))
@@ -134,6 +158,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         expected_revision: str | None | Unset = UNSET,
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        radial: RadialGridSystem | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
         system: GridSystem | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -146,6 +171,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             expected_revision=expected_revision,
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
+            radial=radial,
             series=series,
             system=system,
         ))
@@ -160,6 +186,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
         expected_revision: str | None | Unset = UNSET,
         grids: Sequence[NewGrid] | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        radial: RadialGridSystem | None | Unset = UNSET,
         series: GridSeries | None | Unset = UNSET,
         system: GridSystem | None | Unset = UNSET,
         op: str = "execute",
@@ -177,6 +204,7 @@ class _GridsCreate(LocalCommand[GridsCreate, GridsCreated, GridsPlan]):
             expected_revision=expected_revision,
             grids=_opt(grids, lambda x: list(x)),
             line_weight=line_weight,
+            radial=radial,
             series=series,
             system=system,
         ), op=op, request_id=request_id, expected=expected)

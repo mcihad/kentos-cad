@@ -19,4 +19,8 @@ side?: SeriesSide,
 /**
  * The first's label; absent: as a grid with none.
  */
-start?: string, bubbles?: GridBubbles, bubbleSize?: number, arch?: ArchInfo, };
+start?: string, bubbles?: GridBubbles, bubbleSize?: number, 
+/**
+ * A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+ */
+ends?: number, arch?: ArchInfo, };

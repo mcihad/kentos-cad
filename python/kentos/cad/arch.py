@@ -33,7 +33,10 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni
     2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number),
     tags (tag_target_gone), dimensions (arch_dimension_set_broken,
-    arch_dimension_broken), columns (arch_column_grid_gone), viewmarks
+    arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve
+    sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı
+    olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır
+    cad.arch.edit), columns (arch_column_grid_gone), viewmarks
     (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon,
     merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
     düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
@@ -79,7 +82,10 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük
         arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow),
         numbers (tag_duplicate_number), tags (tag_target_gone), dimensions
-        (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone),
+        (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı
+        katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi
+        üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü
+        sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone),
         viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal,
         kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
         düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
@@ -212,21 +218,22 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     """``cad.arch.edit`` v1. Mimari nesneyi düzenle: Kalıcı kimlikleri verilen aks, kolon,
     merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”,
     hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles,
-    bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin
-    width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise,
-    slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır,
-    kot yerinde kalır; base ile birlikte verilmez), landing; hepsinin level, phase; null
-    alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar
-    ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı
-    kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,
-    merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
-    distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3
-    solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik
-    kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı
-    kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da
-    eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
-    bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
-    nesneleri olacakları gibi gösterir.
+    bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır),
+    width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation,
+    type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut,
+    numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset
+    (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez),
+    landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
+    field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
+    start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
+    (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach
+    (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side —
+    0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance
+    metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı
+    mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o
+    yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma
+    nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve
+    rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.arch.edit"
@@ -250,22 +257,23 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     ) -> ArchEdited:
         """Mimari nesneyi düzenle: Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları
         değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri.
-        operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape,
-        width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight,
-        tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını
-        kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base
-        ile birlikte verilmez), landing; hepsinin level, phase; null alanı kaldırır;
-        nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar,
-        tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum
-        yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın
-        kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek
-        kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı
-        paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit;
-        cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon
-        olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column,
-        sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder.
-        Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi
-        gösterir.
+        operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün
+        aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor
+        (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill; merdivenin
+        width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise,
+        slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır,
+        kot yerinde kalır; base ile birlikte verilmez), landing; hepsinin level, phase; null
+        alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar
+        ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı
+        kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,
+        merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
+        distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3
+        solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik
+        kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı
+        kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da
+        eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
+        bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
+        nesneleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.

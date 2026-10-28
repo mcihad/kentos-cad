@@ -1,0 +1,155 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kesik aks, hizalı ve L kolon",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "grid",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -2.0
+        },
+        {
+          "x": 0.0,
+          "y": 14.0
+        }
+      ],
+      "name": "A",
+      "ends": 12.0
+    },
+    {
+      "kind": "grid",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": -2.0,
+          "y": 0.0
+        },
+        {
+          "x": 14.0,
+          "y": 0.0
+        }
+      ],
+      "name": "1"
+    },
+    {
+      "kind": "grid",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 10.0
+        }
+      ],
+      "bulges": [
+        0.41421356237309503,
+        0.0
+      ],
+      "name": "R",
+      "ends": 8.0
+    },
+    {
+      "kind": "column",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "width": 0.3,
+      "depth": 0.5,
+      "anchor": "bottomLeft",
+      "grids": [
+        "0192f5a1-7250-7000-8000-000000000001",
+        "0192f5a1-7250-7000-8000-000000000002"
+      ],
+      "place": "A-1"
+    },
+    {
+      "kind": "column",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 6.0,
+        "y": 0.0
+      },
+      "shape": "lShape",
+      "width": 0.6,
+      "depth": 0.5,
+      "legs": [
+        0.25,
+        0.3
+      ],
+      "rotation": 0.5,
+      "anchor": "top",
+      "fill": true
+    },
+    {
+      "kind": "column",
+      "id": 6,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 12.0,
+        "y": 0.0
+      },
+      "width": 0.4
+    }
+  ],
+  "uids": [
+    "0192f5a1-7250-7000-8000-000000000001",
+    "0192f5a1-7250-7000-8000-000000000002",
+    "0192f5a1-7250-7000-8000-000000000003",
+    "0192f5a1-7250-7000-8000-000000000004",
+    "0192f5a1-7250-7000-8000-000000000005",
+    "0192f5a1-7250-7000-8000-000000000006"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

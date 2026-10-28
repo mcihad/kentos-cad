@@ -3,7 +3,9 @@
 //!
 //! - A grid: its line or arc with its own line type (dash-dot), a circle bubble past each end it has one at, touching the
 //!   end along its tangent, and its label centred in the bubble.
-//! - A column: a rectangle or a circle round its centre, filled when it says so, its tag and place beside its corner.
+//! - A grid gapped (docs/adr/0725 §5): only its end segments, each so long on paper, when it is longer than both.
+//! - A column: a rectangle, a circle or an L round its box's middle, its reference point (where its grids cross) at one
+//!   of its box's nine points (docs/adr/0725 §2, §3), filled when it says so, its tag and place beside its corner.
 //! - A stair or a ramp: its walking line's band (half its width each side, mitred at the turns), a landing at every turn
 //!   (its length along the walking line, half each side of the turn), a stair's riser lines from its start a tread apart
 //!   with a riser that falls inside a landing moved to the landing's end, its cut line and the arrow up its walking line;
@@ -103,10 +105,12 @@ pub struct GridSpec {
     pub label: String,
     pub bubbles: Bubbles,
     pub bubble_size: Option<f64>,
+    /// A gapped grid's end segments, each this long on paper, millimetres (docs/adr/0725 §5).
+    pub ends: Option<f64>,
 }
 
 impl crate::api::json::Flat for GridSpec {
-    const NAMES: &'static [&'static str] = &["name", "bubbles", "bubbleSize"];
+    const NAMES: &'static [&'static str] = &["name", "bubbles", "bubbleSize", "ends"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         let bubbles = match word(v, "bubbles").as_deref() {
@@ -117,6 +121,7 @@ impl crate::api::json::Flat for GridSpec {
             label: word(v, "name").unwrap_or_default(),
             bubbles,
             bubble_size: number(v, "bubbleSize")?,
+            ends: number(v, "ends")?,
         })
     }
 
@@ -128,36 +133,82 @@ impl crate::api::json::Flat for GridSpec {
         if let Some(s) = &self.bubble_size {
             field(out, first, "bubbleSize", s);
         }
+        if let Some(e) = &self.ends {
+            field(out, first, "ends", e);
+        }
     }
 }
 to_json_flat!(GridSpec);
 
-/// A column's fields beside its centre.
+/// A column's anchors (docs/adr/0725 §2): their names and their places on the box, halves of its width and depth from
+/// its middle.
+const ANCHORS: [(&str, (i8, i8)); 9] = [
+    ("center", (0, 0)),
+    ("left", (-1, 0)),
+    ("right", (1, 0)),
+    ("bottom", (0, -1)),
+    ("top", (0, 1)),
+    ("bottomLeft", (-1, -1)),
+    ("bottomRight", (1, -1)),
+    ("topLeft", (-1, 1)),
+    ("topRight", (1, 1)),
+];
+
+/// A column's fields beside its reference point.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ColumnSpec {
     pub round: bool,
     pub width: f64,
     pub depth: Option<f64>,
+    /// An L's legs (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its depth; an L
+    /// when given.
+    pub legs: Option<[f64; 2]>,
     pub rotation: f64,
+    /// Where its reference point is on its box (docs/adr/0725 §2): halves of its width and depth from its middle, −1,
+    /// 0 or 1 each; its middle by default.
+    pub anchor: (i8, i8),
     pub fill: bool,
     pub tag: Option<String>,
     pub place: Option<String>,
 }
 
 impl crate::api::json::Flat for ColumnSpec {
-    const NAMES: &'static [&'static str] = &["shape", "width", "depth", "rotation", "fill", "tag", "place"];
+    const NAMES: &'static [&'static str] =
+        &["shape", "width", "depth", "legs", "rotation", "anchor", "fill", "tag", "place"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
-        let round = match word(v, "shape").as_deref() {
-            None | Some("rect") => false,
-            Some("round") => true,
+        let (round, l) = match word(v, "shape").as_deref() {
+            None | Some("rect") => (false, false),
+            Some("round") => (true, false),
+            Some("lShape") => (false, true),
             Some(s) => return Err(format!("bilinmeyen kolon biçimi “{s}”")),
+        };
+        let legs = match v.get("legs") {
+            Json::Null => None,
+            Json::Arr(a) => match a.as_slice() {
+                [Json::Num(x), Json::Num(y)] => Some([*x, *y]),
+                _ => return Err("L kolonun kolları iki sayı olmalı".into()),
+            },
+            _ => return Err("L kolonun kolları iki sayı olmalı".into()),
+        };
+        if l != legs.is_some() {
+            return Err("yalnız L kolonun kolları olur, L kolonun da olmalı".into());
+        }
+        let anchor = match word(v, "anchor").as_deref() {
+            None => (0, 0),
+            Some(s) => ANCHORS
+                .iter()
+                .find(|(n, _)| *n == s)
+                .map(|(_, u)| *u)
+                .ok_or_else(|| format!("bilinmeyen kolon hizası “{s}”"))?,
         };
         Ok(ColumnSpec {
             round,
             width: number(v, "width")?.unwrap_or(0.0),
             depth: number(v, "depth")?,
+            legs,
             rotation: number(v, "rotation")?.unwrap_or(0.0),
+            anchor,
             fill: matches!(v.get("fill"), Json::Bool(true)),
             tag: word(v, "tag"),
             place: word(v, "place"),
@@ -167,13 +218,23 @@ impl crate::api::json::Flat for ColumnSpec {
     fn write_flat(&self, out: &mut String, first: &mut bool) {
         if self.round {
             field(out, first, "shape", "round");
+        } else if self.legs.is_some() {
+            field(out, first, "shape", "lShape");
         }
         field(out, first, "width", &self.width);
         if let Some(d) = &self.depth {
             field(out, first, "depth", d);
         }
+        if let Some(legs) = &self.legs {
+            field(out, first, "legs", legs);
+        }
         if self.rotation != 0.0 {
             field(out, first, "rotation", &self.rotation);
+        }
+        if self.anchor != (0, 0)
+            && let Some((name, _)) = ANCHORS.iter().find(|(_, u)| *u == self.anchor)
+        {
+            field(out, first, "anchor", *name);
         }
         if self.fill {
             field(out, first, "fill", &true);
@@ -462,7 +523,57 @@ pub fn grid_tangents(pts: &[Vec2], bulges: Option<&[f64]>) -> Option<(Vec2, Vec2
     Some((Vec2::new(-start.x, -start.y), end))
 }
 
-/// A grid's pieces at 1:`scale`: its path (dash-dot), and a bubble and its label at each end it has one.
+/// A two-point path from `a` to `b` with the bulge `k`: a line, or a polyline when it bends.
+fn bent(a: Vec2, b: Vec2, k: f64) -> Shape {
+    if k == 0.0 {
+        return line(a, b);
+    }
+    Shape::Polyline {
+        pts: vec![a, b],
+        bulges: Some(vec![k, 0.0]),
+        holes: None,
+        parts: None,
+        closed: false,
+        widths: None,
+    }
+}
+
+/// A gapped grid's two end segments (docs/adr/0725 §5): `l` metres from each end along its line or arc; none when it is
+/// no longer than both.
+pub fn grid_end_segments(pts: &[Vec2], bulges: Option<&[f64]>, l: f64) -> Option<[Shape; 2]> {
+    let [a, b] = pts else { return None };
+    let k = bulges.and_then(|x| x.first().copied()).unwrap_or(0.0);
+    if !(l > 0.0) {
+        return None;
+    }
+    match crate::geom::bulge::bulge_arc(*a, *b, k) {
+        Some(g) => {
+            let length = g.r * g.sweep.abs();
+            if !(length > 2.0 * l) {
+                return None;
+            }
+            let part = g.sweep * (l / length);
+            let at = |angle: f64| Vec2::new(g.c.x + g.r * cos(angle), g.c.y + g.r * sin(angle));
+            let k1 = crate::jsmath::tan(part / 4.0);
+            Some([
+                bent(*a, at(g.a0 + part), k1),
+                bent(at(g.a0 + g.sweep - part), *b, k1),
+            ])
+        }
+        None => {
+            let length = js_hypot(b.x - a.x, b.y - a.y);
+            if !(length > 2.0 * l) {
+                return None;
+            }
+            let t = l / length;
+            let on = |t: f64| Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+            Some([line(*a, on(t)), line(on(1.0 - t), *b)])
+        }
+    }
+}
+
+/// A grid's pieces at 1:`scale`: its path (dash-dot), or a gapped grid's end segments, and a bubble and its label at
+/// each end it has one.
 pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     let path = match bulges.filter(|b| b.iter().any(|x| *x != 0.0)) {
@@ -477,9 +588,15 @@ pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale:
         None if pts.len() == 2 => line(pts[0], pts[1]),
         None => return out,
     };
-    let mut p = piece(path);
-    p.stroke.line_type = Some("dashdot".into());
-    out.push(p);
+    let lines = match spec.ends.and_then(|e| grid_end_segments(pts, bulges, e * scale / 1000.0)) {
+        Some(ends) => ends.to_vec(),
+        None => vec![path],
+    };
+    for l in lines {
+        let mut p = piece(l);
+        p.stroke.line_type = Some("dashdot".into());
+        out.push(p);
+    }
     let Some((back, on)) = grid_tangents(pts, bulges) else {
         return out;
     };
@@ -498,16 +615,59 @@ pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale:
     out
 }
 
-/// A column's corners: a rectangle's four, counter-clockwise from its lower left before its turn.
-pub fn column_corners(at: Vec2, spec: &ColumnSpec) -> Vec<Vec2> {
-    let (w, d) = (spec.width / 2.0, spec.depth.unwrap_or(spec.width) / 2.0);
-    [(-w, -d), (w, -d), (w, d), (-w, d)]
-        .into_iter()
-        .map(|(x, y)| {
+/// Half a column's box: half its width, half its depth (a round column's: half its width both ways).
+fn halves(spec: &ColumnSpec) -> (f64, f64) {
+    let w = spec.width / 2.0;
+    if spec.round {
+        (w, w)
+    } else {
+        (w, spec.depth.unwrap_or(spec.width) / 2.0)
+    }
+}
+
+/// A column's box's middle (docs/adr/0725 §2): its reference point less its anchor's place on the box, turned.
+pub fn column_center(at: Vec2, spec: &ColumnSpec) -> Vec2 {
+    if spec.anchor == (0, 0) {
+        return at;
+    }
+    let (w, d) = halves(spec);
+    let off = turned(
+        Vec2::new(f64::from(spec.anchor.0) * w, f64::from(spec.anchor.1) * d),
+        spec.rotation,
+    );
+    Vec2::new(at.x - off.x, at.y - off.y)
+}
+
+/// Points on a column's box, as halves of its width and depth from its middle, in the world.
+fn on_column(at: Vec2, spec: &ColumnSpec, local: &[(f64, f64)]) -> Vec<Vec2> {
+    let c = column_center(at, spec);
+    local
+        .iter()
+        .map(|&(x, y)| {
             let p = turned(Vec2::new(x, y), spec.rotation);
-            Vec2::new(at.x + p.x, at.y + p.y)
+            Vec2::new(c.x + p.x, c.y + p.y)
         })
         .collect()
+}
+
+/// A column's box: its four corners counter-clockwise from its lower left before its turn; a round column's square.
+pub fn column_box(at: Vec2, spec: &ColumnSpec) -> Vec<Vec2> {
+    let (w, d) = halves(spec);
+    on_column(at, spec, &[(-w, -d), (w, -d), (w, d), (-w, d)])
+}
+
+/// A column's corners counter-clockwise from its box's lower left before its turn: a rectangle's four; an L's six, its
+/// legs along its box's lower and left sides (docs/adr/0725 §3).
+pub fn column_corners(at: Vec2, spec: &ColumnSpec) -> Vec<Vec2> {
+    let (w, d) = halves(spec);
+    match spec.legs {
+        Some([a, b]) => on_column(
+            at,
+            spec,
+            &[(-w, -d), (w, -d), (w, -d + a), (-w + b, -d + a), (-w + b, d), (-w, d)],
+        ),
+        None => on_column(at, spec, &[(-w, -d), (w, -d), (w, d), (-w, d)]),
+    }
 }
 
 /// The physical column footprint for area calculations, independent of fill,
@@ -521,13 +681,15 @@ pub fn column_area(at: Vec2, spec: &ColumnSpec) -> Option<crate::geom::arrangeme
         .all(|v| v.is_finite())
         || spec.width <= 0.0
         || depth <= 0.0
+        || spec.legs.is_some_and(|[a, b]| !(a > 0.0 && a < depth && b > 0.0 && b < spec.width))
     {
         return None;
     }
     let outer = if spec.round {
         let r = spec.width / 2.0;
+        let c = column_center(at, spec);
         Ring {
-            pts: vec![Vec2::new(at.x + r, at.y), Vec2::new(at.x - r, at.y)],
+            pts: vec![Vec2::new(c.x + r, c.y), Vec2::new(c.x - r, c.y)],
             bulges: Some(vec![1.0, 1.0]),
         }
     } else {
@@ -556,8 +718,9 @@ fn circle_ring(c: Vec2, r: f64) -> Vec<Vec2> {
 pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     let r = spec.width / 2.0;
+    let centre = column_center(at, spec);
     let (ring, outline) = if spec.round {
-        (circle_ring(at, r), Shape::Circle { c: at, r })
+        (circle_ring(centre, r), Shape::Circle { c: centre, r })
     } else {
         let c = column_corners(at, spec);
         (c.clone(), polygon(c))
@@ -579,10 +742,10 @@ pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
     if !words.is_empty() {
         let h = LABEL_MM * scale / 1000.0;
         let corner = if spec.round {
-            Vec2::new(at.x + r, at.y + r)
+            Vec2::new(centre.x + r, centre.y + r)
         } else {
             let (w, d) = (spec.width / 2.0, spec.depth.unwrap_or(spec.width) / 2.0);
-            Vec2::new(at.x + crate::jsmath::js_max(w, d), at.y + crate::jsmath::js_max(w, d))
+            Vec2::new(centre.x + crate::jsmath::js_max(w, d), centre.y + crate::jsmath::js_max(w, d))
         };
         let p = Vec2::new(corner.x + h * 0.4, corner.y + h * 0.4);
         out.push(piece(text(p, words.join("\n"), h, TextAlign::BottomLeft)));
@@ -1591,7 +1754,7 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         Shape::Column { at, column } => {
             if column.round {
                 Shape::Circle {
-                    c: *at,
+                    c: column_center(*at, column),
                     r: column.width / 2.0,
                 }
             } else {

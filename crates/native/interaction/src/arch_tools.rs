@@ -4,8 +4,10 @@
 //!
 //! - Aks: two clicks a grid, its label the next one (A, B … or Etiket (E) typed); Seri (S) types the spacings
 //!   (“6 6 4.5”): the first grid's two points, then a click on the side the others go.
-//! - Kolon: a click its centre; near where two grids cross it stands there, tied to them. Biçim (B), En (E), Boy (Y),
-//!   Döndür (D), Etiket (K); Aks kesişimleri (A) puts one at every crossing of the grids shown.
+//! - Aks: Kesik (C) draws only its ends so long on paper (docs/adr/0725 §5).
+//! - Kolon: a click its reference point; near where two grids cross it stands there, tied to them. Biçim (B:
+//!   Dikdörtgen, Daire, L), En (E), Boy (Y), L kolları (L), Döndür (D), Hiza (H: which of its box's nine points stands
+//!   there, docs/adr/0725 §2), Etiket (K); Aks kesişimleri (A) puts one at every crossing of the grids shown.
 //! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y; Etkin
 //!   kat's height until one is typed, docs/adr/0713): En fazla
 //!   rıht (R), Rıht sayısı (S, else from the height), Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar
@@ -16,7 +18,7 @@
 //! - Aksları numarala: Başlangıç (B), then the grids clicked in order; Enter writes.
 
 use kentos_commands::{
-    ArchEdit, ArchOperation, ColumnCrossings, ColumnShape, ColumnsCreate, CommandResult, Entity,
+    ArchEdit, ArchOperation, ColumnAnchor, ColumnCrossings, ColumnShape, ColumnsCreate, CommandResult, Entity,
     GridSeries, GridsCreate, NewColumn, NewGrid, NewRamp, NewStair, RampsCreate, Railings,
     SeriesSide, StairsCreate,
 };
@@ -121,6 +123,10 @@ enum Ask {
     Cut,
     /// A curved stair's centre post (docs/adr/0724 §3).
     Post,
+    /// An L column's legs (docs/adr/0725 §3).
+    Legs,
+    /// A gapped grid's ends (docs/adr/0725 §5).
+    Ends,
 }
 
 fn ask_words(ask: Ask) -> &'static str {
@@ -141,6 +147,30 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Rise => "yükseklik farkını yazın",
         Ask::Slope => "eğimi yüzde olarak yazın",
         Ask::Post => "merkez direğinin çapını yazın (0: yok)",
+        Ask::Legs => "L kolonun iki kolunun kalınlığını yazın (0.25 0.30; boş: yarısı)",
+        Ask::Ends => "kesik aksın uçlarını kâğıtta mm olarak yazın (boş ya da 0: bütün aks)",
+    }
+}
+
+/// A gapped grid's ends as a setting shows them.
+pub(crate) fn ends_words(ends: Option<f64>) -> String {
+    ends.map_or_else(|| "Yok".into(), |v| format!("{} mm", crate::fixed(v, 1)))
+}
+
+/// A gapped grid's ends typed: empty, “yok” or 0 none; else millimetres above 0, at most 1000.
+pub(crate) fn read_ends(text: &str) -> Option<Option<f64>> {
+    let t = upper_tr(js_trim(text));
+    let t = t.trim_end_matches("MM").trim();
+    if t.is_empty() || t == "YOK" {
+        return Some(None);
+    }
+    let v = parse_number(t)?;
+    if v == 0.0 {
+        Some(None)
+    } else if v.is_finite() && v > 0.0 && v <= 1000.0 {
+        Some(Some(v))
+    } else {
+        None
     }
 }
 
@@ -151,6 +181,8 @@ fn ask_words(ask: Ask) -> &'static str {
 pub struct GridTool {
     label: Option<String>,
     spacings: Option<Vec<f64>>,
+    /// A gapped grid's ends, millimetres on paper (docs/adr/0725 §5).
+    ends: Option<f64>,
     pts: Vec<Vec2>,
     hover: Option<Vec2>,
     ask: Option<Ask>,
@@ -171,6 +203,7 @@ impl GridTool {
             grids: Vec::new(),
             series: None,
             system: None,
+            radial: None,
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
             expected_revision: None,
@@ -179,6 +212,7 @@ impl GridTool {
             (None, [a]) => input.grids.push(NewGrid {
                 pts: points::wire_all(&[*a, at]),
                 label: self.label.clone(),
+                ends: self.ends,
                 ..NewGrid::default()
             }),
             (Some(spacings), [a, b]) => {
@@ -195,12 +229,14 @@ impl GridTool {
                     start: self.label.clone(),
                     bubbles: None,
                     bubble_size: None,
+                    ends: self.ends,
                     arch: None,
                 });
             }
             (Some(_), [a]) => input.grids.push(NewGrid {
                 pts: points::wire_all(&[*a, at]),
                 label: self.label.clone(),
+                ends: self.ends,
                 ..NewGrid::default()
             }),
             _ => return None,
@@ -297,7 +333,76 @@ impl Tool for GridTool {
                     },
                 ),
             )
+            .option_with("Kesik", "C", ends_words(self.ends))
             .option("Bitir", "Enter")
+    }
+
+    fn settings(&self, f: &Format) -> Vec<Setting> {
+        vec![
+            Setting::text("E", "Etiket", self.label.clone().unwrap_or_else(|| "Sıradaki".into())),
+            Setting::text(
+                "S",
+                "Seri aralıkları",
+                self.spacings.as_ref().map_or_else(
+                    || "Yok".into(),
+                    |s| s.iter().map(|d| f.plain(*d)).collect::<Vec<_>>().join(" "),
+                ),
+            ),
+            Setting::text("C", "Kesik uçlar", ends_words(self.ends)),
+            Setting::hint(
+                "H",
+                "Aks",
+                "Seri: ilk aksın iki noktası, sonra öbür aksların gideceği yan. Kesik aks yalnız uçlarında bu \
+                 boyda (kâğıtta) çizilir; ortası boş kalır.",
+            ),
+        ]
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let ok = match key {
+            "E" => {
+                let t = js_trim(value);
+                self.label = (!t.is_empty() && upper_tr(t) != "SIRADAKİ").then(|| t.to_owned());
+                true
+            }
+            "S" => {
+                let words = upper_tr(js_trim(value));
+                if words.is_empty() || words == "YOK" {
+                    self.spacings = None;
+                    true
+                } else {
+                    match crate::grid_system::spacings(value, |t| cx.typed_length(t)) {
+                        Some(l) if !l.is_empty() => {
+                            self.spacings = Some(l);
+                            true
+                        }
+                        _ => false,
+                    }
+                }
+            }
+            "C" => match read_ends(value) {
+                Some(v) => {
+                    self.ends = v;
+                    true
+                }
+                None => false,
+            },
+            _ => false,
+        };
+        if ok {
+            self.ask = None;
+            self.see(cx);
+        } else {
+            cx.say(
+                Level::Warn,
+                match key {
+                    "S" => "Aralıkları sıfırdan büyük uzunluklar olarak boşlukla yazın: 6 6 4.5, 3*6 ya da 18/3.",
+                    "C" => "Kesik uçları 0'dan büyük, en çok 1000 mm yazın; boş ya da 0 bütün aksı çizer.",
+                    _ => "Geçerli bir değer yazın.",
+                },
+            );
+        }
+        ok
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -338,23 +443,21 @@ impl Tool for GridTool {
                     let t = js_trim(text);
                     self.label = (!t.is_empty()).then(|| t.to_owned());
                 }
-                _ if js_trim(text).is_empty() => self.spacings = None,
-                _ => {
-                    let list: Option<Vec<f64>> = text
-                        .split_whitespace()
-                        .map(|w| cx.typed_length(w))
-                        .collect();
-                    match list {
-                        Some(l) if !l.is_empty() => self.spacings = Some(l),
-                        _ => {
-                            cx.say(
-                                Level::Warn,
-                                "Aralıklar okunamadı: sayıları boşlukla yazın (6 6 4.5 gibi).",
-                            );
-                            return true;
-                        }
-                    }
+                Ask::Ends => {
+                    self.configure("C", text, cx);
+                    return true;
                 }
+                _ if js_trim(text).is_empty() => self.spacings = None,
+                _ => match crate::grid_system::spacings(text, |t| cx.typed_length(t)) {
+                    Some(l) if !l.is_empty() => self.spacings = Some(l),
+                    _ => {
+                        cx.say(
+                            Level::Warn,
+                            "Aralıklar okunamadı: sayıları boşlukla yazın (6 6 4.5, 3*6 ya da 18/3 gibi).",
+                        );
+                        return true;
+                    }
+                },
             }
             self.ask = None;
             self.see(cx);
@@ -363,6 +466,7 @@ impl Tool for GridTool {
         match key.as_str() {
             "E" => self.ask = Some(Ask::Label),
             "S" => self.ask = Some(Ask::Spacings),
+            "C" => self.ask = Some(Ask::Ends),
             _ => {
                 if let Some(p) = cx.typed_point(text, self.pts.last().copied(), self.hover) {
                     return self.accept_point(p, cx);
@@ -424,10 +528,14 @@ impl Tool for GridTool {
 /// Kolon.
 #[derive(Clone, Debug)]
 pub struct ColumnTool {
-    round: bool,
+    shape: ColumnShape,
     width: f64,
     depth: Option<f64>,
+    /// An L's legs typed (docs/adr/0725 §3); none: half its sides.
+    legs: Option<[f64; 2]>,
     turn: f64,
+    /// Which point of its box stands where it is put (docs/adr/0725 §2).
+    anchor: ColumnAnchor,
     tag: Option<String>,
     hover: Option<Vec2>,
     ask: Option<Ask>,
@@ -439,10 +547,12 @@ pub struct ColumnTool {
 impl Default for ColumnTool {
     fn default() -> Self {
         Self {
-            round: false,
+            shape: ColumnShape::Rect,
             width: 0.3,
             depth: Some(0.5),
+            legs: None,
             turn: 0.0,
+            anchor: ColumnAnchor::Center,
             tag: None,
             hover: None,
             ask: None,
@@ -476,13 +586,27 @@ impl ColumnTool {
         best.map(|(_, g)| g)
     }
 
+    fn round(&self) -> bool {
+        self.shape == ColumnShape::Round
+    }
+
+    /// An L's legs: typed, else half its depth and half its width.
+    fn legs_now(&self) -> Option<[f64; 2]> {
+        (self.shape == ColumnShape::LShape).then(|| {
+            self.legs
+                .unwrap_or([self.depth.unwrap_or(self.width) / 2.0, self.width / 2.0])
+        })
+    }
+
     fn column(&self, at: Vec2, cx: &Context<'_>) -> NewColumn {
         NewColumn {
             at: Some(points::wire(at)),
             grids: Self::crossing_at(at, cx).map(|g| g.to_vec()),
-            shape: self.round.then_some(ColumnShape::Round),
+            shape: (self.shape != ColumnShape::Rect).then_some(self.shape),
             width: self.width,
-            depth: if self.round { None } else { self.depth },
+            depth: if self.round() { None } else { self.depth },
+            legs: self.legs_now(),
+            anchor: (self.anchor != ColumnAnchor::Center).then_some(self.anchor),
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
             // Etkin kat (docs/adr/0713).
@@ -569,18 +693,18 @@ impl Tool for ColumnTool {
             "Kolon",
             "kolonun merkezine ya da iki aksın kesişimine tıklayın",
         )
-        .option_with(
-            "Biçim",
-            "B",
-            if self.round { "Daire" } else { "Dikdörtgen" },
-        )
+        .option_with("Biçim", "B", self.shape.label())
         .option_with("En", "E", fmt(self.width));
-        if !self.round {
+        if !self.round() {
             p = p
                 .option_with("Boy", "Y", self.depth.map_or_else(|| fmt(self.width), fmt))
                 .option_with("Döndür", "D", fmt(self.turn.to_degrees()));
         }
-        p.option_with(
+        if let Some([a, b]) = self.legs_now() {
+            p = p.option_with("L kolları", "L", format!("{} {}", fmt(a), fmt(b)));
+        }
+        p.option_with("Hiza", "H", self.anchor.label())
+        .option_with(
             "Etiket",
             "K",
             self.tag.clone().unwrap_or_else(|| "Yok".into()),
@@ -625,6 +749,10 @@ impl Tool for ColumnTool {
                     Some(d) => self.turn = d.to_radians(),
                     None => return true,
                 },
+                Ask::Legs => {
+                    self.configure("L", text, cx);
+                    return true;
+                }
                 _ => match cx.typed_length(text).filter(|v| *v > 0.0) {
                     Some(v) if ask == Ask::Width => self.width = v,
                     Some(v) => self.depth = Some(v),
@@ -636,10 +764,24 @@ impl Tool for ColumnTool {
             return true;
         }
         match key.as_str() {
-            "B" => self.round = !self.round,
+            // Dikdörtgen → Daire → L → Dikdörtgen.
+            "B" => {
+                self.shape = match self.shape {
+                    ColumnShape::Rect => ColumnShape::Round,
+                    ColumnShape::Round => ColumnShape::LShape,
+                    ColumnShape::LShape => ColumnShape::Rect,
+                }
+            }
             "E" => self.ask = Some(Ask::Width),
-            "Y" if !self.round => self.ask = Some(Ask::Depth),
-            "D" if !self.round => self.ask = Some(Ask::Turn),
+            "Y" if !self.round() => self.ask = Some(Ask::Depth),
+            "D" if !self.round() => self.ask = Some(Ask::Turn),
+            "L" if self.shape == ColumnShape::LShape => self.ask = Some(Ask::Legs),
+            // The next of its box's nine points.
+            "H" => {
+                let all = ColumnAnchor::ALL;
+                let at = all.iter().position(|a| *a == self.anchor).unwrap_or(0);
+                self.anchor = all[(at + 1) % all.len()];
+            }
             "K" => self.ask = Some(Ask::Label),
             "A" => {
                 let grids: Vec<String> = grids_shown(cx).into_iter().map(|(_, u, _)| u).collect();
@@ -652,9 +794,11 @@ impl Tool for ColumnTool {
                 }
                 let crossings = ColumnCrossings {
                     grids,
-                    shape: self.round.then_some(ColumnShape::Round),
+                    shape: (self.shape != ColumnShape::Rect).then_some(self.shape),
                     width: self.width,
-                    depth: if self.round { None } else { self.depth },
+                    depth: if self.round() { None } else { self.depth },
+                    legs: self.legs_now(),
+                    anchor: (self.anchor != ColumnAnchor::Center).then_some(self.anchor),
                     rotation: (self.turn != 0.0).then_some(self.turn),
                     kind: None,
                     fill: None,
@@ -684,6 +828,146 @@ impl Tool for ColumnTool {
 
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
         Flow::Exit
+    }
+
+    fn settings(&self, f: &Format) -> Vec<Setting> {
+        let mut rows = vec![
+            Setting::choice(
+                "B",
+                "Biçim",
+                crate::tool_settings::choices(
+                    &ColumnShape::ALL.map(|s| (s.name(), s.label())),
+                    self.shape.name(),
+                ),
+            ),
+            Setting::text("E", if self.round() { "Çap" } else { "En" }, f.length(self.width)),
+        ];
+        if !self.round() {
+            rows.push(Setting::text("Y", "Boy", f.length(self.depth.unwrap_or(self.width))));
+        }
+        if let Some([a, b]) = self.legs_now() {
+            rows.push(Setting::text(
+                "L",
+                "L kolları",
+                if self.legs.is_some() {
+                    format!("{} {}", f.plain(a), f.plain(b))
+                } else {
+                    format!("Yarısı ({} {})", f.plain(a), f.plain(b))
+                },
+            ));
+        }
+        if !self.round() {
+            rows.push(Setting::text("D", "Dönüş", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
+        }
+        rows.push(Setting::choice(
+            "H",
+            "Hiza",
+            crate::tool_settings::choices(&ColumnAnchor::ALL.map(|a| (a.name(), a.label())), self.anchor.name()),
+        ));
+        rows.push(Setting::text("K", "İlk etiket", self.tag.clone().unwrap_or_else(|| "Yok".into())));
+        rows.push(Setting::hint(
+            "T",
+            "Kolon",
+            "Tıklanan nokta kolonun hiza noktasıdır; iki aksın kesişimine yakın tıklanırsa kolon o noktasıyla \
+             kesişime bağlanır, aks taşınınca izler. L kolonun kolları kutusunun alt ve sol yanıdır.",
+        ));
+        if let Some(why) = &self.why {
+            rows.push(Setting::notice("W", "Konamıyor", why.clone()));
+        }
+        rows
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        self.settings(&Format::default())
+            .into_iter()
+            .find(|s| s.key == key)
+            .map_or_else(Vec::new, |s| s.choices)
+    }
+
+    fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.configure(key, value, cx)
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let words = upper_tr(js_trim(value));
+        let ok = match key {
+            "B" => match ColumnShape::ALL.iter().find(|s| s.name() == value || upper_tr(s.label()) == words) {
+                Some(s) => {
+                    self.shape = *s;
+                    true
+                }
+                None => false,
+            },
+            "H" => match ColumnAnchor::ALL.iter().find(|a| a.name() == value || upper_tr(a.label()) == words) {
+                Some(a) => {
+                    self.anchor = *a;
+                    true
+                }
+                None => false,
+            },
+            "E" | "Y" => match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
+                Some(v) if key == "E" => {
+                    self.width = v;
+                    true
+                }
+                Some(v) => {
+                    self.depth = Some(v);
+                    true
+                }
+                None => false,
+            },
+            "L" => {
+                if words.is_empty() || words.starts_with("YARI") {
+                    self.legs = None;
+                    true
+                } else {
+                    let read: Option<Vec<f64>> = value
+                        .split(|c: char| c.is_whitespace() || c == ';')
+                        .filter(|t| !t.is_empty())
+                        .map(|t| cx.typed_length(t).filter(|v| v.is_finite() && *v > 0.0))
+                        .collect();
+                    match read.as_deref() {
+                        Some([a, b]) => {
+                            self.legs = Some([*a, *b]);
+                            true
+                        }
+                        Some([a]) => {
+                            self.legs = Some([*a, *a]);
+                            true
+                        }
+                        _ => false,
+                    }
+                }
+            }
+            "D" => match parse_number(js_trim(value).trim_end_matches('°')).filter(|v| v.is_finite()) {
+                Some(d) => {
+                    self.turn = d.to_radians();
+                    true
+                }
+                None => false,
+            },
+            "K" => {
+                let t = js_trim(value);
+                self.tag = (!t.is_empty() && words != "YOK").then(|| t.to_owned());
+                true
+            }
+            _ => false,
+        };
+        if ok {
+            self.ask = None;
+            self.see(cx);
+        } else {
+            cx.say(
+                Level::Warn,
+                match key {
+                    "L" => "L kolonun iki kolunu sıfırdan büyük uzunluklar olarak boşlukla yazın (0.25 0.30); boş: yarısı.",
+                    "E" | "Y" => "Kolon ölçüsü sıfırdan büyük bir uzunluk olmalı.",
+                    "D" => "Dönüşü derece olarak bir sayıyla yazın; örneğin 30.",
+                    _ => "Geçerli bir değer seçin.",
+                },
+            );
+        }
+        ok
     }
 
     fn preview(&self, _format: &Format) -> Preview {

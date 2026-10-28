@@ -22,6 +22,10 @@ The rules, as ADR 0703 gives them:
   fix delete); a dimension set's stored `broken` (fix `detach`), a dimension outside every set with a broken reference
   (fix: those points freed); a column's (`detach`) and a view mark's (`detach`) stored `broken`; a wall, space,
   column, stair or ramp without a level, or with one the project lacks, while the project has levels.
+- Grids (ADR 0725 §6): a label on more than one grid of a level (no level its own), each grid after the first said
+  with the first (`arch_grid_label_duplicate`, at its middle); its fix deletes it when it lies on the first (the same
+  ends, or swapped with its arc turned over, within a nanometre) and no column is tied to it, else names it the next
+  label after its own that no grid of the level has and no earlier fix gave.
 - A fix only when the object it writes is on an unlocked layer. Order: the groups, each group's codes, then x, then y.
 """
 
@@ -35,13 +39,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wall_join_cases as wj  # noqa: E402  (the joins' reference: exact fractions, straight walls)
+from arch_command_cases import next_label  # noqa: E402  (the grid labels' rule, ADR 0343)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.arch.audit.json"
 COMMAND = "cad.arch.audit"
 JOIN_TOLERANCE = 1e-3
 DEFAULTS = {"maxGap": 0.10, "minArea": 0.10, "minWidth": 0.15}
-GROUPS = ["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels"]
+GROUPS = ["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels"]
 CODES = {
     "walls": ["wall_join_overlap", "wall_join_crowded", "wall_join_acute", "wall_join_unresolved", "arch_wall_end_gap",
               "arch_wall_ends_apart"],
@@ -50,6 +55,7 @@ CODES = {
     "numbers": ["tag_duplicate_number"],
     "tags": ["tag_target_gone"],
     "dimensions": ["arch_dimension_set_broken", "arch_dimension_broken"],
+    "grids": ["arch_grid_label_duplicate"],
     "columns": ["arch_column_grid_gone"],
     "viewmarks": ["arch_viewmark_target_gone"],
     "levels": ["arch_level_missing"],
@@ -79,6 +85,12 @@ SET_WORDS = {
 }
 POSSESSIVE = {"wall": "Duvarın", "space": "Mahalın", "column": "Kolonun", "stair": "Merdivenin", "ramp": "Rampanın",
               "polyline": "Mahal ayırıcının"}
+
+
+def acc_place(a, b):
+    """A column's place from its grids' labels: a lettered one first (ADR 0343 §3)."""
+    lettered = lambda t: t[:1].isalpha()  # noqa: E731
+    return f"{b}-{a}" if not lettered(a) and lettered(b) else f"{a}-{b}"
 
 
 def split(words):
@@ -242,6 +254,18 @@ def drawing():
         # A room separator on no level (ADR 0717 §3): Denetim says it as a wall.
         {"kind": "polyline", **base(29, "mimari"), "lineType": "dashed", "pts": [P(52, 0), P(52, 4)],
          "spaceSeparator": {}},
+        # Grid labels given twice (ADR 0725 §6): A on 22, again on it (no column: deleted), beside it (renamed B),
+        # on the locked layer (no fix) and on another level (none); 1 twice on the same line, a column on the second
+        # (renamed past 2, which a grid has, to 3).
+        {"kind": "grid", **base(30, "mimari"), "pts": [P(30, -2), P(30, 6)], "name": "A"},
+        {"kind": "grid", **base(31, "mimari"), "pts": [P(32, -2), P(32, 6)], "name": "A"},
+        {"kind": "grid", **base(32, "kilitli"), "pts": [P(34, -2), P(34, 6)], "name": "A"},
+        {"kind": "grid", **base(33, "mimari"), "pts": [P(36, -2), P(36, 6)], "name": "A", "arch": {"level": "kat-1"}},
+        {"kind": "grid", **base(34, "mimari"), "pts": [P(28, 7), P(38, 7)], "name": "1"},
+        {"kind": "grid", **base(35, "mimari"), "pts": [P(38, 7), P(28, 7)], "name": "1"},
+        {"kind": "grid", **base(36, "mimari"), "pts": [P(28, 9), P(38, 9)], "name": "2"},
+        {"kind": "column", **base(37, "mimari"), "at": P(32, 7), "width": 0.4, "depth": 0.4,
+         "grids": [U(31), U(35)], "place": "A-1", "arch": {"level": "zemin"}},
     ]
     ds = {"id": SET, "wall": GONE["wall"], "face": "left", "rows": ["overall"], "openings": "ends", "layerId": "olcu",
           "at": P(20, -2.5), "gapMm": 7.0, "height": 0.125, "look": {},
@@ -642,6 +666,50 @@ def dimensions_findings(d):
     return out
 
 
+def grids_findings(d):
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    grids = [e for e in d["entities"] if e["kind"] == "grid"]
+    tied = {g for e in d["entities"] if e["kind"] == "column" for g in e.get("grids", [])}
+    key = lambda e: ((e.get("arch") or {}).get("level"), e["name"])  # noqa: E731
+    taken = {key(e) for e in grids}
+    groups = {}
+    for e in grids:
+        groups.setdefault(key(e), []).append(e)
+    bulge = lambda e: (e.get("bulges") or [0.0])[0]  # noqa: E731
+
+    def near(p, q):
+        return abs(p["x"] - q["x"]) <= 1e-9 and abs(p["y"] - q["y"]) <= 1e-9
+
+    def lies_on(g, h):
+        (a, b), (c, e) = g["pts"], h["pts"]
+        return (near(a, c) and near(b, e) and abs(bulge(g) - bulge(h)) <= 1e-12) or \
+            (near(a, e) and near(b, c) and abs(bulge(g) + bulge(h)) <= 1e-12)
+
+    out = []
+    for k, group in groups.items():
+        first = group[0]
+        for g in group[1:]:
+            u = uid[g["id"]]
+            fix = None
+            if g["layerId"] not in locked:
+                if lies_on(g, first) and u not in tied:
+                    fix = {"label": "Üst üste binen aksı sil", "step": step("cad.entities.delete", {"uids": [u]})}
+                else:
+                    label = next_label(g["name"])
+                    while (k[0], label) in taken:
+                        label = next_label(label)
+                    taken.add((k[0], label))
+                    fix = {"label": f"Aksı “{label}” olarak adlandır",
+                           "step": step("cad.arch.edit", {"uids": [u], "operation": {"kind": "set", "label": label}})}
+            (a, b) = g["pts"]
+            mid = ((F(a["x"]) + F(b["x"])) / 2, (F(a["y"]) + F(b["y"])) / 2)
+            out.append(finding("grids", "arch_grid_label_duplicate", f"“{g['name']}” etiketi bu katta birden çok aksta.",
+                               "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen "
+                               "fazla aksı silin.", [uid[first["id"]], u], mid, fix))
+    return out
+
+
 def columns_findings(d):
     locked = locked_layers(d)
     uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
@@ -739,6 +807,7 @@ def audit(d, inp):
             "numbers": lambda: numbers_findings(d),
             "tags": lambda: tags_findings(d),
             "dimensions": lambda: dimensions_findings(d),
+            "grids": lambda: grids_findings(d),
             "columns": lambda: columns_findings(d),
             "viewmarks": lambda: viewmarks_findings(d),
             "levels": lambda: levels_findings(d, inp),
@@ -798,6 +867,14 @@ def fixed(d, f):
             e["refs"].pop(p["point"])
     elif cmd == "cad.dimensionsets.edit":
         d["dimensionSets"] = [s for s in d["dimensionSets"] if s["id"] != inp["id"]]
+    elif cmd == "cad.arch.edit" and inp["operation"]["kind"] == "set":
+        # A grid named again: a column tied to it takes its place from the new label (ADR 0343 §3).
+        e = ents[inp["uids"][0]]
+        e["name"] = inp["operation"]["label"]
+        for c in d["entities"]:
+            if c["kind"] == "column" and inp["uids"][0] in c.get("grids", []):
+                g = [ents[x] for x in c["grids"]]
+                c["place"] = acc_place(g[0]["name"], g[1]["name"])
     elif cmd == "cad.arch.edit":
         e = ents[inp["uids"][0]]
         e.pop("grids", None)
@@ -877,6 +954,17 @@ def cases():
     empty["entities"], empty["uids"] = [], []
     empty.pop("dimensionSets")
     case("Boş çizim: bulgu yok", [asked(empty, {})], setup=empty)
+
+    # The rename fix (ADR 0725 §6): the grid named the next free label, a column tied to it taking its place from it.
+    renamed = next(f for f in audit(d, {"checks": ["grids"]})["findings"]
+                   if f.get("fix", {}).get("step", {}).get("command") == "cad.arch.edit")
+    st = renamed["fix"]["step"]
+    case("Düzelt ve yeniden denetle: aksı sıradaki boş etiketle adlandır", [
+        asked(d, {"checks": ["grids"]}),
+        {"op": "execute", "command": st["command"], "input": st["input"], "result": ANY,
+         "expect": {"canUndo": True, "revision": "changed"}},
+        asked(fixed(d, renamed), {"checks": ["grids"]}, expect={"canUndo": True, "revision": "same"}),
+    ])
 
     # Each fix by its own command: the finding goes, undo brings it back (ADR 0703 §3: düzelt, yeniden denetle, geri al).
     full = audit(d, {})["findings"]

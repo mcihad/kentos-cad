@@ -2,13 +2,15 @@
 import type { GridSeries } from "./GridSeries";
 import type { GridSystem } from "./GridSystem";
 import type { NewGrid } from "./NewGrid";
+import type { RadialGridSystem } from "./RadialGridSystem";
 
 /**
  * Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns
- * (docs/adr/0707), on a named layer, as one undo step.
+ * (docs/adr/0707), then the curved grid system `radial` and its columns (docs/adr/0725 §1), on a named layer, as one
+ * undo step.
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
  * `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
  * Warning: `layer_hidden`.
  */
-export type GridsCreate = { layerId: string, grids?: Array<NewGrid>, series?: GridSeries, system?: GridSystem, color?: string, lineWeight?: number, expectedRevision?: string, };
+export type GridsCreate = { layerId: string, grids?: Array<NewGrid>, series?: GridSeries, system?: GridSystem, radial?: RadialGridSystem, color?: string, lineWeight?: number, expectedRevision?: string, };

@@ -50,6 +50,31 @@ fn arch_elements_draw_as_the_reference_says() {
         let scale = c["scale"].as_f64().unwrap();
         let e = &c["expect"];
         match &shape {
+            // A gapped grid's end segments (docs/adr/0725 §5): their ends and bulges, or the whole grid.
+            Shape::Grid { pts, bulges, .. } if e.get("lines").is_some() => {
+                let lines: Vec<_> = arch::pieces(&shape, scale)
+                    .into_iter()
+                    .filter(|p| p.stroke.line_type.as_deref() == Some("dashdot"))
+                    .map(|p| match p.shape {
+                        Shape::Line { a, b } => (a, b, 0.0),
+                        Shape::Polyline { pts, bulges, .. } => (pts[0], pts[1], bulges.map_or(0.0, |b| b[0])),
+                        other => panic!("{name}: aksın çizgisi {other:?}"),
+                    })
+                    .collect();
+                let want = e["lines"].as_array().unwrap();
+                if want.is_empty() {
+                    assert_eq!(lines.len(), 1, "{name}: bütün aks");
+                    let (a, b, k) = lines[0];
+                    points(&[a, b], &serde_json::json!([[pts[0].x, pts[0].y], [pts[1].x, pts[1].y]]), name);
+                    close(k, bulges.as_ref().map_or(0.0, |b| b[0]), name);
+                    continue;
+                }
+                assert_eq!(lines.len(), want.len(), "{name}: uç parçaları");
+                for ((a, b, k), w) in lines.iter().zip(want) {
+                    points(&[*a, *b], &serde_json::json!([w[0], w[1]]), name);
+                    close(*k, w[2].as_f64().unwrap(), name);
+                }
+            }
             Shape::Grid { .. } => {
                 let circles: Vec<_> = arch::pieces(&shape, scale)
                     .into_iter()

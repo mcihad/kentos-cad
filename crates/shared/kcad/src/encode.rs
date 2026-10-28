@@ -1976,6 +1976,18 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 126 (docs/adr/0725): a gapped grid, an anchored or an L column.
+    if objs.iter().any(|e| match e {
+        Entity::Grid(g) => g.grid.ends.is_some(),
+        Entity::Column(c) => {
+            c.column.anchor != kentos_contracts::ColumnAnchor::Center
+                || c.column.legs.is_some()
+                || c.column.shape == kentos_contracts::ColumnShape::LShape
+        }
+        _ => false,
+    }) {
+        return crate::SCHEMA_WITH_GRID_COLUMN_FORMS;
+    }
     // Schema 125 (docs/adr/0724): a stair whose rise is its level's height, or with a centre post.
     if objs
         .iter()

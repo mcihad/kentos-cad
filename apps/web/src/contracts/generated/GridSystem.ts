@@ -38,7 +38,11 @@ yStart?: string,
 /**
  * How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5.
  */
-extension?: number, bubbles?: GridBubbles, bubbleSize?: number, arch?: ArchInfo, 
+extension?: number, bubbles?: GridBubbles, bubbleSize?: number, 
+/**
+ * A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+ */
+ends?: number, arch?: ArchInfo, 
 /**
  * A column at every crossing, tied to its two grids, row by row from `origin` (the first grid across y's first);
  * absent: none.

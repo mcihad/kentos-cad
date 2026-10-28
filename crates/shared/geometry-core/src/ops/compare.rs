@@ -508,12 +508,17 @@ fn defs(shape: &Shape) -> Defs {
             others.push(Other::Text(grid.label.clone()));
             others.push(Other::Text(format!("{:?}", grid.bubbles)));
             others.push(Other::Num(grid.bubble_size.unwrap_or(0.0)));
+            others.push(Other::Num(grid.ends.unwrap_or(0.0)));
         }
         Shape::Column { at, column } => {
             comps.push(path(&[*at], None));
             lengths.extend([column.width, column.depth.unwrap_or(column.width)]);
+            if let Some([a, b]) = column.legs {
+                lengths.extend([a, b]);
+            }
             others.push(Other::Num(column.rotation));
             others.push(Other::Flag(column.round));
+            others.push(Other::Text(format!("{:?}", column.anchor)));
             others.push(Other::Flag(column.fill));
             others.push(text(column.tag.as_deref()));
             others.push(text(column.place.as_deref()));

@@ -1,0 +1,2566 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.columns.create",
+  "commandVersion": 1,
+  "title": "Kolonun hizası ve L kolon: dokuz nokta, akslara bağlı hizalı kolon, kesişimler ve aks ağı; L'nin kolları; retler (ADR 0725 §2, §3)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Sol alt köşesiyle konan kolon: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sol alt köşesiyle konan kolon: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "columns": [
+                {
+                  "kind": "column",
+                  "id": 0,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.3,
+                  "depth": 0.5,
+                  "anchor": "bottomLeft"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sol alt köşesiyle konan kolon: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kolon",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sol alt köşesiyle konan kolon: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "L kolon kollarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.5,
+                "legs": [
+                  0.25,
+                  0.3
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.5,
+                "legs": [
+                  0.25,
+                  0.3
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "L kolon üstüyle, dönük ve dolu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.6,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "anchor": "top",
+                "rotation": 0.5,
+                "fill": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.6,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "rotation": 0.5,
+                "anchor": "top",
+                "fill": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "akslara bağlı kolon sağ üst köşesiyle kesişimde (A-1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "grids": [
+                  "$uidOf:3",
+                  "$uidOf:1"
+                ],
+                "width": 0.4,
+                "anchor": "topRight"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.4,
+                "anchor": "topRight",
+                "grids": [
+                  "$uidOf:3",
+                  "$uidOf:1"
+                ],
+                "place": "A-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yuvarlak kolon solundan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "anchor": "left"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                "shape": "round",
+                "width": 0.5,
+                "anchor": "left"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kesişimlerde alt kenarlarıyla kolonlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "crossings": {
+              "grids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:4"
+              ],
+              "width": 0.3,
+              "depth": 0.5,
+              "anchor": "bottom"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom",
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "A-1"
+              },
+              "11": {
+                "kind": "column",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom",
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:4"
+                ],
+                "place": "A-2"
+              },
+              "12": {
+                "kind": "column",
+                "id": 12,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom",
+                "grids": [
+                  "$uidOf:2",
+                  "$uidOf:3"
+                ],
+                "place": "B-1"
+              },
+              "13": {
+                "kind": "column",
+                "id": 13,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 5.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom",
+                "grids": [
+                  "$uidOf:2",
+                  "$uidOf:4"
+                ],
+                "place": "B-2"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dokuz noktanın hepsiyle kolonlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "center"
+              },
+              {
+                "at": {
+                  "x": 1.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "left"
+              },
+              {
+                "at": {
+                  "x": 2.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "right"
+              },
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom"
+              },
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "top"
+              },
+              {
+                "at": {
+                  "x": 5.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              },
+              {
+                "at": {
+                  "x": 6.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomRight"
+              },
+              {
+                "at": {
+                  "x": 7.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "topLeft"
+              },
+              {
+                "at": {
+                  "x": 8.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "topRight"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5
+              },
+              "11": {
+                "kind": "column",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 1.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "left"
+              },
+              "12": {
+                "kind": "column",
+                "id": 12,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 2.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "right"
+              },
+              "13": {
+                "kind": "column",
+                "id": 13,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottom"
+              },
+              "14": {
+                "kind": "column",
+                "id": 14,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "top"
+              },
+              "15": {
+                "kind": "column",
+                "id": 15,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 5.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomRight"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 7.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "topLeft"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 8.0,
+                  "y": 9.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "topRight"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ağının kolonları sol üst köşeleriyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.grids.create",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0,
+                6.0
+              ],
+              "y": [
+                5.0
+              ],
+              "columns": {
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 26.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 26.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 26.5
+                  }
+                ],
+                "name": "3"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 13.5,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 13.5,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "15": {
+                "kind": "column",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:13"
+                ],
+                "place": "A-1"
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:13"
+                ],
+                "place": "A-2"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 20.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:13"
+                ],
+                "place": "A-3"
+              },
+              "18": {
+                "kind": "column",
+                "id": 18,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:14"
+                ],
+                "place": "B-1"
+              },
+              "19": {
+                "kind": "column",
+                "id": 19,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:14"
+                ],
+                "place": "B-2"
+              },
+              "20": {
+                "kind": "column",
+                "id": 20,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 12.0,
+                  "y": 25.0
+                },
+                "width": 0.3,
+                "depth": 0.3,
+                "anchor": "topLeft",
+                "grids": [
+                  "$uidOf:12",
+                  "$uidOf:14"
+                ],
+                "place": "B-3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ağının L kolonları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.grids.create",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0
+              ],
+              "y": [
+                5.0
+              ],
+              "columns": {
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 26.5
+                  }
+                ],
+                "name": "1"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 26.5
+                  }
+                ],
+                "name": "2"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 20.0
+                  }
+                ],
+                "name": "A"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.5,
+                    "y": 25.0
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 25.0
+                  }
+                ],
+                "name": "B"
+              },
+              "14": {
+                "kind": "column",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 20.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:12"
+                ],
+                "place": "A-1"
+              },
+              "15": {
+                "kind": "column",
+                "id": 15,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 20.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:12"
+                ],
+                "place": "A-2"
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 25.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "grids": [
+                  "$uidOf:10",
+                  "$uidOf:13"
+                ],
+                "place": "B-1"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "aks",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 25.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ],
+                "grids": [
+                  "$uidOf:11",
+                  "$uidOf:13"
+                ],
+                "place": "B-2"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ağında kalın kollu L reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.grids.create",
+          "input": {
+            "layerId": "aks",
+            "system": {
+              "origin": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "x": [
+                6.0
+              ],
+              "y": [
+                5.0
+              ],
+              "columns": {
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.5,
+                  0.2
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun kolu 0.5; kolonun boyundan (0.5) ince olmalı.",
+              "path": "system.columns.legs[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kolsuz L kolon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun iki kolunun kalınlığı (legs) verilmeli.",
+              "path": "columns[0].legs"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dikdörtgen kolonun kolu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.5,
+                "legs": [
+                  0.1,
+                  0.1
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kol kalınlıkları yalnız L kolonda olur; biçimi L yapın ya da kolları kaldırın.",
+              "path": "columns[0].legs"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır kalın kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.0,
+                  0.2
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun kolu 0; sıfırdan büyük olmalı.",
+              "path": "columns[0].legs[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boyu kadar kalın kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.4,
+                "legs": [
+                  0.4,
+                  0.2
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun kolu 0.4; kolonun boyundan (0.4) ince olmalı.",
+              "path": "columns[0].legs[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eni kadar kalın ikinci kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.6,
+                "depth": 0.4,
+                "legs": [
+                  0.2,
+                  0.6
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun kolu 0.6; kolonun eninden (0.6) ince olmalı.",
+              "path": "columns[0].legs[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  -0.1
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun kolu -0.1; sıfırdan büyük olmalı.",
+              "path": "columns[0].legs[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "shape": "lShape",
+                "width": 0.5,
+                "legs": [
+                  0.2,
+                  0.2
+                ]
+              }
+            ]
+          },
+          "nonFinite": {
+            "columns[0].legs[1]": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "L kolonun kolu sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "columns[0].legs[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kesişimlerde kolsuz L reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "crossings": {
+              "grids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "shape": "lShape",
+              "width": 0.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "L kolonun iki kolunun kalınlığı (legs) verilmeli.",
+              "path": "crossings.legs"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman grubu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz çizgi kalınlığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ],
+            "lineWeight": 120.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ],
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm değişince yazılmaz (çakışma)",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.5,
+                "anchor": "bottomLeft"
+              }
+            ],
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

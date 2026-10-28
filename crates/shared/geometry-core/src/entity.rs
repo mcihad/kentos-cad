@@ -1907,11 +1907,12 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         Shape::Opening { place, .. } => return crate::geom::opening::centre(place),
         // Its label's place (docs/adr/0342 §2).
         Shape::Space { parts, .. } => return crate::geom::space::label_at(parts),
-        // A grid's middle, a column's centre, a stair's or ramp's middle point (docs/adr/0343 §2).
+        // A grid's middle, a column's box's middle, a stair's or ramp's middle point (docs/adr/0343 §2, 0725 §2).
         Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
-        Shape::Column { at, .. } | Shape::Tag { at, .. } => *at,
+        Shape::Column { at, column } => crate::geom::arch::column_center(*at, column),
+        Shape::Tag { at, .. } => *at,
         Shape::ViewMark { points, .. } => *points.first()?,
         // The point halfway along the curve (docs/adr/0259 §2).
         Shape::Nurbs { ctrl, .. } => match crate::geom::nurbs::of(e) {

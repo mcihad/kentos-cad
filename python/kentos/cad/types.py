@@ -238,6 +238,7 @@ class ArchAuditCheck(_StrEnum):
     - ``numbers``: A number on more than one opening or space.
     - ``tags``: Tags whose object is gone.
     - ``dimensions``: Associative dimensions and dimension sets whose link broke.
+    - ``grids``: A grid label given twice on one level (docs/adr/0725 §6).
     - ``columns``: Columns whose grids are gone.
     - ``viewmarks``: View marks whose target is gone.
     - ``levels``: Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
@@ -250,6 +251,7 @@ class ArchAuditCheck(_StrEnum):
     NUMBERS = "numbers"
     TAGS = "tags"
     DIMENSIONS = "dimensions"
+    GRIDS = "grids"
     COLUMNS = "columns"
     VIEWMARKS = "viewmarks"
     LEVELS = "levels"
@@ -257,7 +259,7 @@ class ArchAuditCheck(_StrEnum):
     STAIRS = "stairs"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels", "accessibility", "stairs"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
 
 
@@ -885,6 +887,25 @@ CloudRenderName = Literal["rgb", "classification", "elevation", "intensity", "re
 """The names of :class:`CloudRender`, for a plain string."""
 
 
+class ColumnAnchor(_StrEnum):
+    """Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its
+    box before its turn, left and right across its width, bottom and top along its depth.
+    """
+    CENTER = "center"
+    LEFT = "left"
+    RIGHT = "right"
+    BOTTOM = "bottom"
+    TOP = "top"
+    BOTTOM_LEFT = "bottomLeft"
+    BOTTOM_RIGHT = "bottomRight"
+    TOP_LEFT = "topLeft"
+    TOP_RIGHT = "topRight"
+
+
+ColumnAnchorName = Literal["center", "left", "right", "bottom", "top", "bottomLeft", "bottomRight", "topLeft", "topRight"]
+"""The names of :class:`ColumnAnchor`, for a plain string."""
+
+
 class ColumnBreak(_StrEnum):
     """Why a column is not where its grids say.
 
@@ -908,12 +929,18 @@ ColumnGapTargetName = Literal["wall", "column"]
 
 
 class ColumnShape(_StrEnum):
-    """A column's outline."""
+    """A column's outline.
+
+    - ``rect``
+    - ``round``
+    - ``lShape``: An L (docs/adr/0725 §3): two legs from its box's lower left corner, one along its width and one along its
+    """
     RECT = "rect"
     ROUND = "round"
+    L_SHAPE = "lShape"
 
 
-ColumnShapeName = Literal["rect", "round"]
+ColumnShapeName = Literal["rect", "round", "lShape"]
 """The names of :class:`ColumnShape`, for a plain string."""
 
 
@@ -10309,7 +10336,8 @@ class ArchAuditFinding(_Model):
         code: `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
             `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
             `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
-            `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
+            `arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,
+            `arch_level_missing`,
             `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
             `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
             `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
@@ -14652,14 +14680,20 @@ class ColumnCrossings(_Model):
     """Columns at every crossing of the grids given, pair by pair in their order, within both grids.
     Attributes:
         width: Unit: length.
+        anchor: Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+            absent: its centre.
         depth: Unit: length.
+        legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+            depth; only with `shape` L, which needs them. Unit: length.
         rotation: Unit: rad.
     """
     grids: list[str]
     width: float
+    anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
     arch: ArchInfo | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    legs: list[float] | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     type: str | None | Unset = UNSET
@@ -14668,12 +14702,16 @@ class ColumnCrossings(_Model):
         out: dict[str, Any] = {}
         out["grids"] = list(self.grids)
         out["width"] = float(self.width)
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else _enum_out(self.anchor)
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -14687,9 +14725,11 @@ class ColumnCrossings(_Model):
         return cls(
             grids=list(data["grids"]),
             width=float(data["width"]),
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else _enum_in(ColumnAnchor, data["anchor"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             type=data.get("type", UNSET),
@@ -14702,8 +14742,10 @@ class ColumnEntity(Entity):
     Attributes:
         id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        at: Its centre. Unit: length.
+        at: Its reference point (docs/adr/0725 §2): its centre, or the point of its box its `anchor` names; where its grids
+            cross when it stands on them. Unit: length.
         width: Across, metres (a round column's diameter). Unit: length.
+        anchor: Which point of its box `at` is (docs/adr/0725 §2); absent: its centre.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         by_layer: On a block's object, the parts without a value of their own that
@@ -14714,6 +14756,8 @@ class ColumnEntity(Entity):
         grids: The two grids it stands where they cross, by their persistent ids.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        legs: An L's legs (docs/adr/0725 §3), metres: the thickness of the one along its width (measured along its depth),
+            then of the one along its depth (measured across its width); only an L's, which needs them. Unit: length.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -14725,7 +14769,7 @@ class ColumnEntity(Entity):
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         place: Its place by its grids' labels (“B-3”), which the document writes.
-        rotation: Its turn, radians counter-clockwise. Unit: rad.
+        rotation: Its turn, radians counter-clockwise, about its reference point. Unit: rad.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         type: Its type's name.
@@ -14738,6 +14782,7 @@ class ColumnEntity(Entity):
     attrs: dict[str, str]
     at: Vec2
     width: float
+    anchor: ColumnAnchor | ColumnAnchorName | Unset = UNSET
     arch: ArchInfo | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     broken: ColumnBreak | ColumnBreakName | None | Unset = UNSET
@@ -14748,6 +14793,7 @@ class ColumnEntity(Entity):
     grids: list[str] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    legs: list[float] | None | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -14769,6 +14815,8 @@ class ColumnEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["at"] = _vec2_out(self.at)
         out["width"] = float(self.width)
+        if self.anchor is not UNSET:
+            out["anchor"] = _enum_out(self.anchor)
         if self.arch is not UNSET:
             out["arch"] = self.arch.to_json()
         if self.attachments is not UNSET:
@@ -14789,6 +14837,8 @@ class ColumnEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
@@ -14825,6 +14875,7 @@ class ColumnEntity(Entity):
             attrs=dict(data["attrs"]),
             at=Vec2.from_json(data["at"]),
             width=float(data["width"]),
+            anchor=_enum_in(ColumnAnchor, data["anchor"]) if "anchor" in data else UNSET,
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(ColumnBreak, data["broken"]),
@@ -14835,6 +14886,7 @@ class ColumnEntity(Entity):
             grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -27058,6 +27110,8 @@ class GridEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        ends: A gapped grid (docs/adr/0725 §5): the end segments it shows, each this long on paper, millimetres, its middle
+            left out; absent: the whole grid. Unit: paper-mm.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -27088,6 +27142,7 @@ class GridEntity(Entity):
     bulges: list[float] | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
@@ -27120,6 +27175,8 @@ class GridEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -27157,6 +27214,7 @@ class GridEntity(Entity):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_pattern=data.get("linePattern", UNSET),
@@ -27178,6 +27236,7 @@ class GridSeries(_Model):
         to: Unit: length.
         spacings: The gaps between them, metres, each greater than 0. Unit: length.
         bubble_size: Unit: paper-mm.
+        ends: A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid. Unit: paper-mm.
         side: Which side of `from` → `to` the next grids go; absent: the left.
         start: The first's label; absent: as a grid with none.
     """
@@ -27187,6 +27246,7 @@ class GridSeries(_Model):
     arch: ArchInfo | None | Unset = UNSET
     bubble_size: float | None | Unset = UNSET
     bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
     side: SeriesSide | SeriesSideName | None | Unset = UNSET
     start: str | None | Unset = UNSET
 
@@ -27201,6 +27261,8 @@ class GridSeries(_Model):
             out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
         if self.bubbles is not UNSET:
             out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
         if self.start is not UNSET:
@@ -27216,6 +27278,7 @@ class GridSeries(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(SeriesSide, data["side"]),
             start=data.get("start", UNSET),
         )
@@ -27233,6 +27296,7 @@ class GridSystem(_Model):
         bubble_size: Unit: paper-mm.
         columns: A column at every crossing, tied to its two grids, row by row from `origin` (the first grid across y's first);
             absent: none.
+        ends: A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid. Unit: paper-mm.
         extension: How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5. Unit: length.
         x: The gaps between the grids across its x axis, the first's from `origin` on, each above 0; empty: one grid. Unit: length.
         x_start: The first label of the grids across x, the next ones following on; absent: “1”.
@@ -27245,6 +27309,7 @@ class GridSystem(_Model):
     bubble_size: float | None | Unset = UNSET
     bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
     columns: SystemColumns | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
     extension: float | None | Unset = UNSET
     x: list[float] = field(default_factory=list)
     x_start: str | None | Unset = UNSET
@@ -27264,6 +27329,8 @@ class GridSystem(_Model):
             out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
         if self.columns is not UNSET:
             out["columns"] = None if self.columns is None else self.columns.to_json()
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
         if self.extension is not UNSET:
             out["extension"] = None if self.extension is None else float(self.extension)
         out["x"] = [float(e0) for e0 in self.x]
@@ -27283,6 +27350,7 @@ class GridSystem(_Model):
             bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else SystemColumns.from_json(data["columns"]),
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             extension=UNSET if "extension" not in data else None if data["extension"] is None else float(data["extension"]),
             x=[float(e0) for e0 in data["x"]] if "x" in data else list(),
             x_start=data.get("xStart", UNSET),
@@ -27314,7 +27382,8 @@ class GridUse(_Model):
 @dataclass(kw_only=True, slots=True)
 class GridsCreate(_Model):
     """Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns
-    (docs/adr/0707), on a named layer, as one undo step.
+    (docs/adr/0707), then the curved grid system `radial` and its columns (docs/adr/0725 §1), on a named layer, as one
+    undo step.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
     `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
@@ -27327,6 +27396,7 @@ class GridsCreate(_Model):
     expected_revision: str | None | Unset = UNSET
     grids: list[NewGrid] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    radial: RadialGridSystem | None | Unset = UNSET
     series: GridSeries | None | Unset = UNSET
     system: GridSystem | None | Unset = UNSET
 
@@ -27341,6 +27411,8 @@ class GridsCreate(_Model):
             out["grids"] = [e0.to_json() for e0 in self.grids]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.radial is not UNSET:
+            out["radial"] = None if self.radial is None else self.radial.to_json()
         if self.series is not UNSET:
             out["series"] = None if self.series is None else self.series.to_json()
         if self.system is not UNSET:
@@ -27355,6 +27427,7 @@ class GridsCreate(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             grids=[NewGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            radial=UNSET if "radial" not in data else None if data["radial"] is None else RadialGridSystem.from_json(data["radial"]),
             series=UNSET if "series" not in data else None if data["series"] is None else GridSeries.from_json(data["series"]),
             system=UNSET if "system" not in data else None if data["system"] is None else GridSystem.from_json(data["system"]),
         )
@@ -36968,20 +37041,26 @@ class NewColumn(_Model):
     """One column to put.
     Attributes:
         width: Across, metres (a round column's diameter). Unit: length.
-        at: Its centre; with `grids`, the crossing nearest it. Unit: length.
+        anchor: Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+            absent: its centre.
+        at: Where it stands: its centre, or the point of its box its `anchor` names; with `grids`, the crossing nearest it. Unit: length.
         depth: Along, metres; absent: its width. Unit: length.
         grids: The two grids it stands where they cross, by their persistent ids; it follows them.
+        legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+            depth; only with `shape` L, which needs them. Unit: length.
         rotation: Its turn, radians counter-clockwise. Unit: rad.
         tag: Absent: from `tagStart` on, else none.
         type: Its type's name.
     """
     width: float
+    anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
     arch: ArchInfo | None | Unset = UNSET
     at: Vec2 | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
     grids: list[str] | None | Unset = UNSET
+    legs: list[float] | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
@@ -36990,6 +37069,8 @@ class NewColumn(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["width"] = float(self.width)
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else _enum_out(self.anchor)
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.at is not UNSET:
@@ -37002,6 +37083,8 @@ class NewColumn(_Model):
             out["fill"] = self.fill
         if self.grids is not UNSET:
             out["grids"] = None if self.grids is None else list(self.grids)
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -37016,12 +37099,14 @@ class NewColumn(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> NewColumn:
         return cls(
             width=float(data["width"]),
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else _enum_in(ColumnAnchor, data["anchor"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
             grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             tag=data.get("tag", UNSET),
@@ -37073,6 +37158,7 @@ class NewGrid(_Model):
         pts: Its start and end. Unit: length.
         bubble_size: The bubble's diameter on paper, millimetres; absent: 8. Unit: paper-mm.
         bulges: Two bulges, the first its arc's; absent: straight. Unit: 1.
+        ends: A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid. Unit: paper-mm.
         label: Absent: the one after the grid before it in this call, else after the drawing's last grid, else “A”.
     """
     pts: list[Vec2]
@@ -37081,6 +37167,7 @@ class NewGrid(_Model):
     bubble_size: float | None | Unset = UNSET
     bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37096,6 +37183,8 @@ class NewGrid(_Model):
             out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
         if self.label is not UNSET:
             out["label"] = self.label
         return out
@@ -37109,6 +37198,7 @@ class NewGrid(_Model):
             bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             label=data.get("label", UNSET),
         )
 
@@ -47068,6 +47158,87 @@ class QueryTime(_Model):
             from_=data.get("from", UNSET),
             known_at=data.get("knownAt", UNSET),
             to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RadialGridSystem(_Model):
+    """A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at
+    `angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.
+    Each grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never
+    past `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than
+    a quarter of the turn left round the circle so that its ends stay apart. An arc runs the way the turns go.
+    Attributes:
+        center: Where its radial grids meet: its arcs' centre. Unit: length.
+        radius: The first arc's radius, metres, above 0. Unit: length.
+        angle: The first radial grid's direction, radians counter-clockwise from east; absent: 0. Unit: rad.
+        arc_start: The first arc's label; absent: “A”.
+        bubble_size: Unit: paper-mm.
+        columns: A column at every crossing, tied to its radial grid and its arc, arc by arc from the first radial grid on; its
+            width along its radial grid, turned `rotation` further when given.
+        ends: A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid. Unit: paper-mm.
+        extension: How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5. Unit: length.
+        radial_start: The first radial grid's label, the next ones following on; absent: “1”.
+        rings: The gaps between the arcs outward, metres, each above 0; empty: one arc. Unit: length.
+        turns: The turns between the radial grids, radians, each not 0, all one way (above 0 counter-clockwise), together
+            less than a whole turn; empty: one radial grid. Unit: rad.
+    """
+    center: Vec2
+    radius: float
+    angle: float | None | Unset = UNSET
+    arc_start: str | None | Unset = UNSET
+    arch: ArchInfo | None | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    columns: SystemColumns | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
+    extension: float | None | Unset = UNSET
+    radial_start: str | None | Unset = UNSET
+    rings: list[float] = field(default_factory=list)
+    turns: list[float] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["center"] = _vec2_out(self.center)
+        out["radius"] = float(self.radius)
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.arc_start is not UNSET:
+            out["arcStart"] = self.arc_start
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else self.columns.to_json()
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
+        if self.extension is not UNSET:
+            out["extension"] = None if self.extension is None else float(self.extension)
+        if self.radial_start is not UNSET:
+            out["radialStart"] = self.radial_start
+        out["rings"] = [float(e0) for e0 in self.rings]
+        out["turns"] = [float(e0) for e0 in self.turns]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RadialGridSystem:
+        return cls(
+            center=Vec2.from_json(data["center"]),
+            radius=float(data["radius"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            arc_start=data.get("arcStart", UNSET),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else SystemColumns.from_json(data["columns"]),
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
+            extension=UNSET if "extension" not in data else None if data["extension"] is None else float(data["extension"]),
+            radial_start=data.get("radialStart", UNSET),
+            rings=[float(e0) for e0 in data["rings"]] if "rings" in data else list(),
+            turns=[float(e0) for e0 in data["turns"]] if "turns" in data else list(),
         )
 
 
@@ -58147,13 +58318,19 @@ class SystemColumns(_Model):
     """The columns a grid system puts at its crossings (docs/adr/0707).
     Attributes:
         width: Across, metres (a round column's diameter). Unit: length.
+        anchor: Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+            absent: its centre.
         depth: Along, metres; absent: its width. Unit: length.
+        legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+            depth; only with `shape` L, which needs them. Unit: length.
         rotation: Their turn, radians counter-clockwise; absent: the system's. Unit: rad.
         tag_start: The first column's tag, the next ones' following on (S1, S2 …); absent: none.
     """
     width: float
+    anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    legs: list[float] | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     tag_start: str | None | Unset = UNSET
@@ -58162,10 +58339,14 @@ class SystemColumns(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["width"] = float(self.width)
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else _enum_out(self.anchor)
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -58180,8 +58361,10 @@ class SystemColumns(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> SystemColumns:
         return cls(
             width=float(data["width"]),
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else _enum_in(ColumnAnchor, data["anchor"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             tag_start=data.get("tagStart", UNSET),
@@ -63905,6 +64088,7 @@ class LabelsAnnotationWork(AnnotationWork):
 class SetArchOperation(ArchOperation):
     """Değiştir: the fields given, on every object named.
     Attributes:
+        anchor: A column's anchor (docs/adr/0725 §2): its reference point stays, its body moves round it.
         base: A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2). Unit: elevation.
         base_offset: A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
             base staying where it is. Not with `base`. Unit: elevation.
@@ -63912,11 +64096,13 @@ class SetArchOperation(ArchOperation):
         bubbles: A grid's.
         cut: A stair's. Unit: index.
         depth: A column's; null: its width. Unit: length.
+        ends: A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid. Unit: paper-mm.
         fill: A column's.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
             risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
         label: A grid's.
         landing: A stair's or a ramp's; null: the width. Unit: length.
+        legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
         numbering: A stair's.
         phase: Any kind's.
@@ -63925,8 +64111,8 @@ class SetArchOperation(ArchOperation):
         rise: A ramp's. Unit: elevation.
         riser_height: A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1). Unit: length.
         risers: A stair's. Unit: count.
-        rotation: A column's. Unit: rad.
-        shape: A column's.
+        rotation: A column's, about its reference point. Unit: rad.
+        shape: A column's; another than L drops its legs.
         slope: A ramp's. Unit: percent.
         tag: A column's.
         tread: A stair's. Unit: length.
@@ -63934,16 +64120,19 @@ class SetArchOperation(ArchOperation):
         width: A column's, a stair's or a ramp's. Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
+    anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
     base: float | None | Unset = UNSET
     base_offset: float | None | Unset = UNSET
     bubble_size: float | None | Unset = UNSET
     bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
     cut: int | None | Unset = UNSET
     depth: float | None | Unset = UNSET
+    ends: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
     height_from_level: bool | None | Unset = UNSET
     label: str | None | Unset = UNSET
     landing: float | None | Unset = UNSET
+    legs: list[float] | None | Unset = UNSET
     level: str | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
@@ -63962,6 +64151,8 @@ class SetArchOperation(ArchOperation):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else _enum_out(self.anchor)
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
         if self.base_offset is not UNSET:
@@ -63974,6 +64165,8 @@ class SetArchOperation(ArchOperation):
             out["cut"] = self.cut
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else float(self.ends)
         if self.fill is not UNSET:
             out["fill"] = self.fill
         if self.height_from_level is not UNSET:
@@ -63982,6 +64175,8 @@ class SetArchOperation(ArchOperation):
             out["label"] = self.label
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
+        if self.legs is not UNSET:
+            out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.level is not UNSET:
             out["level"] = self.level
         if self.numbering is not UNSET:
@@ -64017,16 +64212,19 @@ class SetArchOperation(ArchOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetArchOperation:
         return cls(
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else _enum_in(ColumnAnchor, data["anchor"]),
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
             cut=data.get("cut", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             fill=data.get("fill", UNSET),
             height_from_level=data.get("heightFromLevel", UNSET),
             label=data.get("label", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             level=data.get("level", UNSET),
             numbering=data.get("numbering", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
@@ -80741,6 +80939,8 @@ __all__ = [
     "CollinearConstraintRule",
     "ColorPaperPlotColor",
     "ColumnAlignTableEdit",
+    "ColumnAnchor",
+    "ColumnAnchorName",
     "ColumnBreak",
     "ColumnBreakName",
     "ColumnCrossings",
@@ -82259,6 +82459,7 @@ __all__ = [
     "QueryScope",
     "QueryScopeName",
     "QueryTime",
+    "RadialGridSystem",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "Railings",

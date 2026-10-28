@@ -1787,6 +1787,8 @@ codes! {
     ARCH_CURVED_FACE_SKIPPED = "arch_curved_face_skipped", Warning, false, "Kesen çizginin kestiği yaylı duvar yüzü ölçülmedi; iç ölçü zinciri düz yüzleri ölçer.";
     /// A dimension set whose source broke.
     ARCH_DIMENSION_SET_BROKEN = "arch_dimension_set_broken", Warning, false, "Ölçü dizisinin kaynağı kopuk; ölçüler son yerlerinde duruyor.";
+    /// A grid label on more than one grid of a level (docs/adr/0725 §6).
+    ARCH_GRID_LABEL_DUPLICATE = "arch_grid_label_duplicate", Warning, false, "Aynı katta birden çok aksın etiketi aynı.";
     /// A column whose grids are gone or no longer cross.
     ARCH_COLUMN_GRID_GONE = "arch_column_grid_gone", Warning, false, "Kolonun aksı yok ya da akslar kesişmiyor.";
     /// A view mark whose target is gone.

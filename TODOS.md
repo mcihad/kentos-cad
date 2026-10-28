@@ -129,6 +129,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve duvar stili değişince yüze bağlı ölçülerin izlemesi; ortak durumlar `cad.north.create.json`,
   `cad.revisions.mark.json`, `cad.legends.materials.json`, `cad.tables.edit.json`,
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-ELEM-03 / ADR0725: Aks ve kolon. Web'in Aks ağı aracı Eğrisel biçimi (`radial`: merkez, açı aralıkları iki
+  yönde, ilk yarıçap, yay aralıkları, kesişimlerde radyal yönde kolonlar), “L/n” eşit aralık yazımını ve İki nokta'nın
+  Eşit böl'ünü sunmalı; Aks, seri ve ağlar Kesik uçlar'ı (`ends`, KCAD 126) çizmeli; Kolon aracı ve Öznitelikler L
+  biçimi (`legs`) ile dokuz noktalı Hiza'yı (`anchor`) göstermeli, aynada L'nin kuralı ve kutunun ortasından okuyan
+  geçici ölçü/iç zincir aynı olmalı; Denetim'de Akslar grubu (`arch_grid_label_duplicate`, sil ya da adlandır) ve
+  aksın ölçü yerleri (`start`, `end`, `mid`, `center`, `along`); ortak durumlar `cad.grids.create.radial.json`,
+  `cad.columns.create.forms.json`, `cad.arch.edit.forms.json`, `cad.arch.audit.json`, `fixtures/subref/v1/cases.json`
+  ve `fixtures/arch/v1/cases.json` ile sınanmalı.
 - ARCH-STAIR-01 / ADR0724: Merdiven. Web'in merdiveni `heightFromLevel`'la (KCAD 125) katının yüksekliğine bağlanıp kat
   yüksekliği ya da rıht sayısı değişince rıht yüksekliğini izlemeli, döner merdivende `post`'la merkez direğini
   çizmeli (araçta Merkez direği (M), Öznitelikler'de Yükseklik: Kat yüksekliği/Kendi ve Merkez direği); kat

@@ -89,4 +89,9 @@ name: string, bubbles?: GridBubbles,
 /**
  * The bubble's diameter on paper, millimetres; absent: 8.
  */
-bubbleSize?: number, arch?: ArchInfo, };
+bubbleSize?: number, 
+/**
+ * A gapped grid (docs/adr/0725 §5): the end segments it shows, each this long on paper, millimetres, its middle
+ * left out; absent: the whole grid.
+ */
+ends?: number, arch?: ArchInfo, };

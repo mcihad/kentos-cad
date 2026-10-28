@@ -2231,6 +2231,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any((e["kind"] == "grid" and "ends" in e)
+           or (e["kind"] == "column" and ("anchor" in e or "legs" in e or e.get("shape") == "lShape")) for e in entities):
+        # A gapped grid, an anchored or an L column (docs/adr/0725).
+        return 126
     if any(e["kind"] == "stair" and ("heightFromLevel" in e or "post" in e) for e in entities):
         # A stair bound to its level's height, or with a centre post (docs/adr/0724).
         return 125
@@ -2905,7 +2909,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-126.kcad"] = container(root(cmap(parts), version=uint(126)))
+    files["schema-version-127.kcad"] = container(root(cmap(parts), version=uint(127)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4996,6 +5000,23 @@ def build():
     columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
     columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
     columns_bad("type", lambda src: src.update(columns="Tarih"))
+    # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
+    # column anchored at its top, beside a plain grid and a plain column.
+    gc = document(load("grid-column-forms.json"))
+    assert gc.count(b"\x67version\x18\x7e") == 1
+    out["grid-column-forms.kcad"] = container(gc)
+    out["broken/grid-column-forms-in-schema-125.kcad"] = container(gc.replace(b"\x67version\x18\x7e", b"\x67version\x18\x7d"))
+    def form_bad(name, index, change):
+        d = load("grid-column-forms.json")
+        change(d["entities"][index])
+        out["broken/grid-column-form-" + name + ".kcad"] = container(document(d))
+    form_bad("ends-zero", 0, lambda e: e.update(ends=0.0))
+    form_bad("ends-far", 0, lambda e: e.update(ends=1000.5))
+    form_bad("legs-not-l", 3, lambda e: e.update(legs=[0.1, 0.1]))
+    form_bad("l-without-legs", 4, lambda e: e.pop("legs"))
+    form_bad("legs-thick", 4, lambda e: e.update(legs=[0.5, 0.3]))
+    form_bad("anchor-default", 3, lambda e: e.update(anchor="center"))
+    form_bad("anchor-unknown", 3, lambda e: e.update(anchor="middle"))
     # Schema 125 (docs/adr/0724): stairs whose rise is their level's height, one curved with a centre post, beside one
     # of its own height.
     sl2 = document(load("stair-levels.json"))

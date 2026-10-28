@@ -128,6 +128,12 @@ pub struct GridFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub bubble_size: Option<f64>,
+    /// A gapped grid (docs/adr/0725 §5): the end segments it shows, each this long on paper, millimetres, its middle
+    /// left out; absent: the whole grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<f64>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -158,15 +164,19 @@ pub enum ColumnShape {
     #[default]
     Rect,
     Round,
+    /// An L (docs/adr/0725 §3): two legs from its box's lower left corner, one along its width and one along its
+    /// depth, as thick as its `legs` say.
+    LShape,
 }
 
 impl ColumnShape {
-    pub const ALL: [ColumnShape; 2] = [ColumnShape::Rect, ColumnShape::Round];
+    pub const ALL: [ColumnShape; 3] = [ColumnShape::Rect, ColumnShape::Round, ColumnShape::LShape];
 
     pub fn label(self) -> &'static str {
         match self {
             ColumnShape::Rect => "Dikdörtgen",
             ColumnShape::Round => "Daire",
+            ColumnShape::LShape => "L",
         }
     }
 
@@ -174,8 +184,98 @@ impl ColumnShape {
         match self {
             ColumnShape::Rect => "rect",
             ColumnShape::Round => "round",
+            ColumnShape::LShape => "lShape",
         }
     }
+}
+
+/// Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its
+/// box before its turn, left and right across its width, bottom and top along its depth.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ColumnAnchor {
+    #[default]
+    Center,
+    Left,
+    Right,
+    Bottom,
+    Top,
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight,
+}
+
+impl ColumnAnchor {
+    pub const ALL: [ColumnAnchor; 9] = [
+        ColumnAnchor::Center,
+        ColumnAnchor::Left,
+        ColumnAnchor::Right,
+        ColumnAnchor::Bottom,
+        ColumnAnchor::Top,
+        ColumnAnchor::BottomLeft,
+        ColumnAnchor::BottomRight,
+        ColumnAnchor::TopLeft,
+        ColumnAnchor::TopRight,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            ColumnAnchor::Center => "Orta",
+            ColumnAnchor::Left => "Sol",
+            ColumnAnchor::Right => "Sağ",
+            ColumnAnchor::Bottom => "Alt",
+            ColumnAnchor::Top => "Üst",
+            ColumnAnchor::BottomLeft => "Sol alt",
+            ColumnAnchor::BottomRight => "Sağ alt",
+            ColumnAnchor::TopLeft => "Sol üst",
+            ColumnAnchor::TopRight => "Sağ üst",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            ColumnAnchor::Center => "center",
+            ColumnAnchor::Left => "left",
+            ColumnAnchor::Right => "right",
+            ColumnAnchor::Bottom => "bottom",
+            ColumnAnchor::Top => "top",
+            ColumnAnchor::BottomLeft => "bottomLeft",
+            ColumnAnchor::BottomRight => "bottomRight",
+            ColumnAnchor::TopLeft => "topLeft",
+            ColumnAnchor::TopRight => "topRight",
+        }
+    }
+
+    /// Its place on the box as halves of its width and depth from its middle: −1, 0 or 1 each.
+    pub fn unit(self) -> (i8, i8) {
+        match self {
+            ColumnAnchor::Center => (0, 0),
+            ColumnAnchor::Left => (-1, 0),
+            ColumnAnchor::Right => (1, 0),
+            ColumnAnchor::Bottom => (0, -1),
+            ColumnAnchor::Top => (0, 1),
+            ColumnAnchor::BottomLeft => (-1, -1),
+            ColumnAnchor::BottomRight => (1, -1),
+            ColumnAnchor::TopLeft => (-1, 1),
+            ColumnAnchor::TopRight => (1, 1),
+        }
+    }
+
+    /// The anchor at `unit` on the box.
+    pub fn of_unit(unit: (i8, i8)) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|a| a.unit() == unit)
+            .unwrap_or_default()
+    }
+}
+
+fn is_center(a: &ColumnAnchor) -> bool {
+    *a == ColumnAnchor::Center
 }
 
 fn is_rect(s: &ColumnShape) -> bool {
@@ -210,7 +310,8 @@ fn is_zero(v: &f64) -> bool {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ColumnFields {
-    /// Its centre.
+    /// Its reference point (docs/adr/0725 §2): its centre, or the point of its box its `anchor` names; where its grids
+    /// cross when it stands on them.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     #[serde(default, skip_serializing_if = "is_rect")]
@@ -224,11 +325,21 @@ pub struct ColumnFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
-    /// Its turn, radians counter-clockwise.
+    /// An L's legs (docs/adr/0725 §3), metres: the thickness of the one along its width (measured along its depth),
+    /// then of the one along its depth (measured across its width); only an L's, which needs them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub legs: Option<[f64; 2]>,
+    /// Its turn, radians counter-clockwise, about its reference point.
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
+    /// Which point of its box `at` is (docs/adr/0725 §2); absent: its centre.
+    #[serde(default, skip_serializing_if = "is_center")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<ColumnAnchor>", optional))]
+    pub anchor: ColumnAnchor,
     /// Its type's name.
     #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -259,6 +370,43 @@ impl ColumnFields {
     /// Its depth: its own, else its width.
     pub fn depth(&self) -> f64 {
         self.depth.unwrap_or(self.width)
+    }
+
+    /// What is wrong with its legs (docs/adr/0725 §3): an L needs both, each above 0 and thinner than the side it is
+    /// measured along; no other shape has them.
+    fn legs_problem(&self) -> Problem {
+        let Some([a, b]) = self.legs else {
+            return (self.shape == ColumnShape::LShape).then(|| {
+                (
+                    "legs".into(),
+                    "L kolonun iki kolunun kalınlığı (legs) verilmeli.".into(),
+                )
+            });
+        };
+        if self.shape != ColumnShape::LShape {
+            return Some((
+                "legs".into(),
+                "Kol kalınlıkları yalnız L kolonda olur; biçimi L yapın ya da kolları kaldırın.".into(),
+            ));
+        }
+        for (k, (t, side, whose)) in [(a, self.depth(), "boyundan"), (b, self.width, "eninden")]
+            .into_iter()
+            .enumerate()
+        {
+            if !(t.is_finite() && t > 0.0) {
+                return Some((
+                    format!("legs[{k}]"),
+                    format!("L kolonun kolu {t}; sıfırdan büyük olmalı."),
+                ));
+            }
+            if t >= side {
+                return Some((
+                    format!("legs[{k}]"),
+                    format!("L kolonun kolu {t}; kolonun {whose} ({side}) ince olmalı."),
+                ));
+            }
+        }
+        None
     }
 }
 
@@ -492,8 +640,13 @@ impl GridFields {
         if self.label.trim().is_empty() {
             return Some(("name".into(), "Aksın etiketi boş olamaz.".into()));
         }
-        if let Some(s) = self.bubble_size {
-            return positive(s, "bubbleSize", "Balonun çapı", 100.0);
+        if let Some(s) = self.bubble_size
+            && let Some(found) = positive(s, "bubbleSize", "Balonun çapı", 100.0)
+        {
+            return Some(found);
+        }
+        if let Some(e) = self.ends {
+            return positive(e, "ends", "Kesik aksın uç parçası", 1000.0);
         }
         None
     }
@@ -515,6 +668,9 @@ impl ColumnFields {
         }
         if !self.rotation.is_finite() {
             return Some(("rotation".into(), "Kolonun dönüşü sonlu olmalı.".into()));
+        }
+        if let Some(found) = self.legs_problem() {
+            return Some(found);
         }
         if let Some(g) = &self.grids
             && (g.len() != 2 || g[0] == g[1])

@@ -3,4 +3,4 @@
 /**
  * A column's outline.
  */
-export type ColumnShape = "rect" | "round";
+export type ColumnShape = "rect" | "round" | "lShape";

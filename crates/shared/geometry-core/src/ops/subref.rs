@@ -188,7 +188,19 @@ fn family(shape: &Shape) -> u8 {
         Shape::Wall { .. } => 7,
         Shape::Opening { .. } => 8,
         Shape::Column { .. } => 9,
+        Shape::Grid { .. } => 10,
         _ => 6,
+    }
+}
+
+/// A grid's ends and its arc's bulge (docs/adr/0725 §7): its places are a line's, an arc's when it bends.
+fn grid_line(shape: &Shape) -> Option<(Vec2, Vec2, f64)> {
+    match shape {
+        Shape::Grid { pts, bulges, .. } => match pts.as_slice() {
+            [a, b] => Some((*a, *b, bulge_at(bulges.as_deref(), 0))),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -212,7 +224,7 @@ fn wall_edge(shape: &Shape, part: usize, index: usize) -> Option<(Vec2, Vec2, f6
     Some((l.pts[index], l.pts[(index + 1) % n], l.bulges[index]))
 }
 
-/// A rectangular column's corners in `column_corners`' order (docs/adr/0711 §1); none for a round one.
+/// A rectangular or L column's corners in `column_corners`' order (docs/adr/0711 §1, 0725 §3); none for a round one.
 fn column_corners(shape: &Shape) -> Option<Vec<Vec2>> {
     match shape {
         Shape::Column { at, column } if !column.round => {
@@ -351,8 +363,27 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
             Some(on_edge(a, b, k, t))
         }
         (Shape::Wall { .. }, _) => None,
-        // A column's centre, and a rectangular one's corners and edges (docs/adr/0711 §1).
-        (Shape::Column { at, .. }, Place::Center) => Some(*at),
+        // A grid's ends, middle, centre when it bends and points along it (docs/adr/0725 §7).
+        (Shape::Grid { .. }, Place::Start) => grid_line(&e.shape).map(|(a, ..)| a),
+        (Shape::Grid { .. }, Place::End) => grid_line(&e.shape).map(|(_, b, _)| b),
+        (Shape::Grid { .. }, Place::Center) => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            edge_arc(a, b, k).map(|(c, ..)| c)
+        }
+        (Shape::Grid { .. }, Place::Mid { part: 0, ring: 0, index: 0 }) => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            Some(segment_mid(a, b, k))
+        }
+        (Shape::Grid { .. }, Place::Along { part: 0, ring: 0, index: 0, t }) => {
+            if !(0.0..=1.0).contains(&t) {
+                return None;
+            }
+            let (a, b, k) = grid_line(&e.shape)?;
+            Some(on_edge(a, b, k, t))
+        }
+        (Shape::Grid { .. }, _) => None,
+        // A column's box's middle, and a rectangular or L one's corners and edges (docs/adr/0711 §1, 0725 §2).
+        (Shape::Column { at, column }, Place::Center) => Some(crate::geom::arch::column_center(*at, column)),
         (Shape::Column { .. }, Place::Vertex { part: 0, ring: 0, index }) => {
             column_corners(&e.shape)?.get(index).copied()
         }
@@ -450,6 +481,10 @@ fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
         return p0.len() == p1.len()
             && w0.closed == w1.closed
             && crate::geom::wall::boundaries(w0).len() == crate::geom::wall::boundaries(w1).len();
+    }
+    // A column's: the same shape, as many corners (docs/adr/0725 §3).
+    if let (Shape::Column { column: c0, .. }, Shape::Column { column: c1, .. }) = (before, after) {
+        return c0.round == c1.round && c0.legs.is_some() == c1.legs.is_some();
     }
     match place {
         Place::Vertex { part, ring, .. }
@@ -583,14 +618,16 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
         | Place::Along {
             part, ring, index, ..
         } => {
-            // The edge's two ends, found in the new geometry as one edge (a path's ring's or a wall's line's).
+            // The edge's two ends, found in the new geometry as one edge (a path's ring's, a wall's line's or a
+            // column's).
             let (a, b) = match ring_of(&before.shape, part, ring) {
                 Some(r) => {
                     let n = r.pts.len();
                     (r.pts[index], r.pts[(index + 1) % n])
                 }
-                None => match wall_edge(&before.shape, part, index) {
-                    Some((a, b, _)) if ring == 0 => (a, b),
+                None => match (wall_edge(&before.shape, part, index), column_edge(&before.shape, index)) {
+                    (Some((a, b, _)), _) if ring == 0 => (a, b),
+                    (_, Some((a, b))) if (part, ring) == (0, 0) => (a, b),
                     _ => return Followed::Broken(Reason::NoSuchPlace),
                 },
             };
@@ -614,8 +651,9 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             };
             let (m, closed) = match ring_of(&after.shape, pa, ra) {
                 Some(nr) => (nr.pts.len(), nr.closed),
-                None => match wall_line(&after.shape, pa) {
-                    Some((l, closed)) if ra == 0 => (l.pts.len(), closed),
+                None => match (wall_line(&after.shape, pa), column_corners(&after.shape)) {
+                    (Some((l, closed)), _) if ra == 0 => (l.pts.len(), closed),
+                    (_, Some(c)) if (pa, ra) == (0, 0) => (c.len(), true),
                     _ => return Followed::Broken(Reason::NoSuchPlace),
                 },
             };
@@ -859,6 +897,14 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
                 Some(Place::Along { part: 0, ring: 0, index, t })
             })
         }
+        Shape::Grid { .. } => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            match edge_arc(a, b, k) {
+                Some((c, r, a0, sw)) => t_on_arc(c, r, a0, sw, at),
+                None => t_on_segment(a, b, at),
+            }
+            .map(whole)
+        }
         _ => vertex_places(&e.shape).into_iter().find_map(|(p, _)| {
             let Place::Vertex { part, ring, index } = p else {
                 return None;
@@ -945,6 +991,17 @@ pub fn edge_place_near(e: &Entity, kind: EdgeKind, near: Vec2) -> Option<Place> 
         (Shape::Circle { c, .. }, EdgeKind::Round) => {
             return Some(whole(t_nearest_on_arc(*c, 0.0, TAU, near)));
         }
+        // A grid's line or arc (docs/adr/0725 §7).
+        (Shape::Grid { .. }, _) => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            return match (edge_arc(a, b, k), kind) {
+                (None, EdgeKind::Straight) if a != b => Some(whole(t_nearest_on_segment(a, b, near))),
+                (Some((c, _, a0, sw)), EdgeKind::Arc | EdgeKind::Round) => {
+                    Some(whole(t_nearest_on_arc(c, a0, sw, near)))
+                }
+                _ => None,
+            };
+        }
         (Shape::Polyline { .. } | Shape::Polygon { .. }, _) => {}
         _ => return None,
     }
@@ -991,6 +1048,14 @@ pub fn curve_centre(e: &Entity, place: Place) -> Option<Vec2> {
             Shape::Circle { c, .. } | Shape::Arc { c, .. },
             Place::Along { .. } | Place::Start | Place::End | Place::Center,
         ) => Some(*c),
+        // A bent grid's arc (docs/adr/0725 §7).
+        (
+            Shape::Grid { .. },
+            Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End | Place::Center,
+        ) => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            edge_arc(a, b, k).map(|(c, ..)| c)
+        }
         (
             Shape::Polyline { .. } | Shape::Polygon { .. },
             Place::Along {
@@ -1011,6 +1076,11 @@ pub fn edge_line(e: &Entity, place: Place) -> Option<(Vec2, Vec2)> {
     match (&e.shape, place) {
         (Shape::Line { a, b }, Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End) => {
             Some((*a, *b))
+        }
+        // A straight grid's line (docs/adr/0725 §7).
+        (Shape::Grid { .. }, Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End) => {
+            let (a, b, k) = grid_line(&e.shape)?;
+            edge_arc(a, b, k).is_none().then_some((a, b))
         }
         (
             Shape::Polyline { .. } | Shape::Polygon { .. },

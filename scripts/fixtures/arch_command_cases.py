@@ -37,7 +37,17 @@ run are the drawing reference's (`arch_cases.py`). The rules, as the ADR gives t
   own, or false, frees it (its risers staying); a bound stair keeps its level; a curved stair's centre post `post`
   (§3): on a curved stair only, its diameter above 0, its radius under the stair's inner radius;
 - the document keeps a column with grids at their crossing after every step, its place from their labels; a grid gone
-  breaks it (`gridGone`) where it stands.
+  breaks it (`gridGone`) where it stands;
+- a curved grid system (docs/adr/0725 §1): radial grids from its centre, the first at its angle, the next its turns
+  round (each not 0, one way, together under a whole turn), from its first arc less the extension (never past the
+  centre) to its last arc and it; arcs round the centre, its radius and its rings out, each reaching the extension
+  along itself past the outermost radial grids but never more than a quarter of the turn left; labels 1… and A…; a
+  column at every crossing arc by arc, its width along its radial grid; its crossings found as the follower finds
+  them (an arc a whole circle, the crossing nearest the column), so its numbers are floats, compared within 10⁻⁹;
+- a gapped grid's `ends` (§5): above 0, at most 1000 mm; a column's anchor (§2) and an L column's legs (§3): the
+  legs an L's only, each above 0 and thinner than its side; a shape other than L drops them; a mirror flips a
+  rectangle's anchor across its depth, an L comes round a quarter turn less with its width and depth and its legs
+  swapped and its anchor's halves swapped.
 """
 
 import argparse
@@ -201,6 +211,50 @@ def cross(a, b):
     return (p[0] + d1[0] * t, p[1] + d1[1] * t)
 
 
+def arc_of(g):
+    """A bent grid's circle as KentOS draws a bulge (docs/adr/0343 §1): its centre and radius; None when straight."""
+    b = (g.get("bulges") or [0.0])[0]
+    if b == 0:
+        return None
+    (ax, ay), (bx, by) = [(v["x"], v["y"]) for v in g["pts"]]
+    dx, dy = bx - ax, by - ay
+    k = (1.0 - b * b) / (4.0 * b)
+    c = ((ax + bx) / 2.0 - dy * k, (ay + by) / 2.0 + dx * k)
+    return c, math.hypot(dx, dy) * (1.0 + b * b) / (4.0 * abs(b))
+
+
+def cross_near(a, b, near):
+    """Where two grids cross as the follower takes them (lines unbounded, arcs whole circles), nearest `near`; None:
+    they do not (ADR 0343 §3, 0725 §1)."""
+    ca, cb = arc_of(a), arc_of(b)
+    if ca is None and cb is None:
+        p = cross(a, b)
+        return None if p is None else (float(p[0]), float(p[1]))
+    found = []
+    if ca is not None and cb is not None:
+        (c1, r1), (c2, r2) = ca, cb
+        d = math.hypot(c2[0] - c1[0], c2[1] - c1[1])
+        if d == 0 or d > r1 + r2 or d < abs(r1 - r2):
+            return None
+        m = (d * d + r1 * r1 - r2 * r2) / (2 * d)
+        h = math.sqrt(max(r1 * r1 - m * m, 0.0))
+        ux, uy = (c2[0] - c1[0]) / d, (c2[1] - c1[1]) / d
+        base = (c1[0] + ux * m, c1[1] + uy * m)
+        found = [(base[0] - uy * h, base[1] + ux * h), (base[0] + uy * h, base[1] - ux * h)]
+    else:
+        line, (c, r) = (b, ca) if cb is None else (a, cb)
+        (px, py), (qx, qy) = [(v["x"], v["y"]) for v in line["pts"]]
+        dx, dy = qx - px, qy - py
+        fx, fy = px - c[0], py - c[1]
+        A, B, C = dx * dx + dy * dy, 2 * (fx * dx + fy * dy), fx * fx + fy * fy - r * r
+        disc = B * B - 4 * A * C
+        if disc < 0:
+            return None
+        root = math.sqrt(disc)
+        found = [(px + dx * t, py + dy * t) for t in ((-B - root) / (2 * A), (-B + root) / (2 * A))]
+    return min(found, key=lambda p: math.hypot(p[0] - near["x"], p[1] - near["y"]))
+
+
 def within(g, pt):
     (p, q) = [(F(v["x"]), F(v["y"])) for v in g["pts"]]
     return min(p[0], q[0]) <= pt[0] <= max(p[0], q[0]) and min(p[1], q[1]) <= pt[1] <= max(p[1], q[1])
@@ -214,7 +268,7 @@ def settle(d, c):
         c.pop("broken", None)
         return
     a, b = d.grid_by_uid(gs[0]), d.grid_by_uid(gs[1])
-    p = cross(a, b) if a and b else None
+    p = cross_near(a, b, c["at"]) if a and b else None
     if p is None:
         c["broken"] = "gridGone"
         return
@@ -336,7 +390,11 @@ def grid_problem(g, path):
     if g["name"].strip() == "":
         return refusal(code, "Aksın etiketi boş olamaz.", f"{path}.name")
     if g.get("bubbleSize") is not None:
-        return positive(g["bubbleSize"], "bubbleSize", "Balonun çapı", 100, code, path)
+        r = positive(g["bubbleSize"], "bubbleSize", "Balonun çapı", 100, code, path)
+        if r:
+            return r
+    if g.get("ends") is not None:
+        return positive(g["ends"], "ends", "Kesik aksın uç parçası", 1000, code, path)
     return None
 
 
@@ -349,6 +407,18 @@ def column_problem(c, path):
         r = positive(c["depth"], "depth", "Kolonun boyu", 100, code, path)
         if r:
             return r
+    legs = c.get("legs")
+    if legs is None:
+        if c.get("shape") == "lShape":
+            return refusal(code, "L kolonun iki kolunun kalınlığı (legs) verilmeli.", f"{path}.legs")
+    elif c.get("shape") != "lShape":
+        return refusal(code, "Kol kalınlıkları yalnız L kolonda olur; biçimi L yapın ya da kolları kaldırın.", f"{path}.legs")
+    else:
+        for k, (t, side, whose) in enumerate([(legs[0], c.get("depth", c["width"]), "boyundan"), (legs[1], c["width"], "eninden")]):
+            if not (math.isfinite(t) and t > 0):
+                return refusal(code, f"L kolonun kolu {num(t)}; sıfırdan büyük olmalı.", f"{path}.legs[{k}]")
+            if t >= side:
+                return refusal(code, f"L kolonun kolu {num(t)}; kolonun {whose} ({num(side)}) ince olmalı.", f"{path}.legs[{k}]")
     g = c.get("grids")
     if g is not None and (len(g) != 2 or g[0] == g[1]):
         return refusal(code, "Kolon iki ayrı aksın kesişimine bağlanır.", f"{path}.grids")
@@ -573,8 +643,9 @@ def after(prev):
 
 def grids_create(d, inp, conflict=False):
     series = inp.get("series")
-    if not inp.get("grids") and series is None and inp.get("system") is None:
-        return refusal("no_objects", "Yazılacak aks verilmedi. Akslar (grids), bir seri (series) ya da bir aks ağı (system) verin.", "grids"), None
+    if not inp.get("grids") and series is None and inp.get("system") is None and inp.get("radial") is None:
+        return refusal("no_objects", "Yazılacak aks verilmedi. Akslar (grids), bir seri (series), bir aks ağı (system) ya da "
+                                     "eğrisel aks ağı (radial) verin.", "grids"), None
     prev = last_label(d)
     made = []
     for i, n in enumerate(inp.get("grids", [])):
@@ -582,7 +653,7 @@ def grids_create(d, inp, conflict=False):
         r = points_not_finite(n["pts"], at)
         for k, b in enumerate(n.get("bulges") or []):
             r = r or (not_finite("Büküm", f"{at}.bulges[{k}]") if not math.isfinite(b) else None)
-        r = r or finite_each([(n.get("bubbleSize"), "bubbleSize", "Balon çapı")], at)
+        r = r or finite_each([(n.get("bubbleSize"), "bubbleSize", "Balon çapı"), (n.get("ends"), "ends", "Kesik aksın ucu")], at)
         if r:
             return r, None
         g = {"pts": n["pts"]}
@@ -593,6 +664,8 @@ def grids_create(d, inp, conflict=False):
             g["bubbles"] = n["bubbles"]
         if n.get("bubbleSize") is not None:
             g["bubbleSize"] = n["bubbleSize"]
+        if n.get("ends") is not None:
+            g["ends"] = n["ends"]
         if n.get("arch"):
             g["arch"] = n["arch"]
         r = grid_problem(g, at) or level_check(g.get("arch"), f"{at}.arch.level")
@@ -609,7 +682,7 @@ def grids_create(d, inp, conflict=False):
                 return not_finite("Aralık", f"series.spacings[{k}]"), None
             if s <= 0:
                 return refusal("invalid_grid", f"Akslar arası {num(s)}; sıfırdan büyük olmalı.", f"series.spacings[{k}]"), None
-        r = finite_each([(series.get("bubbleSize"), "bubbleSize", "Balon çapı")], "series")
+        r = finite_each([(series.get("bubbleSize"), "bubbleSize", "Balon çapı"), (series.get("ends"), "ends", "Kesik aksın ucu")], "series")
         if r:
             return r, None
         a, b = series["from"], series["to"]
@@ -632,6 +705,8 @@ def grids_create(d, inp, conflict=False):
                 g["bubbles"] = series["bubbles"]
             if series.get("bubbleSize") is not None:
                 g["bubbleSize"] = series["bubbleSize"]
+            if series.get("ends") is not None:
+                g["ends"] = series["ends"]
             if series.get("arch"):
                 g["arch"] = series["arch"]
             r = grid_problem(g, "series")
@@ -642,6 +717,10 @@ def grids_create(d, inp, conflict=False):
         r = system_made(inp["system"], made)
         if r:
             return r, None
+    if inp.get("radial") is not None:
+        r = radial_made(inp["radial"], made)
+        if r:
+            return r, None
     return finish(inp, conflict, made, [])
 
 
@@ -650,7 +729,7 @@ def system_made(s, made):
     column names its grids as `@k`, the index of the grid among the objects made."""
     r = point_not_finite(s["origin"], "Aks ağının başlangıcının", "system.origin")
     r = r or finite_each([(s.get("angle"), "angle", "Açı"), (s.get("extension"), "extension", "Uzatma"),
-                          (s.get("bubbleSize"), "bubbleSize", "Balon çapı")], "system")
+                          (s.get("bubbleSize"), "bubbleSize", "Balon çapı"), (s.get("ends"), "ends", "Kesik aksın ucu")], "system")
     if r:
         return r
     for axis in ("x", "y"):
@@ -661,8 +740,7 @@ def system_made(s, made):
                 return refusal("invalid_grid", f"Akslar arası {num(gap)}; sıfırdan büyük olmalı.", f"system.{axis}[{k}]")
     cols = s.get("columns")
     if cols is not None:
-        r = finite_each([(cols["width"], "width", "En"), (cols.get("depth"), "depth", "Boy"),
-                         (cols.get("rotation"), "rotation", "Dönüş")], "system.columns")
+        r = finite_each(column_numbers(cols), "system.columns")
         if r:
             return r
     e = s.get("extension", 1.5)
@@ -703,6 +781,8 @@ def system_made(s, made):
                 g["bubbles"] = s["bubbles"]
             if s.get("bubbleSize") is not None:
                 g["bubbleSize"] = s["bubbleSize"]
+            if s.get("ends") is not None:
+                g["ends"] = s["ends"]
             if s.get("arch"):
                 g["arch"] = s["arch"]
             out.append(g)
@@ -733,6 +813,124 @@ def system_made(s, made):
             r = column_problem(col, "system.columns")
             if r:
                 return r
+            made.append(("column", col))
+    return None
+
+
+def column_numbers(n):
+    """A column's numbers in the order their finiteness is checked: width, depth, legs, rotation."""
+    legs = n.get("legs") or [None, None]
+    return [(n["width"], "width", "En"), (n.get("depth"), "depth", "Boy"), (legs[0], "legs[0]", "L kolonun kolu"),
+            (legs[1], "legs[1]", "L kolonun kolu"), (n.get("rotation"), "rotation", "Dönüş")]
+
+
+def radial_made(s, made):
+    """A curved grid system (ADR 0725 §1): its radial grids, then its arcs, then a column at every crossing arc by arc;
+    a column names its grids as `@k`."""
+    r = point_not_finite(s["center"], "Eğrisel aks ağının merkezinin", "radial.center")
+    r = r or finite_each([(s.get("angle"), "angle", "Açı"), (s["radius"], "radius", "Yarıçap"),
+                          (s.get("extension"), "extension", "Uzatma"), (s.get("bubbleSize"), "bubbleSize", "Balon çapı"),
+                          (s.get("ends"), "ends", "Kesik aksın ucu")], "radial")
+    if r:
+        return r
+    turns, rings = s.get("turns", []), s.get("rings", [])
+    for k, t in enumerate(turns):
+        if not math.isfinite(t):
+            return not_finite("Aralık", f"radial.turns[{k}]")
+        if t == 0 or (k > 0 and (t > 0) != (turns[0] > 0)):
+            return refusal("invalid_grid", "Radyal akslar arası açılar sıfır olmaz ve hepsi aynı yöne döner.", f"radial.turns[{k}]")
+    for k, g in enumerate(rings):
+        if not math.isfinite(g):
+            return not_finite("Aralık", f"radial.rings[{k}]")
+        if g <= 0:
+            return refusal("invalid_grid", f"Yaylar arası {num(g)}; sıfırdan büyük olmalı.", f"radial.rings[{k}]")
+    cols = s.get("columns")
+    if cols is not None:
+        r = finite_each(column_numbers(cols), "radial.columns")
+        if r:
+            return r
+    if s["radius"] <= 0:
+        return refusal("invalid_grid", f"İlk yayın yarıçapı {num(s['radius'])}; sıfırdan büyük olmalı.", "radial.radius")
+    turned = sum(abs(t) for t in turns)
+    if turned >= 2 * math.pi:
+        return refusal("invalid_grid", "Radyal akslar arası açılar toplamı tam turdan (360°) küçük olmalı.", "radial.turns")
+    e = s.get("extension", 1.5)
+    if e < 0:
+        return refusal("invalid_grid", f"Uzatma {num(e)}; sıfır ya da daha büyük olmalı.", "radial.extension")
+    if e == 0 and (not turns or not rings):
+        return refusal("invalid_grid", "Tek radyal aks ya da tek yay varken uzatma sıfır olursa öbür akslar nokta olur; uzatma verin.",
+                       "radial.extension")
+    for key in ("radialStart", "arcStart"):
+        if s.get(key) is not None and s[key].strip() == "":
+            return refusal("invalid_grid", "Aksın ilk adı boş; 1, A gibi bir ad verin.", f"radial.{key}")
+    r = level_check(s.get("arch"), "radial.arch.level")
+    if r:
+        return r
+    sign = -1.0 if turns and turns[0] < 0 else 1.0
+    first = s.get("angle", 0.0)
+    angles = [first]
+    for t in turns:
+        angles.append(angles[-1] + t)
+    radii = [s["radius"]]
+    for g in rings:
+        radii.append(radii[-1] + g)
+    c = s["center"]
+
+    def at(radius, a):
+        return P(c["x"] + radius * math.cos(a), c["y"] + radius * math.sin(a))
+
+    inner, outer = max(s["radius"] - e, 0.0), radii[-1] + e
+    room = (2 * math.pi - turned) / 4
+
+    def grid(pts, label, bulges=None):
+        g = {"pts": pts}
+        if bulges is not None:
+            g["bulges"] = bulges
+        g["name"] = label
+        if s.get("bubbles", "both") != "both":
+            g["bubbles"] = s["bubbles"]
+        for k in ("bubbleSize", "ends"):
+            if s.get(k) is not None:
+                g[k] = s[k]
+        if s.get("arch"):
+            g["arch"] = s["arch"]
+        return g
+
+    radial, label = [], s.get("radialStart") or "1"
+    for i, a in enumerate(angles):
+        if i:
+            label = next_label(label)
+        radial.append(grid([at(inner, a), at(outer, a)], label))
+    arcs, label = [], s.get("arcStart") or "A"
+    for k, radius in enumerate(radii):
+        if k:
+            label = next_label(label)
+        reach = min(e / radius, room)
+        a0, a1 = first - sign * reach, angles[-1] + sign * reach
+        arcs.append(grid([at(radius, a0), at(radius, a1)], label, [math.tan((a1 - a0) / 4), 0.0]))
+    base = len(made)
+    for g in radial + arcs:
+        r = grid_problem(g, "radial")
+        if r:
+            return r
+        made.append(g)
+    if cols is None:
+        return None
+    tag = cols.get("tagStart")
+    for k, ga in enumerate(arcs):
+        for i, gr in enumerate(radial):
+            n = {**cols, "rotation": angles[i] + cols.get("rotation", 0.0)}
+            col = column_fields(n, tag, at(radii[k], angles[i]))
+            if tag is not None:
+                tag = next_label(tag)
+            col["grids"] = [f"@{base + i}", f"@{base + len(radial) + k}"]
+            col["place"] = place_of(gr["name"], ga["name"])
+            if s.get("arch"):
+                col["arch"] = s["arch"]
+            r = column_problem(col, "radial.columns")
+            if r:
+                return r
+            col["at"] = P(*cross_near(gr, ga, col["at"]))
             made.append(("column", col))
     return None
 
@@ -773,8 +971,12 @@ def column_fields(n, tag, at):
     c["width"] = n["width"]
     if n.get("depth") is not None:
         c["depth"] = n["depth"]
+    if n.get("legs") is not None:
+        c["legs"] = n["legs"]
     if n.get("rotation"):
         c["rotation"] = n["rotation"]
+    if n.get("anchor", "center") != "center":
+        c["anchor"] = n["anchor"]
     if n.get("type") is not None:
         c["type"] = n["type"]
     if tag is not None:
@@ -805,7 +1007,7 @@ def columns_create(d, inp, conflict=False):
     for i, n in enumerate(inp.get("columns", [])):
         at = f"columns[{i}]"
         r = (point_not_finite(n["at"], "Kolonun merkezinin", f"{at}.at") if n.get("at") else None) or \
-            finite_each([(n["width"], "width", "En"), (n.get("depth"), "depth", "Boy"), (n.get("rotation"), "rotation", "Dönüş")], at)
+            finite_each(column_numbers(n), at)
         if r:
             return r, None
         if n.get("at") is None and n.get("grids") is None:
@@ -824,7 +1026,7 @@ def columns_create(d, inp, conflict=False):
         made.append(c)
     x = inp.get("crossings")
     if x is not None:
-        r = finite_each([(x["width"], "width", "En"), (x.get("depth"), "depth", "Boy"), (x.get("rotation"), "rotation", "Dönüş")], "crossings")
+        r = finite_each(column_numbers(x), "crossings")
         if r:
             return r, None
         if len(x["grids"]) < 2:
@@ -845,6 +1047,9 @@ def columns_create(d, inp, conflict=False):
                     continue
                 c = column_fields({**x, "grids": [ua, ub]}, next_tag(None), P(p[0], p[1]))
                 c["place"] = place_of(ga["name"], gb["name"])
+                r = column_problem(c, "crossings")
+                if r:
+                    return r, None
                 made.append(c)
     return finish(inp, conflict, made, [])
 
@@ -1394,6 +1599,192 @@ def system_cases():
     return c.cases
 
 
+def radial_cases():
+    """Eğrisel aks ağı (ADR 0725 §1): radial grids and arcs round a centre, with columns at their crossings; gapped
+    grids (§5)."""
+    c = Cases()
+    base = {"center": P(0, 40), "turns": [math.pi / 6, math.pi / 6, math.pi / 6], "radius": 6.0, "rings": [4.0, 4.0]}
+    cols = {"width": 0.3, "depth": 0.5, "fill": True, "tagStart": "S1"}
+    life(c, GRIDS, {"layerId": "aks", "radial": {**base, "columns": cols}}, "Kolonlu eğrisel aks ağı")
+    for name, inp in [
+        ("eğrisel ağ: 1–4 radyal, A–C yay, öntanımlı 1.5 m uzatma", {"layerId": "aks", "radial": base}),
+        ("ilk radyal 15°'de, saat yönünde dönen akslar", {"layerId": "aks", "radial": {**base, "angle": math.pi / 12, "turns": [-math.pi / 4, -math.pi / 4]}}),
+        ("tek yay, dört radyal: yay iki uçta uzar", {"layerId": "aks", "radial": {"center": P(40, 0), "turns": [0.5, 0.5, 0.5], "radius": 8.0}}),
+        ("tek radyal, üç yay: radyal yaylardan uzar", {"layerId": "aks", "radial": {"center": P(40, 30), "radius": 5.0, "rings": [3.0, 3.0]}}),
+        ("uzatma ilk yaydan büyük: radyal merkezden başlar", {"layerId": "aks", "radial": {**base, "radius": 1.0, "extension": 2.5}}),
+        ("tam tura yakın: yayın ucu kalan açının dörtte birinde kalır", {"layerId": "aks", "radial": {"center": P(0, 80), "turns": [math.pi / 6] * 11, "radius": 4.0, "rings": [3.0]}}),
+        ("uzatma sıfırken akslar en dış akslarda biter", {"layerId": "aks", "radial": {**base, "extension": 0.0}}),
+        ("ilk adlar verilir, başında balon, 10 mm balon", {"layerId": "aks", "radial": {**base, "radialStart": "R1", "arcStart": "H", "bubbles": "start", "bubbleSize": 10.0}}),
+        ("kesik eğrisel ağ: akslar uçlarında 12 mm", {"layerId": "aks", "radial": {**base, "ends": 12.0}}),
+        ("kolonlar radyal aksın yönüyle, üstüne verilen dönüşle", {"layerId": "kolon", "radial": {**base, "columns": {"width": 0.4, "rotation": 0.25}}}),
+        ("yuvarlak kolonlar, katı ve evresiyle ağ", {"layerId": "aks", "radial": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"shape": "round", "width": 0.5}}}),
+        ("L kolonlar sol alt köşeleriyle kesişimde", {"layerId": "kolon", "radial": {**base, "columns": {"shape": "lShape", "width": 0.6, "depth": 0.6, "legs": [0.25, 0.25], "anchor": "bottomLeft"}}}),
+        ("aks ağıyla birlikte: eğrisel ağ en sonda", {"layerId": "aks", "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}, "radial": {"center": P(80, 0), "turns": [0.4], "radius": 5.0}}),
+        ("kesik aks: uçlarında 15 mm, ortası boş", {"layerId": "aks", "grids": [{"pts": [P(0, 60), P(20, 60)], "label": "K1", "ends": 15.0}]}),
+        ("kesik seri ve kesik aks ağı", {"layerId": "aks", "series": {"from": P(30, 50), "to": P(30, 70), "spacings": [5.0], "start": "S", "ends": 10.0},
+                                          "system": {"origin": P(50, 50), "x": [4.0], "y": [4.0], "ends": 8.0}}),
+    ]:
+        c.add(name, [create_step(Drawing(), GRIDS, "execute", inp)])
+    refusals(c, GRIDS, [
+        ("sıfır açı reddedilir", {"layerId": "aks", "radial": {**base, "turns": [0.5, 0.0]}}, {}),
+        ("iki yöne dönen açılar reddedilir", {"layerId": "aks", "radial": {**base, "turns": [0.5, -0.5]}}, {}),
+        ("tam tur ve ötesi reddedilir", {"layerId": "aks", "radial": {**base, "turns": [math.pi, math.pi]}}, {}),
+        ("eksi yay aralığı reddedilir", {"layerId": "aks", "radial": {**base, "rings": [4.0, -1.0]}}, {}),
+        ("sıfır yarıçap reddedilir", {"layerId": "aks", "radial": {**base, "radius": 0.0}}, {}),
+        ("sonsuz yarıçap reddedilir", {"layerId": "aks", "radial": base}, {"non_finite": {"radial.radius": "Infinity"}}),
+        ("sonsuz açı aralığı reddedilir", {"layerId": "aks", "radial": base}, {"non_finite": {"radial.turns[1]": "NaN"}}),
+        ("sonsuz merkez reddedilir", {"layerId": "aks", "radial": base}, {"non_finite": {"radial.center.y": "-Infinity"}}),
+        ("eksi uzatma reddedilir", {"layerId": "aks", "radial": {**base, "extension": -0.5}}, {}),
+        ("tek yayda sıfır uzatma reddedilir", {"layerId": "aks", "radial": {"center": P(0, 0), "turns": [0.5], "radius": 5.0, "extension": 0.0}}, {}),
+        ("boş ilk ad reddedilir", {"layerId": "aks", "radial": {**base, "arcStart": " "}}, {}),
+        ("sıfır kesik uç reddedilir", {"layerId": "aks", "grids": [{"pts": [P(0, 0), P(5, 0)], "label": "A", "ends": 0.0}]}, {}),
+        ("1000 mm'den uzun kesik uç reddedilir", {"layerId": "aks", "radial": {**base, "ends": 1200.0}}, {}),
+        ("sonsuz kesik uç reddedilir", {"layerId": "aks", "series": {"from": P(0, 0), "to": P(0, 5), "spacings": [3.0], "ends": 5.0}}, {"non_finite": {"series.ends": "NaN"}}),
+        ("eğrisel ağın kolonunda kolsuz L reddedilir", {"layerId": "aks", "radial": {**base, "columns": {"shape": "lShape", "width": 0.6}}}, {}),
+        ("eğrisel ağın olmayan katı reddedilir", {"layerId": "aks", "radial": {**base, "arch": {"level": "yok"}}}, {}),
+    ])
+    common_refusals(c, GRIDS, {"layerId": "aks", "radial": base})
+    return c.cases
+
+
+def form_cases():
+    """Kolonun hizası ve L kolon (ADR 0725 §2, §3): put by any of its box's nine points, an L by its legs."""
+    c = Cases()
+    one = col([{"at": P(3, 3), "width": 0.3, "depth": 0.5, "anchor": "bottomLeft"}])
+    life(c, COLUMNS, one, "Sol alt köşesiyle konan kolon")
+    for name, inp in [
+        ("L kolon kollarıyla", col([{"at": P(4, 4), "shape": "lShape", "width": 0.6, "depth": 0.5, "legs": [0.25, 0.3]}])),
+        ("L kolon üstüyle, dönük ve dolu", col([{"at": P(4, 4), "shape": "lShape", "width": 0.6, "depth": 0.6, "legs": [0.2, 0.2], "anchor": "top", "rotation": 0.5, "fill": True}])),
+        ("akslara bağlı kolon sağ üst köşesiyle kesişimde (A-1)", col([{"grids": [uid_of(3), uid_of(1)], "width": 0.4, "anchor": "topRight"}])),
+        ("yuvarlak kolon solundan", col([{"at": P(5, 5), "shape": "round", "width": 0.5, "anchor": "left"}])),
+        ("kesişimlerde alt kenarlarıyla kolonlar", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(2), uid_of(3), uid_of(4)], "width": 0.3, "depth": 0.5, "anchor": "bottom"}}),
+        ("dokuz noktanın hepsiyle kolonlar", col([{"at": P(float(k), 9.0), "width": 0.3, "depth": 0.5, "anchor": a} for k, a in enumerate(
+            ["center", "left", "right", "bottom", "top", "bottomLeft", "bottomRight", "topLeft", "topRight"])])),
+    ]:
+        c.add(name, [create_step(Drawing(), COLUMNS, "execute", inp)])
+    for name, inp in [
+        ("aks ağının kolonları sol üst köşeleriyle", {"layerId": "aks", "system": {"origin": P(0, 20), "x": [6.0, 6.0], "y": [5.0], "columns": {"width": 0.3, "depth": 0.3, "anchor": "topLeft"}}}),
+        ("aks ağının L kolonları", {"layerId": "aks", "system": {"origin": P(0, 20), "x": [6.0], "y": [5.0], "columns": {"shape": "lShape", "width": 0.5, "legs": [0.2, 0.2]}}}),
+        ("aks ağında kalın kollu L reddedilir", {"layerId": "aks", "system": {"origin": P(0, 20), "x": [6.0], "y": [5.0], "columns": {"shape": "lShape", "width": 0.5, "legs": [0.5, 0.2]}}}),
+    ]:
+        c.add(name, [create_step(Drawing(), GRIDS, "execute", inp, with_command=True)])
+    refusals(c, COLUMNS, [
+        ("kolsuz L kolon reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.5}]), {}),
+        ("dikdörtgen kolonun kolu reddedilir", col([{"at": P(0, 0), "width": 0.5, "legs": [0.1, 0.1]}]), {}),
+        ("sıfır kalın kol reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.5, "legs": [0.0, 0.2]}]), {}),
+        ("boyu kadar kalın kol reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.6, "depth": 0.4, "legs": [0.4, 0.2]}]), {}),
+        ("eni kadar kalın ikinci kol reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.6, "depth": 0.4, "legs": [0.2, 0.6]}]), {}),
+        ("eksi kol reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.5, "legs": [0.2, -0.1]}]), {}),
+        ("sonsuz kol reddedilir", col([{"at": P(0, 0), "shape": "lShape", "width": 0.5, "legs": [0.2, 0.2]}]), {"non_finite": {"columns[0].legs[1]": "Infinity"}}),
+        ("kesişimlerde kolsuz L reddedilir", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(3)], "shape": "lShape", "width": 0.5}}, {}),
+    ])
+    common_refusals(c, COLUMNS, one)
+    return c.cases
+
+
+def norm_angle(a):
+    r = math.fmod(a, 2 * math.pi)
+    return r + 2 * math.pi if r < 0 else r
+
+
+def mirrored_column(f, a, b):
+    """A column mirrored across the line through `a` and `b` (ADR 0725 §2, §3): its point mirrored, its turn the
+    mirror's less its own; a rectangle's or a circle's anchor flipped across its depth; an L a quarter turn less, its
+    width and depth and its legs swapped, its anchor's halves swapped."""
+    dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+    ll = dx * dx + dy * dy
+    cos2, sin2 = (dx * dx - dy * dy) / ll, 2 * dx * dy / ll
+    px, py = f["at"]["x"] - a["x"], f["at"]["y"] - a["y"]
+    g = copy.deepcopy(f)
+    g["at"] = P(a["x"] + cos2 * px + sin2 * py, a["y"] + sin2 * px - cos2 * py)
+    rot = norm_angle(math.atan2(sin2, cos2) - f.get("rotation", 0.0))
+    names = {"center": (0, 0), "left": (-1, 0), "right": (1, 0), "bottom": (0, -1), "top": (0, 1), "bottomLeft": (-1, -1),
+             "bottomRight": (1, -1), "topLeft": (-1, 1), "topRight": (1, 1)}
+    ux, uy = names[f.get("anchor", "center")]
+    if f.get("shape") == "lShape":
+        width, depth = f["width"], f.get("depth", f["width"])
+        g["width"], g["depth"] = depth, width
+        g["legs"] = [f["legs"][1], f["legs"][0]]
+        rot = norm_angle(rot - math.pi / 2)
+        ux, uy = uy, ux
+    else:
+        uy = -uy
+    anchor = next(n for n, u in names.items() if u == (ux, uy))
+    g.pop("anchor", None)
+    if anchor != "center":
+        g["anchor"] = anchor
+    g.pop("rotation", None)
+    if rot:
+        g["rotation"] = rot
+    return g
+
+
+def form_edit_cases():
+    """Mimari nesneyi düzenle with the anchor, the L and the gapped grid (ADR 0725 §2, §3, §5): set, swapped back, refused;
+    a column tied to grids keeps its anchor where they cross; a mirror."""
+    c = Cases()
+
+    def with_column(**kw):
+        d = Drawing()
+        made = create_step(d, COLUMNS, "execute", col([{"at": P(3, 3), "width": 0.3, **kw}]), with_command=True)
+        return d, made, d.next - 1
+
+    def one(d, uids, op, **kw):
+        return edit_step(d, "execute", {"uids": uids, "operation": op}, **kw)
+
+    d, made, k = with_column(depth=0.5)
+    c.add("Değiştir: kolonun hizası; yeri kalır, gövdesi kayar", [made, one(d, [uid_of(k)], {"kind": "set", "anchor": "bottomLeft"})])
+    d, made, k = with_column(depth=0.5, anchor="topRight")
+    c.add("Değiştir: ortaya dönen hiza yazılmaz", [made, one(d, [uid_of(k)], {"kind": "set", "anchor": "center"})])
+    d, made, k = with_column(depth=0.5)
+    c.add("Değiştir: dikdörtgen kolon L olur, kollarıyla", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "lShape", "width": 0.6, "legs": [0.2, 0.25]})])
+    d, made, k = with_column(depth=0.5, shape="lShape", legs=[0.2, 0.2])
+    c.add("Değiştir: L kolon dikdörtgen olunca kolları kalkar", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "rect"})])
+    d, made, k = with_column(depth=0.5, shape="lShape", legs=[0.2, 0.2])
+    c.add("Değiştir: L kolonun kolları ve dönüşü", [made, one(d, [uid_of(k)], {"kind": "set", "legs": [0.1, 0.15], "rotation": 1.0})])
+    d = Drawing()
+    c.add("Değiştir: aksı kesik yapar, null bütün aksa döndürür", [one(d, [uid_of(1)], {"kind": "set", "ends": 12.0}),
+                                                                  one(d, [uid_of(1)], {"kind": "set", "ends": None})])
+    d, made, k = with_column(grids=[uid_of(1), uid_of(3)], anchor="bottomLeft")
+    c.add("akslara bağlı hizalı kolon aks taşınınca köşesiyle izler", [made, other_step(d, "cad.entities.transform",
+          {"uids": [uid_of(1)], "transform": {"kind": "move", "dx": 1.5, "dy": 0.0}},
+          lambda d: (d.objs.__setitem__(1, (d.objs[1][0], d.objs[1][1], dict(d.objs[1][2], pts=[P(1.5, -2), P(1.5, 12)]))), d.follow())[1], [1])])
+    for name, kw, line in [
+        ("aynalanan hizalı kolonun hizası boyunca döner", {"depth": 0.5, "anchor": "topLeft", "rotation": 0.5}, (P(10, 0), P(10, 10))),
+        ("aynalanan L kolon çeyrek tur az döner, kolları değişir", {"depth": 0.5, "shape": "lShape", "width": 0.6, "legs": [0.2, 0.3], "anchor": "bottomRight"}, (P(10, 0), P(10, 10))),
+        ("eğik eksende aynalanan L kolon", {"depth": 0.4, "shape": "lShape", "width": 0.7, "legs": [0.15, 0.25], "anchor": "top", "rotation": 0.3}, (P(0, 0), P(4, 3))),
+    ]:
+        d, made, k = with_column(**kw)
+
+        def mirror(d, k=k, line=line):
+            kind, ly, f = d.objs[k]
+            d.objs[k] = (kind, ly, mirrored_column(f, *line))
+            return []
+        c.add(name, [made, other_step(d, "cad.entities.transform",
+                                      {"uids": [uid_of(k)], "transform": {"kind": "mirror", "a": line[0], "b": line[1]}}, mirror, [k])])
+    for name, inp, kw in [
+        ("aksın kolu yok", {"uids": [uid_of(1)], "operation": {"kind": "set", "legs": [0.1, 0.1]}}, {}),
+        ("merdivenin hizası yok", {"uids": [uid_of(8)], "operation": {"kind": "set", "anchor": "left"}}, {}),
+        ("kolonun kesik ucu yok, aks ve kolon birlikte", {"uids": [uid_of(1)], "operation": {"kind": "set", "ends": 5.0, "anchor": "top"}}, {}),
+        ("sıfır kesik uç reddedilir", {"uids": [uid_of(2)], "operation": {"kind": "set", "ends": 0.0}}, {}),
+        ("sonsuz kesik uç reddedilir", {"uids": [uid_of(2)], "operation": {"kind": "set", "ends": 5.0}}, {"non_finite": {"operation.ends": "NaN"}}),
+    ]:
+        c.add(name, [edit_step(Drawing(), "execute", inp, **kw)])
+    d, made, k = with_column(depth=0.5)
+    c.add("dikdörtgen kolona kol reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "legs": [0.1, 0.1]})])
+    d, made, k = with_column(depth=0.5)
+    c.add("kolsuz L reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "lShape"})])
+    d, made, k = with_column(depth=0.5, shape="lShape", legs=[0.2, 0.2])
+    c.add("kalın kol reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "legs": [0.5, 0.2]})])
+    d, made, k = with_column(depth=0.5, shape="lShape", legs=[0.2, 0.2])
+    c.add("L kolon daralınca kalın kalan kol reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "width": 0.2})])
+    d, made, k = with_column(depth=0.5, shape="lShape", legs=[0.2, 0.2])
+    c.add("sonsuz kol reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "legs": [0.1, 0.1]}, non_finite={"operation.legs[0]": "Infinity"})])
+    d, made, k = with_column(depth=0.5)
+    c.add("Plan hizanın değişimini yazmadan gösterir", [made, edit_step(d, "plan", {"uids": [uid_of(k)], "operation": {"kind": "set", "anchor": "right"}})])
+    return c.cases
+
+
 def col(n, layer="kolon", **kw):
     return {"layerId": layer, "columns": n, **kw}
 
@@ -1871,9 +2262,9 @@ def stair_level_cases():
 
 
 FIELDS = [  # wire name, kinds, nullable
-    ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True),
+    ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
     ("shape", ("column",), False), ("width", ("column", "stair", "ramp"), False), ("depth", ("column",), True),
-    ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column",), True), ("fill", ("column",), False),
+    ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column",), True), ("fill", ("column",), False),
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
     ("post", ("stair",), True), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
@@ -1882,8 +2273,10 @@ FIELDS = [  # wire name, kinds, nullable
     ("level", ("grid", "column", "stair", "ramp"), True), ("phase", ("grid", "column", "stair", "ramp"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
-DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False}
-NUMBERS = [("bubbleSize", "Balon çapı"), ("width", "Genişlik"), ("depth", "Boy"), ("rotation", "Dönüş"),
+DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
+            "anchor": "center"}
+NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
+           ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
            ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu")]
 
@@ -1908,6 +2301,9 @@ def set_field(f, name, value):
     if name == "riserHeight":
         # A riser height of its own frees a stair from its level's height (docs/adr/0724 §1).
         f.pop("heightFromLevel", None)
+    if name == "shape" and value != "lShape":
+        # Another shape has no legs (docs/adr/0725 §3).
+        f.pop("legs", None)
     if value is None or DEFAULTS.get(name, object()) == value:
         f.pop(name, None)
     else:
@@ -1949,7 +2345,7 @@ def edit(d, inp, conflict=False):
             if bad:
                 return refusal("field_not_for_kind", f"“{bad}” alanı {KIND_NAME[kind]} nesnesinde yok.", f"operation.{bad}"), None
         for n, name in NUMBERS:
-            v = op.get(n)
+            v = op.get("legs", [None, None])[int(n[5])] if n.startswith("legs[") else op.get(n)
             if v is not None and not math.isfinite(v):
                 return not_finite(name, f"operation.{n}"), None
         if "riserHeight" in op and op.get("heightFromLevel") is True:
@@ -2192,6 +2588,9 @@ def files():
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
         "cad.stairs.create.levels.json": document(STAIRS, "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)", stair_level_cases()),
         "cad.grids.create.system.json": document(GRIDS, "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)", system_cases()),
+        "cad.grids.create.radial.json": document(GRIDS, "Eğrisel aks ağı ve kesik aks: radyal akslar ve yaylar, açılar, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; kesik aks, seri ve ağ; retler (ADR 0725 §1, §5)", radial_cases()),
+        "cad.columns.create.forms.json": document(COLUMNS, "Kolonun hizası ve L kolon: dokuz nokta, akslara bağlı hizalı kolon, kesişimler ve aks ağı; L'nin kolları; retler (ADR 0725 §2, §3)", form_cases()),
+        "cad.arch.edit.forms.json": document(EDIT, "Mimari nesneyi düzenle: hiza, L kolon, kesik aks; aksla giden hizalı kolon, aynalanan kolon; retler (ADR 0725 §2, §3, §5)", form_edit_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }
 

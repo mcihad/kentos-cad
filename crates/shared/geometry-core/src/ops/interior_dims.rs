@@ -69,7 +69,10 @@ fn body_of(shape: &Shape) -> Option<Body> {
             rings.extend(holes.unwrap_or_default());
             Some(Body::Rings(rings))
         }
-        Shape::Column { at, column } if column.round => Some(Body::Circle(*at, column.width / 2.0)),
+        Shape::Column { at, column } if column.round => Some(Body::Circle(
+            crate::geom::arch::column_center(*at, column),
+            column.width / 2.0,
+        )),
         Shape::Column { at, column } => Some(Body::Rings(vec![crate::geom::arch::column_corners(
             *at, column,
         )])),
@@ -233,18 +236,20 @@ pub fn references(
                 if columns == Columns::None {
                     continue;
                 }
+                // Its box's middle, whatever point its reference is (docs/adr/0725 §2).
+                let middle = crate::geom::arch::column_center(*at, column);
                 let centre = Reference {
                     source,
                     place: Place::Center,
-                    at: *at,
-                    s: along(*at),
+                    at: middle,
+                    s: along(middle),
                 };
                 if column.round {
                     let r = column.width / 2.0;
-                    let met = line_circle_params(from, to, *at, r)
+                    let met = line_circle_params(from, to, middle, r)
                         .into_iter()
                         .any(|t| (0.0..=1.0).contains(&t))
-                        || js_hypot(from.x - at.x, from.y - at.y) <= r;
+                        || js_hypot(from.x - middle.x, from.y - middle.y) <= r;
                     if met {
                         found.push(centre);
                     }

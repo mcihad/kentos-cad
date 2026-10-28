@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Aks ve kolon: eğrisel ağ, kesik aks, hiza, L kolon (28 Ekim 2026; [ADR0725](docs/adr/0725-curved-grids-column-forms.md)).**
+  `cad.grids.create`'in `radial`'ı radyal aksları (açılar iki yönde, toplamı tam turdan az) ve yayları
+  (`[tan(süpürme/4), 0]`) yazar, yay kalan turun dörtte birinden fazla uzamaz; kesişim kolonları radyal yönde. Kesik aks
+  `ends` (kâğıtta mm), kolonun `anchor`'ı (dokuz nokta, `at` dayanak noktası, `column_center`) ve L (`lShape`, `legs`,
+  altı köşe, aynada çeyrek tur az ve kollar takas), KCAD 126 opt-in. Araçta “L/n”, İki nokta'da Eşit böl, Kolon
+  aracının ayarları; Denetim'in Akslar grubu (`arch_grid_label_duplicate`, sil ya da adlandır). Aksın ölçü yerleri
+  (`subref` ailesi 10); ölçü ve kolon çizelgesinin Yer'i aksı aynı adımda izler.
+
 - **Merdiven: kat yüksekliği, yönetmelik profili, üst katta gösterim (28 Ekim 2026; [ADR0724](docs/adr/0724-stair-levels-profiles-upper-plan.md)).**
   `cad.stairs.create`'in `heightFromLevel`'ı merdiveni katının yüksekliğiyle tasarlar; belge kat yüksekliği ya da rıht
   sayısı değişince rıht yüksekliğini yazar (`level_marks.rs`, rıht sayısı korunur), KCAD 125 opt-in; `cad.arch.edit`

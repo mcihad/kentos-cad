@@ -828,6 +828,148 @@
           }
         ],
         "spaceSeparator": {}
+      },
+      {
+        "kind": "grid",
+        "id": 30,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": -2.0
+          },
+          {
+            "x": 30.0,
+            "y": 6.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 31,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 32.0,
+            "y": -2.0
+          },
+          {
+            "x": 32.0,
+            "y": 6.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 32,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 34.0,
+            "y": -2.0
+          },
+          {
+            "x": 34.0,
+            "y": 6.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 33,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 36.0,
+            "y": -2.0
+          },
+          {
+            "x": 36.0,
+            "y": 6.0
+          }
+        ],
+        "name": "A",
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 34,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 28.0,
+            "y": 7.0
+          },
+          {
+            "x": 38.0,
+            "y": 7.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 35,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 38.0,
+            "y": 7.0
+          },
+          {
+            "x": 28.0,
+            "y": 7.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 36,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 28.0,
+            "y": 9.0
+          },
+          {
+            "x": 38.0,
+            "y": 9.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "column",
+        "id": 37,
+        "layerId": "mimari",
+        "attrs": {},
+        "at": {
+          "x": 32.0,
+          "y": 7.0
+        },
+        "width": 0.4,
+        "depth": 0.4,
+        "grids": [
+          "0192f5a1-7030-7000-8000-00000000001f",
+          "0192f5a1-7030-7000-8000-000000000023"
+        ],
+        "place": "A-1",
+        "arch": {
+          "level": "zemin"
+        }
       }
     ],
     "uids": [
@@ -859,7 +1001,15 @@
       "0192f5a1-7030-7000-8000-000000000019",
       "0192f5a1-7030-7000-8000-00000000001a",
       "0192f5a1-7030-7000-8000-00000000001b",
-      "0192f5a1-7030-7000-8000-00000000001d"
+      "0192f5a1-7030-7000-8000-00000000001d",
+      "0192f5a1-7030-7000-8000-00000000001e",
+      "0192f5a1-7030-7000-8000-00000000001f",
+      "0192f5a1-7030-7000-8000-000000000020",
+      "0192f5a1-7030-7000-8000-000000000021",
+      "0192f5a1-7030-7000-8000-000000000022",
+      "0192f5a1-7030-7000-8000-000000000023",
+      "0192f5a1-7030-7000-8000-000000000024",
+      "0192f5a1-7030-7000-8000-000000000025"
     ],
     "styles": {
       "items": [],
@@ -1175,6 +1325,103 @@
                         ]
                       }
                     }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
                   }
                 },
                 {
@@ -1634,6 +1881,103 @@
                         ]
                       }
                     }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
                   }
                 },
                 {
@@ -2256,6 +2600,131 @@
                         ]
                       }
                     }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız grids",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
                   }
                 }
               ],
@@ -3066,6 +3535,103 @@
                         ]
                       }
                     }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
                   }
                 },
                 {
@@ -4819,6 +5385,148 @@
               }
             ],
             "spaceSeparator": {}
+          },
+          {
+            "kind": "grid",
+            "id": 30,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": -2.0
+              },
+              {
+                "x": 30.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 31,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 32.0,
+                "y": -2.0
+              },
+              {
+                "x": 32.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 34.0,
+                "y": -2.0
+              },
+              {
+                "x": 34.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 33,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 36.0,
+                "y": -2.0
+              },
+              {
+                "x": 36.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 34,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 7.0
+              },
+              {
+                "x": 38.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 35,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 38.0,
+                "y": 7.0
+              },
+              {
+                "x": 28.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 36,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 9.0
+              },
+              {
+                "x": 38.0,
+                "y": 9.0
+              }
+            ],
+            "name": "2"
+          },
+          {
+            "kind": "column",
+            "id": 37,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 32.0,
+              "y": 7.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "grids": [
+              "0192f5a1-7030-7000-8000-00000000001f",
+              "0192f5a1-7030-7000-8000-000000000023"
+            ],
+            "place": "A-1",
+            "arch": {
+              "level": "zemin"
+            }
           }
         ],
         "uids": [
@@ -4850,7 +5558,15 @@
           "0192f5a1-7030-7000-8000-000000000019",
           "0192f5a1-7030-7000-8000-00000000001a",
           "0192f5a1-7030-7000-8000-00000000001b",
-          "0192f5a1-7030-7000-8000-00000000001d"
+          "0192f5a1-7030-7000-8000-00000000001d",
+          "0192f5a1-7030-7000-8000-00000000001e",
+          "0192f5a1-7030-7000-8000-00000000001f",
+          "0192f5a1-7030-7000-8000-000000000020",
+          "0192f5a1-7030-7000-8000-000000000021",
+          "0192f5a1-7030-7000-8000-000000000022",
+          "0192f5a1-7030-7000-8000-000000000023",
+          "0192f5a1-7030-7000-8000-000000000024",
+          "0192f5a1-7030-7000-8000-000000000025"
         ],
         "styles": {
           "items": [],
@@ -5735,6 +6451,148 @@
               }
             ],
             "spaceSeparator": {}
+          },
+          {
+            "kind": "grid",
+            "id": 30,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": -2.0
+              },
+              {
+                "x": 30.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 31,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 32.0,
+                "y": -2.0
+              },
+              {
+                "x": 32.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 34.0,
+                "y": -2.0
+              },
+              {
+                "x": 34.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 33,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 36.0,
+                "y": -2.0
+              },
+              {
+                "x": 36.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 34,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 7.0
+              },
+              {
+                "x": 38.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 35,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 38.0,
+                "y": 7.0
+              },
+              {
+                "x": 28.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 36,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 9.0
+              },
+              {
+                "x": 38.0,
+                "y": 9.0
+              }
+            ],
+            "name": "2"
+          },
+          {
+            "kind": "column",
+            "id": 37,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 32.0,
+              "y": 7.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "grids": [
+              "0192f5a1-7030-7000-8000-00000000001f",
+              "0192f5a1-7030-7000-8000-000000000023"
+            ],
+            "place": "A-1",
+            "arch": {
+              "level": "zemin"
+            }
           }
         ],
         "uids": [
@@ -5766,7 +6624,15 @@
           "0192f5a1-7030-7000-8000-000000000019",
           "0192f5a1-7030-7000-8000-00000000001a",
           "0192f5a1-7030-7000-8000-00000000001b",
-          "0192f5a1-7030-7000-8000-00000000001d"
+          "0192f5a1-7030-7000-8000-00000000001d",
+          "0192f5a1-7030-7000-8000-00000000001e",
+          "0192f5a1-7030-7000-8000-00000000001f",
+          "0192f5a1-7030-7000-8000-000000000020",
+          "0192f5a1-7030-7000-8000-000000000021",
+          "0192f5a1-7030-7000-8000-000000000022",
+          "0192f5a1-7030-7000-8000-000000000023",
+          "0192f5a1-7030-7000-8000-000000000024",
+          "0192f5a1-7030-7000-8000-000000000025"
         ],
         "styles": {
           "items": [],
@@ -6695,6 +7561,148 @@
               }
             ],
             "spaceSeparator": {}
+          },
+          {
+            "kind": "grid",
+            "id": 30,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 30.0,
+                "y": -2.0
+              },
+              {
+                "x": 30.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 31,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 32.0,
+                "y": -2.0
+              },
+              {
+                "x": 32.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 32,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 34.0,
+                "y": -2.0
+              },
+              {
+                "x": 34.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "grid",
+            "id": 33,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 36.0,
+                "y": -2.0
+              },
+              {
+                "x": 36.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A",
+            "arch": {
+              "level": "kat-1"
+            }
+          },
+          {
+            "kind": "grid",
+            "id": 34,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 7.0
+              },
+              {
+                "x": 38.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 35,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 38.0,
+                "y": 7.0
+              },
+              {
+                "x": 28.0,
+                "y": 7.0
+              }
+            ],
+            "name": "1"
+          },
+          {
+            "kind": "grid",
+            "id": 36,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 9.0
+              },
+              {
+                "x": 38.0,
+                "y": 9.0
+              }
+            ],
+            "name": "2"
+          },
+          {
+            "kind": "column",
+            "id": 37,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 32.0,
+              "y": 7.0
+            },
+            "width": 0.4,
+            "depth": 0.4,
+            "grids": [
+              "0192f5a1-7030-7000-8000-00000000001f",
+              "0192f5a1-7030-7000-8000-000000000023"
+            ],
+            "place": "A-1",
+            "arch": {
+              "level": "zemin"
+            }
           }
         ],
         "uids": [
@@ -6726,7 +7734,15 @@
           "0192f5a1-7030-7000-8000-000000000019",
           "0192f5a1-7030-7000-8000-00000000001a",
           "0192f5a1-7030-7000-8000-00000000001b",
-          "0192f5a1-7030-7000-8000-00000000001d"
+          "0192f5a1-7030-7000-8000-00000000001d",
+          "0192f5a1-7030-7000-8000-00000000001e",
+          "0192f5a1-7030-7000-8000-00000000001f",
+          "0192f5a1-7030-7000-8000-000000000020",
+          "0192f5a1-7030-7000-8000-000000000021",
+          "0192f5a1-7030-7000-8000-000000000022",
+          "0192f5a1-7030-7000-8000-000000000023",
+          "0192f5a1-7030-7000-8000-000000000024",
+          "0192f5a1-7030-7000-8000-000000000025"
         ],
         "styles": {
           "items": [],
@@ -6913,6 +7929,243 @@
           "categories": []
         }
       }
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: aksı sıradaki boş etiketle adlandır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-00000000001f"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "B"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        }
+      ]
     },
     {
       "name": "Düzelt ve yeniden denetle: wall_join_acute",
@@ -8165,6 +9418,370 @@
                         ]
                       }
                     }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzelt ve yeniden denetle: arch_grid_label_duplicate",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "0192f5a1-7030-7000-8000-00000000001e"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "grids"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
                   }
                 }
               ],

@@ -22,4 +22,8 @@ label?: string, bubbles?: GridBubbles,
 /**
  * The bubble's diameter on paper, millimetres; absent: 8.
  */
-bubbleSize?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+bubbleSize?: number, 
+/**
+ * A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+ */
+ends?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };

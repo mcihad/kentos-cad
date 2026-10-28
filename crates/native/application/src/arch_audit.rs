@@ -30,7 +30,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 11] = [
+const CODES: [(ArchAuditCheck, &[&str]); 12] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -53,6 +53,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 11] = [
         ArchAuditCheck::Dimensions,
         &[codes::ARCH_DIMENSION_SET_BROKEN, codes::ARCH_DIMENSION_BROKEN],
     ),
+    (ArchAuditCheck::Grids, &[codes::ARCH_GRID_LABEL_DUPLICATE]),
     (ArchAuditCheck::Columns, &[codes::ARCH_COLUMN_GRID_GONE]),
     (ArchAuditCheck::Viewmarks, &[codes::ARCH_VIEWMARK_TARGET_GONE]),
     (ArchAuditCheck::Levels, &[codes::ARCH_LEVEL_MISSING]),
@@ -468,6 +469,30 @@ impl Audit<'_> {
 // ── Openings, spaces, numbers, tags ─────────────────────────────────────────────────────────────────────────────
 
 /// An opening's point: its place's points' mean.
+/// A grid's middle: its line's, or its arc's.
+fn grid_middle(g: &kentos_commands::GridFields) -> V {
+    match g.pts.as_slice() {
+        [a, b] => kentos_geometry_core::geom::bulge::segment_mid(
+            core(*a),
+            core(*b),
+            g.bulges.as_ref().and_then(|x| x.first().copied()).unwrap_or(0.0),
+        ),
+        _ => V::new(0.0, 0.0),
+    }
+}
+
+/// Whether grid `g` lies on grid `h`: the same ends, the other way round with its arc turned over too, within a
+/// nanometre.
+fn lies_on(g: &kentos_commands::GridFields, h: &kentos_commands::GridFields) -> bool {
+    let near = |p: Vec2, q: Vec2| (p.x - q.x).abs() <= 1e-9 && (p.y - q.y).abs() <= 1e-9;
+    let bulge = |f: &kentos_commands::GridFields| f.bulges.as_ref().and_then(|x| x.first().copied()).unwrap_or(0.0);
+    let ([a, b], [c, d]) = (g.pts.as_slice(), h.pts.as_slice()) else {
+        return false;
+    };
+    (near(*a, *c) && near(*b, *d) && (bulge(g) - bulge(h)).abs() <= 1e-12)
+        || (near(*a, *d) && near(*b, *c) && (bulge(g) + bulge(h)).abs() <= 1e-12)
+}
+
 fn opening_point(place: &[Vec2]) -> V {
     if place.is_empty() {
         return V::new(0.0, 0.0);
@@ -780,6 +805,81 @@ impl Audit<'_> {
                 core(d.a),
                 fix,
             ));
+        }
+        out
+    }
+
+    /// Grids sharing a label on one level (docs/adr/0725 §6): each one after the first said with the first; its fix
+    /// deletes it when it lies on the first and no column stands on it, else gives it the next label no grid of the
+    /// level has and no fix before gave.
+    fn grids(&self) -> Vec<ArchAuditFinding> {
+        let grids: Vec<(&Entity, &kentos_commands::GridFields)> = self
+            .doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Grid(g) => Some((e, &g.grid)),
+                _ => None,
+            })
+            .collect();
+        let tied: HashSet<String> = self
+            .doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Column(c) => c.column.grids.clone(),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        let mut taken: HashSet<(Option<String>, String)> = grids
+            .iter()
+            .map(|(_, g)| (g.arch.level.clone(), g.label.clone()))
+            .collect();
+        let mut order: Vec<(Option<String>, String)> = Vec::new();
+        let mut groups: BTreeMap<(Option<String>, String), Vec<usize>> = BTreeMap::new();
+        for (i, (_, g)) in grids.iter().enumerate() {
+            let key = (g.arch.level.clone(), g.label.clone());
+            if !groups.contains_key(&key) {
+                order.push(key.clone());
+            }
+            groups.entry(key).or_default().push(i);
+        }
+        let mut out = Vec::new();
+        for key in order {
+            let list = &groups[&key];
+            let (first_e, first) = grids[list[0]];
+            for &k in &list[1..] {
+                let (e, g) = grids[k];
+                let uid = self.uid_of(e);
+                let fix = (!self.locked(e)).then(|| {
+                    if lies_on(g, first) && !tied.contains(&uid) {
+                        fix(
+                            "Üst üste binen aksı sil",
+                            "cad.entities.delete",
+                            json!({"uids": [uid]}),
+                        )
+                    } else {
+                        let mut label = kentos_commands::next_label(&g.label);
+                        while taken.contains(&(key.0.clone(), label.clone())) {
+                            label = kentos_commands::next_label(&label);
+                        }
+                        taken.insert((key.0.clone(), label.clone()));
+                        fix(
+                            format!("Aksı “{label}” olarak adlandır"),
+                            "cad.arch.edit",
+                            json!({"uids": [uid], "operation": {"kind": "set", "label": label}}),
+                        )
+                    }
+                });
+                out.push(finding(
+                    ArchAuditCheck::Grids,
+                    codes::ARCH_GRID_LABEL_DUPLICATE,
+                    format!("“{}” etiketi bu katta birden çok aksta.", g.label),
+                    "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                    vec![self.uid_of(first_e), uid],
+                    grid_middle(g),
+                    fix,
+                ));
+            }
         }
         out
     }
@@ -1211,6 +1311,7 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
             ArchAuditCheck::Numbers => audit.numbers(),
             ArchAuditCheck::Tags => audit.tags(),
             ArchAuditCheck::Dimensions => audit.dimensions(),
+            ArchAuditCheck::Grids => audit.grids(),
             ArchAuditCheck::Columns => audit.columns(),
             ArchAuditCheck::Viewmarks => audit.viewmarks(),
             ArchAuditCheck::Levels => audit.levels(level),

@@ -136,19 +136,32 @@ fn wall_box(e: &Entity) -> Option<Box4> {
     Some(grow(b, r))
 }
 
+/// A column's footprint fields as the core takes them: its shape, size, turn, L legs and anchor (docs/adr/0725).
+fn column_spec(c: &kentos_contracts::ColumnFields) -> arch::ColumnSpec {
+    arch::ColumnSpec {
+        round: c.shape == kentos_contracts::ColumnShape::Round,
+        width: c.width,
+        depth: c.depth,
+        legs: c.legs,
+        rotation: c.rotation,
+        anchor: c.anchor.unit(),
+        ..Default::default()
+    }
+}
+
 fn column_box(e: &Entity) -> Option<Box4> {
     let Entity::Column(c) = e else { return None };
     let c = &c.column;
     let r = c.width.hypot(c.depth()) / 2.;
-    let spec = arch::ColumnSpec {round:c.shape == kentos_contracts::ColumnShape::Round,
-        width:c.width,depth:c.depth,rotation:c.rotation,..Default::default()};
+    let spec = column_spec(c);
+    let middle = arch::column_center(CoreVec2::new(c.at.x,c.at.y),&spec);
     if c.problem().is_some() || arch::column_area(CoreVec2::new(c.at.x,c.at.y),&spec).is_none()
-        || ![c.at.x,c.at.y,r].iter().all(|n|n.is_finite()) {
+        || ![middle.x,middle.y,r].iter().all(|n|n.is_finite()) {
         // An invalid changed source must reach every opting-in space, never
         // disappear because its numeric bounds cannot be indexed.
         return Some([f64::NEG_INFINITY,f64::NEG_INFINITY,f64::INFINITY,f64::INFINITY]);
     }
-    Some([c.at.x-r,c.at.y-r,c.at.x+r,c.at.y+r])
+    Some([middle.x-r,middle.y-r,middle.x+r,middle.y+r])
 }
 
 fn core_parts(parts: &[SpacePart]) -> Vec<Area> {
@@ -377,12 +390,12 @@ impl<'a> SpaceSearch<'a> {
                 _ => None,
             }).map(|c| {
                 if c.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
-                let spec = arch::ColumnSpec { round: c.shape == kentos_contracts::ColumnShape::Round,
-                    width: c.width, depth: c.depth, rotation: c.rotation, ..Default::default() };
+                let spec = column_spec(c);
                 let at = CoreVec2::new(c.at.x,c.at.y);
                 let area = arch::column_area(at,&spec).ok_or(SpaceBreak::InvalidBoundarySource)?;
                 let r = if spec.round { c.width / 2. } else { c.width.hypot(c.depth()) / 2. };
-                Ok((area,[at.x-r,at.y-r,at.x+r,at.y+r]))
+                let middle = arch::column_center(at,&spec);
+                Ok((area,[middle.x-r,middle.y-r,middle.x+r,middle.y+r]))
             }).collect()
         });
         let columns = columns.as_ref().map_err(|e| *e)?;

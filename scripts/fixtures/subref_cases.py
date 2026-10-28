@@ -12,7 +12,9 @@ The ADR's rules are written here again:
   middle or an arc's start, has no structure) the place stays and its point is
   read from the new object; else a vertex (or node) is looked for by its exact coordinates among the new object's
   vertices: once rebinds, never breaks (vertex_gone), more than once breaks (ambiguous); an edge's middle needs its two
-  ends found once each as consecutive vertices of one ring, else vertex_gone (ambiguous when an end is).
+  ends found once each as consecutive vertices of one ring, else vertex_gone (ambiguous when an end is);
+- a grid (docs/adr/0725 §7) is a line, or an arc when it bends: its start, end and middle (its arc's when it bends),
+  its arc's centre, a point along it at a fraction of its chord or of its arc's sweep; its own family.
 
 Writes fixtures/subref/v1/cases.json; `--check` says whether the file is what this script writes. Vertices and
 chord middles of dyadic coordinates are exact; trigonometric points (arcs, ellipses) are compared within 1e-9.
@@ -40,7 +42,12 @@ def pts(*xy):
 
 def family(e):
     k = e["kind"]
-    return {"point": 0, "line": 1, "polyline": 2, "polygon": 2, "circle": 3, "arc": 4, "ellipse": 5}.get(k, 6)
+    return {"point": 0, "line": 1, "polyline": 2, "polygon": 2, "circle": 3, "arc": 4, "ellipse": 5, "grid": 10}.get(k, 6)
+
+
+def grid_line(e):
+    """A grid's ends and its bulge (docs/adr/0725 §7)."""
+    return e["pts"][0], e["pts"][1], (e.get("bulges") or [0.0])[0]
 
 
 def ring(e, part, r):
@@ -77,6 +84,18 @@ def point(e, pl):
     k, kind = e["kind"], pl["kind"]
     if kind == "along":
         return along_point(e, pl)
+    if k == "grid":
+        a, b, kb = grid_line(e)
+        if kind == "start":
+            return a
+        if kind == "end":
+            return b
+        if kind == "mid" and (pl["part"], pl["ring"], pl["index"]) == (0, 0, 0):
+            return edge_mid(a, b, kb)
+        if kind == "center":
+            arc = bulge_circle(a, b, kb)
+            return arc[0] if arc else None
+        return None
     # A text's, an insert's and a table's insertion point (docs/adr/0272 §1).
     if kind == "node" and k in ("text", "insert", "table"):
         return e["p"] if pl["part"] == 0 else None
@@ -175,6 +194,12 @@ def along_point(e, pl):
     whole = (pl["part"], pl["ring"], pl["index"]) == (0, 0, 0)
     if k == "line":
         return lerp(e["a"], e["b"], t) if whole else None
+    if k == "grid":
+        if not whole:
+            return None
+        a, b, kb = grid_line(e)
+        arc = bulge_circle(a, b, kb)
+        return lerp(a, b, t) if not arc else on_circle(arc[0], arc[1], arc[2] + t * arc[3])
     if k == "arc":
         return on_circle(e["c"], e["r"], e["a0"] + t * ccw(e["a0"], e["a1"])) if whole else None
     if k == "circle":
@@ -232,6 +257,11 @@ def along_at(e, at):
     z = {"kind": "along", "part": 0, "ring": 0, "index": 0}
     if k == "line":
         t = t_on_segment(e["a"], e["b"], at)
+        return None if t is None else dict(z, t=t)
+    if k == "grid":
+        a, b, kb = grid_line(e)
+        arc = bulge_circle(a, b, kb)
+        t = t_on_segment(a, b, at) if not arc else t_on_arc(*arc, at)
         return None if t is None else dict(z, t=t)
     if k == "arc":
         t = t_on_arc(e["c"], e["r"], e["a0"], ccw(e["a0"], e["a1"]), at)
@@ -737,6 +767,8 @@ def with_pts(e, *xy, **extra):
     return out
 
 
+GRID = {"kind": "grid", "pts": pts((0, -2), (0, 10)), "name": "A"}
+BENT = {"kind": "grid", "pts": pts((10, 0), (0, 10)), "bulges": [math.tan(math.pi / 8), 0.0], "name": "R"}
 TEXT = {"kind": "text", "p": v(5, 6), "text": "Bina", "height": 1.0}
 INSERT = {"kind": "insert", "block": "vana", "p": v(7, 8)}
 
@@ -758,9 +790,18 @@ POINT_CASES = [
     ("Yayın başı", ARC, place("start")), ("Yayın sonu", ARC, place("end")),
     ("Elipsin başı", ELLIPSE, place("start")), ("Elipsin sonu", ELLIPSE, place("end")),
     ("Çok noktalının ikinci noktası", POINTS, place("node", 2)),
+    ("Aksın başı", GRID, place("start")), ("Aksın sonu", GRID, place("end")),
+    ("Aksın ortası", GRID, place("mid", 0, 0, 0)), ("Düz aksın merkezi yok", GRID, place("center")),
+    ("Yay aksın ortası", BENT, place("mid", 0, 0, 0)), ("Yay aksın merkezi", BENT, place("center")),
+    ("Aksın köşesi yok", GRID, place("vertex", 0, 0, 0)),
 ]
 
 FOLLOW_CASES = [
+    ("Taşınan aks: baş izler", place("start"), GRID, moved(GRID, 1.5, 0)),
+    ("Uzatılan aksın sonu yeni sonunda", place("end"), GRID, with_pts(GRID, (0, -2), (0, 14))),
+    ("Aks yaya döndü: aynı aile, ortası yayın", place("mid", 0, 0, 0), GRID, dict(GRID, bulges=[0.25, 0.0])),
+    ("Aks çizgi oldu: başka aile", place("start"), GRID, {"kind": "line", "a": v(0, -2), "b": v(0, 10)}),
+    ("Silinen aks", place("end"), GRID, None),
     ("Taşınan çizgi: baş izler", place("start"), LINE, moved(LINE, 1.5, 2)),
     ("Taşınan çizgi: orta izler", place("mid", 0, 0, 0), LINE, moved(LINE, 1.5, 2)),
     ("Silinen çizgi", place("end"), LINE, None),
@@ -800,6 +841,10 @@ FOLLOW_CASES = [
 ]
 
 SNAP_CASES = [
+    ("Uç nokta: aksın sonu", GRID, "endpoint", v(0, 10)),
+    ("Orta nokta: aksın ortası", GRID, "midpoint", v(0, 4)),
+    ("Yakın: aksın üstü", GRID, "nearest", v(0, 1)),
+    ("Merkez: yay aksın", BENT, "center", v(0, 0)),
     ("Ekleme noktası: yazının", TEXT, "insertion", v(5, 6)),
     ("Ekleme noktası: yerleştirmenin", INSERT, "insertion", v(7, 8)),
     ("Uç nokta: çizginin sonu", LINE, "endpoint", v(4, 0)),
@@ -832,6 +877,8 @@ def along(part, ring_, index, t):
 
 
 ALONG_POINT_CASES = [
+    ("Aksın dörtte biri", GRID, along(0, 0, 0, 0.25)),
+    ("Yay aksın yarısı", BENT, along(0, 0, 0, 0.5)),
     ("Çizginin çeyreği", LINE, along(0, 0, 0, 0.25)),
     ("Çizgide olmayan kenar", LINE, along(0, 0, 1, 0.5)),
     ("Alanın kapanan kenarında", ROOM, along(0, 0, 3, 0.5)),
@@ -847,6 +894,7 @@ ALONG_POINT_CASES = [
 ]
 
 ALONG_FOLLOW_CASES = [
+    ("Taşınan aksta oran kalır", along(0, 0, 0, 0.25), GRID, moved(GRID, 3, 1)),
     ("Taşınan çizgide oran kalır", along(0, 0, 0, 0.25), LINE, moved(LINE, 1.5, 2)),
     ("Uzatılan çizgide oran kalır", along(0, 0, 0, 0.25), LINE, dict(LINE, b=v(8, 0))),
     ("Köşesi çekilen alanın kenarı", along(0, 0, 1, 0.5), ROOM, with_pts(ROOM, (0, 0), (4, 0), (5, 3.5), (0, 3))),
@@ -996,7 +1044,8 @@ PIECE_NEAR_CASES = [
 
 TRIG = {"Yayın başı", "Yayın sonu", "Elipsin başı", "Elipsin sonu", "Budanan yayın başı yeni başında", "Elipsin sonu",
         "Yaylı kenarın yarısı", "Yaylı kenarın çeyreği", "Yayın üçte biri", "Dairenin çeyreği", "Elipsin yarısı",
-        "Budanan yayda oran kalır", "Büyüyen dairede oran kalır"}
+        "Budanan yayda oran kalır", "Büyüyen dairede oran kalır", "Yay aksın ortası", "Yay aksın merkezi",
+        "Yay aksın yarısı", "Aks yaya döndü: aynı aile, ortası yayın"}
 
 
 def snap_at(defs, ins, path, pl):

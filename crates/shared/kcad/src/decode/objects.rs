@@ -256,6 +256,8 @@ pub(super) struct Features {
     ramp_levels: bool,
     /// Schema 125: a stair's `heightFromLevel` and `post` (docs/adr/0724).
     stair_levels: bool,
+    /// Schema 126: a grid's `ends`, a column's `anchor`, an L column (docs/adr/0725).
+    grid_column_forms: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -464,6 +466,7 @@ impl Features {
             slabs: schema >= crate::SCHEMA_WITH_SLABS,
             ramp_levels: schema >= crate::SCHEMA_WITH_RAMP_LEVELS,
             stair_levels: schema >= crate::SCHEMA_WITH_STAIR_LEVELS,
+            grid_column_forms: schema >= crate::SCHEMA_WITH_GRID_COLUMN_FORMS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2099,6 +2102,22 @@ pub(super) fn object(
     };
     if railed && !has.railings {
         return Err(r.fail(Code::BadValue, "korkuluk (railings) şema 115 ister"));
+    }
+    // Schema 126 (docs/adr/0725): a gapped grid, an anchored or an L column.
+    let formed = match &entity {
+        Entity::Grid(g) => g.grid.ends.is_some(),
+        Entity::Column(c) => {
+            c.column.anchor != kentos_contracts::ColumnAnchor::Center
+                || c.column.legs.is_some()
+                || c.column.shape == kentos_contracts::ColumnShape::LShape
+        }
+        _ => false,
+    };
+    if formed && !has.grid_column_forms {
+        return Err(r.fail(
+            Code::BadValue,
+            "kesik aks (ends), kolonun hizası (anchor) ve L kolon (lShape, legs) şema 126 ister",
+        ));
     }
     // Schema 125 (docs/adr/0724): a stair bound to its level's height, or with a centre post.
     if matches!(&entity, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()) && !has.stair_levels {

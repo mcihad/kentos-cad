@@ -28,11 +28,15 @@ class _ColumnsCreate(LocalCommand[ColumnsCreate, ColumnsCreated, ColumnsPlan]):
     """``cad.columns.create`` v1. Kolon: Kolonlar ekler; tek geri alma adımı “Kolon”.
     columns: her biri merkez (at) ya da iki aks (grids: kalıcı kimlikler; kolon
     kesişimlerinde durur, at verilirse ona en yakın kesişimde), biçim (shape: rect,
-    round), en (width), boy (depth; yoksa en), dönüş (rotation, radyan), tür (type),
-    etiket (tag), dolu (fill). crossings: verilen aksların her çiftinin, ikisinin de
-    içinde kalan kesişimlerinde birer kolon; aynı ölçülerle. Etiketsiz kolonlar
-    tagStart'tan artarak etiketlenir (S1, S2 …). Akslara bağlı kolonun yerini belge
-    izler: aks taşınınca kolon kesişimde kalır, konum yazısı (place) iki aksın
+    round, lShape), en (width), boy (depth; yoksa en), L kolonun kolları (legs: en
+    boyunca kolun boy yönündeki ve boy boyunca kolun en yönündeki kalınlığı; yalnız
+    L'de, gerekli, o yanından ince; docs/adr/0725 §3), hiza (anchor: center, left,
+    right, bottom, top, bottomLeft, bottomRight, topLeft, topRight; at ve aks kesişimi
+    kutunun bu noktasıdır, §2), dönüş (rotation, radyan, hiza noktası çevresinde), tür
+    (type), etiket (tag), dolu (fill). crossings: verilen aksların her çiftinin,
+    ikisinin de içinde kalan kesişimlerinde birer kolon; aynı ölçülerle. Etiketsiz
+    kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). Akslara bağlı kolonun yerini
+    belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı (place) iki aksın
     etiketlerinden “B-3” olur; aks silinir ya da akslar kesişmezse broken: gridGone.
     Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
@@ -62,8 +66,12 @@ class _ColumnsCreate(LocalCommand[ColumnsCreate, ColumnsCreated, ColumnsPlan]):
     ) -> ColumnsCreated:
         """Kolon: Kolonlar ekler; tek geri alma adımı “Kolon”. columns: her biri merkez (at) ya
         da iki aks (grids: kalıcı kimlikler; kolon kesişimlerinde durur, at verilirse ona en
-        yakın kesişimde), biçim (shape: rect, round), en (width), boy (depth; yoksa en),
-        dönüş (rotation, radyan), tür (type), etiket (tag), dolu (fill). crossings: verilen
+        yakın kesişimde), biçim (shape: rect, round, lShape), en (width), boy (depth; yoksa
+        en), L kolonun kolları (legs: en boyunca kolun boy yönündeki ve boy boyunca kolun en
+        yönündeki kalınlığı; yalnız L'de, gerekli, o yanından ince; docs/adr/0725 §3), hiza
+        (anchor: center, left, right, bottom, top, bottomLeft, bottomRight, topLeft,
+        topRight; at ve aks kesişimi kutunun bu noktasıdır, §2), dönüş (rotation, radyan,
+        hiza noktası çevresinde), tür (type), etiket (tag), dolu (fill). crossings: verilen
         aksların her çiftinin, ikisinin de içinde kalan kesişimlerinde birer kolon; aynı
         ölçülerle. Etiketsiz kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). Akslara
         bağlı kolonun yerini belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı

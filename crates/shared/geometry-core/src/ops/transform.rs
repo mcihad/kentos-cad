@@ -709,16 +709,34 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 .map(|b| if is_reflection(m) { b.iter().map(|x| -x).collect() } else { b.clone() }),
             grid: grid.clone(),
         },
+        // A mirror flips its box over its depth: a rectangle or a circle onto itself, its anchor to the other side;
+        // an L's legs come round to a quarter turn less, its width and depth and its legs swapping, as do its anchor's
+        // halves (docs/adr/0725 §2, §3).
         Shape::Column { at, column } => {
             let theta = atan2(m[1], m[0]);
             let mut spec = column.clone();
             spec.width *= s;
             spec.depth = column.depth.map(|d| d * s);
+            spec.legs = column.legs.map(|[a, b]| [a * s, b * s]);
             spec.rotation = norm_angle(if is_reflection(m) {
                 theta - column.rotation
             } else {
                 theta + column.rotation
             });
+            if is_reflection(m) {
+                let (ux, uy) = column.anchor;
+                match spec.legs {
+                    Some([a, b]) => {
+                        let depth = spec.depth.unwrap_or(spec.width);
+                        spec.depth = Some(spec.width);
+                        spec.width = depth;
+                        spec.legs = Some([b, a]);
+                        spec.rotation = norm_angle(spec.rotation - crate::jsmath::PI / 2.0);
+                        spec.anchor = (uy, ux);
+                    }
+                    None => spec.anchor = (ux, -uy),
+                }
+            }
             Shape::Column {
                 at: apply(m, *at),
                 column: spec,

@@ -6,7 +6,12 @@ so every length is an exact fraction; a turn's angle is checked as floats within
 
 - A grid's bubble: radius size/2 × scale/1000 (size 8 mm unless said), its centre past the end along the outward
   tangent by the radius; an arc grid's tangents are its chord turned by ∓2·atan(bulge).
-- A column's rectangle: (±w/2, ±d/2) turned by its rotation about its centre.
+- A column's rectangle: (±w/2, ±d/2) turned by its rotation about its centre; its centre its reference point less its
+  anchor's place on its box, (ux·w/2, uy·d/2) turned (docs/adr/0725 §2); an L's six corners counter-clockwise from its
+  box's lower left: (−w/2, −d/2), (w/2, −d/2), (w/2, −d/2 + a), (−w/2 + b, −d/2 + a), (−w/2 + b, d/2), (−w/2, d/2)
+  for its legs a, b (§3).
+- A gapped grid (§5): its end segments only, each ends × scale/1000 long along its line or arc from its ends, when it is
+  longer than both; a bent one's segments arcs with the bulge tan(segment's sweep/4).
 - A stair's band: the walking line offset half its width each side, mitred at the turns; the landings: at each turn,
   its length along the walking line, half each side; the risers: from 0 a tread apart, one that falls strictly inside a
   landing moved to its end, one past the walking line's end not fitting; two landings leaving less than a tread
@@ -154,16 +159,65 @@ def grid_case(name, pts, bulge, label, bubbles, size, scale):
     return {"name": name, "shape": shape, "scale": float(scale), "expect": {"bubbles": centres, "radius": r}}
 
 
-def column_case(name, at, width, depth, rotation):
+ANCHORS = {"center": (0, 0), "left": (-1, 0), "right": (1, 0), "bottom": (0, -1), "top": (0, 1), "bottomLeft": (-1, -1),
+           "bottomRight": (1, -1), "topLeft": (-1, 1), "topRight": (1, 1)}
+
+
+def column_case(name, at, width, depth, rotation, anchor="center", legs=None):
     c, s = math.cos(rotation), math.sin(rotation)
     w, d = float(width) / 2, float(depth if depth else width) / 2
-    corners = [[float(at[0]) + x * c - y * s, float(at[1]) + x * s + y * c] for x, y in ((-w, -d), (w, -d), (w, d), (-w, d))]
+    ux, uy = ANCHORS[anchor]
+    ox, oy = ux * w, uy * d
+    cx, cy = float(at[0]) - (ox * c - oy * s), float(at[1]) - (ox * s + oy * c)
+    if legs:
+        a, b = float(legs[0]), float(legs[1])
+        local = ((-w, -d), (w, -d), (w, -d + a), (-w + b, -d + a), (-w + b, d), (-w, d))
+    else:
+        local = ((-w, -d), (w, -d), (w, d), (-w, d))
+    corners = [[cx + x * c - y * s, cy + x * s + y * c] for x, y in local]
     shape = {"kind": "column", "at": {"x": float(at[0]), "y": float(at[1])}, "width": float(width)}
+    if legs:
+        shape["shape"] = "lShape"
     if depth:
         shape["depth"] = float(depth)
+    if legs:
+        shape["legs"] = [float(legs[0]), float(legs[1])]
     if rotation:
         shape["rotation"] = rotation
+    if anchor != "center":
+        shape["anchor"] = anchor
     return {"name": name, "shape": shape, "scale": 100.0, "expect": {"corners": corners}}
+
+
+def gapped_case(name, pts, bulge, ends, scale):
+    """A gapped grid's end segments (docs/adr/0725 §5): [start, end, bulge] each; none when the grid is not longer than
+    both."""
+    a, b = [(float(p[0]), float(p[1])) for p in pts]
+    l = ends * scale / 1000
+    lines = []
+    if bulge:
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        chord = math.hypot(dx, dy)
+        k = (1 - bulge * bulge) / (4 * bulge)
+        c = ((a[0] + b[0]) / 2 - dy * k, (a[1] + b[1]) / 2 + dx * k)
+        r = chord * (1 + bulge * bulge) / (4 * abs(bulge))
+        a0, sweep = math.atan2(a[1] - c[1], a[0] - c[0]), 4 * math.atan(bulge)
+        length = r * abs(sweep)
+        if length > 2 * l:
+            part = sweep * (l / length)
+            at = lambda t: [c[0] + r * math.cos(t), c[1] + r * math.sin(t)]  # noqa: E731
+            lines = [[list(a), at(a0 + part), math.tan(part / 4)], [at(a0 + sweep - part), list(b), math.tan(part / 4)]]
+    else:
+        length = math.hypot(b[0] - a[0], b[1] - a[1])
+        if length > 2 * l:
+            t = l / length
+            on = lambda t: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]  # noqa: E731
+            lines = [[list(a), on(t), 0.0], [on(1 - t), list(b), 0.0]]
+    shape = {"kind": "grid", "pts": [{"x": a[0], "y": a[1]}, {"x": b[0], "y": b[1]}], "name": "K"}
+    if bulge:
+        shape["bulges"] = [float(bulge), 0.0]
+    shape["ends"] = float(ends)
+    return {"name": name, "shape": shape, "scale": float(scale), "expect": {"lines": lines}}
 
 
 def fit_end(pts, width, count, tread, land):
@@ -526,6 +580,15 @@ def cases():
         column_case("Dikdörtgen kolon", P(2, 3), F(3, 10), F(1, 2), 0.0),
         column_case("Kare kolon, boyu verilmemiş", P(-1, 1), F(2, 5), None, 0.0),
         column_case("Döndürülmüş kolon (30°)", P(5, 5), F(3, 10), F(6, 10), math.pi / 6),
+        column_case("Sol alt köşesiyle konan kolon", P(2, 3), F(3, 10), F(1, 2), 0.0, "bottomLeft"),
+        column_case("Üstüyle konan dönük kolon", P(5, 5), F(3, 10), F(6, 10), math.pi / 6, "top"),
+        column_case("Sağ kenarıyla konan kare kolon", P(-1, 1), F(2, 5), None, 0.0, "right"),
+        column_case("L kolon", P(0, 0), F(6, 10), F(1, 2), 0.0, legs=(F(1, 4), F(3, 10))),
+        column_case("Dönük L kolon, sağ üst köşesiyle", P(4, 2), F(1, 2), F(1, 2), 0.7, "topRight", (F(1, 5), F(1, 5))),
+        gapped_case("Kesik aks, 1:100'de 12 mm uçlar", [P(0, 0), P(10, 0)], 0, 12, 100),
+        gapped_case("Kesik eğik aks, 1:50'de 20 mm uçlar", [P(0, 0), P(6, 8)], 0, 20, 50),
+        gapped_case("Kesik yay aks: çeyrek çember", [P(10, 0), P(0, 10)], math.tan(math.pi / 8), 15, 100),
+        gapped_case("Uçlarına yetmeyen kısa aks bütün çizilir", [P(0, 0), P(2, 0)], 0, 12, 100),
         stair_case("Düz merdiven, tam sığar", [P(0, 0), P(F(15, 4), 0)], F(6, 5), 16, F(7, 40), F(1, 4)),
         stair_case("Düz merdiven, yol uzun", [P(0, 0), P(4, 0)], F(6, 5), 16, F(7, 40), F(1, 4)),
         stair_case("Düz merdiven, yol kısa", [P(0, 0), P(3, 0)], F(6, 5), 16, F(7, 40), F(1, 4)),

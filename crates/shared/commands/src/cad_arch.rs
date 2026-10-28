@@ -15,7 +15,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, ColumnShape, GridBubbles, Railings};
+use crate::{ArchInfo, ArchPhase, ColumnAnchor, ColumnShape, GridBubbles, Railings};
 
 pub const CAD_GRIDS_CREATE: &str = "cad.grids.create";
 pub const CAD_GRIDS_CREATE_VERSION: u32 = 1;
@@ -60,6 +60,11 @@ pub struct NewGrid {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub bubble_size: Option<f64>,
+    /// A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -97,6 +102,11 @@ pub struct GridSeries {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub bubble_size: Option<f64>,
+    /// A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -164,6 +174,11 @@ pub struct GridSystem {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub bubble_size: Option<f64>,
+    /// A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -192,6 +207,17 @@ pub struct SystemColumns {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
+    /// An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+    /// depth; only with `shape` L, which needs them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub legs: Option<[f64; 2]>,
+    /// Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+    /// absent: its centre.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub anchor: Option<ColumnAnchor>,
     /// Their turn, radians counter-clockwise; absent: the system's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -209,8 +235,75 @@ pub struct SystemColumns {
     pub tag_start: Option<String>,
 }
 
+/// A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at
+/// `angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.
+/// Each grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never
+/// past `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than
+/// a quarter of the turn left round the circle so that its ends stay apart. An arc runs the way the turns go.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RadialGridSystem {
+    /// Where its radial grids meet: its arcs' centre.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub center: Vec2,
+    /// The first radial grid's direction, radians counter-clockwise from east; absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub angle: Option<f64>,
+    /// The turns between the radial grids, radians, each not 0, all one way (above 0 counter-clockwise), together
+    /// less than a whole turn; empty: one radial grid.
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub turns: Vec<f64>,
+    /// The first arc's radius, metres, above 0.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub radius: f64,
+    /// The gaps between the arcs outward, metres, each above 0; empty: one arc.
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rings: Vec<f64>,
+    /// The first radial grid's label, the next ones following on; absent: “1”.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub radial_start: Option<String>,
+    /// The first arc's label; absent: “A”.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arc_start: Option<String>,
+    /// How far each grid reaches past the outermost grids it crosses, metres, 0 or more; absent: 1.5.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub extension: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bubbles: Option<GridBubbles>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub bubble_size: Option<f64>,
+    /// A gapped grid's end segments, each so long on paper, millimetres (docs/adr/0725 §5); absent: the whole grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    /// A column at every crossing, tied to its radial grid and its arc, arc by arc from the first radial grid on; its
+    /// width along its radial grid, turned `rotation` further when given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SystemColumns>,
+}
+
 /// Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, then the grid `system` and its columns
-/// (docs/adr/0707), on a named layer, as one undo step.
+/// (docs/adr/0707), then the curved grid system `radial` and its columns (docs/adr/0725 §1), on a named layer, as one
+/// undo step.
 ///
 /// Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `invalid_column`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
@@ -231,6 +324,9 @@ pub struct GridsCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub system: Option<GridSystem>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub radial: Option<RadialGridSystem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub color: Option<String>,
@@ -278,7 +374,7 @@ pub struct GridsPlan {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NewColumn {
-    /// Its centre; with `grids`, the crossing nearest it.
+    /// Where it stands: its centre, or the point of its box its `anchor` names; with `grids`, the crossing nearest it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -299,6 +395,17 @@ pub struct NewColumn {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
+    /// An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+    /// depth; only with `shape` L, which needs them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub legs: Option<[f64; 2]>,
+    /// Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+    /// absent: its centre.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub anchor: Option<ColumnAnchor>,
     /// Its turn, radians counter-clockwise.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -341,6 +448,17 @@ pub struct ColumnCrossings {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<f64>,
+    /// An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
+    /// depth; only with `shape` L, which needs them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub legs: Option<[f64; 2]>,
+    /// Which point of its box stands where it is put (docs/adr/0725 §2): its centre, a side's middle or a corner;
+    /// absent: its centre.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub anchor: Option<ColumnAnchor>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
@@ -710,7 +828,17 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub bubble_size: Option<Option<f64>>,
-    /// A column's.
+    /// A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub ends: Option<Option<f64>>,
+    /// A column's; another than L drops its legs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub shape: Option<ColumnShape>,
@@ -729,7 +857,16 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub depth: Option<Option<f64>>,
-    /// A column's.
+    /// An L column's legs (docs/adr/0725 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub legs: Option<[f64; 2]>,
+    /// A column's anchor (docs/adr/0725 §2): its reference point stays, its body moves round it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub anchor: Option<ColumnAnchor>,
+    /// A column's, about its reference point.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]

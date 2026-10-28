@@ -963,14 +963,36 @@ impl Input for kentos_commands::SlabsEdit {
 }
 
 impl Input for kentos_commands::GridsCreate {
-    /// `grids[0].pts[k].x` and `.y`, `series.spacings[k]`, `lineWeight` (docs/adr/0343).
+    /// `grids[0].pts[k].x` and `.y`, `series.spacings[k]`, `series.ends`, `lineWeight` (docs/adr/0343); the curved
+    /// system's `radial.center.x` and `.y`, `.radius`, `.turns[k]`, `.rings[k]` (docs/adr/0725 §1).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
         }
+        if path == "series.ends" {
+            return self.series.as_mut()?.ends.as_mut();
+        }
         if let Some(rest) = path.strip_prefix("series.spacings[") {
             let k = rest.strip_suffix(']')?.parse::<usize>().ok()?;
             return self.series.as_mut()?.spacings.get_mut(k);
+        }
+        if let Some(rest) = path.strip_prefix("radial.") {
+            let r = self.radial.as_mut()?;
+            return match rest {
+                "center.x" => Some(&mut r.center.x),
+                "center.y" => Some(&mut r.center.y),
+                "radius" => Some(&mut r.radius),
+                "ends" => r.ends.as_mut(),
+                _ => {
+                    let (list, k) = rest.split_once('[')?;
+                    let k = k.strip_suffix(']')?.parse::<usize>().ok()?;
+                    match list {
+                        "turns" => r.turns.get_mut(k),
+                        "rings" => r.rings.get_mut(k),
+                        _ => None,
+                    }
+                }
+            };
         }
         if let Some(rest) = path.strip_prefix("system.") {
             let s = self.system.as_mut()?;
@@ -1009,6 +1031,9 @@ impl Input for kentos_commands::ColumnsCreate {
             "width" => Some(&mut c.width),
             "at.x" => c.at.as_mut().map(|p| &mut p.x),
             "at.y" => c.at.as_mut().map(|p| &mut p.y),
+            // An L's legs (docs/adr/0725 §3).
+            "legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
+            "legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
             _ => None,
         }
     }
@@ -1343,6 +1368,10 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.rise" => c.rise.as_mut(),
                 "operation.baseOffset" => c.base_offset.as_mut().and_then(Option::as_mut),
                 "operation.post" => c.post.as_mut().and_then(Option::as_mut),
+                // A gapped grid's ends, an L's legs (docs/adr/0725 §3, §5).
+                "operation.ends" => c.ends.as_mut().and_then(Option::as_mut),
+                "operation.legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
+                "operation.legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
                 _ => None,
             },
             // Mesafe's `operation.distance` (docs/adr/0712).

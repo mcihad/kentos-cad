@@ -477,6 +477,8 @@ mod ramp_scenes;
 #[cfg(test)]
 mod stair_scenes;
 #[cfg(test)]
+mod grid_scenes;
+#[cfg(test)]
 mod slab_scenes;
 #[cfg(test)]
 mod space_scenes;

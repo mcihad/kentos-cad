@@ -1341,11 +1341,14 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.grid.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
             e.grid.bulges = bulges;
         }
+        // A mirror swaps an L's width and depth and its legs and moves its anchor (docs/adr/0725 §2, §3).
         (Entity::Column(e), Shape::Column { at, column }) => {
             e.column.at = Point { x: at.x, y: at.y };
             e.column.width = column.width;
             e.column.depth = column.depth;
+            e.column.legs = column.legs;
             e.column.rotation = column.rotation;
+            e.column.anchor = kentos_commands::ColumnAnchor::of_unit(column.anchor);
         }
         (Entity::Stair(e), Shape::Stair { pts, stair }) => {
             e.stair.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();

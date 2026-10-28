@@ -43,6 +43,8 @@ pub enum ArchAuditCheck {
     Tags,
     /// Associative dimensions and dimension sets whose link broke.
     Dimensions,
+    /// A grid label given twice on one level (docs/adr/0725 §6).
+    Grids,
     /// Columns whose grids are gone.
     Columns,
     /// View marks whose target is gone.
@@ -56,13 +58,14 @@ pub enum ArchAuditCheck {
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 11] = [
+    pub const ALL: [ArchAuditCheck; 12] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
         ArchAuditCheck::Numbers,
         ArchAuditCheck::Tags,
         ArchAuditCheck::Dimensions,
+        ArchAuditCheck::Grids,
         ArchAuditCheck::Columns,
         ArchAuditCheck::Viewmarks,
         ArchAuditCheck::Levels,
@@ -79,6 +82,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Numbers => "numbers",
             ArchAuditCheck::Tags => "tags",
             ArchAuditCheck::Dimensions => "dimensions",
+            ArchAuditCheck::Grids => "grids",
             ArchAuditCheck::Columns => "columns",
             ArchAuditCheck::Viewmarks => "viewmarks",
             ArchAuditCheck::Levels => "levels",
@@ -96,6 +100,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Numbers => "Numaralar",
             ArchAuditCheck::Tags => "Etiketler",
             ArchAuditCheck::Dimensions => "Ölçüler",
+            ArchAuditCheck::Grids => "Akslar",
             ArchAuditCheck::Columns => "Kolonlar",
             ArchAuditCheck::Viewmarks => "Görünüm işaretleri",
             ArchAuditCheck::Levels => "Katlar",
@@ -172,7 +177,8 @@ pub struct ArchAuditFinding {
     /// `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
     /// `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
     /// `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
-    /// `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
+    /// `arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,
+    /// `arch_level_missing`,
     /// `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
     /// `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
     /// `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.

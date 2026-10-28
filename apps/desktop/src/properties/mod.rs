@@ -183,6 +183,11 @@ pub enum ArchField {
     BaseOffset,
     /// A curved stair's centre post, its diameter (docs/adr/0724 §3); empty removes it.
     Post,
+    /// A gapped grid's ends on paper, mm (docs/adr/0725 §5); empty or 0 the whole grid.
+    Ends,
+    /// An L column's legs (docs/adr/0725 §3): the one along its width's thickness, the one along its depth's.
+    LegA,
+    LegB,
     /// A tag's template (docs/adr/0344 §5): `\n` its line breaks; empty its kind's.
     TagContent,
     /// A tag's words' height on paper, mm; empty 2.5.
@@ -1391,7 +1396,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             let words = (!t.is_empty()).then(|| t.to_owned());
             let physical = matches!(which, ArchField::Width | ArchField::Depth |
                 ArchField::RiserHeight | ArchField::Tread | ArchField::Landing |
-                ArchField::Rise | ArchField::Base | ArchField::BaseOffset | ArchField::Post);
+                ArchField::Rise | ArchField::Base | ArchField::BaseOffset | ArchField::Post |
+                ArchField::LegA | ArchField::LegB);
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
                     return vec!["Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into()];
@@ -1417,7 +1423,19 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::Base => ArchChange { base: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::BaseOffset => ArchChange { base_offset: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::Post => ArchChange { post: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::Ends => ArchChange { ends: Some(words.map(|_| n).filter(|v| *v != 0.0)), ..Default::default() },
                 _ if words.is_none() => return Vec::new(),
+                // One leg typed, the other kept (docs/adr/0725 §3).
+                ArchField::LegA | ArchField::LegB => {
+                    let Some(kentos_commands::Entity::Column(c)) = model.get(*slot) else {
+                        return Vec::new();
+                    };
+                    let [a, b] = c.column.legs.unwrap_or([c.column.depth() / 2.0, c.column.width / 2.0]);
+                    ArchChange {
+                        legs: Some(if *which == ArchField::LegA { [n, b] } else { [a, n] }),
+                        ..Default::default()
+                    }
+                }
                 ArchField::Width => ArchChange { width: Some(n), ..Default::default() },
                 ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },
                 ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => {

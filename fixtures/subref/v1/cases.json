@@ -597,6 +597,254 @@
    "exact": true
   },
   {
+   "name": "Aksın başı",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "start"
+   },
+   "point": {
+    "x": 0,
+    "y": -2
+   },
+   "exact": true
+  },
+  {
+   "name": "Aksın sonu",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "end"
+   },
+   "point": {
+    "x": 0,
+    "y": 10
+   },
+   "exact": true
+  },
+  {
+   "name": "Aksın ortası",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "point": {
+    "x": 0.0,
+    "y": 4.0
+   },
+   "exact": true
+  },
+  {
+   "name": "Düz aksın merkezi yok",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "center"
+   },
+   "point": null,
+   "exact": true
+  },
+  {
+   "name": "Yay aksın ortası",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "name": "R"
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "point": {
+    "x": 7.0710678118654755,
+    "y": 7.0710678118654755
+   },
+   "exact": false
+  },
+  {
+   "name": "Yay aksın merkezi",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "name": "R"
+   },
+   "place": {
+    "kind": "center"
+   },
+   "point": {
+    "x": 8.881784197001252e-16,
+    "y": 8.881784197001252e-16
+   },
+   "exact": false
+  },
+  {
+   "name": "Aksın köşesi yok",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "point": null,
+   "exact": true
+  },
+  {
+   "name": "Aksın dörtte biri",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "place": {
+    "kind": "along",
+    "part": 0,
+    "ring": 0,
+    "index": 0,
+    "t": 0.25
+   },
+   "point": {
+    "x": 0.0,
+    "y": 1.0
+   },
+   "exact": true
+  },
+  {
+   "name": "Yay aksın yarısı",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "name": "R"
+   },
+   "place": {
+    "kind": "along",
+    "part": 0,
+    "ring": 0,
+    "index": 0,
+    "t": 0.5
+   },
+   "point": {
+    "x": 7.071067811865476,
+    "y": 7.0710678118654755
+   },
+   "exact": false
+  },
+  {
    "name": "Çizginin çeyreği",
    "entity": {
     "kind": "line",
@@ -1004,6 +1252,208 @@
   }
  ],
  "follows": [
+  {
+   "name": "Taşınan aks: baş izler",
+   "place": {
+    "kind": "start"
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 1.5,
+      "y": -2
+     },
+     {
+      "x": 1.5,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "expect": {
+    "at": {
+     "kind": "start"
+    },
+    "point": {
+     "x": 1.5,
+     "y": -2
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Uzatılan aksın sonu yeni sonunda",
+   "place": {
+    "kind": "end"
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 14
+     }
+    ],
+    "name": "A"
+   },
+   "expect": {
+    "at": {
+     "kind": "end"
+    },
+    "point": {
+     "x": 0,
+     "y": 14
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Aks yaya döndü: aynı aile, ortası yayın",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A",
+    "bulges": [
+     0.25,
+     0.0
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "mid",
+     "part": 0,
+     "ring": 0,
+     "index": 0
+    },
+    "point": {
+     "x": 1.5,
+     "y": 4.0
+    }
+   },
+   "exact": false
+  },
+  {
+   "name": "Aks çizgi oldu: başka aile",
+   "place": {
+    "kind": "start"
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": -2
+    },
+    "b": {
+     "x": 0,
+     "y": 10
+    }
+   },
+   "expect": {
+    "broken": "kind_changed"
+   },
+   "exact": true
+  },
+  {
+   "name": "Silinen aks",
+   "place": {
+    "kind": "end"
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": null,
+   "expect": {
+    "broken": "object_gone"
+   },
+   "exact": true
+  },
   {
    "name": "Taşınan çizgi: baş izler",
    "place": {
@@ -2389,6 +2839,58 @@
    "exact": true
   },
   {
+   "name": "Taşınan aksta oran kalır",
+   "place": {
+    "kind": "along",
+    "part": 0,
+    "ring": 0,
+    "index": 0,
+    "t": 0.25
+   },
+   "before": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "after": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 3,
+      "y": -1
+     },
+     {
+      "x": 3,
+      "y": 11
+     }
+    ],
+    "name": "A"
+   },
+   "expect": {
+    "at": {
+     "kind": "along",
+     "part": 0,
+     "ring": 0,
+     "index": 0,
+     "t": 0.25
+    },
+    "point": {
+     "x": 3.0,
+     "y": 2.0
+    }
+   },
+   "exact": true
+  },
+  {
    "name": "Taşınan çizgide oran kalır",
    "place": {
     "kind": "along",
@@ -2825,6 +3327,117 @@
   }
  ],
  "snaps": [
+  {
+   "name": "Uç nokta: aksın sonu",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 0,
+    "y": 10
+   },
+   "place": {
+    "kind": "end"
+   }
+  },
+  {
+   "name": "Orta nokta: aksın ortası",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 0,
+    "y": 4
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   }
+  },
+  {
+   "name": "Yakın: aksın üstü",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 0,
+      "y": -2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "name": "A"
+   },
+   "snap": "nearest",
+   "at": {
+    "x": 0,
+    "y": 1
+   },
+   "place": {
+    "kind": "along",
+    "part": 0,
+    "ring": 0,
+    "index": 0,
+    "t": 0.25
+   }
+  },
+  {
+   "name": "Merkez: yay aksın",
+   "entity": {
+    "kind": "grid",
+    "pts": [
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "name": "R"
+   },
+   "snap": "center",
+   "at": {
+    "x": 0,
+    "y": 0
+   },
+   "place": {
+    "kind": "center"
+   }
+  },
   {
    "name": "Ekleme noktası: yazının",
    "entity": {
@@ -3309,7 +3922,7 @@
     "part": 0,
     "ring": 0,
     "index": 0,
-    "t": 0.5000000000000001
+    "t": 0.5
    }
   },
   {
@@ -3711,7 +4324,7 @@
     "index": 1,
     "t": 0.5
    },
-   "length": 3.3182380450040303
+   "length": 3.3182380450040307
   },
   {
    "name": "Yayın parçası",
@@ -9537,7 +10150,7 @@
     "part": 0,
     "ring": 0,
     "index": 0,
-    "t": 0.5000000000000001
+    "t": 0.5
    }
   },
   {

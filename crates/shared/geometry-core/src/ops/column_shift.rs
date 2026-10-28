@@ -2,23 +2,23 @@
 //! the nearest face running parallel to it (a wall's or another column's) on its level, and the column moved square to
 //! that side so the distance is what was typed, the face across fixed.
 //!
-//! - **Sides:** a rectangular column's, from its corner `k` to the next (`geom::arch::column_corners`' order: the side
-//!   below its centre first, then right, above, left, as it is turned); a round column's are its bounding square's,
-//!   turned as it is.
+//! - **Sides:** a column's box's, from its corner `k` to the next (`geom::arch::column_box`'s order: the side below its
+//!   middle first, then right, above, left, as it is turned): a rectangle's own, a round column's bounding square's, an
+//!   L's box's (docs/adr/0725 §3).
 //! - **Gaps:** on side `k`, outward, the nearest straight edge running parallel to it (within 0.001°) and overlapping
 //!   it along its line by more than [`TIE`]: a wall's facing face (a wall on the same level, or both on none), or
 //!   another column's side; not behind the side by more than [`TIE`]. Measured square to the side at the middle of the
 //!   overlap. Equal distances go to the walls before the columns, then to the one given first, then its lower edge.
-//! - **Move:** the column's centre moved along the side's outward normal by the gap less the distance typed.
+//! - **Move:** the column's reference point moved along the side's outward normal by the gap less the distance typed.
 
-use crate::geom::arch::{ColumnSpec, column_corners};
+use crate::geom::arch::{ColumnSpec, column_box};
 use crate::geom::wall::left_face;
 use crate::geom::wall_join::WallIn;
 use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::ops::wall_shift::{PARALLEL, TIE, edge, edge_count, level};
 use crate::vec2::Vec2;
 
-/// A column as the rule takes it: its centre, its shape and its level.
+/// A column as the rule takes it: its reference point, its shape and its level.
 #[derive(Clone, Copy, Debug)]
 pub struct ColumnIn<'a> {
     pub at: Vec2,
@@ -68,20 +68,10 @@ fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
     (l > 0.0).then(|| Vec2::new((b.x - a.x) / l, (b.y - a.y) / l))
 }
 
-/// The four sides of a column, each from a corner to the next, counter-clockwise: a round one's bounding square's.
+/// The four sides of a column's box, each from a corner to the next, counter-clockwise: a round one's bounding square's,
+/// an L's box's.
 pub fn sides(c: &ColumnIn<'_>) -> [(Vec2, Vec2); 4] {
-    let square;
-    let spec = if c.spec.round {
-        square = ColumnSpec {
-            round: false,
-            depth: None,
-            ..c.spec.clone()
-        };
-        &square
-    } else {
-        c.spec
-    };
-    let k = column_corners(c.at, spec);
+    let k = column_box(c.at, c.spec);
     [(k[0], k[1]), (k[1], k[2]), (k[2], k[3]), (k[3], k[0])]
 }
 

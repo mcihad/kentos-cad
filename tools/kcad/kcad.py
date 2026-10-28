@@ -403,6 +403,10 @@ SCHEMA_WITH_RAMP_LEVELS = 124
 # Schema 125 (docs/adr/0724): a stair's `heightFromLevel` (its rise its level's height; needs its level, only true is
 # written) and `post` (a curved stair's centre post, its diameter, less than its inner side's).
 SCHEMA_WITH_STAIR_LEVELS = 125
+# Schema 126 (docs/adr/0725): a grid's `ends` (a gapped grid's end segments on paper, mm), a column's `anchor` (which
+# of its box's nine points its `at` is) and an L column (`lShape`, its `legs`).
+SCHEMA_WITH_GRID_COLUMN_FORMS = 126
+COLUMN_ANCHORS = ("center", "left", "right", "bottom", "top", "bottomLeft", "bottomRight", "topLeft", "topRight")
 MAX_SLAB_THICKNESS = 5.0
 MAX_SLAB_OFFSET = 100.0
 MAX_SLAB_EDGE = 2.0
@@ -654,7 +658,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3173,6 +3177,7 @@ class _Schema:
         self.slabs = version >= SCHEMA_WITH_SLABS
         self.ramp_levels = version >= SCHEMA_WITH_RAMP_LEVELS
         self.stair_levels = version >= SCHEMA_WITH_STAIR_LEVELS
+        self.grid_column_forms = version >= SCHEMA_WITH_GRID_COLUMN_FORMS
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -8204,6 +8209,18 @@ class _Schema:
                     self.fail("bad_value", "merdivenin kata bağlı yüksekliği (heightFromLevel) ve merkez direği (post) şema 125 ister")
                 return read(x)
             return f
+        def formed(read):
+            # Schema 126 (docs/adr/0725): a gapped grid, an anchored or an L column.
+            def f(x):
+                if not self.grid_column_forms:
+                    self.fail("bad_value", "kesik aks (ends), kolonun hizası (anchor) ve L kolon (lShape, legs) şema 126 ister")
+                return read(x)
+            return f
+        def column_shape(x):
+            shape = unless("rect", self.enum(("rect", "round", "lShape")))(x)
+            if shape == "lShape" and not self.grid_column_forms:
+                self.fail("bad_value", "kesik aks (ends), kolonun hizası (anchor) ve L kolon (lShape, legs) şema 126 ister")
+            return shape
         def stair_bulges(x):
             # Schema 117 (docs/adr/0709): a curved stair's walking line's two bulges.
             if not self.stair_arcs:
@@ -8212,9 +8229,11 @@ class _Schema:
         tables = {
             "grid": {"pts": (points, True), "bulges": (self.array(self.float), False), "name": (self.text, True),
                      "bubbles": (unless("both", self.enum(("both", "start", "end", "none"))), False),
-                     "bubbleSize": (self.float, False), "arch": arch},
-            "column": {"at": (self.jpoint, True), "shape": (unless("rect", self.enum(("rect", "round"))), False),
-                       "width": (self.float, True), "depth": (self.float, False), "rotation": (unless(0.0, self.float), False),
+                     "bubbleSize": (self.float, False), "ends": (formed(self.float), False), "arch": arch},
+            "column": {"at": (self.jpoint, True), "shape": (column_shape, False),
+                       "width": (self.float, True), "depth": (self.float, False),
+                       "legs": (formed(self.array(self.float)), False), "rotation": (unless(0.0, self.float), False),
+                       "anchor": (formed(unless("center", self.enum(COLUMN_ANCHORS))), False),
                        "type": (self.text, False), "tag": (self.text, False), "fill": (unless(False, self.bool), False),
                        "grids": (self.array(self.text), False), "place": (self.text, False),
                        "broken": (self.enum(("gridGone",)), False), "arch": arch},
@@ -8258,6 +8277,8 @@ class _Schema:
                 bad("Aksın etiketi boş olamaz.")
             if "bubbleSize" in f:
                 positive(f["bubbleSize"], "Balonun çapı")
+            if "ends" in f:
+                positive(f["ends"], "Kesik aksın uç parçası", 1000.0)
         elif kind == "column":
             finite_points([f["at"]])
             positive(f["width"], "Kolonun eni")
@@ -8265,6 +8286,16 @@ class _Schema:
                 positive(f["depth"], "Kolonun boyu")
             if not math.isfinite(f.get("rotation", 0.0)):
                 bad("Kolonun dönüşü sonlu olmalı.")
+            # An L's legs (docs/adr/0725 §3): only an L's, which needs both, each above 0 and thinner than its side.
+            if (f.get("shape") == "lShape") != ("legs" in f):
+                bad("L kolonun kolları olur, yalnız onun.")
+            if "legs" in f:
+                legs = f["legs"]
+                if len(legs) != 2:
+                    bad("L kolonun iki kolu olur.")
+                for t, side in ((legs[0], f.get("depth", f["width"])), (legs[1], f["width"])):
+                    if not (math.isfinite(t) and 0 < t < side):
+                        bad("L kolonun kolu sıfırdan büyük, kolonun yanından ince olmalı.")
             g = f.get("grids")
             if g is not None and (len(g) != 2 or g[0] == g[1]):
                 bad("Kolon iki ayrı aksın kesişimine bağlanır.")

@@ -964,7 +964,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: kalınlığı aşan derinlik reddi, açıklıkla çakışma, evre, duvar taşıma ve
   2B görünüş/metraj sözleşmesi. 3B katı sonucu bu aşamada vaat edilmez.
 
-### ARCH-ELEM-03 — Aks ve kolon yerleşimini güçlendir [~]
+### ARCH-ELEM-03 — Aks ve kolon yerleşimini güçlendir [x]
 
 - [x] Aks ağı dilimi [ADR0707](../docs/adr/0707-grid-systems.md): `cad.grids.create`'in
   `system`'i iki yönde aralık listeleri, açı, ilk adlar, uzatma, balonlar ve
@@ -974,6 +974,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   başvurudan, araç testleri, Python/MCP, gerçek GUI resimleri
   (`.run/shots/arac-aks-agi-*`). GUI'de Enter'ın aynı yere ikinci ağ yazması
   bulunup düzeltildi. Eğrisel ağ, kolon hizası, L kolon ve eşit bölme açık.
+- [x] Eğrisel ağ, kesik aks, hiza, L kolon, eşit bölme ve yinelenen aks
+  [ADR0725](../docs/adr/0725-curved-grids-column-forms.md): `radial` (radyal
+  akslar, yaylar, radyal yönde kolonlar), `ends` (KCAD 126), kolonun dokuz
+  noktalı `anchor`'ı ve `lShape`/`legs` (çizim, alan, geçici ölçü, iç zincir,
+  ayna kuralı), “L/n” ve İki nokta'da Eşit böl, Kolon aracının ayarları ve
+  Öznitelikler; Denetim'in Akslar grubu (sil ya da sıradaki boş etiket);
+  aksın ölçü yerleri, ölçü ve kolon çizelgesinin Yer'i aksı izler. Archicad
+  Grid System ve Column Reference Axis, Revit kesik aks araştırıldı. 41+27+21
+  yeni ve 44 denetim durumu bağımsız başvurudan, KCAD örnekleri, tümleşik
+  test, masaüstü yürüyüşü, gerçek GUI resimleri (`.run/shots/arac-aks-*`,
+  `arac-kolon-l-*`). Ağın kendi ölçü zinciri ve uç parçası tutamacı açık.
 
 - Aks aralık listesiyle ortogonal/döndürülmüş ağ, iki uç balonu, kesik aralık;
   aks kesişimine kolon, dikdörtgen/daire/L varyant ve hiza.
@@ -1249,6 +1260,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-02 / ADR0723 | Ara sahanlık (`maxRun`), kata bağlı başlangıç (`baseOffset`, KCAD 124, izleyici), Metraj'da rampa satırları ve Rampalar sekmesi, Denetim'de erişilebilirlik profili (`erisilebilirlik-rampa/1`) ve Düzelt, planda eğim yazısı. 31+27+22+24 ortak durum, gerçek PDF, uygulama/alan/etkileşim/masaüstü (1356)/KCAD/Python (374)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |

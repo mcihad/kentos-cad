@@ -55,9 +55,12 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.label.is_some(), "label", GRID);
     add(c.bubbles.is_some(), "bubbles", GRID);
     add(c.bubble_size.is_some(), "bubbleSize", GRID);
+    add(c.ends.is_some(), "ends", GRID);
     add(c.shape.is_some(), "shape", COLUMN);
     add(c.width.is_some(), "width", WIDE);
     add(c.depth.is_some(), "depth", COLUMN);
+    add(c.legs.is_some(), "legs", COLUMN);
+    add(c.anchor.is_some(), "anchor", COLUMN);
     add(c.rotation.is_some(), "rotation", COLUMN);
     add(c.kind.is_some(), "type", COLUMN);
     add(c.tag.is_some(), "tag", COLUMN);
@@ -94,8 +97,11 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
     let flat = |v: Option<Option<f64>>| v.flatten();
     for (v, field, name) in [
         (flat(c.bubble_size), "bubbleSize", "Balon çapı"),
+        (flat(c.ends), "ends", "Kesik aksın ucu"),
         (c.width, "width", "Genişlik"),
         (flat(c.depth), "depth", "Boy"),
+        (c.legs.map(|l| l[0]), "legs[0]", "L kolonun kolu"),
+        (c.legs.map(|l| l[1]), "legs[1]", "L kolonun kolu"),
         (c.rotation, "rotation", "Dönüş"),
         (c.riser_height, "riserHeight", "Rıht yüksekliği"),
         (flat(c.post), "post", "Merkez direği"),
@@ -133,17 +139,31 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = c.bubble_size {
                 f.bubble_size = v;
             }
+            if let Some(v) = c.ends {
+                f.ends = v;
+            }
         }
         Entity::Column(col) => {
             let f = &mut col.column;
             if let Some(v) = c.shape {
                 f.shape = v;
+                // Another shape has no legs (docs/adr/0725 §3).
+                if v != kentos_commands::ColumnShape::LShape {
+                    f.legs = None;
+                }
             }
             if let Some(v) = c.width {
                 f.width = v;
             }
             if let Some(v) = c.depth {
                 f.depth = v;
+            }
+            if let Some(v) = c.legs {
+                f.legs = Some(v);
+            }
+            // Its reference point stays: its body moves round it (docs/adr/0725 §2).
+            if let Some(v) = c.anchor {
+                f.anchor = v;
             }
             if let Some(v) = c.rotation {
                 f.rotation = v;

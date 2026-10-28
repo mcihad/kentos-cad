@@ -129,6 +129,7 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Numbers => "openingNumber",
         ArchAuditCheck::Tags => "tag",
         ArchAuditCheck::Dimensions => "wallDimensions",
+        ArchAuditCheck::Grids => "archGrid",
         ArchAuditCheck::Columns => "column",
         ArchAuditCheck::Viewmarks => "viewSection",
         ArchAuditCheck::Levels => "archSettings",
