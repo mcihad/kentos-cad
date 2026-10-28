@@ -2119,30 +2119,44 @@ Gelecek değerlendirme için araştırma kaynakları: Martin'in kaynak, endpoint
 
 Kabul: çalışan job sırasında browser kapanır veya worker düşer; iş güvenli biçimde sürer/yeniden alınır, sonuç en fazla bir kez commit edilir. Aynı pure hesap fixture'ı web Worker ve native worker'da eşdeğer çıkar.
 
-## 14. Embedded Python ve `kentos` Python kütüphaneleri — P1/P2
+## 14. Python çalışma ortamları, KEK ve `kentos` Python kütüphaneleri — P1/P2
+
+**27 Ekim 2026 plan uzlaştırması:** Eklenti mimarisi, katkı bazlı
+CAD/GIS/gelecek proje türü görünürlüğü, Python Processing scriptleri,
+modeller ve expression fonksiyonlarının ana planı [plan/kek.md](plan/kek.md);
+uv/ortam, UI, paket ve onaylı katalog görevleri [plan/python.md](plan/python.md)
+içindedir. K0–K7 ve T01–T30 uygulama/kabul işidir; bu plan güncellemesiyle
+tamamlandı sayılmaz. Önceki `PY-*` kimlikleri korunur.
 
 ### 14.1 Çalışma modeli
 
-Desktop uygulamasına CPython, PyO3 aracılığıyla embed edilir. Python kullanıcıya komut ve hesaplama SDK'sı sunar; ana CAD hesaplama algoritmaları Python'da yeniden yazılmaz. Native Python extension dağıtımı ile uygulama içine interpreter gömme ayrı build/packaging ihtiyaçlarıdır. PyO3 her iki kullanım biçimini destekler; static embedding ve C extension yükleme ayrıntıları ayrıca ele alınmalıdır. [PyO3 rehberi](https://pyo3.rs/main/), [PyO3 dağıtım/embedding](https://pyo3.rs/main/building-and-distribution.html).
+Masaüstü konsolu kullanıcı kararıyla **ayrı Python sürecidir**
+([ADR 0132](docs/adr/0132-desktop-python-console.md)); KEK runtime'ları
+da ayrı süreç ve tipli broker kullanacaktır. `kentos._native` mevcut
+haricî Python SDK'sının PyO3 extension'ıdır; masaüstüne interpreter
+embed edildiği anlamına gelmez. Python ürün komutlarını ve ortak Rust
+hesabını kullanır; ana CAD algoritmaları Python'da yeniden yazılmaz.
+Ortam/lifecycle hedefleri [KEK mimarisinde](plan/kek.md) ve
+[Python planında](plan/python.md) izlenir.
 
 | Host | Python yürütme | KentOS'a bağlantı |
 |---|---|---|
-| Desktop | Embed CPython; kontrollü thread/host yaşam döngüsü | Native command girişine ve Rust hesap kütüphanelerine binding |
+| Desktop | Mevcut konsol ve hedef KEK runtime'ları ayrı Python süreçlerinde | Tipli broker/komut/oturum servisleri; canlı UI/document pointer'ı yok |
 | Harici Python | Kurulabilir `kentos` paketi | Yerel headless binding veya yetkili HTTP client |
-| Web | Gerektiğinde yüklenen ayrı Pyodide Worker | JS/RPC üzerinden web TS komut servisi ve hesaplama facade'ı |
+| Web (ADR 0228 ile ertelendi) | Gelecek seçenek: ayrı Pyodide Worker veya kullanıcının seçtiği uzak executor | Aynı contracts ve yetkili command facade; native wheel eşdeğeri varsayılmaz |
 | Server otomasyonu | Sınırlandırılmış Python worker process/container | Yetkili command/job API'si; ana API process'ine script embed edilmez |
 
 Web Python'u, desktop uygulamasının WASM export'u değildir. Pyodide kendi interpreter'ıdır; native PyO3 wheel dosyası tarayıcıya aynen yüklenmez. Emscripten/Pyodide belleği ile mevcut `wasm32-unknown-unknown` hesap modüllerinin belleğini ortakmış gibi kullanma. Web Worker UI'nın uzun Python hesabıyla bloke olmamasını sağlar; Python paketlerinin browser kısıtları ayrıca görünür olmalıdır. [Pyodide Worker](https://pyodide.org/en/stable/usage/webworker.html), [Pyodide uyumluluk sınırları](https://pyodide.org/en/stable/usage/wasm-constraints.html).
 
-### 14.2 Native embedding ve dağıtım
+### 14.2 Native Python runtime ve dağıtım
 
-- [ ] `PY-01` CPython/PyO3 sürüm matrisi, desteklenen OS/architecture, bundled interpreter konumu ve güncelleme politikasını seç. Kullanıcının sistem Python'unun tesadüfen uyumlu olmasına güvenme.
-- [ ] `PY-02` App embedding crate'i ile harici extension/wheel build'ini ayır; `extension-module`, interpreter initialization ve linker flag'leri birbirine yanlış feature birleşimiyle taşınmasın. — **28 Eylül, kısmen:** harici paketin eklentisi ayrı crate'tir (`kentos-python`, kararlı ABI 3.10+, maturin; eskimiş `extension-module` yok); masaüstüne gömme ayrı dilim ([ADR 0131](docs/adr/0131-python-sdk.md)).
+- [ ] `PY-01` CPython/PyO3 sürüm matrisi, desteklenen OS/architecture, opt-in interpreter seçimi/kurulumu ve güncelleme politikasını seç. Hazır locked runtime sistem Python'una tesadüfen bağlanmasın; `PY-UV` işleriyle ortak izlenir.
+- [ ] `PY-02` Ayrı süreç runtime/broker dağıtımı ile harici extension/wheel build'ini ayır; linker/ABI/build ayarları birbirine yanlış feature birleşimiyle taşınmasın. — **28 Eylül, kısmen:** harici paketin eklentisi ayrı crate'tir (`kentos-python`, kararlı ABI 3.10+, maturin; eskimiş `extension-module` yok; [ADR 0131](docs/adr/0131-python-sdk.md)). **27 Ekim plan düzeltmesi:** uygulamaya gömme KEK önkoşulu değildir; kalan ortam/broker işi `plan/python.md` ve `plan/kek.md` içindedir.
 - [ ] `PY-03` Interpreter startup/shutdown, module initialization, exception/traceback, stdout/stderr ve log yönlendirmesini tasarla; PyObject yaşam süresi kapanmış belge/runtime'ı kullanamasın. — **28 Eylül, konsol:** Python ayrı süreçte (sahibin kararı); kanal JSON satırları, betiğin çıktısı mesaj, Python altındaki çıktı standart hataya; hata dökümü betiğin satırlarıyla ([ADR 0132](docs/adr/0132-desktop-python-console.md)).
 - [ ] `PY-04` GIL ve Rust lock sırasını belirle; Python callback beklerken UI/document lock'u tutma. Uzun Rust hesabında interpreter lock'unu uygun API ile bırak; UI mutation'ı komut kuyruğunda yap. — **28 Eylül:** GIL masaüstünde yok (ayrı süreç); betiğin istekleri UI iş parçacığında sırayla yanıtlanır, süreç beklerken UI serbest; `kentos._native`'de Rust işi GIL'i bırakır ([ADR 0132](docs/adr/0132-desktop-python-console.md)).
 - [ ] `PY-05` GUI console, script editor/run, dosyadan script, seçili kodu çalıştır, stop/restart, geçmiş, otomatik tamamlama ve `.pyi` destekli yardım ekle. — **28 Eylül, kısmen:** alt panelde Python sekmesi: çalıştırma, Durdur, Yeniden başlat, Betik aç (.py), geçmiş (↑/↓), çıktı ve hata dökümü; açık: tamamlama, `.pyi` yardımı, betik düzenleyicisi, seçili kodu çalıştırma ([ADR 0132](docs/adr/0132-desktop-python-console.md)). 28 Eylül, 2. kısım: tamamlama (Ctrl+Boşluk, Tab) ve imza yardımı, konsolun kendi adlarından, hiçbir şey çalıştırmadan ([ADR 0135](docs/adr/0135-console-completion.md)). 3. kısım: betik düzenleyicisi (Konsol | Betik): renkli Python, Yeni, Aç, Kaydet, F5 ve seçimi çalıştır, hata satırına gitme, kalıcı taslak ([ADR 0136](docs/adr/0136-script-editor.md)); açık: `.pyi` yardımı, satır numaraları, birden çok betik.
 - [ ] `PY-06` Python ortamını proje/uygulama bağımlılıkları açısından yönet; package lock, kaynak allowlist, offline paket cache'i ve native wheel lisans/ABI uyumluluğunu denetle.
-- [ ] `PY-07` Embed çalışma trusted yerel script modu olsun; güvenilmeyen script veya zorunlu sonlandırma ihtiyacında ayrı OS process host kullan. Restricted builtins, thread timeout veya GIL'i güvenlik sandbox'ı sayma. — **28 Eylül:** masaüstü konsolu ayrı OS sürecidir; Durdur süreci öldürür, yazdıkları geri alınır; kum havuzu iddiası yok ([ADR 0132](docs/adr/0132-desktop-python-console.md)).
+- [ ] `PY-07` Trusted yerel Python ile gerçekten OS izolasyonlu modu ayır; ayrı süreç tek başına sandbox değildir. Restricted builtins, thread timeout veya GIL güvenlik sınırı sayılmaz. — **28 Eylül:** masaüstü konsolu ayrı OS sürecidir; Durdur süreci öldürür, yazdıkları geri alınır; kum havuzu iddiası yok ([ADR 0132](docs/adr/0132-desktop-python-console.md)).
 - [ ] `PY-08` Script izinlerini dosya/ağ/komut/credential kapsamlarıyla bildir; proje açılışında gömülü script otomatik çalışmasın. İzinler proje verisinden gelen iddiayla yükselmesin. — **28 Eylül, kısmen:** proje açılırken betik çalışmaz; izin kapsamları yok ([ADR 0132](docs/adr/0132-desktop-python-console.md)).
 
 ### 14.3 SDK: komut sistemi üzerinden ürün erişimi
@@ -2165,7 +2179,7 @@ Web Python'u, desktop uygulamasının WASM export'u değildir. Pyodide kendi int
 - [ ] `PY-21` Kullanılabilir Python paketlerinin desktop/web/server matrisini yayımla; browser'a uygun olmayan işlem için kullanıcının seçtiği yetkili server job yolu sun, sessizce veri upload etme.
 - [ ] `PY-22` Browser script interrupt desteğini hedef ortama göre doğrula; mümkün olmadığında worker sonlandır/restart ve staged changeset iptali ile belge tutarlılığını koru.
 
-Kabul: aynı basit `polygon oluştur → ölç → katmana ata → kaydet` Python örneği desktop ve web adapter'ında aynı sonucu verir; hatalı script yarım değişiklik bırakmaz. Native olmayan web paketi açıklanabilir hata verir. Harici Python paketi GUI gerektirmeden belgelenmiş headless komutları çalıştırır. — **28 Eylül, kısmen:** harici paket GUI'siz çalışır ve kabul akışı geçer (`pnpm py:test`); hatalı betik `group` ile yarım iş bırakmaz; gerçek sunucuyla `scripts/python/live.py`. Açık: masaüstüne gömülü Python ve web adaptörü ([ADR 0131](docs/adr/0131-python-sdk.md)).
+Kabul: aynı basit `polygon oluştur → ölç → katmana ata → kaydet` Python örneği desteklenen adapter'larda aynı sonucu verir; hatalı script yarım değişiklik bırakmaz. Harici Python paketi GUI gerektirmeden belgelenmiş headless komutları çalıştırır. — **28 Eylül, kısmen:** harici paket GUI'siz çalışır ve kabul akışı geçer (`pnpm py:test`); hatalı betik `group` ile yarım iş bırakmaz; gerçek sunucuyla `scripts/python/live.py` ([ADR 0131](docs/adr/0131-python-sdk.md)). **27 Ekim plan düzeltmesi:** masaüstü konsol host'u ADR 0132'de ayrı süreçtir; kalan KEK environment/broker ve genişletilmiş script/model/expression kabulü ilgili planlardadır. Web adapter'ı ADR 0228 sırasıyla ertelenmiştir; bu oturumda eski testler yeniden çalıştırılmadı.
 
 ## 15. Tam AI surface: sorgulanabilir, işlem yapabilir, sınanabilir — P0 tasarım / P1 teslim
 
