@@ -448,3 +448,48 @@ pub fn plan<'a>(
         sources: ids,
     })
 }
+
+/// A row line's distance from the rows' reference line, the bodies' outermost face on the rows' side, signed along the
+/// frame's normal (docs/adr/0730 §1).
+pub fn row_delta(planned: &Planned, at: CoreVec2) -> f64 {
+    let (d, o) = (planned.direction, planned.origin);
+    let across = (at.x - o.x) * -d.y + (at.y - o.y) * d.x;
+    across - if planned.side > 0.0 { planned.body.1 } else { planned.body.0 }
+}
+
+/// Whether a member's representations at the recipe's sheet scales are the recipe's (docs/adr/0730 §1, §5): its own at
+/// the drawing's scale, each other recipe scale in order with its row's offset there (`offset` at the drawing's scale,
+/// `delta` its row's distance from the reference line), no place or turn of its own; the values' places are the
+/// client's. A recipe without sheet scales leaves them alone.
+pub fn scales_agree(
+    set: &DimensionSet,
+    d: &kentos_contracts::DimensionEntity,
+    offset: f64,
+    delta: f64,
+    plot_scale: f64,
+) -> bool {
+    use kentos_geometry_core::jsmath::js_max;
+    use kentos_geometry_core::ops::dimension_layout::scaled_offset;
+    if set.scales.is_empty() {
+        return true;
+    }
+    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * js_max(a.abs(), b.abs());
+    let Some(a) = d.annotative.as_deref() else {
+        return false;
+    };
+    let others: Vec<f64> = set
+        .scales
+        .iter()
+        .copied()
+        .filter(|s| !kentos_contracts::same_scale(*s, plot_scale))
+        .collect();
+    kentos_contracts::same_scale(a.at, plot_scale)
+        && a.scales.len() == others.len()
+        && a.scales.iter().zip(&others).all(|(e, s)| {
+            kentos_contracts::same_scale(e.scale, *s)
+                && e.point.is_none()
+                && e.rotation.is_none()
+                && e.offset
+                    .is_some_and(|o| close(o, scaled_offset(offset, delta, *s, plot_scale)))
+        })
+}

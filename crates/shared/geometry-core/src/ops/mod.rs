@@ -19,6 +19,7 @@ pub mod curve_cuts;
 pub mod data_search;
 pub mod de9im;
 pub mod derive;
+pub mod dimension_layout;
 pub mod dimension_set;
 pub mod dimension_span;
 pub mod edge_labels;

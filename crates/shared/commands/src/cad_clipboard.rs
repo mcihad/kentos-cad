@@ -13,8 +13,8 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::{
-    DimensionStyleDef, DrawingUnit, Entity, LayerNode, ProjectStyles, TextStyleDef, Vec2,
-    entity::BlockDefinition,
+    DimensionSet, DimensionStyleDef, DrawingUnit, Entity, LayerNode, ProjectStyles, TextStyleDef,
+    Vec2, entity::BlockDefinition,
 };
 
 /// Copies objects with all they use.
@@ -64,6 +64,11 @@ pub struct Clip {
     /// Where the objects are placed from: the copy's base point.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Vec2,
+    /// The dimension recipes copied whole, every source and member among the objects (docs/adr/0730 §4): a paste makes
+    /// them again over the pasted objects.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSet>>", optional))]
+    pub dimension_sets: Vec<DimensionSet>,
 }
 
 /// Input of `cad.entities.copy` v1 (Panoya kopyala, Taban noktasıyla kopyala): the objects `uids` copied with all

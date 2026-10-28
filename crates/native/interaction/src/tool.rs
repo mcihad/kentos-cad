@@ -744,6 +744,9 @@ pub struct Memory {
     /// A façade's or a space's direction square to its source's longest edge, and its walls' cores measured.
     pub wall_dimensions_across: bool,
     pub wall_dimensions_core: bool,
+    /// Pafta ölçekleri (docs/adr/0730 §1): the sheets' scales, ascending, the unused places 0; Sığmayan yazı → Yerinde.
+    pub wall_dimensions_scales: [f64; 8],
+    pub wall_dimensions_keep_tight: bool,
     /// İç ölçü zinciri's choices (docs/adr/0711 §5): every line of a wall, a column's ends (0), centres (1) or
     /// nothing (2), the overall dimension.
     pub interior_skins: bool,
@@ -1178,6 +1181,8 @@ impl Default for Memory {
             wall_dimensions_mode: 0,
             wall_dimensions_across: false,
             wall_dimensions_core: false,
+            wall_dimensions_scales: [0.0; 8],
+            wall_dimensions_keep_tight: false,
             interior_skins: false,
             interior_columns: 0,
             interior_total: false,

@@ -47,6 +47,7 @@ pub mod array;
 mod array_assoc;
 pub mod arrays_edit;
 pub mod constraint_copy;
+pub(crate) mod dimension_set_copy;
 pub mod constraint_follow;
 #[cfg(test)]
 mod constraint_jobs_tests;

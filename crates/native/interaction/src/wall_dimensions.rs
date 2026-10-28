@@ -4,7 +4,7 @@
 //! overall rows, on one side or all four (docs/adr/0729).
 use kentos_commands::{
     CommandResult, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,
-    DimensionSetsCreateInput, Entity, STANDARD_STYLE, TextFace,
+    DimensionSetTight, DimensionSetsCreateInput, Entity, STANDARD_STYLE, TextFace,
 };
 use kentos_domain::dimension_sets::WallEdges;
 use kentos_domain::{Document, Slot, Uuid};
@@ -65,10 +65,19 @@ pub struct WallDimensions {
     grids_row: bool,
     /// A façade's walls measured at their cores.
     core: bool,
-    /// The last plan's rows, said, and how many dimensions do not fit or walls were left out.
+    /// The last plan's rows, said, and how many dimensions do not fit (and have no place aside), were moved aside or
+    /// walls were left out; each sheet scale's values that do not fit anywhere (docs/adr/0730).
     notes: Vec<String>,
     tight: usize,
+    placed: usize,
     skipped: usize,
+    sheet_notes: Vec<String>,
+    /// The rows whose values add up to other than their overall reads (docs/adr/0730 §3).
+    rounding: Vec<String>,
+    /// Pafta ölçekleri: the sheets the rows are drawn on too, as large on paper (docs/adr/0730 §1).
+    scales: Vec<f64>,
+    /// Sığmayan yazı → Yerinde: a value that does not fit stays in its place (docs/adr/0730 §2).
+    keep_tight: bool,
     wall: Option<Uuid>,
     /// The chosen wall's edges; none before a wall is chosen.
     edges: Option<WallEdges>,
@@ -113,7 +122,12 @@ impl Default for WallDimensions {
             core: false,
             notes: Vec::new(),
             tight: 0,
+            placed: 0,
             skipped: 0,
+            sheet_notes: Vec::new(),
+            rounding: Vec::new(),
+            scales: Vec::new(),
+            keep_tight: false,
             wall: None,
             edges: None,
             edge: None,
@@ -497,6 +511,12 @@ impl WallDimensions {
             },
             gap_mm: self.gap_mm,
             dimension_style: self.style.clone(),
+            scales: self.scales.clone(),
+            tight: if self.keep_tight {
+                DimensionSetTight::Keep
+            } else {
+                DimensionSetTight::Shift
+            },
             expected_revision: expected.then(|| self.revision.clone()).flatten(),
         })
     }
@@ -559,7 +579,10 @@ impl WallDimensions {
         self.count = 0;
         self.notes.clear();
         self.tight = 0;
+        self.placed = 0;
         self.skipped = 0;
+        self.sheet_notes.clear();
+        self.rounding.clear();
         // A façade's walls or the space, dashed.
         let outlined: Vec<Uuid> = match self.mode {
             Mode::Wall => Vec::new(),
@@ -619,12 +642,25 @@ impl WallDimensions {
             CommandResult::Completed { output, .. } => {
                 self.revision = Some(output.revision);
                 self.count = output.entities.len();
-                self.tight = output.tight.len();
+                // A value moved aside reads; one that does not fit and stays is drawn in the danger colour, never
+                // hidden (docs/adr/0729 §6, 0730 §2).
+                let stays = |i: &u32| !output.placed.contains(i);
+                self.tight = output.tight.iter().filter(|i| stays(i)).count();
+                self.placed = output.placed.len();
                 self.skipped = output.skipped.len();
                 for (i, entity) in output.entities.iter().enumerate() {
-                    // A value that does not fit is drawn in the danger colour, never hidden (docs/adr/0729 §6).
-                    let tight = output.tight.contains(&(i as u32));
+                    let tight = output.tight.contains(&(i as u32)) && stays(&(i as u32));
                     self.dimension_ghost(entity, tight, cx);
+                }
+                for note in &output.scales {
+                    let stay = note.tight.iter().filter(|i| !note.placed.contains(i)).count();
+                    let scale = crate::annotative::ratio(note.scale);
+                    self.sheet_notes.push(match (note.placed.len(), stay) {
+                        (0, 0) => format!("{scale}: yazılar sığıyor"),
+                        (moved, 0) => format!("{scale}: {moved} yazı yana alındı"),
+                        (0, stay) => format!("{scale}: {stay} yazı sığmıyor"),
+                        (moved, stay) => format!("{scale}: {moved} yazı yana alındı, {stay} yazı sığmıyor"),
+                    });
                 }
                 let name = |r: DimensionSetRow| match r {
                     DimensionSetRow::Openings => "Açıklıklar",
@@ -638,6 +674,14 @@ impl WallDimensions {
                         name(note.row),
                         note.dimensions,
                         note.sources
+                    ));
+                }
+                for r in output.rounding.iter().take(4) {
+                    self.rounding.push(format!(
+                        "{}: parçalar {} · toplam {}",
+                        name(r.row),
+                        r.parts,
+                        r.overall
                     ));
                 }
                 let edges = self
@@ -656,9 +700,14 @@ impl WallDimensions {
                 if sides == 1 {
                     lines.extend(self.notes.iter().cloned());
                 }
+                if self.placed > 0 {
+                    lines.push(format!("{} ölçünün yazısı yana alındı", self.placed));
+                }
                 if self.tight > 0 {
                     lines.push(format!("{} ölçünün yazısı sığmıyor", self.tight));
                 }
+                lines.extend(self.sheet_notes.iter().cloned());
+                lines.extend(self.rounding.iter().map(|r| format!("Yuvarlama · {r}")));
                 if self.skipped > 0 {
                     lines.push(format!("{} duvar eğik ya da yaylı: ölçülmedi", self.skipped));
                 }
@@ -1080,6 +1129,14 @@ impl Tool for WallDimensions {
         self.centers = cx.memory.wall_dimensions_centers;
         self.gap_mm = cx.memory.wall_dimensions_gap_mm;
         self.around = cx.memory.wall_dimensions_around;
+        self.scales = cx
+            .memory
+            .wall_dimensions_scales
+            .iter()
+            .copied()
+            .filter(|s| *s > 0.0)
+            .collect();
+        self.keep_tight = cx.memory.wall_dimensions_keep_tight;
         self.mode = Mode::of(cx.memory.wall_dimensions_mode);
         self.walls_row = cx.memory.wall_dimensions_rows & 4 != 0;
         self.grids_row = cx.memory.wall_dimensions_rows & 8 != 0;
@@ -1349,13 +1406,19 @@ impl Tool for WallDimensions {
             self.distance.clone(),
         ));
         rows.push(Setting::text("R", "Sıra aralığı (kağıtta)", format!("{} mm", self.gap_mm)));
+        rows.push(Setting::text("Ö", "Pafta ölçekleri", scales_text(&self.scales)));
+        rows.push(Setting::choice(
+            "I",
+            "Sığmayan yazı",
+            choices(
+                &[("shift", "Kaydır"), ("keep", "Yerinde")],
+                if self.keep_tight { "keep" } else { "shift" },
+            ),
+        ));
         if !self.notes.is_empty() && !self.around {
             rows.push(Setting::text("Q", "Sıralar", self.notes.join(" · ")).read_only());
         }
-        rows.push(Setting::hint(
-            "H",
-            "Duvar ölçüleri",
-            match self.mode {
+        let hint = match self.mode {
                 _ if self.fixed_distance.is_some() => {
                     "Girilen uzaklık korunur. Tıklama veya Enter ile yerleştirin. Yeniden fareyle yer seçmek için Yerleşim → İmleçle seçin."
                 }
@@ -1368,6 +1431,16 @@ impl Tool for WallDimensions {
                 Mode::Space => {
                     "Mahalin sınırını doğrultu boyunca ölçer: Açıklıklar sırası sınırın köşelerini ve imleç yanındaki kenarın kapı ve pencerelerini, Duvarlar sırası içindeki kolon ve boşlukları da, Toplam mahalin net boyunu. Mahal değişince ölçüler güncellenir."
                 }
+            };
+        rows.push(Setting::hint(
+            "H",
+            "Duvar ölçüleri",
+            if self.fixed_distance.is_some() {
+                hint.to_owned()
+            } else {
+                format!(
+                    "{hint} Pafta ölçekleri (1:100 1:200 gibi) yazılırsa sıralar o paftalarda da aynı kâğıt boyuyla çizilir; Sığmayan yazı → Kaydır sığmayan değeri yanına, üstüne ya da altına alır."
+                )
             },
         ));
         // Kenarlar: shown while it can matter, before a wall or on one with more than one straight edge.
@@ -1390,13 +1463,33 @@ impl Tool for WallDimensions {
                 ),
             );
         }
+        if !self.sheet_notes.is_empty() {
+            rows.push(Setting::text("V", "Paftalarda", self.sheet_notes.join(" · ")).read_only());
+        }
         if self.tight > 0 {
             rows.push(Setting::notice(
                 "U",
-                "Sığmayan yazı",
+                "Sığmayan değer",
+                if self.keep_tight {
+                    format!(
+                        "{} ölçünün değeri uzatma çizgilerinin arasına sığmıyor; gizlenmedi, kırmızıyla gösterildi. Sığmayan yazı → Kaydır ile yanına, üstüne ya da altına alınır.",
+                        self.tight
+                    )
+                } else {
+                    format!(
+                        "{} ölçünün değeri sığmıyor ve yanında, üstünde ya da altında boş yer yok; gizlenmedi, kırmızıyla gösterildi. Sıra aralığını büyütün ya da daha küçük ölçekli bir pafta seçin.",
+                        self.tight
+                    )
+                },
+            ));
+        }
+        if !self.rounding.is_empty() {
+            rows.push(Setting::notice(
+                "Z",
+                "Yuvarlama",
                 format!(
-                    "{} ölçünün değeri uzatma çizgilerinin arasına sığmıyor; gizlenmedi, kırmızıyla gösterildi. Sıra aralığını büyütün ya da ölçü stilinde yazıyı dışarı alın.",
-                    self.tight
+                    "{}. Her değer kendi ölçüsünden yuvarlanır, fark parçalara dağıtılmaz; ölçü stilinde basamak sayısını artırın ya da toplamı ayrıca kontrol edin.",
+                    self.rounding.join("; ")
                 ),
             ));
         }
@@ -1479,6 +1572,17 @@ impl Tool for WallDimensions {
                 self.around = value == "all";
                 true
             }
+            "Ö" => match sheet_scales(value) {
+                Some(scales) => {
+                    self.scales = scales;
+                    true
+                }
+                None => false,
+            },
+            "I" if matches!(value, "shift" | "keep") => {
+                self.keep_tight = value == "keep";
+                true
+            }
             "R" => match paper_mm(value) {
                 Some(mm) if mm > 0.0 && mm <= 1000.0 => {
                     self.gap_mm = mm;
@@ -1532,6 +1636,11 @@ impl Tool for WallDimensions {
             cx.memory.wall_dimensions_mode = self.mode.number();
             cx.memory.wall_dimensions_across = self.across;
             cx.memory.wall_dimensions_core = self.core;
+            cx.memory.wall_dimensions_keep_tight = self.keep_tight;
+            cx.memory.wall_dimensions_scales = [0.0; 8];
+            for (slot, s) in cx.memory.wall_dimensions_scales.iter_mut().zip(&self.scales) {
+                *slot = *s;
+            }
             if self.mode == Mode::Wall
                 && (key == "N" || key == "F" && self.face_override.is_none())
                 && self.fixed_distance.is_none()
@@ -1546,6 +1655,8 @@ impl Tool for WallDimensions {
                 Level::Warn,
                 if key == "R" {
                     "Kağıt üzerinde 0'dan büyük, en çok 1000 mm bir aralık girin; örneğin 7.5 mm."
+                } else if key == "Ö" {
+                    "Pafta ölçeklerini 1:100 1:200 ya da 100 200 gibi yazın (1 ile 1000000 arası, en çok 32); kaldırmak için boş bırakın ya da Yok yazın."
                 } else if key == "P" && !self.has_source() {
                     "Önce ölçülendirilecek duvarı ya da mahali seçin."
                 } else {
@@ -1557,6 +1668,30 @@ impl Tool for WallDimensions {
     }
 }
 
+/// Pafta ölçekleri as they read: none (Yok), or 1:100, 1:200.
+pub fn scales_text(scales: &[f64]) -> String {
+    if scales.is_empty() {
+        "Yok".into()
+    } else {
+        scales
+            .iter()
+            .map(|s| crate::annotative::ratio(*s))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+/// Typed sheet scales (docs/adr/0730 §1), as Diğer ölçekler reads them (`1:100 1:200`, `100, 200`; empty or Yok:
+/// none): ascending, each once; none when one is below 1 or above 1000000, or there are more than 32.
+pub fn sheet_scales(text: &str) -> Option<Vec<f64>> {
+    let mut scales = crate::annotative::parse_scales(text).ok()?;
+    if scales.len() > 32 || scales.iter().any(|s| !(1.0..=1_000_000.0).contains(s)) {
+        return None;
+    }
+    scales.sort_by(f64::total_cmp);
+    Some(scales)
+}
+
 fn paper_mm(text: &str) -> Option<f64> {
     let text = text.trim();
     let number = text.strip_suffix("mm").unwrap_or(text).trim();
@@ -1566,6 +1701,18 @@ fn paper_mm(text: &str) -> Option<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn sheet_scales_read_as_written_ascending_and_once() {
+        assert_eq!(sheet_scales("1:200 1:100"), Some(vec![100.0, 200.0]));
+        assert_eq!(sheet_scales("100, 200; 100"), Some(vec![100.0, 200.0]));
+        assert_eq!(sheet_scales(" "), Some(Vec::new()));
+        assert_eq!(sheet_scales("yok"), Some(Vec::new()));
+        assert_eq!(sheet_scales("0.5"), None);
+        assert_eq!(sheet_scales("1:abc"), None);
+        assert_eq!(scales_text(&[100.0, 200.0]), "1:100, 1:200");
+        assert_eq!(scales_text(&[]), "Yok");
+    }
+
     #[test]
     fn paper_spacing_is_paper_millimetres_and_rejects_other_units() {
         assert_eq!(paper_mm("7.5 mm"), Some(7.5));

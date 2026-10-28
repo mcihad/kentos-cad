@@ -799,6 +799,10 @@ async fn check_dimension_rows(
                 ));
             }
         }
+        // A span measuring the same two places as one drawn before it, in the rows' order, is not drawn again: an edge
+        // without openings has its openings row its whole length, the overall dimension once (the desktop's rule,
+        // docs/adr/0695's 27 October addendum). What the user removed is not drawn, so the other row's stays.
+        let mut drawn: Vec<[(usize, kentos_geometry_core::ops::subref::Place); 2]> = Vec::new();
         for span in spans {
             let row = match span.row {
                 core::Row::Openings => DimensionSetRow::Openings,
@@ -807,10 +811,15 @@ async fn check_dimension_rows(
                 core::Row::Grids => DimensionSetRow::Grids,
             };
             let key = geometric_key(row, span.a.at, span.b.at);
+            if hidden.contains(&key) && !active.contains_key(&key) {
+                continue;
+            }
+            let places = [(span.a.source, span.a.place), (span.b.source, span.b.place)];
+            if drawn.contains(&places) {
+                continue;
+            }
+            drawn.push(places);
             let Some((k, member)) = active.remove(&key) else {
-                if hidden.contains(&key) {
-                    continue;
-                }
                 return Err(AppError::invalid_at(
                     format!("project.dimensionSets[{i}].members"),
                     "Güncel kaynağın ölçü üyeliği eksik. Yeni ve kaldırılan açıklık aralıklarını tam tarifle aynı işlemde yeniden üretin.",
@@ -835,6 +844,15 @@ async fn check_dimension_rows(
                 || d.zb.is_some()
             {
                 Some("style")
+            } else if !kentos_formats::dimension_spans::scales_agree(
+                set,
+                d,
+                span.offset,
+                Frame::new(line).map_or(0.0, |f| f.offset(span.at)),
+                scale,
+            ) {
+                // The sheet scales' representations (docs/adr/0730 §5).
+                Some("annotative")
             } else {
                 None
             };
@@ -1002,6 +1020,9 @@ async fn check_span_rows(
             || d.zb.is_some()
         {
             Some("style")
+        } else if !spans::scales_agree(set, d, span.offset, spans::row_delta(&planned, span.at), scale) {
+            // The sheet scales' representations (docs/adr/0730 §5).
+            Some("annotative")
         } else {
             None
         };

@@ -226,7 +226,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped"],
+        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped", "dimension_set_rounding"],
         targets: none,
     },
     Entry {
@@ -241,7 +241,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped"],
+        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped", "dimension_set_rounding"],
         targets: none,
     },
     Entry {

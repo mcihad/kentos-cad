@@ -3,6 +3,7 @@ import type { DimensionSetFace } from "./DimensionSetFace";
 import type { DimensionSetOpenings } from "./DimensionSetOpenings";
 import type { DimensionSetReference } from "./DimensionSetReference";
 import type { DimensionSetRow } from "./DimensionSetRow";
+import type { DimensionSetTight } from "./DimensionSetTight";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -46,4 +47,14 @@ around?: boolean, face: DimensionSetFace, rows: Array<DimensionSetRow>, openings
 /**
  * Existing project style name; absent means Standart.
  */
-dimensionStyle?: string, expectedRevision?: string, };
+dimensionStyle?: string, 
+/**
+ * The sheets' scales (1:n) the dimensions are drawn at too, as large on paper as at the drawing's own scale
+ * (docs/adr/0730 §1); ascending, from 1 to 1000000.
+ */
+scales?: Array<number>, 
+/**
+ * A value that does not fit between its extension lines: kept in its place (absent) or shifted aside, above or
+ * below (docs/adr/0730 §2).
+ */
+tight?: DimensionSetTight, expectedRevision?: string, };

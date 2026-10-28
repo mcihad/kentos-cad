@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::{DimensionLook, DimensionSetId, EntityId, SubRef, Vec2};
+use crate::{DimensionLook, DimensionSetId, EntityId, SubRef, TextShift, Vec2};
 
 pub const DIMENSION_SET_MEMBERS_MAX: usize = 10_000;
 pub const DIMENSION_SETS_MAX: usize = 10_000;
@@ -67,6 +67,26 @@ pub enum DimensionSetReference {
 impl DimensionSetReference {
     pub fn is_faces(&self) -> bool {
         *self == Self::Faces
+    }
+}
+
+/// What a recipe does with a value that does not fit between its extension lines (docs/adr/0730 §2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DimensionSetTight {
+    /// In its place, drawn in the danger tone (docs/adr/0729 §6).
+    #[default]
+    Keep,
+    /// Beside its interval, else above or below its line, where no other value or row's line is.
+    Shift,
+}
+
+impl DimensionSetTight {
+    pub fn is_keep(&self) -> bool {
+        *self == Self::Keep
     }
 }
 
@@ -180,6 +200,11 @@ pub struct DimensionSetMember {
     pub row: DimensionSetRow,
     pub a: SubRef,
     pub b: SubRef,
+    /// Where the recipe last placed the value at the drawing's own scale (docs/adr/0730 §2); none: in its place. A value
+    /// whose place differs from it was moved by the user and keeps its place.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shift: Option<TextShift>,
 }
 
 impl DimensionSetMember {
@@ -238,6 +263,37 @@ pub struct DimensionSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub span: Option<DimensionSetSpan>,
+    /// The sheets' scales (1:n) the members are drawn at too, as large on paper as at the drawing's own, ascending
+    /// (docs/adr/0730 §1); none: the recipe leaves the members' annotative representations alone.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scales: Vec<f64>,
+    /// A value that does not fit between its extension lines: kept in its place or shifted (docs/adr/0730 §2).
+    #[serde(default, skip_serializing_if = "DimensionSetTight::is_keep")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<DimensionSetTight>", optional))]
+    pub tight: DimensionSetTight,
+}
+
+/// Why a recipe's sheet scales are not usable (docs/adr/0730 §1): each finite, from 1 to 1:1 000 000, ascending, no two the
+/// same scale, at most [`crate::MAX_ANNOTATIVE_SCALES`].
+pub fn scales_problem(scales: &[f64]) -> Option<&'static str> {
+    if scales.len() > crate::MAX_ANNOTATIVE_SCALES {
+        return Some("Ölçü dizisinin pafta ölçeği çok fazla.");
+    }
+    if scales
+        .iter()
+        .any(|s| !s.is_finite() || *s < 1.0 || *s > crate::MAX_ANNOTATIVE_SCALE)
+    {
+        return Some("Ölçü dizisinin pafta ölçeği 1 ile 1000000 arasında bir sayı olmalı (1:n'nin n'si).");
+    }
+    if scales
+        .windows(2)
+        .any(|w| w[1] <= w[0] || crate::same_scale(w[0], w[1]))
+    {
+        return Some("Ölçü dizisinin pafta ölçekleri artan sırada ve birbirinden farklı olmalı.");
+    }
+    None
 }
 
 /// Shape validation independent of a drawing's objects and permissions.
@@ -307,6 +363,12 @@ pub fn dimension_sets_problem(sets: &[DimensionSet]) -> Option<(usize, String)> 
         }
         if let Some((_, why)) = set.look.problem() {
             return Some((i, why));
+        }
+        if let Some(why) = scales_problem(&set.scales) {
+            return fail(why);
+        }
+        if set.members.iter().any(|m| m.shift.is_some_and(|t| !t.along.is_finite() || !t.across.is_finite())) {
+            return fail("Ölçü dizisi üyesinin yazı yeri sonlu olmalı.");
         }
         let mut placed = BTreeSet::new();
         for place in &set.row_places {

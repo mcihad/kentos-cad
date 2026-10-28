@@ -2206,6 +2206,9 @@ def document(d):
     if any("span" in item for item in sets):
         # A façade's or a space's dimension recipe (docs/adr/0729 §1).
         schema = max(schema, 128)
+    if any(item.get("scales") or "tight" in item or any("shift" in m for m in item.get("members", [])) for item in sets):
+        # A recipe's sheet scales, its values shifted, a member's value place (docs/adr/0730 §6).
+        schema = max(schema, 129)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2919,7 +2922,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-129.kcad"] = container(root(cmap(parts), version=uint(129)))
+    files["schema-version-130.kcad"] = container(root(cmap(parts), version=uint(130)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5043,6 +5046,21 @@ def build():
     span_bad("walls-row-without-span", lambda s: (s.pop("span"), s.update(rows=["walls"])))
     span_bad("five-rows", lambda s: s.update(rows=["openings", "walls", "grids", "overall", "openings"]))
     span_bad("edge", lambda s: s.update(edge=1))
+    # Schema 129 (docs/adr/0730): the same façade at 1:50 drawn on 1:100 and 1:200 sheets too, its values shifted, one
+    # placed by hand, and the north wall's own recipe drawn on 1:100 too; schema 128 refuses them.
+    scaled = load("dimension-set-scales.json")
+    sc = document(scaled)
+    assert sc.count(b"\x67version\x18\x81") == 1
+    out["dimension-set-scales.kcad"] = container(sc)
+    out["broken/dimension-set-scales-in-schema-128.kcad"] = container(sc.replace(b"\x67version\x18\x81", b"\x67version\x18\x80"))
+    def scale_bad(name, change):
+        d = copy.deepcopy(scaled)
+        change(d["dimensionSets"][0])
+        out["broken/dimension-set-scales-" + name + ".kcad"] = container(document(d))
+    scale_bad("descending", lambda s: s.update(scales=[200.0, 100.0]))
+    scale_bad("below-one", lambda s: s.update(scales=[0.5]))
+    scale_bad("same", lambda s: s.update(scales=[100.0, 100.00000000001]))
+    scale_bad("keep", lambda s: s.update(tight="keep"))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

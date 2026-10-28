@@ -2,8 +2,14 @@
 import type { DimensionSetRow } from "./DimensionSetRow";
 import type { EntityId } from "./EntityId";
 import type { SubRef } from "./SubRef";
+import type { TextShift } from "./TextShift";
 
 /**
  * An active segment's ordinary dimension. Unchanged active pairs keep this id.
  */
-export type DimensionSetMember = { uid: EntityId, row: DimensionSetRow, a: SubRef, b: SubRef, };
+export type DimensionSetMember = { uid: EntityId, row: DimensionSetRow, a: SubRef, b: SubRef, 
+/**
+ * Where the recipe last placed the value at the drawing's own scale (docs/adr/0730 §2); none: in its place. A value
+ * whose place differs from it was moved by the user and keeps its place.
+ */
+shift?: TextShift, };

@@ -521,19 +521,44 @@ fn selected_walls_make_a_facade_and_four_sides_go_in_one_step() {
 /// Duvarlar sırası: the walls' thicknesses are measured; a value wider than its interval is said and drawn in the
 /// danger tone, never hidden (docs/adr/0729 §6).
 #[test]
-fn values_that_do_not_fit_are_counted_and_drawn_in_the_danger_tone() {
+fn values_that_do_not_fit_are_moved_aside_or_counted_and_drawn_in_the_danger_tone() {
     let (mut b, [south, ..]) = house();
     b.selection.set([south]);
     b.start("wallDimensions");
     assert!(configure(&mut b, "M", "facade"));
     assert!(configure(&mut b, "W", "yes"));
     b.move_to(5., -1.5);
+    // Sığmayan yazı → Kaydır, the new recipe's (docs/adr/0730 §2): the thin walls' values go aside, none in danger.
+    let lines = tag(&b);
+    assert!(lines.iter().any(|l| l == "3 ölçünün yazısı yana alındı"), "{lines:?}");
+    let settings = b.session.settings(&Default::default());
+    assert!(!settings.iter().any(|r| r.key == "U"), "nothing left that does not fit");
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert!(!preview.strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
+    // Yerinde: they stay where they are, said and drawn in the danger tone (docs/adr/0729 §6).
+    assert!(configure(&mut b, "I", "keep"));
     let settings = b.session.settings(&Default::default());
     let notice = settings.iter().find(|r| r.key == "U").expect("the tight values are said");
     assert!(notice.value.starts_with("3 ölçünün"), "{}", notice.value);
     let preview = b.session.preview(&Default::default()).unwrap();
     assert!(preview.strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
     assert!(tag(&b).iter().any(|l| l.starts_with("Duvarlar: 5 ölçü")), "{:?}", tag(&b));
+    // Pafta ölçekleri, typed in any order: read back ascending, each sheet said; one confirmation writes them.
+    assert!(configure(&mut b, "I", "shift"));
+    assert!(configure(&mut b, "Ö", "1:200 100"));
+    assert!(!configure(&mut b, "Ö", "0.5"), "a scale below 1 is refused");
+    let settings = b.session.settings(&Default::default());
+    let scales = settings.iter().find(|r| r.key == "Ö").unwrap();
+    assert_eq!(scales.value, "1:100, 1:200");
+    let sheets = settings.iter().find(|r| r.key == "V").expect("each sheet said");
+    assert!(sheets.value.starts_with("1:100: "), "{}", sheets.value);
+    assert!(tag(&b).iter().any(|l| l.starts_with("1:200: ")), "{:?}", tag(&b));
+    b.confirm();
+    let set = &b.doc.dimension_sets()[0];
+    assert_eq!(set.scales, [100.0, 200.0]);
+    assert_eq!(set.tight, kentos_commands::DimensionSetTight::Shift);
+    // The next façade starts with the same choices.
+    assert_eq!(b.memory.wall_dimensions_scales[..2], [100.0, 200.0]);
 }
 
 /// Mahal: a click inside a room measures its outline along the direction; the room's door on its edge facing the
@@ -636,4 +661,43 @@ fn a_wall_grip_previews_the_dimensions_that_follow_it() {
         assert!(shown.iter().any(|t| t == value), "{value} in {shown:?}");
     }
     assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
+}
+
+/// A row whose values, each rounded from its own measurement, add up to other than the overall reads (docs/adr/0730 §3):
+/// said in the preview and in a notice, never spread over the parts.
+#[test]
+fn a_row_whose_values_do_not_add_up_to_the_overall_is_said() {
+    let mut b = Bench::new("wall");
+    let mut settings = b.doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::M);
+    b.doc.set_settings(settings);
+    b.start("wall");
+    b.click(0., 0.);
+    b.click(3.0012, 0.);
+    b.confirm();
+    b.confirm();
+    let wall = Slot(b.newest().base().id);
+    let host = b.doc.uid(wall).unwrap().to_string();
+    let layer = b.newest().base().layer_id.clone();
+    let made = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+        "cad.openings.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": layer, "openings": [{"host": host, "at": 1.5006, "width": 1.0004}]}),
+    )
+    .unwrap();
+    assert_eq!(made["status"], "completed", "{made}");
+    b.selection.set([wall]);
+    b.start("wallDimensions");
+    b.move_to(1.5, 1.5);
+    let lines = tag(&b);
+    assert!(
+        lines.iter().any(|l| l == "Yuvarlama · Açıklıklar: parçalar 3.000 · toplam 3.001"),
+        "{lines:?}"
+    );
+    let settings = b.session.settings(&Default::default());
+    let notice = settings.iter().find(|r| r.key == "Z").expect("the rounding said");
+    assert!(notice.value.starts_with("Açıklıklar: parçalar 3.000 · toplam 3.001."), "{}", notice.value);
 }

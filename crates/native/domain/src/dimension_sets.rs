@@ -36,6 +36,10 @@ pub struct PlannedDimensionSetMember {
     pub segment: DimensionSetSegment,
     pub uid: Option<EntityId>,
     pub dimension: DimensionEntity,
+    /// Where the recipe places its value at the drawing's scale, recorded with it (docs/adr/0730 §2).
+    pub shift: Option<kentos_contracts::TextShift>,
+    /// Whether its value fits and was moved, at the drawing's scale and at each sheet scale (docs/adr/0730).
+    pub notes: crate::dimension_layout::ValueNotes,
 }
 
 /// The face edge a recipe measures: its two ends, the face line's number and the ends' vertex numbers, and how
@@ -92,6 +96,10 @@ use crate::dimension_spans::{contract_row, core_row as row};
 /// where they are, to a nanometre, in either order.
 type Interval = (&'static str, [(EntityId, i64, i64); 2]);
 
+/// One wall edge's spans, the identities their source numbers name, and the measured line their sheet scales and
+/// tight values are laid out from (docs/adr/0730 §1, §2).
+type EdgeSpans = (Vec<core::Span>, Vec<EntityId>, [CoreVec2; 2]);
+
 fn interval(row: DimensionSetRow, a: (EntityId, Vec2), b: (EntityId, Vec2)) -> Interval {
     let at = |(id, p): (EntityId, Vec2)| (id, (p.x * 1e9).round() as i64, (p.y * 1e9).round() as i64);
     let (a, b) = (at(a), at(b));
@@ -115,6 +123,15 @@ pub(crate) fn same_owned_geometry(a: &DimensionEntity, b: &DimensionEntity) -> b
         && a.za == b.za
         && a.zb == b.zb
         && a.refs == b.refs
+}
+
+/// What a recipe owns of a member: its geometry, and with sheet scales their representations (docs/adr/0730 §1).
+pub(crate) fn same_recipe_geometry(
+    set: &DimensionSet,
+    a: &DimensionEntity,
+    b: &DimensionEntity,
+) -> bool {
+    same_owned_geometry(a, b) && (set.scales.is_empty() || a.annotative == b.annotative)
 }
 
 fn base(layer: &str) -> EntityBase {
@@ -441,6 +458,23 @@ impl Document {
             let Ok(plan) = self.dimension_set_plan(&set) else {
                 continue;
             };
+            // The values' places and the sheet scales' representations follow the rows (docs/adr/0730).
+            let mut recorded = (*set).clone();
+            for planned in &plan {
+                if let Some(uid) = planned.uid
+                    && let Some(m) = recorded.members.iter_mut().find(|m| m.uid == uid)
+                {
+                    m.shift = planned.shift;
+                }
+            }
+            if recorded != *set {
+                let op = Op::DimensionSetUpdate {
+                    before: set.clone(),
+                    after: Arc::new(recorded),
+                    writes: Vec::new(),
+                };
+                self.apply_dimension_set_op(&op);
+            }
             for planned in plan {
                 let Some(uid) = planned.uid else {
                     continue;
@@ -455,11 +489,19 @@ impl Document {
                 let Entity::Dimension(d) = &*before.entity else {
                     continue;
                 };
-                if d.offset == planned.dimension.offset {
+                let owns_scales = !set.scales.is_empty();
+                if d.offset == planned.dimension.offset
+                    && d.text_shift == planned.dimension.text_shift
+                    && (!owns_scales || d.annotative == planned.dimension.annotative)
+                {
                     continue;
                 }
                 let mut d = d.clone();
                 d.offset = planned.dimension.offset;
+                d.text_shift = planned.dimension.text_shift;
+                if owns_scales {
+                    d.annotative = planned.dimension.annotative.clone();
+                }
                 let after = Stored {
                     uid: before.uid,
                     entity: Arc::new(Entity::Dimension(d)),
@@ -658,10 +700,17 @@ impl Document {
     ) -> Result<Vec<PlannedDimensionSetMember>, DimensionSetBreak> {
         if set.span.is_some() {
             let plan = self.dimension_span_spans(set).map_err(|r| r.broken)?;
-            return self.dimension_set_members(set, plan.spans, &plan.sources);
+            let frame = plan.frame();
+            let mut members = self.dimension_set_members(set, plan.spans, &plan.sources)?;
+            self.dress_dimension_set(set, &mut members, &frame);
+            return Ok(members);
         }
-        let (spans, sources) = self.dimension_edge_spans(set)?;
-        self.dimension_set_members(set, spans, &sources)
+        let (spans, sources, line) = self.dimension_edge_spans(set)?;
+        let mut members = self.dimension_set_members(set, spans, &sources)?;
+        if let Some(frame) = crate::dimension_layout::edge_frame(line) {
+            self.dress_dimension_set(set, &mut members, &frame);
+        }
+        Ok(members)
     }
 
     /// A façade or space recipe's plan with its rows' account (docs/adr/0729 §5), or why it cannot be planned: what a
@@ -672,21 +721,20 @@ impl Document {
     ) -> Result<(Vec<PlannedDimensionSetMember>, crate::dimension_spans::SpanNotes), crate::dimension_spans::SpanRefusal>
     {
         let plan = self.dimension_span_spans(set)?;
-        let members = self
+        let frame = plan.frame();
+        let mut members = self
             .dimension_set_members(set, plan.spans, &plan.sources)
             .map_err(|broken| crate::dimension_spans::SpanRefusal {
                 broken,
                 source: None,
                 why: None,
             })?;
+        self.dress_dimension_set(set, &mut members, &frame);
         Ok((members, plan.notes))
     }
 
     /// One wall edge's spans (docs/adr/0695, 0700) and the identities their source numbers name.
-    fn dimension_edge_spans(
-        &self,
-        set: &DimensionSet,
-    ) -> Result<(Vec<core::Span>, Vec<EntityId>), DimensionSetBreak> {
+    fn dimension_edge_spans(&self, set: &DimensionSet) -> Result<EdgeSpans, DimensionSetBreak> {
         let FaceEdge {
             line,
             part,
@@ -752,7 +800,7 @@ impl Document {
                 .collect::<Vec<_>>(),
         )
         .map_err(fault)?;
-        Ok((spans, sources))
+        Ok((spans, sources, line))
     }
 
     /// The members a recipe's spans make: an unchanged source pair keeps its dimension's identity, as does the same
@@ -910,6 +958,8 @@ impl Document {
                 segment,
                 uid: old.filter(|_| like.is_some()).map(|m| m.uid),
                 dimension: d,
+                shift: None,
+                notes: Default::default(),
             });
         }
         Ok(out)
@@ -977,6 +1027,7 @@ impl Document {
                 row: planned.segment.row,
                 a: planned.segment.a,
                 b: planned.segment.b,
+                shift: planned.shift,
             });
         }
         set.members = next;
@@ -1009,6 +1060,90 @@ impl Document {
         Ok(())
     }
 
+    /// Adds a copied recipe (docs/adr/0730 §4) whose members are the copies of its members, already in the drawing, its
+    /// references the copies of its objects: planned as an edit plans, each member keeping the copy of its interval and
+    /// taking its geometry and bonds from the plan; with the copies' step when inside one.
+    pub fn add_dimension_set_copy(&mut self, mut set: DimensionSet) -> Result<(), Refusal> {
+        self.dimension_set_policy()?;
+        let mut list: Vec<DimensionSet> =
+            self.dimension_sets.iter().map(|s| (**s).clone()).collect();
+        list.push(set.clone());
+        if let Some((_, why)) = dimension_sets_problem(&list) {
+            return Err(Refusal(why));
+        }
+        if set.members.iter().any(|m| {
+            !matches!(
+                self.slot_of(Uuid::from_bytes(m.uid.0)).and_then(|slot| self.get(slot)),
+                Some(Entity::Dimension(_))
+            )
+        }) {
+            return Err(Refusal(
+                "Kopyalanan ölçü grubunun bir üyesinin kopyası çizimde yok.".into(),
+            ));
+        }
+        // Refused before anything is written when the copies cannot be planned; the followers plan them as the recipe
+        // is added, so that the members' new geometry is the recipe's own write.
+        self.dimension_set_plan(&set)
+            .map_err(|b| Refusal(format!("Ölçü kaynağı hazır değil: {}.", b.name())))?;
+        set.broken = None;
+        self.record(
+            vec![Op::DimensionSetAdd {
+                index: self.dimension_sets.len(),
+                set: Arc::new(set),
+            }],
+            labels::ADD,
+        );
+        Ok(())
+    }
+
+    /// Objects changed with the recipes they hold whole (docs/adr/0730 §4): their new forms and the recipes' moved layout
+    /// as one change, the recipes' members among the objects their own writes; the recipes are planned again on the
+    /// moved sources, each member keeping its interval. Unknown slots and unknown recipes are skipped.
+    pub fn update_with_recipes(
+        &mut self,
+        changes: Vec<(Slot, Entity)>,
+        sets: Vec<DimensionSet>,
+        label: &str,
+    ) -> Result<usize, Refusal> {
+        self.dimension_set_policy()?;
+        let mut latest: HashMap<Slot, Stored> = HashMap::new();
+        let mut ops = Vec::with_capacity(changes.len() + sets.len());
+        for (slot, entity) in changes {
+            let Some(before) = latest.get(&slot).or_else(|| self.store.get(slot)).cloned() else {
+                continue;
+            };
+            let after = Stored {
+                uid: before.uid,
+                entity: Arc::new(crate::edit::changed(entity, slot, &before.entity)),
+            };
+            if after.entity == before.entity {
+                continue;
+            }
+            latest.insert(slot, after.clone());
+            ops.push(Op::Update { before, after });
+        }
+        let applied = ops.len();
+        for set in sets {
+            let Some(before) = self.dimension_sets.iter().find(|s| s.id == set.id).cloned() else {
+                continue;
+            };
+            let mut after = set;
+            after.members = before.members.clone();
+            let mine: HashSet<Uuid> = before.members.iter().map(|m| Uuid::from_bytes(m.uid.0)).collect();
+            let writes: Vec<_> = owned_writes(&ops)
+                .into_iter()
+                .filter(|(uid, _, _)| mine.contains(uid))
+                .collect();
+            ops.push(Op::DimensionSetUpdate {
+                before,
+                after: Arc::new(after),
+                writes,
+            });
+        }
+        self.record(ops, label);
+        Ok(applied)
+    }
+
     pub fn update_dimension_set(&mut self, mut set: DimensionSet) -> Result<bool, Refusal> {
         self.dimension_set_policy()?;
         let Some(index) = self.dimension_sets.iter().position(|s| s.id == set.id) else {
@@ -1035,6 +1170,88 @@ impl Document {
         let plan = self
             .dimension_set_plan(&set)
             .map_err(|b| Refusal(format!("Ölçü kaynağı hazır değil: {}.", b.name())))?;
+        let mut ops = self.dimension_set_ops(&mut set, plan)?;
+        if *before == set && ops.is_empty() {
+            return Ok(false);
+        }
+        ops.push(Op::DimensionSetUpdate {
+            before,
+            after: Arc::new(set),
+            writes: owned_writes(&ops),
+        });
+        self.record(ops, labels::CHANGE);
+        Ok(true)
+    }
+
+    /// A recipe's values (one row's, or all) back in the recipe's places (docs/adr/0730 §2): each one's place now taken as
+    /// the recipe's last, so that the plan places it again (or, keeping, puts it back in its own place); one step.
+    pub fn reset_dimension_set_texts(
+        &mut self,
+        id: DimensionSetId,
+        row: Option<DimensionSetRow>,
+    ) -> Result<bool, Refusal> {
+        self.dimension_set_policy()?;
+        let Some(index) = self.dimension_sets.iter().position(|s| s.id == id) else {
+            return Ok(false);
+        };
+        let before = self.dimension_sets[index].clone();
+        let mut set = (*before).clone();
+        for member in &mut set.members {
+            if row.is_some_and(|r| r != member.row) {
+                continue;
+            }
+            member.shift = match self
+                .slot_of(Uuid::from_bytes(member.uid.0))
+                .and_then(|slot| self.get(slot))
+            {
+                Some(Entity::Dimension(d)) => d.text_shift,
+                _ => member.shift,
+            };
+        }
+        let plan = match self.dimension_set_plan(&set) {
+            Ok(plan) => plan,
+            // A broken recipe's values go back to their own places, its members as they are.
+            Err(_) => {
+                let mut ops = Vec::new();
+                for member in &mut set.members {
+                    if row.is_some_and(|r| r != member.row) {
+                        continue;
+                    }
+                    member.shift = None;
+                    let Some(stored) = self
+                        .slot_of(Uuid::from_bytes(member.uid.0))
+                        .and_then(|slot| self.store.get(slot))
+                        .cloned()
+                    else {
+                        continue;
+                    };
+                    if let Entity::Dimension(d) = &*stored.entity
+                        && d.text_shift.is_some()
+                    {
+                        let mut d = d.clone();
+                        d.text_shift = None;
+                        let after = Stored {
+                            uid: stored.uid,
+                            entity: Arc::new(Entity::Dimension(d)),
+                        };
+                        ops.push(Op::Update {
+                            before: stored,
+                            after,
+                        });
+                    }
+                }
+                if ops.is_empty() && *before == set {
+                    return Ok(false);
+                }
+                ops.push(Op::DimensionSetUpdate {
+                    before,
+                    after: Arc::new(set),
+                    writes: owned_writes(&ops),
+                });
+                self.record(ops, labels::CHANGE);
+                return Ok(true);
+            }
+        };
         let mut ops = self.dimension_set_ops(&mut set, plan)?;
         if *before == set && ops.is_empty() {
             return Ok(false);
@@ -1150,6 +1367,13 @@ impl Document {
             .iter()
             .flat_map(|s| s.members.iter().map(|m| (Uuid::from_bytes(m.uid.0), s.id)))
             .collect();
+        // A recipe with sheet scales owns its members' representations there too (docs/adr/0730 §1).
+        let scaled: HashSet<DimensionSetId> = self
+            .dimension_sets
+            .iter()
+            .filter(|s| !s.scales.is_empty())
+            .map(|s| s.id)
+            .collect();
         for op in ops {
             let mut source = |s: &Stored| {
                 changed.insert(EntityId(s.uid.into_bytes()));
@@ -1172,7 +1396,8 @@ impl Document {
                     source(before);
                     source(after);
                     if let Some(set_id) = owners.get(&after.uid) {
-                        let legal = matches!((&*before.entity, &*after.entity), (Entity::Dimension(a),Entity::Dimension(b)) if same_owned_geometry(a,b));
+                        let legal = matches!((&*before.entity, &*after.entity), (Entity::Dimension(a),Entity::Dimension(b))
+                            if same_owned_geometry(a,b) && (!scaled.contains(set_id) || a.annotative == b.annotative));
                         if !legal
                             && !trusted.contains(&(
                                 after.uid,
@@ -1352,7 +1577,7 @@ impl Document {
             };
             if let (Some(before), Some(after)) = (change.before.as_deref(), change.after.as_deref())
             {
-                let legal = matches!((before,after), (Entity::Dimension(a),Entity::Dimension(b)) if same_owned_geometry(a,b));
+                let legal = matches!((before,after), (Entity::Dimension(a),Entity::Dimension(b)) if same_recipe_geometry(set,a,b));
                 if !legal && !authorized(set.id) && !cached.contains(&change.uid) {
                     out.push(Fault {
                         uid: change.uid,
@@ -1398,7 +1623,7 @@ impl Document {
                 let complete =
                     plan.len() == set.members.len() && plan.iter().all(|p| p.uid.is_some_and(|uid|
                         self.slot_of(Uuid::from_bytes(uid.0)).and_then(|s|self.get(s)).is_some_and(|e|
-                            matches!(e,Entity::Dimension(d) if same_owned_geometry(d,&p.dimension)))));
+                            matches!(e,Entity::Dimension(d) if same_recipe_geometry(set,d,&p.dimension)))));
                 if !complete {
                     out.push(Fault { uid: Uuid::from_bytes(set.wall.0), message: "Otomatik ölçü sırası eksiksiz üretilemedi; kaynak değişikliği uygulanmadı. Çizimdeki nesne kapasitesini kontrol edin.".into(), code: Some("dimension_set_incomplete") });
                 }

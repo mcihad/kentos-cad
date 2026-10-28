@@ -92,3 +92,59 @@ fn a_span_opts_into_schema_128_and_127_refuses_it() {
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
     assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x80"));
 }
+
+const SCALES_MODEL: &str = include_str!("../../../../../fixtures/kcad/v2/dimension-set-scales.json");
+const SCALES_BYTES: &[u8] = include_bytes!("../../../../../fixtures/kcad/v2/dimension-set-scales.kcad");
+
+/// docs/adr/0730: a recipe's sheet scales, its shifting and its members' recorded places opt into schema 129; schema 128
+/// refuses them, and the same façade without them keeps schema 128.
+#[test]
+fn sheet_scales_opt_into_schema_129_and_128_refuses_them() {
+    let model: DocumentSnapshotV2 = serde_json::from_str(SCALES_MODEL).unwrap();
+    let set = &model.dimension_sets[0];
+    assert_eq!(set.scales, [100.0, 200.0]);
+    assert!(set.members.iter().any(|m| m.shift.is_some()));
+    assert_eq!(kentos_kcad::encode_verified(&model).unwrap(), SCALES_BYTES);
+    assert_eq!(
+        kentos_kcad::decode(SCALES_BYTES).unwrap().dimension_sets,
+        model.dimension_sets
+    );
+    let old = include_bytes!(
+        "../../../../../fixtures/kcad/v2/broken/dimension-set-scales-in-schema-128.kcad"
+    );
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::BadValue
+    );
+    for name in ["descending", "below-one", "same", "keep"] {
+        let path = format!(
+            "{}/../../../fixtures/kcad/v2/broken/dimension-set-scales-{name}.kcad",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let bytes = std::fs::read(&path).unwrap();
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect_err(name).code,
+            kentos_kcad::Code::BadValue,
+            "{name}"
+        );
+    }
+    // Each of the three alone opts in; without them the façade keeps schema 128.
+    let mut plain = model.clone();
+    for s in &mut plain.dimension_sets {
+        s.scales.clear();
+        s.tight = Default::default();
+        for m in &mut s.members {
+            m.shift = None;
+        }
+    }
+    let bytes = kentos_kcad::encode_verified(&plain).unwrap();
+    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x81"));
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\x80"));
+    let mut shifted = plain.clone();
+    shifted.dimension_sets[0].members[0].shift = model.dimension_sets[0]
+        .members
+        .iter()
+        .find_map(|m| m.shift);
+    let bytes = kentos_kcad::encode_verified(&shifted).unwrap();
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\x81"));
+}

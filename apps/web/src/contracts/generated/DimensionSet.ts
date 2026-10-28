@@ -9,6 +9,7 @@ import type { DimensionSetRow } from "./DimensionSetRow";
 import type { DimensionSetRowPlace } from "./DimensionSetRowPlace";
 import type { DimensionSetSegment } from "./DimensionSetSegment";
 import type { DimensionSetSpan } from "./DimensionSetSpan";
+import type { DimensionSetTight } from "./DimensionSetTight";
 import type { EntityId } from "./EntityId";
 import type { Vec2 } from "./Vec2";
 
@@ -40,4 +41,13 @@ suppressed?: Array<DimensionSetSegment>, broken?: DimensionSetBreak,
 /**
  * A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700).
  */
-span?: DimensionSetSpan, };
+span?: DimensionSetSpan, 
+/**
+ * The sheets' scales (1:n) the members are drawn at too, as large on paper as at the drawing's own, ascending
+ * (docs/adr/0730 §1); none: the recipe leaves the members' annotative representations alone.
+ */
+scales?: Array<number>, 
+/**
+ * A value that does not fit between its extension lines: kept in its place or shifted (docs/adr/0730 §2).
+ */
+tight?: DimensionSetTight, };

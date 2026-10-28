@@ -3,6 +3,7 @@ import type { DimensionSetFace } from "./DimensionSetFace";
 import type { DimensionSetOpenings } from "./DimensionSetOpenings";
 import type { DimensionSetReference } from "./DimensionSetReference";
 import type { DimensionSetRow } from "./DimensionSetRow";
+import type { DimensionSetTight } from "./DimensionSetTight";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -13,4 +14,12 @@ export type DimensionSetEdit = { "kind": "move", at: Vec2, row?: DimensionSetRow
 /**
  * A façade's or a space's lines measured (docs/adr/0729).
  */
-reference?: DimensionSetReference, } | { "kind": "sources", walls: Array<string>, } | { "kind": "restoreHidden" } | { "kind": "detach" } | { "kind": "delete" } | { "kind": "resetText", row?: DimensionSetRow, } | { "kind": "resetRows" };
+reference?: DimensionSetReference, 
+/**
+ * The sheets' scales, replaced; empty: none (docs/adr/0730 §1).
+ */
+scales?: Array<number>, 
+/**
+ * A value that does not fit: kept or shifted (docs/adr/0730 §2).
+ */
+tight?: DimensionSetTight, } | { "kind": "sources", walls: Array<string>, } | { "kind": "restoreHidden" } | { "kind": "detach" } | { "kind": "delete" } | { "kind": "resetText", row?: DimensionSetRow, } | { "kind": "resetRows" };

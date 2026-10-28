@@ -15,6 +15,8 @@ mod semantic_tool_tests;
 #[cfg(test)]
 mod annotative_sheet_tests;
 #[cfg(test)]
+mod dimension_set_sheet_tests;
+#[cfg(test)]
 mod symbols_sheet_tests;
 #[cfg(test)]
 mod text_outputs_tests;
@@ -125,6 +127,8 @@ mod dimension_follow_scenes;
 mod dimension_mark_scenes;
 #[cfg(test)]
 mod facade_dimension_scenes;
+#[cfg(test)]
+mod dimension_layout_scenes;
 #[cfg(test)]
 mod annotative_scenes;
 #[cfg(test)]

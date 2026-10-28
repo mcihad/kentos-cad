@@ -144,9 +144,9 @@ fn write_execute(
     let (changed, created) = if copy {
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
         let copies: Vec<_> = checked.moved.into_iter().map(unlinked).collect();
-        let origins: Vec<_> = if copies.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
-            checked.sources.iter().filter_map(|(_, id)| kentos_domain::Uuid::parse_str(id).ok()).collect()
-        } else { Vec::new() };
+        // The copies' groups: a space's sources and an opening's wall go onto their copies (docs/adr/0730 §4).
+        let origins: Vec<_> =
+            checked.sources.iter().filter_map(|(_, id)| kentos_domain::Uuid::parse_str(id).ok()).collect();
         match cx.doc.add_room_copies(copies, &origins, label) {
             Ok((slots,detached)) => {
                 if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
@@ -161,11 +161,26 @@ fn write_execute(
                     Err(stop) => return stop.into(),
                 }
                 let doc = &*cx.doc;
-                let created = slots
+                let created: Vec<String> = slots
                     .iter()
                     .filter_map(|slot| doc.uid(*slot))
                     .map(|uid| uid.to_string())
                     .collect();
+                // The recipes taken whole, onto the copies (docs/adr/0730 §4).
+                if let Some(m) = checked.matrix {
+                    let originals: Vec<String> =
+                        checked.sources.iter().map(|(_, uid)| uid.clone()).collect();
+                    if let Err(stop) = crate::dimension_set_copy::add_copies(
+                        cx.doc,
+                        &checked.recipes,
+                        &originals,
+                        &created,
+                        &m,
+                        input.layer_id.as_deref(),
+                    ) {
+                        return stop.into();
+                    }
+                }
                 (Vec::new(), created)
             }
             Err(full) => {
@@ -187,7 +202,19 @@ fn write_execute(
             .map(|(slot, _)| *slot)
             .zip(checked.moved)
             .collect();
-        cx.doc.update_many(changes, label);
+        // The recipes whose objects all move, moved with them in the same change (docs/adr/0730 §4).
+        match checked.matrix {
+            Some(m) if !checked.recipes.is_empty() => {
+                if let Err(stop) =
+                    crate::dimension_set_copy::move_whole(cx.doc, changes, &checked.recipes, &m, label)
+                {
+                    return stop.into();
+                }
+            }
+            _ => {
+                cx.doc.update_many(changes, label);
+            }
+        }
         let changed = checked.sources.into_iter().map(|(_, uid)| uid).collect();
         (changed, Vec::new())
     };
@@ -322,6 +349,9 @@ struct Checked {
     moved: Vec<Entity>,
     locked: Vec<String>,
     warnings: Vec<CommandWarning>,
+    /// The dimension recipes taken whole and the matrix moving them (docs/adr/0730 §4).
+    recipes: Vec<kentos_commands::DimensionSet>,
+    matrix: Option<Affine>,
 }
 
 fn locked_message(n: usize) -> String {
@@ -616,10 +646,17 @@ pub fn text_policy(transform: &Transform) -> TextPolicy {
 
 fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Dönüştürülecek nesne verilmedi.")?;
-    if input.copy.unwrap_or(false) {
+    let how = check_transform(&input.transform)?;
+    // The dimension recipes taken whole go with their objects under a modify tool's matrix; a part of one, or one under
+    // another transform, is refused (docs/adr/0730 §4).
+    let recipes = crate::dimension_set_copy::whole(doc, &input.uids)?;
+    if !recipes.is_empty() && !matches!(how, How::Matrix(_)) {
         crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
     }
-    let how = check_transform(&input.transform)?;
+    let matrix = match &how {
+        How::Matrix(m) => Some(*m),
+        _ => None,
+    };
     // A mirror's texts (docs/adr/0292): readable unless asked otherwise.
     let policy = text_policy(&input.transform);
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -849,6 +886,8 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         moved,
         locked,
         warnings,
+        recipes,
+        matrix,
     })
 }
 

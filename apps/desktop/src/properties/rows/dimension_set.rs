@@ -2,6 +2,7 @@
 //! (docs/adr/0729 §7).
 use kentos_commands::{
     DimensionSetBreak, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,
+    DimensionSetTight,
 };
 use kentos_domain::Slot;
 
@@ -58,6 +59,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
                 Choice::Separator,
                 action("Sıraların yerini sıfırla", "resetRows", true),
                 action("Bu sıranın yazı yerlerini sıfırla", "rowText", true),
+                action("Yazıları tarife döndür", "resetText", true),
                 action("Gizlenen ölçüleri geri getir", "restoreHidden", true),
                 Choice::Separator,
                 action("Diziyi bağımsız ölçülere dönüştür", "detach", true),
@@ -183,6 +185,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
                 .unit("mm · kağıtta")
                 .editor((!locked).then_some(Editor::Number(Field::DimensionSetGap(slot)))),
         );
+        out.extend(sheets(set, slot, locked));
         out.push(broken_note(set.broken).unwrap_or_else(|| {
             Row::note(if span.space {
                 "Mahal ve kapıları değişince bu dizi güncellenir. Sıra uzaklığı bu sırayı birlikte taşır."
@@ -248,10 +251,41 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
             .unit("mm · kağıtta")
             .editor((!locked).then_some(Editor::Number(Field::DimensionSetGap(slot)))),
     );
+    out.extend(sheets(set, slot, locked));
     out.push(broken_note(set.broken).unwrap_or_else(|| {
         Row::note("Duvar ve açıklıklar değişince bu dizi güncellenir. Sıra uzaklığı bu sırayı birlikte taşır; yazı ve görünüş yalnız seçili ölçüye uygulanır.")
     }));
     out
+}
+
+/// A recipe's sheet scales and its values that do not fit (docs/adr/0730 §1, §2): the sheets drawn on too, as large on
+/// paper, and whether a value that does not fit is shifted aside or kept in its place.
+fn sheets(set: &kentos_commands::DimensionSet, slot: Slot, locked: bool) -> Vec<Row> {
+    let scales = kentos_interaction::wall_dimensions::scales_text(&set.scales);
+    let shift = set.tight == DimensionSetTight::Shift;
+    let pick = |label: &str, value: &str, chosen: bool| Choice::Pick {
+        label: label.into(),
+        swatch: None,
+        icon: None,
+        wide: false,
+        chosen,
+        enabled: !locked,
+        message: Message::Properties(Event::DimensionSetValue(slot, "tight", value.into())),
+    };
+    let label = if shift { "Kaydır" } else { "Yerinde" };
+    vec![
+        Row::text("Pafta ölçekleri", &scales)
+            .editor((!locked).then_some(Editor::Text(Field::DimensionSetScales(slot)))),
+        Row::text("Sığmayan yazı", label).editor(Some(Editor::Select {
+            text: label.into(),
+            swatch: None,
+            icon: None,
+            items: vec![
+                pick("Kaydır: yanına, üstüne ya da altına", "shift", shift),
+                pick("Yerinde: kırmızıyla göster", "keep", !shift),
+            ],
+        })),
+    ]
 }
 
 /// Why a recipe no longer follows its source, as a warning row.

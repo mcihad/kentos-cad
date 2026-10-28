@@ -773,12 +773,24 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ### ARCH-DIM-01 — Otomatik mimari ölçü dizileri [~]
 
-- [~] İlk kalıcı sıra dilimi: doğrusal tek duvarın sol/sağ yüzü, açıklık
+- [x] İlk kalıcı sıra dilimi: doğrusal tek duvarın sol/sağ yüzü, açıklık
   uçları/merkezleri ve toplam; görünür ayarlar, tek onay, kalıcı üyelik,
   sıra/metin yerleşimi, Python/MCP, KCAD ve atomik bulut eşitleme.
-  [ADR0695](../docs/adr/0695-associative-wall-dimension-sets.md) uygulanıyor;
-  otomatik test ve gerçek arayüz kabulü tamamlanmadan bitmiş sayılmaz.
-  Kapalı/çok parçalı cephe, mahal/çekirdek ve çoklu pafta kapsamı açıktır.
+  [ADR0695](../docs/adr/0695-associative-wall-dimension-sets.md); kapalı/çok kenarlı
+  duvar ADR0700'de, cephe/mahal/çekirdek ADR0729'da, çoklu pafta ADR0730'da kapandı.
+  Gerçek arayüz, sunucu (PostGIS) ve PDF kabulü ADR0729 ve ADR0730'un Doğrulama'sında.
+- [x] Çoklu pafta [ADR0730](../docs/adr/0730-dimension-set-sheets-text-rounding-copy.md):
+  tarifin `scales`'ı üyelerin ölçekli temsillerini tarifin hesabıyla yazar; 1:50 ve
+  1:100 paftada yazı ve sıra aralığı kâğıtta aynı (PDF'te `pdftotext -bbox` ile:
+  3,0 mm yazı kutusu, 7,50 mm sıra aralığı, yüzden 14,6 mm); tarifin ölçeğinde olmayan
+  paftada çizilmez; sunucu temsilleri denetler. KCAD 129 (opt-in).
+- [x] Sığmayan yazının yeri: `tight: shift` sağ, sol, üst, alt adaylarından ilk boşa
+  koyar; elle taşınan yazı korunur ve engel sayılır, Yazıları tarife döndür geri getirir;
+  boş yer yoksa yerinde ve tehlike renginde. Duvar ölçüleri'nde yeni tarif Kaydır.
+- [x] Kopyalama: bütünüyle seçilmiş tarif Kopyala/Dizi/pano ile kopyalara, Taşı/Döndür/
+  Ölçekle/Aynala ile kaynaklarıyla gider; kısmen seçilmiş tarif açıklamalı ret
+  (`dimension_set_owned`). Aynalamada duvarın yolu ters döner: yüz aynı, kenar
+  numarası yeni yolda, açıklıklar pervazlarından okunur.
 - [~] Kullanıcının bildirdiği duvar stili görünürlüğü regresyonu:
   1:100 otomatik ayrıntıda yaklaşınca bileşenlerin gelmemesi ve yoğun
   GPU taramanın kaybolması [ADR0696](../docs/adr/0696-model-wall-detail-and-dense-hairlines.md)
@@ -838,8 +850,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [Archicad29 dış ölçü](https://help.graphisoft.com/AC/29/INT/_AC29_Help/070_Documentation/070_Documentation-49.htm)
   (seçilmiş duvar, yön, yer, toplam/dış geometri/yapı/açıklık, merkez-uç, yüz ve
   sıra aralığı); yerel uygulama testi yapılmış sayılmaz.
-- Kabul: kapı eni ve konumu değişir, duvar uzar/bölünür/silinir; ölçü güncellenir
-  veya kopuk bağ açık gösterilir. Toplam ile parçaların yuvarlama kuralı belirli.
+- [x] Kabul: kapı eni ve konumu değişir, duvar uzar/bölünür/silinir; ölçü güncellenir
+  veya kopuk bağ açık gösterilir (ADR0695, 0700, 0729). Toplam ile parçaların yuvarlama
+  kuralı belirli: her değer kendi ölçüsünden yuvarlanır, fark dağıtılmaz; tutmayan sıra
+  planda `rounding` ve `dimension_set_rounding` ile, araçta Yuvarlama satırıyla söylenir
+  (ADR0730 §3).
 
 ### ARCH-EDIT-01 — Geçici ölçüyle doğrudan düzenleme [x]
 
@@ -1301,6 +1316,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-28 | ARCH-EDIT-01 / ADR0728 | Geçici ölçünün kalanı: aksa mesafe (duvar kenarının ekseninden, kolonun ve açıklığın ortasından), iki adaylı yanda kareyle yüz ↔ aks ve oturumda tutulan seçim, duvar boyu (sabit uç, köşedeki duvar Kaydır'la izler, uç uca duvar, T ve çok duvarlı uç ret); `cad.walls.edit` `length`/`to`, `cad.arch.edit` ve `cad.openings.edit` `to`, sorgularda aks ve boy. 68 yeni ortak durum (215), çekirdek/etkileşim/masaüstü testleri, kilitli referans, dönük UCS, büyük koordinat, Esc, tek Geri al, Python/MCP, gerçek GUI (bulunan dört kusur düzeltildi: yazı alanı seçimleri siliyordu, boyun işaretleri tutamaçların üstündeydi, kısa yanın sayısı boyunkiyle çakışıyordu, iki ucu T duvarda boy gösteriliyordu). | [x] Bütün madde |
 | 2026-10-28 | ARCH-LIB-02 / ADR0727 | Mutfak dizisi L ve U (kör/açık köşe), bulaşık makinesi, fırın, buzdolabı, modülün kendi eni ve kapısı, tezgâh kesimleri, Modül/Tür/Açılma; kalıcı dizi (KCAD 127) duvarı izler, kopar, nesneleriyle taşınır, sahiplik (`casework_owned`); `cad.casework.edit`/`query`, `casework_clash`, kör köşedeki cihaz `casework_blind_corner`; araçta Biçim (Otomatik kör modülü atlar), Öznitelikler'de Mutfak dizisi. 80 + 39 + 22 ortak durum (Rust, Python), KCAD, bulut meta ve göç 0035, araç ve masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-DIM-01 / ADR0729 | Cephe, duvar grubu ve mahal ölçü dizileri: tarifin `span`'ı (KCAD 128), sıralar Açıklıklar/Duvarlar/Akslar/Toplam, dış yüz/çekirdek, köşe duvarları ve saplanan bölmeler, cepheden görünürlük, mahalin dış halkası ve delikleri, dört yan, okunur doğrultu; üyelik aynı adımda (kapı, bölme, bölme/birleştirme, ters yön, silme), kimlik aynı çift ya da aynı aralık; sığmayan yazı söylenir; `Sources`, `reference`, sıra uzaklığı dış yüzden. 70 bağımsız ortak durum (Rust ve Python), çekirdek/uygulama/belge/araç/masaüstü/MCP testleri, clippy, wasm32, gerçek GUI (8 sahne). | [x] ADR0729 alt maddeleri; ADR0695/0696 kabul kapıları ve veritabanı projesi açık |
+| 2026-10-29 | ARCH-DIM-01 / ADR0730 | Ölçü dizisinin kalanı: pafta ölçekleri (`scales`, ölçekli temsiller tarifin hesabıyla), sığmayan yazının yeri (`tight: shift`, dört aday, elle taşınan korunur, `resetText`), yuvarlama uyarısı (`rounding`), bütünüyle seçilmiş tarifin kopya/dizi/pano/taşı/döndür/aynala ile gitmesi; KCAD 129. 86 bağımsız ortak durum (Rust ve Python), çekirdek/uygulama/araç/masaüstü/Python/MCP testleri, sunucu PostGIS'te (ADR0695 ekinin kuralı sunucuda eksikti, kapandı), PDF'te 1:50 ve 1:100 aynı kâğıt boyu, gerçek GUI (9 sahne). | [x] ADR0730 alt maddeleri; ADR0696'nın görünüş kabulü açık |
 | 2026-10-28 | ARCH-LIB-01 / ADR0726 | Bloklar › Kitaplık (DWG/DXF/KCAD klasörleri, kategoriler, gerçek boy ve birim, birim bildirmeyen dosyada birim sorusu), `file.import.block`'un DWG/DXF okuması, `sourceUnit`, `category`, `sizes`, `unit`; Blok ekle'nin gerçek boy etiketi, taban işareti, görünür ayarları ve Varyant (V); Öznitelikler'de En × boy. 30 + 25 ortak durum, DWG ikizleri, başsız kabul matrisi (m/mm, iç içe, aynalı, kaydet/aç, DXF `--written`), etkileşim/masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |

@@ -28,6 +28,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Ölçü dizisinin kalanı: pafta ölçekleri, sığmayan yazı, yuvarlama, kopya (29 Ekim 2026; [ADR0730](docs/adr/0730-dimension-set-sheets-text-rounding-copy.md)).**
+  Tarifin `scales`'ı (pafta ölçekleri) üyelerin `annotative`'ini tarifin hesabıyla yazar: her ölçekte sıra başvuru
+  çizgisinden `s/P` katı uzakta (`ops::dimension_layout::scaled_offset`), kâğıtta her paftada aynı; temsiller tarifindir.
+  `tight: shift` sığmayan yazıyı sağ, sol, üst, alt adaylarından ilk boşa koyar (`place_values`; elle taşınan yazı kalır,
+  engel sayılır, üyenin `shift`'i tarifin son yeri; `resetText` döndürür). Yuvarlanmış parçalar toplamı tutmazsa plan
+  `rounding` ve `dimension_set_rounding` (dağıtılmaz). Bütünüyle seçilmiş tarif Kopyala/Dizi/pano ile kopyalara, Taşı/
+  Döndür/Ölçekle/Aynala ile birlikte gider (aynalamada yol ters: yüz aynı, kenar yeni yolda; açıklık pervazdan okunur).
+  KCAD 129 opt-in; sunucu temsilleri denetler ve ADR0695 ekinin tek sayılan aralık kuralını artık bilir. Araçta Pafta
+  ölçekleri ve Sığmayan yazı (yeni tarif Kaydır), Öznitelikler'de aynı satırlar ve Yazıları tarife döndür. PDF'te 1:50 ve
+  1:100 paftada aynı kâğıt boyu (`dimension_set_sheet_tests.rs`).
+
 - **Cephe, duvar grubu ve mahal ölçü dizileri (28 Ekim 2026; [ADR0729](docs/adr/0729-facade-and-space-dimension-recipes.md)).**
   Ölçü dizisi tarifinin `span`'ı (KCAD 128 opt-in): kaynak duvarlar (`wall` + `walls`) ya da mahal (`space`), doğrultu
   (okunur yöne çevrilir), `reference` dış yüzler/çekirdek (en güçlü bileşen bandı), kat. Ortak çekirdek

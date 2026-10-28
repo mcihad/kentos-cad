@@ -3,16 +3,17 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
     CommandResult, CommandWarning, DimensionSet, DimensionSetBreak, DimensionSetEdit,
-    DimensionSetFace, DimensionSetId, DimensionSetRowNote, DimensionSetRowPlace, DimensionSetSpan,
-    DimensionSetsChanged, DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsPlan,
-    DimensionSetsQueried, DimensionSetsQueryInput, DrawingFont, Entity, EntityId, Vec2,
-    dimension_sets_problem,
+    DimensionSetFace, DimensionSetId, DimensionSetRounding, DimensionSetRow, DimensionSetRowNote,
+    DimensionSetRowPlace, DimensionSetScaleNote, DimensionSetSpan, DimensionSetsChanged,
+    DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsPlan, DimensionSetsQueried,
+    DimensionSetsQueryInput, Entity, EntityId, Vec2, dimension_sets_problem, scales_problem,
 };
 use kentos_domain::dimension_sets::PlannedDimensionSetMember;
 use kentos_domain::dimension_spans::SpanRefusal;
 use kentos_domain::{Document, Uuid};
+use kentos_domain::dimension_layout::member_value;
+use kentos_geometry_core::ops::dimension_layout::rounding_gap;
 use kentos_geometry_core::ops::dimension_span::Why;
-use kentos_geometry_core::text::{Font, width_em};
 use kentos_project::format::Format;
 
 use crate::ExecutionContext;
@@ -148,6 +149,9 @@ fn create_recipes(
 ) -> Result<Vec<DimensionSet>, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::point(input.at, "Ölçü sırasının yeri", "at")?;
+    if let Some(why) = scales_problem(&input.scales) {
+        return Err(fail(why, "scales"));
+    }
     checks::layer(doc, &input.layer_id)?;
     let (look, height) = crate::dimension_create::style_of(doc, input.dimension_style.as_deref())?;
     if input.space.is_some() || !input.walls.is_empty() {
@@ -189,6 +193,8 @@ fn create_recipes(
                 suppressed: Vec::new(),
                 broken: None,
                 span: None,
+                scales: input.scales.clone(),
+                tight: input.tight,
             };
             recipe_ok(&set)?;
             doc.dimension_set_plan(&set).map_err(source_error)?;
@@ -265,7 +271,7 @@ fn longest_edge(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<Ve
 }
 
 /// A direction turned to read left to right, or upward (docs/adr/0729 §5): rows are written along it from its low end.
-fn readable(d: Vec2) -> Vec2 {
+pub(crate) fn readable(d: Vec2) -> Vec2 {
     if d.x < -1e-9 || (d.x.abs() <= 1e-9 && d.y < 0.0) {
         Vec2 {
             x: -d.x + 0.0,
@@ -486,6 +492,8 @@ fn span_recipes(
             reference: input.reference,
             level,
         }),
+        scales: input.scales.clone(),
+        tight: input.tight,
     };
     let sets = if input.around { four_sides(doc, &base) } else { vec![base] };
     for set in &sets {
@@ -501,32 +509,147 @@ fn span_recipes(
     Ok(sets)
 }
 
-/// The members whose value does not fit between their extension lines (docs/adr/0729 §6): the value as the document
-/// writes it, in the drawing's face at the dimension's height, with a height to spare.
-fn tight(doc: &Document, members: &[PlannedDimensionSetMember]) -> Vec<u32> {
-    let format = Format::of(doc.settings());
-    let font = Font::from_id(DrawingFont::id_of(doc.settings().drawing_font));
-    members
-        .iter()
-        .enumerate()
-        .filter(|(_, m)| {
-            let d = &m.dimension;
-            let read = crate::dimensions_query::read(&format, Uuid::nil(), d);
-            read.measured.is_finite() && width_em(&read.shown, font) * d.height + d.height > read.measured.abs()
+/// The plan's account of its values (docs/adr/0729 §6, docs/adr/0730 §2): those that do not fit, those the recipe moved,
+/// and the same at each sheet scale, by their place among the members.
+fn value_notes(members: &[PlannedDimensionSetMember]) -> (Vec<u32>, Vec<u32>, Vec<DimensionSetScaleNote>) {
+    let pick = |f: &dyn Fn(&PlannedDimensionSetMember) -> bool| -> Vec<u32> {
+        members
+            .iter()
+            .enumerate()
+            .filter(|(_, m)| f(m))
+            .map(|(i, _)| i as u32)
+            .collect()
+    };
+    let tight = pick(&|m| m.notes.own.tight);
+    let placed = pick(&|m| m.notes.own.placed);
+    let scales = members
+        .first()
+        .map(|first| {
+            first
+                .notes
+                .scales
+                .iter()
+                .enumerate()
+                .map(|(k, (scale, _))| DimensionSetScaleNote {
+                    scale: *scale,
+                    tight: pick(&|m| m.notes.scales.get(k).is_some_and(|n| n.1.tight)),
+                    placed: pick(&|m| m.notes.scales.get(k).is_some_and(|n| n.1.placed)),
+                })
+                .collect()
         })
-        .map(|(i, _)| i as u32)
-        .collect()
+        .unwrap_or_default();
+    (tight, placed, scales)
+}
+
+/// The rows whose values, each rounded from its own measurement, add up to other than the overall reads (docs/adr/0730
+/// §3): a row running from the overall's first place to its last without a gap, its values and the overall's plain
+/// decimal numbers with as many decimals.
+fn rounding(doc: &Document, set: &DimensionSet, members: &[PlannedDimensionSetMember]) -> Vec<DimensionSetRounding> {
+    let format = Format::of(doc.settings());
+    let Some(overall) = members.iter().find(|m| m.segment.row == DimensionSetRow::Overall) else {
+        return Vec::new();
+    };
+    let shown = |m: &PlannedDimensionSetMember| member_value(&format, &m.dimension).1;
+    let total = shown(overall);
+    let mut out = Vec::new();
+    for row in set.rows.iter().copied().filter(|r| *r != DimensionSetRow::Overall) {
+        let chain: Vec<&PlannedDimensionSetMember> =
+            members.iter().filter(|m| m.segment.row == row).collect();
+        let (Some(first), Some(last)) = (chain.first(), chain.last()) else {
+            continue;
+        };
+        if first.segment.a != overall.segment.a
+            || last.segment.b != overall.segment.b
+            || chain.windows(2).any(|w| w[0].segment.b != w[1].segment.a)
+        {
+            continue;
+        }
+        let parts: Vec<String> = chain.iter().map(|m| shown(m)).collect();
+        let refs: Vec<&str> = parts.iter().map(String::as_str).collect();
+        if let Some(sum) = rounding_gap(&refs, &total) {
+            out.push(DimensionSetRounding {
+                row,
+                parts: sum,
+                overall: total.clone(),
+            });
+        }
+    }
+    out
+}
+
+/// A row's name as the user reads it.
+fn row_name(row: DimensionSetRow) -> &'static str {
+    match row {
+        DimensionSetRow::Openings => "Açıklıklar",
+        DimensionSetRow::Walls => "Duvarlar",
+        DimensionSetRow::Grids => "Akslar",
+        DimensionSetRow::Overall => "Toplam",
+    }
+}
+
+/// `plan` with `more`'s members and accounts after its own, their places counted on.
+fn merge(out: &mut DimensionSetsPlan, more: DimensionSetsPlan) {
+    let base = out.entities.len() as u32;
+    out.tight.extend(more.tight.iter().map(|i| i + base));
+    out.placed.extend(more.placed.iter().map(|i| i + base));
+    for note in more.scales {
+        let k = match out.scales.iter().position(|n| n.scale == note.scale) {
+            Some(k) => k,
+            None => {
+                out.scales.push(DimensionSetScaleNote {
+                    scale: note.scale,
+                    tight: Vec::new(),
+                    placed: Vec::new(),
+                });
+                out.scales.len() - 1
+            }
+        };
+        let mine = &mut out.scales[k];
+        mine.tight.extend(note.tight.iter().map(|i| i + base));
+        mine.placed.extend(note.placed.iter().map(|i| i + base));
+    }
+    out.rounding.extend(more.rounding);
+    out.entities.extend(more.entities);
+    out.spans.extend(more.spans);
+    out.rows.extend(more.rows);
+    for wall in more.skipped {
+        if !out.skipped.contains(&wall) {
+            out.skipped.push(wall);
+        }
+    }
 }
 
 /// A plan's warnings: dimensions that do not fit, walls at a façade left unmeasured.
 fn plan_warnings(plan: &DimensionSetsPlan) -> Vec<CommandWarning> {
     let mut out = Vec::new();
     if !plan.tight.is_empty() {
+        let moved = plan.placed.len();
         out.push(CommandWarning {
             code: crate::codes::DIMENSION_TEXT_TIGHT.into(),
+            message: if moved == 0 {
+                format!(
+                    "{} ölçünün değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin.",
+                    plan.tight.len()
+                )
+            } else {
+                format!(
+                    "{} ölçünün değeri iki uzatma çizgisinin arasına sığmıyor: {} tanesi yana, üste ya da alta alındı, {} tanesi yerinde kaldı.",
+                    plan.tight.len(),
+                    moved,
+                    plan.tight.len().saturating_sub(moved)
+                )
+            },
+            path: None,
+        });
+    }
+    for r in &plan.rounding {
+        out.push(CommandWarning {
+            code: crate::codes::DIMENSION_SET_ROUNDING.into(),
             message: format!(
-                "{} ölçünün değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin.",
-                plan.tight.len()
+                "{} sırasının yuvarlanmış değerlerinin toplamı {}; toplam ölçü {} yazıyor. Her değer kendi ölçüsünden yuvarlanır, fark dağıtılmaz.",
+                row_name(r.row),
+                r.parts,
+                r.overall
             ),
             path: None,
         });
@@ -612,7 +735,18 @@ fn check_edit(doc: &Document, input: &DimensionSetsEditInput) -> Result<Dimensio
             dimension_style,
             layer_id,
             reference,
+            scales,
+            tight,
         } => {
+            if let Some(scales) = scales {
+                if let Some(why) = scales_problem(scales) {
+                    return Err(fail(why, "operation.scales"));
+                }
+                set.scales = scales.clone();
+            }
+            if let Some(tight) = tight {
+                set.tight = *tight;
+            }
             if let Some(face) = face {
                 if set.span.is_some() {
                     return Err(fail(
@@ -735,6 +869,7 @@ fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<Dimensi
         .map(|m| m.uid.to_string())
         .collect();
     let reference = set.span.as_ref().map(|s| s.reference).unwrap_or_default();
+    let (tight, placed, scales) = value_notes(&members);
     Ok(DimensionSetsPlan {
         set: existing.then_some(set.id),
         entities: members
@@ -766,7 +901,10 @@ fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<Dimensi
         skipped: notes
             .map(|n| n.skipped.iter().map(|id| id.to_string()).collect())
             .unwrap_or_default(),
-        tight: tight(doc, &members),
+        tight,
+        placed,
+        scales,
+        rounding: rounding(doc, set, &members),
     })
 }
 fn success<T>(output: T) -> CommandResult<T> {
@@ -804,6 +942,9 @@ fn empty_plan(doc: &Document, set: Option<DimensionSetId>) -> DimensionSetsPlan 
         rows: Vec::new(),
         skipped: Vec::new(),
         tight: Vec::new(),
+        placed: Vec::new(),
+        scales: Vec::new(),
+        rounding: Vec::new(),
     }
 }
 
@@ -844,16 +985,7 @@ pub mod create {
             Ok(plans) => {
                 let mut out = empty_plan(doc, None);
                 for plan in plans {
-                    let base = out.entities.len() as u32;
-                    out.tight.extend(plan.tight.iter().map(|i| i + base));
-                    out.entities.extend(plan.entities);
-                    out.spans.extend(plan.spans);
-                    out.rows.extend(plan.rows);
-                    for wall in plan.skipped {
-                        if !out.skipped.contains(&wall) {
-                            out.skipped.push(wall);
-                        }
-                    }
+                    merge(&mut out, plan);
                 }
                 let warnings = plan_warnings(&out);
                 with_warnings(visible_result(doc, &input.layer_id, out), warnings)
@@ -884,12 +1016,9 @@ pub mod create {
         let mut said = empty_plan(cx.doc, None);
         for set in &sets {
             if let Ok(plan) = planned(cx.doc, set, false) {
-                said.tight.extend(plan.tight);
-                said.skipped.extend(plan.skipped);
+                merge(&mut said, plan);
             }
         }
-        said.skipped.sort();
-        said.skipped.dedup();
         let warnings = plan_warnings(&said);
         // Every set in one undo step: all written, or none (docs/adr/0700).
         let written = cx
@@ -971,17 +1100,34 @@ pub mod edit {
                 out.uids = before.members.iter().map(|m| m.uid.to_string()).collect()
             }
             DimensionSetEdit::ResetText { row } => {
+                // Each value's place taken as the recipe's last: the plan places it again (docs/adr/0730 §2).
+                let current = |uid: Uuid| match cx.doc.slot_of(uid).and_then(|s| cx.doc.get(s)) {
+                    Some(Entity::Dimension(d)) => Some(d.clone()),
+                    _ => None,
+                };
+                let mut probe = before.clone();
+                for m in &mut probe.members {
+                    if row.is_none_or(|r| r == m.row)
+                        && let Some(d) = current(Uuid::from_bytes(m.uid.0))
+                    {
+                        m.shift = d.text_shift;
+                    }
+                }
+                let again = cx.doc.dimension_set_plan(&probe).ok();
                 for member in &before.members {
                     if row.is_some_and(|r| r != member.row) {
                         continue;
                     }
                     let uid = Uuid::from_bytes(member.uid.0);
-                    if let Some(Entity::Dimension(d)) =
-                        cx.doc.slot_of(uid).and_then(|s| cx.doc.get(s))
-                        && d.text_shift.is_some()
-                    {
-                        let mut d = d.clone();
-                        d.text_shift = None;
+                    let Some(mut d) = current(uid) else {
+                        continue;
+                    };
+                    let place = again
+                        .as_ref()
+                        .and_then(|ms| ms.iter().find(|p| p.uid == Some(member.uid)))
+                        .and_then(|p| p.dimension.text_shift);
+                    if d.text_shift != place {
+                        d.text_shift = place;
                         out.entities.push(Entity::Dimension(d));
                         out.uids.push(uid.to_string());
                         out.spans.push(member.segment());
@@ -1053,21 +1199,8 @@ pub mod edit {
                         }
                     }
                     DimensionSetEdit::ResetText { row } => {
-                        for member in &old.members {
-                            if row.is_some_and(|r| r != member.row) {
-                                continue;
-                            }
-                            let Some(slot) = doc.slot_of(Uuid::from_bytes(member.uid.0)) else {
-                                continue;
-                            };
-                            if let Some(Entity::Dimension(d)) = doc.get(slot)
-                                && d.text_shift.is_some()
-                            {
-                                let mut d = d.clone();
-                                d.text_shift = None;
-                                doc.update(slot, Entity::Dimension(d));
-                            }
-                        }
+                        doc.reset_dimension_set_texts(set.id, *row)
+                            .map_err(|e| e.to_string())?;
                     }
                     _ => {
                         doc.update_dimension_set(set).map_err(|e| e.to_string())?;

@@ -130,9 +130,9 @@ fn write_execute(
             Err(stop) => stop.into(),
         };
     }
-    let origins: Vec<_> = if checked.copies.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
-        checked.sources.iter().filter_map(|id| kentos_domain::Uuid::parse_str(id).ok()).collect()
-    } else { Vec::new() };
+    // Each item's group: a space's sources and an opening's wall go onto their copies (docs/adr/0730 §4).
+    let origins: Vec<_> =
+        checked.sources.iter().filter_map(|id| kentos_domain::Uuid::parse_str(id).ok()).collect();
     let (slots,detached) = match cx.doc.add_room_copies(checked.copies, &origins, label(&input.layout)) {
         Ok(done) => done,
         Err(full) => {
@@ -166,6 +166,30 @@ fn write_execute(
     match crate::constraint_copy::copy_constraints(cx.doc, &groups, label(&input.layout)) {
         Ok(note) => warnings.extend(note),
         Err(stop) => return stop.into(),
+    }
+    // The recipes taken whole, onto each item's copies (docs/adr/0730 §4).
+    if !checked.recipes.is_empty() {
+        let items: Vec<Vec<String>> = slots
+            .chunks(per)
+            .map(|item| {
+                item.iter()
+                    .filter_map(|slot| cx.doc.uid(*slot))
+                    .map(|u| u.to_string())
+                    .collect()
+            })
+            .collect();
+        for (item, m) in items.iter().zip(&checked.affines) {
+            if let Err(stop) = crate::dimension_set_copy::add_copies(
+                cx.doc,
+                &checked.recipes,
+                &checked.sources,
+                item,
+                m,
+                None,
+            ) {
+                return stop.into();
+            }
+        }
     }
     let doc = &*cx.doc;
     let created = slots
@@ -232,6 +256,9 @@ struct Checked {
     copies: Vec<Entity>,
     locked: Vec<String>,
     warnings: Vec<CommandWarning>,
+    /// The dimension recipes taken whole and each item's matrix (docs/adr/0730 §4).
+    recipes: Vec<kentos_commands::DimensionSet>,
+    affines: Vec<kentos_geometry_core::geom::affine::Affine>,
 }
 
 fn refuse(code: &str, message: &str, path: &str) -> Stop {
@@ -423,9 +450,13 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Diziye alınacak nesne verilmedi.")?;
     check_layout(&input.layout)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    // Neither ordinary copies nor associative block inserts carry a source recipe graph yet.
+    // Ordinary copies carry the dimension recipes taken whole (docs/adr/0730 §4); an associative array's block inserts
+    // cannot.
     let found = checks::objects(doc, &input.uids)?;
-    crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
+    let recipes = crate::dimension_set_copy::whole(doc, &input.uids)?;
+    if input.associative {
+        crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
+    }
     let mut sources = Vec::new();
     let mut originals = Vec::new();
     let mut locked = Vec::new();
@@ -501,5 +532,7 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
         copies,
         locked,
         warnings,
+        recipes,
+        affines,
     })
 }

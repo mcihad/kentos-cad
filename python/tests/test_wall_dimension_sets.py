@@ -161,3 +161,43 @@ class WallDimensionSets(unittest.TestCase):
         self.assertEqual(cad.dimensionsets.query(doc).sets[0].broken.value, "hostGone")
         doc.undo(); self.assertEqual(doc.to_bytes(), before)
 
+
+
+class SheetScales(unittest.TestCase):
+    """docs/adr/0730 through the typed SDK: a recipe's sheet scales write its members' representations, each row as far
+    out on a 1:100 sheet as on the drawing's 1:50 (twice in the model), and go with them; one undo step each."""
+
+    def test_sheet_scales_write_and_take_back_the_representations(self):
+        doc = cad.Document.new("Pafta ölçekleri", workspace="cad", drawing_unit="m", plot_scale=50)
+        host = cad.walls.create(doc, layer_id=doc.active_layer, walls=[
+            cad.NewWall(pts=[(0., 0.), (10., 0.)], width=.2, closed=False)]).uids[0]
+        cad.openings.create(doc, layer_id=doc.active_layer, openings=[
+            cad.NewOpening(host=host, at=4, width=1, form="window")])
+        made = cad.dimensionsets.create(doc, layer_id=doc.active_layer, wall=host, at=(5, -1),
+                                        scales=[100], tight="shift")
+        group = cad.dimensionsets.query(doc).sets[0]
+        self.assertEqual(list(group.scales), [100.])
+        self.assertEqual(group.tight.value, "shift")
+        for member in group.members:
+            d = doc.entity(member.uid).entity.to_json()
+            self.assertEqual(d["annotative"]["at"], 50)
+            [sheet] = d["annotative"]["scales"]
+            self.assertEqual(sheet["scale"], 100)
+            # The members measure the face their row is measured from: twice as far out in the model at 1:100.
+            self.assertAlmostEqual(sheet["offset"], 2 * d["offset"])
+        scaled = doc.to_bytes()
+        cad.dimensionsets.edit(doc, id=made.set, operation=edit("set", scales=[]))
+        group = cad.dimensionsets.query(doc).sets[0]
+        self.assertNotIn("scales", group.to_json())
+        self.assertTrue(all("annotative" not in doc.entity(m.uid).entity.to_json() for m in group.members))
+        doc.undo()
+        self.assertEqual(doc.to_bytes(), scaled)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "pafta-olcekleri.kcad"
+            doc.save(path)
+            spec = importlib.util.spec_from_file_location("independent_kcad",
+                Path(__file__).resolve().parents[2] / "tools/kcad/kcad.py")
+            reader = importlib.util.module_from_spec(spec); spec.loader.exec_module(reader)
+            _, model = reader.read(path.read_bytes())
+            self.assertEqual(model["dimensionSets"][0]["scales"], [100.])
+            self.assertEqual(model["dimensionSets"][0]["tight"], "shift")

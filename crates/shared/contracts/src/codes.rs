@@ -72,6 +72,8 @@ codes! {
     DIMENSION_TEXT_TIGHT = "dimension_text_tight", Warning, false, "Bazı ölçülerin değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin.";
     /// A wall at a façade not measured for an oblique or curved edge (docs/adr/0729 §2).
     DIMENSION_SET_WALL_SKIPPED = "dimension_set_wall_skipped", Warning, false, "Cepheye değen bir duvar eğik ya da yaylı kenarı yüzünden ölçülmedi.";
+    /// A row's rounded values adding up to other than its rounded overall (docs/adr/0730 §3).
+    DIMENSION_SET_ROUNDING = "dimension_set_rounding", Warning, false, "Bir sıranın yuvarlanmış değerlerinin toplamı toplam ölçünün yazdığından farklı: her değer kendi ölçüsünden yuvarlanır, fark dağıtılmaz.";
 
     // ── Shapes and numbers ──────────────────────────────────────────────
     /// A closed area with fewer than 3 corners (`cad.polygon.create`).

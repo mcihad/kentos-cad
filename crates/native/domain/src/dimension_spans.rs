@@ -47,6 +47,17 @@ pub(crate) struct SpanPlan {
 }
 
 impl SpanPlan {
+    /// The rows' frame (docs/adr/0730): its reference line the bodies' outermost face on the rows' side.
+    pub(crate) fn frame(&self) -> crate::dimension_layout::RowFrame {
+        let n = CoreVec2::new(-self.direction.y, self.direction.x);
+        let face = self.face();
+        crate::dimension_layout::RowFrame {
+            origin: CoreVec2::new(self.origin.x + n.x * face, self.origin.y + n.y * face),
+            d: self.direction,
+            n,
+        }
+    }
+
     /// Across the direction (to its left) from the frame's origin.
     fn across(&self, q: CoreVec2) -> f64 {
         (q.x - self.origin.x) * -self.direction.y + (q.y - self.origin.y) * self.direction.x

@@ -20,6 +20,8 @@ from .types import (  # noqa: F401
     DimensionSetReferenceName,
     DimensionSetRow,
     DimensionSetRowName,
+    DimensionSetTight,
+    DimensionSetTightName,
     DimensionSetsChanged,
     DimensionSetsCreateInput,
     DimensionSetsEditInput,
@@ -71,7 +73,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
         reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        scales: Sequence[float] | Unset = UNSET,
         space: str | None | Unset = UNSET,
+        tight: DimensionSetTight | DimensionSetTightName | Unset = UNSET,
         wall: str | None | Unset = UNSET,
         walls: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
@@ -104,7 +108,11 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             openings:
             reference: A façade's or a space's lines measured: the walls' faces or their cores.
             rows:
+            scales: The sheets' scales (1:n) the dimensions are drawn at too, as large on paper as at the drawing's own scale
+                (docs/adr/0730 §1); ascending, from 1 to 1000000. Unit: scale.
             space: A space whose outline is measured, with the openings on it and its holes (docs/adr/0729).
+            tight: A value that does not fit between its extension lines: kept in its place (absent) or shifted aside, above or
+                below (docs/adr/0730 §2).
             wall: The wall measured (its edge; docs/adr/0695, 0700); with `walls`, a façade's first wall.
             walls: A façade's walls (docs/adr/0729): measured along `direction` with the walls at their ends and meeting them,
                 their openings and the grids across them; `wall` first when given too.
@@ -133,7 +141,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             openings=openings,
             reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            scales=_opt(scales, lambda x: list(x)),
             space=space,
+            tight=tight,
             wall=wall,
             walls=_opt(walls, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
@@ -155,7 +165,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
         reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        scales: Sequence[float] | Unset = UNSET,
         space: str | None | Unset = UNSET,
+        tight: DimensionSetTight | DimensionSetTightName | Unset = UNSET,
         wall: str | None | Unset = UNSET,
         walls: Sequence[str] | Unset = UNSET,
     ) -> DimensionSetsPlan:
@@ -175,7 +187,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             openings=openings,
             reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            scales=_opt(scales, lambda x: list(x)),
             space=space,
+            tight=tight,
             wall=wall,
             walls=_opt(walls, lambda x: list(x)),
         ))
@@ -197,7 +211,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
         reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        scales: Sequence[float] | Unset = UNSET,
         space: str | None | Unset = UNSET,
+        tight: DimensionSetTight | DimensionSetTightName | Unset = UNSET,
         wall: str | None | Unset = UNSET,
         walls: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -217,7 +233,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             openings=openings,
             reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            scales=_opt(scales, lambda x: list(x)),
             space=space,
+            tight=tight,
             wall=wall,
             walls=_opt(walls, lambda x: list(x)),
         ))
@@ -239,7 +257,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
         reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        scales: Sequence[float] | Unset = UNSET,
         space: str | None | Unset = UNSET,
+        tight: DimensionSetTight | DimensionSetTightName | Unset = UNSET,
         wall: str | None | Unset = UNSET,
         walls: Sequence[str] | Unset = UNSET,
         op: str = "execute",
@@ -264,7 +284,9 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
             openings=openings,
             reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            scales=_opt(scales, lambda x: list(x)),
             space=space,
+            tight=tight,
             wall=wall,
             walls=_opt(walls, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)

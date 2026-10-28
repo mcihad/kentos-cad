@@ -5049,12 +5049,15 @@ fn check(
                         .collect::<Vec<_>>(),
                 )
                 .map_err(|e| format!("{at}: {e}"))?;
-                expect_same(
-                    &got,
-                    &fill(want, doc, state, at)?,
-                    "duvar ölçü grupları",
-                    at,
-                )?;
+                let wanted = fill(want, doc, state, at)?;
+                match within {
+                    // A recipe turned with its objects (docs/adr/0730 §4): its places within the step's `within`.
+                    Some(w) if !close(&got, &wanted, w) => {
+                        return Err(format!("{at}: duvar ölçü grupları (±{w}): beklenen {wanted}, bulunan {got}"));
+                    }
+                    Some(_) => {}
+                    None => expect_same(&got, &wanted, "duvar ölçü grupları", at)?,
+                }
             }
             "arrays" => {
                 let got: Vec<Value> = doc

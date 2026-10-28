@@ -19,7 +19,7 @@ use crate::tools_screens::Scene;
 use crate::wall_scenes::{opened, wall_between};
 
 /// The camera on a part of the drawing, `[west, south, east, north]` from (E, N): the values readable at 1:50.
-fn look(app: &mut App, b: [f64; 4]) {
+pub(crate) fn look(app: &mut App, b: [f64; 4]) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E + b[0],
@@ -32,12 +32,12 @@ fn look(app: &mut App, b: [f64; 4]) {
 }
 
 /// The south façade and its rows.
-const SOUTH: [f64; 4] = [-1.2, -3.4, 11.2, 1.4];
+pub(crate) const SOUTH: [f64; 4] = [-1.2, -3.4, 11.2, 1.4];
 /// The whole house and its four sides' rows.
-const WHOLE: [f64; 4] = [-3.5, -3.2, 13.5, 11.2];
+pub(crate) const WHOLE: [f64; 4] = [-3.5, -3.2, 13.5, 11.2];
 
 /// The house: walls slots 1–4 (south, east, north, west), the partition 5, then its doors, window and grids.
-fn house(app: &mut App) {
+pub(crate) fn house(app: &mut App) {
     opened(app, Objects::new(), 50.0);
     look(app, WHOLE);
     app.tab = "arch";
@@ -67,7 +67,7 @@ fn house(app: &mut App) {
     app.selection.clear();
 }
 
-fn set(app: &mut App, key: &'static str, value: &str) {
+pub(crate) fn set(app: &mut App, key: &'static str, value: &str) {
     let _ = app.tool_setting(crate::architecture_settings::Commit {
         tool: "wallDimensions",
         key,

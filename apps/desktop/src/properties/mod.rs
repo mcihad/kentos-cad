@@ -213,6 +213,8 @@ pub enum Field {
     PointY(Slot),
     DimensionOffset(Slot),
     DimensionSetGap(Slot),
+    /// A dimension recipe's sheet scales (docs/adr/0730 §1), typed as Diğer ölçekler.
+    DimensionSetScales(Slot),
     /// A kitchen run's countertop depth (docs/adr/0727 §6), in the drawing's unit.
     CaseworkDepth(Slot),
     DimensionHeight(Slot),
@@ -895,7 +897,7 @@ impl App {
             Event::Casework(slot, action) => casework_action(model, slot, action),
             Event::CaseworkValue(slot, field, value) => casework_value(model, slot, field, &value),
             Event::DimensionSetValue(slot, field, value) => {
-                if matches!(field, "dimensionStyle" | "layerId") {
+                if matches!(field, "dimensionStyle" | "layerId" | "tight") {
                     let mut operation = serde_json::json!({"kind":"set"});
                     operation[field] = serde_json::json!(value);
                     dimension_set_edit(model, slot, operation)
@@ -1241,6 +1243,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 casework_edit(model, *slot, serde_json::json!({"kind": "recipe", "recipe": r}))
             }
             _ => vec!["Tezgâhın derinliğini girin; örneğin 65 cm.".into()],
+        };
+    }
+    if let Field::DimensionSetScales(slot) = field {
+        return match kentos_interaction::wall_dimensions::sheet_scales(text) {
+            Some(scales) => dimension_set_edit(model, *slot, serde_json::json!({"kind":"set","scales":scales})),
+            None => vec!["Pafta ölçeklerini 1:100, 1:200 ya da 100 200 gibi yazın (1 ile 1000000 arası, en çok 32); kaldırmak için boş bırakın ya da Yok yazın.".into()],
         };
     }
     if let Field::DimensionSetGap(slot) = field {
@@ -1859,7 +1867,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionRound(_)
         | Field::DimensionTolerance(..)
         | Field::DimensionLevelOffset(_) => return Vec::new(),
-        Field::DimensionSetGap(_) | Field::CaseworkDepth(_) => return Vec::new(),
+        Field::DimensionSetGap(_) | Field::DimensionSetScales(_) | Field::CaseworkDepth(_) => {
+            return Vec::new();
+        }
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

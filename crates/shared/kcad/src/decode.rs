@@ -453,6 +453,21 @@ fn dimension_sets(
             &format!("dimensionSets[{index}]: cephe ya da mahal ölçüsü (span) şema 128 ister"),
         ));
     }
+    if !has.dimension_set_scales
+        && let Some(index) = sets.iter().position(|s| {
+            !s.scales.is_empty()
+                || !s.tight.is_keep()
+                || s.members.iter().any(|m| m.shift.is_some())
+        })
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!(
+                "dimensionSets[{index}]: pafta ölçekleri, sığmayan yazının yeri ya da üyenin yazı yeri şema 129 ister"
+            ),
+        ));
+    }
     Ok(sets)
 }
 

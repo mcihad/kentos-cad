@@ -953,6 +953,7 @@ async fn new_and_deleted_opening_require_complete_interval_membership() {
             row: DimensionSetRow::Openings,
             a: pair[0].1.clone(),
             b: pair[1].1.clone(),
+            shift: None,
         });
         features.push(FeatureChange::Create {
             id: uid.to_text(),
@@ -1176,6 +1177,7 @@ async fn rotated_large_coordinate_centres_and_right_faces_keep_valid_cached_memb
                 row: DimensionSetRow::Openings,
                 a: pair[0].1.clone(),
                 b: pair[1].1.clone(),
+                shift: None,
             });
             source.entities.push(entity);
             source.uids.push(uid);
@@ -1370,5 +1372,92 @@ async fn a_facade_recipe_commits_only_with_the_shared_plan_of_its_sources() {
         refused.path()
     );
     assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "1");
+    db.close().await;
+}
+
+/// docs/adr/0730 §5: a façade recipe drawn on 1:100 and 1:200 sheets too, and a wall's own recipe drawn on 1:100 too,
+/// commit when each member's representations are the recipe's at its sheet scales; a member whose last sheet's row is
+/// moved off the recipe's is refused, by its path, and nothing is written.
+#[tokio::test]
+async fn a_recipes_sheet_scales_commit_only_as_the_recipe_draws_them() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 3)
+        .await
+        .unwrap();
+    let who = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let source: DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../fixtures/kcad/v2/dimension-set-scales.json"
+    ))
+    .unwrap();
+    assert_eq!(source.dimension_sets[0].scales, [100.0, 200.0]);
+    assert!(source.dimension_sets[1].span.is_none() && source.dimension_sets[1].scales == [100.0]);
+    let created = projects::create(&db.app, &who, create(&source), None)
+        .await
+        .unwrap();
+    let project = Uuid::parse_str(&created.id).unwrap();
+    let by = open(&db, &who, project).await;
+    let changes_of = |entities: &[kentos_contracts::Entity]| -> Vec<FeatureChange> {
+        source
+            .uids
+            .iter()
+            .zip(entities)
+            .map(|(id, entity)| FeatureChange::Create {
+                id: id.to_text(),
+                entity: entity.clone(),
+            })
+            .collect()
+    };
+    let commit = |features: Vec<FeatureChange>| {
+        let mut command = envelope(
+            &who,
+            project,
+            ProjectChanges {
+                features,
+                blocks: Vec::new(),
+                project: Some(ProjectPatch {
+                    dimension_sets: Some(source.dimension_sets.clone()),
+                    ..Default::default()
+                }),
+            },
+            &[("@project", &created.meta_version)],
+        );
+        command.version = 2;
+        changes::commit(&db.app, &by, command)
+    };
+    // Each recipe's first member's row on its last sheet half a metre off the recipe's.
+    for set in &source.dimension_sets {
+        let first = set.members[0].uid;
+        let k = source.uids.iter().position(|u| *u == first).unwrap();
+        let mut entities = source.entities.clone();
+        let kentos_contracts::Entity::Dimension(d) = &mut entities[k] else {
+            panic!("a member dimension");
+        };
+        let last = d.annotative.as_mut().unwrap().scales.last_mut().unwrap();
+        last.offset = last.offset.map(|o| o + 0.5);
+        let refused = commit(changes_of(&entities)).await.unwrap_err();
+        assert_eq!(refused.path(), Some(format!("features[{k}].entity.annotative").as_str()));
+        assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "0");
+    }
+    // The recipes' own representations: committed, and back from the snapshot as written.
+    let committed = commit(changes_of(&source.entities)).await.unwrap();
+    assert_eq!(committed.data_revision, "1");
+    let back = kentos_kcad::decode(&snapshot::snapshot(&db.app, &by).await.unwrap().bytes).unwrap();
+    assert_eq!(back.dimension_sets, source.dimension_sets);
+    for set in &source.dimension_sets {
+        let first = set.members[0].uid;
+        let dimension = |doc: &DocumentSnapshotV2| {
+            doc.uids
+                .iter()
+                .position(|u| *u == first)
+                .and_then(|i| match &doc.entities[i] {
+                    kentos_contracts::Entity::Dimension(d) => Some(d.annotative.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        assert_eq!(dimension(&back), dimension(&source), "the sheets' representations kept");
+    }
     db.close().await;
 }

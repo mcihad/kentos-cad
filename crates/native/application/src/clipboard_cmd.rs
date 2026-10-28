@@ -125,7 +125,8 @@ fn copy_check(doc: &Document, input: &EntitiesCopy) -> Result<Clip, Stop> {
         checks::point(base, "Taban noktasının", "base")?;
     }
     let found = checks::named(doc, &input.uids)?;
-    crate::blocks_define::reject_owned_dimension_members(doc, &input.uids)?;
+    // The dimension recipes copied whole go with the copy; a part of one is refused (docs/adr/0730 §4).
+    let recipes = crate::dimension_set_copy::whole(doc, &input.uids)?;
     // The exchange's rules prune the layer tree, keep the placed blocks and the library items by what the objects
     // name; a representative of each layer, symbol, picture and block they use tells them as much as all of them,
     // and costs no JSON of the rest (docs/adr/0309 §6). The objects themselves stay typed.
@@ -209,6 +210,7 @@ fn copy_check(doc: &Document, input: &EntitiesCopy) -> Result<Clip, Stop> {
         library: (!drawing.styles.items.is_empty()).then_some(drawing.styles),
         unit: doc.settings().drawing_unit,
         base,
+        dimension_sets: recipes,
     })
 }
 
@@ -270,6 +272,9 @@ struct Prepared {
     origins: Vec<Uuid>,
     report: PasteReport,
     warnings: Vec<CommandWarning>,
+    /// The copy's dimension recipes and the move that places the objects (docs/adr/0730 §4); none pasted as a block.
+    recipes: Vec<kentos_commands::DimensionSet>,
+    moved: kentos_geometry_core::geom::affine::Affine,
 }
 
 /// The copy as a drawing of its own beside `ours` (the exchange's rules read two drawings), without its objects:
@@ -774,6 +779,27 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
             path: Some("clip.unit".into()),
         });
     }
+    // The copy's recipes name only its objects (docs/adr/0730 §4); as a block they stay its plain dimensions.
+    let recipes = if block.is_some() {
+        Vec::new()
+    } else {
+        let named: HashSet<EntityId> = uids.iter().copied().collect();
+        for (i, set) in clip.dimension_sets.iter().enumerate() {
+            if set
+                .sources()
+                .iter()
+                .chain(set.members.iter().map(|m| &m.uid))
+                .any(|id| !named.contains(id))
+            {
+                return Err(refuse(
+                    codes::INVALID_CLIP,
+                    "Pano içeriğindeki bir ölçü grubu panodaki nesnelerin dışındaki bir nesneyi anıyor.",
+                    &format!("clip.dimensionSets[{i}]"),
+                ));
+            }
+        }
+        clip.dimension_sets.clone()
+    };
     Ok(Prepared {
         drawing,
         objects,
@@ -787,6 +813,8 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
             renamed: renames,
         },
         warnings,
+        recipes,
+        moved: translation(at.x - clip.base.x, at.y - clip.base.y),
     })
 }
 
@@ -798,6 +826,8 @@ fn write(doc: &mut Document, prepared: Prepared) -> CommandResult<EntitiesPasted
         origins,
         report,
         warnings,
+        recipes,
+        moved,
     } = prepared;
     doc.name_step(LABEL);
     let mut counts = Counts::default();
@@ -832,11 +862,30 @@ fn write(doc: &mut Document, prepared: Prepared) -> CommandResult<EntitiesPasted
             .into();
         }
     };
-    let created = slots
+    let created: Vec<String> = slots
         .iter()
         .filter_map(|s| doc.uid(*s))
         .map(|u| u.to_string())
         .collect();
+    // The copy's recipes over the pasted objects, each on its members' layer here (docs/adr/0730 §4).
+    let originals: Vec<String> = origins.iter().map(ToString::to_string).collect();
+    for set in &recipes {
+        let layer = set.members.first().and_then(|m| {
+            let at = origins.iter().position(|o| o.as_bytes() == &m.uid.0)?;
+            let uid = Uuid::parse_str(created.get(at)?).ok()?;
+            Some(doc.get(doc.slot_of(uid)?)?.base().layer_id.clone())
+        });
+        if let Err(stop) = crate::dimension_set_copy::add_copies(
+            doc,
+            std::slice::from_ref(set),
+            &originals,
+            &created,
+            &moved,
+            layer.as_deref(),
+        ) {
+            return stop.into();
+        }
+    }
     CommandResult::Completed {
         output: EntitiesPasted {
             created,

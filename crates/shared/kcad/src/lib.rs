@@ -648,11 +648,14 @@ pub const SCHEMA_WITH_CASEWORK: u32 = 127;
 /// Schema 128 (docs/adr/0729): a dimension recipe over a façade of walls or a space's outline (its `span`) and its rows
 /// `walls` and `grids`, written only when a recipe has one.
 pub const SCHEMA_WITH_DIMENSION_SET_SPANS: u32 = 128;
+/// Schema 129 (docs/adr/0730): a dimension recipe's sheet scales (`scales`), its values shifted where they do not fit
+/// (`tight`) and a member's value place (`shift`), written only when a recipe has one.
+pub const SCHEMA_WITH_DIMENSION_SET_SCALES: u32 = 129;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 127] = [
+pub const SCHEMAS: [u32; 128] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -780,6 +783,7 @@ pub const SCHEMAS: [u32; 127] = [
     SCHEMA_WITH_GRID_COLUMN_FORMS,
     SCHEMA_WITH_CASEWORK,
     SCHEMA_WITH_DIMENSION_SET_SPANS,
+    SCHEMA_WITH_DIMENSION_SET_SCALES,
 ];
 
 /// The file a drawing is saved as.

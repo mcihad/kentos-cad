@@ -5932,6 +5932,13 @@
             },
             "type": "array"
           },
+          "dimensionSets": {
+            "description": "The dimension recipes copied whole, every source and member among the objects (docs/adr/0730 §4): a paste makes\nthem again over the pasted objects.",
+            "items": {
+              "$ref": "#/$defs/DimensionSet"
+            },
+            "type": "array"
+          },
           "dimensionStyles": {
             "description": "The dimension styles the objects name.",
             "items": {
@@ -6013,6 +6020,13 @@
             "description": "The block definitions the objects place, and those these place.",
             "items": {
               "$ref": "#/$defs/BlockDefinition"
+            },
+            "type": "array"
+          },
+          "dimensionSets": {
+            "description": "The dimension recipes copied whole, every source and member among the objects (docs/adr/0730 §4): a paste makes\nthem again over the pasted objects.",
+            "items": {
+              "$ref": "#/$defs/DimensionSet"
             },
             "type": "array"
           },
@@ -48793,6 +48807,15 @@
             },
             "type": "array"
           },
+          "scales": {
+            "description": "The sheets' scales (1:n) the dimensions are drawn at too, as large on paper as at the drawing's own scale\n(docs/adr/0730 §1); ascending, from 1 to 1000000.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "scale"
+          },
           "space": {
             "description": "A space whose outline is measured, with the openings on it and its holes (docs/adr/0729).",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -48800,6 +48823,10 @@
               "string",
               "null"
             ]
+          },
+          "tight": {
+            "$ref": "#/$defs/DimensionSetTight",
+            "description": "A value that does not fit between its extension lines: kept in its place (absent) or shifted aside, above or\nbelow (docs/adr/0730 §2)."
           },
           "wall": {
             "description": "The wall measured (its edge; docs/adr/0695, 0700); with `walls`, a façade's first wall.",
@@ -48886,6 +48913,16 @@
             },
             "type": "array"
           },
+          "placed": {
+            "description": "The dimensions whose value the recipe moved aside, above or below its line (docs/adr/0730 §2), by their place in\n`entities`.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "count"
+          },
           "removed": {
             "items": {
               "type": "string"
@@ -48895,10 +48932,24 @@
           "revision": {
             "type": "string"
           },
+          "rounding": {
+            "description": "The rows whose rounded values do not add up to the rounded overall (docs/adr/0730 §3).",
+            "items": {
+              "$ref": "#/$defs/DimensionSetRounding"
+            },
+            "type": "array"
+          },
           "rows": {
             "description": "A façade's or a space's rows (docs/adr/0729 §5): each one's points, sources and dimensions, and the lines it\nmeasures.",
             "items": {
               "$ref": "#/$defs/DimensionSetRowNote"
+            },
+            "type": "array"
+          },
+          "scales": {
+            "description": "Each sheet scale's values that do not fit and those moved (docs/adr/0730 §1, §2).",
+            "items": {
+              "$ref": "#/$defs/DimensionSetScaleNote"
             },
             "type": "array"
           },
@@ -48967,7 +49018,8 @@
         "warnings": [
           "layer_hidden",
           "dimension_text_tight",
-          "dimension_set_wall_skipped"
+          "dimension_set_wall_skipped",
+          "dimension_set_rounding"
         ]
       },
       "examples": [
@@ -49094,6 +49146,16 @@
             },
             "type": "array"
           },
+          "placed": {
+            "description": "The dimensions whose value the recipe moved aside, above or below its line (docs/adr/0730 §2), by their place in\n`entities`.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "count"
+          },
           "removed": {
             "items": {
               "type": "string"
@@ -49103,10 +49165,24 @@
           "revision": {
             "type": "string"
           },
+          "rounding": {
+            "description": "The rows whose rounded values do not add up to the rounded overall (docs/adr/0730 §3).",
+            "items": {
+              "$ref": "#/$defs/DimensionSetRounding"
+            },
+            "type": "array"
+          },
           "rows": {
             "description": "A façade's or a space's rows (docs/adr/0729 §5): each one's points, sources and dimensions, and the lines it\nmeasures.",
             "items": {
               "$ref": "#/$defs/DimensionSetRowNote"
+            },
+            "type": "array"
+          },
+          "scales": {
+            "description": "Each sheet scale's values that do not fit and those moved (docs/adr/0730 §1, §2).",
+            "items": {
+              "$ref": "#/$defs/DimensionSetScaleNote"
             },
             "type": "array"
           },
@@ -49176,7 +49252,8 @@
         "warnings": [
           "layer_hidden",
           "dimension_text_tight",
-          "dimension_set_wall_skipped"
+          "dimension_set_wall_skipped",
+          "dimension_set_rounding"
         ]
       },
       "examples": [
@@ -62184,6 +62261,12 @@
       "meaning": "Cepheye değen bir duvar eğik ya da yaylı kenarı yüzünden ölçülmedi."
     },
     {
+      "code": "dimension_set_rounding",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir sıranın yuvarlanmış değerlerinin toplamı toplam ölçünün yazdığından farklı: her değer kendi ölçüsünden yuvarlanır, fark dağıtılmaz."
+    },
+    {
       "code": "too_few_corners",
       "kind": "failed",
       "retryable": false,
@@ -74819,6 +74902,13 @@
           },
           "type": "array"
         },
+        "dimensionSets": {
+          "description": "The dimension recipes copied whole, every source and member among the objects (docs/adr/0730 §4): a paste makes\nthem again over the pasted objects.",
+          "items": {
+            "$ref": "#/$defs/DimensionSet"
+          },
+          "type": "array"
+        },
         "dimensionStyles": {
           "description": "The dimension styles the objects name.",
           "items": {
@@ -81766,6 +81856,15 @@
           },
           "type": "array"
         },
+        "scales": {
+          "description": "The sheets' scales (1:n) the members are drawn at too, as large on paper as at the drawing's own, ascending\n(docs/adr/0730 §1); none: the recipe leaves the members' annotative representations alone.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "scale"
+        },
         "span": {
           "anyOf": [
             {
@@ -81783,6 +81882,10 @@
             "$ref": "#/$defs/DimensionSetSegment"
           },
           "type": "array"
+        },
+        "tight": {
+          "$ref": "#/$defs/DimensionSetTight",
+          "description": "A value that does not fit between its extension lines: kept in its place or shifted (docs/adr/0730 §2)."
         },
         "wall": {
           "$ref": "#/$defs/EntityId"
@@ -81940,6 +82043,29 @@
                 "array",
                 "null"
               ]
+            },
+            "scales": {
+              "description": "The sheets' scales, replaced; empty: none (docs/adr/0730 §1).",
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "scale"
+            },
+            "tight": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DimensionSetTight"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A value that does not fit: kept or shifted (docs/adr/0730 §2)."
             }
           },
           "required": [
@@ -82013,6 +82139,7 @@
         },
         {
           "additionalProperties": false,
+          "description": "The values back in the recipe's places: the user's moves forgotten (docs/adr/0730 §2).",
           "properties": {
             "kind": {
               "const": "resetText",
@@ -82075,6 +82202,17 @@
         "row": {
           "$ref": "#/$defs/DimensionSetRow"
         },
+        "shift": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextShift"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the recipe last placed the value at the drawing's own scale (docs/adr/0730 §2); none: in its place. A value\nwhose place differs from it was moved by the user and keeps its place."
+        },
         "uid": {
           "$ref": "#/$defs/EntityId"
         }
@@ -82109,6 +82247,28 @@
           "type": "string"
         }
       ]
+    },
+    "DimensionSetRounding": {
+      "description": "A row whose values, each rounded from its own measurement, add up to other than the overall reads (docs/adr/0730 §3).",
+      "properties": {
+        "overall": {
+          "description": "The overall dimension's written value.",
+          "type": "string"
+        },
+        "parts": {
+          "description": "The row's written values added up, in their decimals.",
+          "type": "string"
+        },
+        "row": {
+          "$ref": "#/$defs/DimensionSetRow"
+        }
+      },
+      "required": [
+        "row",
+        "parts",
+        "overall"
+      ],
+      "type": "object"
     },
     "DimensionSetRow": {
       "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
@@ -82189,6 +82349,38 @@
       ],
       "type": "object"
     },
+    "DimensionSetScaleNote": {
+      "description": "A sheet scale's values in a plan (docs/adr/0730 §1).",
+      "properties": {
+        "placed": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "count"
+        },
+        "scale": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "scale"
+        },
+        "tight": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "scale"
+      ],
+      "type": "object"
+    },
     "DimensionSetSegment": {
       "description": "A semantic segment, independent of its current order and coordinates.",
       "properties": {
@@ -82243,6 +82435,21 @@
         "direction"
       ],
       "type": "object"
+    },
+    "DimensionSetTight": {
+      "description": "What a recipe does with a value that does not fit between its extension lines (docs/adr/0730 §2).",
+      "oneOf": [
+        {
+          "const": "keep",
+          "description": "In its place, drawn in the danger tone (docs/adr/0729 §6).",
+          "type": "string"
+        },
+        {
+          "const": "shift",
+          "description": "Beside its interval, else above or below its line, where no other value or row's line is.",
+          "type": "string"
+        }
+      ]
     },
     "DimensionStyle": {
       "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",

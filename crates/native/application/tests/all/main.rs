@@ -19,6 +19,7 @@ mod cleanup_cmd;
 mod clipboard_cmd;
 mod dimension_set_copy;
 mod dimension_sets;
+mod dimension_layout;
 mod dimension_spans;
 mod compare_timing;
 mod cog;

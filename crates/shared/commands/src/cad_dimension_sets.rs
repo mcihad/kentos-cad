@@ -3,7 +3,7 @@
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::{
     DimensionSet, DimensionSetFace, DimensionSetId, DimensionSetOpenings, DimensionSetReference,
-    DimensionSetRow, DimensionSetSegment, Entity, EntityId, Vec2,
+    DimensionSetRow, DimensionSetSegment, DimensionSetTight, Entity, EntityId, Vec2,
 };
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -83,6 +83,17 @@ pub struct DimensionSetsCreateInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension_style: Option<String>,
+    /// The sheets' scales (1:n) the dimensions are drawn at too, as large on paper as at the drawing's own scale
+    /// (docs/adr/0730 §1); ascending, from 1 to 1000000.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scales: Vec<f64>,
+    /// A value that does not fit between its extension lines: kept in its place (absent) or shifted aside, above or
+    /// below (docs/adr/0730 §2).
+    #[serde(default, skip_serializing_if = "DimensionSetTight::is_keep")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<DimensionSetTight>", optional))]
+    pub tight: DimensionSetTight,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -138,6 +149,15 @@ pub enum DimensionSetEdit {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         reference: Option<DimensionSetReference>,
+        /// The sheets' scales, replaced; empty: none (docs/adr/0730 §1).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+        scales: Option<Vec<f64>>,
+        /// A value that does not fit: kept or shifted (docs/adr/0730 §2).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        tight: Option<DimensionSetTight>,
     },
     /// A façade's walls, replaced (docs/adr/0729 §5).
     Sources {
@@ -150,6 +170,7 @@ pub enum DimensionSetEdit {
     Detach,
     /// Remove the recipe and all its active dimensions together.
     Delete,
+    /// The values back in the recipe's places: the user's moves forgotten (docs/adr/0730 §2).
     ResetText {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
@@ -217,6 +238,53 @@ pub struct DimensionSetsPlan {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub tight: Vec<u32>,
+    /// The dimensions whose value the recipe moved aside, above or below its line (docs/adr/0730 §2), by their place in
+    /// `entities`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub placed: Vec<u32>,
+    /// Each sheet scale's values that do not fit and those moved (docs/adr/0730 §1, §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetScaleNote>>", optional))]
+    pub scales: Vec<DimensionSetScaleNote>,
+    /// The rows whose rounded values do not add up to the rounded overall (docs/adr/0730 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetRounding>>", optional))]
+    pub rounding: Vec<DimensionSetRounding>,
+}
+
+/// A sheet scale's values in a plan (docs/adr/0730 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionSetScaleNote {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scale: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub tight: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub placed: Vec<u32>,
+}
+
+/// A row whose values, each rounded from its own measurement, add up to other than the overall reads (docs/adr/0730 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionSetRounding {
+    pub row: DimensionSetRow,
+    /// The row's written values added up, in their decimals.
+    pub parts: String,
+    /// The overall dimension's written value.
+    pub overall: String,
 }
 
 /// A façade's or a space's row in a plan (docs/adr/0729 §5).

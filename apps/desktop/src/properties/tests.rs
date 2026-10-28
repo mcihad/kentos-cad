@@ -117,6 +117,49 @@ fn wall_dimension_inspector_uses_face_offset_moves_one_row_and_preserves_text() 
     );
 }
 
+/// docs/adr/0730 §7: Pafta ölçekleri typed as Diğer ölçekler are, Sığmayan yazı chosen, and Yazıları tarife döndür: each
+/// one step of `cad.dimensionsets.edit`; a scale below 1 changes nothing and says why.
+#[test]
+fn a_recipes_sheet_scales_and_tight_values_are_set_from_the_inspector() {
+    let (mut app, _, member) = wall_dimension_set();
+    let shown: Vec<_> = rows(&app).into_iter().flat_map(|(_, rows)| rows).collect();
+    let scales = shown.iter().find(|row| row.label == "Pafta ölçekleri").expect("the sheets row");
+    assert_eq!(scales.value, "Yok");
+    assert!(shown.iter().any(|row| row.label == "Sığmayan yazı" && row.value == "Yerinde"));
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionSetScales(member), "1:200, 100".into()),
+    );
+    let model = &app.document.as_ref().unwrap().model;
+    assert_eq!(model.dimension_sets()[0].scales, [100.0, 200.0]);
+    let d = dimension_of(&app, member.0);
+    assert_eq!(d.annotative.as_deref().map(|a| a.scales.len()), Some(2));
+    let shown: Vec<_> = rows(&app).into_iter().flat_map(|(_, rows)| rows).collect();
+    assert!(shown.iter().any(|row| row.label == "Pafta ölçekleri" && row.value == "1:100, 1:200"));
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionSetScales(member), "1:0.5".into()),
+    );
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    event(
+        &mut app,
+        Event::DimensionSetValue(member, "tight", "shift".into()),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.dimension_sets()[0].tight,
+        kentos_commands::DimensionSetTight::Shift
+    );
+    event(&mut app, Event::DimensionSet(member, "resetText"));
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionSetScales(member), "Yok".into()),
+    );
+    let model = &app.document.as_ref().unwrap().model;
+    assert!(model.dimension_sets()[0].scales.is_empty());
+    assert!(dimension_of(&app, member.0).annotative.is_none(), "the representations go with the scales");
+}
+
 #[test]
 fn wall_dimension_set_selection_is_read_only_and_release_removes_recipe_ownership() {
     let (mut app, wall, member) = wall_dimension_set();
