@@ -110,6 +110,10 @@ enum Ask {
     Risers,
     Tread,
     Landing,
+    /// En uzun kol (docs/adr/0723 §1).
+    RampRun,
+    /// A ramp's start: its level's, over it, or its own (docs/adr/0723 §2).
+    RampBase,
     Rise,
     Slope,
     Height,
@@ -130,6 +134,8 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Cut => "planın kesme yüksekliğini yazın (0: kesme yok)",
         Ask::Tread => "basamak derinliğini yazın",
         Ask::Landing => "sahanlığın boyunu yazın",
+        Ask::RampRun => "en uzun eğimli kolu yazın (boş: sahanlık yalnız dönüşlerde)",
+        Ask::RampBase => "başlangıç kotunu yazın (boş ya da kat: katın kotu; kat+0.15: kattan fark; sayı: kendi kotu)",
         Ask::Rise => "yükseklik farkını yazın",
         Ask::Slope => "eğimi yüzde olarak yazın",
     }
@@ -730,6 +736,13 @@ pub struct FlightTool {
     /// The sides with a railing (docs/adr/0705 §2).
     railings: Option<Railings>,
     landing: Option<f64>,
+    /// En uzun kol: a landing wherever a sloped run would be longer (docs/adr/0723 §1).
+    max_run: Option<f64>,
+    /// A ramp's start (docs/adr/0723 §2): its own elevation typed, else Etkin kat's elevation plus `base_offset`.
+    ramp_base: Option<f64>,
+    base_offset: f64,
+    /// Etkin kat's floor elevation, as last seen.
+    level_elevation: Option<f64>,
     rise: f64,
     slope: Option<f64>,
     pts: Vec<Vec2>,
@@ -809,6 +822,10 @@ impl FlightTool {
             fit: true,
             railings: None,
             landing: None,
+            max_run: None,
+            ramp_base: None,
+            base_offset: 0.0,
+            level_elevation: None,
             rise: 0.5,
             slope: None,
             pts: Vec::new(),
@@ -853,8 +870,11 @@ impl FlightTool {
         if self.height_typed { None } else { self.level_height }
     }
 
-    /// Sees Etkin kat's height (a positive, finite floor to floor).
+    /// Sees Etkin kat's height (a positive, finite floor to floor) and its elevation.
     fn see_level(&mut self, cx: &Context<'_>) {
+        self.level_elevation = cx.level.and_then(|id| {
+            cx.doc.settings().arch.as_ref()?.levels.iter().find(|l| l.id == id).map(|l| l.elevation)
+        });
         self.level_height = cx
             .level
             .and_then(|id| {
@@ -875,6 +895,41 @@ impl FlightTool {
         match self.followed_height() {
             Some(h) => format!("{} · katın", f.length(h)),
             None => f.length(self.height),
+        }
+    }
+
+    /// A ramp's start in the settings and the prompt: its own, else its level's plus its offset, said so.
+    fn base_words(&self, f: &Format) -> String {
+        match (self.ramp_base, self.level_elevation) {
+            (Some(b), _) => f.length(b),
+            (None, Some(e)) if self.base_offset == 0.0 => format!("{} · katın", f.length(e)),
+            (None, Some(e)) => format!(
+                "{} · katın {}{}",
+                f.length(e + self.base_offset),
+                if self.base_offset < 0.0 { "−" } else { "+" },
+                f.length(self.base_offset.abs())
+            ),
+            (None, None) => f.length(self.base_offset),
+        }
+    }
+
+    /// A ramp's start on the prompt: its own, else Kat and its offset.
+    fn base_option(&self) -> String {
+        match (self.ramp_base, self.level_elevation) {
+            (Some(b), _) => b.to_string(),
+            (None, Some(_)) if self.base_offset == 0.0 => "Kat".into(),
+            (None, Some(_)) if self.base_offset < 0.0 => format!("Kat−{}", -self.base_offset),
+            (None, Some(_)) => format!("Kat+{}", self.base_offset),
+            (None, None) => self.base_offset.to_string(),
+        }
+    }
+
+    /// A ramp's start as the command takes it (docs/adr/0723 §2): its own base, else bound to Etkin kat.
+    fn ramp_start(&self, cx: &Context<'_>) -> (Option<f64>, Option<f64>) {
+        match (self.ramp_base, cx.level) {
+            (Some(b), _) => (Some(b), None),
+            (None, Some(_)) => (None, Some(self.base_offset)),
+            (None, None) => ((self.base_offset != 0.0).then_some(self.base_offset), None),
         }
     }
 
@@ -970,14 +1025,18 @@ impl FlightTool {
         let color = cx.draft.color_text();
         let line_weight = cx.draft.line_weight;
         if self.ramp {
+            let (base, base_offset) = self.ramp_start(cx);
             let input = RampsCreate {
                 layer_id,
                 ramps: vec![NewRamp {
+                    base,
+                    base_offset,
                     pts: points::wire_all(pts),
                     width: self.width,
                     rise: self.rise,
                     slope: self.slope,
                     landing: self.landing,
+                    max_run: self.max_run,
                     fit: self.fit.then_some(true),
                     railings: self.railings,
                     // Etkin kat (docs/adr/0713).
@@ -1177,6 +1236,24 @@ impl FlightTool {
                 true
             }
             "H" => length(cx).map(|v| self.landing = Some(v)).is_some(),
+            "L" if self.ramp && (words.is_empty() || words.starts_with("YOK")) => {
+                self.max_run = None;
+                true
+            }
+            "L" if self.ramp => length(cx).map(|v| self.max_run = Some(v)).is_some(),
+            // Empty or Kat: Etkin kat's elevation; Kat+0.15: over it; a number: its own (docs/adr/0723 §2).
+            "Z" if self.ramp && (words.is_empty() || words.starts_with("KAT")) => {
+                let rest = js_trim(value).get(3..).unwrap_or("").trim();
+                let rest = rest.strip_prefix('+').unwrap_or(rest).trim();
+                let offset = if rest.is_empty() { Some(0.0) } else { cx.typed_length(rest).filter(|v| v.is_finite()) };
+                offset
+                    .map(|o| {
+                        self.ramp_base = None;
+                        self.base_offset = o;
+                    })
+                    .is_some()
+            }
+            "Z" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.ramp_base = Some(v)).is_some(),
             "Y" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.rise = v).is_some(),
             "E" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
                 self.slope = None;
@@ -1375,6 +1452,8 @@ impl Tool for FlightTool {
                 )
                 .option_with("Genişlik", "G", n(self.width))
                 .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
+                .option_with("En uzun kol", "L", self.max_run.map_or_else(|| "Yok".into(), n))
+                .option_with("Başlangıç", "Z", self.base_option())
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
                 .option_with("Son kol", "U", if self.fit { "Eğime göre" } else { "Tıklanan yerde" })
                 .option("Bitir", "Enter");
@@ -1460,6 +1539,8 @@ impl Tool for FlightTool {
             let field = match ask {
                 Ask::Width => "G",
                 Ask::Landing => "H",
+                Ask::RampRun => "L",
+                Ask::RampBase => "Z",
                 Ask::Rise | Ask::Height => "Y",
                 Ask::Slope => "E",
                 Ask::MaxRiser => "R",
@@ -1482,6 +1563,8 @@ impl Tool for FlightTool {
         self.ask = match key.as_str() {
             "G" => Some(Ask::Width),
             "H" => Some(Ask::Landing),
+            "L" if self.ramp => Some(Ask::RampRun),
+            "Z" if self.ramp => Some(Ask::RampBase),
             "Y" if self.ramp => Some(Ask::Rise),
             "E" if self.ramp => Some(Ask::Slope),
             "Y" => Some(Ask::Height),
@@ -1548,6 +1631,8 @@ impl Tool for FlightTool {
                 ),
                 Setting::text("G", "Genişlik", f.length(self.width)),
                 Setting::text("H", "Sahanlık", landing),
+                Setting::text("L", "En uzun kol", self.max_run.map_or_else(|| "Yok".into(), |v| f.length(v))),
+                Setting::text("Z", "Başlangıç kotu", self.base_words(f)),
                 railings_setting(self.railings),
                 Setting::choice(
                     "U",

@@ -11,6 +11,7 @@ mod bands;
 mod book;
 mod map_layers;
 mod map_levels;
+mod ramp_levels;
 mod output;
 mod units;
 

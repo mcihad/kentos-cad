@@ -1793,8 +1793,16 @@ codes! {
     ARCH_VIEWMARK_TARGET_GONE = "arch_viewmark_target_gone", Warning, false, "Görünüm işaretinin hedefi yok.";
     /// An object without a level, or with one the project lacks, while the project has levels.
     ARCH_LEVEL_MISSING = "arch_level_missing", Warning, false, "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat.";
-    /// An audit threshold below zero.
-    INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı.";
+    /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
+    RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";
+    /// A sloped run longer than the profile's long run and steeper than it allows there.
+    RAMP_LONG_RUN_SLOPE = "ramp_long_run_slope", Warning, false, "Rampanın uzun bir eğimli kolu erişilebilirlik profilinin uzun kol eğiminden dik.";
+    /// A ramp's landing shorter than the profile's.
+    RAMP_LANDING_SHORT = "ramp_landing_short", Warning, false, "Rampanın sahanlığı erişilebilirlik profilinin en kısa sahanlığından kısa.";
+    /// A ramp that turns, narrower than the profile's turning landing.
+    RAMP_TURN_NARROW = "ramp_turn_narrow", Warning, false, "Yön değiştiren rampa erişilebilirlik profilinin dönüş sahanlığından dar.";
+    /// An audit threshold below zero, or an accessibility profile the catalog lacks.
+    INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; erişilebilirlik profili katalogda olmalı.";
 
     // ── Kat ver (docs/adr/0717) ─────────────────────────────────────────
     /// An object given a level that has no level of its own: an opening, a tag or a finish is on its object's level;

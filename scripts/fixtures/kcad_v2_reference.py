@@ -2231,6 +2231,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "ramp" and "baseOffset" in e for e in entities):
+        # A ramp bound to its level (docs/adr/0723 §2).
+        return 124
     if any(e["kind"] == "slab" for e in entities):
         # A slab (docs/adr/0722).
         return 123
@@ -2899,7 +2902,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-124.kcad"] = container(root(cmap(parts), version=uint(124)))
+    files["schema-version-125.kcad"] = container(root(cmap(parts), version=uint(125)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4990,6 +4993,18 @@ def build():
     columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
     columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
     columns_bad("type", lambda src: src.update(columns="Tarih"))
+    # Schema 124 (docs/adr/0723 §2): ramps bound to their level (one at the level, one below it going down) beside one
+    # with a base of its own, which alone would stay in the schema before.
+    rl = document(load("ramp-levels.json"))
+    assert rl.count(b"\x67version\x18\x7c") == 1
+    out["ramp-levels.kcad"] = container(rl)
+    out["broken/ramp-levels-in-schema-123.kcad"] = container(rl.replace(b"\x67version\x18\x7c", b"\x67version\x18\x7b"))
+    def ramp_level_bad(name, index, change):
+        d = load("ramp-levels.json")
+        change(d["entities"][index])
+        out["broken/ramp-level-" + name + ".kcad"] = container(document(d))
+    ramp_level_bad("without-level", 0, lambda e: e.pop("arch"))
+    ramp_level_bad("far-offset", 1, lambda e: e.update(baseOffset=1000.5))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

@@ -337,8 +337,8 @@ impl Document {
         }
         if reverted > 0 || restored {
             self.refresh_viewmarks();
-            self.refresh_derived_tags();
             self.refresh_level_marks();
+            self.refresh_derived_tags();
             self.refresh_dimension_set_rows_quietly();
             self.mark_changed();
         }

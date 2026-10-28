@@ -1260,8 +1260,8 @@ impl Document {
             let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
             self.settings = settings;
             self.refresh_viewmarks();
-            self.refresh_derived_tags();
             self.refresh_level_marks();
+            self.refresh_derived_tags();
             if scale_changed {
                 self.refresh_dimension_set_rows();
             }

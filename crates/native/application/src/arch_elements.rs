@@ -926,6 +926,18 @@ fn fitted(s: &StairFields, at: &str) -> Result<(Vec<Vec2>, Option<Vec<f64>>), St
     Ok((out, s.bulges.clone()))
 }
 
+/// A ramp bound to its level (docs/adr/0723 §2) with its base read from it: the level's elevation plus its offset, as
+/// the document keeps it. Its level is known (checked before).
+pub(crate) fn level_bound(doc: &Document, r: &mut RampFields) {
+    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    if let Some(z) = r.bound_base(levels) {
+        r.base = Some(z);
+    }
+}
+
+/// The longest sloped run `maxRun` may ask for (docs/adr/0723 §1).
+const MAX_RAMP_RUN: f64 = 100.0;
+
 /// The ramp's line ending where its sloped length is its rise over its slope (docs/adr/0705 §1), its last point moved
 /// along its last segment.
 fn ramp_fitted(r: &RampFields, at: &str) -> Result<Vec<Vec2>, Stop> {
@@ -971,16 +983,25 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
                 (Some(n.rise), "rise", "Yükseklik"),
                 (n.slope, "slope", "Eğim"),
                 (n.base, "base", "Başlangıç kotu"),
+                (n.base_offset, "baseOffset", "Kata göre başlangıç kotu"),
                 (n.landing, "landing", "Sahanlık"),
             ],
             &at,
         )?;
+        if n.base.is_some() && n.base_offset.is_some() {
+            return Err(fail(
+                codes::INVALID_RAMP,
+                "Başlangıç kotu ya kendisi (base) ya da kata göre (baseOffset) verilir; ikisi birden verilmez.".into(),
+                &format!("{at}.baseOffset"),
+            ));
+        }
         let mut r = RampFields {
             pts: n.pts.clone(),
             width: n.width,
             rise: n.rise,
             slope: n.slope,
             base: n.base,
+            base_offset: n.base_offset,
             landing: n.landing,
             railings: n.railings,
             arch: n.arch.clone().unwrap_or_default(),
@@ -990,7 +1011,25 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
             r.pts = ramp_fitted(&r, &at)?;
             ramp_valid(&r, &at)?;
         }
+        if let Some(max) = n.max_run {
+            if !(max > 0.0 && max <= MAX_RAMP_RUN) {
+                return Err(fail(
+                    codes::INVALID_RAMP,
+                    format!("En uzun kol 0'dan büyük ve en çok {MAX_RAMP_RUN} m olmalı; {max} verildi."),
+                    &format!("{at}.maxRun"),
+                ));
+            }
+            let shape = kentos_formats::arch_elements::core_ramp(&r);
+            if let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape {
+                r.pts = arch::ramp_with_landings(pts, ramp, max, n.fit == Some(true))
+                    .into_iter()
+                    .map(|p| Vec2 { x: p.x, y: p.y })
+                    .collect();
+            }
+            ramp_valid(&r, &at)?;
+        }
         crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
+        level_bound(doc, &mut r);
         warnings.extend(ramp_warnings(&r, &at));
         made.push((
             at,

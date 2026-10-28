@@ -112,9 +112,10 @@ fn arch_elements_draw_as_the_reference_says() {
                         _ => None,
                     })
                     .collect();
-                let levels: Vec<String> =
-                    e["levels"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
-                assert_eq!(texts, levels, "{name}: kotlar");
+                // Its slope as drawn, then its levels (docs/adr/0723 §5).
+                let want: Vec<String> =
+                    e["texts"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+                assert_eq!(texts, want, "{name}: eğim ve kotlar");
                 points(&arch::band(pts, ramp.width / 2.0), &e["band"], name);
                 // docs/adr/0705 §1, §2: the fitted end, the railings.
                 match (arch::ramp_fit_end(pts, ramp), e["fit"].as_array()) {
@@ -191,4 +192,29 @@ fn curved_stair(pts: &[kentos_geometry_core::vec2::Vec2], stair: &arch::StairSpe
         points(pts, &w["pts"], name);
         close(b[0], w["bulge"].as_f64().unwrap(), name);
     }
+}
+
+/// En uzun kol (docs/adr/0723 §1): 1.2 m at 5 % is 24 m of slope; with runs of at most 9 m and 1.5 m landings the
+/// line gets two straight corners and ends 27 m from its start (9 + 1.5 + 9 + 1.5 + 6), every run at most 9 m. A
+/// ramp whose runs are short enough is left alone, and no positive limit means no change.
+#[test]
+fn long_ramps_get_landings_where_a_run_would_pass_the_limit() {
+    use kentos_geometry_core::Vec2;
+    let spec = arch::RampSpec { width: 1.5, rise: 1.2, slope: Some(5.0), base: None, landing: Some(1.5), railings: None };
+    let line = [Vec2::new(0.0, 0.0), Vec2::new(30.0, 0.0)];
+    let pts = arch::ramp_with_landings(&line, &spec, 9.0, true);
+    let xs: Vec<f64> = pts.iter().map(|p| p.x).collect();
+    assert_eq!(xs.len(), 4, "{xs:?}");
+    for (x, want) in xs.iter().zip([0.0, 9.75, 20.25, 27.0]) {
+        assert!((x - want).abs() < 1e-9, "{xs:?}");
+    }
+    let walk = arch::Walk::of(&pts);
+    assert!((arch::ramp_run(&walk, &spec) - 24.0).abs() < 1e-9);
+    let mut start = 0.0;
+    for (a, b) in arch::ramp_landings(&walk, &spec).into_iter().chain([(walk.length(), walk.length())]) {
+        assert!(a - start <= 9.0 + 1e-9, "{a} {start}");
+        start = b;
+    }
+    assert_eq!(arch::ramp_with_landings(&line, &spec, 30.0, false), line.to_vec());
+    assert_eq!(arch::ramp_with_landings(&line, &spec, 0.0, true), line.to_vec());
 }

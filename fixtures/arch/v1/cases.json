@@ -1903,7 +1903,8 @@
         "run": 10.0,
         "slope": 5.0,
         "codes": [],
-        "levels": [
+        "texts": [
+          "%5.00",
           "+0.00",
           "+0.50"
         ],
@@ -1954,7 +1955,8 @@
         "run": 8.0,
         "slope": 5.0,
         "codes": [],
-        "levels": [
+        "texts": [
+          "%5.00",
           "+0.00",
           "+0.40"
         ],
@@ -2009,7 +2011,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%5.71",
           "+0.00",
           "+0.60"
         ],
@@ -2069,7 +2072,8 @@
         "run": 10.0,
         "slope": -5.0,
         "codes": [],
-        "levels": [
+        "texts": [
+          "%5.00",
           "-0.30",
           "-0.80"
         ],
@@ -2126,7 +2130,8 @@
         "run": 11.0,
         "slope": 4.545454545454546,
         "codes": [],
-        "levels": [
+        "texts": [
+          "%4.55",
           "+0.00",
           "+0.50"
         ],
@@ -2202,7 +2207,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%5.00",
           "+0.00",
           "+0.50"
         ],
@@ -2273,7 +2279,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%10.00",
           "+0.00",
           "+0.50"
         ],
@@ -2359,7 +2366,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%11.11",
           "+0.00",
           "+0.50"
         ],
@@ -2440,7 +2448,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%10.00",
           "+0.30",
           "+0.00"
         ],
@@ -2498,7 +2507,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%3.70",
           "+0.00",
           "+0.50"
         ],
@@ -2557,7 +2567,7 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
           "+0.00",
           "+0.00"
         ],
@@ -2609,7 +2619,8 @@
         "codes": [
           "ramp_slope_mismatch"
         ],
-        "levels": [
+        "texts": [
+          "%6.25",
           "+0.00",
           "+0.50"
         ],

@@ -11,6 +11,9 @@
 //! - An opening: its width, its height head − sill, its area; a niche's or flue's depth. The totals' opening area is
 //!   the through openings'.
 //! - A room's baseboard, a slab, the floor finishes' changes at the passages: `slab_quantities` (docs/adr/0722 §5).
+//! - A ramp (docs/adr/0723 §3): its centre line's length, its sloped runs' (the line less its landings), its landings,
+//!   its band's plan area (mitred at its turns), its slope as drawn (the rise's size over the sloped length), its start
+//!   and end elevations, its railings' length.
 
 use std::collections::BTreeMap;
 
@@ -88,6 +91,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         openings: Vec::new(),
         slabs: Vec::new(),
         transitions: Vec::new(),
+        ramps: Vec::new(),
         totals: QuantityTotals::default(),
     };
     // The doors and gaps to the floor (docs/adr/0722 §5), and the voids a slab's area loses, by level.
@@ -215,6 +219,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.slabs.push(crate::slab_quantities::slab_row(doc, uid(e), &sl.slab, &voids));
                 }
             }
+            Entity::Ramp(r) if input.usages.is_none() => {
+                if takes(e, &r.ramp.arch) {
+                    out.ramps.push(ramp_row(uid(e), &r.ramp));
+                }
+            }
             Entity::Wall(w) if input.usages.is_none() => {
                 let x = &w.wall;
                 if !takes(e, &x.arch) {
@@ -277,8 +286,38 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         slab_volume,
         railing_length,
         parapet_length,
+        ramp_area: out.ramps.iter().map(|r| r.area).sum(),
+        ramp_railing_length: out.ramps.iter().map(|r| r.railing_length).sum(),
     };
     Ok(out)
+}
+
+/// A ramp measured (docs/adr/0723 §3): its lengths, landings, plan area and railings from its line, its slope as drawn.
+pub(crate) fn ramp_row(uid: String, r: &kentos_commands::RampFields) -> kentos_commands::RampRow {
+    let shape = kentos_formats::arch_elements::core_ramp(r);
+    let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else {
+        unreachable!("core_ramp makes a ramp");
+    };
+    let m = kentos_geometry_core::geom::arch::ramp_measure(pts, ramp);
+    let base = r.base.unwrap_or(0.0);
+    kentos_commands::RampRow {
+        uid,
+        level: r.arch.level.clone(),
+        width: r.width,
+        rise: r.rise,
+        slope: (m.run > 0.0).then(|| r.rise.abs() / m.run * 100.0),
+        run: m.run,
+        length: m.length,
+        landings: u32::try_from(m.landings).unwrap_or(u32::MAX),
+        area: m.area,
+        base,
+        top: base + r.rise,
+        base_offset: r.base_offset,
+        railing_length: m.railing_length,
+        rule: "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; \
+               eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+            .into(),
+    }
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &SpacesQuantities) -> CommandResult<()> {

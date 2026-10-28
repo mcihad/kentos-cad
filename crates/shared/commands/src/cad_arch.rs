@@ -576,11 +576,17 @@ pub struct NewRamp {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub slope: Option<f64>,
-    /// Its start's elevation; absent: 0.
+    /// Its start's elevation; absent: 0 (or its level's, `baseOffset`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<f64>,
+    /// Its start's elevation over its level's (docs/adr/0723 §2): its base follows the level's elevation; needs a
+    /// level (`arch.level`), not with `base`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base_offset: Option<f64>,
     /// A landing's length at a turn; absent: the width.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -591,6 +597,12 @@ pub struct NewRamp {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fit: Option<bool>,
+    /// The longest sloped run, metres: a straight corner and a landing wherever a run would be longer
+    /// (docs/adr/0723 §1); absent: landings only at its turns.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub max_run: Option<f64>,
     /// Its railings' sides; absent: none (docs/adr/0705 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -794,7 +806,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub slope: Option<Option<f64>>,
-    /// A ramp's; null: 0.
+    /// A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2).
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -804,6 +816,17 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<Option<f64>>,
+    /// A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
+    /// base staying where it is. Not with `base`.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base_offset: Option<Option<f64>>,
     /// Any kind's.
     #[serde(
         default,

@@ -15124,7 +15124,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -27445,7 +27454,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -57419,7 +57437,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -75639,7 +75666,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -86617,7 +86653,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -97567,7 +97612,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -108528,7 +108582,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -119473,7 +119536,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -130386,7 +130458,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -141313,7 +141394,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -152545,7 +152635,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -169118,7 +169217,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -180240,7 +180348,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -191456,7 +191573,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -203851,7 +203977,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -215284,7 +215419,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -228067,7 +228211,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -239262,7 +239415,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -250211,7 +250373,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -261241,7 +261412,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -275170,7 +275350,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -289677,7 +289866,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -304326,7 +304524,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -315882,7 +316089,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -327573,7 +327789,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -338525,7 +338750,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -349501,7 +349735,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -360526,7 +360769,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -371703,7 +371955,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -382977,7 +383238,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -394284,7 +394554,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -405368,7 +405647,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -416710,7 +416998,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -427466,7 +427763,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -440408,7 +440714,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -451128,7 +451443,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -462208,7 +462532,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -473972,7 +474305,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -485047,7 +485389,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -495767,7 +496118,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -506978,7 +507338,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -518151,7 +518520,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -528851,7 +529229,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -533189,7 +533576,7 @@
       "id": "cad.spaces.quantities",
       "version": 1,
       "title": "Metraj",
-      "summary": "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler, genişlikleri ve kaplamalarıyla. levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).",
+      "summary": "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723 §3): kat, genişlik, kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve rampRailingLength. levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -533388,6 +533775,17 @@
                 "type": "number",
                 "x-unit": "length"
               },
+              "rampArea": {
+                "description": "The ramps' plan area and their railings' length (docs/adr/0723 §3).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "rampRailingLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
               "slabArea": {
                 "description": "The slabs' net area and volume, those left out not summed.",
                 "format": "double",
@@ -533428,6 +533826,105 @@
               "wallNetArea",
               "openings",
               "openingArea"
+            ],
+            "type": "object"
+          },
+          "RampRow": {
+            "description": "A ramp measured (docs/adr/0723 §3).",
+            "properties": {
+              "area": {
+                "description": "Its band's plan area, m².",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "base": {
+                "description": "Its start's elevation and its end's.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start over its level's when bound to it (docs/adr/0723 §2).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "landings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "Its centre line's length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "railingLength": {
+                "description": "Its railings' lines' length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "rise": {
+                "description": "How much higher its end is than its start (below zero going down).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "rule": {
+                "type": "string"
+              },
+              "run": {
+                "description": "Its sloped runs' length: its centre line less its landings, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "slope": {
+                "description": "Its slope as drawn, per cent: its rise's size over its sloped length; none when no sloped run is left.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "top": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "uid",
+              "width",
+              "rise",
+              "run",
+              "length",
+              "area",
+              "base",
+              "top",
+              "rule"
             ],
             "type": "object"
           },
@@ -533891,6 +534388,13 @@
           "openings": {
             "items": {
               "$ref": "#/$defs/OpeningRow"
+            },
+            "type": "array"
+          },
+          "ramps": {
+            "description": "The ramps (docs/adr/0723 §3).",
+            "items": {
+              "$ref": "#/$defs/RampRow"
             },
             "type": "array"
           },
@@ -534062,6 +534566,17 @@
                 "type": "number",
                 "x-unit": "length"
               },
+              "rampArea": {
+                "description": "The ramps' plan area and their railings' length (docs/adr/0723 §3).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "rampRailingLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
               "slabArea": {
                 "description": "The slabs' net area and volume, those left out not summed.",
                 "format": "double",
@@ -534102,6 +534617,105 @@
               "wallNetArea",
               "openings",
               "openingArea"
+            ],
+            "type": "object"
+          },
+          "RampRow": {
+            "description": "A ramp measured (docs/adr/0723 §3).",
+            "properties": {
+              "area": {
+                "description": "Its band's plan area, m².",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "base": {
+                "description": "Its start's elevation and its end's.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start over its level's when bound to it (docs/adr/0723 §2).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "landings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "Its centre line's length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "railingLength": {
+                "description": "Its railings' lines' length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "rise": {
+                "description": "How much higher its end is than its start (below zero going down).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "rule": {
+                "type": "string"
+              },
+              "run": {
+                "description": "Its sloped runs' length: its centre line less its landings, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "slope": {
+                "description": "Its slope as drawn, per cent: its rise's size over its sloped length; none when no sloped run is left.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "top": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "elevation"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "uid",
+              "width",
+              "rise",
+              "run",
+              "length",
+              "area",
+              "base",
+              "top",
+              "rule"
             ],
             "type": "object"
           },
@@ -534565,6 +535179,13 @@
           "openings": {
             "items": {
               "$ref": "#/$defs/OpeningRow"
+            },
+            "type": "array"
+          },
+          "ramps": {
+            "description": "The ramps (docs/adr/0723 §3).",
+            "items": {
+              "$ref": "#/$defs/RampRow"
             },
             "type": "array"
           },
@@ -541604,7 +542225,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -552778,7 +553408,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -563884,7 +564523,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -568222,7 +568870,7 @@
       "id": "cad.ramps.create",
       "version": 1,
       "title": "Rampa",
-      "summary": "Rampalar ekler; tek geri alma adımı “Rampa”. Her biri orta çizgi (pts: 2–4 nokta), genişlik, toplam yükseklik (rise), eğim (slope, yüzde; yoksa yükseklik ve eğimli uzunluktan), başlangıç kotu (base; yoksa 0), dönüşteki sahanlığın boyu (landing; yoksa genişlik). Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok. Verilen eğim yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret değildir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "summary": "Rampalar ekler; tek geri alma adımı “Rampa”. Her biri orta çizgi (pts: 2–4 nokta), genişlik, toplam yükseklik (rise), eğim (slope, yüzde; yoksa yükseklik ve eğimli uzunluktan), başlangıç kotu (base; yoksa 0) ya da katına göre farkı (baseOffset, docs/adr/0723 §2: başlangıç katın kotu artı fark, kat kotu değişince izler; katı ister, base ile birlikte verilmez), dönüşteki sahanlığın boyu (landing; yoksa genişlik), fit (son kol eğime göre biter, docs/adr/0705), maxRun (en uzun eğimli kol: aşan kola düz köşe ve ara sahanlık, docs/adr/0723 §1), korkuluk (railings). Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok. Verilen eğim yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret değildir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -568337,7 +568985,16 @@
                 ]
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0 (or its level's, `baseOffset`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2): its base follows the level's elevation; needs a\nlevel (`arch.level`), not with `base`.",
                 "format": "double",
                 "type": [
                   "number",
@@ -568354,6 +569011,15 @@
               },
               "landing": {
                 "description": "A landing's length at a turn; absent: the width.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "maxRun": {
+                "description": "The longest sloped run, metres: a straight corner and a landing wherever a run would be longer\n(docs/adr/0723 §1); absent: landings only at its turns.",
                 "format": "double",
                 "type": [
                   "number",
@@ -574938,7 +575604,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -579263,7 +579938,7 @@
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -579286,7 +579961,16 @@
                 "description": "Değiştir: the fields given, on every object named.",
                 "properties": {
                   "base": {
-                    "description": "A ramp's; null: 0.",
+                    "description": "A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2).",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "elevation"
+                  },
+                  "baseOffset": {
+                    "description": "A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its\nbase staying where it is. Not with `base`.",
                     "format": "double",
                     "type": [
                       "number",
@@ -586063,7 +586747,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -596764,7 +597457,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -607842,7 +608544,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -618707,7 +619418,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -629407,7 +630127,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -640578,7 +641307,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -651502,7 +652240,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -662202,7 +662949,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -673525,7 +674281,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -684233,7 +684998,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -728311,7 +729085,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -739364,7 +740147,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -750070,7 +750862,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -761293,7 +762094,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -772728,7 +773538,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -783464,7 +784283,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -788289,7 +789117,7 @@
       "id": "cad.arch.audit",
       "version": 1,
       "title": "Mimari denetim",
-      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -788351,13 +789179,18 @@
                 "const": "levels",
                 "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
+              },
+              {
+                "const": "accessibility",
+                "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
+                "type": "string"
               }
             ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order), `level_not_found` (`level`).",
+        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).",
         "properties": {
           "checks": {
             "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
@@ -788399,6 +789232,13 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "profile": {
+            "description": "The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id\n([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "title": "ArchAudit",
@@ -788453,6 +789293,11 @@
                 "const": "levels",
                 "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
+              },
+              {
+                "const": "accessibility",
+                "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
+                "type": "string"
               }
             ]
           },
@@ -788468,7 +789313,7 @@
                 "$ref": "#/$defs/ArchAuditCheck"
               },
               "code": {
-                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.",
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.",
                 "type": "string"
               },
               "fix": {
@@ -788650,6 +789495,11 @@
                 "const": "levels",
                 "description": "Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.",
                 "type": "string"
+              },
+              {
+                "const": "accessibility",
+                "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
+                "type": "string"
               }
             ]
           },
@@ -788665,7 +789515,7 @@
                 "$ref": "#/$defs/ArchAuditCheck"
               },
               "code": {
-                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.",
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.",
                 "type": "string"
               },
               "fix": {
@@ -796436,7 +797286,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -808307,7 +809166,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -820110,7 +820978,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -831303,7 +832180,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -842414,7 +843300,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -854065,7 +854960,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -865137,7 +866041,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -876444,7 +877357,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -888557,7 +889479,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -899925,7 +900856,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -911815,7 +912755,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -923079,7 +924028,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -934186,7 +935144,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -945493,7 +946460,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -956590,7 +957566,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -967592,7 +968577,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -978620,7 +979614,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -989571,7 +990574,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1000498,7 +1001510,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1011468,7 +1012489,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1022345,7 +1023375,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1033336,7 +1034375,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1044369,7 +1045417,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1055393,7 +1056450,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1066751,7 +1067817,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1083098,7 +1084173,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1094307,7 +1095391,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1105986,7 +1107079,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1117610,7 +1118712,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1129402,7 +1130513,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1141283,7 +1142403,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1152015,7 +1153144,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1163624,7 +1164762,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1241709,7 +1242856,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1302148,7 +1303304,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1314469,7 +1315634,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1325451,7 +1326625,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1336597,7 +1337780,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1349818,7 +1351010,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1360935,7 +1362136,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1371945,7 +1373155,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1382892,7 +1384111,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1393884,7 +1395112,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1404865,7 +1406102,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1415809,7 +1417055,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1427000,7 +1428255,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1438212,7 +1439476,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1449383,7 +1450656,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1460370,7 +1461652,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1471300,7 +1472591,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1482326,7 +1483626,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1493355,7 +1494664,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1504617,7 +1505935,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1515821,7 +1517148,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1527320,7 +1528656,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1538453,7 +1539798,16 @@
                 "type": "object"
               },
               "base": {
-                "description": "Its start's elevation; absent: 0.",
+                "description": "Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "baseOffset": {
+                "description": "Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation\nplus this, written again whenever the level's elevation changes; absent: `base` is its own.",
                 "format": "double",
                 "type": [
                   "number",
@@ -1572836,10 +1574190,34 @@
       "meaning": "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat."
     },
     {
+      "code": "ramp_slope_over_profile",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor."
+    },
+    {
+      "code": "ramp_long_run_slope",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Rampanın uzun bir eğimli kolu erişilebilirlik profilinin uzun kol eğiminden dik."
+    },
+    {
+      "code": "ramp_landing_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Rampanın sahanlığı erişilebilirlik profilinin en kısa sahanlığından kısa."
+    },
+    {
+      "code": "ramp_turn_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yön değiştiren rampa erişilebilirlik profilinin dönüş sahanlığından dar."
+    },
+    {
       "code": "invalid_arch_audit",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı."
+      "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; erişilebilirlik profili katalogda olmalı."
     },
     {
       "code": "not_levelled",

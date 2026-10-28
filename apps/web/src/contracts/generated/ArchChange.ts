@@ -86,9 +86,14 @@ rise?: number,
  */
 slope?: number | null, 
 /**
- * A ramp's; null: 0.
+ * A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2).
  */
 base?: number | null, 
+/**
+ * A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
+ * base staying where it is. Not with `base`.
+ */
+baseOffset?: number | null, 
 /**
  * Any kind's.
  */

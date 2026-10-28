@@ -209,7 +209,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "networks/0/kind",
         ),
-        ("broken/schema-version-124.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-125.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

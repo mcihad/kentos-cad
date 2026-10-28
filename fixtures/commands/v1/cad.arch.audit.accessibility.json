@@ -1,0 +1,1974 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arch.audit",
+  "commandVersion": 1,
+  "title": "Mimari denetim: rampaların erişilebilirlik profili (eğim bandı, uzun kol, sahanlık, dönüş); düzeltme; retler",
+  "note": "ADR 0723 §4. Beklenenler scripts/fixtures/ramp_access_cases.py'nin ADR'den ve profilin değerlerinden (catalog/v1/accessibility/erisilebilirlik-rampa-1.json) yazılmış kurallarından, KentOS kodu olmadan. Kurulumdaki çizimde bir çizgi var, kat yok; rampalar 2'den başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Erişilebilir rampalar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "rampa",
+        "name": "Rampa",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "rampa",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "rampa",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -5.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": -5.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "15 cm kot farkında tam %8 rampa geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.875,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 cm kot farkında %8'i aşan rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %8 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "50 cm kot farkında %7'yi aşan rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %7.14; 0.50 m kot farkı için en çok %7.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %7 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "50 cm kot farkında %7 içinde kalan rampa geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 cm kot farkı %7 bandında: %7.62 rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 2.1,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.16
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %7.62; 0.16 m kot farkı için en çok %7.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %7 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 m kot farkında %6'yı aşan 16 m kollu rampa: eğim ve uzun kol",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.0
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %6.25; 1.00 m kot farkı için en çok %6.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %6 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_long_run_slope",
+                  "message": "Rampanın 1. eğimli kolu 16.00 m, eğimi %6.25; 10 m'den uzun kolda en çok %6.",
+                  "repair": "Rampayı En uzun kol ile ara sahanlıklı yeniden çizin ya da eğimini düşürün.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1,20 m kot farkında %5 rampa geçer, uzun kolu %6 içinde",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 24.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1,20 m kot farkında %5'i aşan rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %6.00; 1.20 m kot farkı için en çok %5.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %5 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "inen rampanın eğimi kot farkının büyüklüğüyle sınanır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": -0.5,
+                "base": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %8.33; 0.50 m kot farkı için en çok %7.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %7 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dar dönüşlü L rampa: kısa sahanlık ve dar dönüş, iki düzeltme",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geniş L rampa 1,50 m sahanlıkla geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "landing": 1.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "U rampa 1,40 m geniş: dar dönüş, sahanlık yeterli",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 3.0
+                  }
+                ],
+                "width": 1.4,
+                "rise": 0.6,
+                "landing": 1.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.40 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düz köşeli rampa dönmez: yalnız kısa ara sahanlık",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 9.6,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 19.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.9,
+                "landing": 1.2
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 9.6,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimsiz (düz) rampa ölçülmez, sahanlığı da yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.0
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğimli kolu kalmayan rampa: yalnız dar dönüş",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 1.0
+                  }
+                ],
+                "width": 1.0,
+                "rise": 0.2,
+                "landing": 5.0
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.00 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 1.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmandaki rampanın bulguları düzeltmesiz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "kilitli",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.set",
+          "input": {
+            "operation": "locked",
+            "layer": "kilitli",
+            "value": true
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profil verilmeyince erişilebilirlik bir şey bulmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profil verilip grup sorulmayınca bulgu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bütün gruplar profille: yalnız erişilebilirlik bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "üç rampa: kodların sırası, sonra x, sonra y",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 11.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              },
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 11.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              },
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %8 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %8 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 10.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:3"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:3"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sahanlık düzeltmesi çalıştırılınca yalnız dar dönüş kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": 1.5
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı bulguları verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "plan",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_landing_short",
+                  "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
+                  "repair": "Sahanlığı uzatın.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": 1.5
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "accessibility",
+                  "code": "ramp_turn_narrow",
+                  "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
+                  "repair": "Rampayı genişletin.",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula bir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "validate",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "erisilebilirlik-rampa/1",
+            "checks": [
+              "accessibility"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katalogda olmayan profil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ],
+                "width": 1.2,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profile": "yok/1"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "“yok/1” erişilebilirlik profili yok; erisilebilirlik-rampa/1 verin.",
+              "path": "profile"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

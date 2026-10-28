@@ -1,5 +1,6 @@
 //! A Kot bound to a level (docs/adr/0721 §2): an elevation mark whose value is its level's floor elevation plus its
-//! offset. The levels are project settings (no undo step), so the value is derived, like a view mark's words: written
+//! offset; and a ramp bound to its level (docs/adr/0723 §2), its start's elevation (`base`) the same way. The levels
+//! are project settings (no undo step), so the value is derived, like a view mark's words: written
 //!
 //! - at a step's end, for the marks the step added or changed (inside the step);
 //! - outside any step, in place, when the settings change, and after an undo, a redo or a rollback: every mark whose
@@ -10,7 +11,7 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use kentos_contracts::{ArchLevel, DimensionEntity, Entity};
+use kentos_contracts::{ArchLevel, DimensionEntity, Entity, RampEntity};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -23,8 +24,28 @@ pub fn settled(d: &DimensionEntity, levels: &[ArchLevel]) -> Option<DimensionEnt
     (d.za != Some(z)).then(|| DimensionEntity { za: Some(z), ..d.clone() })
 }
 
+/// `r` with its base read from its level among `levels` (docs/adr/0723 §2); none when it already holds, it is not
+/// bound or its level is gone.
+pub fn ramp_settled(r: &RampEntity, levels: &[ArchLevel]) -> Option<RampEntity> {
+    let z = r.ramp.bound_base(levels)?;
+    (r.ramp.base != Some(z)).then(|| {
+        let mut out = r.clone();
+        out.ramp.base = Some(z);
+        out
+    })
+}
+
+/// Whether `e` takes a value from its level: a Kot bound to one or a ramp bound to its own.
+pub(crate) fn level_bound(e: &Entity) -> bool {
+    match e {
+        Entity::Dimension(d) => d.level.is_some(),
+        Entity::Ramp(r) => r.ramp.base_offset.is_some(),
+        _ => false,
+    }
+}
+
 impl Document {
-    /// The updates that write `slots`' Kots again from their levels.
+    /// The updates that write `slots`' Kots and ramps again from their levels.
     fn level_mark_updates(&self, slots: impl IntoIterator<Item = Slot>) -> Vec<Op> {
         let levels = self.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
         let mut out = Vec::new();
@@ -32,14 +53,16 @@ impl Document {
             let Some(current) = self.store.get(slot).cloned() else {
                 continue;
             };
-            let Entity::Dimension(d) = &*current.entity else {
-                continue;
+            let next = match &*current.entity {
+                Entity::Dimension(d) => settled(d, levels).map(Entity::Dimension),
+                Entity::Ramp(r) => ramp_settled(r, levels).map(Entity::Ramp),
+                _ => None,
             };
-            if let Some(next) = settled(d, levels) {
+            if let Some(next) = next {
                 out.push(Op::Update {
                     after: Stored {
                         uid: current.uid,
-                        entity: Arc::new(Entity::Dimension(next)),
+                        entity: Arc::new(next),
                     },
                     before: current,
                 });
@@ -48,7 +71,7 @@ impl Document {
         out
     }
 
-    /// What writes the Kots `ops` added or changed from their levels, applied: the step takes them in.
+    /// What writes the Kots and ramps `ops` added or changed from their levels, applied: the step takes them in.
     pub(crate) fn follow_level_marks(&mut self, ops: &[Op]) -> Vec<Op> {
         if !self.store.has_level_marks() {
             return Vec::new();
@@ -56,11 +79,7 @@ impl Document {
         let own: BTreeSet<Uuid> = ops
             .iter()
             .filter_map(|op| match op {
-                Op::Add(s) | Op::Update { after: s, .. }
-                    if matches!(&*s.entity, Entity::Dimension(d) if d.level.is_some()) =>
-                {
-                    Some(s.uid)
-                }
+                Op::Add(s) | Op::Update { after: s, .. } if level_bound(&s.entity) => Some(s.uid),
                 _ => None,
             })
             .collect();
@@ -72,8 +91,8 @@ impl Document {
         out
     }
 
-    /// Every Kot bound to a level written again in place, outside the undo history: after the settings changed, an
-    /// undo, a redo or a rollback. Returns how many changed.
+    /// Every Kot and ramp bound to a level written again in place, outside the undo history: after the settings
+    /// changed, an undo, a redo or a rollback. Returns how many changed.
     pub(crate) fn refresh_level_marks(&mut self) -> usize {
         if !self.store.has_level_marks() {
             return 0;

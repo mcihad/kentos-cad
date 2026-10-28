@@ -414,11 +414,33 @@ def ramp_problem(r, path):
         p = positive(r["slope"], "slope", "Rampanın eğimi (%)", 1000, code, path)
         if p:
             return p
+    if r.get("baseOffset") is not None:
+        # docs/adr/0723 §2: a ramp bound to its level: the offset finite, at most 1000 m, the ramp's level given.
+        o = r["baseOffset"]
+        if not (math.isfinite(o) and abs(o) <= 1000):
+            return refusal(code, f"Rampanın kata göre başlangıç kotu {num(o)}; sonlu ve en çok 1000 m olmalı.", f"{path}.baseOffset")
+        if (r.get("arch") or {}).get("level") is None:
+            return refusal(code, "Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok. Rampaya kat verin ya da "
+                                 "başlangıç kotunu kendisi olarak yazın.", f"{path}.baseOffset")
     if r.get("landing") is not None:
         p = positive(r["landing"], "landing", "Sahanlığın boyu", 100, code, path)
         if p:
             return p
     return None
+
+
+BOTH_BASES = "Başlangıç kotu ya kendisi (base) ya da kata göre (baseOffset) verilir; ikisi birden verilmez."
+
+
+def level_bound(f, levels=None):
+    """A ramp bound to its level with its base read from it (docs/adr/0723 §2): the level's elevation plus its offset,
+    added as doubles in that order."""
+    if f.get("baseOffset") is None:
+        return
+    level = (f.get("arch") or {}).get("level")
+    for lv in levels or LEVELS:
+        if lv["id"] == level:
+            f["base"] = float(lv["elevation"]) + float(f["baseOffset"])
 
 
 def fpts(pts):
@@ -976,7 +998,7 @@ def stairs_create(d, inp, conflict=False):
 
 def ramp_fields(n):
     r = {"pts": n["pts"], "width": n["width"], "rise": n["rise"]}
-    for k in ("slope", "base", "landing", "railings", "arch"):
+    for k in ("slope", "base", "baseOffset", "landing", "railings", "arch"):
         if n.get(k) is not None:
             r[k] = n[k]
     return r
@@ -1035,6 +1057,44 @@ def ramp_fitted(r, at):
     return r["pts"][:-1] + [{"x": got[0], "y": got[1]}], r["pts"][:-1] + [{"x": exact[0], "y": exact[1]}]
 
 
+def float_ramp_landings(pts, rise, slope, land, max_run, fit):
+    """docs/adr/0723 §1, written from the ADR: a straight corner `max_run` and half a landing past the start of each
+    sloped run that is longer than `max_run` (landings at every inner corner, those that touch made one); with `fit`
+    the last point is moved again first, as `float_ramp_fit` does."""
+    import math
+    eps = 1e-9
+    pts = [tuple(p) for p in pts]
+    for _ in range(1000):
+        if fit:
+            end = float_ramp_fit(pts, rise, slope, land)
+            if end is not None:
+                pts[-1] = end
+        at = [0.0]
+        for a, b in zip(pts, pts[1:]):
+            at.append(at[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+        length = at[-1]
+        lands = []
+        for c in at[1:-1]:
+            a, b = max(c - land / 2.0, 0.0), min(c + land / 2.0, length)
+            if lands and a < lands[-1][1] + eps:
+                lands[-1][1] = max(lands[-1][1], b)
+            else:
+                lands.append([a, b])
+        start, cut = 0.0, None
+        for a, b in lands + [[length, length]]:
+            if a - start > max_run + eps and start + max_run + land / 2.0 < a - eps:
+                cut = start + max_run + land / 2.0
+                break
+            start = b
+        if cut is None:
+            return pts
+        k = next((i for i, c in enumerate(at) if c > cut), len(pts) - 1)
+        t = (cut - at[k - 1]) / (at[k] - at[k - 1])
+        a, b = pts[k - 1], pts[k]
+        pts.insert(max(k, 1), (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+    return pts
+
+
 def ramps_create(d, inp, conflict=False):
     if not inp["ramps"]:
         return refusal("no_objects", "Yazılacak rampa verilmedi. En az bir rampanın orta çizgisini ve ölçülerini verin.", "ramps"), None
@@ -1043,9 +1103,12 @@ def ramps_create(d, inp, conflict=False):
         at = f"ramps[{i}]"
         r = points_not_finite(n["pts"], at) or finite_each(
             [(n["width"], "width", "Genişlik"), (n["rise"], "rise", "Yükseklik"), (n.get("slope"), "slope", "Eğim"),
-             (n.get("base"), "base", "Başlangıç kotu"), (n.get("landing"), "landing", "Sahanlık")], at)
+             (n.get("base"), "base", "Başlangıç kotu"), (n.get("baseOffset"), "baseOffset", "Kata göre başlangıç kotu"),
+             (n.get("landing"), "landing", "Sahanlık")], at)
         if r:
             return r, None
+        if n.get("base") is not None and n.get("baseOffset") is not None:
+            return refusal("invalid_ramp", BOTH_BASES, f"{at}.baseOffset"), None
         f = ramp_fields(n)
         r = ramp_problem(f, at)
         if r:
@@ -1060,9 +1123,20 @@ def ramps_create(d, inp, conflict=False):
             r = ramp_problem(f, at)
             if r:
                 return r, None
+        if n.get("maxRun") is not None:
+            m = n["maxRun"]
+            if not (m > 0.0 and m <= 100.0):
+                return refusal("invalid_ramp", f"En uzun kol 0'dan büyük ve en çok 100 m olmalı; {str(int(m)) if float(m).is_integer() else repr(float(m))} verildi.", f"{at}.maxRun"), None
+            got = float_ramp_landings([(p["x"], p["y"]) for p in f["pts"]], f["rise"], f.get("slope"), f.get("landing", f["width"]), m, n.get("fit") is True)
+            f["pts"] = [{"x": x, "y": y} for x, y in got]
+            exact = {**exact, "pts": f["pts"]}
+            r = ramp_problem(f, at)
+            if r:
+                return r, None
         r = level_check(f.get("arch"), f"{at}.arch.level")
         if r:
             return r, None
+        level_bound(f)
         warnings += ramp_warnings(exact, at)
         made.append(f)
     return finish(inp, conflict, made, warnings)
@@ -1468,6 +1542,15 @@ def ramp_design_cases():
         ("inen rampa: eksi kot farkı da eğime göre biter", rdesign(pts=[P(0, 40), P(0, 37)], rise=-0.3, slope=5.0, base=0.3)),
         ("eğik (3-4-5) rampa eğime göre biter", rdesign(pts=[P(0, 40), P(0.75, 41)], slope=8.0)),
         ("ters yöne çizilen rampa", rdesign(pts=[P(10, 40), P(9, 40)])),
+        ("en uzun kol 9 m: 24 m eğimli kola iki ara sahanlık", rdesign(pts=[P(0, 40), P(30, 40)], rise=1.2, slope=5.0, landing=1.5, maxRun=9.0)),
+        ("kolları kısa rampa en uzun kolla değişmez", rdesign(maxRun=9.0)),
+        ("eğime göre bitmeyen uzun rampa da bölünür", rdesign(pts=[P(0, 40), P(20, 40)], rise=0.8, slope=None, fit=None, maxRun=6.0)),
+        ("L rampada dönüşten sonra kalan uzun kol bölünür", rdesign(pts=[P(0, 40), P(6, 40), P(6, 60)], rise=1.0, slope=5.0, maxRun=8.0)),
+        ("inen uzun rampa ara sahanlıkla", rdesign(pts=[P(0, 40), P(-30, 40)], rise=-1.2, slope=5.0, base=1.2, maxRun=9.0)),
+        ("tam en uzun kol kadar olan kol bölünmez", rdesign(pts=[P(0, 40), P(10, 40)], rise=0.5, slope=5.0, maxRun=10.0)),
+        ("sıfır en uzun kol reddedilir", rdesign(maxRun=0.0)),
+        ("eksi en uzun kol reddedilir", rdesign(maxRun=-1.0)),
+        ("100 m'yi aşan en uzun kol reddedilir", rdesign(maxRun=101.0)),
         ("kısa yol eğime göre uzar", rdesign(pts=[P(0, 40), P(2, 40)])),
         ("uzun yol eğime göre kısalır", rdesign(pts=[P(0, 40), P(20, 40)])),
         ("başlangıç kotlu rampa: +0.30'dan +0.80'e", rdesign(base=0.3)),
@@ -1525,6 +1608,90 @@ def ramp_cases():
     common_refusals(c, RAMPS, ramp())
     return c.cases
 
+def ramp_level_cases():
+    """docs/adr/0723 §2: a ramp's start bound to its level: written, followed when the level rises, set and freed."""
+    c = Cases()
+
+    def bound(level="zemin", offset=0.0, **kw):
+        return ramp(arch={"level": level}, baseOffset=offset, **kw)
+
+    life(c, RAMPS, bound("kat-1", -0.15), "1. katın 15 cm altından çıkan kata bağlı rampa")
+    for name, inp in [
+        ("zemin kata bağlı rampa: başlangıcı katın kotu", bound()),
+        ("1. kata bağlı rampa: başlangıcı 1. katın kotu", bound("kat-1")),
+        ("1. kattan inen kata bağlı rampa", bound("kat-1", 0.0, pts=[P(0, 40), P(-10, 40)], rise=-0.5)),
+        ("kata bağlı, eğime göre biten ve en uzun kollu rampa", bound("kat-1", 0.3, pts=[P(0, 40), P(30, 40)], rise=1.2,
+                                                                       landing=1.5, fit=True, maxRun=9.0)),
+        ("kata bağlı, kotu katın 2 cm üstünde başlayan rampa", bound("zemin", 0.02)),
+    ]:
+        c.add(name, [create_step(Drawing(), RAMPS, "execute", inp)])
+    nan = bound("kat-1", 0.0)
+    refusals(c, RAMPS, [
+        ("başlangıç kotu ve kata göre fark birlikte reddedilir", bound("kat-1", 0.1, base=3.0), {}),
+        ("katsız rampa kata bağlanamaz", ramp(baseOffset=0.0), {}),
+        ("olmayan kata bağlı rampa reddedilir", bound("yok"), {}),
+        ("kata göre fark 1000 m'den çok reddedilir", bound("kat-1", -1000.5), {}),
+        ("sonsuz kata göre fark reddedilir", nan, {"non_finite": {"ramps[0].baseOffset": "Infinity"}}),
+    ])
+    # The level raised (a project setting, no undo step): a bound ramp's start follows it in place; one with a base of
+    # its own stays.
+    raised = [LEVELS[0], {**LEVELS[1], "elevation": 6.5}]
+    for name, inp in [
+        ("kat yükselince bağlı rampanın başlangıcı da yükselir, geri alma adımı olmadan", bound("kat-1", -0.15)),
+        ("kat yükselince kendi kotlu rampa yerinde kalır", ramp(arch={"level": "kat-1"}, base=0.45)),
+    ]:
+        d = Drawing()
+        made = create_step(d, RAMPS, "execute", inp)
+        f = copy.deepcopy(d.objs[NEW][2])
+        level_bound(f, raised)
+        after = {"kind": "ramp", "id": NEW, "layerId": "merdiven", "attrs": {}, **f}
+        c.add(name, [made,
+                     {"op": "execute", "command": "cad.settings.set", "input": {"arch": {"levels": raised}}, "result": "$any",
+                      "within": 1e-9,
+                      "expect": {"ids": IDS + [NEW], "entities": {str(NEW): after}, "settings": {"arch": {"levels": raised}},
+                                 "canUndo": True, "canRedo": False}},
+                     {"op": "undo", "returns": "Rampa", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+                     {"op": "redo", "returns": "Rampa", "within": 1e-9,
+                      "expect": {"ids": IDS + [NEW], "entities": {str(NEW): after}}}])
+
+    def one(d, uids, op, **kw):
+        return edit_step(d, "execute", {"uids": uids, "operation": op}, **kw)
+
+    def with_bound(level="zemin", offset=0.1):
+        d = Drawing()
+        return d, create_step(d, RAMPS, "execute", bound(level, offset), with_command=True)
+
+    d = Drawing()
+    c.add("Değiştir: rampa kata bağlanır, başlangıcı katın kotu artı fark",
+          [one(d, [uid_of(9)], {"kind": "set", "level": "kat-1", "baseOffset": 0.2})])
+    d = Drawing()
+    c.add("Değiştir: kata göre fark katsız rampada reddedilir", [one(d, [uid_of(9)], {"kind": "set", "baseOffset": 0.2})])
+    d, made = with_bound()
+    c.add("Değiştir: null kat bağını kaldırır, başlangıç kotu yerinde kalır",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "baseOffset": None})])
+    d, made = with_bound()
+    c.add("Değiştir: kendi başlangıç kotu yazılınca kat bağı kalkar", [made, one(d, [uid_of(NEW)], {"kind": "set", "base": 0.8})])
+    d, made = with_bound()
+    c.add("Değiştir: bağlı rampanın katı değişince başlangıcı yeni katı izler",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "level": "kat-1"})])
+    d, made = with_bound()
+    c.add("Değiştir: bağlı rampanın farkı değişince başlangıcı da değişir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "baseOffset": -0.3})])
+    d, made = with_bound()
+    c.add("Değiştir: bağlı rampanın katı kaldırılamaz", [made, one(d, [uid_of(NEW)], {"kind": "set", "level": None})])
+    d, made = with_bound()
+    c.add("Değiştir: başlangıç kotu ve fark birlikte reddedilir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "base": 1.0, "baseOffset": 0.0})])
+    d = Drawing()
+    c.add("Değiştir: merdivene kata göre fark reddedilir", [one(d, [uid_of(8)], {"kind": "set", "baseOffset": 0.0})])
+    d, made = with_bound()
+    c.add("Değiştir: sonsuz kata göre fark reddedilir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "baseOffset": 0.0}, non_finite={"operation.baseOffset": "NaN"})])
+    d, made = with_bound()
+    c.add("Değiştir: bağlı rampanın planı yeni başlangıcı gösterir",
+          [made, edit_step(d, "plan", {"uids": [uid_of(NEW)], "operation": {"kind": "set", "level": "kat-1", "baseOffset": 0.5}})])
+    return c.cases
+
 # ── cad.arch.edit ──────────────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -1535,14 +1702,14 @@ FIELDS = [  # wire name, kinds, nullable
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
-    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True),
+    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp",), True),
     ("level", ("grid", "column", "stair", "ramp"), True), ("phase", ("grid", "column", "stair", "ramp"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("width", "Genişlik"), ("depth", "Boy"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"), ("rise", "Yükseklik"),
-           ("slope", "Eğim"), ("base", "Başlangıç kotu")]
+           ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu")]
 
 
 def set_field(f, name, value):
@@ -1559,6 +1726,9 @@ def set_field(f, name, value):
         else:
             f.pop("arch", None)
         return
+    if name == "base":
+        # A base of its own frees a ramp from its level (docs/adr/0723 §2).
+        f.pop("baseOffset", None)
     if value is None or DEFAULTS.get(name, object()) == value:
         f.pop(name, None)
     else:
@@ -1603,6 +1773,8 @@ def edit(d, inp, conflict=False):
             v = op.get(n)
             if v is not None and not math.isfinite(v):
                 return not_finite(name, f"operation.{n}"), None
+        if "base" in op and "baseOffset" in op:
+            return refusal("invalid_ramp", BOTH_BASES, "operation.baseOffset"), None
         for i, oid in found:
             kind, ly, f = d.objs[oid]
             f = copy.deepcopy(f)
@@ -1623,6 +1795,8 @@ def edit(d, inp, conflict=False):
             r = level_check(f.get("arch"), "operation.level")
             if r:
                 return r, None
+            if kind == "ramp":
+                level_bound(f)
             out.append((oid, f))
     elif op["kind"] == "renumber":
         kinds = [d.objs[oid][0] for _, oid in found]
@@ -1827,6 +2001,7 @@ def files():
         "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
+        "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
         "cad.grids.create.system.json": document(GRIDS, "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)", system_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }

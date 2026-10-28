@@ -905,8 +905,13 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık),
     kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler
     (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler,
-    genişlikleri ve kaplamalarıyla. levels, phases, usages ve layers verilen kat, evre,
-    kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+    genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723 §3): kat, genişlik, kot
+    farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa
+    yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık
+    sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata
+    bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
+    rampRailingLength. levels, phases, usages ve layers verilen kat, evre, kullanım ve
+    katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -947,9 +952,13 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre,
         hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir,
         toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı
-        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. levels, phases, usages ve
-        layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız
-        mahaller).
+        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723
+        §3): kat, genişlik, kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli
+        uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta
+        çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç
+        ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu;
+        toplamlarda rampArea ve rampRailingLength. levels, phases, usages ve layers verilen
+        kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
 
         Args:
             doc: The drawing it works on.

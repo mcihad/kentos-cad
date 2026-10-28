@@ -20,9 +20,14 @@ rise: number,
  */
 slope?: number, 
 /**
- * Its start's elevation; absent: 0.
+ * Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.
  */
 base?: number, 
+/**
+ * Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation
+ * plus this, written again whenever the level's elevation changes; absent: `base` is its own.
+ */
+baseOffset?: number, 
 /**
  * A landing's length at a turn; absent: the width.
  */

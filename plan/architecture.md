@@ -1017,7 +1017,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: sayı/gerçek geometri tutarlılığı, başlangıç/bitiş yönü, aynala,
   sahanlık çakışması, pafta gösterimi ve 2B ölçülebilir çıktı.
 
-### ARCH-STAIR-02 — Rampa ve korkuluk [~]
+### ARCH-STAIR-02 — Rampa ve korkuluk [x]
 
 - [x] Eğim ve korkuluk dilimi [ADR0705](../docs/adr/0705-ramps-by-slope-and-railings.md):
   rampa eğimden tasarlanır (`fit`: son kol |kot farkı| ÷ eğim uzunluğunda biter,
@@ -1025,9 +1025,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   sol/sağ/iki yan korkuluk taşır (KCAD şema 115, opt-in), merdivende kesmenin
   üstü kesikli, iç korkuluk boşluğu dolanır. Araçlarda ve Öznitelikler'de
   görünür. 38 çekirdek, 22+6 komut durumu bağımsız başvurudan; KCAD/Python/
-  araç testleri; gerçek GUI resimleri (`.run/shots/arac-rampa-*`). Kendiliğinden
-  ara sahanlık, kaynak kot izleme, metraj/pafta kabulü ve erişilebilirlik
-  profili açık.
+  araç testleri; gerçek GUI resimleri (`.run/shots/arac-rampa-*`).
+- [x] Ara sahanlık, kata bağlı başlangıç, metraj ve erişilebilirlik profili
+  [ADR0723](../docs/adr/0723-ramp-landings-levels-accessibility.md): `maxRun`
+  (En uzun kol) aşan kola düz köşe ve sahanlık ekler; `baseOffset` başlangıcı
+  katın kotu + fark yapar, kat değişince belge izler (KCAD 124), araçta
+  Başlangıç kotu (Z) etkin katı izler; Metraj'da rampa satırları ve Rampalar
+  sekmesi; sürümlü `erisilebilirlik-rampa/1` (TS 9111 özeti, mevzuat onayı
+  değil) ile Denetim'de eğim bandı, uzun kol, kısa sahanlık ve dar dönüş, son
+  ikisi Düzelt'li; planda okun yanında eğim yazısı. 31+27+22+24 ortak durum
+  bağımsız başvurulardan, gerçek PDF (`pdftotext`: %5.00, kat yükselince
+  +3.25 → +4.45), gerçek GUI resimleri (`.run/shots/arac-rampa-sahanlik-*`).
+  Genişlik/küpeşte profili, döner rampa ve kesit/3B açık.
 
 - Eğim, uzunluk, kot farkı ve sahanlık arasından açık sürücü parametreler;
   çıkış yönü, kot etiketi ve korkuluk kenarı.
@@ -1225,6 +1234,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-28 | ARCH-STAIR-02 / ADR0723 | Ara sahanlık (`maxRun`), kata bağlı başlangıç (`baseOffset`, KCAD 124, izleyici), Metraj'da rampa satırları ve Rampalar sekmesi, Denetim'de erişilebilirlik profili (`erisilebilirlik-rampa/1`) ve Düzelt, planda eğim yazısı. 31+27+22+24 ortak durum, gerçek PDF, uygulama/alan/etkileşim/masaüstü (1356)/KCAD/Python (374)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
 | 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |
 | 2026-10-27 | ARCH-EDIT-01 / ADR0710 | Duvarın geçici ölçüsü: iki yanda paralel duvara net mesafe, sayıya bas-yaz-Enter kenarı kaydırır, köşeler/T'ler/köşe noktaları izler, açıklıklar yerinde; `cad.walls.edit` shift/distance, `cad.walls.distances`. 22+32 durum, 4 araç testi, gerçek GUI resimleri. | [~] Duvar dilimi; kolon, duvar boyu ve kilitli referans açık |

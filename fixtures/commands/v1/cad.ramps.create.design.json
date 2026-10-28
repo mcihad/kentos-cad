@@ -1064,6 +1064,697 @@
       ]
     },
     {
+      "name": "en uzun kol 9 m: 24 m eğimli kola iki ara sahanlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2,
+                "slope": 5.0,
+                "fit": true,
+                "landing": 1.5,
+                "maxRun": 9.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 9.75,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 20.25,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 26.999999999999996,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2,
+                "slope": 5.0,
+                "landing": 1.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kolları kısa rampa en uzun kolla değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 6.25,
+                "fit": true,
+                "maxRun": 9.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 6.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eğime göre bitmeyen uzun rampa da bölünür",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 20.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.8,
+                "maxRun": 6.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.75,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 14.25,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 20.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.8
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "L rampada dönüşten sonra kalan uzun kol bölünür",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 60.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.0,
+                "slope": 5.0,
+                "fit": true,
+                "maxRun": 8.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 49.5
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 57.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.0,
+                "slope": 5.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "inen uzun rampa ara sahanlıkla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -30.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": -1.2,
+                "slope": 5.0,
+                "fit": true,
+                "base": 1.2,
+                "maxRun": 9.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "ramp_slope_mismatch",
+                "message": "Rampanın eğimi %5.00 verildi; yükseklik ve eğimli uzunlukla %-5.00.",
+                "path": "ramps[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -9.75,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -20.25,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -26.999999999999996,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": -1.2,
+                "slope": 5.0,
+                "base": 1.2
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tam en uzun kol kadar olan kol bölünmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "fit": true,
+                "maxRun": 10.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır en uzun kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 6.25,
+                "fit": true,
+                "maxRun": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "En uzun kol 0'dan büyük ve en çok 100 m olmalı; 0 verildi.",
+              "path": "ramps[0].maxRun"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi en uzun kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 6.25,
+                "fit": true,
+                "maxRun": -1.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "En uzun kol 0'dan büyük ve en çok 100 m olmalı; -1 verildi.",
+              "path": "ramps[0].maxRun"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "100 m'yi aşan en uzun kol reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 6.25,
+                "fit": true,
+                "maxRun": 101.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "En uzun kol 0'dan büyük ve en çok 100 m olmalı; 101 verildi.",
+              "path": "ramps[0].maxRun"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "kısa yol eğime göre uzar",
       "steps": [
         {

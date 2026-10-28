@@ -1111,7 +1111,6 @@ pub fn level_text(v: f64) -> String {
     }
 }
 
-/// A ramp's sloped length: its walking line less its landings.
 /// A ramp's landings (docs/adr/0705 §1): the walking line's at its turns, overlapping ones made one so that a short
 /// middle flight's landings are not counted twice.
 pub fn ramp_landings(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
@@ -1125,9 +1124,110 @@ pub fn ramp_landings(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
     out
 }
 
+/// A ramp's sloped length: its walking line less its landings.
 pub fn ramp_run(walk: &Walk, spec: &RampSpec) -> f64 {
     let land: f64 = ramp_landings(walk, spec).iter().map(|(a, b)| b - a).sum();
     walk.length() - land
+}
+
+/// A ramp's sloped runs' lengths in order (docs/adr/0723 §4): between its start, its landings and its end, those of
+/// no length left out.
+pub fn ramp_runs(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
+    let length = walk.length();
+    let mut out = Vec::new();
+    let mut start = 0.0;
+    for (a, b) in ramp_landings(walk, spec).into_iter().chain(std::iter::once((length, length))) {
+        if a - start > EPS {
+            out.push((start, a));
+        }
+        start = b;
+    }
+    out
+}
+
+/// The inner points where a walking line turns (its direction changes; a straight corner, as `maxRun` adds, does not).
+pub fn turn_points(pts: &[Vec2]) -> Vec<usize> {
+    (1..pts.len().saturating_sub(1))
+        .filter(|&k| {
+            let (a, b, c) = (pts[k - 1], pts[k], pts[k + 1]);
+            let (u, v) = (unit(Vec2::new(b.x - a.x, b.y - a.y)), unit(Vec2::new(c.x - b.x, c.y - b.y)));
+            (u.x * v.y - u.y * v.x).abs() > 1e-9 || u.x * v.x + u.y * v.y < 0.0
+        })
+        .collect()
+}
+
+/// A ramp measured (docs/adr/0723 §3).
+#[derive(Clone, Debug, PartialEq)]
+pub struct RampMeasure {
+    /// Its centre line's length, its landings in.
+    pub length: f64,
+    /// Its sloped runs' length: its centre line less its landings.
+    pub run: f64,
+    /// Its landings, those that touch made one.
+    pub landings: usize,
+    /// Its band's plan area: the polygon of [`band`], mitred at its turns.
+    pub area: f64,
+    /// Its railings' lines' length ([`ramp_railings`]).
+    pub railing_length: f64,
+}
+
+/// A ramp's lengths, landings, plan area and railings (docs/adr/0723 §3).
+pub fn ramp_measure(pts: &[Vec2], spec: &RampSpec) -> RampMeasure {
+    let walk = Walk::of(pts);
+    let ring = band(pts, spec.width / 2.0);
+    let n = ring.len();
+    let twice: f64 = (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            a.x * b.y - b.x * a.y
+        })
+        .sum();
+    let railing_length = ramp_railings(pts, spec)
+        .iter()
+        .map(|(line, _)| line.windows(2).map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y)).sum::<f64>())
+        .sum();
+    RampMeasure {
+        length: walk.length(),
+        run: ramp_run(&walk, spec),
+        landings: ramp_landings(&walk, spec).len(),
+        area: (twice / 2.0).abs(),
+        railing_length,
+    }
+}
+
+/// A ramp's line with a landing wherever a sloped run would be longer than `max_run` (docs/adr/0723 §1): a straight
+/// corner `max_run` and half a landing past the run's start, the landing (`spec.landing()`) centred on it as at every
+/// turn. With `fit` the last point is moved again after each landing so the sloped length stays its rise over its
+/// slope. Unchanged when `max_run` is not positive or when no run is too long; at most 1000 corners are added.
+pub fn ramp_with_landings(pts: &[Vec2], spec: &RampSpec, max_run: f64, fit: bool) -> Vec<Vec2> {
+    let mut pts = pts.to_vec();
+    if !(max_run > 0.0) || !max_run.is_finite() || pts.len() < 2 {
+        return pts;
+    }
+    let half = spec.landing() / 2.0;
+    for _ in 0..1000 {
+        if fit && let Some(end) = ramp_fit_end(&pts, spec) {
+            let n = pts.len();
+            pts[n - 1] = end;
+        }
+        let walk = Walk::of(&pts);
+        let length = walk.length();
+        let lands = ramp_landings(&walk, spec);
+        let mut start = 0.0;
+        let mut cut = None;
+        for (a, b) in lands.iter().copied().chain(std::iter::once((length, length))) {
+            if a - start > max_run + EPS && start + max_run + half < a - EPS {
+                cut = Some(start + max_run + half);
+                break;
+            }
+            start = b;
+        }
+        let Some(at) = cut else { break };
+        let (p, _) = walk.point(at);
+        let k = walk.at.iter().position(|&c| c > at).unwrap_or(pts.len() - 1);
+        pts.insert(k.max(1), p);
+    }
+    pts
 }
 
 /// Where a ramp's line ends for its sloped length to be its rise over its slope (docs/adr/0705 §1, `fit`): its last
@@ -1161,8 +1261,8 @@ pub fn ramp_fit_end(pts: &[Vec2], spec: &RampSpec) -> Option<Vec2> {
     Some(Vec2::new(prev.x + d.x * t, prev.y + d.y * t))
 }
 
-/// A ramp's pieces at 1:`scale`: its band, its landings' edges, its railings, the arrow up it and its levels at its
-/// ends.
+/// A ramp's pieces at 1:`scale`: its band, its landings' edges, its railings, the arrow up it, its slope beside the
+/// arrow and its levels at its ends.
 pub fn ramp_pieces(pts: &[Vec2], spec: &RampSpec, scale: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -1180,6 +1280,26 @@ pub fn ramp_pieces(pts: &[Vec2], spec: &RampSpec, scale: f64) -> Vec<Piece> {
         out.push(piece(s));
     }
     let h = LABEL_MM * scale / 1000.0;
+    // Its slope as drawn (docs/adr/0723 §5): beside its arrow, on its left, at its longest sloped run's middle.
+    let run = ramp_run(&walk, spec);
+    if run > EPS && spec.rise != 0.0 {
+        let mut longest: Option<(f64, f64)> = None;
+        for (a, b) in ramp_runs(&walk, spec) {
+            if longest.is_none_or(|(x, y)| b - a > y - x + EPS) {
+                longest = Some((a, b));
+            }
+        }
+        if let Some((a, b)) = longest {
+            let (p, d) = walk.point((a + b) / 2.0);
+            let n = left(d);
+            out.push(piece(text(
+                Vec2::new(p.x + n.x * h * 1.2, p.y + n.y * h * 1.2),
+                format!("%{}", fixed(spec.rise.abs() / run * 100.0, 2)),
+                h,
+                TextAlign::MiddleCenter,
+            )));
+        }
+    }
     let base = spec.base.unwrap_or(0.0);
     let (p0, d0) = walk.point(0.0);
     let (p1, d1) = walk.point(walk.length());

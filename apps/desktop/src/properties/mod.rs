@@ -179,6 +179,8 @@ pub enum ArchField {
     Rise,
     Slope,
     Base,
+    /// A ramp's start over its level's (docs/adr/0723 §2); empty frees it from its level.
+    BaseOffset,
     /// A tag's template (docs/adr/0344 §5): `\n` its line breaks; empty its kind's.
     TagContent,
     /// A tag's words' height on paper, mm; empty 2.5.
@@ -1387,7 +1389,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             let words = (!t.is_empty()).then(|| t.to_owned());
             let physical = matches!(which, ArchField::Width | ArchField::Depth |
                 ArchField::RiserHeight | ArchField::Tread | ArchField::Landing |
-                ArchField::Rise | ArchField::Base);
+                ArchField::Rise | ArchField::Base | ArchField::BaseOffset);
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
                     return vec!["Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into()];
@@ -1411,6 +1413,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::Landing => ArchChange { landing: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::Slope => ArchChange { slope: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::Base => ArchChange { base: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::BaseOffset => ArchChange { base_offset: Some(words.map(|_| n)), ..Default::default() },
                 _ if words.is_none() => return Vec::new(),
                 ArchField::Width => ArchChange { width: Some(n), ..Default::default() },
                 ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },

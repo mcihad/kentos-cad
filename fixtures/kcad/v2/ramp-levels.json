@@ -1,0 +1,136 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kata bağlı rampalar: zemin ve 1. kat",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.25
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.25,
+          "height": 3.25
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "ramp",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        }
+      ],
+      "width": 1.5,
+      "rise": 0.6,
+      "slope": 5.0,
+      "base": 0.0,
+      "baseOffset": 0.0,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "ramp",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 5.0
+        },
+        {
+          "x": 8.0,
+          "y": 5.0
+        },
+        {
+          "x": 8.0,
+          "y": 9.0
+        }
+      ],
+      "width": 1.2,
+      "rise": -0.4,
+      "base": 3.1,
+      "baseOffset": -0.15,
+      "landing": 1.5,
+      "arch": {
+        "level": "kat-1"
+      }
+    },
+    {
+      "kind": "ramp",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 15.0,
+          "y": 0.0
+        },
+        {
+          "x": 21.0,
+          "y": 0.0
+        }
+      ],
+      "width": 1.5,
+      "rise": 0.3,
+      "base": 0.45,
+      "arch": {
+        "level": "zemin"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-7230-7000-8000-000000000001",
+    "0192f5a1-7230-7000-8000-000000000002",
+    "0192f5a1-7230-7000-8000-000000000003"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

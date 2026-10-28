@@ -72,6 +72,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.rise.is_some(), "rise", RAMP);
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
+    add(c.base_offset.is_some(), "baseOffset", RAMP);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
     out
@@ -100,6 +101,7 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (c.rise, "rise", "Yükseklik"),
         (flat(c.slope), "slope", "Eğim"),
         (flat(c.base), "base", "Başlangıç kotu"),
+        (flat(c.base_offset), "baseOffset", "Kata göre başlangıç kotu"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -192,7 +194,13 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.slope = v;
             }
             if let Some(v) = c.base {
+                // A base of its own frees the ramp from its level (docs/adr/0723 §2).
                 f.base = v;
+                f.base_offset = None;
+            }
+            if let Some(v) = c.base_offset {
+                // Freed from its level, its base stays where it is.
+                f.base_offset = v;
             }
             if let Some(v) = c.landing {
                 f.landing = v;
@@ -244,7 +252,6 @@ fn settled(doc: &Document, e: Entity, path: &str) -> Result<(Entity, Vec<Command
         }
         Entity::Ramp(r) => {
             ramp_valid(&r.ramp, path)?;
-            warnings = arch_elements::ramp_warnings(&r.ramp, path);
             Entity::Ramp(r)
         }
         other => other,
@@ -252,6 +259,15 @@ fn settled(doc: &Document, e: Entity, path: &str) -> Result<(Entity, Vec<Command
     if let Some(arch) = arch_elements::arch_of(&e) {
         crate::walls::level_known(doc, arch, "operation.level")?;
     }
+    let e = match e {
+        // Its base read from its level, now known (docs/adr/0723 §2), before its warnings.
+        Entity::Ramp(mut r) => {
+            arch_elements::level_bound(doc, &mut r.ramp);
+            warnings = arch_elements::ramp_warnings(&r.ramp, path);
+            Entity::Ramp(r)
+        }
+        other => other,
+    };
     Ok((e, warnings))
 }
 
@@ -293,6 +309,14 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 }
             }
             numbers(c)?;
+            if c.base.is_some() && c.base_offset.is_some() {
+                return Err(fail(
+                    codes::INVALID_RAMP,
+                    "Başlangıç kotu ya kendisi (base) ya da kata göre (baseOffset) verilir; ikisi birden verilmez."
+                        .into(),
+                    "operation.baseOffset",
+                ));
+            }
             for (at, slot, e, _) in &found {
                 let (e, mut w) = settled(doc, changed(e, c), &format!("uids[{at}]"))?;
                 warnings.append(&mut w);

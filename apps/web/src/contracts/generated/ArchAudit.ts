@@ -6,7 +6,7 @@ import type { ArchAuditCheck } from "./ArchAuditCheck";
  * the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
  *
  * Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
- * zero, in the same order), `level_not_found` (`level`).
+ * zero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).
  */
 export type ArchAudit = { 
 /**
@@ -29,4 +29,9 @@ minWidth?: number,
  * The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
  * absent: the project's ground level (the one at elevation 0, else its first).
  */
-level?: string, };
+level?: string, 
+/**
+ * The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
+ * ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
+ */
+profile?: string, };

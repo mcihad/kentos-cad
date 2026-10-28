@@ -359,11 +359,17 @@ pub struct RampFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub slope: Option<f64>,
-    /// Its start's elevation; absent: 0.
+    /// Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<f64>,
+    /// Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation
+    /// plus this, written again whenever the level's elevation changes; absent: `base` is its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base_offset: Option<f64>,
     /// A landing's length at a turn; absent: the width.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -613,6 +619,25 @@ impl RampFields {
         {
             return Some(("base".into(), "Rampanın başlangıç kotu sonlu olmalı.".into()));
         }
+        if let Some(o) = self.base_offset {
+            if !(o.is_finite() && o.abs() <= crate::MAX_LEVEL_OFFSET) {
+                return Some((
+                    "baseOffset".into(),
+                    format!(
+                        "Rampanın kata göre başlangıç kotu {o}; sonlu ve en çok {} m olmalı.",
+                        crate::MAX_LEVEL_OFFSET
+                    ),
+                ));
+            }
+            if self.arch.level.is_none() {
+                return Some((
+                    "baseOffset".into(),
+                    "Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok. Rampaya kat verin ya da \
+                     başlangıç kotunu kendisi olarak yazın."
+                        .into(),
+                ));
+            }
+        }
         if let Some(l) = self.landing
             && let Some(found) = positive(l, "landing", "Sahanlığın boyu", 100.0)
         {
@@ -624,6 +649,14 @@ impl RampFields {
     /// Its landing's length: its own, else its width.
     pub fn landing(&self) -> f64 {
         self.landing.unwrap_or(self.width)
+    }
+
+    /// Its start's elevation read from its level among `levels` (docs/adr/0723 §2): the level's elevation plus its
+    /// offset; none when it is not bound to its level or the project lacks the level.
+    pub fn bound_base(&self, levels: &[crate::ArchLevel]) -> Option<f64> {
+        let offset = self.base_offset?;
+        let id = self.arch.level.as_deref()?;
+        levels.iter().find(|l| l.id == id).map(|l| l.elevation + offset)
     }
 }
 

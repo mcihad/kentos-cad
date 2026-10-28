@@ -1959,6 +1959,7 @@ __all__ = [
     "RailingsName",
     "RaiseShapeElevation",
     "RampEntity",
+    "RampRow",
     "RampsCreate",
     "RampsCreated",
     "RampsPlan",

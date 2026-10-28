@@ -129,6 +129,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve duvar stili değişince yüze bağlı ölçülerin izlemesi; ortak durumlar `cad.north.create.json`,
   `cad.revisions.mark.json`, `cad.legends.materials.json`, `cad.tables.edit.json`,
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-STAIR-02 / ADR0723: Rampa. Web'in rampası `maxRun`'la ara sahanlık açmalı, `baseOffset`'le (KCAD 124) katına
+  bağlanıp kat kotu değişince başlangıcını izlemeli (Rampa aracında En uzun kol (L) ve Başlangıç kotu (Z),
+  Öznitelikler'de Kata göre), planında okun yanında eğim yazısını çizmeli; Metraj'da rampa satırları ve Rampalar
+  sekmesi, Denetim'de Erişilebilirlik (`profile`, `erisilebilirlik-rampa/1`) ve bulguların Düzelt'i; ortak durumlar
+  `cad.ramps.create.design.json`, `cad.ramps.create.levels.json`, `cad.spaces.quantities.ramps.json`,
+  `cad.arch.audit.accessibility.json` ve `fixtures/arch/v1/cases.json` ile sınanmalı.
 - ARCH-ELEM-01 / ADR0722: Döşeme, balkon, teras. Web'in belgesi `slab` türünü (KCAD 123, tipli sütunlarda tür 30)
   okuyup yazmalı, mahalin şekliyle çizmeli ve kenarın çizgilerini (`edge.runs`) serbest kenarlardan yeniden
   türetmeli; `cad.slabs.create`, `cad.slabs.edit` işleyicileri, Döşeme aracı (T/S/K/F/E/W/Ö/M/D), Öznitelikler'in

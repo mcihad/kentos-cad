@@ -78,7 +78,8 @@ pub(crate) struct Store {
     tags: BTreeSet<Slot>,
     /// The view marks (docs/adr/0345 §2): written again when their targets change.
     viewmarks: BTreeSet<Slot>,
-    /// The Kots bound to a level (docs/adr/0721 §2): written again when the levels change.
+    /// The Kots bound to a level (docs/adr/0721 §2) and the ramps bound to theirs (docs/adr/0723 §2): written again
+    /// when the levels change.
     level_marks: BTreeSet<Slot>,
 }
 
@@ -313,7 +314,7 @@ impl Store {
         if matches!(&*stored.entity, Entity::ViewMark(_)) {
             self.viewmarks.insert(stored.slot());
         }
-        if matches!(&*stored.entity, Entity::Dimension(d) if d.level.is_some()) {
+        if crate::level_marks::level_bound(&stored.entity) {
             self.level_marks.insert(stored.slot());
         }
         if let Some((of, always)) = fields_of(stored) {

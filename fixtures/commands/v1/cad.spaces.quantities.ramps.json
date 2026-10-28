@@ -1,0 +1,2419 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.spaces.quantities",
+  "commandVersion": 1,
+  "title": "Metraj: rampaların satırları (eğimli uzunluk, sahanlık, plan alanı, eğim, kotlar, korkuluk); süzgeçler; retler",
+  "note": "ADR 0723 §3. Beklenenler scripts/fixtures/ramp_quantity_cases.py'nin ADR'den yazılmış kurallarından (ramp_geometry.py), KentOS kodu olmadan. Kurulumdaki çizimde 8 rampa ve bir çizgi var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Rampalar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "rampa",
+        "name": "Rampa",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "rampa",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "ramp",
+        "id": 1,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 12.0,
+            "y": 0.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.6,
+        "slope": 5.0,
+        "railings": "both",
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 2,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 10.0
+          },
+          {
+            "x": 6.0,
+            "y": 10.0
+          },
+          {
+            "x": 6.0,
+            "y": 16.0
+          }
+        ],
+        "width": 1.2,
+        "rise": 0.5,
+        "base": 2.85,
+        "baseOffset": -0.15,
+        "landing": 1.5,
+        "railings": "left",
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 3,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 26.0,
+            "y": 0.0
+          },
+          {
+            "x": 26.0,
+            "y": 3.0
+          },
+          {
+            "x": 20.0,
+            "y": 3.0
+          }
+        ],
+        "width": 1.4,
+        "rise": -0.6,
+        "base": 0.6,
+        "landing": 1.5,
+        "arch": {
+          "level": "zemin",
+          "phase": "existing"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 4,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 20.0
+          },
+          {
+            "x": 8.0,
+            "y": 20.0
+          }
+        ],
+        "width": 1.2,
+        "rise": 0.4,
+        "base": 3.2,
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 5,
+        "layerId": "gizli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 25.0
+          },
+          {
+            "x": 6.0,
+            "y": 25.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.3
+      },
+      {
+        "kind": "ramp",
+        "id": 6,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 0.0
+          },
+          {
+            "x": 41.0,
+            "y": 0.0
+          },
+          {
+            "x": 41.0,
+            "y": 1.0
+          }
+        ],
+        "width": 1.0,
+        "rise": 0.2,
+        "landing": 5.0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 7,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 30.0
+          },
+          {
+            "x": 10.75,
+            "y": 30.0
+          },
+          {
+            "x": 22.0,
+            "y": 30.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 1.0,
+        "landing": 1.5,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 8,
+        "layerId": "rampa",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 40.0
+          },
+          {
+            "x": 5.0,
+            "y": 40.0
+          }
+        ],
+        "width": 1.2,
+        "rise": 0.0,
+        "arch": {
+          "level": "kat-1",
+          "phase": "existing"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 50.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 50.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "bütün rampalar: düz, L, U, kilitli, gizli, kolsuz, düz köşeli ve düz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "width": 1.5,
+                  "rise": 0.3,
+                  "slope": 5.0,
+                  "run": 6.0,
+                  "length": 6.0,
+                  "area": 9.0,
+                  "base": 0.0,
+                  "top": 0.3,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 113.00000000000003,
+                "rampRailingLength": 34.9
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zemin kat süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 74.0,
+                "rampRailingLength": 24.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kat süzgeci: kata bağlı ve kendi kotlu rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 30.000000000000014,
+                "rampRailingLength": 10.899999999999999
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kat birden: katsız rampa dışarıda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin",
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 104.00000000000003,
+                "rampRailingLength": 34.9
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: yeni",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "phases": [
+              "new"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 18.0,
+                "rampRailingLength": 24.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: var olan",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 27.000000000000007
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: rampa katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "rampa"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 94.4,
+                "rampRailingLength": 34.9
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: kilitli katmanın rampası da ölçülür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "kilitli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 9.600000000000023
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: gizli katmanın katsız rampası",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "gizli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:5",
+                  "width": 1.5,
+                  "rise": 0.3,
+                  "slope": 5.0,
+                  "run": 6.0,
+                  "length": 6.0,
+                  "area": 9.0,
+                  "base": 0.0,
+                  "top": 0.3,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 9.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanım süzgeci rampaları almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "usages": [
+              "Islak"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat ve evre birlikte: inen U rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ],
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 21.000000000000007
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman ve evre: var olan rampalar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "rampa"
+            ],
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 27.000000000000007
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız çizginin katmanı: hiçbir rampa yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "cizim"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı cevabı verir, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "width": 1.5,
+                  "rise": 0.3,
+                  "slope": 5.0,
+                  "run": 6.0,
+                  "length": 6.0,
+                  "area": 9.0,
+                  "base": 0.0,
+                  "top": 0.3,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 113.00000000000003,
+                "rampRailingLength": 34.9
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula bir şey yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "levels[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layers[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yükselince bağlı rampanın başlangıcı ve bitişi izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.0
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 3.5,
+                  "height": 3.0
+                }
+              ]
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 3.35,
+                  "top": 3.85,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 30.000000000000014,
+                "rampRailingLength": 10.899999999999999
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "U rampaya iki yan korkuluk: korkuluk toplamda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "both"
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "railingLength": 30.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 74.0,
+                "rampRailingLength": 54.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "L rampanın sahanlığı uzayınca eğimli uzunluğu kısalır, eğimi artar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": 2.0
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "run": 10.0,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.4,
+                  "slope": 5.0,
+                  "run": 8.0,
+                  "length": 8.0,
+                  "area": 9.600000000000023,
+                  "base": 3.2,
+                  "top": 3.6,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 30.000000000000014,
+                "rampRailingLength": 10.899999999999999
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "en uzun kolla yazılan rampanın ara sahanlıkları sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "rampa",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 60.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 60.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2,
+                "slope": 5.0,
+                "landing": 1.5,
+                "maxRun": 9.0,
+                "fit": true
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "rampa"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.5,
+                  "slope": 4.761904761904762,
+                  "run": 10.5,
+                  "length": 12.0,
+                  "landings": 1,
+                  "area": 14.399999999999991,
+                  "base": 2.85,
+                  "top": 3.35,
+                  "baseOffset": -0.15,
+                  "railingLength": 10.899999999999999,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "rise": 0.0,
+                  "slope": 0.0,
+                  "run": 5.0,
+                  "length": 5.0,
+                  "area": 6.0,
+                  "base": 0.0,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "width": 1.5,
+                  "rise": 1.2,
+                  "slope": 5.0,
+                  "run": 23.999999999999996,
+                  "length": 26.999999999999996,
+                  "landings": 2,
+                  "area": 40.5,
+                  "base": 0.0,
+                  "top": 1.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 134.9,
+                "rampRailingLength": 34.9
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "silinen rampa metrajdan çıkar, geri alınınca döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 56.00000000000001
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "ramps": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 12.0,
+                  "area": 18.0,
+                  "base": 0.0,
+                  "top": 0.6,
+                  "railingLength": 24.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.4,
+                  "rise": -0.6,
+                  "slope": 5.0,
+                  "run": 12.0,
+                  "length": 15.0,
+                  "landings": 2,
+                  "area": 21.000000000000007,
+                  "base": 0.6,
+                  "top": 0.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "level": "zemin",
+                  "width": 1.0,
+                  "rise": 0.2,
+                  "run": 0.0,
+                  "length": 2.0,
+                  "landings": 1,
+                  "area": 2.0,
+                  "base": 0.0,
+                  "top": 0.2,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "level": "zemin",
+                  "width": 1.5,
+                  "rise": 1.0,
+                  "slope": 4.878048780487805,
+                  "run": 20.5,
+                  "length": 22.0,
+                  "landings": 1,
+                  "area": 33.0,
+                  "base": 0.0,
+                  "top": 1.0,
+                  "rule": "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "rampArea": 74.0,
+                "rampRailingLength": 24.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Rampa: ara sahanlık, kata bağlı başlangıç, metraj, erişilebilirlik (28 Ekim 2026; [ADR0723](docs/adr/0723-ramp-landings-levels-accessibility.md)).**
+  `cad.ramps.create`'in `maxRun`'ı aşan kola düz köşe ve sahanlık ekler (`geom::arch::ramp_with_landings`);
+  `baseOffset` başlangıcı katın kotu + fark yapar, belge kat değişince yazar (`level_marks.rs`, etiketlerden önce),
+  KCAD 124 opt-in; `cad.arch.edit` `baseOffset` bağlar, `base` ya da `null` bağı kaldırır. Rampa aracında En uzun
+  kol (L) ve Başlangıç kotu (Z: boş/kat etkin kat, kat±fark, sayı kendi). Metraj `ramps` satırları (`ramp_measure`)
+  ve Rampalar sekmesi; `cad.arch.audit`'in `profile`'ı (`catalog/v1/accessibility/`, TS 9111 özeti; mevzuat
+  onayı değil) `accessibility` grubu: eğim bandı, uzun kol, kısa sahanlık ve dar dönüş, son ikisi Düzelt'li;
+  masaüstünde öntanımlı açık. Planda okun yanında eğim yazısı (DXF ve PDF de). Genişlik profili açık.
+
 - **Döşeme, balkon, teras (28 Ekim 2026; [ADR0722](docs/adr/0722-slabs.md)).**
   Yeni `slab` türü mahalin şekliyle çizilir (ikinci alan motoru yok): Döşeme/Balkon/Teras, kalınlık, kata göre kot
   farkı, malzeme, metraj dışı. `cad.slabs.create` çizilmiş, duvarların dış yüzlerinden (`outline`) ya da odadan

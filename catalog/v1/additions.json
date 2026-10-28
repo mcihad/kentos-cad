@@ -2285,7 +2285,7 @@
       "id": "tool.ramp",
       "title": "Rampa",
       "icon": "ramp",
-      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik (Y), Eğim (E, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (G), Sahanlık (H), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; eğim KentOS'un öntanımlısıdır, erişilebilirlik denetimi değildir.",
+      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik (Y), Eğim (E, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (G), Sahanlık (H), En uzun kol (L: aşan kola ara sahanlık), Başlangıç kotu (Z: boş ya da kat etkin katın kotunu izler, kat+0.15 kattan fark, sayı kendi kotu), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; erişilebilirliği Mimari denetim'in TS 9111 özeti sınar.",
       "aliases": [
         "RAMP",
         "RAMPACIZ",

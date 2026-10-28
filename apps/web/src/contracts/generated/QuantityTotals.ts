@@ -23,4 +23,8 @@ slabArea?: number, slabVolume?: number,
 /**
  * The railings' and parapets' length along the slabs' free sides, metres.
  */
-railingLength?: number, parapetLength?: number, };
+railingLength?: number, parapetLength?: number, 
+/**
+ * The ramps' plan area and their railings' length (docs/adr/0723 §3).
+ */
+rampArea?: number, rampRailingLength?: number, };

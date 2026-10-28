@@ -24,12 +24,16 @@ if TYPE_CHECKING:
 class _RampsCreate(LocalCommand[RampsCreate, RampsCreated, RampsPlan]):
     """``cad.ramps.create`` v1. Rampa: Rampalar ekler; tek geri alma adımı “Rampa”. Her
     biri orta çizgi (pts: 2–4 nokta), genişlik, toplam yükseklik (rise), eğim (slope,
-    yüzde; yoksa yükseklik ve eğimli uzunluktan), başlangıç kotu (base; yoksa 0),
-    dönüşteki sahanlığın boyu (landing; yoksa genişlik). Uçlarında kot yazısı (+0.00
-    gibi), eğimli kollarında ok. Verilen eğim yükseklik bölü eğimli uzunluktan 0,1
-    puandan çok farklıysa ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa
-    ramp_no_run uyarısı; ret değildir. Katman açıkça verilir; kilitli katmana yazılmaz,
-    gizli katmana uyarıyla yazılır.
+    yüzde; yoksa yükseklik ve eğimli uzunluktan), başlangıç kotu (base; yoksa 0) ya da
+    katına göre farkı (baseOffset, docs/adr/0723 §2: başlangıç katın kotu artı fark, kat
+    kotu değişince izler; katı ister, base ile birlikte verilmez), dönüşteki sahanlığın
+    boyu (landing; yoksa genişlik), fit (son kol eğime göre biter, docs/adr/0705),
+    maxRun (en uzun eğimli kol: aşan kola düz köşe ve ara sahanlık, docs/adr/0723 §1),
+    korkuluk (railings). Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok.
+    Verilen eğim yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa
+    ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret
+    değildir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla
+    yazılır.
     """
     __slots__ = ()
     id = "cad.ramps.create"
@@ -55,12 +59,15 @@ class _RampsCreate(LocalCommand[RampsCreate, RampsCreated, RampsPlan]):
     ) -> RampsCreated:
         """Rampa: Rampalar ekler; tek geri alma adımı “Rampa”. Her biri orta çizgi (pts: 2–4
         nokta), genişlik, toplam yükseklik (rise), eğim (slope, yüzde; yoksa yükseklik ve
-        eğimli uzunluktan), başlangıç kotu (base; yoksa 0), dönüşteki sahanlığın boyu
-        (landing; yoksa genişlik). Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok.
-        Verilen eğim yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa
-        ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret
-        değildir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla
-        yazılır.
+        eğimli uzunluktan), başlangıç kotu (base; yoksa 0) ya da katına göre farkı
+        (baseOffset, docs/adr/0723 §2: başlangıç katın kotu artı fark, kat kotu değişince
+        izler; katı ister, base ile birlikte verilmez), dönüşteki sahanlığın boyu (landing;
+        yoksa genişlik), fit (son kol eğime göre biter, docs/adr/0705), maxRun (en uzun
+        eğimli kol: aşan kola düz köşe ve ara sahanlık, docs/adr/0723 §1), korkuluk
+        (railings). Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok. Verilen eğim
+        yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa ramp_slope_mismatch,
+        sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret değildir. Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

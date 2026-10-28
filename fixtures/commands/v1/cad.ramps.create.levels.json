@@ -1,0 +1,3282 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.ramps.create",
+  "commandVersion": 1,
+  "title": "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "1. katın 15 cm altından çıkan kata bağlı rampa: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. katın 15 cm altından çıkan kata bağlı rampa: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ramps": [
+                {
+                  "kind": "ramp",
+                  "id": 0,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "baseOffset": -0.15,
+                  "arch": {
+                    "level": "kat-1"
+                  },
+                  "base": 2.91
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. katın 15 cm altından çıkan kata bağlı rampa: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.15,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 2.91
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Rampa",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. katın 15 cm altından çıkan kata bağlı rampa: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.15,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 2.91
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zemin kata bağlı rampa: başlangıcı katın kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kata bağlı rampa: başlangıcı 1. katın kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 3.06
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kattan inen kata bağlı rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": -0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "ramp_slope_mismatch",
+                "message": "Rampanın eğimi %5.00 verildi; yükseklik ve eğimli uzunlukla %-5.00.",
+                "path": "ramps[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": -10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": -0.5,
+                "slope": 5.0,
+                "baseOffset": 0.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 3.06
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı, eğime göre biten ve en uzun kollu rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": 0.3,
+                "landing": 1.5,
+                "fit": true,
+                "maxRun": 9.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 9.75,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 20.25,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 26.999999999999996,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 1.2,
+                "slope": 5.0,
+                "baseOffset": 0.3,
+                "landing": 1.5,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 3.36
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı, kotu katın 2 cm üstünde başlayan rampa",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.02
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.02,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.02
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "başlangıç kotu ve kata göre fark birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": 0.1,
+                "base": 3.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Başlangıç kotu ya kendisi (base) ya da kata göre (baseOffset) verilir; ikisi birden verilmez.",
+              "path": "ramps[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız rampa kata bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok. Rampaya kat verin ya da başlangıç kotunu kendisi olarak yazın.",
+              "path": "ramps[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kata bağlı rampa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "yok"
+                },
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "ramps[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata göre fark 1000 m'den çok reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -1000.5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Rampanın kata göre başlangıç kotu -1000.5; sonlu ve en çok 1000 m olmalı.",
+              "path": "ramps[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz kata göre fark reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": 0.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "ramps[0].baseOffset": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kata göre başlangıç kotu sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "ramps[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yükselince bağlı rampanın başlangıcı da yükselir, geri alma adımı olmadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "baseOffset": -0.15
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.15,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 2.91
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.06
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 6.5
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.15,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 6.35
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0,
+                    "height": 3.06
+                  },
+                  {
+                    "id": "kat-1",
+                    "name": "1. kat",
+                    "elevation": 6.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Rampa",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Rampa",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.15,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 6.35
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yükselince kendi kotlu rampa yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 0.45
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "base": 0.45,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.06
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 6.5
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "base": 0.45,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0,
+                    "height": 3.06
+                  },
+                  {
+                    "id": "kat-1",
+                    "name": "1. kat",
+                    "elevation": 6.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Rampa",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Rampa",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "base": 0.45,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: rampa kata bağlanır, başlangıcı katın kotu artı fark",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "baseOffset": 0.2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "baseOffset": 0.2,
+                  "arch": {
+                    "level": "kat-1"
+                  },
+                  "base": 3.2600000000000002
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.2,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 3.2600000000000002
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kata göre fark katsız rampada reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "baseOffset": 0.2
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok. Rampaya kat verin ya da başlangıç kotunu kendisi olarak yazın.",
+              "path": "uids[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null kat bağını kaldırır, başlangıç kotu yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "baseOffset": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "base": 0.1
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kendi başlangıç kotu yazılınca kat bağı kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "base": 0.8
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "base": 0.8
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.8
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı rampanın katı değişince başlangıcı yeni katı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "baseOffset": 0.1,
+                  "arch": {
+                    "level": "kat-1"
+                  },
+                  "base": 3.16
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "kat-1"
+                },
+                "base": 3.16
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı rampanın farkı değişince başlangıcı da değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "baseOffset": -0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "baseOffset": -0.3,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "base": -0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": -0.3,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": -0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı rampanın katı kaldırılamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": null
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok. Rampaya kat verin ya da başlangıç kotunu kendisi olarak yazın.",
+              "path": "uids[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: başlangıç kotu ve fark birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "base": 1.0,
+              "baseOffset": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Başlangıç kotu ya kendisi (base) ya da kata göre (baseOffset) verilir; ikisi birden verilmez.",
+              "path": "operation.baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdivene kata göre fark reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "baseOffset": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“baseOffset” alanı merdiven nesnesinde yok.",
+              "path": "operation.baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sonsuz kata göre fark reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "baseOffset": 0.0
+            }
+          },
+          "nonFinite": {
+            "operation.baseOffset": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kata göre başlangıç kotu sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı rampanın planı yeni başlangıcı gösterir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "baseOffset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 40.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 5.0,
+                "baseOffset": 0.1,
+                "arch": {
+                  "level": "zemin"
+                },
+                "base": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "baseOffset": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 10.0,
+                      "y": 40.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 5.0,
+                  "baseOffset": 0.5,
+                  "arch": {
+                    "level": "kat-1"
+                  },
+                  "base": 3.56
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

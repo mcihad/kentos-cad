@@ -1037,7 +1037,7 @@ impl Input for kentos_commands::StairsCreate {
 }
 
 impl Input for kentos_commands::RampsCreate {
-    /// `ramps[0].rise`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
+    /// `ramps[0].rise`, `.width`, `.baseOffset` (docs/adr/0723 §2), `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1047,6 +1047,7 @@ impl Input for kentos_commands::RampsCreate {
         match rest {
             "rise" => Some(&mut r.rise),
             "width" => Some(&mut r.width),
+            "baseOffset" => r.base_offset.as_mut(),
             _ => named_point(&mut r.pts, "pts", rest),
         }
     }
@@ -1329,7 +1330,7 @@ impl Input for kentos_commands::SchedulesEdit {
 }
 
 impl Input for kentos_commands::ArchEdit {
-    /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343).
+    /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343), `.baseOffset` (docs/adr/0723).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::ArchOperation as Op;
         match &mut self.operation {
@@ -1338,6 +1339,7 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.riserHeight" => c.riser_height.as_mut(),
                 "operation.tread" => c.tread.as_mut(),
                 "operation.rise" => c.rise.as_mut(),
+                "operation.baseOffset" => c.base_offset.as_mut().and_then(Option::as_mut),
                 _ => None,
             },
             // Mesafe's `operation.distance` (docs/adr/0712).

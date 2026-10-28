@@ -423,6 +423,15 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 x.base.unwrap_or(0.0),
                 ArchField::Base,
             ));
+            // Its start over its level's (docs/adr/0723 §2): empty frees it, its base staying; a ramp without a level
+            // has none.
+            if x.arch.level.is_some() {
+                out.push(match x.base_offset {
+                    Some(o) => length("Kata göre", o, ArchField::BaseOffset),
+                    None => Row::text("Kata göre", "Bağlı değil")
+                        .editor(edit(Editor::Number(Field::Arch(slot, ArchField::BaseOffset)))),
+                });
+            }
             out.push(length("Sahanlık", x.landing(), ArchField::Landing));
             out.push(railings_row(slot, x.railings, &edit));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));

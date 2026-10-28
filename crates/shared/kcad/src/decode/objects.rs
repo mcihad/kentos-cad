@@ -252,6 +252,8 @@ pub(super) struct Features {
     schedule_columns: bool,
     /// Schema 123: the slab kind (docs/adr/0722).
     slabs: bool,
+    /// Schema 124: a ramp bound to its level (`baseOffset`, docs/adr/0723 §2).
+    ramp_levels: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -458,6 +460,7 @@ impl Features {
             dimension_levels: schema >= crate::SCHEMA_WITH_DIMENSION_LEVELS,
             schedule_columns: schema >= crate::SCHEMA_WITH_SCHEDULE_COLUMNS,
             slabs: schema >= crate::SCHEMA_WITH_SLABS,
+            ramp_levels: schema >= crate::SCHEMA_WITH_RAMP_LEVELS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2093,6 +2096,10 @@ pub(super) fn object(
     };
     if railed && !has.railings {
         return Err(r.fail(Code::BadValue, "korkuluk (railings) şema 115 ister"));
+    }
+    // Schema 124 (docs/adr/0723 §2): a ramp bound to its level.
+    if matches!(&entity, Entity::Ramp(m) if m.ramp.base_offset.is_some()) && !has.ramp_levels {
+        return Err(r.fail(Code::BadValue, "rampanın kata göre başlangıç kotu (baseOffset) şema 124 ister"));
     }
     // Schema 117 (docs/adr/0709): a curved stair's arc.
     if matches!(&entity, Entity::Stair(s) if s.stair.bulges.is_some()) && !has.stair_arcs {

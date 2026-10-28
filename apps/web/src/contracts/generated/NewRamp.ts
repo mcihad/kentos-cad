@@ -20,9 +20,14 @@ rise: number,
  */
 slope?: number, 
 /**
- * Its start's elevation; absent: 0.
+ * Its start's elevation; absent: 0 (or its level's, `baseOffset`).
  */
 base?: number, 
+/**
+ * Its start's elevation over its level's (docs/adr/0723 §2): its base follows the level's elevation; needs a
+ * level (`arch.level`), not with `base`.
+ */
+baseOffset?: number, 
 /**
  * A landing's length at a turn; absent: the width.
  */
@@ -32,6 +37,11 @@ landing?: number,
  * (docs/adr/0705 §1); needs a slope and a rise.
  */
 fit?: boolean, 
+/**
+ * The longest sloped run, metres: a straight corner and a landing wherever a run would be longer
+ * (docs/adr/0723 §1); absent: landings only at its turns.
+ */
+maxRun?: number, 
 /**
  * Its railings' sides; absent: none (docs/adr/0705 §2).
  */

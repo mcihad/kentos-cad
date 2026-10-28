@@ -634,11 +634,13 @@ pub const SCHEMA_WITH_SCHEDULE_COLUMNS: u32 = 122;
 /// Schema 123 (docs/adr/0722): the slab kind (`slab`: a floor, a balcony or a terrace, its fields as one map), written
 /// only when the drawing has one.
 pub const SCHEMA_WITH_SLABS: u32 = 123;
+/// Schema 124 (docs/adr/0723 §2): a ramp bound to its level (its `baseOffset`), written only when one is.
+pub const SCHEMA_WITH_RAMP_LEVELS: u32 = 124;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 122] = [
+pub const SCHEMAS: [u32; 123] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -761,6 +763,7 @@ pub const SCHEMAS: [u32; 122] = [
     SCHEMA_WITH_DIMENSION_LEVELS,
     SCHEMA_WITH_SCHEDULE_COLUMNS,
     SCHEMA_WITH_SLABS,
+    SCHEMA_WITH_RAMP_LEVELS,
 ];
 
 /// The file a drawing is saved as.

@@ -613,6 +613,62 @@ pub struct SlabRow {
     pub rule: String,
 }
 
+/// A ramp measured (docs/adr/0723 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RampRow {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// How much higher its end is than its start (below zero going down).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub rise: f64,
+    /// Its slope as drawn, per cent: its rise's size over its sloped length; none when no sloped run is left.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slope: Option<f64>,
+    /// Its sloped runs' length: its centre line less its landings, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub run: f64,
+    /// Its centre line's length, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[serde(default, skip_serializing_if = "is_zero_count")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub landings: u32,
+    /// Its band's plan area, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// Its start's elevation and its end's.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub top: f64,
+    /// Its start over its level's when bound to it (docs/adr/0723 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub base_offset: Option<f64>,
+    /// Its railings' lines' length, metres.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub railing_length: f64,
+    pub rule: String,
+}
+
+fn is_zero_count(n: &u32) -> bool {
+    *n == 0
+}
+
 /// A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -680,6 +736,15 @@ pub struct QuantityTotals {
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub parapet_length: f64,
+    /// The ramps' plan area and their railings' length (docs/adr/0723 §3).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub ramp_area: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub ramp_railing_length: f64,
 }
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
@@ -700,5 +765,9 @@ pub struct SpacesQuantified {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TransitionRow>>", optional))]
     pub transitions: Vec<TransitionRow>,
+    /// The ramps (docs/adr/0723 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RampRow>>", optional))]
+    pub ramps: Vec<RampRow>,
     pub totals: QuantityTotals,
 }

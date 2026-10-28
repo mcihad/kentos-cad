@@ -37,11 +37,17 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon,
     merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
     düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
-    olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²:
-    maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair),
-    nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve
-    step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır,
-    tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+    olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility
+    (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti
+    — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den
+    uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa
+    ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin
+    düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). Eşikler
+    metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı
+    (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir:
+    label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi
+    çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+    değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -62,6 +68,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
+        profile: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ArchAudited:
@@ -76,11 +83,17 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal,
         kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
         düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
-        olan, yoksa ilk kat; projede olmayan level level_not_found). Eşikler metre ve m²:
-        maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair),
-        nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve
-        step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır,
-        tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+        olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility
+        (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti
+        — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den
+        uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa
+        ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin
+        düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). Eşikler
+        metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı
+        (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir:
+        label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi
+        çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+        değildir.
 
         Args:
             doc: The drawing it works on.
@@ -90,6 +103,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
             min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
             min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
+            profile: The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
+                ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -108,6 +123,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
+            profile=profile,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -120,6 +136,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
+        profile: str | None | Unset = UNSET,
     ) -> ArchAudited:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -130,6 +147,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
+            profile=profile,
         ))
 
     def validate(
@@ -142,6 +160,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
+        profile: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -152,6 +171,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
+            profile=profile,
         ))
 
     def answer(
@@ -164,6 +184,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
+        profile: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -179,6 +200,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
+            profile=profile,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -192,18 +214,19 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles,
     bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin
     width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise,
-    slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde
-    olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür,
-    verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı
-    da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime),
-    detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı
-    side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden
-    distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit;
-    cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon
-    olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column,
-    sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder.
-    Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi
-    gösterir.
+    slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır,
+    kot yerinde kalır; base ile birlikte verilmez), landing; hepsinin level, phase; null
+    alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar
+    ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı
+    kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,
+    merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
+    distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3
+    solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik
+    kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı
+    kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da
+    eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
+    bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
+    nesneleri olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.arch.edit"
@@ -229,18 +252,20 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
         değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri.
         operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape,
         width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight,
-        tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin
-        level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
-        field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
-        start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
-        (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach
-        (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side —
-        0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance
-        metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı
-        mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o
-        yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma
-        nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve
-        rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.
+        tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını
+        kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base
+        ile birlikte verilmez), landing; hepsinin level, phase; null alanı kaldırır;
+        nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar,
+        tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum
+        yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın
+        kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek
+        kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı
+        paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit;
+        cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon
+        olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column,
+        sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder.
+        Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi
+        gösterir.
 
         Args:
             doc: The drawing it works on.

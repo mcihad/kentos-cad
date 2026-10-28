@@ -19,7 +19,8 @@ so every length is an exact fraction; a turn's angle is checked as floats within
   last segment so that its sloped length is its rise over its slope, none without both or when that length is used up
   before the last landing ends.
 - A ramp's sloped run: its length less its landings; its slope rise / run × 100; ramp_slope_mismatch beyond 0.1 points;
-  its levels “+base” and “+base+rise” with two decimals.
+  its texts: its slope as drawn “%5.00” (the rise's size over the run, two decimals, the half up; none without a rise or
+  a run, docs/adr/0723 §5), then its levels “+base” and “+base+rise” with two decimals.
 - A curved (spiral) stair (docs/adr/0709): its two-point walking line an arc, sweep 4·atan(bulge) (counter-clockwise
   positive), its centre on the chord's left at chord/2·cot(sweep/2), its radius chord/(2|sin(sweep/2)|); its length the
   radius times the turn. No landings; its risers a tread apart along the arc, each a radial line across its width; its
@@ -372,6 +373,12 @@ def level(v):
     return f"-{t}" if v < 0 and t != "0.00" else f"+{t}"
 
 
+def slope_text(v):
+    """A slope's text: the double's own decimal, two places, the half up (as the core's `fixed` writes it)."""
+    from decimal import ROUND_HALF_UP, Decimal
+    return "%" + str(Decimal(v).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 def ramp_landings(pts, at, land):
     """A ramp's: overlapping landings make one, counted once."""
     out = []
@@ -424,7 +431,8 @@ def ramp_case(name, pts, width, rise, slope=None, base=None, land=None, sides=No
     fit = ramp_fit(pts, rise, slope, land_len)
     return {"name": name, "shape": shape, "scale": 50.0,
             "expect": {"run": float(run), "slope": float(actual), "codes": codes,
-                       "levels": [level(float(b0)), level(float(b0 + rise))],
+                       "texts": ([slope_text(abs(float(rise)) / float(run) * 100.0)] if rise != 0 and run > 0 else [])
+                                + [level(float(b0)), level(float(b0 + rise))],
                        "band": [fl(p) for p in band(pts, width / 2)],
                        "fit": fl(fit) if fit else None,
                        "railings": rails(railings_of(pts, width / 2, sides, None))}}

@@ -241,6 +241,7 @@ class ArchAuditCheck(_StrEnum):
     - ``columns``: Columns whose grids are gone.
     - ``viewmarks``: View marks whose target is gone.
     - ``levels``: Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
+    - ``accessibility``: Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -251,9 +252,10 @@ class ArchAuditCheck(_StrEnum):
     COLUMNS = "columns"
     VIEWMARKS = "viewmarks"
     LEVELS = "levels"
+    ACCESSIBILITY = "accessibility"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels", "accessibility"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
 
 
@@ -10251,7 +10253,7 @@ class ArchAudit(_Model):
     the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
 
     Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-    zero, in the same order), `level_not_found` (`level`).
+    zero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).
     Attributes:
         checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
         level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
@@ -10259,12 +10261,15 @@ class ArchAudit(_Model):
         max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
         min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
         min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
+        profile: The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
+            ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
     """
     checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
     level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     min_area: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
+    profile: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10278,6 +10283,8 @@ class ArchAudit(_Model):
             out["minArea"] = None if self.min_area is None else float(self.min_area)
         if self.min_width is not UNSET:
             out["minWidth"] = None if self.min_width is None else float(self.min_width)
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
         return out
 
     @classmethod
@@ -10288,6 +10295,7 @@ class ArchAudit(_Model):
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
+            profile=data.get("profile", UNSET),
         )
 
 
@@ -10298,7 +10306,8 @@ class ArchAuditFinding(_Model):
         code: `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
             `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
             `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
-            `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone` or `arch_level_missing`.
+            `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
+            `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -37314,10 +37323,14 @@ class NewRamp(_Model):
         pts: Its centre line, up from its first point. Unit: length.
         width: Unit: length.
         rise: How much higher its end is than its start. Unit: elevation.
-        base: Its start's elevation; absent: 0. Unit: elevation.
+        base: Its start's elevation; absent: 0 (or its level's, `baseOffset`). Unit: elevation.
+        base_offset: Its start's elevation over its level's (docs/adr/0723 §2): its base follows the level's elevation; needs a
+            level (`arch.level`), not with `base`. Unit: elevation.
         fit: True: its last point moves along its last segment so that its sloped length is its rise over its slope
             (docs/adr/0705 §1); needs a slope and a rise.
         landing: A landing's length at a turn; absent: the width. Unit: length.
+        max_run: The longest sloped run, metres: a straight corner and a landing wherever a run would be longer
+            (docs/adr/0723 §1); absent: landings only at its turns. Unit: length.
         railings: Its railings' sides; absent: none (docs/adr/0705 §2).
         slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
     """
@@ -37327,8 +37340,10 @@ class NewRamp(_Model):
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     base: float | None | Unset = UNSET
+    base_offset: float | None | Unset = UNSET
     fit: bool | None | Unset = UNSET
     landing: float | None | Unset = UNSET
+    max_run: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
 
@@ -37343,10 +37358,14 @@ class NewRamp(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
         if self.fit is not UNSET:
             out["fit"] = self.fit
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
+        if self.max_run is not UNSET:
+            out["maxRun"] = None if self.max_run is None else float(self.max_run)
         if self.railings is not UNSET:
             out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.slope is not UNSET:
@@ -37362,8 +37381,10 @@ class NewRamp(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             fit=data.get("fit", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            max_run=UNSET if "maxRun" not in data else None if data["maxRun"] is None else float(data["maxRun"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
         )
@@ -46698,6 +46719,8 @@ class QuantityTotals(_Model):
         baseboard_length: The rooms' baseboards, metres (docs/adr/0722 §5). Unit: length.
         parapet_length: Unit: length.
         railing_length: The railings' and parapets' length along the slabs' free sides, metres. Unit: length.
+        ramp_area: The ramps' plan area and their railings' length (docs/adr/0723 §3). Unit: area.
+        ramp_railing_length: Unit: length.
         slab_area: The slabs' net area and volume, those left out not summed. Unit: area.
         slab_volume: Unit: volume.
         void_area: The voids' area: shafts, lift shafts, openings in the floor. Unit: area.
@@ -46710,6 +46733,8 @@ class QuantityTotals(_Model):
     baseboard_length: float | Unset = UNSET
     parapet_length: float | Unset = UNSET
     railing_length: float | Unset = UNSET
+    ramp_area: float | Unset = UNSET
+    ramp_railing_length: float | Unset = UNSET
     slab_area: float | Unset = UNSET
     slab_volume: float | Unset = UNSET
     void_area: float | Unset = UNSET
@@ -46727,6 +46752,10 @@ class QuantityTotals(_Model):
             out["parapetLength"] = float(self.parapet_length)
         if self.railing_length is not UNSET:
             out["railingLength"] = float(self.railing_length)
+        if self.ramp_area is not UNSET:
+            out["rampArea"] = float(self.ramp_area)
+        if self.ramp_railing_length is not UNSET:
+            out["rampRailingLength"] = float(self.ramp_railing_length)
         if self.slab_area is not UNSET:
             out["slabArea"] = float(self.slab_area)
         if self.slab_volume is not UNSET:
@@ -46746,6 +46775,8 @@ class QuantityTotals(_Model):
             baseboard_length=float(data["baseboardLength"]) if "baseboardLength" in data else UNSET,
             parapet_length=float(data["parapetLength"]) if "parapetLength" in data else UNSET,
             railing_length=float(data["railingLength"]) if "railingLength" in data else UNSET,
+            ramp_area=float(data["rampArea"]) if "rampArea" in data else UNSET,
+            ramp_railing_length=float(data["rampRailingLength"]) if "rampRailingLength" in data else UNSET,
             slab_area=float(data["slabArea"]) if "slabArea" in data else UNSET,
             slab_volume=float(data["slabVolume"]) if "slabVolume" in data else UNSET,
             void_area=float(data["voidArea"]) if "voidArea" in data else UNSET,
@@ -47020,7 +47051,9 @@ class RampEntity(Entity):
         rise: How much higher its end is than its start. Unit: elevation.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
-        base: Its start's elevation; absent: 0. Unit: elevation.
+        base: Its start's elevation; absent: 0. Bound to its level (`base_offset`), the document writes it. Unit: elevation.
+        base_offset: Its start's elevation over its level's (docs/adr/0723 §2, schema 124): `base` is then its level's elevation
+            plus this, written again whenever the level's elevation changes; absent: `base` is its own. Unit: elevation.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -47055,6 +47088,7 @@ class RampEntity(Entity):
     arch: ArchInfo | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     base: float | None | Unset = UNSET
+    base_offset: float | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -47085,6 +47119,8 @@ class RampEntity(Entity):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -47129,6 +47165,7 @@ class RampEntity(Entity):
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
@@ -47144,6 +47181,80 @@ class RampEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RampRow(_Model):
+    """A ramp measured (docs/adr/0723 §3).
+    Attributes:
+        width: Unit: length.
+        rise: How much higher its end is than its start (below zero going down). Unit: elevation.
+        run: Its sloped runs' length: its centre line less its landings, metres. Unit: length.
+        length: Its centre line's length, metres. Unit: length.
+        area: Its band's plan area, m². Unit: area.
+        base: Its start's elevation and its end's. Unit: elevation.
+        top: Unit: elevation.
+        base_offset: Its start over its level's when bound to it (docs/adr/0723 §2). Unit: elevation.
+        landings: Unit: count.
+        railing_length: Its railings' lines' length, metres. Unit: length.
+        slope: Its slope as drawn, per cent: its rise's size over its sloped length; none when no sloped run is left. Unit: percent.
+    """
+    uid: str
+    width: float
+    rise: float
+    run: float
+    length: float
+    area: float
+    base: float
+    top: float
+    rule: str
+    base_offset: float | None | Unset = UNSET
+    landings: int | Unset = UNSET
+    level: str | None | Unset = UNSET
+    railing_length: float | Unset = UNSET
+    slope: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["width"] = float(self.width)
+        out["rise"] = float(self.rise)
+        out["run"] = float(self.run)
+        out["length"] = float(self.length)
+        out["area"] = float(self.area)
+        out["base"] = float(self.base)
+        out["top"] = float(self.top)
+        out["rule"] = self.rule
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
+        if self.landings is not UNSET:
+            out["landings"] = self.landings
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.railing_length is not UNSET:
+            out["railingLength"] = float(self.railing_length)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RampRow:
+        return cls(
+            uid=data["uid"],
+            width=float(data["width"]),
+            rise=float(data["rise"]),
+            run=float(data["run"]),
+            length=float(data["length"]),
+            area=float(data["area"]),
+            base=float(data["base"]),
+            top=float(data["top"]),
+            rule=data["rule"],
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
+            landings=data.get("landings", UNSET),
+            level=data.get("level", UNSET),
+            railing_length=float(data["railingLength"]) if "railingLength" in data else UNSET,
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
         )
 
 
@@ -55124,6 +55235,7 @@ class SpacesPlan(_Model):
 class SpacesQuantified(_Model):
     """Output of `cad.spaces.quantities` v1 (its plan's too).
     Attributes:
+        ramps: The ramps (docs/adr/0723 §3).
         slabs: The slabs (docs/adr/0722 §5).
         transitions: The floor finishes' changes at the passages.
     """
@@ -55131,6 +55243,7 @@ class SpacesQuantified(_Model):
     walls: list[WallRow]
     openings: list[OpeningRow]
     totals: QuantityTotals
+    ramps: list[RampRow] | Unset = UNSET
     slabs: list[SlabRow] | Unset = UNSET
     transitions: list[TransitionRow] | Unset = UNSET
 
@@ -55140,6 +55253,8 @@ class SpacesQuantified(_Model):
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["openings"] = [e0.to_json() for e0 in self.openings]
         out["totals"] = self.totals.to_json()
+        if self.ramps is not UNSET:
+            out["ramps"] = [e0.to_json() for e0 in self.ramps]
         if self.slabs is not UNSET:
             out["slabs"] = [e0.to_json() for e0 in self.slabs]
         if self.transitions is not UNSET:
@@ -55153,6 +55268,7 @@ class SpacesQuantified(_Model):
             walls=[WallRow.from_json(e0) for e0 in data["walls"]],
             openings=[OpeningRow.from_json(e0) for e0 in data["openings"]],
             totals=QuantityTotals.from_json(data["totals"]),
+            ramps=[RampRow.from_json(e0) for e0 in data["ramps"]] if "ramps" in data else UNSET,
             slabs=[SlabRow.from_json(e0) for e0 in data["slabs"]] if "slabs" in data else UNSET,
             transitions=[TransitionRow.from_json(e0) for e0 in data["transitions"]] if "transitions" in data else UNSET,
         )
@@ -63658,7 +63774,9 @@ class LabelsAnnotationWork(AnnotationWork):
 class SetArchOperation(ArchOperation):
     """Değiştir: the fields given, on every object named.
     Attributes:
-        base: A ramp's; null: 0. Unit: elevation.
+        base: A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2). Unit: elevation.
+        base_offset: A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
+            base staying where it is. Not with `base`. Unit: elevation.
         bubble_size: A grid's; null: 8 mm. Unit: paper-mm.
         bubbles: A grid's.
         cut: A stair's. Unit: index.
@@ -63683,6 +63801,7 @@ class SetArchOperation(ArchOperation):
     """
     TAG_VALUE: ClassVar[str] = "set"
     base: float | None | Unset = UNSET
+    base_offset: float | None | Unset = UNSET
     bubble_size: float | None | Unset = UNSET
     bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
     cut: int | None | Unset = UNSET
@@ -63709,6 +63828,8 @@ class SetArchOperation(ArchOperation):
         out: dict[str, Any] = {"kind": "set"}
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
         if self.bubble_size is not UNSET:
             out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
         if self.bubbles is not UNSET:
@@ -63757,6 +63878,7 @@ class SetArchOperation(ArchOperation):
     def from_json(cls, data: Mapping[str, Any]) -> SetArchOperation:
         return cls(
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
             cut=data.get("cut", UNSET),
@@ -82001,6 +82123,7 @@ __all__ = [
     "RailingsName",
     "RaiseShapeElevation",
     "RampEntity",
+    "RampRow",
     "RampsCreate",
     "RampsCreated",
     "RampsPlan",
