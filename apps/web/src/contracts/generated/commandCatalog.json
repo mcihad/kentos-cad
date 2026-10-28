@@ -5249,6 +5249,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -5276,12 +5287,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -5328,13 +5348,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -5370,6 +5419,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -35300,6 +35384,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -35327,12 +35422,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -35379,13 +35483,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -35421,6 +35554,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -48520,6 +48688,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -48547,12 +48726,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -48599,13 +48787,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -48641,6 +48858,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -1315795,6 +1316047,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -1315822,12 +1316085,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -1315874,13 +1316146,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -1315916,6 +1316217,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -1342903,13 +1343239,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -1342932,10 +1343297,10 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Create a live chain on one straight wall face. Wire geometry is metres;\ngapMm is paper millimetres and uses the existing project plotScale once.\nA wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).",
+        "description": "Create a live chain on one straight wall face, or along a façade of walls or a space's outline (docs/adr/0729).\nWire geometry is metres; gapMm is paper millimetres and uses the existing project plotScale once.\nA wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).",
         "properties": {
           "around": {
-            "description": "Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far\nout from its face as `at` is from `edge`'s (else the first straight edge's).",
+            "description": "Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far\nout from its face as `at` is from `edge`'s (else the first straight edge's). A façade's or a space's: its\nfour sides, along `direction` and square to it, each as far out from the outermost body as `at`.",
             "type": "boolean"
           },
           "at": {
@@ -1342948,6 +1343313,18 @@
               "string",
               "null"
             ]
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A façade's or a space's direction along; absent: its first source's longest straight edge's.",
+            "x-unit": "1"
           },
           "edge": {
             "description": "The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the\nfirst vertex). Absent: a two-point wall's only edge.",
@@ -1342983,6 +1343360,10 @@
             "$ref": "#/$defs/DimensionSetOpenings",
             "default": "ends"
           },
+          "reference": {
+            "$ref": "#/$defs/DimensionSetReference",
+            "description": "A façade's or a space's lines measured: the walls' faces or their cores."
+          },
           "rows": {
             "default": [
               "openings",
@@ -1342993,14 +1343374,33 @@
             },
             "type": "array"
           },
-          "wall": {
+          "space": {
+            "description": "A space whose outline is measured, with the openings on it and its holes (docs/adr/0729).",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "wall": {
+            "description": "The wall measured (its edge; docs/adr/0695, 0700); with `walls`, a façade's first wall.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "walls": {
+            "description": "A façade's walls (docs/adr/0729): measured along `direction` with the walls at their ends and meeting them,\ntheir openings and the grids across them; `wall` first when given too.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
           "layerId",
-          "wall",
           "at"
         ],
         "title": "DimensionSetsCreateInput",
@@ -1345206,13 +1345606,82 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionSetRowNote": {
+            "description": "A façade's or a space's row in a plan (docs/adr/0729 §5).",
+            "properties": {
+              "dimensions": {
+                "description": "Its dimensions drawn (a span another row draws first is not drawn again).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "points": {
+                "description": "Its points along the direction.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "row": {
+                "$ref": "#/$defs/DimensionSetRow"
+              },
+              "sources": {
+                "description": "The objects they come from.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "row",
+              "points",
+              "sources",
+              "dimensions",
+              "reference"
             ],
-            "type": "string"
+            "type": "object"
           },
           "DimensionSetSegment": {
             "description": "A semantic segment, independent of its current order and coordinates.",
@@ -1353867,6 +1354336,13 @@
           "revision": {
             "type": "string"
           },
+          "rows": {
+            "description": "A façade's or a space's rows (docs/adr/0729 §5): each one's points, sources and dimensions, and the lines it\nmeasures.",
+            "items": {
+              "$ref": "#/$defs/DimensionSetRowNote"
+            },
+            "type": "array"
+          },
           "set": {
             "anyOf": [
               {
@@ -1353877,11 +1354353,28 @@
               }
             ]
           },
+          "skipped": {
+            "description": "The walls near a façade not measured: an oblique or curved edge where they meet it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "spans": {
             "items": {
               "$ref": "#/$defs/DimensionSetSegment"
             },
             "type": "array"
+          },
+          "tight": {
+            "description": "The dimensions (by their place in `entities`) whose value does not fit between their extension lines\n(docs/adr/0729 §6): said, never hidden.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "count"
           },
           "uids": {
             "description": "Existing active member ids in this proposal; new members receive ids only on write.",
@@ -1353913,7 +1354406,9 @@
           "revision_conflict"
         ],
         "warnings": [
-          "layer_hidden"
+          "layer_hidden",
+          "dimension_text_tight",
+          "dimension_set_wall_skipped"
         ]
       },
       "examples": [
@@ -1354057,6 +1354552,17 @@
                       }
                     ]
                   },
+                  "reference": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionSetReference"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "A façade's or a space's lines measured (docs/adr/0729)."
+                  },
                   "rows": {
                     "items": {
                       "$ref": "#/$defs/DimensionSetRow"
@@ -1354069,6 +1354575,28 @@
                 },
                 "required": [
                   "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A façade's walls, replaced (docs/adr/0729 §5).",
+                "properties": {
+                  "kind": {
+                    "const": "sources",
+                    "type": "string"
+                  },
+                  "walls": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "walls"
                 ],
                 "type": "object"
               },
@@ -1354174,13 +1354702,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -1356425,13 +1356982,82 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionSetRowNote": {
+            "description": "A façade's or a space's row in a plan (docs/adr/0729 §5).",
+            "properties": {
+              "dimensions": {
+                "description": "Its dimensions drawn (a span another row draws first is not drawn again).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "points": {
+                "description": "Its points along the direction.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "row": {
+                "$ref": "#/$defs/DimensionSetRow"
+              },
+              "sources": {
+                "description": "The objects they come from.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "row",
+              "points",
+              "sources",
+              "dimensions",
+              "reference"
             ],
-            "type": "string"
+            "type": "object"
           },
           "DimensionSetSegment": {
             "description": "A semantic segment, independent of its current order and coordinates.",
@@ -1365086,6 +1365712,13 @@
           "revision": {
             "type": "string"
           },
+          "rows": {
+            "description": "A façade's or a space's rows (docs/adr/0729 §5): each one's points, sources and dimensions, and the lines it\nmeasures.",
+            "items": {
+              "$ref": "#/$defs/DimensionSetRowNote"
+            },
+            "type": "array"
+          },
           "set": {
             "anyOf": [
               {
@@ -1365096,11 +1365729,28 @@
               }
             ]
           },
+          "skipped": {
+            "description": "The walls near a façade not measured: an oblique or curved edge where they meet it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "spans": {
             "items": {
               "$ref": "#/$defs/DimensionSetSegment"
             },
             "type": "array"
+          },
+          "tight": {
+            "description": "The dimensions (by their place in `entities`) whose value does not fit between their extension lines\n(docs/adr/0729 §6): said, never hidden.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "count"
           },
           "uids": {
             "description": "Existing active member ids in this proposal; new members receive ids only on write.",
@@ -1365133,7 +1365783,9 @@
           "revision_conflict"
         ],
         "warnings": [
-          "layer_hidden"
+          "layer_hidden",
+          "dimension_text_tight",
+          "dimension_set_wall_skipped"
         ]
       },
       "examples": [
@@ -1365613,6 +1366265,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -1365640,12 +1366303,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -1365692,13 +1366364,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -1365734,6 +1366435,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -1366556,6 +1367292,17 @@
                 },
                 "type": "array"
               },
+              "span": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionSetSpan"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700)."
+              },
               "suppressed": {
                 "description": "Explicitly removed segments stay removed until the user restores them.",
                 "items": {
@@ -1366583,12 +1367330,21 @@
           },
           "DimensionSetBreak": {
             "description": "Why a recipe cannot currently generate a trustworthy complete chain.",
-            "enum": [
-              "hostGone",
-              "unsupportedWall",
-              "openingUnplaced"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "hostGone",
+                  "unsupportedWall",
+                  "openingUnplaced"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "mixedSources",
+                "description": "A façade's walls on different architectural levels now (docs/adr/0729 §3).",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetFace": {
             "description": "A real wall face, relative to the direction of its source path.",
@@ -1366635,13 +1367391,42 @@
             ],
             "type": "string"
           },
+          "DimensionSetReference": {
+            "description": "Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).",
+            "oneOf": [
+              {
+                "const": "faces",
+                "description": "Its two faces.",
+                "type": "string"
+              },
+              {
+                "const": "core",
+                "description": "The two boundaries of its strongest components' band (its faces without components).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionSetRow": {
-            "description": "The adjacent wall/opening intervals, or the source wall's whole length.",
-            "enum": [
-              "openings",
-              "overall"
-            ],
-            "type": "string"
+            "description": "The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids\n(docs/adr/0729).",
+            "oneOf": [
+              {
+                "enum": [
+                  "openings",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "walls",
+                "description": "The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.",
+                "type": "string"
+              },
+              {
+                "const": "grids",
+                "description": "The grids across a façade or a space: a `span` recipe's only.",
+                "type": "string"
+              }
+            ]
           },
           "DimensionSetRowPlace": {
             "description": "A row manually placed in world coordinates; source edits keep this override.",
@@ -1366677,6 +1367462,41 @@
               "row",
               "a",
               "b"
+            ],
+            "type": "object"
+          },
+          "DimensionSetSpan": {
+            "description": "A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).",
+            "properties": {
+              "direction": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The unit direction measured along, in the world plane.",
+                "x-unit": "1"
+              },
+              "level": {
+                "description": "The sources' architectural level; none when they have none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reference": {
+                "$ref": "#/$defs/DimensionSetReference"
+              },
+              "space": {
+                "description": "The recipe's `wall` is a space: its outline is measured.",
+                "type": "boolean"
+              },
+              "walls": {
+                "description": "A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "direction"
             ],
             "type": "object"
           },
@@ -1593417,6 +1594237,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Ölçü bir grubun üyesi; grup komutuyla düzenleyin veya önce bağımsız ölçülere dönüştürün."
+    },
+    {
+      "code": "dimension_text_tight",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı ölçülerin değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin."
+    },
+    {
+      "code": "dimension_set_wall_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Cepheye değen bir duvar eğik ya da yaylı kenarı yüzünden ölçülmedi."
     },
     {
       "code": "too_few_corners",

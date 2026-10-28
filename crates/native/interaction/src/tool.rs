@@ -737,8 +737,13 @@ pub struct Memory {
     pub wall_dimensions_gap_mm: f64,
     pub wall_dimensions_rows: u8,
     pub wall_dimensions_centers: bool,
-    /// Kenarlar → Bütün kenarlar (docs/adr/0700).
+    /// Kenarlar → Bütün kenarlar (docs/adr/0700); a façade's or a space's Dört yan (docs/adr/0729).
     pub wall_dimensions_around: bool,
+    /// Kaynak türü: a wall's edge (0), a façade (1), a space (2) (docs/adr/0729 §7).
+    pub wall_dimensions_mode: u8,
+    /// A façade's or a space's direction square to its source's longest edge, and its walls' cores measured.
+    pub wall_dimensions_across: bool,
+    pub wall_dimensions_core: bool,
     /// İç ölçü zinciri's choices (docs/adr/0711 §5): every line of a wall, a column's ends (0), centres (1) or
     /// nothing (2), the overall dimension.
     pub interior_skins: bool,
@@ -1170,6 +1175,9 @@ impl Default for Memory {
             wall_dimensions_rows: 3,
             wall_dimensions_centers: false,
             wall_dimensions_around: false,
+            wall_dimensions_mode: 0,
+            wall_dimensions_across: false,
+            wall_dimensions_core: false,
             interior_skins: false,
             interior_columns: 0,
             interior_total: false,

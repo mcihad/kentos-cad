@@ -8,6 +8,7 @@ import type { DimensionSetOpenings } from "./DimensionSetOpenings";
 import type { DimensionSetRow } from "./DimensionSetRow";
 import type { DimensionSetRowPlace } from "./DimensionSetRowPlace";
 import type { DimensionSetSegment } from "./DimensionSetSegment";
+import type { DimensionSetSpan } from "./DimensionSetSpan";
 import type { EntityId } from "./EntityId";
 import type { Vec2 } from "./Vec2";
 
@@ -35,4 +36,8 @@ look: DimensionLook, rowPlaces?: Array<DimensionSetRowPlace>, members?: Array<Di
 /**
  * Explicitly removed segments stay removed until the user restores them.
  */
-suppressed?: Array<DimensionSetSegment>, broken?: DimensionSetBreak, };
+suppressed?: Array<DimensionSetSegment>, broken?: DimensionSetBreak, 
+/**
+ * A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700).
+ */
+span?: DimensionSetSpan, };

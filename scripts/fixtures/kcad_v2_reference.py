@@ -2203,6 +2203,9 @@ def document(d):
     if d.get("casework"):
         # A kitchen run (docs/adr/0727 §5).
         schema = max(schema, 127)
+    if any("span" in item for item in sets):
+        # A façade's or a space's dimension recipe (docs/adr/0729 §1).
+        schema = max(schema, 128)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2916,7 +2919,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-128.kcad"] = container(root(cmap(parts), version=uint(128)))
+    files["schema-version-129.kcad"] = container(root(cmap(parts), version=uint(129)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5025,6 +5028,21 @@ def build():
     casework_bad("three-corners", lambda runs: runs[0]["recipe"].update(through=[{"x": 0.0, "y": 3.0}] * 3))
     casework_bad("unknown", lambda runs: runs[0].update(unknown=True))
     casework_bad("empty-layer", lambda runs: runs[0]["recipe"].update(layerId=""))
+    # Schema 128 (docs/adr/0729): a south façade with its window, its corner walls and three grids, as the command
+    # writes it; schema 127 refuses its `span`.
+    spans = load("dimension-set-spans.json")
+    sp = document(spans)
+    assert sp.count(b"\x67version\x18\x80") == 1
+    out["dimension-set-spans.kcad"] = container(sp)
+    out["broken/dimension-set-spans-in-schema-127.kcad"] = container(sp.replace(b"\x67version\x18\x80", b"\x67version\x18\x7f"))
+    def span_bad(name, change):
+        d = copy.deepcopy(spans)
+        change(d["dimensionSets"][0])
+        out["broken/dimension-set-spans-" + name + ".kcad"] = container(document(d))
+    span_bad("direction", lambda s: s["span"].update(direction={"x": 2.0, "y": 0.0}))
+    span_bad("walls-row-without-span", lambda s: (s.pop("span"), s.update(rows=["walls"])))
+    span_bad("five-rows", lambda s: s.update(rows=["openings", "walls", "grids", "overall", "openings"]))
+    span_bad("edge", lambda s: s.update(edge=1))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

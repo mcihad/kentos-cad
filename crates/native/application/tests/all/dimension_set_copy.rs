@@ -35,6 +35,7 @@ fn fixture() -> (Document, String, String) {
         members: vec![],
         suppressed: vec![],
         broken: None,
+        span: None,
     })
     .unwrap();
     let member = doc.dimension_set(SET).unwrap().members[0].uid.to_string();

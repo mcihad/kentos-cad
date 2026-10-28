@@ -1989,6 +1989,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 128 (docs/adr/0729): a façade's or a space's dimension recipe.
+    if doc.dimension_sets.iter().any(|s| s.span.is_some()) {
+        return crate::SCHEMA_WITH_DIMENSION_SET_SPANS;
+    }
     // Schema 127 (docs/adr/0727): the kitchen runs.
     if !doc.casework.is_empty() {
         return crate::SCHEMA_WITH_CASEWORK;

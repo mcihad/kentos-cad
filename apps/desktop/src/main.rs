@@ -124,6 +124,8 @@ mod dimension_follow_scenes;
 #[cfg(test)]
 mod dimension_mark_scenes;
 #[cfg(test)]
+mod facade_dimension_scenes;
+#[cfg(test)]
 mod annotative_scenes;
 #[cfg(test)]
 mod paragraph_layout_scenes;

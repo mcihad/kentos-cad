@@ -3,4 +3,4 @@
 /**
  * Why a recipe cannot currently generate a trustworthy complete chain.
  */
-export type DimensionSetBreak = "hostGone" | "unsupportedWall" | "openingUnplaced";
+export type DimensionSetBreak = "hostGone" | "unsupportedWall" | "openingUnplaced" | "mixedSources";

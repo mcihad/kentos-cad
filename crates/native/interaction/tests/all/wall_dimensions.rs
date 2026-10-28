@@ -426,3 +426,151 @@ fn changing_source_resets_fixed_placement_and_bare_keyboard_distance_still_place
             < 1e-8
     );
 }
+
+/// docs/adr/0729: a 10 × 8 house of four 20 cm walls drawn corner to corner at 1:50, a partition at x = 4, doors on
+/// its south wall at 1–2 m and 6–7 m; the walls' slots south, east, north, west, partition.
+fn house() -> (Bench, [Slot; 5]) {
+    let mut b = Bench::new("wall");
+    let mut settings = b.doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.drawing_unit = Some(DrawingUnit::M);
+    settings.plot_scale = 50.0;
+    b.doc.set_settings(settings);
+    b.session.exit();
+    let mut slots = Vec::new();
+    for (a, z) in [((0., 0.), (10., 0.)), ((10., 0.), (10., 8.)), ((10., 8.), (0., 8.)), ((0., 8.), (0., 0.)), ((4., 0.), (4., 8.))] {
+        b.start("wall");
+        b.click(a.0, a.1);
+        b.click(z.0, z.1);
+        b.confirm();
+        b.confirm();
+        slots.push(Slot(b.newest().base().id));
+    }
+    for x in [1.5, 6.5] {
+        b.start("door");
+        assert!(configure(&mut b, "E", "1 m"));
+        b.click(x, 0.05);
+        b.session.exit();
+    }
+    (b, [slots[0], slots[1], slots[2], slots[3], slots[4]])
+}
+
+fn tag(b: &Bench) -> Vec<String> {
+    b.session
+        .preview(&Default::default())
+        .and_then(|p| p.tag)
+        .map(|t| t.lines)
+        .unwrap_or_default()
+}
+
+/// Cephe: the wall clicked, measured with the walls at its corners: their outer faces close the rows, the door
+/// between; one confirmation writes the recipe, one undo takes it back.
+#[test]
+fn a_facade_of_the_clicked_wall_runs_to_its_corner_walls_outer_faces() {
+    let (mut b, [south, ..]) = house();
+    b.selection.clear();
+    b.start("wallDimensions");
+    assert!(configure(&mut b, "M", "facade"));
+    let before = b.doc.to_snapshot_v2();
+    b.click(5., 0.);
+    assert_eq!(b.points(), 1, "the façade is chosen");
+    b.move_to(5., -1.5);
+    assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
+    let lines = tag(&b);
+    assert!(lines[0].starts_with("6 ölçü"), "{lines:?}");
+    assert!(lines.iter().any(|l| l.starts_with("Açıklıklar: 5 ölçü · 4 kaynak")), "{lines:?}");
+    let values: Vec<String> = b.session.preview(&Default::default()).unwrap().texts.iter().map(|t| t.text.clone()).collect();
+    assert_eq!(values, ["1.100", "1.000", "4.000", "1.000", "3.100", "10.200"], "outer face to outer face");
+    b.click(5., -1.5);
+    assert!(!b.session.is_running());
+    let set = &b.doc.dimension_sets()[0];
+    let span = set.span.as_ref().expect("a façade's recipe");
+    assert_eq!(set.wall.0, b.doc.uid(south).unwrap().into_bytes());
+    assert!(span.walls.is_empty() && !span.space);
+    assert_eq!(set.members.len(), 6);
+    b.doc.undo().unwrap();
+    assert!(b.doc.dimension_sets().is_empty());
+}
+
+/// Walls selected before the tool make a façade; Dört yan writes four recipes in one step.
+#[test]
+fn selected_walls_make_a_facade_and_four_sides_go_in_one_step() {
+    let (mut b, [s, e, n, w, _]) = house();
+    b.selection.set([s, e, n, w]);
+    b.start("wallDimensions");
+    let settings = b.session.settings(&Default::default());
+    assert!(settings.iter().any(|r| r.key == "M" && r.value == "Cephe"), "several walls are a façade");
+    for key in ["O", "Y", "N", "W", "G"] {
+        assert!(settings.iter().any(|r| r.key == key), "{key}");
+    }
+    assert!(configure(&mut b, "N", "all"));
+    let lines = tag(&b);
+    assert!(lines[0].contains("dört yan"), "{lines:?}");
+    let before = b.doc.to_snapshot_v2();
+    b.confirm();
+    assert!(!b.session.is_running());
+    let sets = b.doc.dimension_sets();
+    assert_eq!(sets.len(), 4);
+    assert!(sets.iter().all(|s| s.span.as_ref().is_some_and(|p| p.walls.len() == 3)));
+    b.doc.undo().unwrap();
+    assert!(b.doc.dimension_sets().is_empty());
+    assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
+}
+
+/// Duvarlar sırası: the walls' thicknesses are measured; a value wider than its interval is said and drawn in the
+/// danger tone, never hidden (docs/adr/0729 §6).
+#[test]
+fn values_that_do_not_fit_are_counted_and_drawn_in_the_danger_tone() {
+    let (mut b, [south, ..]) = house();
+    b.selection.set([south]);
+    b.start("wallDimensions");
+    assert!(configure(&mut b, "M", "facade"));
+    assert!(configure(&mut b, "W", "yes"));
+    b.move_to(5., -1.5);
+    let settings = b.session.settings(&Default::default());
+    let notice = settings.iter().find(|r| r.key == "U").expect("the tight values are said");
+    assert!(notice.value.starts_with("3 ölçünün"), "{}", notice.value);
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert!(preview.strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
+    assert!(tag(&b).iter().any(|l| l.starts_with("Duvarlar: 5 ölçü")), "{:?}", tag(&b));
+}
+
+/// Mahal: a click inside a room measures its outline along the direction; the room's door on its edge facing the
+/// rows is in the openings row.
+#[test]
+fn a_space_clicked_is_measured_with_its_door() {
+    let (mut b, _) = house();
+    b.start("space");
+    b.click(2., 4.);
+    b.session.exit();
+    assert!(matches!(b.newest(), Entity::Space(_)));
+    b.selection.clear();
+    b.start("wallDimensions");
+    assert!(configure(&mut b, "M", "space"));
+    b.click(2., 4.);
+    assert_eq!(b.points(), 1, "the room is chosen");
+    // Along its longest edge (north) first; across it, along the south edge with the door.
+    assert_eq!(tag(&b)[0], "1 ölçü · tek adım");
+    assert!(configure(&mut b, "O", "across"));
+    b.move_to(2., -1.5);
+    let settings = b.session.settings(&Default::default());
+    assert!(settings.iter().any(|r| r.key == "C" && r.value.starts_with("Mahal")));
+    assert!(!settings.iter().any(|r| r.key == "Y"), "a room has no core to choose");
+    b.confirm();
+    let set = &b.doc.dimension_sets()[0];
+    assert!(set.span.as_ref().is_some_and(|s| s.space));
+    let lengths: Vec<f64> = set
+        .members
+        .iter()
+        .map(|m| {
+            let Some(Entity::Dimension(d)) =
+                b.doc.slot_of(kentos_domain::Uuid::from_bytes(m.uid.0)).and_then(|s| b.doc.get(s))
+            else {
+                panic!("a dimension");
+            };
+            ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6
+        })
+        .collect();
+    assert_eq!(lengths, [0.9, 1.0, 1.9, 3.8], "west to east: the door in the room's south edge, its net length");
+}

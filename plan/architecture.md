@@ -793,22 +793,23 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   36 ham ekran/21 tam bağımsız model ve dört ayrı tanısal kopya,
   önceki1828 KCAD aynı. [Kanıt ve sınırlar](../docs/baseline/2026-10-26-architecture-opening-dimensions/README.md).
   Otomatik ölçü dizileri ve kaynak üyeliği tamamlanmış değildir.
-- Cephe/duvar grubu/mahal seç; açıklık, ara duvar, yapı ve toplam boy için
-  seçilebilir sıralar. İç yüz, dış yüz, çekirdek ve açıklık merkezi/uçları açık.
-- Ölçüler mevcut ilişkili ölçü modelinden üretilsin; Zincir/Baz/Hızlı ölçü
-  davranışı değişmesin. Yeni araç görünüş çizgilerine ölçü bağlamasın.
-- Metin sığmama ve sıra aralığı önizlensin; üst üste yazıları gizleyerek çözme.
-- [ ] Otomatik sıranın kalıcı kaynak tarifi: seçilmiş duvar/mahal UUID'leri,
-  mimari kat ve hangi yüz/merkez/uç politikasının kullanıldığı saklanmalı.
-  Sadece tek sefer çok sayıda serbest ölçü eklemek otomatik sıra kabulü değildir.
-- [ ] Kaynaklar değişince sıranın üyeliği de güncellensin: sonradan kapı ekleme,
-  açıklık kaldırma, duvar bölme/rehost ve ters yön; aynı kaynak çiftinin ölçü
-  kimliği ve kullanıcının taşıdığı sıra yeri korunmalı. Belirsiz topoloji
-  değişimi sessiz yanlış ölçüye dönüşmemeli, görünür inceleme gerektirmeli.
-- [ ] Her sıranın önizlemesi kaynak, ölçülen yüz ve sayıyı açıklamalı. Kağıt mm
-  cinsinden sıra aralığı mevcut çizim ölçeğiyle dönüştürülmeli; kaynak model
-  veya proje birimi sırf ölçü yerleştirmek için değiştirilmemeli. Yazı sığma
-  denetimi mevcut belge yazı tipi/ölçü stiliyle yapılmalı.
+- [x] Cephe/duvar grubu/mahal seç; açıklık, ara duvar, yapı ve toplam boy için
+  seçilebilir sıralar (Açıklıklar, Duvarlar, Akslar, Toplam); dış yüz, çekirdek ve
+  açıklık merkezi/uçları; dört yan tek adımda. [ADR0729](../docs/adr/0729-facade-and-space-dimension-recipes.md).
+  Ölçüler mevcut ilişkili Doğrusal ölçülerdir; Zincir/Baz/Hızlı ölçü değişmedi.
+  İç yüzden cephe sırası dış cephe kuralıdır (iç ölçü ADR0711'in kesen çizgisi).
+- [x] Metin sığmama ve sıra aralığı önizlenir: sığmayan değer gizlenmez, tehlike
+  renginde çizilir, sayılır ve `dimension_text_tight` ile söylenir (ADR0729 §6).
+- [x] Otomatik sıranın kalıcı kaynak tarifi: tarifin `span`'ı (kaynak duvarlar ya da
+  mahal, doğrultu, dış yüz/çekirdek, kat), açıklık uç/merkez politikası ve sıralar
+  kalıcı (KCAD 128, opt-in); tek seferlik serbest ölçü değil.
+- [x] Kaynaklar değişince üyelik aynı adımda güncellenir: sonradan kapı, bölme
+  ekleme/silme, duvar bölme (parça kaynaklara katılır), birleştirme, rehost, ters yön;
+  aynı kaynak çifti ya da aynı aralık ölçü kimliğini, kullanıcının taşıdığı sıra yeri
+  korunur; kaynak kaybı ve karışık kat görünür kopma (`hostGone`, `mixedSources`).
+- [x] Her sıranın önizlemesi ve planı kaynak, ölçülen çizgi ve sayıları söyler
+  (`rows`: nokta, kaynak, ölçü, `reference`); kağıt mm aralığı çizim ölçeğiyle bir kez
+  çevrilir, proje birimi değişmez; sığma belge yazı tipi ve ölçü stiliyle denetlenir.
 - [x] Kapalı ve çok kenarlı duvarın her düz kenarı: tarifin `edge`'i ve
   `around` ile bütün kenarlara tek adımda dizi; kenar köşe ekleme/silmede izlenir,
   izlenemezse dizi kopar (KCAD şema 114). [ADR0700](../docs/adr/0700-dimension-sets-on-wall-edges.md);
@@ -824,13 +825,14 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   durum (Kaydır ve silme izlemesi dahil), Python/MCP, 5 çekirdek+4 araç testi,
   gerçek GUI (`.run/shots/arac-ic-olcu-*`). Üyelik kalıcı değildir; açıklık, aks,
   kiriş ve duvar ekseni noktası açık.
-- [ ] İlk otomatik üretimin desteklediği geometri açıkça daraltılmalı:
-  doğrusal kaynak/yaylı kaynak ve kiriş/host boyunca mesafe aynı şey değildir.
-  Desteklenmeyen yüz/kat/karma kaynağa tek işlemden önce açıklamalı ret verilmeli;
-  kısmen yazılmış ölçü dizisi kalmamalı.
-- [ ] Mevcut oluştur/yeniden bağlama ve yeni sıra yaşam döngüsünün Python/MCP
-  karşılığı, salt okunur planı, tek undo'su, kaydet-aç ve yeni sürüm uyumu
-  birlikte doğrulanmalı. Native kenet/ölçü altyapısı tek başına bu kapıyı kapatmaz.
+- [x] Desteklenen geometri açıkça daraltıldı: doğrultuya paralel ya da dik düz
+  kenarlar; eğik/yay kaynak, yay kenarlı mahal, karışık kat, yerleşemeyen açıklık,
+  yanlış türde kaynak açıklamalı atomik ret (kimliği `uids`'te); eğik ya da yaylı
+  saplanan duvar ölçülmez ve söylenir (`dimension_set_wall_skipped`).
+- [x] Yaşam döngüsü Python/MCP'de aynı komutlarla: salt okunur plan, tek undo,
+  KCAD 128 kaydet-aç, eski dosyaların baytları aynı; 70 bağımsız ortak durum Rust ve
+  Python tipli katmanından geçer. Veritabanında saklanan bulut projesi `span`'lı tarifi
+  açıkça reddeder (sunucunun ortak kuralla denetlemesi açık iş, TODOS.md).
   Güncel iş akışı karşılaştırması:
   [Archicad29 dış ölçü](https://help.graphisoft.com/AC/29/INT/_AC29_Help/070_Documentation/070_Documentation-49.htm)
   (seçilmiş duvar, yön, yer, toplam/dış geometri/yapı/açıklık, merkez-uç, yüz ve
@@ -1297,6 +1299,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
 | 2026-10-28 | ARCH-EDIT-01 / ADR0728 | Geçici ölçünün kalanı: aksa mesafe (duvar kenarının ekseninden, kolonun ve açıklığın ortasından), iki adaylı yanda kareyle yüz ↔ aks ve oturumda tutulan seçim, duvar boyu (sabit uç, köşedeki duvar Kaydır'la izler, uç uca duvar, T ve çok duvarlı uç ret); `cad.walls.edit` `length`/`to`, `cad.arch.edit` ve `cad.openings.edit` `to`, sorgularda aks ve boy. 68 yeni ortak durum (215), çekirdek/etkileşim/masaüstü testleri, kilitli referans, dönük UCS, büyük koordinat, Esc, tek Geri al, Python/MCP, gerçek GUI (bulunan dört kusur düzeltildi: yazı alanı seçimleri siliyordu, boyun işaretleri tutamaçların üstündeydi, kısa yanın sayısı boyunkiyle çakışıyordu, iki ucu T duvarda boy gösteriliyordu). | [x] Bütün madde |
 | 2026-10-28 | ARCH-LIB-02 / ADR0727 | Mutfak dizisi L ve U (kör/açık köşe), bulaşık makinesi, fırın, buzdolabı, modülün kendi eni ve kapısı, tezgâh kesimleri, Modül/Tür/Açılma; kalıcı dizi (KCAD 127) duvarı izler, kopar, nesneleriyle taşınır, sahiplik (`casework_owned`); `cad.casework.edit`/`query`, `casework_clash`, kör köşedeki cihaz `casework_blind_corner`; araçta Biçim (Otomatik kör modülü atlar), Öznitelikler'de Mutfak dizisi. 80 + 39 + 22 ortak durum (Rust, Python), KCAD, bulut meta ve göç 0035, araç ve masaüstü testleri, gerçek GUI. | [x] Bütün madde |
+| 2026-10-28 | ARCH-DIM-01 / ADR0729 | Cephe, duvar grubu ve mahal ölçü dizileri: tarifin `span`'ı (KCAD 128), sıralar Açıklıklar/Duvarlar/Akslar/Toplam, dış yüz/çekirdek, köşe duvarları ve saplanan bölmeler, cepheden görünürlük, mahalin dış halkası ve delikleri, dört yan, okunur doğrultu; üyelik aynı adımda (kapı, bölme, bölme/birleştirme, ters yön, silme), kimlik aynı çift ya da aynı aralık; sığmayan yazı söylenir; `Sources`, `reference`, sıra uzaklığı dış yüzden. 70 bağımsız ortak durum (Rust ve Python), çekirdek/uygulama/belge/araç/masaüstü/MCP testleri, clippy, wasm32, gerçek GUI (8 sahne). | [x] ADR0729 alt maddeleri; ADR0695/0696 kabul kapıları ve veritabanı projesi açık |
 | 2026-10-28 | ARCH-LIB-01 / ADR0726 | Bloklar › Kitaplık (DWG/DXF/KCAD klasörleri, kategoriler, gerçek boy ve birim, birim bildirmeyen dosyada birim sorusu), `file.import.block`'un DWG/DXF okuması, `sourceUnit`, `category`, `sizes`, `unit`; Blok ekle'nin gerçek boy etiketi, taban işareti, görünür ayarları ve Varyant (V); Öznitelikler'de En × boy. 30 + 25 ortak durum, DWG ikizleri, başsız kabul matrisi (m/mm, iç içe, aynalı, kaydet/aç, DXF `--written`), etkileşim/masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |

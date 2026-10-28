@@ -722,6 +722,9 @@ fn set_words(b: kentos_commands::DimensionSetBreak) -> &'static str {
             "Ölçü dizisinin duvar kenarı artık ölçülemiyor (pahlı köşe, yay ya da olmayan kenar); ölçüler son yerlerinde duruyor."
         }
         B::OpeningUnplaced => "Ölçü dizisinin bir açıklığı duvarına yerleşmiyor; ölçüler son yerlerinde duruyor.",
+        B::MixedSources => {
+            "Ölçü dizisinin duvarları artık farklı katlarda; ölçüler son yerlerinde duruyor."
+        }
     }
 }
 

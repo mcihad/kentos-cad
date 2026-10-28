@@ -1,5 +1,8 @@
-//! A wall dimension recipe, shown in the existing inspector without exposing ids.
-use kentos_commands::{DimensionSetBreak, DimensionSetFace, DimensionSetOpenings, DimensionSetRow};
+//! A wall dimension recipe, shown in the existing inspector without exposing ids; a façade's or a space's too
+//! (docs/adr/0729 §7).
+use kentos_commands::{
+    DimensionSetBreak, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,
+};
 use kentos_domain::Slot;
 
 use super::{Choice, Editor, Event, Field, Row};
@@ -18,6 +21,8 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
     let row_name = match member.row {
         DimensionSetRow::Openings => "Açıklıklar",
         DimensionSetRow::Overall => "Toplam boy",
+        DimensionSetRow::Walls => "Duvarlar",
+        DimensionSetRow::Grids => "Akslar",
     };
     let action = |label: &'static str, name: &'static str, editable: bool| Choice::Action {
         label,
@@ -41,7 +46,11 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
                 action("Dizinin tamamını seç", "select", false),
                 action("Bu sırayı seç", "row", false),
                 Choice::Action {
-                    label: "Kaynak duvarı göster",
+                    label: match &set.span {
+                        Some(span) if span.space => "Kaynak mahali göster",
+                        Some(_) => "Kaynak duvarları göster",
+                        None => "Kaynak duvarı göster",
+                    },
                     icon: "wall",
                     message: (set.broken != Some(DimensionSetBreak::HostGone))
                         .then_some(Message::Properties(Event::DimensionSet(slot, "source"))),
@@ -123,6 +132,66 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
     }))
     .collect();
     out.push(Row::text("Dizi stili", chosen_style).editor(select(chosen_style, styles)));
+    if let Some(span) = &set.span {
+        // A façade's or a space's source, direction, rows and lines (docs/adr/0729 §7).
+        let source = if span.space {
+            "Mahal".to_owned()
+        } else {
+            format!("Cephe · {} duvar", 1 + span.walls.len())
+        };
+        out.insert(1, Row::text("Kaynak", &source));
+        let angle = span.direction.y.atan2(span.direction.x).to_degrees();
+        out.push(Row::text("Doğrultu", format!("{:.2}°", (angle + 360.0) % 360.0)));
+        let names = [
+            (DimensionSetRow::Openings, "Açıklıklar", "toggle:openings"),
+            (DimensionSetRow::Walls, "Duvarlar", "toggle:walls"),
+            (DimensionSetRow::Grids, "Akslar", "toggle:grids"),
+            (DimensionSetRow::Overall, "Toplam boy", "toggle:overall"),
+        ];
+        let label = names
+            .iter()
+            .filter(|(r, ..)| set.rows.contains(r))
+            .map(|(_, n, _)| *n)
+            .collect::<Vec<_>>()
+            .join(", ");
+        out.push(Row::text("Ölçü sıraları", &label).editor(select(
+            &label,
+            names
+                .iter()
+                .map(|(r, n, name)| pick(&format!("{n} sırası"), name, set.rows.contains(r)))
+                .collect(),
+        )));
+        let centers = set.openings == DimensionSetOpenings::Centers;
+        let label = if centers { "Açıklık merkezleri" } else { "Açıklık uçları" };
+        out.push(Row::text("Açıklıkları ölç", label).editor(select(
+            label,
+            vec![
+                pick("Açıklık uçları", "ends", !centers),
+                pick("Açıklık merkezleri", "centers", centers),
+            ],
+        )));
+        if !span.space {
+            let core = span.reference == DimensionSetReference::Core;
+            let label = if core { "Çekirdek" } else { "Dış yüzler" };
+            out.push(Row::text("Ölçülen çizgi", label).editor(select(
+                label,
+                vec![pick("Dış yüzler", "faces", !core), pick("Çekirdek", "core", core)],
+            )));
+        }
+        out.push(
+            Row::figure("Sıra aralığı", kentos_interaction::fixed(set.gap_mm, 2))
+                .unit("mm · kağıtta")
+                .editor((!locked).then_some(Editor::Number(Field::DimensionSetGap(slot)))),
+        );
+        out.push(broken_note(set.broken).unwrap_or_else(|| {
+            Row::note(if span.space {
+                "Mahal ve kapıları değişince bu dizi güncellenir. Sıra uzaklığı bu sırayı birlikte taşır."
+            } else {
+                "Cephenin duvarları, açıklıkları, saplanan bölmeleri ve akslar değişince bu dizi güncellenir; duvar bölününce parçası diziye katılır."
+            })
+        }));
+        return out;
+    }
     let both = set.rows.contains(&DimensionSetRow::Openings)
         && set.rows.contains(&DimensionSetRow::Overall);
     let rows_label = if both {
@@ -179,22 +248,28 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
             .unit("mm · kağıtta")
             .editor((!locked).then_some(Editor::Number(Field::DimensionSetGap(slot)))),
     );
-    if let Some(broken) = set.broken {
-        let mut note = Row::note(match broken {
-            DimensionSetBreak::HostGone => {
-                "Kaynak duvar silindi. Ölçüler son konumlarını gösterir; duvarı geri alın veya diziyi bağımsız ölçülere dönüştürün."
-            }
-            DimensionSetBreak::UnsupportedWall => {
-                "Kaynak artık tek düz duvar değil. Ölçüler güncellenemiyor; kaynak biçimini düzeltin veya diziyi bağımsız ölçülere dönüştürün."
-            }
-            DimensionSetBreak::OpeningUnplaced => {
-                "Bir açıklığın duvardaki yeri çözülemiyor. Açıklığı düzeltince ölçü dizisi yeniden güncellenir."
-            }
-        });
-        note.warn = true;
-        out.push(note);
-    } else {
-        out.push(Row::note("Duvar ve açıklıklar değişince bu dizi güncellenir. Sıra uzaklığı bu sırayı birlikte taşır; yazı ve görünüş yalnız seçili ölçüye uygulanır."));
-    }
+    out.push(broken_note(set.broken).unwrap_or_else(|| {
+        Row::note("Duvar ve açıklıklar değişince bu dizi güncellenir. Sıra uzaklığı bu sırayı birlikte taşır; yazı ve görünüş yalnız seçili ölçüye uygulanır.")
+    }));
     out
+}
+
+/// Why a recipe no longer follows its source, as a warning row.
+fn broken_note(broken: Option<DimensionSetBreak>) -> Option<Row> {
+    let mut note = Row::note(match broken? {
+        DimensionSetBreak::HostGone => {
+            "Kaynak silindi. Ölçüler son konumlarını gösterir; kaynağı geri alın veya diziyi bağımsız ölçülere dönüştürün."
+        }
+        DimensionSetBreak::UnsupportedWall => {
+            "Kaynak artık ölçülebilir değil (pahlı köşe, yay ya da doğrultuya eğik kenar). Ölçüler güncellenemiyor; kaynak biçimini düzeltin veya diziyi bağımsız ölçülere dönüştürün."
+        }
+        DimensionSetBreak::OpeningUnplaced => {
+            "Bir açıklığın duvardaki yeri çözülemiyor. Açıklığı düzeltince ölçü dizisi yeniden güncellenir."
+        }
+        DimensionSetBreak::MixedSources => {
+            "Cephenin duvarları artık farklı katlarda. Ölçüler güncellenemiyor; duvarlara aynı katı verin veya diziyi bağımsız ölçülere dönüştürün."
+        }
+    });
+    note.warn = true;
+    Some(note)
 }

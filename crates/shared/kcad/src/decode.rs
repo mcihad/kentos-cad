@@ -444,6 +444,15 @@ fn dimension_sets(
             &format!("dimensionSets[{index}]: kenar (edge) şema 114 ister"),
         ));
     }
+    if !has.dimension_set_spans
+        && let Some(index) = sets.iter().position(|s| s.span.is_some())
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("dimensionSets[{index}]: cephe ya da mahal ölçüsü (span) şema 128 ister"),
+        ));
+    }
     Ok(sets)
 }
 

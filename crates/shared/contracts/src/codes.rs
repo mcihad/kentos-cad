@@ -68,6 +68,10 @@ codes! {
     INVALID_DIMENSION_SET = "invalid_dimension_set", Failed, false, "Ölçü grubu tarifi veya kaynak yüzü geçersiz; desteklenen düz duvar, sıra ve yer seçin.";
     DIMENSION_SET_NOT_FOUND = "dimension_set_not_found", Failed, false, "Ölçü grubu artık yok; yeniden seçin.";
     DIMENSION_SET_OWNED = "dimension_set_owned", Failed, false, "Ölçü bir grubun üyesi; grup komutuyla düzenleyin veya önce bağımsız ölçülere dönüştürün.";
+    /// A recipe's dimension whose value does not fit between its extension lines (docs/adr/0729 §6).
+    DIMENSION_TEXT_TIGHT = "dimension_text_tight", Warning, false, "Bazı ölçülerin değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin.";
+    /// A wall at a façade not measured for an oblique or curved edge (docs/adr/0729 §2).
+    DIMENSION_SET_WALL_SKIPPED = "dimension_set_wall_skipped", Warning, false, "Cepheye değen bir duvar eğik ya da yaylı kenarı yüzünden ölçülmedi.";
 
     // ── Shapes and numbers ──────────────────────────────────────────────
     /// A closed area with fewer than 3 corners (`cad.polygon.create`).

@@ -65,3 +65,30 @@ fn an_edge_opts_into_schema_114_and_113_refuses_it() {
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
     assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\x71"));
 }
+
+const SPANS_MODEL: &str = include_str!("../../../../../fixtures/kcad/v2/dimension-set-spans.json");
+const SPANS_BYTES: &[u8] = include_bytes!("../../../../../fixtures/kcad/v2/dimension-set-spans.kcad");
+
+/// docs/adr/0729: a façade's recipe (its `span`) opts into schema 128; schema 127 refuses it, and the drawing without it
+/// keeps its older schema.
+#[test]
+fn a_span_opts_into_schema_128_and_127_refuses_it() {
+    let model: DocumentSnapshotV2 = serde_json::from_str(SPANS_MODEL).unwrap();
+    assert!(model.dimension_sets[0].span.is_some());
+    assert_eq!(kentos_kcad::encode_verified(&model).unwrap(), SPANS_BYTES);
+    assert_eq!(
+        kentos_kcad::decode(SPANS_BYTES).unwrap().dimension_sets,
+        model.dimension_sets
+    );
+    let old = include_bytes!(
+        "../../../../../fixtures/kcad/v2/broken/dimension-set-spans-in-schema-127.kcad"
+    );
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::BadValue
+    );
+    let mut plain = model;
+    plain.dimension_sets.clear();
+    let bytes = kentos_kcad::encode_verified(&plain).unwrap();
+    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x80"));
+}

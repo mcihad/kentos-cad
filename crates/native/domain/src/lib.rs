@@ -36,6 +36,7 @@ mod calls;
 mod changes;
 pub mod dimension_ties;
 pub mod dimension_sets;
+pub mod dimension_spans;
 mod document;
 mod edit;
 pub mod etag;

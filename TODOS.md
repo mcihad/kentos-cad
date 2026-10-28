@@ -88,6 +88,16 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   işleyicisi ve Mutfak dizisi aracı (baş, son, taraf; Otomatik evye/ocak;
   blokların Genişlik'iyle açılmış önizleme) `cad.casework.run.json` ile
   sınanmalı.
+- ARCH-DIM-01 / ADR0729: Cephe, duvar grubu ve mahal ölçü dizileri. Web'in belgesi tarifin `span`'ını (KCAD 128:
+  `walls`, `space`, `direction`, `reference`, `level`) okuyup yazmalı ve izleyicisi kaynakları (bölmenin parçası katılır,
+  birleşen duvar yerini alır, silinen çıkar; tek duvar tarifi bölünürse cepheye döner, ters çevrilince yüzü izler),
+  etki kutusundaki duvar, aks ve açıklık değişikliklerini aynı adımda yeniden planlamalı (kimlik aynı çift, sonra aynı
+  aralık); ortak kural `kentos_formats::dimension_spans` ve çekirdeğin `ops::dimension_span`'ı WASM'den. Komutun
+  `walls`, `space`, `direction`, `reference`, `around` (dört yan) girdileri, planın `rows`, `skipped`, `tight`'ı,
+  `dimension_text_tight` ve `dimension_set_wall_skipped`; `cad.dimensionsets.edit`'in `Sources`'ı ve `reference`'ı,
+  `span`'lı tarifte sıra uzaklığı en dış yüzden. Duvar ölçüleri aracında Kaynak türü (Duvar, Cephe, Mahal), Doğrultu,
+  Ölçülen çizgi, Yanlar, Duvarlar ve Akslar sıraları, sığmayan değerin tehlike rengi; Öznitelikler'de dizinin kaynağı,
+  doğrultusu ve sıraları. `cad.dimensionsets.create.span.json` ve `cad.dimensionsets.edit.span.json` ile sınanmalı.
 - ARCH-EDIT-01 / ADR0728: Geçici ölçünün kalanı. Web'in seçili duvarı, kolonu ve açıklığı her yanda yüzü ve aksı
   aday olarak bilmeli (aks nesnenin ekseninden: duvar kenarının iki yüzünün ortası, kolonun ortası, açıklığın iki
   pervazının ortası); bir yanda iki aday varsa referansın ucunda kare, basınca öbürüne geçer, seçim oturumda kalır
@@ -2039,6 +2049,7 @@ CRS etiketi atamak dönüşüm yapmak değildir; gerçek dönüşüm `ST_Transfo
 - [ ] `PG-18` Query ve provider davranışını desktop, web gateway, server jobs ve Python üzerinden aynı fixture/kayıp raporuyla doğrula.
 - [ ] `PG-19` Yönetilen CAD proje şemasını tamamla: proje/revision, katman, kalıcı entity ID, analitik CAD tanımı, geometri izdüşümü, öznitelik, stil, blok/ilişki, layout ve asset referansları. Migration/unknown-extension politikasını binary domain sözleşmesiyle eşle; bütün projeyi sorgulanamayan tek JSON alanına koymayı provider modeli yerine geçirme.
 - [ ] `PG-20` “CAD projesini PostGIS'e kaydet” ile “GIS geometrisine dönüştür/export et” komutlarını ayır. İlkinde desteklenen CAD semantiği korunur; ikincisinde tolerans ve kayıp önizlemesi gerekir. Dış şema CAD tanımlarını taşıyamıyorsa yönetilen şema kurulumu için açık izin iste veya sınırlamayı bildir; sessiz flatten/DDL yapma. — **26 Eylül, kısmen:** “PostGIS'e aktar” açık komuttur (`project.convert` v1, [ADR 0039](docs/adr/0039-storage-conversion.md)): dosya projesinin en yeni revizyonundan yeni bir veritabanı projesi açar, analitik CAD tanımları `cad_definition` olarak korunur; ters yönde veritabanı projesinin tek anlık görüntüsü yeni dosya projesinin 1. revizyonu olur. Kaynak değişmez, iki yazılabilir otorite olmaz. Açık: yerinde dönüştürme, “GIS geometrisine dönüştür” (tolerans ve kayıp önizlemesi), arayüz. **26 Eylül (web):** katalogda “PostGIS'e aktar…” ve “Dosya projesine çevir…” ([ADR 0038](docs/adr/0038-web-file-projects-and-history.md)).
+- [ ] `PG-23` Cephe ve mahal ölçü dizisi (ADR 0729) veritabanında saklanan projede: sunucu `project.changes`'te `span`'lı tarifi şimdilik açıkça reddeder. Kaynakları (kaynak duvarlar ya da mahal, etki kutusundaki duvar ve akslar, kaynakların açıklıkları) aynı işlemde masaüstüyle ortak kuralla (`kentos_formats::dimension_spans`) okuyup üyelerin ölçüsünü ve başvurularını denetleyerek yazmalı; sürümünü bilmeyen sunucuya açık ret. Gerçek PostGIS turu (`KENTOS_TEST_DB=required`) ve masaüstünün bulut eşitlemesi birlikte doğrulanmalı.
 - [ ] `PG-21` CAD definition, türetilmiş geometry, relation ve revision değişimini atomik commit et; async türetim gerekirse pending/projection revision durumuyla eski geometriyi güncel kaynak gibi göstermeme kuralı koy. Undo/redo ve concurrent update bu otorite modeline uysun.
 - [ ] `PG-22` Binary `.kcad` → yönetilen PostGIS → `.kcad` round-trip'ini yay/daire, blok/instance, ölçü, tipli öznitelik, stil/katman, CRS/birim ve desteklenen ilişki örnekleriyle sınayarak doğrula. CAD ve GIS projeleri desktop/native provider ile web/gateway üzerinden aynı kalıcı kimlik ve izinlerle açılıp düzenlensin. — **26 Eylül, kısmen:** `fixtures/kcad/v2/drawing.kcad` → yönetilen PostGIS → `.kcad` gidiş-dönüşü 13 nesne türünün hepsiyle, kilitli ve gizli katmanla, stillerle ve kalıcı kimliklerle sınandı; eksi sıfır sıfır olur, ±10⁹'u aşan değerli nesne alan yolu verilerek reddedilir ([ADR 0033](docs/adr/0033-database-project-snapshot.md)). Açık: blok/instance, tipli öznitelik, ilişki (modelde yok); masaüstü/native provider.
 

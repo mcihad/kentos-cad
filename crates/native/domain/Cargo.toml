@@ -19,5 +19,7 @@ kentos-geometry-core = { path = "../../shared/geometry-core" }
 # The records of a layer whose form enforces its rules are completed as a step ends (docs/adr/0402 §4).
 kentos-expression = { path = "../../shared/expression" }
 kentos-forms = { path = "../../shared/forms" }
+# A façade or space dimension recipe reads its objects by the rule the server checks it with (docs/adr/0729 §2).
+kentos-formats = { path = "../../shared/formats" }
 serde_json = { workspace = true }
 uuid = { workspace = true }

@@ -16,6 +16,8 @@ from .types import (  # noqa: F401
     DimensionSetFaceName,
     DimensionSetOpenings,
     DimensionSetOpeningsName,
+    DimensionSetReference,
+    DimensionSetReferenceName,
     DimensionSetRow,
     DimensionSetRowName,
     DimensionSetsChanged,
@@ -58,16 +60,20 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         /,
         *,
         layer_id: str,
-        wall: str,
         at: Vec2Like,
         around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        direction: Vec2Like | None | Unset = UNSET,
         edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
+        reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        space: str | None | Unset = UNSET,
+        wall: str | None | Unset = UNSET,
+        walls: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DimensionSetsChanged:
@@ -84,18 +90,24 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         Args:
             doc: The drawing it works on.
             layer_id:
-            wall:
             at: Unit: length.
             around: Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
-                out from its face as `at` is from `edge`'s (else the first straight edge's).
+                out from its face as `at` is from `edge`'s (else the first straight edge's). A façade's or a space's: its
+                four sides, along `direction` and square to it, each as far out from the outermost body as `at`.
             dimension_style: Existing project style name; absent means Standart.
+            direction: A façade's or a space's direction along; absent: its first source's longest straight edge's. Unit: 1.
             edge: The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
                 first vertex). Absent: a two-point wall's only edge. Unit: count.
             expected_revision:
             face:
             gap_mm: Unit: paper-mm.
             openings:
+            reference: A façade's or a space's lines measured: the walls' faces or their cores.
             rows:
+            space: A space whose outline is measured, with the openings on it and its holes (docs/adr/0729).
+            wall: The wall measured (its edge; docs/adr/0695, 0700); with `walls`, a façade's first wall.
+            walls: A façade's walls (docs/adr/0729): measured along `direction` with the walls at their ends and meeting them,
+                their openings and the grids across them; `wall` first when given too.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -110,16 +122,20 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         """
         return self.execute_input(doc, DimensionSetsCreateInput(
             layer_id=layer_id,
-            wall=wall,
             at=Vec2.of(at),
             around=around,
             dimension_style=dimension_style,
+            direction=_opt(direction, lambda x: Vec2.of(x)),
             edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
             openings=openings,
+            reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            space=space,
+            wall=wall,
+            walls=_opt(walls, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -128,32 +144,40 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         /,
         *,
         layer_id: str,
-        wall: str,
         at: Vec2Like,
         around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        direction: Vec2Like | None | Unset = UNSET,
         edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
+        reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        space: str | None | Unset = UNSET,
+        wall: str | None | Unset = UNSET,
+        walls: Sequence[str] | Unset = UNSET,
     ) -> DimensionSetsPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, DimensionSetsCreateInput(
             layer_id=layer_id,
-            wall=wall,
             at=Vec2.of(at),
             around=around,
             dimension_style=dimension_style,
+            direction=_opt(direction, lambda x: Vec2.of(x)),
             edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
             openings=openings,
+            reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            space=space,
+            wall=wall,
+            walls=_opt(walls, lambda x: list(x)),
         ))
 
     def validate(
@@ -162,32 +186,40 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         /,
         *,
         layer_id: str,
-        wall: str,
         at: Vec2Like,
         around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        direction: Vec2Like | None | Unset = UNSET,
         edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
+        reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        space: str | None | Unset = UNSET,
+        wall: str | None | Unset = UNSET,
+        walls: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, DimensionSetsCreateInput(
             layer_id=layer_id,
-            wall=wall,
             at=Vec2.of(at),
             around=around,
             dimension_style=dimension_style,
+            direction=_opt(direction, lambda x: Vec2.of(x)),
             edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
             openings=openings,
+            reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            space=space,
+            wall=wall,
+            walls=_opt(walls, lambda x: list(x)),
         ))
 
     def answer(
@@ -196,16 +228,20 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         /,
         *,
         layer_id: str,
-        wall: str,
         at: Vec2Like,
         around: bool | Unset = UNSET,
         dimension_style: str | None | Unset = UNSET,
+        direction: Vec2Like | None | Unset = UNSET,
         edge: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT,
         gap_mm: float = 7.5,
         openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS,
+        reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET,
         rows: Sequence[DimensionSetRow | DimensionSetRowName] | Unset = UNSET,
+        space: str | None | Unset = UNSET,
+        wall: str | None | Unset = UNSET,
+        walls: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -217,16 +253,20 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         """
         return self.answer_input(doc, DimensionSetsCreateInput(
             layer_id=layer_id,
-            wall=wall,
             at=Vec2.of(at),
             around=around,
             dimension_style=dimension_style,
+            direction=_opt(direction, lambda x: Vec2.of(x)),
             edge=edge,
             expected_revision=expected_revision,
             face=face,
             gap_mm=gap_mm,
             openings=openings,
+            reference=reference,
             rows=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])() if rows is UNSET else _opt(rows, lambda x: list(x)),
+            space=space,
+            wall=wall,
+            walls=_opt(walls, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

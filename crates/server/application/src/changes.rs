@@ -555,6 +555,8 @@ async fn check_dimension_rows(
     let row = |row| match row {
         DimensionSetRow::Openings => core::Row::Openings,
         DimensionSetRow::Overall => core::Row::Overall,
+        DimensionSetRow::Walls => core::Row::Walls,
+        DimensionSetRow::Grids => core::Row::Grids,
     };
     let bits = |value: f64| if value == 0. { 0 } else { value.to_bits() };
     let geometric_key = |row: DimensionSetRow, a: Vec2, b: Vec2| {
@@ -783,6 +785,8 @@ async fn check_dimension_rows(
             let row = match span.row {
                 core::Row::Openings => DimensionSetRow::Openings,
                 core::Row::Overall => DimensionSetRow::Overall,
+                core::Row::Walls => DimensionSetRow::Walls,
+                core::Row::Grids => DimensionSetRow::Grids,
             };
             let key = geometric_key(row, span.a.at, span.b.at);
             let Some((k, member)) = active.remove(&key) else {

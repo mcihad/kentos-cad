@@ -1330,13 +1330,20 @@ DimensionRuleName = Literal["curve", "edges", "pair", "cross"]
 
 
 class DimensionSetBreak(_StrEnum):
-    """Why a recipe cannot currently generate a trustworthy complete chain."""
+    """Why a recipe cannot currently generate a trustworthy complete chain.
+
+    - ``hostGone``
+    - ``unsupportedWall``
+    - ``openingUnplaced``
+    - ``mixedSources``: A façade's walls on different architectural levels now (docs/adr/0729 §3).
+    """
     HOST_GONE = "hostGone"
     UNSUPPORTED_WALL = "unsupportedWall"
     OPENING_UNPLACED = "openingUnplaced"
+    MIXED_SOURCES = "mixedSources"
 
 
-DimensionSetBreakName = Literal["hostGone", "unsupportedWall", "openingUnplaced"]
+DimensionSetBreakName = Literal["hostGone", "unsupportedWall", "openingUnplaced", "mixedSources"]
 """The names of :class:`DimensionSetBreak`, for a plain string."""
 
 
@@ -1360,13 +1367,36 @@ DimensionSetOpeningsName = Literal["ends", "centers"]
 """The names of :class:`DimensionSetOpenings`, for a plain string."""
 
 
+class DimensionSetReference(_StrEnum):
+    """Which of a wall's lines a façade or space recipe measures (docs/adr/0729 §1).
+
+    - ``faces``: Its two faces.
+    - ``core``: The two boundaries of its strongest components' band (its faces without components).
+    """
+    FACES = "faces"
+    CORE = "core"
+
+
+DimensionSetReferenceName = Literal["faces", "core"]
+"""The names of :class:`DimensionSetReference`, for a plain string."""
+
+
 class DimensionSetRow(_StrEnum):
-    """The adjacent wall/opening intervals, or the source wall's whole length."""
+    """The adjacent wall/opening intervals, or the source wall's whole length; a façade's or a space's walls and grids
+    (docs/adr/0729).
+
+    - ``openings``
+    - ``overall``
+    - ``walls``: The walls' thicknesses, the walls meeting a façade, a space's holes: a `span` recipe's only.
+    - ``grids``: The grids across a façade or a space: a `span` recipe's only.
+    """
     OPENINGS = "openings"
     OVERALL = "overall"
+    WALLS = "walls"
+    GRIDS = "grids"
 
 
-DimensionSetRowName = Literal["openings", "overall"]
+DimensionSetRowName = Literal["openings", "overall", "walls", "grids"]
 """The names of :class:`DimensionSetRow`, for a plain string."""
 
 
@@ -6792,6 +6822,7 @@ class DimensionSetEdit(_Union):
     - :class:`MoveDimensionSetEdit` (``kind: move``)
     - :class:`RowOffsetDimensionSetEdit` (``kind: rowOffset``)
     - :class:`SetDimensionSetEdit` (``kind: set``)
+    - :class:`SourcesDimensionSetEdit` (``kind: sources``)
     - :class:`RestoreHiddenDimensionSetEdit` (``kind: restoreHidden``)
     - :class:`DetachDimensionSetEdit` (``kind: detach``)
     - :class:`DeleteDimensionSetEdit` (``kind: delete``)
@@ -18270,6 +18301,7 @@ class DimensionSet(_Model):
         look: The new members' starting template; existing members retain manual looks.
         edge: The straight edge of the wall's path measured: vertex `edge` to `edge + 1` (a closed wall's last edge back to
             its first vertex; docs/adr/0700). None: a two-point wall's only edge, as before (KCAD schema 113). Unit: count.
+        span: A façade or a space measured along a direction (docs/adr/0729); none: one wall's edge (docs/adr/0695/0700).
         suppressed: Explicitly removed segments stay removed until the user restores them.
     """
     id: str
@@ -18286,6 +18318,7 @@ class DimensionSet(_Model):
     edge: int | None | Unset = UNSET
     members: list[DimensionSetMember] | Unset = UNSET
     row_places: list[DimensionSetRowPlace] | Unset = UNSET
+    span: DimensionSetSpan | None | Unset = UNSET
     suppressed: list[DimensionSetSegment] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18308,6 +18341,8 @@ class DimensionSet(_Model):
             out["members"] = [e0.to_json() for e0 in self.members]
         if self.row_places is not UNSET:
             out["rowPlaces"] = [e0.to_json() for e0 in self.row_places]
+        if self.span is not UNSET:
+            out["span"] = None if self.span is None else self.span.to_json()
         if self.suppressed is not UNSET:
             out["suppressed"] = [e0.to_json() for e0 in self.suppressed]
         return out
@@ -18329,6 +18364,7 @@ class DimensionSet(_Model):
             edge=data.get("edge", UNSET),
             members=[DimensionSetMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
             row_places=[DimensionSetRowPlace.from_json(e0) for e0 in data["rowPlaces"]] if "rowPlaces" in data else UNSET,
+            span=UNSET if "span" not in data else None if data["span"] is None else DimensionSetSpan.from_json(data["span"]),
             suppressed=[DimensionSetSegment.from_json(e0) for e0 in data["suppressed"]] if "suppressed" in data else UNSET,
         )
 
@@ -18356,6 +18392,40 @@ class DimensionSetMember(_Model):
             row=_enum_in(DimensionSetRow, data["row"]),
             a=SubRef.from_json(data["a"]),
             b=SubRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionSetRowNote(_Model):
+    """A façade's or a space's row in a plan (docs/adr/0729 §5).
+    Attributes:
+        points: Its points along the direction. Unit: count.
+        sources: The objects they come from. Unit: count.
+        dimensions: Its dimensions drawn (a span another row draws first is not drawn again). Unit: count.
+    """
+    row: DimensionSetRow | DimensionSetRowName
+    points: int
+    sources: int
+    dimensions: int
+    reference: DimensionSetReference | DimensionSetReferenceName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = _enum_out(self.row)
+        out["points"] = self.points
+        out["sources"] = self.sources
+        out["dimensions"] = self.dimensions
+        out["reference"] = _enum_out(self.reference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetRowNote:
+        return cls(
+            row=_enum_in(DimensionSetRow, data["row"]),
+            points=data["points"],
+            sources=data["sources"],
+            dimensions=data["dimensions"],
+            reference=_enum_in(DimensionSetReference, data["reference"]),
         )
 
 
@@ -18406,6 +18476,45 @@ class DimensionSetSegment(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DimensionSetSpan(_Model):
+    """A recipe over a group of walls (a façade) or a space's outline, along one direction (docs/adr/0729 §1).
+    Attributes:
+        direction: The unit direction measured along, in the world plane. Unit: 1.
+        level: The sources' architectural level; none when they have none.
+        space: The recipe's `wall` is a space: its outline is measured.
+        walls: A façade's further walls, after the recipe's `wall`, in the user's order; none for a space.
+    """
+    direction: Vec2
+    level: str | None | Unset = UNSET
+    reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET
+    space: bool | Unset = UNSET
+    walls: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["direction"] = _vec2_out(self.direction)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.reference is not UNSET:
+            out["reference"] = _enum_out(self.reference)
+        if self.space is not UNSET:
+            out["space"] = self.space
+        if self.walls is not UNSET:
+            out["walls"] = list(self.walls)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionSetSpan:
+        return cls(
+            direction=Vec2.from_json(data["direction"]),
+            level=data.get("level", UNSET),
+            reference=_enum_in(DimensionSetReference, data["reference"]) if "reference" in data else UNSET,
+            space=data.get("space", UNSET),
+            walls=list(data["walls"]) if "walls" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionSetsChanged(_Model):
     """
     Attributes:
@@ -18446,39 +18555,51 @@ class DimensionSetsChanged(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DimensionSetsCreateInput(_Model):
-    """Create a live chain on one straight wall face. Wire geometry is metres;
-    gapMm is paper millimetres and uses the existing project plotScale once.
+    """Create a live chain on one straight wall face, or along a façade of walls or a space's outline (docs/adr/0729).
+    Wire geometry is metres; gapMm is paper millimetres and uses the existing project plotScale once.
     A wall of more than one edge needs `edge`, or `around` for a chain on each straight edge (docs/adr/0700).
     Attributes:
         at: Unit: length.
         around: Every straight edge, in one step: a closed wall's outer face, an open wall's `face`; each first row as far
-            out from its face as `at` is from `edge`'s (else the first straight edge's).
+            out from its face as `at` is from `edge`'s (else the first straight edge's). A façade's or a space's: its
+            four sides, along `direction` and square to it, each as far out from the outermost body as `at`.
         dimension_style: Existing project style name; absent means Standart.
+        direction: A façade's or a space's direction along; absent: its first source's longest straight edge's. Unit: 1.
         edge: The wall path's straight edge measured (vertex `edge` to the next; a closed wall's last edge wraps to the
             first vertex). Absent: a two-point wall's only edge. Unit: count.
         gap_mm: Unit: paper-mm.
+        reference: A façade's or a space's lines measured: the walls' faces or their cores.
+        space: A space whose outline is measured, with the openings on it and its holes (docs/adr/0729).
+        wall: The wall measured (its edge; docs/adr/0695, 0700); with `walls`, a façade's first wall.
+        walls: A façade's walls (docs/adr/0729): measured along `direction` with the walls at their ends and meeting them,
+            their openings and the grids across them; `wall` first when given too.
     """
     layer_id: str
-    wall: str
     at: Vec2
     around: bool | Unset = UNSET
     dimension_style: str | None | Unset = UNSET
+    direction: Vec2 | None | Unset = UNSET
     edge: int | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
     gap_mm: float = 7.5
     openings: DimensionSetOpenings | DimensionSetOpeningsName = DimensionSetOpenings.ENDS
+    reference: DimensionSetReference | DimensionSetReferenceName | Unset = UNSET
     rows: list[DimensionSetRow | DimensionSetRowName] = field(default_factory=(lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']]))
+    space: str | None | Unset = UNSET
+    wall: str | None | Unset = UNSET
+    walls: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layerId"] = self.layer_id
-        out["wall"] = self.wall
         out["at"] = _vec2_out(self.at)
         if self.around is not UNSET:
             out["around"] = self.around
         if self.dimension_style is not UNSET:
             out["dimensionStyle"] = self.dimension_style
+        if self.direction is not UNSET:
+            out["direction"] = None if self.direction is None else _vec2_out(self.direction)
         if self.edge is not UNSET:
             out["edge"] = self.edge
         if self.expected_revision is not UNSET:
@@ -18486,23 +18607,35 @@ class DimensionSetsCreateInput(_Model):
         out["face"] = _enum_out(self.face)
         out["gapMm"] = float(self.gap_mm)
         out["openings"] = _enum_out(self.openings)
+        if self.reference is not UNSET:
+            out["reference"] = _enum_out(self.reference)
         out["rows"] = [_enum_out(e0) for e0 in self.rows]
+        if self.space is not UNSET:
+            out["space"] = self.space
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        if self.walls is not UNSET:
+            out["walls"] = list(self.walls)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> DimensionSetsCreateInput:
         return cls(
             layer_id=data["layerId"],
-            wall=data["wall"],
             at=Vec2.from_json(data["at"]),
             around=data.get("around", UNSET),
             dimension_style=data.get("dimensionStyle", UNSET),
+            direction=UNSET if "direction" not in data else None if data["direction"] is None else Vec2.from_json(data["direction"]),
             edge=data.get("edge", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
             gap_mm=float(data["gapMm"]) if "gapMm" in data else 7.5,
             openings=_enum_in(DimensionSetOpenings, data["openings"]) if "openings" in data else DimensionSetOpenings.ENDS,
+            reference=_enum_in(DimensionSetReference, data["reference"]) if "reference" in data else UNSET,
             rows=[_enum_in(DimensionSetRow, e0) for e0 in data["rows"]] if "rows" in data else (lambda: [_enum_in(DimensionSetRow, e0) for e0 in ['openings', 'overall']])(),
+            space=data.get("space", UNSET),
+            wall=data.get("wall", UNSET),
+            walls=list(data["walls"]) if "walls" in data else UNSET,
         )
 
 
@@ -18534,13 +18667,21 @@ class DimensionSetsPlan(_Model):
     """
     Attributes:
         uids: Existing active member ids in this proposal; new members receive ids only on write.
+        rows: A façade's or a space's rows (docs/adr/0729 §5): each one's points, sources and dimensions, and the lines it
+            measures.
+        skipped: The walls near a façade not measured: an oblique or curved edge where they meet it.
+        tight: The dimensions (by their place in `entities`) whose value does not fit between their extension lines
+            (docs/adr/0729 §6): said, never hidden. Unit: count.
     """
     entities: list[Entity]
     spans: list[DimensionSetSegment]
     removed: list[str]
     uids: list[str]
     revision: str
+    rows: list[DimensionSetRowNote] | Unset = UNSET
     set: str | None | Unset = UNSET
+    skipped: list[str] | Unset = UNSET
+    tight: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -18549,8 +18690,14 @@ class DimensionSetsPlan(_Model):
         out["removed"] = list(self.removed)
         out["uids"] = list(self.uids)
         out["revision"] = self.revision
+        if self.rows is not UNSET:
+            out["rows"] = [e0.to_json() for e0 in self.rows]
         if self.set is not UNSET:
             out["set"] = self.set
+        if self.skipped is not UNSET:
+            out["skipped"] = list(self.skipped)
+        if self.tight is not UNSET:
+            out["tight"] = list(self.tight)
         return out
 
     @classmethod
@@ -18561,7 +18708,10 @@ class DimensionSetsPlan(_Model):
             removed=list(data["removed"]),
             uids=list(data["uids"]),
             revision=data["revision"],
+            rows=[DimensionSetRowNote.from_json(e0) for e0 in data["rows"]] if "rows" in data else UNSET,
             set=data.get("set", UNSET),
+            skipped=list(data["skipped"]) if "skipped" in data else UNSET,
+            tight=list(data["tight"]) if "tight" in data else UNSET,
         )
 
 
@@ -68770,6 +68920,7 @@ class SetDimensionSetEdit(DimensionSetEdit):
     """
     Attributes:
         gap_mm: Unit: paper-mm.
+        reference: A façade's or a space's lines measured (docs/adr/0729).
     """
     TAG_VALUE: ClassVar[str] = "set"
     dimension_style: str | None | Unset = UNSET
@@ -68777,6 +68928,7 @@ class SetDimensionSetEdit(DimensionSetEdit):
     gap_mm: float | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     openings: DimensionSetOpenings | DimensionSetOpeningsName | None | Unset = UNSET
+    reference: DimensionSetReference | DimensionSetReferenceName | None | Unset = UNSET
     rows: list[DimensionSetRow | DimensionSetRowName] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68791,6 +68943,8 @@ class SetDimensionSetEdit(DimensionSetEdit):
             out["layerId"] = self.layer_id
         if self.openings is not UNSET:
             out["openings"] = None if self.openings is None else _enum_out(self.openings)
+        if self.reference is not UNSET:
+            out["reference"] = None if self.reference is None else _enum_out(self.reference)
         if self.rows is not UNSET:
             out["rows"] = None if self.rows is None else [_enum_out(e0) for e0 in self.rows]
         return out
@@ -68803,7 +68957,26 @@ class SetDimensionSetEdit(DimensionSetEdit):
             gap_mm=UNSET if "gapMm" not in data else None if data["gapMm"] is None else float(data["gapMm"]),
             layer_id=data.get("layerId", UNSET),
             openings=UNSET if "openings" not in data else None if data["openings"] is None else _enum_in(DimensionSetOpenings, data["openings"]),
+            reference=UNSET if "reference" not in data else None if data["reference"] is None else _enum_in(DimensionSetReference, data["reference"]),
             rows=UNSET if "rows" not in data else None if data["rows"] is None else [_enum_in(DimensionSetRow, e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesDimensionSetEdit(DimensionSetEdit):
+    """A façade's walls, replaced (docs/adr/0729 §5)."""
+    TAG_VALUE: ClassVar[str] = "sources"
+    walls: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sources"}
+        out["walls"] = list(self.walls)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesDimensionSetEdit:
+        return cls(
+            walls=list(data["walls"]),
         )
 
 
@@ -81131,7 +81304,7 @@ _DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, 
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure, "centerMark": CenterMarkDimensionMeasure, "centerLine": CenterLineDimensionMeasure, "elevation": ElevationDimensionMeasure}
 
 
-_DIMENSION_SET_EDIT: dict[str, type[DimensionSetEdit]] = {"move": MoveDimensionSetEdit, "rowOffset": RowOffsetDimensionSetEdit, "set": SetDimensionSetEdit, "restoreHidden": RestoreHiddenDimensionSetEdit, "detach": DetachDimensionSetEdit, "delete": DeleteDimensionSetEdit, "resetText": ResetTextDimensionSetEdit, "resetRows": ResetRowsDimensionSetEdit}
+_DIMENSION_SET_EDIT: dict[str, type[DimensionSetEdit]] = {"move": MoveDimensionSetEdit, "rowOffset": RowOffsetDimensionSetEdit, "set": SetDimensionSetEdit, "sources": SourcesDimensionSetEdit, "restoreHidden": RestoreHiddenDimensionSetEdit, "detach": DetachDimensionSetEdit, "delete": DeleteDimensionSetEdit, "resetText": ResetTextDimensionSetEdit, "resetRows": ResetRowsDimensionSetEdit}
 
 
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
@@ -81971,10 +82144,14 @@ __all__ = [
     "DimensionSetMember",
     "DimensionSetOpenings",
     "DimensionSetOpeningsName",
+    "DimensionSetReference",
+    "DimensionSetReferenceName",
     "DimensionSetRow",
     "DimensionSetRowName",
+    "DimensionSetRowNote",
     "DimensionSetRowPlace",
     "DimensionSetSegment",
+    "DimensionSetSpan",
     "DimensionSetsChanged",
     "DimensionSetsCreateInput",
     "DimensionSetsEditInput",
@@ -83702,6 +83879,7 @@ __all__ = [
     "SourceUncertainty",
     "SourcesDescribe",
     "SourcesDescribed",
+    "SourcesDimensionSetEdit",
     "SourcesEdit",
     "SourcesEditOp",
     "SourcesEdited",

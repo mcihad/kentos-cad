@@ -14,6 +14,10 @@ pub enum Face {
 pub enum Row {
     Openings,
     Overall,
+    /// A façade's or a space's walls: thicknesses, the walls meeting it, a space's holes (docs/adr/0729).
+    Walls,
+    /// The grids across a façade or a space, between its outermost points (docs/adr/0729).
+    Grids,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Openings {

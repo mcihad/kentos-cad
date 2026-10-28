@@ -28,6 +28,20 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Cephe, duvar grubu ve mahal ölçü dizileri (28 Ekim 2026; [ADR0729](docs/adr/0729-facade-and-space-dimension-recipes.md)).**
+  Ölçü dizisi tarifinin `span`'ı (KCAD 128 opt-in): kaynak duvarlar (`wall` + `walls`) ya da mahal (`space`), doğrultu
+  (okunur yöne çevrilir), `reference` dış yüzler/çekirdek (en güçlü bileşen bandı), kat. Ortak çekirdek
+  `ops::dimension_span` ve ortak toplayıcı `kentos_formats::dimension_spans`: dik kenar noktaları, uçtaki köşe duvarı,
+  saplanan/kesişen duvar (eğik/yaylı ise `dimension_set_wall_skipped`), açıklığın yakın pervazları, s yanından
+  görünürlük, dik akslar; mahalde dış halka, delikler ve s'ye bakan kenarın açıklıkları. Sıralar `openings`, `walls`,
+  `grids`, `overall`; boş sıra yer kaplamaz; `around` dört yan. Planın `rows`/`skipped`/`tight`'ı ve sığmayan yazı
+  `dimension_text_tight` (gizlenmez). İzleme aynı adımda: bölme parçası kaynaklara katılır, birleşen yerini alır,
+  tek duvar tarifi bölünürse cepheye döner, kimlik aynı çift ya da nanometre aralığı; karışık kat `mixedSources`.
+  `cad.dimensionsets.edit`'in `Sources` ve `reference`'ı, `span`'lı tarifte sıra uzaklığı en dış yüzden. Araçta Kaynak
+  türü (Duvar/Cephe/Mahal), Doğrultu, Ölçülen çizgi, Yanlar, Duvarlar/Akslar sırası; Öznitelikler'de kaynak ve sıralar.
+  Veritabanı projesi `span`'ı şimdilik açıkça reddeder (TODOS.md `PG-23`). 70 bağımsız ortak durum
+  (`dimension_spans_cases.py`).
+
 - **Geçici ölçünün kalanı: aksa mesafe, duvar boyu, iki aday (28 Ekim 2026; [ADR0728](docs/adr/0728-temporary-distances-grids-length-references.md)).**
   Duvar, kolon ve açıklığın geçici ölçüsünde aks ikinci adaydır ve nesnenin ekseninden ölçülür (duvar kenarının iki
   yüzünün ortası, kolonun ortası, pervazların ortası; düz aks, katında ya da katsız, sonsuz doğru; `ops::grid_ref`).

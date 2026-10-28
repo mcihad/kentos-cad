@@ -56,6 +56,7 @@ fn recipe(doc: &Document, wall: Slot, origin: Vec2) -> DimensionSet {
         members: Vec::new(),
         suppressed: Vec::new(),
         broken: None,
+        span: None,
     }
 }
 fn dim(doc: &Document, uid: EntityId) -> &kentos_domain::contracts::DimensionEntity {

@@ -286,6 +286,12 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
                 index,
             },
         ) => place.get(index).copied(),
+        // A space's boundary vertices (docs/adr/0729 §2): ring 0 a part's outer ring, the next its holes.
+        (Shape::Space { parts, .. }, Place::Vertex { part, ring, index }) => {
+            let area = parts.get(part)?;
+            let r = if ring == 0 { &area.outer } else { area.holes.get(ring - 1)? };
+            r.pts.get(index).copied()
+        }
         (Shape::Point { p, .. }, Place::Node { part: 0 }) => Some(*p),
         // A text's, an insert's and a table's insertion point (docs/adr/0272 §1).
         (

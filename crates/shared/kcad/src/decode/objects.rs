@@ -260,6 +260,8 @@ pub(super) struct Features {
     grid_column_forms: bool,
     /// Schema 127: the kitchen runs (docs/adr/0727).
     pub(super) casework: bool,
+    /// Schema 128: a façade's or a space's dimension recipe (docs/adr/0729).
+    pub(super) dimension_set_spans: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -470,6 +472,7 @@ impl Features {
             stair_levels: schema >= crate::SCHEMA_WITH_STAIR_LEVELS,
             grid_column_forms: schema >= crate::SCHEMA_WITH_GRID_COLUMN_FORMS,
             casework: schema >= crate::SCHEMA_WITH_CASEWORK,
+            dimension_set_spans: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SPANS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

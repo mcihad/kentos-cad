@@ -27,6 +27,7 @@ pub mod arch_elements;
 pub mod blocks;
 pub mod compress;
 pub mod coords;
+pub mod dimension_spans;
 pub mod dxf;
 pub mod exif;
 pub(crate) mod export_geom;

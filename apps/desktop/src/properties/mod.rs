@@ -688,12 +688,10 @@ impl App {
             };
             let row = set.members[index].row;
             let slots: Vec<_> = if action == "source" {
-                set.wall
-                    .to_text()
-                    .parse()
-                    .ok()
-                    .and_then(|uid| model.slot_of(uid))
-                    .into_iter()
+                set.sources()
+                    .iter()
+                    .filter_map(|id| id.to_text().parse().ok())
+                    .filter_map(|uid| model.slot_of(uid))
                     .collect()
             } else {
                 set.members
@@ -1127,11 +1125,30 @@ fn dimension_set_action(
     action: &str,
 ) -> Vec<String> {
     use serde_json::json;
-    let row = model
+    let found = model
         .uid(slot)
-        .and_then(|uid| model.dimension_set_of_item(uid))
-        .map(|(set, index)| set.members[index].row.name());
+        .and_then(|uid| model.dimension_set_of_item(uid));
+    let row = found.map(|(set, index)| set.members[index].row.name());
+    // A façade's or a space's row on or off, the rows kept in their order (docs/adr/0729 §7).
+    let toggled = action.strip_prefix("toggle:").and_then(|name| {
+        let (set, _) = found?;
+        let order = ["openings", "walls", "grids", "overall"];
+        let mut rows: Vec<&str> = order
+            .iter()
+            .copied()
+            .filter(|r| set.rows.iter().any(|x| x.name() == *r))
+            .collect();
+        if rows.contains(&name) {
+            rows.retain(|r| *r != name);
+        } else {
+            rows.push(name);
+            rows.sort_by_key(|r| order.iter().position(|o| o == r));
+        }
+        Some(rows)
+    });
     let operation = match action {
+        _ if toggled.is_some() => json!({"kind":"set","rows":toggled}),
+        "faces" | "core" => json!({"kind":"set","reference":action}),
         "left" | "right" => json!({"kind":"set","face":action}),
         "ends" | "centers" => json!({"kind":"set","openings":action}),
         "both" => json!({"kind":"set","rows":["openings","overall"]}),

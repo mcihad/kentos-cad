@@ -18,6 +18,7 @@ mod crs_text;
 mod data_search;
 mod delaunay;
 mod derive;
+mod dimension_span;
 mod dimensions;
 mod display;
 mod drawing_extras;

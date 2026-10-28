@@ -2,12 +2,18 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, DimensionSet, DimensionSetBreak, DimensionSetEdit, DimensionSetFace,
-    DimensionSetId, DimensionSetRowPlace, DimensionSetsChanged, DimensionSetsCreateInput,
-    DimensionSetsEditInput, DimensionSetsPlan, DimensionSetsQueried, DimensionSetsQueryInput,
-    Entity, EntityId, Vec2, dimension_sets_problem,
+    CommandResult, CommandWarning, DimensionSet, DimensionSetBreak, DimensionSetEdit,
+    DimensionSetFace, DimensionSetId, DimensionSetRowNote, DimensionSetRowPlace, DimensionSetSpan,
+    DimensionSetsChanged, DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsPlan,
+    DimensionSetsQueried, DimensionSetsQueryInput, DrawingFont, Entity, EntityId, Vec2,
+    dimension_sets_problem,
 };
+use kentos_domain::dimension_sets::PlannedDimensionSetMember;
+use kentos_domain::dimension_spans::SpanRefusal;
 use kentos_domain::{Document, Uuid};
+use kentos_geometry_core::ops::dimension_span::Why;
+use kentos_geometry_core::text::{Font, width_em};
+use kentos_project::format::Format;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -27,6 +33,9 @@ fn source_error(why: DimensionSetBreak) -> Stop {
         }
         DimensionSetBreak::OpeningUnplaced => {
             "Duvarın bir açıklığı yerleştirilemedi. Önce açıklığın kaynak bağını düzeltin."
+        }
+        DimensionSetBreak::MixedSources => {
+            "Duvarlar farklı katlarda; cephe ölçüsünün duvarları tek bir katta olmalı."
         }
     };
     fail(message, "wall")
@@ -140,11 +149,26 @@ fn create_recipes(
     checks::revision(doc, input.expected_revision.as_deref())?;
     checks::point(input.at, "Ölçü sırasının yeri", "at")?;
     checks::layer(doc, &input.layer_id)?;
-    if !checks::is_uid_text(&input.wall) {
+    let (look, height) = crate::dimension_create::style_of(doc, input.dimension_style.as_deref())?;
+    if input.space.is_some() || !input.walls.is_empty() {
+        return span_recipes(doc, input, look, height);
+    }
+    let Some(wall) = &input.wall else {
+        return Err(fail(
+            "Ölçülecek duvarı (wall), cephenin duvarlarını (walls) ya da mahali (space) verin.",
+            "wall",
+        ));
+    };
+    if !checks::is_uid_text(wall) {
         return Err(fail("Geçerli bir duvar kimliği verin.", "wall"));
     }
-    let wall = Uuid::parse_str(&input.wall).map_err(|_| fail("Duvar kimliği geçersiz.", "wall"))?;
-    let (look, height) = crate::dimension_create::style_of(doc, input.dimension_style.as_deref())?;
+    if input.direction.is_some() || !input.reference.is_faces() {
+        return Err(fail(
+            "Doğrultu (direction) ve ölçülen çizgi (reference) yalnız cephe (walls) ve mahal (space) dizisinde verilir.",
+            "direction",
+        ));
+    }
+    let wall = Uuid::parse_str(wall).map_err(|_| fail("Duvar kimliği geçersiz.", "wall"))?;
     measured_edges(doc, wall, input)?
         .into_iter()
         .map(|(edge, face, at)| {
@@ -164,6 +188,7 @@ fn create_recipes(
                 members: Vec::new(),
                 suppressed: Vec::new(),
                 broken: None,
+                span: None,
             };
             recipe_ok(&set)?;
             doc.dimension_set_plan(&set).map_err(source_error)?;
@@ -171,6 +196,354 @@ fn create_recipes(
         })
         .collect()
 }
+
+fn uid_at(text: &str, path: &str) -> Result<EntityId, Stop> {
+    if !checks::is_uid_text(text) {
+        return Err(fail("Geçerli bir kimlik verin.", path));
+    }
+    Uuid::parse_str(text)
+        .map(|u| EntityId(u.into_bytes()))
+        .map_err(|_| fail("Kimlik geçersiz.", path))
+}
+
+/// Why a façade or space recipe cannot be made (docs/adr/0729 §3), its source named.
+fn span_error(r: SpanRefusal, path: &str) -> Stop {
+    let named = r.source.map(|id| format!(" ({id})")).unwrap_or_default();
+    let message = match (r.broken, r.why) {
+        (DimensionSetBreak::UnsupportedWall, Some(Why::Oblique)) => format!(
+            "Kaynağın{named} bir kenarı ölçü doğrultusuna ne paralel ne dik. Cephe ve mahal ölçüsü yalnız doğrultuya paralel ve dik kenarları ölçer: doğrultuyu duvarlara göre verin ya da eğik duvarı ayrı ölçün."
+        ),
+        (DimensionSetBreak::UnsupportedWall, Some(Why::Arc)) => format!(
+            "Kaynağın{named} yaylı bir kenarı var; cephe ve mahal ölçüsü yaylı kenarı ölçmez. Yaylı duvarı tek duvar ölçüsüyle ya da ayrı ölçün."
+        ),
+        (DimensionSetBreak::UnsupportedWall, Some(Why::Drawn)) => format!(
+            "Kaynak duvarın{named} bir yüzü köşesinde pahlanıyor ya da duvar çizilemiyor; ölçülemez."
+        ),
+        (DimensionSetBreak::UnsupportedWall, None) if r.source.is_some() => format!(
+            "Kaynak{named} bir duvar değil (mahal dizisinde bir mahal değil). Doğru nesneyi seçin."
+        ),
+        (DimensionSetBreak::UnsupportedWall, None) => {
+            "Ölçü doğrultusu, yeri ya da sıra aralığı geçersiz.".to_owned()
+        }
+        (DimensionSetBreak::MixedSources, _) => format!(
+            "Duvarlar{named} farklı katlarda; cephe ölçüsünün duvarları tek bir katta (ya da hepsi katsız) olmalı. Duvarlara aynı katı verin ya da ayrı ölçün."
+        ),
+        (DimensionSetBreak::HostGone, _) => {
+            "Kaynak bulunamadı. Duvarları ya da mahali yeniden seçin.".to_owned()
+        }
+        (DimensionSetBreak::OpeningUnplaced, _) => {
+            "Duvarın bir açıklığı yerleştirilemedi. Önce açıklığın kaynak bağını düzeltin.".to_owned()
+        }
+    };
+    let mut e = error("invalid_dimension_set", message, Some(path.into()));
+    e.uids = r.source.map(|id| vec![id.to_string()]).unwrap_or_default();
+    Stop::failed(e)
+}
+
+/// A path's longest straight edge's direction; none when it has none.
+fn longest_edge(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<Vec2> {
+    let n = pts.len();
+    let edges = if closed { n } else { n.saturating_sub(1) };
+    let mut best: Option<(f64, Vec2)> = None;
+    for k in 0..edges {
+        if bulges.and_then(|b| b.get(k)).is_some_and(|b| *b != 0.0) {
+            continue;
+        }
+        let (a, b) = (pts[k], pts[(k + 1) % n]);
+        let l = (b.x - a.x).hypot(b.y - a.y);
+        if l > 0.0 && best.is_none_or(|(m, _)| l > m) {
+            best = Some((
+                l,
+                Vec2 {
+                    x: (b.x - a.x) / l,
+                    y: (b.y - a.y) / l,
+                },
+            ));
+        }
+    }
+    best.map(|(_, d)| d)
+}
+
+/// A direction turned to read left to right, or upward (docs/adr/0729 §5): rows are written along it from its low end.
+fn readable(d: Vec2) -> Vec2 {
+    if d.x < -1e-9 || (d.x.abs() <= 1e-9 && d.y < 0.0) {
+        Vec2 {
+            x: -d.x + 0.0,
+            y: -d.y + 0.0,
+        }
+    } else {
+        d
+    }
+}
+
+/// The points of a façade's walls' faces or a space's outer rings: what its four sides go round.
+fn body_points(doc: &Document, set: &DimensionSet) -> Vec<Vec2> {
+    let mut out = Vec::new();
+    for id in set.sources() {
+        let Some(e) = doc
+            .slot_of(Uuid::from_bytes(id.0))
+            .and_then(|slot| doc.get(slot))
+        else {
+            continue;
+        };
+        match e {
+            Entity::Wall(w) => {
+                let pts: Vec<_> = w
+                    .wall
+                    .pts
+                    .iter()
+                    .map(|p| kentos_geometry_core::vec2::Vec2::new(p.x, p.y))
+                    .collect();
+                let spec = crate::walls::core_spec(&w.wall);
+                if let Ok(lines) =
+                    kentos_geometry_core::geom::wall::lines(&pts, w.wall.bulges.as_deref(), &spec)
+                {
+                    for l in [&lines[0], &lines[lines.len() - 1]] {
+                        out.extend(l.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }));
+                    }
+                }
+            }
+            Entity::Space(s) => {
+                for part in &s.space.parts {
+                    out.extend(part.outer.pts.iter().copied());
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+/// A façade's or a space's four sides (docs/adr/0729 §5): along the direction south and north of the bodies, square to
+/// it east and west, each first row as far out from the outermost body as `at`.
+fn four_sides(doc: &Document, base: &DimensionSet) -> Vec<DimensionSet> {
+    let Some(span) = &base.span else {
+        return vec![base.clone()];
+    };
+    let pts = body_points(doc, base);
+    let Some(origin) = pts.first().copied() else {
+        return vec![base.clone()];
+    };
+    let d = span.direction;
+    let n = Vec2 { x: -d.y, y: d.x };
+    let t = |p: Vec2| (p.x - origin.x) * d.x + (p.y - origin.y) * d.y;
+    let o = |p: Vec2| (p.x - origin.x) * n.x + (p.y - origin.y) * n.y;
+    let (mut t0, mut t1, mut o0, mut o1) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
+    for p in &pts {
+        (t0, t1) = (t0.min(t(*p)), t1.max(t(*p)));
+        (o0, o1) = (o0.min(o(*p)), o1.max(o(*p)));
+    }
+    let (ta, oa) = (t(base.at), o(base.at));
+    let reach = if oa < o0 {
+        o0 - oa
+    } else if oa > o1 {
+        oa - o1
+    } else if ta < t0 {
+        t0 - ta
+    } else if ta > t1 {
+        ta - t1
+    } else {
+        (oa - o0).min(o1 - oa).min(ta - t0).min(t1 - ta)
+    };
+    let at = |tt: f64, oo: f64| Vec2 {
+        x: origin.x + d.x * tt + n.x * oo,
+        y: origin.y + d.y * tt + n.y * oo,
+    };
+    let (tm, om) = ((t0 + t1) * 0.5, (o0 + o1) * 0.5);
+    [
+        (d, at(tm, o0 - reach)),
+        (n, at(t1 + reach, om)),
+        (d, at(tm, o1 + reach)),
+        (n, at(t0 - reach, om)),
+    ]
+    .into_iter()
+    .map(|(direction, place)| {
+        let mut set = base.clone();
+        set.at = place;
+        if let Some(s) = &mut set.span {
+            s.direction = readable(direction);
+        }
+        set
+    })
+    .collect()
+}
+
+/// A façade's or a space's recipes (docs/adr/0729 §1, §5): its sources checked, its direction, one recipe or four.
+fn span_recipes(
+    doc: &Document,
+    input: &DimensionSetsCreateInput,
+    look: kentos_commands::DimensionLook,
+    height: f64,
+) -> Result<Vec<DimensionSet>, Stop> {
+    if input.edge.is_some() {
+        return Err(fail(
+            "Kenar (edge) yalnız tek duvar ölçüsünde verilir; cephe ve mahal doğrultusuyla ölçülür.",
+            "edge",
+        ));
+    }
+    let (wall, walls, space, path) = if let Some(space) = &input.space {
+        if input.wall.is_some() || !input.walls.is_empty() {
+            return Err(fail(
+                "Mahal ölçüsüne duvar verilmez: ya mahali (space) ya duvarları (walls) verin.",
+                "space",
+            ));
+        }
+        (uid_at(space, "space")?, Vec::new(), true, "space")
+    } else {
+        let mut all = Vec::new();
+        if let Some(w) = &input.wall {
+            all.push(uid_at(w, "wall")?);
+        }
+        for (i, w) in input.walls.iter().enumerate() {
+            let id = uid_at(w, &format!("walls[{i}]"))?;
+            if all.contains(&id) {
+                return Err(fail("Aynı duvar iki kez verildi.", &format!("walls[{i}]")));
+            }
+            all.push(id);
+        }
+        (all[0], all[1..].to_vec(), false, "walls")
+    };
+    for id in std::iter::once(&wall).chain(walls.iter()) {
+        let e = doc
+            .slot_of(Uuid::from_bytes(id.0))
+            .and_then(|slot| doc.get(slot));
+        let fits = match e {
+            None => {
+                return Err(span_error(
+                    SpanRefusal {
+                        broken: DimensionSetBreak::HostGone,
+                        source: Some(*id),
+                        why: None,
+                    },
+                    path,
+                ));
+            }
+            Some(Entity::Wall(_)) => !space,
+            Some(Entity::Space(_)) => space,
+            Some(_) => false,
+        };
+        if !fits {
+            return Err(span_error(
+                SpanRefusal {
+                    broken: DimensionSetBreak::UnsupportedWall,
+                    source: Some(*id),
+                    why: None,
+                },
+                path,
+            ));
+        }
+    }
+    let first = doc
+        .slot_of(Uuid::from_bytes(wall.0))
+        .and_then(|slot| doc.get(slot));
+    let level = match first {
+        Some(Entity::Wall(w)) => w.wall.arch.level.clone(),
+        Some(Entity::Space(s)) => s.space.arch.level.clone(),
+        _ => None,
+    };
+    let direction = match input.direction {
+        Some(d) => {
+            checks::point(d, "Ölçü doğrultusu", "direction")?;
+            let l = d.x.hypot(d.y);
+            if l.is_nan() || l <= 1e-12 {
+                return Err(fail("Ölçü doğrultusu sıfır olamaz.", "direction"));
+            }
+            Vec2 {
+                x: d.x / l,
+                y: d.y / l,
+            }
+        }
+        None => match first {
+            Some(Entity::Wall(w)) => longest_edge(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
+            Some(Entity::Space(s)) => s.space.parts.first().and_then(|part| {
+                longest_edge(&part.outer.pts, part.outer.bulges.as_deref(), true)
+            }),
+            _ => None,
+        }
+        .ok_or_else(|| fail("Kaynağın düz kenarı yok; ölçü doğrultusunu (direction) verin.", "direction"))?,
+    };
+    let direction = readable(direction);
+    let base = DimensionSet {
+        id: DimensionSetId([1; 16]),
+        wall,
+        edge: None,
+        face: DimensionSetFace::Left,
+        rows: input.rows.clone(),
+        openings: input.openings,
+        layer_id: input.layer_id.clone(),
+        at: input.at,
+        gap_mm: input.gap_mm,
+        height,
+        look,
+        row_places: Vec::new(),
+        members: Vec::new(),
+        suppressed: Vec::new(),
+        broken: None,
+        span: Some(DimensionSetSpan {
+            walls,
+            space,
+            direction,
+            reference: input.reference,
+            level,
+        }),
+    };
+    let sets = if input.around { four_sides(doc, &base) } else { vec![base] };
+    for set in &sets {
+        recipe_ok(set)?;
+        let (members, _) = doc.dimension_span_plan(set).map_err(|r| span_error(r, path))?;
+        if members.is_empty() {
+            return Err(fail(
+                "Bu kaynakta seçilen sıralarda ölçülecek aralık yok: başka sıra seçin ya da kaynakları değiştirin.",
+                "rows",
+            ));
+        }
+    }
+    Ok(sets)
+}
+
+/// The members whose value does not fit between their extension lines (docs/adr/0729 §6): the value as the document
+/// writes it, in the drawing's face at the dimension's height, with a height to spare.
+fn tight(doc: &Document, members: &[PlannedDimensionSetMember]) -> Vec<u32> {
+    let format = Format::of(doc.settings());
+    let font = Font::from_id(DrawingFont::id_of(doc.settings().drawing_font));
+    members
+        .iter()
+        .enumerate()
+        .filter(|(_, m)| {
+            let d = &m.dimension;
+            let read = crate::dimensions_query::read(&format, Uuid::nil(), d);
+            read.measured.is_finite() && width_em(&read.shown, font) * d.height + d.height > read.measured.abs()
+        })
+        .map(|(i, _)| i as u32)
+        .collect()
+}
+
+/// A plan's warnings: dimensions that do not fit, walls at a façade left unmeasured.
+fn plan_warnings(plan: &DimensionSetsPlan) -> Vec<CommandWarning> {
+    let mut out = Vec::new();
+    if !plan.tight.is_empty() {
+        out.push(CommandWarning {
+            code: crate::codes::DIMENSION_TEXT_TIGHT.into(),
+            message: format!(
+                "{} ölçünün değeri iki uzatma çizgisinin arasına sığmıyor; gizlenmedi. Sıra aralığını ya da ölçü stilinin yazı yerini değiştirin.",
+                plan.tight.len()
+            ),
+            path: None,
+        });
+    }
+    if !plan.skipped.is_empty() {
+        out.push(CommandWarning {
+            code: crate::codes::DIMENSION_SET_WALL_SKIPPED.into(),
+            message: format!(
+                "Cepheye değen {} duvar eğik ya da yaylı kenarı yüzünden ölçülmedi.",
+                plan.skipped.len()
+            ),
+            path: None,
+        });
+    }
+    out
+}
+
 fn member_entities(doc: &Document, set: &DimensionSet) -> BTreeMap<String, Entity> {
     set.members
         .iter()
@@ -238,9 +611,25 @@ fn check_edit(doc: &Document, input: &DimensionSetsEditInput) -> Result<Dimensio
             gap_mm,
             dimension_style,
             layer_id,
+            reference,
         } => {
             if let Some(face) = face {
+                if set.span.is_some() {
+                    return Err(fail(
+                        "Cephe ve mahal dizisinde yüz, sıraların yanından seçilir; ölçülen çizgi için reference verin.",
+                        "operation.face",
+                    ));
+                }
                 set.face = *face;
+            }
+            if let Some(reference) = reference {
+                let Some(span) = &mut set.span else {
+                    return Err(fail(
+                        "Ölçülen çizgi (reference) yalnız cephe ve mahal dizisinde verilir.",
+                        "operation.reference",
+                    ));
+                };
+                span.reference = *reference;
             }
             if let Some(rows) = rows {
                 set.rows = rows.clone();
@@ -262,6 +651,52 @@ fn check_edit(doc: &Document, input: &DimensionSetsEditInput) -> Result<Dimensio
                 (set.look, set.height) = crate::dimension_create::style_of(doc, Some(name))?;
             }
         }
+        DimensionSetEdit::Sources { walls } => {
+            let Some(span) = &set.span else {
+                return Err(fail(
+                    "Kaynak duvarlar yalnız cephe dizisinde değiştirilir.",
+                    "operation.walls",
+                ));
+            };
+            if span.space {
+                return Err(fail(
+                    "Mahal dizisinin kaynağı mahaldir; duvar verilmez.",
+                    "operation.walls",
+                ));
+            }
+            let mut ids: Vec<EntityId> = Vec::new();
+            for (i, w) in walls.iter().enumerate() {
+                let path = format!("operation.walls[{i}]");
+                let id = uid_at(w, &path)?;
+                if ids.contains(&id) {
+                    return Err(fail("Aynı duvar iki kez verildi.", &path));
+                }
+                match doc.slot_of(Uuid::from_bytes(id.0)).and_then(|slot| doc.get(slot)) {
+                    Some(Entity::Wall(_)) => ids.push(id),
+                    found => {
+                        return Err(span_error(
+                            SpanRefusal {
+                                broken: if found.is_none() {
+                                    DimensionSetBreak::HostGone
+                                } else {
+                                    DimensionSetBreak::UnsupportedWall
+                                },
+                                source: Some(id),
+                                why: None,
+                            },
+                            &path,
+                        ));
+                    }
+                }
+            }
+            let Some((first, rest)) = ids.split_first() else {
+                return Err(fail("Cephenin en az bir duvarı olmalı.", "operation.walls"));
+            };
+            set.wall = *first;
+            if let Some(span) = &mut set.span {
+                span.walls = rest.to_vec();
+            }
+        }
         DimensionSetEdit::RestoreHidden => set.suppressed.clear(),
         DimensionSetEdit::ResetRows => set.row_places.clear(),
         DimensionSetEdit::ResetText { row } => {
@@ -274,12 +709,24 @@ fn check_edit(doc: &Document, input: &DimensionSetsEditInput) -> Result<Dimensio
     recipe_ok(&set)?;
     // Text reset can still repair text placement when a source is broken.
     if !matches!(input.operation, DimensionSetEdit::ResetText { .. }) {
-        doc.dimension_set_plan(&set).map_err(source_error)?;
+        if set.span.is_some() {
+            doc.dimension_span_plan(&set)
+                .map_err(|r| span_error(r, "operation"))?;
+        } else {
+            doc.dimension_set_plan(&set).map_err(source_error)?;
+        }
     }
     Ok(set)
 }
 fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<DimensionSetsPlan, Stop> {
-    let members = doc.dimension_set_plan(set).map_err(source_error)?;
+    let (members, notes) = if set.span.is_some() {
+        let (members, notes) = doc
+            .dimension_span_plan(set)
+            .map_err(|r| span_error(r, "operation"))?;
+        (members, Some(notes))
+    } else {
+        (doc.dimension_set_plan(set).map_err(source_error)?, None)
+    };
     let kept: HashSet<_> = members.iter().filter_map(|m| m.uid).collect();
     let removed = set
         .members
@@ -287,6 +734,7 @@ fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<Dimensi
         .filter(|m| !kept.contains(&m.uid))
         .map(|m| m.uid.to_string())
         .collect();
+    let reference = set.span.as_ref().map(|s| s.reference).unwrap_or_default();
     Ok(DimensionSetsPlan {
         set: existing.then_some(set.id),
         entities: members
@@ -300,6 +748,25 @@ fn planned(doc: &Document, set: &DimensionSet, existing: bool) -> Result<Dimensi
             .collect(),
         removed,
         revision: doc.revision().to_string(),
+        rows: notes
+            .as_ref()
+            .map(|n| {
+                n.rows
+                    .iter()
+                    .map(|r| DimensionSetRowNote {
+                        row: r.row,
+                        points: r.points as u32,
+                        sources: r.sources as u32,
+                        dimensions: r.spans as u32,
+                        reference,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
+        skipped: notes
+            .map(|n| n.skipped.iter().map(|id| id.to_string()).collect())
+            .unwrap_or_default(),
+        tight: tight(doc, &members),
     })
 }
 fn success<T>(output: T) -> CommandResult<T> {
@@ -317,6 +784,28 @@ fn visible_result<T>(doc: &Document, layer: &str, output: T) -> CommandResult<T>
         warnings: checks::layer(doc, layer).unwrap_or_default(),
     }
 }
+fn with_warnings<T>(result: CommandResult<T>, extra: Vec<CommandWarning>) -> CommandResult<T> {
+    match result {
+        CommandResult::Completed { output, mut warnings } => {
+            warnings.extend(extra);
+            CommandResult::Completed { output, warnings }
+        }
+        other => other,
+    }
+}
+fn empty_plan(doc: &Document, set: Option<DimensionSetId>) -> DimensionSetsPlan {
+    DimensionSetsPlan {
+        set,
+        entities: Vec::new(),
+        spans: Vec::new(),
+        removed: Vec::new(),
+        uids: Vec::new(),
+        revision: doc.revision().to_string(),
+        rows: Vec::new(),
+        skipped: Vec::new(),
+        tight: Vec::new(),
+    }
+}
 
 pub mod create {
     use super::*;
@@ -325,7 +814,13 @@ pub mod create {
         input: &DimensionSetsCreateInput,
     ) -> CommandResult<()> {
         match create_recipes(cx.doc, input) {
-            Ok(_) => visible_result(cx.doc, &input.layer_id, ()),
+            Ok(_) => match plan_in(cx.doc, input) {
+                CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+                    output: (),
+                    warnings,
+                },
+                _ => visible_result(cx.doc, &input.layer_id, ()),
+            },
             Err(e) => e.into(),
         }
     }
@@ -345,21 +840,23 @@ pub mod create {
                 .collect::<Result<Vec<_>, _>>()
         });
         match plans {
-            // Every edge's chain, in edge order (docs/adr/0700).
+            // Every edge's chain, in edge order (docs/adr/0700); a façade's four sides in order (docs/adr/0729).
             Ok(plans) => {
-                let mut out = DimensionSetsPlan {
-                    set: None,
-                    entities: Vec::new(),
-                    spans: Vec::new(),
-                    removed: Vec::new(),
-                    uids: Vec::new(),
-                    revision: doc.revision().to_string(),
-                };
+                let mut out = empty_plan(doc, None);
                 for plan in plans {
+                    let base = out.entities.len() as u32;
+                    out.tight.extend(plan.tight.iter().map(|i| i + base));
                     out.entities.extend(plan.entities);
                     out.spans.extend(plan.spans);
+                    out.rows.extend(plan.rows);
+                    for wall in plan.skipped {
+                        if !out.skipped.contains(&wall) {
+                            out.skipped.push(wall);
+                        }
+                    }
                 }
-                visible_result(doc, &input.layer_id, out)
+                let warnings = plan_warnings(&out);
+                with_warnings(visible_result(doc, &input.layer_id, out), warnings)
             }
             Err(e) => e.into(),
         }
@@ -384,6 +881,16 @@ pub mod create {
             Ok(s) => s,
             Err(e) => return e.into(),
         };
+        let mut said = empty_plan(cx.doc, None);
+        for set in &sets {
+            if let Ok(plan) = planned(cx.doc, set, false) {
+                said.tight.extend(plan.tight);
+                said.skipped.extend(plan.skipped);
+            }
+        }
+        said.skipped.sort();
+        said.skipped.dedup();
+        let warnings = plan_warnings(&said);
         // Every set in one undo step: all written, or none (docs/adr/0700).
         let written = cx
             .doc
@@ -405,7 +912,7 @@ pub mod create {
             .filter_map(|id| cx.doc.dimension_set(*id))
             .flat_map(|s| s.members.iter().map(|m| m.uid.to_string()))
             .collect();
-        visible_result(
+        with_warnings(visible_result(
             cx.doc,
             &input.layer_id,
             DimensionSetsChanged {
@@ -421,7 +928,7 @@ pub mod create {
                 removed: Vec::new(),
                 revision: cx.doc.revision().to_string(),
             },
-        )
+        ), warnings)
     }
 }
 pub mod edit {
@@ -450,14 +957,7 @@ pub mod edit {
         let mut out = match input.operation {
             DimensionSetEdit::Delete
             | DimensionSetEdit::Detach
-            | DimensionSetEdit::ResetText { .. } => DimensionSetsPlan {
-                set: Some(set.id),
-                entities: Vec::new(),
-                spans: Vec::new(),
-                removed: Vec::new(),
-                uids: Vec::new(),
-                revision: cx.doc.revision().to_string(),
-            },
+            | DimensionSetEdit::ResetText { .. } => empty_plan(cx.doc, Some(set.id)),
             _ => match planned(cx.doc, &set, true) {
                 Ok(o) => o,
                 Err(e) => return e.into(),
@@ -498,7 +998,8 @@ pub mod edit {
                     .collect();
             }
         }
-        visible_result(cx.doc, &set.layer_id, out)
+        let warnings = plan_warnings(&out);
+        with_warnings(visible_result(cx.doc, &set.layer_id, out), warnings)
     }
     pub fn execute(
         cx: &mut ExecutionContext<'_>,
@@ -526,6 +1027,15 @@ pub mod edit {
         };
         let before = member_entities(cx.doc, &old);
         let result_layer = set.layer_id.clone();
+        // What the plan says of the rows written (docs/adr/0729 §5, §6), said with the write too.
+        let said = match input.operation {
+            DimensionSetEdit::Detach | DimensionSetEdit::Delete | DimensionSetEdit::ResetText { .. } => {
+                Vec::new()
+            }
+            _ => planned(cx.doc, &set, true)
+                .map(|plan| plan_warnings(&plan))
+                .unwrap_or_default(),
+        };
         let result = cx
             .doc
             .transact("Duvar ölçülerini düzenle", |doc| -> Result<(), String> {
@@ -607,18 +1117,21 @@ pub mod edit {
             .filter(|(u, e)| before.get(*u).is_some_and(|b| b != *e))
             .map(|(u, _)| u.clone())
             .collect();
-        visible_result(
-            cx.doc,
-            &result_layer,
-            DimensionSetsChanged {
-                set: input.id,
-                sets: Vec::new(),
-                uids,
-                created,
-                removed,
-                changed,
-                revision: cx.doc.revision().to_string(),
-            },
+        with_warnings(
+            visible_result(
+                cx.doc,
+                &result_layer,
+                DimensionSetsChanged {
+                    set: input.id,
+                    sets: Vec::new(),
+                    uids,
+                    created,
+                    removed,
+                    changed,
+                    revision: cx.doc.revision().to_string(),
+                },
+            ),
+            said,
         )
     }
 }
@@ -631,7 +1144,7 @@ pub mod query {
                 .iter()
                 .filter(|s| {
                     (input.ids.is_empty() || input.ids.contains(&s.id))
-                        && input.wall.is_none_or(|w| w == s.wall)
+                        && input.wall.is_none_or(|w| s.sources().contains(&w))
                 })
                 .map(|s| (**s).clone())
                 .collect(),

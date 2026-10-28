@@ -279,10 +279,17 @@ pub(crate) fn casework_value(runs: &[kentos_contracts::CaseworkRecord]) -> AppRe
 
 /// Architectural dimension recipes are never pruned during transfer: broken hosts remain repairable.
 pub fn check_dimension_sets(sets: &[kentos_contracts::DimensionSet], path: &str) -> AppResult<()> {
-    match kentos_contracts::dimension_sets_problem(sets) {
-        Some((i, why)) => Err(AppError::invalid_at(format!("{path}[{i}]"), why)),
-        None => Ok(()),
+    if let Some((i, why)) = kentos_contracts::dimension_sets_problem(sets) {
+        return Err(AppError::invalid_at(format!("{path}[{i}]"), why));
     }
+    // A façade or space recipe (docs/adr/0729 §8) is a file project's in this version: refused, nothing written.
+    if let Some(i) = sets.iter().position(|s| s.span.is_some()) {
+        return Err(AppError::invalid_at(
+            format!("{path}[{i}].span"),
+            "Veritabanında saklanan projede cephe ve mahal ölçü dizileri bu sürümde taşınmaz. Projeyi dosya olarak saklayın ya da diziyi bağımsız ölçülere dönüştürün.",
+        ));
+    }
+    Ok(())
 }
 
 pub(crate) fn check_dimension_layers(

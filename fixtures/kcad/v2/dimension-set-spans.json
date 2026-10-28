@@ -1,0 +1,820 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Duvarlar",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "drawingUnit": "m",
+    "wallStyles": [
+      {
+        "id": "proje-perde-20",
+        "name": "Perde 20",
+        "components": [
+          {
+            "name": "Betonarme",
+            "material": "Betonarme",
+            "thickness": 0.2,
+            "hatch": {
+              "pattern": "SOLID",
+              "scale": 1.0,
+              "angle": 0.0,
+              "color": "#A6A6A6"
+            },
+            "detail": "standard"
+          }
+        ],
+        "fill": "#3C3C3C"
+      }
+    ],
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "sinir",
+          "name": "Sınır",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "ink",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "activeLayer": "duvar",
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.25,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 8.0
+        }
+      ],
+      "width": 0.25,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 10.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 8.0
+        }
+      ],
+      "width": 0.25,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.25,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 8.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center"
+    },
+    {
+      "kind": "opening",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "host": "01a18355-148e-7212-93b1-6138da0b3135",
+      "at": 6.6,
+      "width": 1.2,
+      "form": "door",
+      "frame": 0.05,
+      "head": 2.1,
+      "style": "kentos-kapi-90",
+      "place": [
+        {
+          "x": 6.0,
+          "y": 0.125
+        },
+        {
+          "x": 6.0,
+          "y": -0.125
+        },
+        {
+          "x": 7.199999999999999,
+          "y": 0.125
+        },
+        {
+          "x": 7.199999999999999,
+          "y": -0.125
+        }
+      ]
+    },
+    {
+      "kind": "grid",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -2.0
+        },
+        {
+          "x": 0.0,
+          "y": 10.0
+        }
+      ],
+      "name": "A"
+    },
+    {
+      "kind": "grid",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": -2.0
+        },
+        {
+          "x": 4.0,
+          "y": 10.0
+        }
+      ],
+      "name": "B"
+    },
+    {
+      "kind": "grid",
+      "id": 9,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 10.0,
+          "y": -2.0
+        },
+        {
+          "x": 10.0,
+          "y": 10.0
+        }
+      ],
+      "name": "C"
+    },
+    {
+      "kind": "dimension",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": -0.125,
+        "y": 0.0
+      },
+      "b": {
+        "x": 6.0,
+        "y": -0.125
+      },
+      "offset": -1.5,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 1
+          }
+        },
+        "b": {
+          "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 11,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 6.0,
+        "y": -0.125
+      },
+      "b": {
+        "x": 7.199999999999999,
+        "y": -0.125
+      },
+      "offset": -1.375,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        },
+        "b": {
+          "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 3
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 7.199999999999999,
+        "y": -0.125
+      },
+      "b": {
+        "x": 10.125,
+        "y": 0.0
+      },
+      "offset": -1.375,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 3
+          }
+        },
+        "b": {
+          "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": -0.125,
+        "y": 0.0
+      },
+      "b": {
+        "x": 0.0,
+        "y": -2.0
+      },
+      "offset": -1.875,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 1
+          }
+        },
+        "b": {
+          "uid": "01a18355-1496-7354-b388-db7d830ebe2a",
+          "place": {
+            "kind": "start"
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": -2.0
+      },
+      "b": {
+        "x": 4.0,
+        "y": -2.0
+      },
+      "offset": 0.125,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1496-7354-b388-db7d830ebe2a",
+          "place": {
+            "kind": "start"
+          }
+        },
+        "b": {
+          "uid": "01a18355-1497-75d7-930a-fb661208fdb6",
+          "place": {
+            "kind": "start"
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 4.0,
+        "y": -2.0
+      },
+      "b": {
+        "x": 10.0,
+        "y": -2.0
+      },
+      "offset": 0.125,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1497-75d7-930a-fb661208fdb6",
+          "place": {
+            "kind": "start"
+          }
+        },
+        "b": {
+          "uid": "01a18355-1497-75d7-930a-fb6b33e5b082",
+          "place": {
+            "kind": "start"
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 16,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 10.0,
+        "y": -2.0
+      },
+      "b": {
+        "x": 10.125,
+        "y": 0.0
+      },
+      "offset": 0.125,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1497-75d7-930a-fb6b33e5b082",
+          "place": {
+            "kind": "start"
+          }
+        },
+        "b": {
+          "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 17,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": -0.125,
+        "y": 0.0
+      },
+      "b": {
+        "x": 10.125,
+        "y": 0.0
+      },
+      "offset": -2.25,
+      "height": 0.125,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 1
+          }
+        },
+        "b": {
+          "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+          "place": {
+            "kind": "vertex",
+            "part": 1,
+            "ring": 0,
+            "index": 0
+          }
+        }
+      }
+    }
+  ],
+  "uids": [
+    "01a18355-148e-7212-93b1-6138da0b3135",
+    "01a18355-1492-77ff-a739-7f6d39b449b0",
+    "01a18355-1492-77ff-a739-7f6e60081922",
+    "01a18355-1492-77ff-a739-7f7b0c21df36",
+    "01a18355-1493-7348-ae96-3cf172f1090f",
+    "01a18355-1495-70af-9017-73ad2f34722d",
+    "01a18355-1496-7354-b388-db7d830ebe2a",
+    "01a18355-1497-75d7-930a-fb661208fdb6",
+    "01a18355-1497-75d7-930a-fb6b33e5b082",
+    "01a18355-149b-74cd-9753-16ecd97c7b60",
+    "01a18355-149b-74cd-9753-16ed4d628ece",
+    "01a18355-149b-74cd-9753-16eef47beb2f",
+    "01a18355-149b-74cd-9753-16efa8a820e1",
+    "01a18355-149b-74cd-9753-16f05634f6f0",
+    "01a18355-149b-74cd-9753-16f1558c25f6",
+    "01a18355-149b-74cd-9753-16f21b291d50",
+    "01a18355-149b-74cd-9753-16f37635b4f0"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "projectId": "d6663faf-3ea6-5012-bb56-193456444d09",
+  "migratedFrom": {
+    "format": "kentos.document",
+    "version": 1,
+    "sourceSha256": "f0188e3b602d7c9414de84e8abe6ae1d465abc39b447862e5679f3dcaf07463d"
+  },
+  "dimensionSets": [
+    {
+      "id": "01a18355-149b-74cd-9753-16d1f64b1157",
+      "wall": "01a18355-148e-7212-93b1-6138da0b3135",
+      "face": "left",
+      "rows": [
+        "openings",
+        "grids",
+        "overall"
+      ],
+      "openings": "ends",
+      "layerId": "cizim",
+      "at": {
+        "x": 5.0,
+        "y": -1.5
+      },
+      "gapMm": 7.5,
+      "height": 0.125,
+      "look": {},
+      "members": [
+        {
+          "uid": "01a18355-149b-74cd-9753-16ecd97c7b60",
+          "row": "openings",
+          "a": {
+            "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "b": {
+            "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16ed4d628ece",
+          "row": "openings",
+          "a": {
+            "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "b": {
+            "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 3
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16eef47beb2f",
+          "row": "openings",
+          "a": {
+            "uid": "01a18355-1495-70af-9017-73ad2f34722d",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 3
+            }
+          },
+          "b": {
+            "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 0
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16efa8a820e1",
+          "row": "grids",
+          "a": {
+            "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "b": {
+            "uid": "01a18355-1496-7354-b388-db7d830ebe2a",
+            "place": {
+              "kind": "start"
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16f05634f6f0",
+          "row": "grids",
+          "a": {
+            "uid": "01a18355-1496-7354-b388-db7d830ebe2a",
+            "place": {
+              "kind": "start"
+            }
+          },
+          "b": {
+            "uid": "01a18355-1497-75d7-930a-fb661208fdb6",
+            "place": {
+              "kind": "start"
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16f1558c25f6",
+          "row": "grids",
+          "a": {
+            "uid": "01a18355-1497-75d7-930a-fb661208fdb6",
+            "place": {
+              "kind": "start"
+            }
+          },
+          "b": {
+            "uid": "01a18355-1497-75d7-930a-fb6b33e5b082",
+            "place": {
+              "kind": "start"
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16f21b291d50",
+          "row": "grids",
+          "a": {
+            "uid": "01a18355-1497-75d7-930a-fb6b33e5b082",
+            "place": {
+              "kind": "start"
+            }
+          },
+          "b": {
+            "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 0
+            }
+          }
+        },
+        {
+          "uid": "01a18355-149b-74cd-9753-16f37635b4f0",
+          "row": "overall",
+          "a": {
+            "uid": "01a18355-1492-77ff-a739-7f7b0c21df36",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "b": {
+            "uid": "01a18355-1492-77ff-a739-7f6d39b449b0",
+            "place": {
+              "kind": "vertex",
+              "part": 1,
+              "ring": 0,
+              "index": 0
+            }
+          }
+        }
+      ],
+      "span": {
+        "direction": {
+          "x": 1.0,
+          "y": 0.0
+        }
+      }
+    }
+  ]
+}

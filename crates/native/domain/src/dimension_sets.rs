@@ -86,17 +86,16 @@ fn follow_edge(before: &WallFields, after: &WallFields, edge: Option<u32>) -> Op
     Some((after.closed || n1 > 2).then_some(j as u32))
 }
 
-fn row(r: DimensionSetRow) -> core::Row {
-    match r {
-        DimensionSetRow::Openings => core::Row::Openings,
-        DimensionSetRow::Overall => core::Row::Overall,
-    }
-}
-fn contract_row(r: core::Row) -> DimensionSetRow {
-    match r {
-        core::Row::Openings => DimensionSetRow::Openings,
-        core::Row::Overall => DimensionSetRow::Overall,
-    }
+use crate::dimension_spans::{contract_row, core_row as row};
+
+/// An interval's identity apart from the places naming it (docs/adr/0729 §4): its row, and its two objects with
+/// where they are, to a nanometre, in either order.
+type Interval = (&'static str, [(EntityId, i64, i64); 2]);
+
+fn interval(row: DimensionSetRow, a: (EntityId, Vec2), b: (EntityId, Vec2)) -> Interval {
+    let at = |(id, p): (EntityId, Vec2)| (id, (p.x * 1e9).round() as i64, (p.y * 1e9).round() as i64);
+    let (a, b) = (at(a), at(b));
+    (row.name(), if a <= b { [a, b] } else { [b, a] })
 }
 fn fault(f: core::Fault) -> DimensionSetBreak {
     match f {
@@ -131,6 +130,141 @@ fn base(layer: &str) -> EntityBase {
         attachments: Vec::new(),
         look: Default::default(),
     }
+}
+
+/// Whether `q` lies on a wall's straight path within a micrometre.
+fn on_path(w: &WallFields, q: Vec2) -> bool {
+    let n = w.pts.len();
+    let edges = if w.closed { n } else { n.saturating_sub(1) };
+    (0..edges).any(|k| {
+        let bulge = w.bulges.as_ref().and_then(|b| b.get(k)).copied().unwrap_or(0.0);
+        let (a, b) = (w.pts[k], w.pts[(k + 1) % n]);
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let l2 = dx * dx + dy * dy;
+        if bulge != 0.0 || l2 <= 0.0 {
+            return false;
+        }
+        let t = ((q.x - a.x) * dx + (q.y - a.y) * dy) / l2;
+        let (px, py) = (a.x + dx * t, a.y + dy * t);
+        (-1e-9..=1.0 + 1e-9).contains(&t) && (q.x - px).hypot(q.y - py) <= 1e-6
+    })
+}
+
+/// A wall's path turned the other way round, bit for bit (`cad.walls.edit`'s Çevir).
+fn is_turned(before: &WallFields, after: &WallFields) -> bool {
+    let same = |u: Vec2, w: Vec2| u.x.to_bits() == w.x.to_bits() && u.y.to_bits() == w.y.to_bits();
+    before.closed == after.closed
+        && before.pts.len() == after.pts.len()
+        && before.pts.len() >= 2
+        && before.pts.iter().rev().zip(&after.pts).all(|(u, w)| same(*u, *w))
+}
+
+/// A turned wall's edge: the same two ends' (an open path's `n − 2 − k`, a closed one's `(2n − 2 − k) mod n`).
+fn turned_edge(before: &WallFields, _after: &WallFields, edge: Option<u32>) -> Option<u32> {
+    let n = before.pts.len();
+    edge.map(|k| {
+        let k = k as usize;
+        (if before.closed { (2 * n - 2 - k) % n } else { n.saturating_sub(2 + k) }) as u32
+    })
+}
+
+/// A façade or wall recipe's sources after the step (docs/adr/0729 §4): a split's piece joins them, a join's wall takes
+/// its absorbed one's place, a deleted one leaves; one wall's recipe split or joined becomes a façade's along its
+/// measured edge's former direction. A turned single wall's face is the other: returns whether it turned.
+fn follow_sources(
+    set: &mut DimensionSet,
+    walls: &HashMap<EntityId, (WallFields, WallFields)>,
+    made: &[(EntityId, WallFields)],
+    gone: &[(EntityId, WallFields)],
+) -> bool {
+    if set.span.as_ref().is_some_and(|s| s.space) {
+        return false;
+    }
+    let mut turned = false;
+    if set.span.is_none()
+        && let Some((b, a)) = walls.get(&set.wall)
+        && is_turned(b, a)
+    {
+        set.face = match set.face {
+            DimensionSetFace::Left => DimensionSetFace::Right,
+            DimensionSetFace::Right => DimensionSetFace::Left,
+        };
+        turned = true;
+    }
+    let before = set.sources();
+    let mut sources = before.clone();
+    // A piece the step made on a source's former path.
+    for (id, piece) in made {
+        let split = before.iter().any(|s| {
+            walls
+                .get(s)
+                .is_some_and(|(old, _)| piece.pts.iter().all(|q| on_path(old, *q)))
+        });
+        if split && !sources.contains(id) {
+            sources.push(*id);
+        }
+    }
+    // A source the step removed: a wall not yet a source now running over its former path takes its place, else it
+    // leaves.
+    for (id, old) in gone {
+        let Some(at) = sources.iter().position(|s| s == id) else {
+            continue;
+        };
+        let mut takers: Vec<&EntityId> = walls
+            .iter()
+            .filter(|(w, (_, now))| !sources.contains(w) && old.pts.iter().all(|q| on_path(now, *q)))
+            .map(|(w, _)| w)
+            .collect();
+        takers.sort();
+        match takers.first() {
+            Some(w) => sources[at] = **w,
+            None => {
+                sources.remove(at);
+            }
+        }
+    }
+    let mut seen = HashSet::new();
+    sources.retain(|s| seen.insert(*s));
+    if sources == before || sources.is_empty() {
+        return turned;
+    }
+    if set.span.is_none() {
+        // The measured wall's fields before the step: an edited one's, or a removed one's.
+        let former = walls
+            .get(&set.wall)
+            .map(|(b, _)| b)
+            .or_else(|| gone.iter().find(|(g, _)| *g == set.wall).map(|(_, w)| w));
+        let Some(former) = former else {
+            return turned;
+        };
+        let n = former.pts.len();
+        let k = set.edge.unwrap_or(0) as usize;
+        if n < 2 || k >= n {
+            return turned;
+        }
+        let (a, b) = (former.pts[k], former.pts[(k + 1) % n]);
+        let l = (b.x - a.x).hypot(b.y - a.y);
+        if l.is_nan() || l <= 0.0 {
+            return turned;
+        }
+        set.span = Some(kentos_contracts::DimensionSetSpan {
+            walls: Vec::new(),
+            space: false,
+            direction: Vec2 {
+                x: (b.x - a.x) / l,
+                y: (b.y - a.y) / l,
+            },
+            reference: kentos_contracts::DimensionSetReference::Faces,
+            level: former.arch.level.clone(),
+        });
+        set.edge = None;
+        set.face = DimensionSetFace::Left;
+    }
+    set.wall = sources[0];
+    if let Some(span) = &mut set.span {
+        span.walls = sources[1..].to_vec();
+    }
+    turned
 }
 
 /// Arc identities distinguish our exact child writes from a caller's visually identical operation.
@@ -457,12 +591,16 @@ impl Document {
         })
     }
 
-    /// Row offset is relative to the selected physical wall face, not a centre-reference member.
+    /// Row offset is relative to the selected physical wall face, not a centre-reference member; a façade's or a
+    /// space's from its bodies' outermost face (docs/adr/0729 §6).
     pub fn dimension_set_row_offset(
         &self,
         set: &DimensionSet,
         which: DimensionSetRow,
     ) -> Result<f64, DimensionSetBreak> {
+        if set.span.is_some() {
+            return self.dimension_span_row_offset(set, which);
+        }
         let line = self.dimension_set_face(set)?.line;
         let frame = core::Frame::new(line).map_err(fault)?;
         let at = self.dimension_set_row_at(set, which, frame)?;
@@ -500,6 +638,9 @@ impl Document {
         if !offset.is_finite() {
             return Err(DimensionSetBreak::UnsupportedWall);
         }
+        if set.span.is_some() {
+            return self.set_dimension_span_row_offset(set, which, offset);
+        }
         let line = self.dimension_set_face(set)?.line;
         let frame = core::Frame::new(line).map_err(fault)?;
         let at = v(frame.at_offset(self.dimension_set_row_at(set, which, frame)?, offset));
@@ -515,6 +656,37 @@ impl Document {
         &self,
         set: &DimensionSet,
     ) -> Result<Vec<PlannedDimensionSetMember>, DimensionSetBreak> {
+        if set.span.is_some() {
+            let plan = self.dimension_span_spans(set).map_err(|r| r.broken)?;
+            return self.dimension_set_members(set, plan.spans, &plan.sources);
+        }
+        let (spans, sources) = self.dimension_edge_spans(set)?;
+        self.dimension_set_members(set, spans, &sources)
+    }
+
+    /// A façade or space recipe's plan with its rows' account (docs/adr/0729 §5), or why it cannot be planned: what a
+    /// command plans and refuses with.
+    pub fn dimension_span_plan(
+        &self,
+        set: &DimensionSet,
+    ) -> Result<(Vec<PlannedDimensionSetMember>, crate::dimension_spans::SpanNotes), crate::dimension_spans::SpanRefusal>
+    {
+        let plan = self.dimension_span_spans(set)?;
+        let members = self
+            .dimension_set_members(set, plan.spans, &plan.sources)
+            .map_err(|broken| crate::dimension_spans::SpanRefusal {
+                broken,
+                source: None,
+                why: None,
+            })?;
+        Ok((members, plan.notes))
+    }
+
+    /// One wall edge's spans (docs/adr/0695, 0700) and the identities their source numbers name.
+    fn dimension_edge_spans(
+        &self,
+        set: &DimensionSet,
+    ) -> Result<(Vec<core::Span>, Vec<EntityId>), DimensionSetBreak> {
         let FaceEdge {
             line,
             part,
@@ -580,6 +752,17 @@ impl Document {
                 .collect::<Vec<_>>(),
         )
         .map_err(fault)?;
+        Ok((spans, sources))
+    }
+
+    /// The members a recipe's spans make: an unchanged source pair keeps its dimension's identity, as does the same
+    /// interval named by other places of the same objects (a turned wall's faces; docs/adr/0729 §4).
+    fn dimension_set_members(
+        &self,
+        set: &DimensionSet,
+        spans: Vec<core::Span>,
+        sources: &[EntityId],
+    ) -> Result<Vec<PlannedDimensionSetMember>, DimensionSetBreak> {
         let mut look = set.look.clone();
         // No named style is the project's Standard dimension style, exactly as style_of(None).
         // Current style heights apply to new intervals; existing member overrides stay below.
@@ -619,11 +802,11 @@ impl Document {
         let appearance_changed =
             before.is_some_and(|s| s.look != set.look || s.height != set.height);
         let layer_changed = before.is_some_and(|s| s.layer_id != set.layer_id);
-        let mut out = Vec::with_capacity(spans.len());
         // A span measuring the same two places as one drawn before it, in the rows' order, is not drawn again: an
         // edge without openings has its openings row its whole length, the overall dimension once (docs/adr/0695's
         // 27 October addendum). What the user removed is not drawn, so the other row's stays.
         let mut drawn: Vec<(SubRef, SubRef)> = Vec::new();
+        let mut kept: Vec<(core::Span, DimensionSetSegment, String)> = Vec::with_capacity(spans.len());
         for span in spans {
             let segment = DimensionSetSegment {
                 row: contract_row(span.row),
@@ -640,17 +823,48 @@ impl Document {
                 continue;
             }
             drawn.push((segment.a.clone(), segment.b.clone()));
-            let old = old_by_key.get(&key).copied();
-            let like = old
-                .and_then(|m| self.slot_of(Uuid::from_bytes(m.uid.0)))
-                .and_then(|slot| self.get(slot))
-                .and_then(|e| {
-                    if let Entity::Dimension(d) = e {
-                        Some(d)
-                    } else {
-                        None
-                    }
+            kept.push((span, segment, key));
+        }
+        // The members' identities: the same source pair first, then the same interval by other places.
+        let stored = |m: &DimensionSetMember| match self
+            .slot_of(Uuid::from_bytes(m.uid.0))
+            .and_then(|slot| self.get(slot))
+        {
+            Some(Entity::Dimension(d)) => Some(d),
+            _ => None,
+        };
+        let mut claimed: HashSet<EntityId> = kept
+            .iter()
+            .filter_map(|(_, _, key)| old_by_key.get(key))
+            .filter(|m| stored(m).is_some())
+            .map(|m| m.uid)
+            .collect();
+        let mut by_interval: HashMap<Interval, &DimensionSetMember> = HashMap::new();
+        for m in &set.members {
+            if claimed.contains(&m.uid) {
+                continue;
+            }
+            if let Some(d) = stored(m) {
+                by_interval
+                    .entry(interval(m.row, (m.a.uid, d.a), (m.b.uid, d.b)))
+                    .or_insert(m);
+            }
+        }
+        let mut out = Vec::with_capacity(kept.len());
+        for (span, segment, key) in kept {
+            let old = old_by_key
+                .get(&key)
+                .copied()
+                .filter(|m| stored(m).is_some())
+                .or_else(|| {
+                    let found = by_interval.get(&interval(
+                        segment.row,
+                        (segment.a.uid, v(span.a.at)),
+                        (segment.b.uid, v(span.b.at)),
+                    ))?;
+                    claimed.insert(found.uid).then_some(*found)
                 });
+            let like = old.and_then(stored);
             let mut d = like.cloned().unwrap_or_else(|| DimensionEntity {
                 base: base(&set.layer_id),
                 a: v(span.a.at),
@@ -899,14 +1113,36 @@ impl Document {
             .collect();
         // Each changed wall's path before the step's first write and after its last (docs/adr/0700).
         let mut walls: HashMap<EntityId, (WallFields, WallFields)> = HashMap::new();
+        // The walls the step made and removed (a split's piece, a join's absorbed wall; docs/adr/0729 §4), and the
+        // boxes of what it changed that a façade or space recipe reads.
+        let mut made: Vec<(EntityId, WallFields)> = Vec::new();
+        let mut gone: Vec<(EntityId, WallFields)> = Vec::new();
+        let mut boxes: Vec<crate::dimension_spans::Box4> = Vec::new();
         for op in ops {
-            if let Op::Update { before, after } = op
-                && let (Entity::Wall(b), Entity::Wall(a)) = (&*before.entity, &*after.entity)
-            {
-                walls
-                    .entry(EntityId(after.uid.into_bytes()))
-                    .and_modify(|(_, last)| *last = a.wall.clone())
-                    .or_insert_with(|| (b.wall.clone(), a.wall.clone()));
+            match op {
+                Op::Update { before, after } => {
+                    if let (Entity::Wall(b), Entity::Wall(a)) = (&*before.entity, &*after.entity) {
+                        walls
+                            .entry(EntityId(after.uid.into_bytes()))
+                            .and_modify(|(_, last)| *last = a.wall.clone())
+                            .or_insert_with(|| (b.wall.clone(), a.wall.clone()));
+                    }
+                    boxes.extend(crate::dimension_spans::reach_box(&before.entity));
+                    boxes.extend(crate::dimension_spans::reach_box(&after.entity));
+                }
+                Op::Add(s) => {
+                    if let Entity::Wall(w) = &*s.entity {
+                        made.push((EntityId(s.uid.into_bytes()), w.wall.clone()));
+                    }
+                    boxes.extend(crate::dimension_spans::reach_box(&s.entity));
+                }
+                Op::Remove(s) => {
+                    if let Entity::Wall(w) = &*s.entity {
+                        gone.push((EntityId(s.uid.into_bytes()), w.wall.clone()));
+                    }
+                    boxes.extend(crate::dimension_spans::reach_box(&s.entity));
+                }
+                _ => {}
             }
         }
         let owners: HashMap<Uuid, DimensionSetId> = self
@@ -966,12 +1202,21 @@ impl Document {
             if illegal.contains(&before.id) {
                 continue;
             } // Explicit fault, never silently undo a user's forbidden edit.
-            let source_changed = changed.contains(&before.wall) || hosts.contains(&before.wall);
+            let source_changed = before
+                .sources()
+                .iter()
+                .any(|s| changed.contains(s) || hosts.contains(s))
+                || (before.span.is_some()
+                    && self.dimension_span_reach(&before).is_some_and(|r| {
+                        boxes.iter().any(|b| crate::dimension_spans::meets(b, &r))
+                    }));
             let member_changed = before.members.iter().any(|m| changed.contains(&m.uid));
             if !source_changed && !member_changed && !own.contains(&before.id) {
                 continue;
             }
             let mut next = (*before).clone();
+            // Its sources after a split, a join, a deletion; one wall's recipe becomes a façade's (docs/adr/0729 §4).
+            let turned = follow_sources(&mut next, &walls, &made, &gone);
             if !own.contains(&before.id) {
                 let deleted: Vec<_> = next
                     .members
@@ -996,15 +1241,19 @@ impl Document {
                     next.members.retain(|member| member.uid != m.uid);
                 }
             }
-            // The measured edge goes with its two ends when the wall gains or loses a vertex; gone, the set breaks
-            // rather than measure another edge.
+            // The measured edge goes with its two ends when the wall gains or loses a vertex, and the face with a
+            // turned wall's; gone, the set breaks rather than measure another edge.
             let edge = match walls.get(&next.wall) {
+                _ if next.span.is_some() => Some(None),
+                Some((b, a)) if turned => Some(turned_edge(b, a, next.edge)),
                 Some((b, a)) => follow_edge(b, a, next.edge),
                 None => Some(next.edge),
             };
             let planned = match edge {
                 Some(edge) => {
-                    next.edge = edge;
+                    if next.span.is_none() {
+                        next.edge = edge;
+                    }
                     self.dimension_set_plan(&next)
                 }
                 None => Err(DimensionSetBreak::UnsupportedWall),
@@ -1138,8 +1387,7 @@ impl Document {
             .collect();
         for set in &self.dimension_sets {
             let touched = authorized(set.id)
-                || changed.contains(&set.wall)
-                || hosts.contains(&set.wall)
+                || set.sources().iter().any(|s| changed.contains(s) || hosts.contains(s))
                 || set.members.iter().any(|m| changed.contains(&m.uid));
             // A broken set keeps its last members on purpose (docs/adr/0700): its edge may now name another edge
             // the plan would measure, which is no capacity shortfall.
