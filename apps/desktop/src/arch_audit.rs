@@ -27,7 +27,7 @@ use crate::icons::from_web;
 /// The tab's title, which a trace names it by.
 pub(crate) const TAB: &str = "Denetim";
 const CHECK: &str = "Denetle";
-const CHECK_HINT: &str = "Duvar birleşimlerini, uç boşluklarını, kopuk açıklık, mahal, ölçü, kolon ve işaretleri, yinelenen numaraları, katı olmayan nesneleri ve seçilen erişilebilirlik profiline göre rampaları bulur. Çizimi değiştirmez.";
+const CHECK_HINT: &str = "Duvar birleşimlerini, uç boşluklarını, kopuk açıklık, mahal, ölçü, kolon ve işaretleri, yinelenen numaraları, katı olmayan nesneleri, seçilen profillere göre rampaları ve merdivenleri bulur. Çizimi değiştirmez.";
 const FIX: &str = "Düzelt";
 const STALE: &str = "Çizim denetimden sonra değişti; yeniden denetleyin.";
 const NOT_CHECKED: &str = "Denetle ile çizimin mimari sorunlarını bulun.";
@@ -40,10 +40,18 @@ const COLUMNS: [&str; 5] = ["#", "Grup", "Bulgu", "Ne yapılır", "Nesne"];
 const GAPS: [f64; 5] = [0.02, 0.05, ARCH_AUDIT_MAX_GAP, 0.20, 0.50];
 const AREAS: [f64; 5] = [0.05, ARCH_AUDIT_MIN_AREA, 0.25, 0.50, 1.00];
 const WIDTHS: [f64; 4] = [0.10, ARCH_AUDIT_MIN_WIDTH, 0.20, 0.30];
-/// The accessibility profiles a bar offers (docs/adr/0723 §4): none, or one of the catalog's, by its words.
-const PROFILES: [(Option<&str>, &str); 2] = [(None, "Yok"), (Some("erisilebilirlik-rampa/1"), "TS 9111 özeti")];
+/// The ramp profiles a bar offers (docs/adr/0723 §4): none, or one of the catalog's, by its words.
+const RAMP_PROFILES: [(Option<&str>, &str); 2] = [(None, "Yok"), (Some("erisilebilirlik-rampa/1"), "TS 9111 özeti")];
+/// The stair profiles a bar offers (docs/adr/0724 §2): none, or one of the catalog's, by its words.
+const STAIR_PROFILES: [(Option<&str>, &str); 5] = [
+    (None, "Yok"),
+    (Some("imar-merdiven-konut/1"), "Konut, asansörlü"),
+    (Some("imar-merdiven-konut-asansorsuz/1"), "Konut, asansörsüz"),
+    (Some("imar-merdiven-diger/1"), "Diğer yapılar"),
+    (Some("imar-merdiven-daire-ici/1"), "Daire içi"),
+];
 /// The widest the bar needs on one line (logical pixels at the default text size).
-const BAR_WIDTH: f32 = 1420.0;
+const BAR_WIDTH: f32 = 1640.0;
 
 /// The last check: its findings and the drawing's state it saw.
 #[derive(Clone, Debug)]
@@ -64,8 +72,10 @@ pub(crate) struct ArchAuditPanel {
     pub max_gap: f64,
     pub min_area: f64,
     pub min_width: f64,
-    /// The accessibility profile the ramps are measured against (docs/adr/0723 §4); none: not measured.
-    pub profile: Option<&'static str>,
+    /// The profile the ramps are measured against (docs/adr/0723 §4); none: not measured.
+    pub ramp_profile: Option<&'static str>,
+    /// The profile the stairs are measured against (docs/adr/0724 §2); none: not measured.
+    pub stair_profile: Option<&'static str>,
 }
 
 impl Default for ArchAuditPanel {
@@ -77,7 +87,8 @@ impl Default for ArchAuditPanel {
             max_gap: ARCH_AUDIT_MAX_GAP,
             min_area: ARCH_AUDIT_MIN_AREA,
             min_width: ARCH_AUDIT_MIN_WIDTH,
-            profile: PROFILES[1].0,
+            ramp_profile: RAMP_PROFILES[1].0,
+            stair_profile: STAIR_PROFILES[1].0,
         }
     }
 }
@@ -99,8 +110,10 @@ pub enum Event {
     Gap(usize),
     Area(usize),
     Width(usize),
-    /// Erişilebilirlik's choice, by its place in [`PROFILES`].
-    Profile(usize),
+    /// Rampa's choice, by its place in [`RAMP_PROFILES`].
+    RampProfile(usize),
+    /// Merdiven's choice, by its place in [`STAIR_PROFILES`].
+    StairProfile(usize),
 }
 
 fn msg(e: Event) -> Message {
@@ -120,6 +133,7 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Viewmarks => "viewSection",
         ArchAuditCheck::Levels => "archSettings",
         ArchAuditCheck::Accessibility => "ramp",
+        ArchAuditCheck::Stairs => "stair",
     }
 }
 
@@ -205,7 +219,11 @@ impl App {
             min_width: Some(self.arch_audit.min_width),
             // A level finding's Düzelt gives Etkin kat (docs/adr/0717 §3).
             level: self.active_level(),
-            profile: self.arch_audit.profile.map(str::to_owned),
+            profiles: [self.arch_audit.ramp_profile, self.arch_audit.stair_profile]
+                .into_iter()
+                .flatten()
+                .map(str::to_owned)
+                .collect(),
         }
     }
 
@@ -289,8 +307,12 @@ impl App {
                 self.arch_audit.min_width = WIDTHS[i.min(WIDTHS.len() - 1)];
                 self.arch_audit_check();
             }
-            Event::Profile(i) => {
-                self.arch_audit.profile = PROFILES[i.min(PROFILES.len() - 1)].0;
+            Event::RampProfile(i) => {
+                self.arch_audit.ramp_profile = RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;
+                self.arch_audit_check();
+            }
+            Event::StairProfile(i) => {
+                self.arch_audit.stair_profile = STAIR_PROFILES[i.min(STAIR_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
         }
@@ -600,26 +622,39 @@ impl App {
         out.push(horizontal_divider()).push(table).width(Fill).height(Fill).into()
     }
 
-    /// Erişilebilirlik: the profile the ramps are measured against, its note in its tip (docs/adr/0723 §4).
-    fn arch_audit_profile(&self) -> Element<'_, Message> {
-        let picked = PROFILES.iter().position(|(id, _)| *id == self.arch_audit.profile);
-        let select = Select::new(
-            PROFILES.iter().map(|(_, words)| Choice::new(*words)).collect::<Vec<_>>(),
-            picked,
-            |i| msg(Event::Profile(i)),
-        );
-        let note = kentos_commands::accessibility_profile(PROFILES[1].0.unwrap_or_default())
-            .map_or_else(String::new, |p| format!("{}: {}", p.name, p.note));
-        tip(
-            row![
-                label::muted("Erişilebilirlik"),
-                container(select).width(Length::Fixed(typography::scaled(132.0)))
-            ]
-            .spacing(6)
-            .align_y(Center),
-            Tip::new("Erişilebilirlik").body(note),
-            iced::widget::tooltip::Position::Top,
-        )
+    /// Rampa and Merdiven: the profiles the ramps (docs/adr/0723 §4) and the stairs (0724 §2) are measured against;
+    /// the chosen profile's name and note in its tip.
+    fn arch_audit_profiles(&self) -> Element<'_, Message> {
+        let profile = |caption: &'static str,
+                       list: &'static [(Option<&'static str>, &'static str)],
+                       chosen: Option<&'static str>,
+                       on: fn(usize) -> Event,
+                       width: f32| {
+            let picked = list.iter().position(|(id, _)| *id == chosen);
+            let select = Select::new(
+                list.iter().map(|(_, words)| Choice::new(*words)).collect::<Vec<_>>(),
+                picked,
+                move |i| msg(on(i)),
+            );
+            let note = chosen.and_then(kentos_commands::arch_profile).map_or_else(
+                || format!("{caption} denetlenmez. Bir profil seçin."),
+                |p| format!("{}. {}", p.name, p.note),
+            );
+            tip(
+                row![label::muted(caption), container(select).width(Length::Fixed(typography::scaled(width)))]
+                    .spacing(6)
+                    .align_y(Center),
+                Tip::new(caption).body(note),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        row![
+            profile("Rampa", &RAMP_PROFILES, self.arch_audit.ramp_profile, Event::RampProfile, 124.0),
+            profile("Merdiven", &STAIR_PROFILES, self.arch_audit.stair_profile, Event::StairProfile, 150.0),
+        ]
+        .spacing(12)
+        .align_y(Center)
+        .into()
     }
 
     /// The bar at `width`: Denetle, the group, the thresholds; the count and Düzelt at its end, or under it when
@@ -660,7 +695,7 @@ impl App {
             threshold("Boşluk ≤", &GAPS, self.arch_audit.max_gap, length, Event::Gap),
             threshold("Küçük <", &AREAS, self.arch_audit.min_area, |v| format!("{v:.2} m²"), Event::Area),
             threshold("Dar <", &WIDTHS, self.arch_audit.min_width, length, Event::Width),
-            self.arch_audit_profile(),
+            self.arch_audit_profiles(),
         ]
         .spacing(12)
         .align_y(Center);

@@ -64,6 +64,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.fill.is_some(), "fill", COLUMN);
     add(c.risers.is_some(), "risers", STAIR);
     add(c.riser_height.is_some(), "riserHeight", STAIR);
+    add(c.height_from_level.is_some(), "heightFromLevel", STAIR);
+    add(c.post.is_some(), "post", STAIR);
     add(c.tread.is_some(), "tread", STAIR);
     add(c.landing.is_some(), "landing", FLIGHT);
     add(c.cut.is_some(), "cut", STAIR);
@@ -96,6 +98,7 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (flat(c.depth), "depth", "Boy"),
         (c.rotation, "rotation", "Dönüş"),
         (c.riser_height, "riserHeight", "Rıht yüksekliği"),
+        (flat(c.post), "post", "Merkez direği"),
         (c.tread, "tread", "Basamak derinliği"),
         (flat(c.landing), "landing", "Sahanlık"),
         (c.rise, "rise", "Yükseklik"),
@@ -164,7 +167,15 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.risers = v;
             }
             if let Some(v) = c.riser_height {
+                // A riser height of its own frees the stair from its level's height (docs/adr/0724 §1).
                 f.riser_height = v;
+                f.height_from_level = false;
+            }
+            if let Some(v) = c.height_from_level {
+                f.height_from_level = v;
+            }
+            if let Some(v) = c.post {
+                f.post = v;
             }
             if let Some(v) = c.tread {
                 f.tread = v;
@@ -232,8 +243,14 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
     }
 }
 
-/// `e` checked at `path`, a column settled on its grids, with the warnings a stair or a ramp gives.
-fn settled(doc: &Document, e: Entity, path: &str) -> Result<(Entity, Vec<CommandWarning>), Stop> {
+/// The project's levels.
+fn level_list(doc: &Document) -> &[kentos_commands::ArchLevel] {
+    doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice())
+}
+
+/// `e` checked at `path`, a column settled on its grids, with the warnings a stair or a ramp gives; `binds`: the change
+/// binds a stair's rise to its level's height.
+fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity, Vec<CommandWarning>), Stop> {
     let mut warnings = Vec::new();
     let e = match e {
         Entity::Grid(g) => {
@@ -247,7 +264,6 @@ fn settled(doc: &Document, e: Entity, path: &str) -> Result<(Entity, Vec<Command
         }
         Entity::Stair(s) => {
             stair_valid(&s.stair, path)?;
-            warnings = arch_elements::stair_warnings(doc, &s.stair, path);
             Entity::Stair(s)
         }
         Entity::Ramp(r) => {
@@ -265,6 +281,20 @@ fn settled(doc: &Document, e: Entity, path: &str) -> Result<(Entity, Vec<Command
             arch_elements::level_bound(doc, &mut r.ramp);
             warnings = arch_elements::ramp_warnings(&r.ramp, path);
             Entity::Ramp(r)
+        }
+        // Its riser height read from its level's height (docs/adr/0724 §1); bound now, the level must have one.
+        Entity::Stair(mut s) => {
+            if binds && s.stair.height_from_level && s.stair.level_riser(level_list(doc)).is_none() {
+                return Err(fail(
+                    codes::INVALID_STAIR,
+                    "Merdivenin katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın yüksekliğini verin."
+                        .into(),
+                    "operation.heightFromLevel",
+                ));
+            }
+            arch_elements::stair_level_bound(doc, &mut s.stair);
+            warnings = arch_elements::stair_warnings(doc, &s.stair, path);
+            Entity::Stair(s)
         }
         other => other,
     };
@@ -309,6 +339,14 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 }
             }
             numbers(c)?;
+            if c.riser_height.is_some() && c.height_from_level == Some(true) {
+                return Err(fail(
+                    codes::INVALID_STAIR,
+                    "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) verilir; ikisi birden verilmez."
+                        .into(),
+                    "operation.heightFromLevel",
+                ));
+            }
             if c.base.is_some() && c.base_offset.is_some() {
                 return Err(fail(
                     codes::INVALID_RAMP,
@@ -318,7 +356,8 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 ));
             }
             for (at, slot, e, _) in &found {
-                let (e, mut w) = settled(doc, changed(e, c), &format!("uids[{at}]"))?;
+                let binds = c.height_from_level == Some(true);
+                let (e, mut w) = settled(doc, changed(e, c), &format!("uids[{at}]"), binds)?;
                 warnings.append(&mut w);
                 out.push((*slot, e));
             }

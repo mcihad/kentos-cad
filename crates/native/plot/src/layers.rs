@@ -65,16 +65,29 @@ pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::ph
     out
 }
 
+/// Kat görünümü as a map of `level` shows it (docs/adr/0716): Etkin kat ve alt kat with `below`, else Yalnız etkin kat.
+pub fn level_view(level: &kentos_sheet::kinds::MapLevel) -> kentos_interaction::level_view::LevelView {
+    use kentos_interaction::level_view::LevelView;
+    if level.below { LevelView::Below } else { LevelView::Active }
+}
+
 /// What a map of `level` leaves out and draws faint (docs/adr/0716): Kat görünümü's rule (docs/adr/0715) for that level,
-/// the level under it faint with `below`.
+/// the level under it faint with `below`. The stairs under it seen from above (docs/adr/0724 §4) are neither: a store
+/// of the map's own holds them so ([`shows_from_above`]).
 pub fn level_looks(
     doc: &kentos_domain::Document,
     level: &kentos_sheet::kinds::MapLevel,
 ) -> (std::collections::HashSet<u32>, std::collections::HashSet<u32>) {
-    use kentos_interaction::level_view::{LevelView, looks};
-    let view = if level.below { LevelView::Below } else { LevelView::Active };
-    let l = looks(doc, view, Some(&level.id));
+    let l = kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id));
     (l.hidden.into_iter().collect(), l.faded.into_iter().collect())
+}
+
+/// Whether a map of `level` shows a stair of the level under it from above (docs/adr/0724 §4): then it draws from a
+/// store whose level view is the map's.
+pub fn shows_from_above(doc: &kentos_domain::Document, level: &kentos_sheet::kinds::MapLevel) -> bool {
+    !kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id))
+        .upper
+        .is_empty()
 }
 
 /// A colour on white paper as faint as a faded object (`PHASE_FADED`, docs/adr/0716): its mix with white, its own

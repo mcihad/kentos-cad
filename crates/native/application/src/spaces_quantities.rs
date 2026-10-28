@@ -92,6 +92,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         slabs: Vec::new(),
         transitions: Vec::new(),
         ramps: Vec::new(),
+        stairs: Vec::new(),
         totals: QuantityTotals::default(),
     };
     // The doors and gaps to the floor (docs/adr/0722 §5), and the voids a slab's area loses, by level.
@@ -224,6 +225,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.ramps.push(ramp_row(uid(e), &r.ramp));
                 }
             }
+            Entity::Stair(s) if input.usages.is_none() => {
+                if takes(e, &s.stair.arch) {
+                    out.stairs.push(stair_row(uid(e), &s.stair));
+                }
+            }
             Entity::Wall(w) if input.usages.is_none() => {
                 let x = &w.wall;
                 if !takes(e, &x.arch) {
@@ -288,6 +294,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         parapet_length,
         ramp_area: out.ramps.iter().map(|r| r.area).sum(),
         ramp_railing_length: out.ramps.iter().map(|r| r.railing_length).sum(),
+        stair_area: out.stairs.iter().map(|s| s.area).sum(),
+        stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum(),
+        stair_risers: out.stairs.iter().map(|s| s.risers).fold(0u32, u32::saturating_add),
     };
     Ok(out)
 }
@@ -317,6 +326,40 @@ pub(crate) fn ramp_row(uid: String, r: &kentos_commands::RampFields) -> kentos_c
         rule: "alan: orta çizgi boyunca, dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar; \
                eğim: kot farkı ÷ eğimli uzunluk; korkuluk: kenarlardan 5 cm içerideki çizgiler"
             .into(),
+    }
+}
+
+/// A stair measured (docs/adr/0724 §5): its walking line's length, its landings, its band's plan area and its
+/// railings from its line; a curved one's radius and inner tread.
+pub(crate) fn stair_row(uid: String, s: &kentos_commands::StairFields) -> kentos_commands::StairRow {
+    let shape = kentos_formats::arch_elements::core_stair(s);
+    let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
+        unreachable!("core_stair makes a stair");
+    };
+    let m = kentos_geometry_core::geom::arch::stair_measure(pts, stair);
+    let rule = if m.radius.is_some() {
+        "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; \
+         korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+    } else {
+        "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar \
+         dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+    };
+    kentos_commands::StairRow {
+        uid,
+        level: s.arch.level.clone(),
+        width: s.width,
+        risers: s.risers,
+        riser_height: s.riser_height,
+        tread: s.tread,
+        height: f64::from(s.risers) * s.riser_height,
+        length: m.length,
+        landings: u32::try_from(m.landings).unwrap_or(u32::MAX),
+        area: m.area,
+        railing_length: m.railing_length,
+        radius: m.radius,
+        inner_tread: m.inner_tread,
+        height_from_level: s.height_from_level,
+        rule: rule.into(),
     }
 }
 

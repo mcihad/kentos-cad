@@ -981,7 +981,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: sıra atlama, yinelenen aks, negatif yön, kolon dönüşü, kilitli katman,
   referans kopması ve ölçü/çizelge güncellemesi.
 
-### ARCH-STAIR-01 — Kullanılabilir 2B merdiven tasarımı [~]
+### ARCH-STAIR-01 — Kullanılabilir 2B merdiven tasarımı [x]
 
 - [x] Yükseklikten tasarım dilimi [ADR0704](../docs/adr/0704-stairs-from-height.md):
   `cad.stairs.create` toplam yükseklik ve en yüksek rıhttan rıht sayısını
@@ -1007,6 +1007,21 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   uygulanamaması bu dilimde bulunup düzeltildi), gerçek GUI resimleri
   (`.run/shots/arac-doner-merdiven-*`). Merkez direği, yay+düz karışık kol ve
   iç basamak denetimi açık.
+- [x] Kat yüksekliği, yönetmelik profili, üst katta gösterim, merkez direği ve
+  metraj [ADR0724](../docs/adr/0724-stair-levels-profiles-upper-plan.md):
+  `heightFromLevel` merdiveni katının yüksekliğiyle tasarlar, kat yüksekliği ya
+  da rıht sayısı değişince belge rıht yüksekliğini yazar (KCAD 125), araç Etkin
+  kat'ı izlerken bağlar; döner merdivende merkez direği (`post`, M). İmar
+  Yönetmeliği md. 31'in dört profili (`catalog/v1/arch-profiles/`, mevzuat onayı
+  değil) ve Denetim'in `stairs` grubu: rıht, basamak, 2a+b, kol, sahanlık, dar
+  uç, korkuluk; üçü Düzelt'li; `profiles` bir rampa ve bir merdiven profili
+  alır. Alttaki katın kesmeli merdiveni etkin katta yukarıdan çizilir (seçilmez,
+  kenetlenir); pafta haritası kendi katıyla çizer, ekranın kat görünümü paftayı
+  değiştirmez. Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21
+  ortak durum ve çekirdekte üst kat ile direk bağımsız başvurulardan; gerçek PDF
+  (1. kat paftası merdiveni yukarıdan çizer, `pdftoppm`); gerçek GUI resimleri
+  (`.run/shots/arac-merdiven-*`). Rıht sayısının yeniden hesaplanması, çok katlı
+  merdiven ve kesit/3B açık.
 
 - Düz/L/U ve sahanlık; toplam yükseklik, rıht sayısı, basamak derinliği, kol eni;
   değiştirilen parametre ve sabit tutulan kural açık olsun.
@@ -1234,6 +1249,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-02 / ADR0723 | Ara sahanlık (`maxRun`), kata bağlı başlangıç (`baseOffset`, KCAD 124, izleyici), Metraj'da rampa satırları ve Rampalar sekmesi, Denetim'de erişilebilirlik profili (`erisilebilirlik-rampa/1`) ve Düzelt, planda eğim yazısı. 31+27+22+24 ortak durum, gerçek PDF, uygulama/alan/etkileşim/masaüstü (1356)/KCAD/Python (374)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |
 | 2026-10-27 | ARCH-LIB-02 / ADR0706 | `cad.casework.run`: düz mutfak dizisi (modüller, evye, ocak, üst dolap, dolgu, tezgâh) tek adımda, kitaplık blokları gerekirse aynı adımda; Mutfak dizisi aracı (baş, son, taraf). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri. Başlık tablosunun önceki eksikleri (0701, 0703) de kapandı. | [~] Düz dizi dilimi; köşe ve cihaz modülleri açık |
 | 2026-10-27 | ARCH-ELEM-03 / ADR0707 | Aks ağı: `cad.grids.create` `system` (iki yön aralık, açı, ilk adlar, uzatma, kesişim kolonları akslara bağlı) tek adımda; Aks ağı aracı (tek tık ya da iki nokta). 36 durum, 3+1 araç testi, Python/MCP, gerçek GUI resimleri; Enter'ın ikinci ağ yazması düzeltildi. | [~] Dik ağ dilimi; eğrisel ağ, kolon hizası ve L kolon açık |

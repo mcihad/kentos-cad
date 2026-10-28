@@ -27,6 +27,11 @@ so every length is an exact fraction; a turn's angle is checked as floats within
   band the two concentric arcs half its width each side (bulges b, 0, −b, 0); fitted, its end round the centre from its
   start by (risers − 1) × tread, none when that is a whole turn or more; its railings concentric arcs 5 cm inside its
   sides, split at the cut as a straight stair's. Floats (trigonometry): the core's test checks within 1e-9.
+- A stair on the plan of the level above its own (docs/adr/0724 §4), one with a cut only: its band's sides past the cut
+  (the left from the cut riser, the right a tread further on; a side starting at a turn starts at its mitre), its
+  landings' edges past the cut, its end, the cut line (the left side at the cut riser to the right a tread on), its
+  risers past the cut, its railings past the cut, an arrow and its centre post. A curved stair's sides are arcs.
+- A curved stair's centre post (docs/adr/0724 §3): a circle of its diameter at its arc's centre, after the arrow.
 """
 
 import argparse
@@ -231,6 +236,50 @@ def rails(lines):
     return [{"pts": [fl(p) for p in line], "over": over} for line, over in lines]
 
 
+def across_at(pts, at, s, half):
+    p, d = point_on(pts, at, s)
+    n = left(d)
+    return [fl((p[0] + n[0] * half, p[1] + n[1] * half)), fl((p[0] - n[0] * half, p[1] - n[1] * half))]
+
+
+def upper_straight(pts, width, count, tread, land, cut, sides):
+    """A straight stair on the plan of the level above (docs/adr/0724 §4): its sides, its lines in order (landing edges
+    past the cut, its end, the cut line, its risers past the cut) and its railings past the cut; nothing without a cut."""
+    st, _, at = risers(pts, width, count, tread, land)
+    if cut is None or not st:
+        return {"pieces": 0}
+    c = min(max(cut, 1), len(st))
+    s, total = st[c - 1], at[-1]
+    t = min(s + tread, total)
+    half = width / 2
+    ring, n = band(pts, half), len(pts)
+
+    def side(x, k):
+        p, d = point_on(pts, at, x)
+        m = left(d)
+        return (p[0] + m[0] * half * k, p[1] + m[1] * half * k)
+
+    def start(x, k, corner):
+        for i, a in enumerate(at):
+            if abs(a - x) <= EPS:
+                return corner(i)
+        return side(x, k)
+
+    l = [start(s, 1, lambda i: ring[i])] + [ring[i] for i in range(n) if at[i] > s + EPS]
+    r = [start(t, -1, lambda i: ring[2 * n - 1 - i])] + [ring[2 * n - 1 - i] for i in range(n) if at[i] > t + EPS]
+    lines = []
+    for a, b in stair_landings(pts, at, land, tread):
+        for x in (a, b):
+            if t + EPS < x < total - EPS:
+                lines.append(across_at(pts, at, x, half))
+    lines.append([fl(side(total, 1)), fl(side(total, -1))])
+    lines.append([fl(side(s, 1)), fl(side(t, -1))])
+    lines += [across_at(pts, at, x, half) for x in st[c:]]
+    over = [line for line, past in railings_of(pts, half, sides, (s, t)) if past]
+    return {"sides": [{"pts": [fl(p) for p in l]}, {"pts": [fl(p) for p in r]}], "lines": lines,
+            "railings": [{"pts": [fl(p) for p in line]} for line in over]}
+
+
 def stair_case(name, pts, width, count, riser, tread, land=None, cut=None, sides=None):
     land_len = land if land is not None else width
     st, missing, at = risers(pts, width, count, tread, land_len)
@@ -263,7 +312,8 @@ def stair_case(name, pts, width, count, riser, tread, land=None, cut=None, sides
                        "landings": [[float(a), float(b)] for a, b in stair_landings(pts, at, land_len, tread)],
                        "fit": fl(fit) if fit else None,
                        "dashed": len(st) - shown + sum(1 for _, over in lines if over),
-                       "railings": rails(lines)}}
+                       "railings": rails(lines),
+                       "upper": upper_straight(pts, width, count, tread, land_len, cut, sides)}}
 
 
 def arc_of(a, b, bulge):
@@ -298,7 +348,7 @@ def curved_end(a, centre, n_risers, tread, sign):
     return [centre[0] + r * math.cos(t), centre[1] + r * math.sin(t)], math.tan(sweep / 4.0)
 
 
-def curved_case(name, a, b, bulge, width, count, riser, tread, cut=None, sides=None, numbering=False):
+def curved_case(name, a, b, bulge, width, count, riser, tread, cut=None, sides=None, numbering=False, post=None):
     arc = arc_of(a, b, bulge)
     c, r, a0, sweep = arc
     total = r * abs(sweep)
@@ -327,6 +377,8 @@ def curved_case(name, a, b, bulge, width, count, riser, tread, cut=None, sides=N
         shape["numbering"] = True
     if sides is not None:
         shape["railings"] = sides
+    if post is not None:
+        shape["post"] = float(post)
     fit = curved_end(a, c, count, tread, 1.0 if sweep > 0 else -1.0)
     shown = len(st) if cut is None else min(max(cut, 1), len(st))
     rails = []
@@ -351,16 +403,38 @@ def curved_case(name, a, b, bulge, width, count, riser, tread, cut=None, sides=N
                 rails.append({**arc_line(0.0, total), "over": True})
             else:
                 rails.append({**arc_line(0.0, total), "over": False})
-    return {"name": name, "shape": shape, "scale": 50.0,
-            "expect": {"stations": [float(s) for s in st], "missing": missing, "codes": codes,
-                       "band": [arc_point(arc, 0.0, half), arc_point(arc, total, half), arc_point(arc, total, -half),
-                                arc_point(arc, 0.0, -half)],
-                       "bandBulges": [bulge, 0.0, -bulge, 0.0],
-                       "landings": [],
-                       "fitArc": [fit[0][0], fit[0][1], fit[1]] if fit else None,
-                       "risers": [[arc_point(arc, float(x), half), arc_point(arc, float(x), -half)] for x in st],
-                       "dashed": len(st) - shown + sum(1 for x in rails if x["over"]),
-                       "railingArcs": rails}}
+    # On the plan of the level above (docs/adr/0724 §4): its arcs past the cut, its end, the cut line, its risers past
+    # the cut, its railings past the cut; its centre post.
+    if cut is None or not st:
+        upper = {"pieces": 0}
+    else:
+        k = min(max(cut, 1), len(st))
+        s0 = float(st[k - 1])
+        t0 = min(s0 + float(tread), total)
+        sign = 1.0 if sweep > 0 else -1.0
+        upper = {"sides": [{"pts": [arc_point(arc, s0, half), arc_point(arc, total, half)],
+                            "bulge": math.tan(sign * (total - s0) / r / 4.0)},
+                           {"pts": [arc_point(arc, t0, -half), arc_point(arc, total, -half)],
+                            "bulge": math.tan(sign * (total - t0) / r / 4.0)}],
+                 "lines": [[arc_point(arc, total, half), arc_point(arc, total, -half)],
+                           [arc_point(arc, s0, half), arc_point(arc, t0, -half)]]
+                          + [[arc_point(arc, float(x), half), arc_point(arc, float(x), -half)] for x in st[k:]],
+                 "railings": [{"pts": x["pts"], "bulge": x["bulge"]} for x in rails if x["over"]]}
+    expect = {"stations": [float(s) for s in st], "missing": missing, "codes": codes,
+              "band": [arc_point(arc, 0.0, half), arc_point(arc, total, half), arc_point(arc, total, -half),
+                       arc_point(arc, 0.0, -half)],
+              "bandBulges": [bulge, 0.0, -bulge, 0.0],
+              "landings": [],
+              "fitArc": [fit[0][0], fit[0][1], fit[1]] if fit else None,
+              "risers": [[arc_point(arc, float(x), half), arc_point(arc, float(x), -half)] for x in st],
+              "dashed": len(st) - shown + sum(1 for x in rails if x["over"]),
+              "railingArcs": rails,
+              "upper": upper}
+    if post is not None:
+        expect["post"] = [c[0], c[1], float(post) / 2.0]
+        if "sides" in upper:
+            upper["post"] = expect["post"]
+    return {"name": name, "shape": shape, "scale": 50.0, "expect": expect}
 
 
 def fitted_curve(a, centre, count, tread, sign):
@@ -525,6 +599,19 @@ def cases():
         curved_case("Döner merdiven, Blondel dışı", *half_turn, F(1), 10, F(1, 5), F(8, 25)),
         curved_case("Döner merdiven, kesme ilk rıhtta, iki yan korkuluk", *half_turn, F(1), 17, F(7, 40), F(7, 25),
                     cut=1, sides="both"),
+        # ADR 0724 §3, §4: a centre post; the plan of the level above.
+        curved_case("Döner merdiven, merkez direği ve kesme", *half_turn, F(1), 17, F(7, 40), F(7, 25), cut=6,
+                    sides="both", post=F(3, 10)),
+        curved_case("Saat yönünde döner merdiven, merkez direği, kesmesiz", P(2, 0), P(0, 2), math.tan(-3 * math.pi / 8),
+                    F(6, 5), 20, F(17, 100), F(29, 100), post=F(1, 2)),
+    ]
+    c += [
+        stair_case("L merdiven, kesme ilk kolda: üst katta dönüşten sonrası", [P(0, 0), P(3, 0), P(3, 3)], F(1), 18,
+                   F(1, 6), F(7, 25), cut=5, sides="both"),
+        stair_case("L merdiven, kesmenin bir basamak ötesi dönüşte: köşeden başlar", [P(0, 0), P(F(7, 5), 0), P(F(7, 5), 3)],
+                   F(1), 14, F(1, 6), F(7, 25), cut=5),
+        stair_case("U merdiven, kesme ikinci kolda: tek kol ve uç", [P(0, 0), P(3, 0), P(3, 2), P(0, 2)], F(1), 18,
+                   F(17, 100), F(28, 100), cut=14, sides="left"),
     ]
     return c
 

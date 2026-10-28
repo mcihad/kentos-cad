@@ -78,11 +78,16 @@ struct StyledAt {
 /// Styled layers kept for this many scales.
 const STYLED_KEPT: usize = 4;
 
+/// The drawing (its session and state), the scale and annotation scale, whether the screen's store draws otherwise
+/// than paper, the bands' rows it took (docs/adr/0636 §2) and the level whose plan it is when that shows stairs from
+/// above.
+type ScaledKey = (u64, u64, u64, u64, bool, usize, Option<(String, bool)>);
+
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
-/// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
+/// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing. A level's
+/// plan showing the stairs under it from above (docs/adr/0724 §4) has its own, its store's level view the map's.
 struct Scaled {
-    /// The drawing (its session and state), the scale and the bands' rows it took (docs/adr/0636 §2).
-    key: (u64, u64, u64, u64, bool, usize),
+    key: ScaledKey,
     view: Option<(Document, Spatial)>,
 }
 
@@ -136,11 +141,13 @@ impl SheetMaps {
         &self,
         drawing: &Document,
         view: &kentos_sheet::display::MapViewPrim,
+        level: Option<&kentos_sheet::kinds::MapLevel>,
         main: &Spatial,
     ) -> Option<Rc<Scaled>> {
         // A model camera can draw more detail than this paper map, even at the same plot scale.
         // Such a map gets its own index so screen navigation cannot change paper/PDF output (ADR 0696).
-        let unscoped = main.has_sheet_view()
+        // The screen's stairs seen from above (docs/adr/0724 §4) are not the paper's either.
+        let unscoped = main.draws_otherwise()
             || (drawing.model.has_scale_dependent_geometry()
                 && main.store().wall_view()
                     != kentos_native_application::walls::view_at(
@@ -156,7 +163,12 @@ impl SheetMaps {
             annotation.to_bits(),
             unscoped,
             main.ghost_total(),
+            // A level's plan showing the stairs under it from above (docs/adr/0724 §4).
+            level
+                .filter(|l| kentos_plot::layers::shows_from_above(&drawing.model, l))
+                .map(|l| (l.id.clone(), l.below)),
         );
+        let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
             let at = scale.max(1e-6);
@@ -167,11 +179,14 @@ impl SheetMaps {
                 .has_annotative()
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
-                .or_else(|| (walls || unscoped).then(|| drawing.model.reading_copy()))
+                .or_else(|| (walls || unscoped || upper.is_some()).then(|| drawing.model.reading_copy()))
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
                     spatial.reload(&model);
+                    if let Some(l) = upper {
+                        spatial.set_level_view(&model, kentos_plot::layers::level_view(l), Some(l.id.clone()));
+                    }
                     // The rows round a bound layer's part hold room in the copy too (docs/adr/0636 §2).
                     for link in model.settings().sources.iter().filter(|l| l.extent.is_some()) {
                         spatial.set_ghosts(&link.layer, main.ghosts_of(&link.layer));
@@ -512,7 +527,7 @@ impl MapPainter for SheetPainter<'_> {
             && (r.export || !primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
         {
             let mut keep = None;
-            let (drawing, spatial) = self.source(r.view, &mut keep);
+            let (drawing, spatial) = self.source(r, &mut keep);
             let Some(doc) = drawing.map(|d| &d.model).or(self.doc) else {
                 return false;
             };
@@ -562,7 +577,7 @@ impl MapPainter for SheetPainter<'_> {
             return false;
         }
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view, &mut keep);
+        let (drawing, spatial) = self.source(r, &mut keep);
         if let Some(doc) = drawing.map(|d| &d.model).or(self.doc) {
             self.labels(doc, spatial, r, frame);
         }
@@ -598,7 +613,7 @@ impl MapPainter for SheetPainter<'_> {
         r: &MapRequest<'_>,
     ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view, &mut keep);
+        let (drawing, spatial) = self.source(r, &mut keep);
         let Some(drawing) = drawing else {
             return Ok(None);
         };
@@ -697,12 +712,13 @@ impl SheetPainter<'_> {
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
     fn source<'s>(
         &'s self,
-        view: &kentos_sheet::display::MapViewPrim,
+        r: &MapRequest<'_>,
         keep: &'s mut Option<Rc<Scaled>>,
     ) -> Source<'s> {
+        let level = r.primitive.and_then(|m| m.level.as_ref());
         *keep = self
             .drawing
-            .and_then(|d| self.maps.scaled(d, view, self.spatial));
+            .and_then(|d| self.maps.scaled(d, r.view, level, self.spatial));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -716,7 +732,7 @@ impl SheetPainter<'_> {
     /// drawing, no place).
     fn paint_styled(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view, &mut keep);
+        let (drawing, spatial) = self.source(r, &mut keep);
         let (Some(drawing), Some(extent)) = (drawing, r.extent) else {
             return false;
         };
@@ -831,7 +847,7 @@ impl SheetPainter<'_> {
     /// export window says it (“Yapı (desen dolgusu)”); none when it goes as vectors.
     fn why_no_vectors(&self, r: &MapRequest<'_>) -> Option<String> {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view, &mut keep);
+        let (drawing, spatial) = self.source(r, &mut keep);
         let drawing = drawing?;
         let extent = r.extent?;
         let scale = r.view.scale.max(1e-6);
@@ -1476,7 +1492,7 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
-        let unscoped=self.spatial.has_sheet_view().then(||Spatial::of(&doc.model));
+        let unscoped=self.spatial.draws_otherwise().then(||Spatial::of(&doc.model));
         let data = kentos_plot::inputs::sheet_data(
             &doc.model,
             unscoped.as_ref().unwrap_or(&self.spatial),
@@ -1840,13 +1856,13 @@ mod tests {
             serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
         let maps = SheetMaps::default();
         let copied = maps
-            .scaled(doc, &view, &main)
+            .scaled(doc, &view, None, &main)
             .expect("separate paper index despite equal project scale");
         let (_, paper) = copied.view.as_ref().unwrap();
         assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
         assert_eq!(paper.store().wall_view().scale, 100.);
         main.set_screen_wall_scale(&doc.model, Some(10.));
-        let again = maps.scaled(doc, &view, &main).unwrap();
+        let again = maps.scaled(doc, &view, None, &main).unwrap();
         assert!(
             Rc::ptr_eq(&copied, &again),
             "camera motion does not rebuild the paper cache"
@@ -1854,7 +1870,7 @@ mod tests {
         assert_eq!(doc.model.to_snapshot_v2(), before);
         main.set_screen_wall_scale(&doc.model, None);
         assert!(
-            maps.scaled(doc, &view, &main).is_none(),
+            maps.scaled(doc, &view, None, &main).is_none(),
             "matching ordinary paper index may still be shared"
         );
     }
@@ -1898,7 +1914,7 @@ mod tests {
         let view: kentos_sheet::display::MapViewPrim =
             serde_json::from_value(serde_json::json!({"scale": 200.0, "rotation": 0})).expect("a view");
         let maps = SheetMaps::default();
-        let copy = maps.scaled(&doc, &view, &main).expect("a copy at 1:200");
+        let copy = maps.scaled(&doc, &view, None, &main).expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);
     }
@@ -2702,7 +2718,7 @@ mod tests {
         let lay = |k: f64| {
             let r = request(k);
             let mut keep = None;
-            let (drawing, spatial) = painter.source(r.view, &mut keep);
+            let (drawing, spatial) = painter.source(&r, &mut keep);
             let model = &drawing.expect("a drawing").model;
             let (camera, spots, fence) = painter
                 .label_layout(model, spatial, &r)

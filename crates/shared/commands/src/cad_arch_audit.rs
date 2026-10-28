@@ -51,10 +51,12 @@ pub enum ArchAuditCheck {
     Levels,
     /// Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.
     Accessibility,
+    /// Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.
+    Stairs,
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 10] = [
+    pub const ALL: [ArchAuditCheck; 11] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
@@ -65,6 +67,7 @@ impl ArchAuditCheck {
         ArchAuditCheck::Viewmarks,
         ArchAuditCheck::Levels,
         ArchAuditCheck::Accessibility,
+        ArchAuditCheck::Stairs,
     ];
 
     /// Its name on the wire.
@@ -80,6 +83,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Viewmarks => "viewmarks",
             ArchAuditCheck::Levels => "levels",
             ArchAuditCheck::Accessibility => "accessibility",
+            ArchAuditCheck::Stairs => "stairs",
         }
     }
 
@@ -96,6 +100,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Viewmarks => "Görünüm işaretleri",
             ArchAuditCheck::Levels => "Katlar",
             ArchAuditCheck::Accessibility => "Erişilebilirlik",
+            ArchAuditCheck::Stairs => "Merdivenler",
         }
     }
 }
@@ -104,7 +109,8 @@ impl ArchAuditCheck {
 /// the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
 ///
 /// Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-/// zero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).
+/// zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`
+/// (`level`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -135,11 +141,11 @@ pub struct ArchAudit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
-    /// The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
-    /// ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub profile: Option<String>,
+    /// The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
+    /// ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub profiles: Vec<String>,
 }
 
 /// What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it
@@ -167,7 +173,9 @@ pub struct ArchAuditFinding {
     /// `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
     /// `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
     /// `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
-    /// `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.
+    /// `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
+    /// `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
+    /// `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
     pub code: String,
     /// What is wrong.
     pub message: String,
@@ -198,23 +206,28 @@ pub struct ArchAudited {
     pub revision: String,
 }
 
-/// An accessibility profile (docs/adr/0723 §4): versioned values a ramp is measured against, with their sources and
-/// what they are not (a regulation's approval).
+/// An architectural profile (docs/adr/0723 §4, 0724 §2): versioned values ramps and stairs are measured against, with
+/// their sources and what they are not (a regulation's approval).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
-pub struct AccessibilityProfile {
-    /// `kentos.accessibility-profile`.
+pub struct ArchProfile {
+    /// `kentos.arch-profile`.
     pub format: String,
     pub version: u32,
     /// Its id with its version (`erisilebilirlik-rampa/1`).
     pub id: String,
     pub name: String,
     pub note: String,
-    pub sources: Vec<AccessibilitySource>,
-    pub ramp: RampRules,
+    pub sources: Vec<ProfileReference>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ramp: Option<RampRules>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stair: Option<StairRules>,
 }
 
 /// Where a profile's values come from.
@@ -223,7 +236,7 @@ pub struct AccessibilityProfile {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
-pub struct AccessibilitySource {
+pub struct ProfileReference {
     pub title: String,
     pub url: String,
 }
@@ -246,6 +259,34 @@ pub struct RampRules {
     /// A ramp that turns is at least this wide at its turns, metres (a landing that turns is this square).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub turn: f64,
+}
+
+/// A stair's rules in a profile (docs/adr/0724 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StairRules {
+    /// The highest riser, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub riser: f64,
+    /// The shortest tread, metres (a winding stair's on its walking line).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tread: f64,
+    /// Two risers and a tread (2a+b), metres: the least and the most.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub step: [f64; 2],
+    /// The narrowest flight, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// A landing at least as long as the flight is wide.
+    pub landing_width: bool,
+    /// A winding (curved) stair's tread at its narrow end, at least; metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub winder: f64,
+    /// A railing on both sides.
+    pub both_railings: bool,
 }
 
 /// One band of [`RampRules::slopes`].
@@ -276,15 +317,33 @@ pub struct LongRun {
     pub max: f64,
 }
 
-/// The built-in accessibility profiles: their ids and their data (`catalog/v1/accessibility/`).
-pub const ACCESSIBILITY_PROFILES: &[(&str, &str)] = &[(
-    "erisilebilirlik-rampa/1",
-    include_str!("../../../../catalog/v1/accessibility/erisilebilirlik-rampa-1.json"),
-)];
+/// The built-in architectural profiles: their ids and their data (`catalog/v1/arch-profiles/`), ramps' first.
+pub const ARCH_PROFILES: &[(&str, &str)] = &[
+    (
+        "erisilebilirlik-rampa/1",
+        include_str!("../../../../catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json"),
+    ),
+    (
+        "imar-merdiven-konut/1",
+        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-konut-1.json"),
+    ),
+    (
+        "imar-merdiven-konut-asansorsuz/1",
+        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-konut-asansorsuz-1.json"),
+    ),
+    (
+        "imar-merdiven-diger/1",
+        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-diger-1.json"),
+    ),
+    (
+        "imar-merdiven-daire-ici/1",
+        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-daire-ici-1.json"),
+    ),
+];
 
-/// A built-in accessibility profile by its id.
-pub fn accessibility_profile(id: &str) -> Option<AccessibilityProfile> {
-    let (_, text) = ACCESSIBILITY_PROFILES.iter().find(|(i, _)| *i == id)?;
+/// A built-in architectural profile by its id.
+pub fn arch_profile(id: &str) -> Option<ArchProfile> {
+    let (_, text) = ARCH_PROFILES.iter().find(|(i, _)| *i == id)?;
     serde_json::from_str(text).ok()
 }
 
@@ -302,17 +361,25 @@ mod profile_tests {
 
     #[test]
     fn every_built_in_profile_reads_and_is_named_by_its_id() {
-        for (id, _) in ACCESSIBILITY_PROFILES {
-            let p = accessibility_profile(id).expect("reads");
+        for (id, _) in ARCH_PROFILES {
+            let p = arch_profile(id).expect("reads");
             assert_eq!(p.id, *id);
-            assert_eq!(p.format, "kentos.accessibility-profile");
-            assert!(p.ramp.slopes.last().is_some_and(|b| b.up_to.is_none()), "the last band has no bound");
-            assert!(p.ramp.slopes.windows(2).all(|w| w[0].up_to < w[1].up_to || w[1].up_to.is_none()));
+            assert_eq!(p.format, "kentos.arch-profile");
+            assert!(p.ramp.is_some() || p.stair.is_some(), "{id}: rules");
+            if let Some(r) = &p.ramp {
+                assert!(r.slopes.last().is_some_and(|b| b.up_to.is_none()), "the last band has no bound");
+                assert!(r.slopes.windows(2).all(|w| w[0].up_to < w[1].up_to || w[1].up_to.is_none()));
+            }
+            if let Some(s) = &p.stair {
+                assert!(s.step[0] < s.step[1] && s.riser > 0.0 && s.tread > 0.0 && s.width > 0.0);
+            }
         }
-        let p = accessibility_profile("erisilebilirlik-rampa/1").unwrap();
-        assert_eq!(p.ramp.slope_for(0.15), Some(8.0));
-        assert_eq!(p.ramp.slope_for(-0.16), Some(7.0));
-        assert_eq!(p.ramp.slope_for(1.0), Some(6.0));
-        assert_eq!(p.ramp.slope_for(1.01), Some(5.0));
+        let r = arch_profile("erisilebilirlik-rampa/1").unwrap().ramp.unwrap();
+        assert_eq!(r.slope_for(0.15), Some(8.0));
+        assert_eq!(r.slope_for(-0.16), Some(7.0));
+        assert_eq!(r.slope_for(1.0), Some(6.0));
+        assert_eq!(r.slope_for(1.01), Some(5.0));
+        let s = arch_profile("imar-merdiven-konut-asansorsuz/1").unwrap().stair.unwrap();
+        assert_eq!((s.riser, s.width), (0.16, 1.2));
     }
 }

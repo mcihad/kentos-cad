@@ -99,6 +99,7 @@ fn arch_elements_draw_as_the_reference_says() {
                     .count();
                 assert_eq!(dashed as u64, e["dashed"].as_u64().unwrap(), "{name}: kesikli rıhtlar");
                 railings(&arch::stair_railings(pts, stair), &e["railings"], name);
+                upper_stair(pts, stair, &e["upper"], name);
             }
             Shape::Ramp { pts, ramp } => {
                 let run = arch::ramp_run(&arch::Walk::of(pts), ramp);
@@ -192,6 +193,64 @@ fn curved_stair(pts: &[kentos_geometry_core::vec2::Vec2], stair: &arch::StairSpe
         points(pts, &w["pts"], name);
         close(b[0], w["bulge"].as_f64().unwrap(), name);
     }
+    // Its centre post (docs/adr/0724 §3): the last piece, a circle at its arc's centre.
+    if let Some(w) = e["post"].as_array() {
+        let Some(Shape::Circle { c, r }) = pieces.last().map(|p| &p.shape) else {
+            panic!("{name}: merkez direği çember olmalı");
+        };
+        close(c.x, w[0].as_f64().unwrap(), name);
+        close(c.y, w[1].as_f64().unwrap(), name);
+        close(*r, w[2].as_f64().unwrap(), name);
+    }
+    upper_stair(pts, stair, &e["upper"], name);
+}
+
+/// A stair on the plan of the level above its own (docs/adr/0724 §4) against the reference: its sides past the cut
+/// (arcs on a curved stair), its lines (landings' edges, its end, the cut line, its risers past the cut), its railings
+/// past the cut, the arrow's two wings and its dot, its centre post; nothing for one without a cut.
+fn upper_stair(pts: &[kentos_geometry_core::vec2::Vec2], stair: &arch::StairSpec, want: &Value, name: &str) {
+    let mut above = stair.clone();
+    above.upper = true;
+    let pieces = arch::stair_upper_pieces(pts, &above, 50.0);
+    assert_eq!(arch::stair_pieces(pts, &above, 50.0).len(), pieces.len(), "{name}: üst kattaki parçalar");
+    if want["pieces"].as_u64() == Some(0) {
+        assert!(pieces.is_empty(), "{name}: kesmesiz merdiven üst katta görünmez");
+        return;
+    }
+    let polylines: Vec<(&Vec<kentos_geometry_core::vec2::Vec2>, Option<&Vec<f64>>)> = pieces
+        .iter()
+        .filter_map(|p| match &p.shape {
+            Shape::Polyline { pts, bulges, .. } => Some((pts, bulges.as_ref())),
+            _ => None,
+        })
+        .collect();
+    let lines: Vec<[kentos_geometry_core::vec2::Vec2; 2]> = pieces
+        .iter()
+        .filter_map(|p| match p.shape {
+            Shape::Line { a, b } => Some([a, b]),
+            _ => None,
+        })
+        .collect();
+    let circles = pieces.iter().filter(|p| matches!(p.shape, Shape::Circle { .. })).count();
+    let sides = want["sides"].as_array().unwrap();
+    let rails = want["railings"].as_array().unwrap();
+    // The two sides, the railings past the cut, the arrow's line.
+    assert_eq!(polylines.len(), sides.len() + rails.len() + 1, "{name}: üst katta çoklu çizgiler");
+    for ((got, bulges), w) in polylines.iter().zip(sides.iter().chain(rails)) {
+        points(got, &w["pts"], name);
+        if let Some(b) = w["bulge"].as_f64() {
+            close(bulges.expect("a curved side or railing")[0], b, name);
+        }
+    }
+    let want_lines = want["lines"].as_array().unwrap();
+    // The lines, then the arrow's two wings.
+    assert_eq!(lines.len(), want_lines.len() + 2, "{name}: üst katta çizgiler");
+    for (g, w) in lines.iter().zip(want_lines) {
+        points(g, w, name);
+    }
+    assert_eq!(circles, 1 + usize::from(want["post"].is_array()), "{name}: okun noktası ve merkez direği");
+    // Never dashed: what the plan from above shows is seen.
+    assert!(pieces.iter().all(|p| p.stroke.line_type.is_none()), "{name}: üst katta kesikli parça yok");
 }
 
 /// En uzun kol (docs/adr/0723 §1): 1.2 m at 5 % is 24 m of slope; with runs of at most 9 m and 1.5 m landings the

@@ -94,7 +94,7 @@ Araştırma (yerelde doğrulanmadı; kaynaklar birbirini tam tutmuyor):
   - Çekirdek başvurusu `arch_cases.py`: 48 durum, eğim yazısıyla.
   - Eski 41 denetim, 48 düzenleme ve 25 metraj durumu değişmeden geçer.
 - **KCAD:** `ramp-levels.kcad` ve iki kural bozuk örnek, önceki şema örneği; bilinmeyen şema örneği
-  `schema-version-125`'e taşındı. Bağımsız Python okuyucusu 1289 dosyanın hepsini okudu. Kodek 228 test.
+  `schema-version-126`'e taşındı. Bağımsız Python okuyucusu 1289 dosyanın hepsini okudu. Kodek 228 test.
 - **Takımlar:**
   - uygulama 242 + 67, alan 121, etkileşim 783 + 66;
   - komutlar 918, sözleşmeler 1061 + 33 + 10;
@@ -120,3 +120,13 @@ Araştırma (yerelde doğrulanmadı; kaynaklar birbirini tam tutmuyor):
 - Profilde genişlik ve korkuluk/küpeşte yüksekliği (kaynaklar ayrılıyor), kurumun kendi profil dosyası.
 - Döner (yaylı) rampa, rampanın kesitte ve 3B'de gösterimi, rampa ile döşeme birleşimi.
 - Merdivenin başlangıç kotunun da kata bağlanması (merdiven bugün yalnız katın yüksekliğini okur).
+
+## Ek: profiller ve Metraj (28 Ekim 2026, ADR 0724)
+
+- Profil `catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json`'a taşındı. Biçimi `kentos.arch-profile` 1 oldu; merdiven
+  profilleri de aynı yerdedir.
+- `cad.arch.audit`'in `profile` alanı `profiles` listesi oldu. En çok bir rampa ve bir merdiven profili verilir.
+  Katalogda olmayan profil `profiles[i]` yerinde reddedilir; ret iletisi katalogdaki profilleri sayar.
+- Denetim sekmesindeki seçimin adı “Rampa” oldu; yanında “Merdiven” seçimi var.
+- Metraj'a Merdivenler sekmesi eklendi. XLSX ve ODS artık yedi sayfa yazar.
+- Erişilebilirliğin 24 ortak durumu `profiles` girdisiyle yeniden yazıldı.

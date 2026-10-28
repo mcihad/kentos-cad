@@ -98,4 +98,13 @@ cut?: number, numbering?: boolean,
 /**
  * Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
  */
-railings?: Railings, arch?: ArchInfo, };
+railings?: Railings, 
+/**
+ * Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that
+ * height over its risers, written again whenever the level's height changes; needs its level.
+ */
+heightFromLevel?: boolean, 
+/**
+ * A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.
+ */
+post?: number, arch?: ArchInfo, };

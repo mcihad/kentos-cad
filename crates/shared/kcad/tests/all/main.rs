@@ -13,6 +13,7 @@ mod compose;
 mod dimension_levels;
 mod schedule_columns;
 mod ramp_levels;
+mod stair_levels;
 mod slabs;
 mod dimension_refs;
 mod dimension_sets;

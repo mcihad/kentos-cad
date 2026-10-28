@@ -54,9 +54,18 @@ fill?: boolean,
  */
 risers?: number, 
 /**
- * A stair's.
+ * A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1).
  */
 riserHeight?: number, 
+/**
+ * A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
+ * risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+ */
+heightFromLevel?: boolean, 
+/**
+ * A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none.
+ */
+post?: number | null, 
 /**
  * A stair's.
  */

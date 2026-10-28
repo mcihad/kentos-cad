@@ -27,4 +27,8 @@ railingLength?: number, parapetLength?: number,
 /**
  * The ramps' plan area and their railings' length (docs/adr/0723 §3).
  */
-rampArea?: number, rampRailingLength?: number, };
+rampArea?: number, rampRailingLength?: number, 
+/**
+ * The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).
+ */
+stairArea?: number, stairRailingLength?: number, stairRisers?: number, };

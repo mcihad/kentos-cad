@@ -1,5 +1,6 @@
 //! A Kot bound to a level (docs/adr/0721 §2): an elevation mark whose value is its level's floor elevation plus its
-//! offset; and a ramp bound to its level (docs/adr/0723 §2), its start's elevation (`base`) the same way. The levels
+//! offset; a ramp bound to its level (docs/adr/0723 §2), its start's elevation (`base`) the same way; and a stair whose
+//! rise is its level's height (docs/adr/0724 §1), its riser height that height over its risers. The levels
 //! are project settings (no undo step), so the value is derived, like a view mark's words: written
 //!
 //! - at a step's end, for the marks the step added or changed (inside the step);
@@ -11,7 +12,7 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use kentos_contracts::{ArchLevel, DimensionEntity, Entity, RampEntity};
+use kentos_contracts::{ArchLevel, DimensionEntity, Entity, RampEntity, StairEntity};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -35,11 +36,23 @@ pub fn ramp_settled(r: &RampEntity, levels: &[ArchLevel]) -> Option<RampEntity> 
     })
 }
 
-/// Whether `e` takes a value from its level: a Kot bound to one or a ramp bound to its own.
+/// `s` with its riser height read from its level's height among `levels` (docs/adr/0724 §1); none when it already
+/// holds, its rise is not its level's or the level has no height.
+pub fn stair_settled(s: &StairEntity, levels: &[ArchLevel]) -> Option<StairEntity> {
+    let h = s.stair.level_riser(levels)?;
+    (s.stair.riser_height != h).then(|| {
+        let mut out = s.clone();
+        out.stair.riser_height = h;
+        out
+    })
+}
+
+/// Whether `e` takes a value from its level: a Kot bound to one, a ramp or a stair bound to its own.
 pub(crate) fn level_bound(e: &Entity) -> bool {
     match e {
         Entity::Dimension(d) => d.level.is_some(),
         Entity::Ramp(r) => r.ramp.base_offset.is_some(),
+        Entity::Stair(s) => s.stair.height_from_level,
         _ => false,
     }
 }
@@ -56,6 +69,7 @@ impl Document {
             let next = match &*current.entity {
                 Entity::Dimension(d) => settled(d, levels).map(Entity::Dimension),
                 Entity::Ramp(r) => ramp_settled(r, levels).map(Entity::Ramp),
+                Entity::Stair(st) => stair_settled(st, levels).map(Entity::Stair),
                 _ => None,
             };
             if let Some(next) = next {

@@ -242,6 +242,7 @@ class ArchAuditCheck(_StrEnum):
     - ``viewmarks``: View marks whose target is gone.
     - ``levels``: Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
     - ``accessibility``: Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.
+    - ``stairs``: Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -253,9 +254,10 @@ class ArchAuditCheck(_StrEnum):
     VIEWMARKS = "viewmarks"
     LEVELS = "levels"
     ACCESSIBILITY = "accessibility"
+    STAIRS = "stairs"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels", "accessibility"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "columns", "viewmarks", "levels", "accessibility", "stairs"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
 
 
@@ -10253,7 +10255,8 @@ class ArchAudit(_Model):
     the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
 
     Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-    zero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).
+    zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`
+    (`level`).
     Attributes:
         checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
         level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
@@ -10261,15 +10264,15 @@ class ArchAudit(_Model):
         max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
         min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
         min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
-        profile: The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
-            ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
+        profiles: The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
+            ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.
     """
     checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
     level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     min_area: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
-    profile: str | None | Unset = UNSET
+    profiles: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10283,8 +10286,8 @@ class ArchAudit(_Model):
             out["minArea"] = None if self.min_area is None else float(self.min_area)
         if self.min_width is not UNSET:
             out["minWidth"] = None if self.min_width is None else float(self.min_width)
-        if self.profile is not UNSET:
-            out["profile"] = self.profile
+        if self.profiles is not UNSET:
+            out["profiles"] = list(self.profiles)
         return out
 
     @classmethod
@@ -10295,7 +10298,7 @@ class ArchAudit(_Model):
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
-            profile=data.get("profile", UNSET),
+            profiles=list(data["profiles"]) if "profiles" in data else UNSET,
         )
 
 
@@ -10307,7 +10310,9 @@ class ArchAuditFinding(_Model):
             `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
             `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
             `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
-            `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.
+            `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
+            `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
+            `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -37613,8 +37618,11 @@ class NewStair(_Model):
         cut_height: The plan's cut height above its foot: its cut line after the last riser wholly under it (not with `cut`). Unit: length.
         fit: True: its last point moves along its last segment so that its walking line ends at its last riser.
         height: Its whole rise, the risers drawn from it (docs/adr/0704 §1). Unit: length.
+        height_from_level: True: its whole rise is its level's floor-to-floor height (docs/adr/0724 §1), drawn as `height` would be and
+            followed whenever the level's height changes; needs its level (`arch.level`) with a height, not with `height`.
         landing: A landing's length at a turn; absent: the width. Unit: length.
         max_riser: The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`. Unit: length.
+        post: A curved stair's centre post, its diameter (docs/adr/0724 §3); absent: none. Unit: length.
         railings: Its railings' sides; absent: none (docs/adr/0705 §2).
         riser_height: A riser's height; 0 or absent with `height` (which gives it: `height / risers`). Unit: length.
         risers: Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`. Unit: count.
@@ -37629,9 +37637,11 @@ class NewStair(_Model):
     cut_height: float | None | Unset = UNSET
     fit: bool | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    height_from_level: bool | None | Unset = UNSET
     landing: float | None | Unset = UNSET
     max_riser: float | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
+    post: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
     riser_height: float = 0.0
     risers: int = 0
@@ -37655,12 +37665,16 @@ class NewStair(_Model):
             out["fit"] = self.fit
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.height_from_level is not UNSET:
+            out["heightFromLevel"] = self.height_from_level
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
         if self.max_riser is not UNSET:
             out["maxRiser"] = None if self.max_riser is None else float(self.max_riser)
         if self.numbering is not UNSET:
             out["numbering"] = self.numbering
+        if self.post is not UNSET:
+            out["post"] = None if self.post is None else float(self.post)
         if self.railings is not UNSET:
             out["railings"] = None if self.railings is None else _enum_out(self.railings)
         out["riserHeight"] = float(self.riser_height)
@@ -37680,9 +37694,11 @@ class NewStair(_Model):
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             fit=data.get("fit", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            height_from_level=data.get("heightFromLevel", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
             max_riser=UNSET if "maxRiser" not in data else None if data["maxRiser"] is None else float(data["maxRiser"]),
             numbering=data.get("numbering", UNSET),
+            post=UNSET if "post" not in data else None if data["post"] is None else float(data["post"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             riser_height=float(data["riserHeight"]) if "riserHeight" in data else 0.0,
             risers=data["risers"] if "risers" in data else 0,
@@ -46723,6 +46739,9 @@ class QuantityTotals(_Model):
         ramp_railing_length: Unit: length.
         slab_area: The slabs' net area and volume, those left out not summed. Unit: area.
         slab_volume: Unit: volume.
+        stair_area: The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5). Unit: area.
+        stair_railing_length: Unit: length.
+        stair_risers: Unit: count.
         void_area: The voids' area: shafts, lift shafts, openings in the floor. Unit: area.
     """
     space_area: float
@@ -46737,6 +46756,9 @@ class QuantityTotals(_Model):
     ramp_railing_length: float | Unset = UNSET
     slab_area: float | Unset = UNSET
     slab_volume: float | Unset = UNSET
+    stair_area: float | Unset = UNSET
+    stair_railing_length: float | Unset = UNSET
+    stair_risers: int | Unset = UNSET
     void_area: float | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -46760,6 +46782,12 @@ class QuantityTotals(_Model):
             out["slabArea"] = float(self.slab_area)
         if self.slab_volume is not UNSET:
             out["slabVolume"] = float(self.slab_volume)
+        if self.stair_area is not UNSET:
+            out["stairArea"] = float(self.stair_area)
+        if self.stair_railing_length is not UNSET:
+            out["stairRailingLength"] = float(self.stair_railing_length)
+        if self.stair_risers is not UNSET:
+            out["stairRisers"] = self.stair_risers
         if self.void_area is not UNSET:
             out["voidArea"] = float(self.void_area)
         return out
@@ -46779,6 +46807,9 @@ class QuantityTotals(_Model):
             ramp_railing_length=float(data["rampRailingLength"]) if "rampRailingLength" in data else UNSET,
             slab_area=float(data["slabArea"]) if "slabArea" in data else UNSET,
             slab_volume=float(data["slabVolume"]) if "slabVolume" in data else UNSET,
+            stair_area=float(data["stairArea"]) if "stairArea" in data else UNSET,
+            stair_railing_length=float(data["stairRailingLength"]) if "stairRailingLength" in data else UNSET,
+            stair_risers=data.get("stairRisers", UNSET),
             void_area=float(data["voidArea"]) if "voidArea" in data else UNSET,
         )
 
@@ -55237,6 +55268,7 @@ class SpacesQuantified(_Model):
     Attributes:
         ramps: The ramps (docs/adr/0723 §3).
         slabs: The slabs (docs/adr/0722 §5).
+        stairs: The stairs (docs/adr/0724 §5).
         transitions: The floor finishes' changes at the passages.
     """
     spaces: list[SpaceRow]
@@ -55245,6 +55277,7 @@ class SpacesQuantified(_Model):
     totals: QuantityTotals
     ramps: list[RampRow] | Unset = UNSET
     slabs: list[SlabRow] | Unset = UNSET
+    stairs: list[StairRow] | Unset = UNSET
     transitions: list[TransitionRow] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -55257,6 +55290,8 @@ class SpacesQuantified(_Model):
             out["ramps"] = [e0.to_json() for e0 in self.ramps]
         if self.slabs is not UNSET:
             out["slabs"] = [e0.to_json() for e0 in self.slabs]
+        if self.stairs is not UNSET:
+            out["stairs"] = [e0.to_json() for e0 in self.stairs]
         if self.transitions is not UNSET:
             out["transitions"] = [e0.to_json() for e0 in self.transitions]
         return out
@@ -55270,14 +55305,16 @@ class SpacesQuantified(_Model):
             totals=QuantityTotals.from_json(data["totals"]),
             ramps=[RampRow.from_json(e0) for e0 in data["ramps"]] if "ramps" in data else UNSET,
             slabs=[SlabRow.from_json(e0) for e0 in data["slabs"]] if "slabs" in data else UNSET,
+            stairs=[StairRow.from_json(e0) for e0 in data["stairs"]] if "stairs" in data else UNSET,
             transitions=[TransitionRow.from_json(e0) for e0 in data["transitions"]] if "transitions" in data else UNSET,
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class SpacesQuantities(_Model):
-    """Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the
-    levels, phases, usages and layers given (each absent: every one).
+    """Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,
+    ramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each
+    absent: every one; a usage filter leaves out all but the spaces).
 
     Refusals: `level_not_found`, `layer_not_found`.
     """
@@ -56296,6 +56333,8 @@ class StairEntity(Entity):
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         cut: The riser its cut line stands at; absent: none. Unit: index.
+        height_from_level: Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that
+            height over its risers, written again whenever the level's height changes; needs its level.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         landing: A landing's length along the walking line at a turn; absent: the width. Unit: length.
@@ -56309,6 +56348,7 @@ class StairEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        post: A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none. Unit: length.
         railings: Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -56330,6 +56370,7 @@ class StairEntity(Entity):
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     cut: int | None | Unset = UNSET
+    height_from_level: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     landing: float | None | Unset = UNSET
@@ -56339,6 +56380,7 @@ class StairEntity(Entity):
     line_weight: float | None | Unset = UNSET
     numbering: bool | Unset = UNSET
     order: int | None | Unset = UNSET
+    post: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -56366,6 +56408,8 @@ class StairEntity(Entity):
             out["color"] = self.color
         if self.cut is not UNSET:
             out["cut"] = self.cut
+        if self.height_from_level is not UNSET:
+            out["heightFromLevel"] = self.height_from_level
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -56384,6 +56428,8 @@ class StairEntity(Entity):
             out["numbering"] = self.numbering
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.post is not UNSET:
+            out["post"] = None if self.post is None else float(self.post)
         if self.railings is not UNSET:
             out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.symbol is not UNSET:
@@ -56411,6 +56457,7 @@ class StairEntity(Entity):
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             cut=data.get("cut", UNSET),
+            height_from_level=data.get("heightFromLevel", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
@@ -56420,6 +56467,7 @@ class StairEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             numbering=data.get("numbering", UNSET),
             order=data.get("order", UNSET),
+            post=UNSET if "post" not in data else None if data["post"] is None else float(data["post"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
@@ -56428,14 +56476,97 @@ class StairEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class StairRow(_Model):
+    """A stair measured (docs/adr/0724 §5).
+    Attributes:
+        width: Unit: length.
+        risers: Unit: count.
+        riser_height: Unit: length.
+        tread: Unit: length.
+        height: Its whole rise: its risers × their height. Unit: length.
+        length: Its walking line's length, its landings in, metres. Unit: length.
+        area: Its band's plan area, m². Unit: area.
+        height_from_level: Its height follows its level's (docs/adr/0724 §1).
+        inner_tread: Unit: length.
+        landings: Unit: count.
+        radius: A curved stair's walking line's radius and its tread at its inner side. Unit: length.
+        railing_length: Its railings' lines' length, metres. Unit: length.
+    """
+    uid: str
+    width: float
+    risers: int
+    riser_height: float
+    tread: float
+    height: float
+    length: float
+    area: float
+    rule: str
+    height_from_level: bool | Unset = UNSET
+    inner_tread: float | None | Unset = UNSET
+    landings: int | Unset = UNSET
+    level: str | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    railing_length: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["width"] = float(self.width)
+        out["risers"] = self.risers
+        out["riserHeight"] = float(self.riser_height)
+        out["tread"] = float(self.tread)
+        out["height"] = float(self.height)
+        out["length"] = float(self.length)
+        out["area"] = float(self.area)
+        out["rule"] = self.rule
+        if self.height_from_level is not UNSET:
+            out["heightFromLevel"] = self.height_from_level
+        if self.inner_tread is not UNSET:
+            out["innerTread"] = None if self.inner_tread is None else float(self.inner_tread)
+        if self.landings is not UNSET:
+            out["landings"] = self.landings
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.railing_length is not UNSET:
+            out["railingLength"] = float(self.railing_length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StairRow:
+        return cls(
+            uid=data["uid"],
+            width=float(data["width"]),
+            risers=data["risers"],
+            riser_height=float(data["riserHeight"]),
+            tread=float(data["tread"]),
+            height=float(data["height"]),
+            length=float(data["length"]),
+            area=float(data["area"]),
+            rule=data["rule"],
+            height_from_level=data.get("heightFromLevel", UNSET),
+            inner_tread=UNSET if "innerTread" not in data else None if data["innerTread"] is None else float(data["innerTread"]),
+            landings=data.get("landings", UNSET),
+            level=data.get("level", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            railing_length=float(data["railingLength"]) if "railingLength" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StairsCreate(_Model):
     """Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
     (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.
 
-    Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the
-    cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
-    `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also
-    `slots_exhausted`.
+    A stair bound to its level's height (`heightFromLevel`, docs/adr/0724 §1) is drawn from that height and keeps
+    following it: the document writes its riser height again whenever the level's height or its risers change.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the level's height for `heightFromLevel`: not
+    with `height`, a level given with a height; else `level_not_found`), `invalid_stair` (the design from the height, the
+    fields with the centre post, the cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
+    `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on
+    the desktop also `slots_exhausted`.
     Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
     Attributes:
         line_weight: Unit: paper-mm.
@@ -63782,14 +63913,17 @@ class SetArchOperation(ArchOperation):
         cut: A stair's. Unit: index.
         depth: A column's; null: its width. Unit: length.
         fill: A column's.
+        height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
+            risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
         label: A grid's.
         landing: A stair's or a ramp's; null: the width. Unit: length.
         level: Any kind's.
         numbering: A stair's.
         phase: Any kind's.
+        post: A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none. Unit: length.
         railings: A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
         rise: A ramp's. Unit: elevation.
-        riser_height: A stair's. Unit: length.
+        riser_height: A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1). Unit: length.
         risers: A stair's. Unit: count.
         rotation: A column's. Unit: rad.
         shape: A column's.
@@ -63807,11 +63941,13 @@ class SetArchOperation(ArchOperation):
     cut: int | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    height_from_level: bool | None | Unset = UNSET
     label: str | None | Unset = UNSET
     landing: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    post: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
     rise: float | None | Unset = UNSET
     riser_height: float | None | Unset = UNSET
@@ -63840,6 +63976,8 @@ class SetArchOperation(ArchOperation):
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.height_from_level is not UNSET:
+            out["heightFromLevel"] = self.height_from_level
         if self.label is not UNSET:
             out["label"] = self.label
         if self.landing is not UNSET:
@@ -63850,6 +63988,8 @@ class SetArchOperation(ArchOperation):
             out["numbering"] = self.numbering
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.post is not UNSET:
+            out["post"] = None if self.post is None else float(self.post)
         if self.railings is not UNSET:
             out["railings"] = None if self.railings is None else _enum_out(self.railings)
         if self.rise is not UNSET:
@@ -63884,11 +64024,13 @@ class SetArchOperation(ArchOperation):
             cut=data.get("cut", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
+            height_from_level=data.get("heightFromLevel", UNSET),
             label=data.get("label", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
             level=data.get("level", UNSET),
             numbering=data.get("numbering", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            post=UNSET if "post" not in data else None if data["post"] is None else float(data["post"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
             riser_height=UNSET if "riserHeight" not in data else None if data["riserHeight"] is None else float(data["riserHeight"]),
@@ -82573,6 +82715,7 @@ __all__ = [
     "StackMode",
     "StackModeName",
     "StairEntity",
+    "StairRow",
     "StairsCreate",
     "StairsCreated",
     "StairsPlan",

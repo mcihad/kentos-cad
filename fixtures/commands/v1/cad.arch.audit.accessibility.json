@@ -4,7 +4,7 @@
   "command": "cad.arch.audit",
   "commandVersion": 1,
   "title": "Mimari denetim: rampaların erişilebilirlik profili (eğim bandı, uzun kol, sahanlık, dönüş); düzeltme; retler",
-  "note": "ADR 0723 §4. Beklenenler scripts/fixtures/ramp_access_cases.py'nin ADR'den ve profilin değerlerinden (catalog/v1/accessibility/erisilebilirlik-rampa-1.json) yazılmış kurallarından, KentOS kodu olmadan. Kurulumdaki çizimde bir çizgi var, kat yok; rampalar 2'den başlar.",
+  "note": "ADR 0723 §4. Beklenenler scripts/fixtures/ramp_access_cases.py'nin ADR'den ve profilin değerlerinden (catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json) yazılmış kurallarından, KentOS kodu olmadan. Kurulumdaki çizimde bir çizgi var, kat yok; rampalar 2'den başlar.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -106,7 +106,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -157,7 +159,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -222,7 +226,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -287,7 +293,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -338,7 +346,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -403,7 +413,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -481,7 +493,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -532,7 +546,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -598,7 +614,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -667,7 +685,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -780,7 +800,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -840,7 +862,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -925,7 +949,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1005,7 +1031,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1061,7 +1089,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1155,7 +1185,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1283,7 +1315,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "levels"
             ]
@@ -1338,7 +1372,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1"
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ]
           },
           "result": {
             "status": "completed",
@@ -1475,7 +1511,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1613,7 +1651,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1706,7 +1746,9 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1790,7 +1832,9 @@
           "op": "plan",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1902,7 +1946,9 @@
           "op": "validate",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "erisilebilirlik-rampa/1",
+            "profiles": [
+              "erisilebilirlik-rampa/1"
+            ],
             "checks": [
               "accessibility"
             ]
@@ -1954,14 +2000,16 @@
           "op": "execute",
           "command": "cad.arch.audit",
           "input": {
-            "profile": "yok/1"
+            "profiles": [
+              "yok/1"
+            ]
           },
           "result": {
             "status": "failed",
             "error": {
               "code": "invalid_arch_audit",
-              "message": "“yok/1” erişilebilirlik profili yok; erisilebilirlik-rampa/1 verin.",
-              "path": "profile"
+              "message": "“yok/1” profili yok; şunlardan birini verin: erisilebilirlik-rampa/1, imar-merdiven-konut/1, imar-merdiven-konut-asansorsuz/1, imar-merdiven-diger/1, imar-merdiven-daire-ici/1.",
+              "path": "profiles[0]"
             }
           },
           "expect": {

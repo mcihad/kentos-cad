@@ -1,0 +1,25 @@
+{
+  "format": "kentos.arch-profile",
+  "version": 1,
+  "id": "imar-merdiven-diger/1",
+  "name": "Diğer yapıların ortak merdiveni, asansörlü bina (İmar Yönetmeliği md. 31)",
+  "note": "Planlı Alanlar İmar Yönetmeliği md. 31'in değerleri (docs/adr/0724 §2). Mevzuat onayı ya da uygunluk belgesi değildir; bulgu yokluğu uygunluk demek değildir. Yangın yönetmeliğinin kaçış genişliği ve TSE standartları ayrıca denetlenir.",
+  "sources": [
+    {
+      "title": "Planlı Alanlar İmar Yönetmeliği md. 31 (01.07.2026 derlemesi)",
+      "url": "https://www.alomaliye.com/wp-content/uploads/2017/07/planli-alanlar-01-07-2026.pdf"
+    }
+  ],
+  "stair": {
+    "riser": 0.18,
+    "tread": 0.27,
+    "step": [
+      0.6,
+      0.64
+    ],
+    "width": 1.5,
+    "landingWidth": true,
+    "winder": 0.1,
+    "bothRailings": true
+  }
+}

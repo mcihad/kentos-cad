@@ -31,6 +31,11 @@ run are the drawing reference's (`arch_cases.py`). The rules, as the ADR gives t
 - `cad.arch.edit`: the ids, these kinds only, the operation's fields (each for its kinds: `field_not_for_kind`), their
   numbers, each object's fields again; Numarala one kind of grids or columns; Akslara bağla and Bağı kopar columns only;
   the revision; a locked layer refusing all;
+- a stair's rise bound to its level's height (docs/adr/0724 §1): `heightFromLevel` true draws it as that height given
+  would (not with `height`; its level given, the project's, with a height); kept as `heightFromLevel` with its riser
+  height the level's height over its risers, again whenever that height or its risers change; a riser height of its
+  own, or false, frees it (its risers staying); a bound stair keeps its level; a curved stair's centre post `post`
+  (§3): on a curved stair only, its diameter above 0, its radius under the stair's inner radius;
 - the document keeps a column with grids at their crossing after every step, its place from their labels; a grid gone
   breaks it (`gridGone`) where it stands.
 """
@@ -379,6 +384,27 @@ def arc_problem(s, path):
     return None
 
 
+def post_problem(s, path):
+    """docs/adr/0724 §3: a centre post on a curved stair only, its diameter above 0 and its radius less than the stair's
+    inner radius (the walking line's radius less half its width)."""
+    d = s.get("post")
+    if d is None:
+        return None
+    at = f"{path}.post"
+    code = "invalid_stair"
+    b = (s.get("bulges") or [0.0])[0]
+    if len(s["pts"]) != 2 or b == 0.0 or not math.isfinite(b):
+        return refusal(code, "Merkez direği yalnız döner merdivende olur.", at)
+    if not (math.isfinite(d) and d > 0.0):
+        return refusal(code, f"Merkez direğinin çapı {num(d)}; sıfırdan büyük, sonlu olmalı.", at)
+    (ax, ay), (bx, by) = [(q["x"], q["y"]) for q in s["pts"]]
+    r = math.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)) * (1.0 + b * b) / (4.0 * abs(b))
+    inner = r - s["width"] / 2.0
+    if d / 2.0 >= inner - 1e-9:
+        return refusal(code, f"Merkez direğinin yarıçapı {d / 2.0:.3f} m; merdivenin iç yarıçapından ({inner:.3f} m) küçük olmalı.", at)
+    return None
+
+
 def stair_problem(s, path):
     code = "invalid_stair"
     r = flight_problem(s["pts"], "Merdivenin", code, path) or arc_problem(s, path)
@@ -397,7 +423,28 @@ def stair_problem(s, path):
     c = s.get("cut")
     if c is not None and not 1 <= c <= s["risers"]:
         return refusal(code, f"Kesme çizgisi {c}. rıhtta; 1 ile {s['risers']} arasında olmalı.", f"{path}.cut")
+    r = post_problem(s, path)
+    if r:
+        return r
+    if s.get("heightFromLevel") and (s.get("arch") or {}).get("level") is None:
+        return refusal(code, "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da bağı kaldırın.",
+                       f"{path}.heightFromLevel")
     return None
+
+
+def level_of(id, levels=None):
+    return next((lv for lv in levels or LEVELS if lv["id"] == id), None)
+
+
+def stair_bound(f, levels=None):
+    """A stair's rise its level's height (docs/adr/0724 §1): its riser height that height over its risers, as a double
+    divided; none to do when it is not bound or its level has no height."""
+    if not f.get("heightFromLevel") or not f.get("risers"):
+        return
+    lv = level_of((f.get("arch") or {}).get("level"), levels)
+    h = lv.get("height") if lv else None
+    if h is not None and math.isfinite(h) and h > 0:
+        f["riserHeight"] = float(h) / float(f["risers"])
 
 
 def ramp_problem(r, path):
@@ -814,17 +861,44 @@ def stair_fields(n, risers=None, riser=None):
         s["numbering"] = True
     if n.get("railings") is not None:
         s["railings"] = n["railings"]
+    # docs/adr/0724 §1, §3: bound to its level's height (only when true), its centre post.
+    if n.get("heightFromLevel") is True:
+        s["heightFromLevel"] = True
+    if n.get("post") is not None:
+        s["post"] = n["post"]
     return s
+
+
+def level_height(n, at):
+    """The height of a stair's level for `heightFromLevel` (docs/adr/0724 §1): not with `height`, its level given and the
+    project's (`level_not_found`), the level with a height."""
+    code = "invalid_stair"
+    field = f"{at}.heightFromLevel"
+    if n.get("height") is not None:
+        return refusal(code, "Yükseklik ya kendisi (height) ya katından (heightFromLevel) verilir; ikisi birden verilmez.", field)
+    level = (n.get("arch") or {}).get("level")
+    if level is None:
+        return refusal(code, "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da yüksekliğini yazın.", field)
+    r = level_check(n.get("arch"), f"{at}.arch.level")
+    if r:
+        return r
+    lv = level_of(level)
+    h = lv.get("height")
+    if h is None or not (math.isfinite(h) and h > 0):
+        return refusal(code, f"“{lv['name']}” katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın "
+                             "yüksekliğini verin ya da merdivenin yüksekliğini yazın.", field)
+    return float(h)
 
 
 DEFAULT_MAX_RISER = 0.175
 
 
-def designed(n, at):
-    """docs/adr/0704 §1: the risers and their height, as given or from the height; then the highest riser a given count
-    exceeds. A refusal instead when the fields do not hold."""
+def designed(n, at, height=None):
+    """docs/adr/0704 §1: the risers and their height, as given or from the height (`height`, or the level's for
+    `heightFromLevel`, docs/adr/0724 §1); then the highest riser a given count exceeds. A refusal instead when the fields
+    do not hold."""
     code = "invalid_stair"
-    h = n.get("height")
+    h = n.get("height") if height is None else height
     if h is None:
         if n.get("maxRiser") is not None:
             return refusal(code, "En fazla rıht yalnız yükseklikle kullanılır; merdivenin yüksekliğini verin.", f"{at}.maxRiser")
@@ -954,10 +1028,15 @@ def stairs_create(d, inp, conflict=False):
             [(n["width"], "width", "Genişlik"), (n.get("riserHeight", 0.0), "riserHeight", "Rıht yüksekliği"),
              (n["tread"], "tread", "Basamak derinliği"), (n.get("landing"), "landing", "Sahanlık"),
              (n.get("height"), "height", "Yükseklik"), (n.get("maxRiser"), "maxRiser", "En fazla rıht"),
-             (n.get("cutHeight"), "cutHeight", "Kesme yüksekliği")], at)
+             (n.get("cutHeight"), "cutHeight", "Kesme yüksekliği"), (n.get("post"), "post", "Merkez direği")], at)
         if r:
             return r, None
-        design = designed(n, at)
+        height = None
+        if n.get("heightFromLevel") is True:
+            height = level_height(n, at)
+            if isinstance(height, dict):
+                return height, None
+        design = designed(n, at, height)
         if "status" in design:
             return design, None
         risers, riser, high = design
@@ -1692,6 +1771,102 @@ def ramp_level_cases():
           [made, edit_step(d, "plan", {"uids": [uid_of(NEW)], "operation": {"kind": "set", "level": "kat-1", "baseOffset": 0.5}})])
     return c.cases
 
+def stair_level_cases():
+    """docs/adr/0724 §1, §3: a stair's rise bound to its level's height: drawn from it, followed when it changes, set and
+    freed; a curved stair's centre post."""
+    c = Cases()
+
+    def bound(level="zemin", **kw):
+        return design(height=None, heightFromLevel=True, arch={"level": level}, **kw)
+
+    life(c, STAIRS, bound(), "Zemin katın yüksekliğine bağlı merdiven")
+    for name, inp in [
+        ("kata bağlı, en fazla 18 cm rıhtla 17 rıht", bound(maxRiser=0.18)),
+        ("kata bağlı, verilen 20 rıht: rıht yüksekliği katın yüksekliğinden", bound(risers=20)),
+        ("kata bağlı U merdiven, kesme yüksekliği 1,10 m", bound(pts=[P(0, 30), P(3, 30), P(3, 32), P(0, 32)], width=1.0,
+                                                                 cutHeight=1.1)),
+        ("kata bağlı döner merdiven, merkez direğiyle", curved(height=None, heightFromLevel=True, arch={"level": "zemin"}, post=0.2)),
+        ("döner merdivenin merkez direği, iki yan korkuluk", curved(post=0.3, railings="both")),
+        ("heightFromLevel false: yükseklik kendisi", design(heightFromLevel=False, arch={"level": "zemin"})),
+    ]:
+        c.add(name, [create_step(Drawing(), STAIRS, "execute", inp)])
+    refusals(c, STAIRS, [
+        ("yükseklik ve kat bağı birlikte reddedilir", design(heightFromLevel=True, arch={"level": "zemin"}), {}),
+        ("katsız merdiven kata bağlanamaz", design(height=None, heightFromLevel=True), {}),
+        ("olmayan kata bağlı merdiven reddedilir", bound("yok"), {}),
+        ("yüksekliği olmayan kata bağlanamaz", bound("kat-1"), {}),
+        ("düz merdivende merkez direği reddedilir", design(post=0.2), {}),
+        ("sıfır merkez direği reddedilir", curved(post=0.0), {}),
+        ("iç yarıçaptan büyük merkez direği reddedilir", curved(post=2.0), {}),
+        ("sonsuz merkez direği reddedilir", curved(post=0.2), {"non_finite": {"stairs[0].post": "NaN"}}),
+    ])
+    # The level's height raised (a project setting, no undo step): a bound stair's risers follow it, their count kept;
+    # one with a height of its own stays.
+    raised = [{**LEVELS[0], "height": 3.4}, LEVELS[1]]
+    for name, inp in [
+        ("kat yükselince bağlı merdivenin rıhtları da yükselir, geri alma adımı olmadan", bound()),
+        ("kat yükselince kendi yükseklikli merdiven yerinde kalır", design(arch={"level": "zemin"})),
+    ]:
+        d = Drawing()
+        made = create_step(d, STAIRS, "execute", inp)
+        f = copy.deepcopy(d.objs[NEW][2])
+        stair_bound(f, raised)
+        after = {"kind": "stair", "id": NEW, "layerId": "merdiven", "attrs": {}, **f}
+        c.add(name, [made,
+                     {"op": "execute", "command": "cad.settings.set", "input": {"arch": {"levels": raised}}, "result": "$any",
+                      "within": 1e-9,
+                      "expect": {"ids": IDS + [NEW], "entities": {str(NEW): after}, "settings": {"arch": {"levels": raised}},
+                                 "canUndo": True, "canRedo": False}},
+                     {"op": "undo", "returns": "Merdiven", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+                     {"op": "redo", "returns": "Merdiven", "within": 1e-9,
+                      "expect": {"ids": IDS + [NEW], "entities": {str(NEW): after}}}])
+
+    def one(d, uids, op, **kw):
+        return edit_step(d, "execute", {"uids": uids, "operation": op}, **kw)
+
+    def made_with(inp):
+        d = Drawing()
+        return d, create_step(d, STAIRS, "execute", inp, with_command=True)
+
+    d = Drawing()
+    c.add("Değiştir: merdivene kat verilip yüksekliği kata bağlanır, rıhtı katın yüksekliğinden",
+          [one(d, [uid_of(8)], {"kind": "set", "level": "zemin", "heightFromLevel": True})])
+    d, made = made_with(bound())
+    c.add("Değiştir: rıht sayısı değişince bağlı merdivenin rıhtı katın yüksekliğinden",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "risers": 20})])
+    d, made = made_with(bound())
+    c.add("Değiştir: kendi rıht yüksekliği kat bağını kaldırır", [made, one(d, [uid_of(NEW)], {"kind": "set", "riserHeight": 0.16})])
+    d, made = made_with(bound())
+    c.add("Değiştir: false kat bağını kaldırır, rıhtlar yerinde kalır",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "heightFromLevel": False})])
+    d, made = made_with(bound())
+    c.add("Değiştir: rıht yüksekliği ve kat bağı birlikte reddedilir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "riserHeight": 0.16, "heightFromLevel": True})])
+    d = Drawing()
+    c.add("Değiştir: yüksekliği olmayan kata bağlanamaz",
+          [one(d, [uid_of(8)], {"kind": "set", "level": "kat-1", "heightFromLevel": True})])
+    d = Drawing()
+    c.add("Değiştir: katsız merdiven kata bağlanamaz", [one(d, [uid_of(8)], {"kind": "set", "heightFromLevel": True})])
+    d, made = made_with(bound())
+    c.add("Değiştir: bağlı merdivenin katı kaldırılamaz", [made, one(d, [uid_of(NEW)], {"kind": "set", "level": None})])
+    d = Drawing()
+    c.add("Değiştir: rampaya kat yüksekliği bağı reddedilir", [one(d, [uid_of(9)], {"kind": "set", "heightFromLevel": True})])
+    d, made = made_with(curved())
+    c.add("Değiştir: döner merdivene merkez direği, sonra null kaldırır",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "post": 0.25}), one(d, [uid_of(NEW)], {"kind": "set", "post": None})])
+    d = Drawing()
+    c.add("Değiştir: düz merdivene merkez direği reddedilir", [one(d, [uid_of(8)], {"kind": "set", "post": 0.2})])
+    d, made = made_with(curved(post=0.2))
+    c.add("Değiştir: merdiven genişleyince sığmayan merkez direği reddedilir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "width": 2.9})])
+    d, made = made_with(curved())
+    c.add("Değiştir: sonsuz merkez direği reddedilir",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "post": 0.2}, non_finite={"operation.post": "NaN"})])
+    d, made = made_with(bound())
+    c.add("Değiştir: bağlı merdivenin planı katın yüksekliğinden rıhtı gösterir",
+          [made, edit_step(d, "plan", {"uids": [uid_of(NEW)], "operation": {"kind": "set", "risers": 17}})])
+    return c.cases
+
 # ── cad.arch.edit ──────────────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -1699,17 +1874,18 @@ FIELDS = [  # wire name, kinds, nullable
     ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True),
     ("shape", ("column",), False), ("width", ("column", "stair", "ramp"), False), ("depth", ("column",), True),
     ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column",), True), ("fill", ("column",), False),
-    ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("tread", ("stair",), False),
+    ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
+    ("post", ("stair",), True), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp",), True),
     ("level", ("grid", "column", "stair", "ramp"), True), ("phase", ("grid", "column", "stair", "ramp"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
-DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False}
+DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("width", "Genişlik"), ("depth", "Boy"), ("rotation", "Dönüş"),
-           ("riserHeight", "Rıht yüksekliği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"), ("rise", "Yükseklik"),
-           ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu")]
+           ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
+           ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu")]
 
 
 def set_field(f, name, value):
@@ -1729,6 +1905,9 @@ def set_field(f, name, value):
     if name == "base":
         # A base of its own frees a ramp from its level (docs/adr/0723 §2).
         f.pop("baseOffset", None)
+    if name == "riserHeight":
+        # A riser height of its own frees a stair from its level's height (docs/adr/0724 §1).
+        f.pop("heightFromLevel", None)
     if value is None or DEFAULTS.get(name, object()) == value:
         f.pop(name, None)
     else:
@@ -1773,6 +1952,9 @@ def edit(d, inp, conflict=False):
             v = op.get(n)
             if v is not None and not math.isfinite(v):
                 return not_finite(name, f"operation.{n}"), None
+        if "riserHeight" in op and op.get("heightFromLevel") is True:
+            return refusal("invalid_stair", "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) "
+                                            "verilir; ikisi birden verilmez.", "operation.heightFromLevel"), None
         if "base" in op and "baseOffset" in op:
             return refusal("invalid_ramp", BOTH_BASES, "operation.baseOffset"), None
         for i, oid in found:
@@ -1788,15 +1970,21 @@ def edit(d, inp, conflict=False):
                 r = settled_on(d, f, path)
                 if r:
                     return r, None
-            if kind == "stair":
-                warnings += stair_warnings(f, path)
-            if kind == "ramp":
-                warnings += ramp_warnings(f, path)
             r = level_check(f.get("arch"), "operation.level")
             if r:
                 return r, None
             if kind == "ramp":
                 level_bound(f)
+                warnings += ramp_warnings(f, path)
+            if kind == "stair":
+                # Bound now (docs/adr/0724 §1): its level must have a height; its riser height read from it.
+                if op.get("heightFromLevel") is True and f.get("heightFromLevel"):
+                    lv = level_of((f.get("arch") or {}).get("level"))
+                    if lv is None or lv.get("height") is None or not f.get("risers"):
+                        return refusal("invalid_stair", "Merdivenin katının yüksekliği yok; merdiven onu izleyemez. Proje "
+                                                        "ayarları › Mimari'de katın yüksekliğini verin.", "operation.heightFromLevel"), None
+                stair_bound(f)
+                warnings += stair_warnings(f, path)
             out.append((oid, f))
     elif op["kind"] == "renumber":
         kinds = [d.objs[oid][0] for _, oid in found]
@@ -2002,6 +2190,7 @@ def files():
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
+        "cad.stairs.create.levels.json": document(STAIRS, "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)", stair_level_cases()),
         "cad.grids.create.system.json": document(GRIDS, "Aks ağı: iki yönde aralık listeleri, açı, uzatma, ilk adlar, kesişimlerde akslara bağlı kolonlar; retler (ADR 0707)", system_cases()),
         "cad.arch.edit.json": document(EDIT, "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler", edit_cases()),
     }

@@ -2,8 +2,9 @@
 import type { ArchPhase } from "./ArchPhase";
 
 /**
- * Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the
- * levels, phases, usages and layers given (each absent: every one).
+ * Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,
+ * ramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each
+ * absent: every one; a usage filter leaves out all but the spaces).
  *
  * Refusals: `level_not_found`, `layer_not_found`.
  */

@@ -119,6 +119,8 @@ enum Ask {
     Height,
     MaxRiser,
     Cut,
+    /// A curved stair's centre post (docs/adr/0724 §3).
+    Post,
 }
 
 fn ask_words(ask: Ask) -> &'static str {
@@ -138,6 +140,7 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::RampBase => "başlangıç kotunu yazın (boş ya da kat: katın kotu; kat+0.15: kattan fark; sayı: kendi kotu)",
         Ask::Rise => "yükseklik farkını yazın",
         Ask::Slope => "eğimi yüzde olarak yazın",
+        Ask::Post => "merkez direğinin çapını yazın (0: yok)",
     }
 }
 
@@ -735,6 +738,8 @@ pub struct FlightTool {
     fit: bool,
     /// The sides with a railing (docs/adr/0705 §2).
     railings: Option<Railings>,
+    /// A curved stair's centre post, its diameter (docs/adr/0724 §3).
+    post: Option<f64>,
     landing: Option<f64>,
     /// En uzun kol: a landing wherever a sloped run would be longer (docs/adr/0723 §1).
     max_run: Option<f64>,
@@ -821,6 +826,7 @@ impl FlightTool {
             numbering: false,
             fit: true,
             railings: None,
+            post: None,
             landing: None,
             max_run: None,
             ramp_base: None,
@@ -1071,13 +1077,16 @@ impl FlightTool {
                     width: self.width,
                     risers: self.risers,
                     tread: self.tread,
-                    height: Some(self.stair_height()),
+                    // Following Etkin kat's height: bound to it, its rise follows the level (docs/adr/0724 §1).
+                    height: self.followed_height().is_none().then(|| self.stair_height()),
+                    height_from_level: self.followed_height().is_some().then_some(true),
                     max_riser: Some(self.max_riser),
                     cut_height: self.cut,
                     fit: self.fit.then_some(true),
                     landing: self.landing,
                     numbering: self.numbering.then_some(true),
                     railings: self.railings,
+                    post: self.post.filter(|_| self.spiralling()),
                     // Etkin kat (docs/adr/0713).
                     arch: cx.level_arch(),
                     ..NewStair::default()
@@ -1289,6 +1298,12 @@ impl FlightTool {
                 true
             }
             "K" => length(cx).map(|v| self.cut = Some(v)).is_some(),
+            // Merkez direği (docs/adr/0724 §3): empty, Yok or 0 none.
+            "M" if !self.ramp && (words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0)) => {
+                self.post = None;
+                true
+            }
+            "M" if !self.ramp => length(cx).map(|v| self.post = Some(v)).is_some(),
             "O" => match words.as_str() {
                 "" | "NONE" | "YOK" => {
                     self.railings = None;
@@ -1431,6 +1446,7 @@ impl Tool for FlightTool {
                 .option_with("Basamak", "D", n(self.tread))
                 .option_with("Genişlik", "G", n(self.width))
                 .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
+                .option_with("Merkez direği", "M", self.post.map_or_else(|| "Yok".into(), n))
                 .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
                 .option_with("Yay", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
@@ -1547,6 +1563,7 @@ impl Tool for FlightTool {
                 Ask::Risers => "S",
                 Ask::Tread => "D",
                 Ask::Cut => "K",
+                Ask::Post => "M",
                 _ => "",
             };
             if !self.apply(field, text, cx) {
@@ -1572,6 +1589,7 @@ impl Tool for FlightTool {
             "S" if !self.ramp => Some(Ask::Risers),
             "D" if !self.ramp => Some(Ask::Tread),
             "K" if !self.ramp => Some(Ask::Cut),
+            "M" if self.spiralling() => Some(Ask::Post),
             "N" if !self.ramp => {
                 self.numbering = !self.numbering;
                 self.see(cx);
@@ -1673,6 +1691,7 @@ impl Tool for FlightTool {
             Setting::text("D", "Basamak", f.length(self.tread)),
             Setting::text("G", "Genişlik", f.length(self.width)),
             Setting::text("H", "Sahanlık", landing),
+            Setting::text("M", "Merkez direği", self.post.map_or_else(|| "Yok".into(), |v| f.length(v))),
             Setting::text("K", "Kesme yüksekliği", self.cut.map_or_else(|| "Yok".into(), |v| f.length(v))),
             Setting::toggle("N", "Basamak numaraları", self.numbering),
             railings_setting(self.railings),
@@ -1688,6 +1707,9 @@ impl Tool for FlightTool {
         if self.curved {
             // A curved stair has no turns, so no landings (docs/adr/0709).
             rows.retain(|r| r.key != "H");
+        } else {
+            // A straight stair has no centre post (docs/adr/0724 §3).
+            rows.retain(|r| r.key != "M");
         }
         let words = self.design_words(f);
         if !words.is_empty() {
@@ -1696,7 +1718,7 @@ impl Tool for FlightTool {
         rows.push(Setting::hint(
             "P",
             "Profil",
-            "En fazla rıht, basamak ve kesme KentOS'un öntanımlı değerleridir; yönetmelik denetimi değildir.",
+            "En fazla rıht, basamak ve kesme KentOS'un öntanımlı değerleridir. Mimari denetim'in Merdiven profili İmar Yönetmeliği md. 31'in değerleriyle denetler; mevzuat onayı değildir.",
         ));
         rows
     }

@@ -1015,8 +1015,8 @@ impl Input for kentos_commands::ColumnsCreate {
 }
 
 impl Input for kentos_commands::StairsCreate {
-    /// `stairs[0].tread`, `.width`, `.height`, `.cutHeight`, `.pts[k].x` and `.y`, `.bulges[k]`, `lineWeight`
-    /// (docs/adr/0343, docs/adr/0704, docs/adr/0709).
+    /// `stairs[0].tread`, `.width`, `.height`, `.cutHeight`, `.post`, `.pts[k].x` and `.y`, `.bulges[k]`, `lineWeight`
+    /// (docs/adr/0343, docs/adr/0704, docs/adr/0709, docs/adr/0724).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1031,6 +1031,7 @@ impl Input for kentos_commands::StairsCreate {
             "width" => Some(&mut s.width),
             "height" => s.height.as_mut(),
             "cutHeight" => s.cut_height.as_mut(),
+            "post" => s.post.as_mut(),
             _ => named_point(&mut s.pts, "pts", rest),
         }
     }
@@ -1330,7 +1331,8 @@ impl Input for kentos_commands::SchedulesEdit {
 }
 
 impl Input for kentos_commands::ArchEdit {
-    /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343), `.baseOffset` (docs/adr/0723).
+    /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343), `.baseOffset` (docs/adr/0723),
+    /// `.post` (docs/adr/0724).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::ArchOperation as Op;
         match &mut self.operation {
@@ -1340,6 +1342,7 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.tread" => c.tread.as_mut(),
                 "operation.rise" => c.rise.as_mut(),
                 "operation.baseOffset" => c.base_offset.as_mut().and_then(Option::as_mut),
+                "operation.post" => c.post.as_mut().and_then(Option::as_mut),
                 _ => None,
             },
             // Mesafe's `operation.distance` (docs/adr/0712).

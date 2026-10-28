@@ -767,10 +767,18 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
                 (n.height, "height", "Yükseklik"),
                 (n.max_riser, "maxRiser", "En fazla rıht"),
                 (n.cut_height, "cutHeight", "Kesme yüksekliği"),
+                (n.post, "post", "Merkez direği"),
             ],
             &at,
         )?;
-        let (risers, riser_height, high) = designed(n, &at)?;
+        // Its rise its level's height (docs/adr/0724 §1): the level's, drawn as a height given would be.
+        let bound = n.height_from_level == Some(true);
+        let height = if bound {
+            Some(level_height(doc, n, &at)?)
+        } else {
+            n.height
+        };
+        let (risers, riser_height, high) = designed(n, height, &at)?;
         if n.cut_height.is_some() && n.cut.is_some() {
             return Err(fail(
                 codes::INVALID_STAIR,
@@ -789,6 +797,8 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
             cut: n.cut,
             numbering: n.numbering.unwrap_or(false),
             railings: n.railings,
+            height_from_level: bound,
+            post: n.post,
             arch: n.arch.clone().unwrap_or_default(),
         };
         stair_valid(&s, &at)?;
@@ -845,10 +855,55 @@ fn positive_or(v: f64, field: &str, whose: &str, at: &str) -> Result<(), Stop> {
     ))
 }
 
-/// A stair's risers and their height (docs/adr/0704 §1): as given, or from its height: its risers given or as many as
-/// keep each under its highest riser, each `height / risers` high. Third, the highest riser a given count exceeds.
-fn designed(n: &kentos_commands::NewStair, at: &str) -> Result<(u32, f64, Option<f64>), Stop> {
-    let Some(h) = n.height else {
+/// The height of a stair's level for `heightFromLevel` (docs/adr/0724 §1): not with `height`, its level given and the
+/// project's (`level_not_found`), the level with a height.
+fn level_height(doc: &Document, n: &kentos_commands::NewStair, at: &str) -> Result<f64, Stop> {
+    let field = format!("{at}.heightFromLevel");
+    if n.height.is_some() {
+        return Err(fail(
+            codes::INVALID_STAIR,
+            "Yükseklik ya kendisi (height) ya katından (heightFromLevel) verilir; ikisi birden verilmez.".into(),
+            &field,
+        ));
+    }
+    let arch = n.arch.clone().unwrap_or_default();
+    let Some(id) = arch.level.as_deref() else {
+        return Err(fail(
+            codes::INVALID_STAIR,
+            "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da yüksekliğini yazın."
+                .into(),
+            &field,
+        ));
+    };
+    crate::walls::level_known(doc, &arch, &format!("{at}.arch.level"))?;
+    let level = doc.settings().arch.as_ref().and_then(|a| a.levels.iter().find(|l| l.id == id));
+    match level.and_then(|l| l.height).filter(|h| h.is_finite() && *h > 0.0) {
+        Some(h) => Ok(h),
+        None => Err(fail(
+            codes::INVALID_STAIR,
+            format!(
+                "“{}” katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın yüksekliğini verin ya da merdivenin yüksekliğini yazın.",
+                level.map_or(id, |l| l.name.as_str())
+            ),
+            &field,
+        )),
+    }
+}
+
+/// A stair whose rise is its level's height (docs/adr/0724 §1) with its riser height read from it, as the document
+/// keeps it; unchanged when the level has no height.
+pub(crate) fn stair_level_bound(doc: &Document, s: &mut StairFields) {
+    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    if let Some(h) = s.level_riser(levels) {
+        s.riser_height = h;
+    }
+}
+
+/// A stair's risers and their height (docs/adr/0704 §1): as given, or from its height (`height`, or its level's for
+/// `heightFromLevel`): its risers given or as many as keep each under its highest riser, each `height / risers` high.
+/// Third, the highest riser a given count exceeds.
+fn designed(n: &kentos_commands::NewStair, height: Option<f64>, at: &str) -> Result<(u32, f64, Option<f64>), Stop> {
+    let Some(h) = height else {
         if n.max_riser.is_some() {
             return Err(fail(
                 codes::INVALID_STAIR,

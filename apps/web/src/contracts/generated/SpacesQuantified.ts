@@ -4,6 +4,7 @@ import type { QuantityTotals } from "./QuantityTotals";
 import type { RampRow } from "./RampRow";
 import type { SlabRow } from "./SlabRow";
 import type { SpaceRow } from "./SpaceRow";
+import type { StairRow } from "./StairRow";
 import type { TransitionRow } from "./TransitionRow";
 import type { WallRow } from "./WallRow";
 
@@ -22,4 +23,8 @@ transitions?: Array<TransitionRow>,
 /**
  * The ramps (docs/adr/0723 §3).
  */
-ramps?: Array<RampRow>, totals: QuantityTotals, };
+ramps?: Array<RampRow>, 
+/**
+ * The stairs (docs/adr/0724 §5).
+ */
+stairs?: Array<StairRow>, totals: QuantityTotals, };

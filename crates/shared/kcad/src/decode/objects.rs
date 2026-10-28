@@ -254,6 +254,8 @@ pub(super) struct Features {
     slabs: bool,
     /// Schema 124: a ramp bound to its level (`baseOffset`, docs/adr/0723 §2).
     ramp_levels: bool,
+    /// Schema 125: a stair's `heightFromLevel` and `post` (docs/adr/0724).
+    stair_levels: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -461,6 +463,7 @@ impl Features {
             schedule_columns: schema >= crate::SCHEMA_WITH_SCHEDULE_COLUMNS,
             slabs: schema >= crate::SCHEMA_WITH_SLABS,
             ramp_levels: schema >= crate::SCHEMA_WITH_RAMP_LEVELS,
+            stair_levels: schema >= crate::SCHEMA_WITH_STAIR_LEVELS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -2096,6 +2099,13 @@ pub(super) fn object(
     };
     if railed && !has.railings {
         return Err(r.fail(Code::BadValue, "korkuluk (railings) şema 115 ister"));
+    }
+    // Schema 125 (docs/adr/0724): a stair bound to its level's height, or with a centre post.
+    if matches!(&entity, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()) && !has.stair_levels {
+        return Err(r.fail(
+            Code::BadValue,
+            "merdivenin kata bağlı yüksekliği (heightFromLevel) ve merkez direği (post) şema 125 ister",
+        ));
     }
     // Schema 124 (docs/adr/0723 §2): a ramp bound to its level.
     if matches!(&entity, Entity::Ramp(m) if m.ramp.base_offset.is_some()) && !has.ramp_levels {

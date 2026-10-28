@@ -240,6 +240,10 @@ pub struct StairSpec {
     pub cut: Option<f64>,
     pub numbering: bool,
     pub railings: Option<Railings>,
+    /// A curved stair's centre post, its diameter (docs/adr/0724 §3).
+    pub post: Option<f64>,
+    /// Drawn as the plan of the level above its own shows it (docs/adr/0724 §4): its part past its cut.
+    pub upper: bool,
 }
 
 impl crate::api::json::Flat for StairSpec {
@@ -253,6 +257,7 @@ impl crate::api::json::Flat for StairSpec {
         "numbering",
         "railings",
         "bulges",
+        "post",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -273,6 +278,8 @@ impl crate::api::json::Flat for StairSpec {
             cut: number(v, "cut")?,
             numbering: matches!(v.get("numbering"), Json::Bool(true)),
             railings: Railings::read(v)?,
+            post: number(v, "post")?,
+            upper: false,
         })
     }
 
@@ -295,6 +302,9 @@ impl crate::api::json::Flat for StairSpec {
         }
         if self.bulge != 0.0 {
             field(out, first, "bulges", &vec![self.bulge, 0.0]);
+        }
+        if let Some(p) = &self.post {
+            field(out, first, "post", p);
         }
     }
 }
@@ -1034,9 +1044,172 @@ fn arrow(walk: &Walk, from: f64, to: f64, scale: f64) -> Vec<Shape> {
     ]
 }
 
+/// A curved stair's centre post (docs/adr/0724 §3): a circle of its diameter at its arc's centre.
+fn post_piece(walk: &Walk, spec: &StairSpec, out: &mut Vec<Piece>) {
+    if let (Some(d), Some(a)) = (spec.post, walk.arc)
+        && d > 0.0
+    {
+        out.push(piece(Shape::Circle { c: a.c, r: d / 2.0 }));
+    }
+}
+
+/// What a stair shows on the plan of the level above its own (docs/adr/0724 §4): its part past its cut line, the cut
+/// line, its risers, landings' edges and railings past the cut, its end, the arrow from the cut up and its centre
+/// post; nothing for one without a cut (it does not reach the plan's cut plane).
+pub fn stair_upper_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
+    let mut out = Vec::new();
+    if pts.len() < 2 {
+        return out;
+    }
+    let walk = Walk::curved(pts, spec.bulge);
+    let half = spec.width / 2.0;
+    let (stations, _) = riser_stations(&walk, spec);
+    let Some(c) = cut_riser(spec, &stations).filter(|&c| c > 0) else {
+        return out;
+    };
+    let total = walk.length();
+    let s = stations[c - 1];
+    let t = crate::jsmath::js_min(s + spec.tread, total);
+    let side = |at: f64, k: f64| {
+        let (p, d) = walk.point(at);
+        let n = left(d);
+        Vec2::new(p.x + n.x * half * k, p.y + n.y * half * k)
+    };
+    match walk.arc {
+        Some(a) => {
+            let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+            for (from, k) in [(s, 1.0), (t, -1.0)] {
+                out.push(piece(arc_polyline(
+                    side(from, k),
+                    side(total, k),
+                    crate::geom::bulge::bulge_of_sweep(turn * (total - from) / a.r),
+                )));
+            }
+        }
+        None => {
+            // The band's mitred sides past the cut; a side starting at a turn starts at its mitre.
+            let ring = band(pts, half);
+            let n = pts.len();
+            let start = |from: f64, k: f64, corner: &dyn Fn(usize) -> Vec2| match walk
+                .at
+                .iter()
+                .position(|a| (a - from).abs() <= EPS)
+            {
+                Some(i) => corner(i),
+                None => side(from, k),
+            };
+            let mut l = vec![start(s, 1.0, &|i| ring[i])];
+            let mut r = vec![start(t, -1.0, &|i| ring[2 * n - 1 - i])];
+            for i in 0..n {
+                if walk.at[i] > s + EPS {
+                    l.push(ring[i]);
+                }
+                if walk.at[i] > t + EPS {
+                    r.push(ring[2 * n - 1 - i]);
+                }
+            }
+            out.push(piece(polyline(l)));
+            out.push(piece(polyline(r)));
+            for (a, b) in stair_landings(&walk, spec) {
+                for x in [a, b] {
+                    if x > t + EPS && x < total - EPS {
+                        out.push(piece(across(&walk, x, half)));
+                    }
+                }
+            }
+        }
+    }
+    out.push(piece(line(side(total, 1.0), side(total, -1.0))));
+    out.push(piece(line(side(s, 1.0), side(t, -1.0))));
+    for &x in &stations[c..] {
+        out.push(piece(across(&walk, x, half)));
+    }
+    for (shape, over) in stair_railing_arcs(pts, spec) {
+        if over {
+            out.push(piece(shape));
+        }
+    }
+    for (line, over) in stair_railings(pts, spec) {
+        if over {
+            out.push(piece(polyline(line)));
+        }
+    }
+    for shape in arrow(&walk, s, total, scale) {
+        out.push(piece(shape));
+    }
+    post_piece(&walk, spec, &mut out);
+    out
+}
+
+/// A stair measured (docs/adr/0724 §5).
+#[derive(Clone, Debug, PartialEq)]
+pub struct StairMeasure {
+    /// Its walking line's length, its landings in.
+    pub length: f64,
+    /// Its landings, those a tread apart made one.
+    pub landings: usize,
+    /// Its band's plan area: the polygon of [`band`], mitred at its turns; a curved stair's ring sector.
+    pub area: f64,
+    /// Its railings' lines' length.
+    pub railing_length: f64,
+    /// A curved stair's tread at its inner side (its walking line in its middle); none for a straight one.
+    pub inner_tread: Option<f64>,
+    /// A curved stair's walking line's radius; none for a straight one.
+    pub radius: Option<f64>,
+}
+
+/// A stair's lengths, landings, plan area and railings (docs/adr/0724 §5).
+pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
+    let walk = Walk::curved(pts, spec.bulge);
+    let half = spec.width / 2.0;
+    match walk.arc {
+        Some(a) => {
+            let turn = if a.sweep < 0.0 { -1.0 } else { 1.0 };
+            let off = crate::jsmath::js_max(half - RAILING_INSET, 0.0);
+            let side = |k: f64| a.sweep.abs() * (a.r - turn * k * off);
+            let railing_length = spec.railings.map_or(0.0, |r| {
+                (if r.left() { side(1.0) } else { 0.0 }) + (if r.right() { side(-1.0) } else { 0.0 })
+            });
+            StairMeasure {
+                length: walk.length(),
+                landings: 0,
+                area: a.sweep.abs() * a.r * spec.width,
+                railing_length,
+                inner_tread: Some(spec.tread * (a.r - half) / a.r),
+                radius: Some(a.r),
+            }
+        }
+        None => {
+            let ring = band(pts, half);
+            let n = ring.len();
+            let twice: f64 = (0..n)
+                .map(|i| {
+                    let (p, q) = (ring[i], ring[(i + 1) % n]);
+                    p.x * q.y - q.x * p.y
+                })
+                .sum();
+            let railing_length = stair_railings(pts, spec)
+                .iter()
+                .map(|(line, _)| line.windows(2).map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y)).sum::<f64>())
+                .sum();
+            StairMeasure {
+                length: walk.length(),
+                landings: stair_landings(&walk, spec).len(),
+                area: (twice / 2.0).abs(),
+                railing_length,
+                inner_tread: None,
+                radius: None,
+            }
+        }
+    }
+}
+
 /// A stair's pieces at 1:`scale`: its band, its landings' edges, its risers (dashed past its cut), the cut line, its
-/// railings (dashed past the cut), the arrow and the numbers below the cut.
+/// railings (dashed past the cut), the arrow, its centre post and the numbers below the cut.
 pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
+    if spec.upper {
+        return stair_upper_pieces(pts, spec, scale);
+    }
     let mut out = Vec::new();
     if pts.len() < 2 {
         return out;
@@ -1085,6 +1258,7 @@ pub fn stair_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Piece> {
     for s in arrow(&walk, 0.0, end, scale) {
         out.push(piece(s));
     }
+    post_piece(&walk, spec, &mut out);
     if spec.numbering {
         let h = NUMBER_MM * scale / 1000.0;
         for (i, &s) in stations[..shown].iter().enumerate() {

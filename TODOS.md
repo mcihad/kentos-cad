@@ -129,6 +129,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve duvar stili değişince yüze bağlı ölçülerin izlemesi; ortak durumlar `cad.north.create.json`,
   `cad.revisions.mark.json`, `cad.legends.materials.json`, `cad.tables.edit.json`,
   `cad.dimensions.interior.json` ile sınanmalı.
+- ARCH-STAIR-01 / ADR0724: Merdiven. Web'in merdiveni `heightFromLevel`'la (KCAD 125) katının yüksekliğine bağlanıp kat
+  yüksekliği ya da rıht sayısı değişince rıht yüksekliğini izlemeli, döner merdivende `post`'la merkez direğini
+  çizmeli (araçta Merkez direği (M), Öznitelikler'de Yükseklik: Kat yüksekliği/Kendi ve Merkez direği); kat
+  görünümünde alttaki katın kesmeli merdivenini etkin katta yukarıdan çizmeli (`stair_upper_pieces`, seçilmez) ve
+  paftanın haritası kendi katıyla bunu yapmalı; Metraj'da merdiven satırları ve Merdivenler sekmesi (yedi sayfa),
+  Denetim'de `profiles` (Rampa ve Merdiven seçimleri, `catalog/v1/arch-profiles/`) ve `stairs` grubunun Düzelt'leri;
+  ortak durumlar `cad.stairs.create.levels.json`, `cad.arch.audit.stairs.json`, `cad.spaces.quantities.stairs.json`,
+  yenilenen `cad.arch.audit.accessibility.json` ve `fixtures/arch/v1/cases.json` (üst kat ve direk) ile sınanmalı.
 - ARCH-STAIR-02 / ADR0723: Rampa. Web'in rampası `maxRun`'la ara sahanlık açmalı, `baseOffset`'le (KCAD 124) katına
   bağlanıp kat kotu değişince başlangıcını izlemeli (Rampa aracında En uzun kol (L) ve Başlangıç kotu (Z),
   Öznitelikler'de Kata göre), planında okun yanında eğim yazısını çizmeli; Metraj'da rampa satırları ve Rampalar

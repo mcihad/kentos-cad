@@ -1,8 +1,8 @@
 //! Metraj (docs/adr/0342 §4, §5; `arch.quantities`): the drawing's spaces, walls, openings, slabs, the floor finishes'
-//! changes at the passages (docs/adr/0722 §5) and ramps (docs/adr/0723 §3) measured by `cad.spaces.quantities`, a
-//! level's or all, each row with the rule its numbers come from, and the totals; a room's baseboard in its own column.
-//! Panoya kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the shown table as CSV or all six
-//! tables as a workbook's
+//! changes at the passages (docs/adr/0722 §5), ramps (docs/adr/0723 §3) and stairs (docs/adr/0724 §5) measured by
+//! `cad.spaces.quantities`, a level's or all, each row with the rule its numbers come from, and the totals; a room's
+//! baseboard in its own column. Panoya kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the
+//! shown table as CSV or all seven tables as a workbook's
 //! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
@@ -42,6 +42,8 @@ pub enum Tab {
     Transitions,
     /// The ramps (docs/adr/0723 §3).
     Ramps,
+    /// The stairs (docs/adr/0724 §5).
+    Stairs,
 }
 
 impl std::fmt::Display for Tab {
@@ -53,6 +55,7 @@ impl std::fmt::Display for Tab {
             Tab::Slabs => "Döşemeler",
             Tab::Transitions => "Geçişler",
             Tab::Ramps => "Rampalar",
+            Tab::Stairs => "Merdivenler",
         })
     }
 }
@@ -201,7 +204,7 @@ impl App {
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 6] {
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 7] {
         let f = self
             .document
             .as_ref()
@@ -579,10 +582,61 @@ impl App {
                 })
                 .collect(),
         };
-        [spaces, walls, openings, slabs, transitions, ramps]
+        let stairs = Table {
+            name: "Merdivenler",
+            heading: vec![
+                "Kat", "Genişlik", "Rıht", "Rıht yüksekliği", "Basamak", "Yükseklik", "Uzunluk", "Sahanlık", "Alan",
+                "Korkuluk", "Yarıçap", "İç basamak",
+            ],
+            numbers: vec![false, true, true, true, true, true, true, true, true, true, true, true],
+            widths: vec![80.0, 72.0, 56.0, 96.0, 72.0, 88.0, 72.0, 72.0, 72.0, 72.0, 72.0, 80.0],
+            shown: q
+                .stairs
+                .iter()
+                .map(|s| {
+                    vec![
+                        level_name(&s.level),
+                        len(s.width),
+                        s.risers.to_string(),
+                        len(s.riser_height),
+                        len(s.tread),
+                        // Following its level's height: said so (docs/adr/0724 §1).
+                        if s.height_from_level { format!("{} · katın", len(s.height)) } else { len(s.height) },
+                        len(s.length),
+                        s.landings.to_string(),
+                        area(s.area),
+                        if s.railing_length > 0.0 { len(s.railing_length) } else { String::new() },
+                        s.radius.map_or_else(String::new, len),
+                        s.inner_tread.map_or_else(String::new, len),
+                    ]
+                })
+                .collect(),
+            cells: q
+                .stairs
+                .iter()
+                .map(|s| {
+                    let n = |v: f64| format!("{v}");
+                    vec![
+                        level_name(&s.level),
+                        n(s.width),
+                        s.risers.to_string(),
+                        n(s.riser_height),
+                        n(s.tread),
+                        n(s.height),
+                        n(s.length),
+                        s.landings.to_string(),
+                        n(s.area),
+                        n(s.railing_length),
+                        s.radius.map_or_else(String::new, n),
+                        s.inner_tread.map_or_else(String::new, n),
+                    ]
+                })
+                .collect(),
+        };
+        [spaces, walls, openings, slabs, transitions, ramps, stairs]
     }
 
-    /// CSV has one table: the one shown. Workbooks keep all six sheets,
+    /// CSV has one table: the one shown. Workbooks keep all seven sheets,
     /// including empty headings, under the same selected level filter.
     fn quantities_sheets(&self, q: &SpacesQuantified, tab: Tab, format: WorkbookFormat) -> Vec<WorkbookSheet> {
         self.quantities_tables(q)
@@ -670,7 +724,7 @@ impl App {
             .searchable(false)
             .into();
         let tabs = Segmented::new(
-            [Tab::Spaces, Tab::Walls, Tab::Openings, Tab::Slabs, Tab::Transitions, Tab::Ramps],
+            [Tab::Spaces, Tab::Walls, Tab::Openings, Tab::Slabs, Tab::Transitions, Tab::Ramps, Tab::Stairs],
             w.tab,
             |t| msg(Event::Tab(t)),
         );
@@ -762,6 +816,13 @@ impl App {
         }
         if t.ramp_railing_length > 0.0 {
             finish.push(format!("rampa korkuluğu {}", f.length(t.ramp_railing_length)));
+        }
+        // Stairs (docs/adr/0724 §5).
+        if !q.stairs.is_empty() {
+            finish.push(format!("{} merdiven, {} rıht, {}", q.stairs.len(), t.stair_risers, f.area(t.stair_area)));
+        }
+        if t.stair_railing_length > 0.0 {
+            finish.push(format!("merdiven korkuluğu {}", f.length(t.stair_railing_length)));
         }
         if !finish.is_empty() {
             let mut line = finish.join("; ");
@@ -871,7 +932,7 @@ impl App {
             .push(summary)
             .push(table)
             .push(words::text_line(Kind::Info,
-                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki altı tablo ayrı sayfalarda."))
+                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki yedi tablo ayrı sayfalarda."))
             .push(row![export].width(Fill));
         overlay::modal(
             Frame::new(TITLE)
@@ -910,6 +971,10 @@ impl App {
                 || "Alan: orta çizgi boyunca dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar.".to_owned(),
                 |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
             ),
+            Tab::Stairs => q.stairs.first().map_or_else(
+                || "Alan: yürüme çizgisi boyunca dönüşlerde gönyeli şeridin plan alanı; döner merdivende iki yayın arası; yükseklik: rıht sayısı × rıht yüksekliği.".to_owned(),
+                |s| format!("Kural: {}; yükseklik: rıht sayısı × rıht yüksekliği.", s.rule.trim_end_matches('.')),
+            ),
         }
     }
 
@@ -930,6 +995,7 @@ impl App {
             Control::Press("Döşemeler") => Some(msg(Event::Tab(Tab::Slabs))),
             Control::Press("Geçişler") => Some(msg(Event::Tab(Tab::Transitions))),
             Control::Press("Rampalar") => Some(msg(Event::Tab(Tab::Ramps))),
+            Control::Press("Merdivenler") => Some(msg(Event::Tab(Tab::Stairs))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -947,7 +1013,7 @@ mod tests {
             "uid":uid,"number":uid,"name":"Salon","method":"net","area":12.,"perimeter":14.,
             "boundaryBreak":broken,"rule":"alan: halkaların alanı"
         })).unwrap();
-        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],slabs:vec![],transitions:vec![],ramps:vec![],totals:Default::default()};
+        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],slabs:vec![],transitions:vec![],ramps:vec![],stairs:vec![],totals:Default::default()};
         let [table,..]=app.quantities_tables(&q);
         let status=table.heading.iter().position(|s|*s=="Durum").unwrap();
         assert!(table.shown[0][status].is_empty());

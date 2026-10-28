@@ -6,7 +6,8 @@ import type { ArchAuditCheck } from "./ArchAuditCheck";
  * the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
  *
  * Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
- * zero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).
+ * zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`
+ * (`level`).
  */
 export type ArchAudit = { 
 /**
@@ -31,7 +32,7 @@ minWidth?: number,
  */
 level?: string, 
 /**
- * The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
- * ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
+ * The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
+ * ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.
  */
-profile?: string, };
+profiles?: Array<string>, };

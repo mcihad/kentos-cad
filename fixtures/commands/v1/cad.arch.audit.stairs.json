@@ -1,0 +1,2896 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arch.audit",
+  "commandVersion": 1,
+  "title": "Mimari denetim: merdivenlerin İmar Yönetmeliği md. 31 profilleri (rıht, basamak, 2a+b, kol, sahanlık, döner basamak, korkuluk); düzeltme; retler",
+  "note": "ADR 0724 §2. Beklenenler scripts/fixtures/stair_access_cases.py'nin ADR'den ve profillerin değerlerinden (catalog/v1/arch-profiles) yazılmış kurallarından, KentOS kodu olmadan. Kurulumdaki çizimde bir çizgi var, kat yok; merdivenler 2'den başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Merdiven profilleri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "merdiven",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "merdiven",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -5.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": -5.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "konut profiline uyan düz merdiven geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 cm'yi aşan rıht",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.185,
+                "tread": 0.27,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_riser_over_profile",
+                  "message": "Merdivenin rıhtı 0.185 m; en çok 0.18 m olmalı.",
+                  "repair": "Rıht sayısını artırın; merdiven uzar (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 cm'den kısa basamak",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.26,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_tread_short",
+                  "message": "Merdivenin basamağı 0.260 m; en az 0.27 m olmalı.",
+                  "repair": "Basamağı derinleştirin; merdiven uzar (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2a+b 64 cm'yi aşar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.32,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_step_over_profile",
+                  "message": "Merdivenin 2a+b'si 0.660 m; 0.60–0.64 m olmalı.",
+                  "repair": "Rıhtı ya da basamağı değiştirin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2a+b 60 cm'nin altında",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.15,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_step_over_profile",
+                  "message": "Merdivenin 2a+b'si 0.580 m; 0.60–0.64 m olmalı.",
+                  "repair": "Rıhtı ya da basamağı değiştirin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rıht, basamak ve 2a+b birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.2,
+                "tread": 0.25,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_riser_over_profile",
+                  "message": "Merdivenin rıhtı 0.200 m; en çok 0.18 m olmalı.",
+                  "repair": "Rıht sayısını artırın; merdiven uzar (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_tread_short",
+                  "message": "Merdivenin basamağı 0.250 m; en az 0.27 m olmalı.",
+                  "repair": "Basamağı derinleştirin; merdiven uzar (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_step_over_profile",
+                  "message": "Merdivenin 2a+b'si 0.650 m; 0.60–0.64 m olmalı.",
+                  "repair": "Rıhtı ya da basamağı değiştirin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1,20 m'den dar kol, düzeltmesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kol genişliğinden kısa sahanlıklı L, düzeltmesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both",
+                "landing": 0.8
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.80 m; en az kol genişliği (1.20 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı kol genişliği yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": null
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sahanlığı kol genişliği kadar L geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sahanlığı kol genişliğinden uzun L geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both",
+                "landing": 1.5
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "U merdivenin tek sahanlığı kısa",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.3
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 1.3
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both",
+                "landing": 0.9
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.90 m; en az kol genişliği (1.20 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı kol genişliği yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": null
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dar uçta 10 cm'den dar döner merdiven",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.8,
+                    "y": 0.0
+                  },
+                  {
+                    "x": -0.8,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 10,
+                "riserHeight": 0.17,
+                "tread": 0.27,
+                "railings": "both",
+                "bulges": [
+                  1.0,
+                  0.0
+                ]
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_winder_narrow",
+                  "message": "Döner merdivenin basamağı dar uçta 0.068 m; en az 0.10 m olmalı.",
+                  "repair": "Yarıçapı büyütün ya da merdiveni daraltın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.8,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dar ucu yeterli döner merdiven geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 12,
+                "riserHeight": 0.17,
+                "tread": 0.27,
+                "railings": "both",
+                "bulges": [
+                  1.0,
+                  0.0
+                ]
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız sol korkuluk: sağ yanda yok, düzeltmesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "left"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sağ yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız sağ korkuluk: sol yanda yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "right"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sol yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "korkuluksuz merdiven",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivende korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmandaki merdivenin bulguları düzeltmesiz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "kilitli",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "landing": 0.8
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.set",
+          "input": {
+            "operation": "locked",
+            "layer": "kilitli",
+            "value": true
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.80 m; en az kol genişliği (1.00 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivende korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "asansörsüz konut profili 16 cm'yi aşan rıhtı bulur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut-asansorsuz/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_riser_over_profile",
+                  "message": "Merdivenin rıhtı 0.170 m; en çok 0.16 m olmalı.",
+                  "repair": "Rıht sayısını artırın; merdiven uzar (imar-merdiven-konut-asansorsuz/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "diğer yapılar profili 1,50 m'den dar kolu bulur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-diger/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.20 m geniş; en az 1.50 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-diger/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.50 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.5
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "daire içi profili 1,00 m kolu geçirir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-daire-ici/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "merdiven profili verilmeyince merdivenler denetlenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profil verilip grup sorulmayınca bulgu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "levels"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rampa ve merdiven profili birlikte: iki grubun bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 1.8,
+                    "y": 10.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.15
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "erisilebilirlik-rampa/1",
+              "imar-merdiven-konut/1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "accessibility",
+                  "code": "ramp_slope_over_profile",
+                  "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
+                  "repair": "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %8 olmalı (erisilebilirlik-rampa/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 10.0
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "üç merdiven: kodların sırası, sonra x, sonra y",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "left"
+              },
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.1,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              },
+              {
+                "pts": [
+                  {
+                    "x": -3.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 1.2,
+                    "y": 2.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": -3.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:4"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.10 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:3"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sağ yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "genişlik düzeltmesi çalıştırılınca dar kol kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "left",
+                "landing": 0.8
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.80 m; en az kol genişliği (1.00 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı kol genişliği yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": null
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sağ yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.2
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.80 m; en az kol genişliği (1.20 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı kol genişliği yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": null
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sağ yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sahanlık düzeltmesi çalıştırılınca kısa sahanlık kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "left",
+                "landing": 0.8
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": null
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_railing_missing",
+                  "message": "Merdivenin sağ yanında korkuluk yok; iki yanında olmalı.",
+                  "repair": "İki yanına korkuluk koyun (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "İki yana korkuluk koy",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "railings": "both"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "korkuluk düzeltmesi çalıştırılınca eksik korkuluk kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "left",
+                "landing": 0.8
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "both"
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "check": "stairs",
+                  "code": "stair_landing_short",
+                  "message": "Merdivenin sahanlığı 0.80 m; en az kol genişliği (1.00 m) kadar olmalı.",
+                  "repair": "Sahanlığı kol genişliği kadar yapın (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Sahanlığı kol genişliği yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "landing": null
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı bulguları verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "plan",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "check": "stairs",
+                  "code": "stair_width_narrow",
+                  "message": "Merdivenin kolu 1.00 m geniş; en az 1.20 m olmalı.",
+                  "repair": "Merdiveni genişletin (imar-merdiven-konut/1, mevzuat onayı değildir).",
+                  "uids": [
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Genişliği 1.20 m yap",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "$uidOf:2"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "width": 1.2
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula bir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "validate",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1"
+            ],
+            "checks": [
+              "stairs"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katalogda olmayan profil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1",
+              "yok/1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "“yok/1” profili yok; şunlardan birini verin: erisilebilirlik-rampa/1, imar-merdiven-konut/1, imar-merdiven-konut-asansorsuz/1, imar-merdiven-diger/1, imar-merdiven-daire-ici/1.",
+              "path": "profiles[1]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki merdiven profili reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "imar-merdiven-konut/1",
+              "imar-merdiven-diger/1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "Merdivenler için bir profil verilir; ikinci merdiven profilini kaldırın.",
+              "path": "profiles[1]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı rampa profili iki kez reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "erisilebilirlik-rampa/1",
+              "erisilebilirlik-rampa/1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "Rampalar için bir profil verilir; ikinci rampa profilini kaldırın.",
+              "path": "profiles[1]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula olmayan profili reddeder",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.2,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 16,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "validate",
+          "command": "cad.arch.audit",
+          "input": {
+            "profiles": [
+              "yok/1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "“yok/1” profili yok; şunlardan birini verin: erisilebilirlik-rampa/1, imar-merdiven-konut/1, imar-merdiven-konut-asansorsuz/1, imar-merdiven-diger/1, imar-merdiven-daire-ici/1.",
+              "path": "profiles[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

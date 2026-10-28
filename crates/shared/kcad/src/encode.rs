@@ -1976,6 +1976,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 125 (docs/adr/0724): a stair whose rise is its level's height, or with a centre post.
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()))
+    {
+        return crate::SCHEMA_WITH_STAIR_LEVELS;
+    }
     // Schema 124 (docs/adr/0723 §2): a ramp bound to its level.
     if objs.iter().any(|e| matches!(e, Entity::Ramp(r) if r.ramp.base_offset.is_some())) {
         return crate::SCHEMA_WITH_RAMP_LEVELS;

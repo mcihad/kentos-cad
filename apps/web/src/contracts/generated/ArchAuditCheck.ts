@@ -3,4 +3,4 @@
 /**
  * A group of the audit's checks, in the order its findings come.
  */
-export type ArchAuditCheck = "walls" | "openings" | "spaces" | "numbers" | "tags" | "dimensions" | "columns" | "viewmarks" | "levels" | "accessibility";
+export type ArchAuditCheck = "walls" | "openings" | "spaces" | "numbers" | "tags" | "dimensions" | "columns" | "viewmarks" | "levels" | "accessibility" | "stairs";

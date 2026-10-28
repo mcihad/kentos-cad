@@ -461,6 +461,11 @@ pub struct NewStair {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
+    /// True: its whole rise is its level's floor-to-floor height (docs/adr/0724 §1), drawn as `height` would be and
+    /// followed whenever the level's height changes; needs its level (`arch.level`) with a height, not with `height`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height_from_level: Option<bool>,
     /// The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -492,6 +497,11 @@ pub struct NewStair {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub railings: Option<Railings>,
+    /// A curved stair's centre post, its diameter (docs/adr/0724 §3); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub post: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -503,10 +513,14 @@ pub struct NewStair {
 /// Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
 /// (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.
 ///
-/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the
-/// cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
-/// `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also
-/// `slots_exhausted`.
+/// A stair bound to its level's height (`heightFromLevel`, docs/adr/0724 §1) is drawn from that height and keeps
+/// following it: the document writes its riser height again whenever the level's height or its risers change.
+///
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the level's height for `heightFromLevel`: not
+/// with `height`, a level given with a height; else `level_not_found`), `invalid_stair` (the design from the height, the
+/// fields with the centre post, the cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
+/// `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on
+/// the desktop also `slots_exhausted`.
 /// Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -748,11 +762,26 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub risers: Option<u32>,
-    /// A stair's.
+    /// A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub riser_height: Option<f64>,
+    /// A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
+    /// risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height_from_level: Option<bool>,
+    /// A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub post: Option<Option<f64>>,
     /// A stair's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

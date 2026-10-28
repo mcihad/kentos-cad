@@ -17604,6 +17604,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -17684,6 +17688,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -29385,6 +29398,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -29465,6 +29482,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -59917,6 +59943,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -59997,6 +60027,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -77597,6 +77636,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -77677,6 +77720,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -88584,6 +88636,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -88664,6 +88720,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -99543,6 +99608,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -99623,6 +99692,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -110542,6 +110620,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -110622,6 +110704,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -121467,6 +121558,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -121547,6 +121642,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -132389,6 +132493,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -132469,6 +132577,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -143325,6 +143442,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -143405,6 +143526,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -154566,6 +154696,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -154646,6 +154780,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -171148,6 +171291,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -171228,6 +171375,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -182279,6 +182435,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -182359,6 +182519,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -193504,6 +193673,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -193584,6 +193757,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -205943,6 +206125,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -206023,6 +206209,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -217385,6 +217580,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -217465,6 +217664,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -230142,6 +230350,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -230222,6 +230434,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -241346,6 +241567,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -241426,6 +241651,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -252304,6 +252538,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -252384,6 +252622,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -263343,6 +263590,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -263423,6 +263674,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -277563,6 +277823,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -277643,6 +277907,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -292079,6 +292352,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -292159,6 +292436,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -306737,6 +307023,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -306817,6 +307107,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -318020,6 +318319,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -318100,6 +318403,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -329720,6 +330032,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -329800,6 +330116,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -340681,6 +341006,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -340761,6 +341090,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -351666,6 +352004,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -351746,6 +352088,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -362700,6 +363051,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -362780,6 +363135,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -373886,6 +374250,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -373966,6 +374334,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -385169,6 +385546,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -385249,6 +385630,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -396485,6 +396875,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -396565,6 +396959,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -407578,6 +407981,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -407658,6 +408065,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -418929,6 +419345,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -419009,6 +419429,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -429694,6 +430123,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -429774,6 +430207,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -442645,6 +443087,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -442725,6 +443171,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -453374,6 +453829,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -453454,6 +453913,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -464463,6 +464931,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -464543,6 +465015,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -476236,6 +476717,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -476316,6 +476801,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -487320,6 +487814,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -487400,6 +487898,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -498049,6 +498556,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -498129,6 +498640,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -509269,6 +509789,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -509349,6 +509873,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -520451,6 +520984,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -520531,6 +521068,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -531160,6 +531706,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -531240,6 +531790,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -533604,7 +534163,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the\nlevels, phases, usages and layers given (each absent: every one).\n\nRefusals: `level_not_found`, `layer_not_found`.",
+        "description": "Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,\nramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each\nabsent: every one; a usage filter leaves out all but the spaces).\n\nRefusals: `level_not_found`, `layer_not_found`.",
         "properties": {
           "layers": {
             "items": {
@@ -533803,6 +534362,23 @@
                 "type": "number",
                 "x-unit": "area"
               },
+              "stairArea": {
+                "description": "The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "stairRailingLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "stairRisers": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "voidArea": {
                 "description": "The voids' area: shafts, lift shafts, openings in the floor.",
                 "format": "double",
@@ -534247,6 +534823,107 @@
             ],
             "type": "string"
           },
+          "StairRow": {
+            "description": "A stair measured (docs/adr/0724 §5).",
+            "properties": {
+              "area": {
+                "description": "Its band's plan area, m².",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "height": {
+                "description": "Its whole rise: its risers × their height.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "heightFromLevel": {
+                "description": "Its height follows its level's (docs/adr/0724 §1).",
+                "type": "boolean"
+              },
+              "innerTread": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "landings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "Its walking line's length, its landings in, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "radius": {
+                "description": "A curved stair's walking line's radius and its tread at its inner side.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "railingLength": {
+                "description": "Its railings' lines' length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "riserHeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "risers": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "type": "string"
+              },
+              "tread": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "uid",
+              "width",
+              "risers",
+              "riserHeight",
+              "tread",
+              "height",
+              "length",
+              "area",
+              "rule"
+            ],
+            "type": "object"
+          },
           "TransitionRow": {
             "description": "A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.",
             "properties": {
@@ -534408,6 +535085,13 @@
           "spaces": {
             "items": {
               "$ref": "#/$defs/SpaceRow"
+            },
+            "type": "array"
+          },
+          "stairs": {
+            "description": "The stairs (docs/adr/0724 §5).",
+            "items": {
+              "$ref": "#/$defs/StairRow"
             },
             "type": "array"
           },
@@ -534594,6 +535278,23 @@
                 "type": "number",
                 "x-unit": "area"
               },
+              "stairArea": {
+                "description": "The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "stairRailingLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "stairRisers": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "voidArea": {
                 "description": "The voids' area: shafts, lift shafts, openings in the floor.",
                 "format": "double",
@@ -535038,6 +535739,107 @@
             ],
             "type": "string"
           },
+          "StairRow": {
+            "description": "A stair measured (docs/adr/0724 §5).",
+            "properties": {
+              "area": {
+                "description": "Its band's plan area, m².",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              },
+              "height": {
+                "description": "Its whole rise: its risers × their height.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "heightFromLevel": {
+                "description": "Its height follows its level's (docs/adr/0724 §1).",
+                "type": "boolean"
+              },
+              "innerTread": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "landings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "Its walking line's length, its landings in, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "radius": {
+                "description": "A curved stair's walking line's radius and its tread at its inner side.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "railingLength": {
+                "description": "Its railings' lines' length, metres.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "riserHeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "risers": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "type": "string"
+              },
+              "tread": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "uid",
+              "width",
+              "risers",
+              "riserHeight",
+              "tread",
+              "height",
+              "length",
+              "area",
+              "rule"
+            ],
+            "type": "object"
+          },
           "TransitionRow": {
             "description": "A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.",
             "properties": {
@@ -535199,6 +536001,13 @@
           "spaces": {
             "items": {
               "$ref": "#/$defs/SpaceRow"
+            },
+            "type": "array"
+          },
+          "stairs": {
+            "description": "The stairs (docs/adr/0724 §5).",
+            "items": {
+              "$ref": "#/$defs/StairRow"
             },
             "type": "array"
           },
@@ -544156,6 +544965,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -544236,6 +545049,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -555339,6 +556161,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -555419,6 +556245,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -557916,6 +558751,13 @@
                 ],
                 "x-unit": "length"
               },
+              "heightFromLevel": {
+                "description": "True: its whole rise is its level's floor-to-floor height (docs/adr/0724 §1), drawn as `height` would be and\nfollowed whenever the level's height changes; needs its level (`arch.level`) with a height, not with `height`.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "landing": {
                 "description": "A landing's length at a turn; absent: the width.",
                 "format": "double",
@@ -557939,6 +558781,15 @@
                   "boolean",
                   "null"
                 ]
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -558023,7 +558874,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit\n(`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the fields, the design from the height, the\ncut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`,\n`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also\n`slots_exhausted`.\nWarnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.",
+        "description": "Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit\n(`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`) are warnings.\n\nA stair bound to its level's height (`heightFromLevel`, docs/adr/0724 §1) is drawn from that height and keeps\nfollowing it: the document writes its riser height again whenever the level's height or its risers change.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the level's height for `heightFromLevel`: not\nwith `height`, a level given with a height; else `level_not_found`), `invalid_stair` (the design from the height, the\nfields with the centre post, the cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,\n`revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on\nthe desktop also `slots_exhausted`.\nWarnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.",
         "properties": {
           "color": {
             "type": [
@@ -566454,6 +567305,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -566534,6 +567389,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -577535,6 +578399,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -577615,6 +578483,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -580024,6 +580901,13 @@
                       "null"
                     ]
                   },
+                  "heightFromLevel": {
+                    "description": "A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its\nrisers, followed); false, freed, its riser height staying. Not with `riserHeight`.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
                   "kind": {
                     "const": "set",
                     "type": "string"
@@ -580069,6 +580953,15 @@
                     ],
                     "description": "Any kind's."
                   },
+                  "post": {
+                    "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
                   "railings": {
                     "anyOf": [
                       {
@@ -580090,7 +580983,7 @@
                     "x-unit": "elevation"
                   },
                   "riserHeight": {
-                    "description": "A stair's.",
+                    "description": "A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1).",
                     "format": "double",
                     "type": [
                       "number",
@@ -588678,6 +589571,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -588758,6 +589655,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -599388,6 +600294,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -599468,6 +600378,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -610475,6 +611394,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -610555,6 +611478,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -621349,6 +622281,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -621429,6 +622365,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -632058,6 +633003,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -632138,6 +633087,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -643238,6 +644196,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -643318,6 +644280,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -654171,6 +655142,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -654251,6 +655226,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -664880,6 +665864,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -664960,6 +665948,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -676212,6 +677209,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -676292,6 +677293,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -686929,6 +687939,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -687009,6 +688023,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -731016,6 +732039,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -731096,6 +732123,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -742078,6 +743114,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -742158,6 +743198,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -752793,6 +753842,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -752873,6 +753926,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -764025,6 +765087,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -764105,6 +765171,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -775469,6 +776544,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -775549,6 +776628,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -786214,6 +787302,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -786294,6 +787386,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -789184,13 +790285,18 @@
                 "const": "accessibility",
                 "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
                 "type": "string"
+              },
+              {
+                "const": "stairs",
+                "description": "Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.",
+                "type": "string"
               }
             ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order; a `profile` the catalog lacks), `level_not_found` (`level`).",
+        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`\n(`level`).",
         "properties": {
           "checks": {
             "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
@@ -789233,12 +790339,12 @@
             ],
             "x-unit": "length"
           },
-          "profile": {
-            "description": "The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id\n([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.",
-            "type": [
-              "string",
-              "null"
-            ]
+          "profiles": {
+            "description": "The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids\n([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "title": "ArchAudit",
@@ -789298,6 +790404,11 @@
                 "const": "accessibility",
                 "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
                 "type": "string"
+              },
+              {
+                "const": "stairs",
+                "description": "Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.",
+                "type": "string"
               }
             ]
           },
@@ -789313,7 +790424,7 @@
                 "$ref": "#/$defs/ArchAuditCheck"
               },
               "code": {
-                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.",
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.",
                 "type": "string"
               },
               "fix": {
@@ -789500,6 +790611,11 @@
                 "const": "accessibility",
                 "description": "Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.",
                 "type": "string"
+              },
+              {
+                "const": "stairs",
+                "description": "Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.",
+                "type": "string"
               }
             ]
           },
@@ -789515,7 +790631,7 @@
                 "$ref": "#/$defs/ArchAuditCheck"
               },
               "code": {
-                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.",
+                "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.",
                 "type": "string"
               },
               "fix": {
@@ -799217,6 +800333,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -799297,6 +800417,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -811097,6 +812226,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -811177,6 +812310,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -822909,6 +824051,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -822989,6 +824135,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -834111,6 +835266,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -834191,6 +835350,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -845231,6 +846399,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -845311,6 +846483,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -856891,6 +858072,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -856971,6 +858156,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -867972,6 +869166,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -868052,6 +869250,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -879288,6 +880495,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -879368,6 +880579,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -891410,6 +892630,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -891490,6 +892714,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -902787,6 +904020,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -902867,6 +904104,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -914686,6 +915932,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -914766,6 +916016,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -925959,6 +927218,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -926039,6 +927302,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -937075,6 +938347,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -937155,6 +938431,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -948391,6 +949676,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -948471,6 +949760,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -959497,6 +960795,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -959577,6 +960879,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -970508,6 +971819,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -970588,6 +971903,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -981545,6 +982869,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -981625,6 +982953,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -992505,6 +993842,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -992585,6 +993926,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1003441,6 +1004791,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1003521,6 +1004875,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1014420,6 +1015783,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1014500,6 +1015867,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1025306,6 +1026682,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1025386,6 +1026766,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1036306,6 +1037695,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1036386,6 +1037779,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1047348,6 +1048750,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1047428,6 +1048834,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1058381,6 +1059796,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1058461,6 +1059880,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1069748,6 +1071176,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1069828,6 +1071260,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1086104,6 +1087545,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1086184,6 +1087629,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1097322,6 +1098776,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1097402,6 +1098860,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1109010,6 +1110477,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1109090,6 +1110561,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1120643,6 +1122123,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1120723,6 +1122207,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1132444,6 +1133937,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1132524,6 +1134021,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1144334,6 +1145840,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1144414,6 +1145924,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1155075,6 +1156594,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1155155,6 +1156678,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1166693,6 +1168225,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1166773,6 +1168309,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1244787,6 +1246332,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1244867,6 +1246416,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1305784,6 +1307342,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1305864,6 +1307426,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1317565,6 +1319136,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1317645,6 +1319220,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1328556,6 +1330140,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1328636,6 +1330224,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1339711,6 +1341308,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1339791,6 +1341392,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1352941,6 +1354551,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1353021,6 +1354635,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1364067,6 +1365690,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1364147,6 +1365774,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1375086,6 +1376722,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1375166,6 +1376806,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1386042,6 +1387691,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1386122,6 +1387775,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1397043,6 +1398705,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1397123,6 +1398789,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1408033,6 +1409708,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1408113,6 +1409792,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1418986,6 +1420674,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1419066,6 +1420758,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1430186,6 +1431887,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1430266,6 +1431971,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1441407,6 +1443121,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1441487,6 +1443205,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1452587,6 +1454314,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1452667,6 +1454398,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1463583,6 +1465323,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1463663,6 +1465407,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1474522,6 +1476275,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1474602,6 +1476359,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1485557,6 +1487323,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1485637,6 +1487407,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1496595,6 +1498374,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1496675,6 +1498458,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1507866,6 +1509658,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1507946,6 +1509742,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1519079,6 +1520884,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1519159,6 +1520968,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1530587,6 +1532405,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1530667,6 +1532489,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1541729,6 +1543560,10 @@
                 ],
                 "x-unit": "index"
               },
+              "heightFromLevel": {
+                "description": "Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that\nheight over its risers, written again whenever the level's height changes; needs its level.",
+                "type": "boolean"
+              },
               "id": {
                 "format": "uint32",
                 "minimum": 0,
@@ -1541809,6 +1543644,15 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "post": {
+                "description": "A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "pts": {
                 "description": "Its walking line, up from its first point: two points straight, three an L, four a U.",
@@ -1574214,10 +1576058,52 @@
       "meaning": "Yön değiştiren rampa erişilebilirlik profilinin dönüş sahanlığından dar."
     },
     {
+      "code": "stair_riser_over_profile",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin rıhtı profilin en yüksek rıhtından yüksek."
+    },
+    {
+      "code": "stair_tread_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin basamağı profilin en kısa basamağından kısa."
+    },
+    {
+      "code": "stair_step_over_profile",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin 2a+b'si profilin aralığının dışında."
+    },
+    {
+      "code": "stair_width_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin kolu profilin en dar kolundan dar."
+    },
+    {
+      "code": "stair_landing_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin sahanlığı kol genişliğinden kısa."
+    },
+    {
+      "code": "stair_winder_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Döner merdivenin basamağı dar uçta profilin sınırından dar."
+    },
+    {
+      "code": "stair_railing_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Merdivenin bir yanında korkuluk yok; profil iki yanında ister."
+    },
+    {
       "code": "invalid_arch_audit",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; erişilebilirlik profili katalogda olmalı."
+      "meaning": "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; profil katalogda olmalı, rampa ve merdiven için birer profil verilir."
     },
     {
       "code": "not_levelled",

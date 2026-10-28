@@ -2231,6 +2231,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "stair" and ("heightFromLevel" in e or "post" in e) for e in entities):
+        # A stair bound to its level's height, or with a centre post (docs/adr/0724).
+        return 125
     if any(e["kind"] == "ramp" and "baseOffset" in e for e in entities):
         # A ramp bound to its level (docs/adr/0723 §2).
         return 124
@@ -2902,7 +2905,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-125.kcad"] = container(root(cmap(parts), version=uint(125)))
+    files["schema-version-126.kcad"] = container(root(cmap(parts), version=uint(126)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4993,6 +4996,20 @@ def build():
     columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
     columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
     columns_bad("type", lambda src: src.update(columns="Tarih"))
+    # Schema 125 (docs/adr/0724): stairs whose rise is their level's height, one curved with a centre post, beside one
+    # of its own height.
+    sl2 = document(load("stair-levels.json"))
+    assert sl2.count(b"\x67version\x18\x7d") == 1
+    out["stair-levels.kcad"] = container(sl2)
+    out["broken/stair-levels-in-schema-124.kcad"] = container(sl2.replace(b"\x67version\x18\x7d", b"\x67version\x18\x7c"))
+    def stair_level_bad(name, index, change):
+        d = load("stair-levels.json")
+        change(d["entities"][index])
+        out["broken/stair-level-" + name + ".kcad"] = container(document(d))
+    stair_level_bad("without-level", 0, lambda e: e.pop("arch"))
+    stair_level_bad("false", 0, lambda e: e.update(heightFromLevel=False))
+    stair_level_bad("post-straight", 0, lambda e: e.update(post=0.2))
+    stair_level_bad("post-wide", 1, lambda e: e.update(post=5.0))
     # Schema 124 (docs/adr/0723 §2): ramps bound to their level (one at the level, one below it going down) beside one
     # with a base of its own, which alone would stay in the schema before.
     rl = document(load("ramp-levels.json"))

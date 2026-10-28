@@ -386,10 +386,18 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(length("Basamak", x.tread, ArchField::Tread));
             match &arc {
                 // Measured on its walking line; shorter on its inner side, no landings (no turns).
-                Some(a) => out.push(
-                    Row::figure("İç basamak", f.length_bare(x.tread * (a.r - x.width / 2.0) / a.r))
-                        .unit(f.length_unit_label()),
-                ),
+                Some(a) => {
+                    out.push(
+                        Row::figure("İç basamak", f.length_bare(x.tread * (a.r - x.width / 2.0) / a.r))
+                            .unit(f.length_unit_label()),
+                    );
+                    // Its centre post (docs/adr/0724 §3): empty removes it.
+                    out.push(match x.post {
+                        Some(d) => length("Merkez direği", d, ArchField::Post),
+                        None => Row::text("Merkez direği", "Yok")
+                            .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Post)))),
+                    });
+                }
                 None => out.push(length("Sahanlık", x.landing(), ArchField::Landing)),
             }
             out.push(railings_row(slot, x.railings, &edit));
@@ -400,6 +408,26 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 )
                 .unit(f.length_unit_label()),
             );
+            // Its rise following its level's height (docs/adr/0724 §1); a stair without a level has none to follow.
+            if x.arch.level.is_some() {
+                let bind = |on: bool| {
+                    set(
+                        slot,
+                        ArchChange {
+                            height_from_level: Some(on),
+                            ..Default::default()
+                        },
+                    )
+                };
+                let shown = if x.height_from_level { "Kat yüksekliği" } else { "Kendi" };
+                out.push(Row::text("Yükseklik", shown).editor(edit(select(
+                    shown.to_owned(),
+                    vec![
+                        pick("Kat yüksekliği".into(), x.height_from_level, bind(true), None),
+                        pick("Kendi".into(), !x.height_from_level, bind(false), None),
+                    ],
+                ))));
+            }
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
             out.extend(checks(
                 kentos_native_application::arch_elements::stair_warnings(&doc.model, x, ""),

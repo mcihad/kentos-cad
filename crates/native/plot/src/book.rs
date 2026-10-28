@@ -129,6 +129,10 @@ pub fn today() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
+/// Which copy of the drawing a map draws: its scale's and its annotation scale's bits, and the level whose plan shows
+/// the stairs under it from above with whether it shows the level below too.
+type ScaledKey = (u64, u64, Option<(String, bool)>);
+
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
 /// list its content at its scale, what could not be said told in `finish`.
 pub(crate) struct MapDrawer<'a> {
@@ -138,9 +142,10 @@ pub(crate) struct MapDrawer<'a> {
     /// The moment the temporal layers show at (docs/adr/0534 §3); none: no time cut.
     window: Option<kentos_geometry_core::time::Window>,
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
-    /// object draws otherwise there.
+    /// object draws otherwise there; per scale and level where the level's plan shows the stairs under it from above
+    /// (docs/adr/0724 §4).
     annotative: bool,
-    scaled: std::collections::HashMap<(u64, u64), Option<(Document, Spatial)>>,
+    scaled: std::collections::HashMap<ScaledKey, Option<(Document, Spatial)>>,
     pub(crate) notes: Vec<String>,
     errors: Vec<String>,
     pub(crate) drawing: Option<String>,
@@ -207,21 +212,33 @@ impl<'a> MapDrawer<'a> {
         let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
         let annotation = m.view.annotation_denominator();
-        let key = (at.to_bits(), annotation.to_bits());
+        // A level's plan showing the stairs under it from above (docs/adr/0724 §4) wants a store of its own.
+        let upper = m
+            .level
+            .as_ref()
+            .filter(|l| crate::layers::shows_from_above(doc, l));
+        let key = (
+            at.to_bits(),
+            annotation.to_bits(),
+            upper.map(|l| (l.id.clone(), l.below)),
+        );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_at(doc, at);
-        if (self.annotative || walls) && !self.scaled.contains_key(&key) {
+        if (self.annotative || walls || upper.is_some()) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
                 .then(|| doc.at_scale(annotation))
                 .flatten()
-                .or_else(|| walls.then(|| doc.reading_copy()));
+                .or_else(|| (walls || upper.is_some()).then(|| doc.reading_copy()));
             let window = self.window;
             let main = self.spatial;
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
                 spatial.set_wall_scale(Some(at));
                 spatial.reload(&copy);
+                if let Some(l) = upper {
+                    spatial.set_level_view(&copy, crate::layers::level_view(l), Some(l.id.clone()));
+                }
                 spatial.set_time_window(window);
                 // The bands' rows hold room in the copy too (docs/adr/0636 §2).
                 for link in copy.settings().sources.iter().filter(|l| l.extent.is_some()) {
@@ -229,7 +246,7 @@ impl<'a> MapDrawer<'a> {
                 }
                 (copy, spatial)
             });
-            self.scaled.insert(key, copy);
+            self.scaled.insert(key.clone(), copy);
         }
         let own;
         let src = match self.scaled.get(&key) {

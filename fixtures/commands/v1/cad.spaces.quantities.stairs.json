@@ -1,0 +1,2030 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.spaces.quantities",
+  "commandVersion": 1,
+  "title": "Metraj: merdivenlerin satırları (rıht, yükseklik, yürüme çizgisi, sahanlık, plan alanı, korkuluk, döner merdivenin yarıçapı ve iç basamağı, kat bağı); süzgeçler; retler",
+  "note": "ADR 0724 §5. Beklenenler scripts/fixtures/stair_quantity_cases.py'nin ADR'den yazılmış kurallarından (ramp_geometry.py, arch_cases.py), KentOS kodu olmadan. Kurulumdaki çizimde 7 merdiven ve bir çizgi var; yeni nesne 9'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Merdivenler",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "merdiven",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "stair",
+        "id": 1,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.76,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 18,
+        "riserHeight": 0.17,
+        "tread": 0.28,
+        "railings": "both",
+        "heightFromLevel": true,
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 2,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 10.0
+          },
+          {
+            "x": 2.8,
+            "y": 10.0
+          },
+          {
+            "x": 2.8,
+            "y": 13.0
+          }
+        ],
+        "width": 1.0,
+        "risers": 18,
+        "riserHeight": 0.16666666666666666,
+        "tread": 0.28,
+        "landing": 0.8,
+        "railings": "left",
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 3,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 13.0,
+            "y": 0.0
+          },
+          {
+            "x": 13.0,
+            "y": 1.2
+          },
+          {
+            "x": 10.0,
+            "y": 1.2
+          }
+        ],
+        "width": 1.1,
+        "risers": 20,
+        "riserHeight": 0.15,
+        "tread": 0.3,
+        "cut": 8,
+        "arch": {
+          "level": "zemin",
+          "phase": "existing"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 4,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 21.5,
+            "y": 0.0
+          },
+          {
+            "x": 18.5,
+            "y": 0.0
+          }
+        ],
+        "width": 1.0,
+        "risers": 16,
+        "riserHeight": 0.18,
+        "tread": 0.28,
+        "bulges": [
+          1.0,
+          0.0
+        ],
+        "post": 0.3,
+        "railings": "both",
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 20.0
+          },
+          {
+            "x": 3.0,
+            "y": 20.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 12,
+        "riserHeight": 0.17,
+        "tread": 0.27,
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 6,
+        "layerId": "gizli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 25.0
+          },
+          {
+            "x": 2.8,
+            "y": 25.0
+          }
+        ],
+        "width": 0.9,
+        "risers": 10,
+        "riserHeight": 0.18,
+        "tread": 0.3
+      },
+      {
+        "kind": "stair",
+        "id": 7,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 31.2,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 1.2
+          }
+        ],
+        "width": 1.0,
+        "risers": 8,
+        "riserHeight": 0.17,
+        "tread": 0.25,
+        "bulges": [
+          -0.4142135623730951,
+          0.0
+        ],
+        "railings": "right"
+      },
+      {
+        "kind": "line",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 50.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 50.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "bütün merdivenler: düz, L, U, döner, kilitli, gizli ve saat yönünde döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "width": 0.9,
+                  "risers": 10,
+                  "riserHeight": 0.18,
+                  "tread": 0.3,
+                  "height": 1.7999999999999998,
+                  "length": 2.8,
+                  "area": 2.519999999999996,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "width": 1.0,
+                  "risers": 8,
+                  "riserHeight": 0.17,
+                  "tread": 0.25,
+                  "height": 1.36,
+                  "length": 1.8849555921538754,
+                  "area": 1.8849555921538754,
+                  "railingLength": 1.178097245096172,
+                  "radius": 1.1999999999999995,
+                  "innerTread": 0.1458333333333333,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 32.149344572538574,
+                "stairRailingLength": 25.022875205865553,
+                "stairRisers": 102
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zemin kat süzgeci: kata bağlı düz ve U",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 13.632000000000005,
+                "stairRailingLength": 9.52,
+                "stairRisers": 38
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kat süzgeci: L, merkez direkli döner ve kilitli",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 14.112388980384699,
+                "stairRailingLength": 14.32477796076938,
+                "stairRisers": 46
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kat birden: katsız merdivenler dışarıda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin",
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 27.744388980384706,
+                "stairRailingLength": 23.844777960769378,
+                "stairRisers": 84
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: yeni",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "phases": [
+              "new"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 5.712,
+                "stairRailingLength": 9.52,
+                "stairRisers": 18
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: var olan",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 7.920000000000005,
+                "stairRisers": 20
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: merdiven katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "merdiven"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "width": 1.0,
+                  "risers": 8,
+                  "riserHeight": 0.17,
+                  "tread": 0.25,
+                  "height": 1.36,
+                  "length": 1.8849555921538754,
+                  "area": 1.8849555921538754,
+                  "railingLength": 1.178097245096172,
+                  "radius": 1.1999999999999995,
+                  "innerTread": 0.1458333333333333,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 26.02934457253857,
+                "stairRailingLength": 25.022875205865553,
+                "stairRisers": 80
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: kilitli katmanın merdiveni de ölçülür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "kilitli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 3.6000000000000085,
+                "stairRisers": 12
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: gizli katmanın katsız merdiveni",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "gizli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:6",
+                  "width": 0.9,
+                  "risers": 10,
+                  "riserHeight": 0.18,
+                  "tread": 0.3,
+                  "height": 1.7999999999999998,
+                  "length": 2.8,
+                  "area": 2.519999999999996,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 2.519999999999996,
+                "stairRisers": 10
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanım süzgeci merdivenleri almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "usages": [
+              "Islak"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat ve evre birlikte: var olan U",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ],
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 7.920000000000005,
+                "stairRisers": 20
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız çizginin katmanı: hiçbir merdiven yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "cizim"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı cevabı verir, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:6",
+                  "width": 0.9,
+                  "risers": 10,
+                  "riserHeight": 0.18,
+                  "tread": 0.3,
+                  "height": 1.7999999999999998,
+                  "length": 2.8,
+                  "area": 2.519999999999996,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "width": 1.0,
+                  "risers": 8,
+                  "riserHeight": 0.17,
+                  "tread": 0.25,
+                  "height": 1.36,
+                  "length": 1.8849555921538754,
+                  "area": 1.8849555921538754,
+                  "railingLength": 1.178097245096172,
+                  "radius": 1.1999999999999995,
+                  "innerTread": 0.1458333333333333,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 32.149344572538574,
+                "stairRailingLength": 25.022875205865553,
+                "stairRisers": 102
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula bir şey yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "levels[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "layers": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layers[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yüksekliği değişince bağlı merdivenin rıhtı ve yüksekliği izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.4
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 3.06,
+                  "height": 3.0
+                }
+              ]
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.18888888888888888,
+                  "tread": 0.28,
+                  "height": 3.4,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 13.632000000000005,
+                "stairRailingLength": 9.52,
+                "stairRisers": 38
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "U merdivene iki yan korkuluk: korkuluk toplamda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ],
+            "operation": {
+              "kind": "set",
+              "railings": "both"
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "railingLength": 14.399999999999999,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 13.632000000000005,
+                "stairRailingLength": 23.919999999999998,
+                "stairRisers": 38
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "L merdivenin sahanlığı kol genişliği olur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": null
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 4.71238898038469,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.18666666666666668,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 14.112388980384699,
+                "stairRailingLength": 14.32477796076938,
+                "stairRisers": 46
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "döner merdiven genişleyince alanı, iç basamağı ve korkuluğu değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:4"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.2
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:2",
+                  "level": "kat-1",
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "height": 3.0,
+                  "length": 5.8,
+                  "landings": 1,
+                  "area": 5.800000000000001,
+                  "railingLength": 4.9,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "height": 2.88,
+                  "length": 4.71238898038469,
+                  "area": 5.654866776461628,
+                  "railingLength": 9.42477796076938,
+                  "radius": 1.5,
+                  "innerTread": 0.16800000000000004,
+                  "rule": "alan: iki eş merkezli yayın arası (yarıçap × genişlik × dönüş açısı); uzunluk: yürüme çizgisinin yayı; korkuluk: kenarlardan 5 cm içerideki yaylar; iç basamak: basamak × (yarıçap − genişlik/2) ÷ yarıçap"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "kat-1",
+                  "width": 1.2,
+                  "risers": 12,
+                  "riserHeight": 0.17,
+                  "tread": 0.27,
+                  "height": 2.04,
+                  "length": 3.0,
+                  "area": 3.6000000000000085,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 15.054866776461637,
+                "stairRailingLength": 14.32477796076938,
+                "stairRisers": 46
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "silinen merdiven metrajdan çıkar, geri alınınca döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 7.920000000000005,
+                "stairRisers": 20
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "stairs": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "height": 3.06,
+                  "length": 4.76,
+                  "area": 5.712,
+                  "railingLength": 9.52,
+                  "heightFromLevel": true,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "width": 1.1,
+                  "risers": 20,
+                  "riserHeight": 0.15,
+                  "tread": 0.3,
+                  "height": 3.0,
+                  "length": 7.2,
+                  "landings": 1,
+                  "area": 7.920000000000005,
+                  "rule": "alan: yürüme çizgisi boyunca, dönüşlerde gönyeli şeridin plan alanı; uzunluk: yürüme çizgisi, sahanlıklar dahil; korkuluk: kenarlardan 5 cm içerideki çizgiler"
+                }
+              ],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "stairArea": 13.632000000000005,
+                "stairRailingLength": 9.52,
+                "stairRisers": 38
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

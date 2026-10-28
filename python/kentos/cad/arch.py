@@ -68,7 +68,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
-        profile: str | None | Unset = UNSET,
+        profiles: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ArchAudited:
@@ -103,8 +103,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
             min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
             min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
-            profile: The accessibility profile the ramps are measured against (docs/adr/0723 §4), by its id
-                ([`ACCESSIBILITY_PROFILES`]); absent: the group finds nothing.
+            profiles: The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
+                ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -123,7 +123,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
-            profile=profile,
+            profiles=_opt(profiles, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -136,7 +136,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
-        profile: str | None | Unset = UNSET,
+        profiles: Sequence[str] | Unset = UNSET,
     ) -> ArchAudited:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -147,7 +147,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
-            profile=profile,
+            profiles=_opt(profiles, lambda x: list(x)),
         ))
 
     def validate(
@@ -160,7 +160,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
-        profile: str | None | Unset = UNSET,
+        profiles: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -171,7 +171,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
-            profile=profile,
+            profiles=_opt(profiles, lambda x: list(x)),
         ))
 
     def answer(
@@ -184,7 +184,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
-        profile: str | None | Unset = UNSET,
+        profiles: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -200,7 +200,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             max_gap=max_gap,
             min_area=min_area,
             min_width=min_width,
-            profile=profile,
+            profiles=_opt(profiles, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

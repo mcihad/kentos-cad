@@ -41,7 +41,7 @@ impl App {
             let book = self.sheets.book();
             let unscoped = self
                 .spatial
-                .has_sheet_view()
+                .draws_otherwise()
                 .then(|| kentos_interaction::Spatial::of(&doc.model));
             for id in self.sheets.pdf_sheets() {
                 if Some(&id) == open.as_ref() {

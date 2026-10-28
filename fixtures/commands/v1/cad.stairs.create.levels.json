@@ -1,0 +1,3898 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.stairs.create",
+  "commandVersion": 1,
+  "title": "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Zemin katın yüksekliğine bağlı merdiven: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katın yüksekliğine bağlı merdiven: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stairs": [
+                {
+                  "kind": "stair",
+                  "id": 0,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.7600000000000025,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "heightFromLevel": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katın yüksekliğine bağlı merdiven: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Merdiven",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin katın yüksekliğine bağlı merdiven: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı, en fazla 18 cm rıhtla 17 rıht",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                },
+                "maxRiser": 0.18
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.480000000000002,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 17,
+                "riserHeight": 0.18,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı, verilen 20 rıht: rıht yüksekliği katın yüksekliğinden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                },
+                "risers": 20
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_step_rule",
+                "message": "2 × rıht + basamak = 0.586 m; Blondel'in oranı 0.60–0.65 m. Bu bir bilgidir, yönetmelik denetimi değildir.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.320000000000003,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 20,
+                "riserHeight": 0.153,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı U merdiven, kesme yüksekliği 1,10 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 32.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 32.0
+                  }
+                ],
+                "width": 1.0,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                },
+                "cutHeight": 1.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 32.0
+                  },
+                  {
+                    "x": 1.379999999999999,
+                    "y": 32.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true,
+                "cut": 6
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kata bağlı döner merdiven, merkez direğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                },
+                "post": 0.2
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true,
+                "post": 0.2
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "döner merdivenin merkez direği, iki yan korkuluk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 0.3,
+                "railings": "both"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "railings": "both",
+                "post": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "heightFromLevel false: yükseklik kendisi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": false,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_rise_level",
+                "message": "18 rıht × 0.167 m = 3.000 m; katın yüksekliği 3.060 m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yükseklik ve kat bağı birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Yükseklik ya kendisi (height) ya katından (heightFromLevel) verilir; ikisi birden verilmez.",
+              "path": "stairs[0].heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katsız merdiven kata bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da yüksekliğini yazın.",
+              "path": "stairs[0].heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kata bağlı merdiven reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "yok"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "stairs[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yüksekliği olmayan kata bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "“1. kat” katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın yüksekliğini verin ya da merdivenin yüksekliğini yazın.",
+              "path": "stairs[0].heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düz merdivende merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 0.2
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merkez direği yalnız döner merdivende olur.",
+              "path": "stairs[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merkez direğinin çapı 0; sıfırdan büyük, sonlu olmalı.",
+              "path": "stairs[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iç yarıçaptan büyük merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merkez direğinin yarıçapı 1.000 m; merdivenin iç yarıçapından (1.000 m) küçük olmalı.",
+              "path": "stairs[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 0.2
+              }
+            ]
+          },
+          "nonFinite": {
+            "stairs[0].post": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Merkez direği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "stairs[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yükselince bağlı merdivenin rıhtları da yükselir, geri alma adımı olmadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.4
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 3.06
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.18888888888888888,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0,
+                    "height": 3.4
+                  },
+                  {
+                    "id": "kat-1",
+                    "name": "1. kat",
+                    "elevation": 3.06
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Merdiven",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Merdiven",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.18888888888888888,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat yükselince kendi yükseklikli merdiven yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_rise_level",
+                "message": "18 rıht × 0.167 m = 3.000 m; katın yüksekliği 3.060 m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.settings.set",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0.0,
+                  "height": 3.4
+                },
+                {
+                  "id": "kat-1",
+                  "name": "1. kat",
+                  "elevation": 3.06
+                }
+              ]
+            }
+          },
+          "result": "$any",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0,
+                    "height": 3.4
+                  },
+                  {
+                    "id": "kat-1",
+                    "name": "1. kat",
+                    "elevation": 3.06
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Merdiven",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Merdiven",
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdivene kat verilip yüksekliği kata bağlanır, rıhtı katın yüksekliğinden",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "zemin",
+              "heightFromLevel": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.19125,
+                  "tread": 0.25,
+                  "heightFromLevel": true,
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.19125,
+                "tread": 0.25,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: rıht sayısı değişince bağlı merdivenin rıhtı katın yüksekliğinden",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 20
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.7600000000000025,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 20,
+                  "riserHeight": 0.153,
+                  "tread": 0.28,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "heightFromLevel": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (4.76 m) 20 rıhta yetmiyor: 2 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "uids[0]"
+              },
+              {
+                "code": "stair_step_rule",
+                "message": "2 × rıht + basamak = 0.586 m; Blondel'in oranı 0.60–0.65 m. Bu bir bilgidir, yönetmelik denetimi değildir.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 20,
+                "riserHeight": 0.153,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kendi rıht yüksekliği kat bağını kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "riserHeight": 0.16
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.7600000000000025,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.16,
+                  "tread": 0.28,
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_rise_level",
+                "message": "18 rıht × 0.160 m = 2.880 m; katın yüksekliği 3.060 m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.16,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: false kat bağını kaldırır, rıhtlar yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "heightFromLevel": false
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.7600000000000025,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: rıht yüksekliği ve kat bağı birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "riserHeight": 0.16,
+              "heightFromLevel": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) verilir; ikisi birden verilmez.",
+              "path": "operation.heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yüksekliği olmayan kata bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "heightFromLevel": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merdivenin katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın yüksekliğini verin.",
+              "path": "operation.heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: katsız merdiven kata bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "heightFromLevel": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da bağı kaldırın.",
+              "path": "uids[0].heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı merdivenin katı kaldırılamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": null
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da bağı kaldırın.",
+              "path": "uids[0].heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: rampaya kat yüksekliği bağı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "heightFromLevel": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“heightFromLevel” alanı rampa nesnesinde yok.",
+              "path": "operation.heightFromLevel"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: döner merdivene merkez direği, sonra null kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "post": 0.25
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 1.5,
+                      "y": 30.0
+                    },
+                    {
+                      "x": -1.4992444603722652,
+                      "y": 29.9523969744336
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "bulges": [
+                    1.0159976194759095,
+                    0.0
+                  ],
+                  "post": 0.25
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "post": 0.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "post": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 1.5,
+                      "y": 30.0
+                    },
+                    {
+                      "x": -1.4992444603722652,
+                      "y": 29.9523969744336
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.16666666666666666,
+                  "tread": 0.28,
+                  "bulges": [
+                    1.0159976194759095,
+                    0.0
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: düz merdivene merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "post": 0.2
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merkez direği yalnız döner merdivende olur.",
+              "path": "uids[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdiven genişleyince sığmayan merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true,
+                "post": 0.2
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ],
+                "post": 0.2
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 2.9
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Merkez direğinin yarıçapı 0.100 m; merdivenin iç yarıçapından (0.050 m) küçük olmalı.",
+              "path": "uids[0].post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sonsuz merkez direği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "width": 1.0,
+                "height": 3.0,
+                "tread": 0.28,
+                "fit": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.4992444603722652,
+                    "y": 29.9523969744336
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "tread": 0.28,
+                "bulges": [
+                  1.0159976194759095,
+                  0.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "post": 0.2
+            }
+          },
+          "nonFinite": {
+            "operation.post": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Merkez direği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.post"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: bağlı merdivenin planı katın yüksekliğinden rıhtı gösterir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "tread": 0.28,
+                "fit": true,
+                "heightFromLevel": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.7600000000000025,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "arch": {
+                  "level": "zemin"
+                },
+                "heightFromLevel": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 17
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.7600000000000025,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 17,
+                  "riserHeight": 0.18,
+                  "tread": 0.28,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "heightFromLevel": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.28 m kalıyor; merdiven yoldan kısa.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

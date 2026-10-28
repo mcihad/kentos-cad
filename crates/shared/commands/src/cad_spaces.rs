@@ -374,8 +374,9 @@ pub struct SpacesEdited {
     pub revision: String,
 }
 
-/// Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the
-/// levels, phases, usages and layers given (each absent: every one).
+/// Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,
+/// ramps and stairs (docs/adr/0722 §5, 0723 §3, 0724 §5), those of the levels, phases, usages and layers given (each
+/// absent: every one; a usage filter leaves out all but the spaces).
 ///
 /// Refusals: `level_not_found`, `layer_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -669,6 +670,59 @@ fn is_zero_count(n: &u32) -> bool {
     *n == 0
 }
 
+/// A stair measured (docs/adr/0724 §5).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StairRow {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub risers: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub riser_height: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tread: f64,
+    /// Its whole rise: its risers × their height.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    /// Its walking line's length, its landings in, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[serde(default, skip_serializing_if = "is_zero_count")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub landings: u32,
+    /// Its band's plan area, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// Its railings' lines' length, metres.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub railing_length: f64,
+    /// A curved stair's walking line's radius and its tread at its inner side.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub radius: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub inner_tread: Option<f64>,
+    /// Its height follows its level's (docs/adr/0724 §1).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub height_from_level: bool,
+    pub rule: String,
+}
+
 /// A floor finish's change at a passage (docs/adr/0722 §5): the rooms on its two sides, their floors.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -745,6 +799,19 @@ pub struct QuantityTotals {
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ramp_railing_length: f64,
+    /// The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub stair_area: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub stair_railing_length: f64,
+    #[serde(default, skip_serializing_if = "is_zero_count")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub stair_risers: u32,
 }
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
@@ -769,5 +836,9 @@ pub struct SpacesQuantified {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RampRow>>", optional))]
     pub ramps: Vec<RampRow>,
+    /// The stairs (docs/adr/0724 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StairRow>>", optional))]
+    pub stairs: Vec<StairRow>,
     pub totals: QuantityTotals,
 }

@@ -60,6 +60,8 @@ pub fn core_stair(s: &StairFields) -> Shape {
             cut: s.cut.map(f64::from),
             numbering: s.numbering,
             railings: s.railings.map(railings),
+            post: s.post,
+            upper: false,
         },
     }
 }

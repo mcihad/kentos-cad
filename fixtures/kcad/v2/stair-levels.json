@@ -1,0 +1,136 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kata bağlı merdivenler ve merkez direkli döner merdiven",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.06
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.06,
+          "height": 3.06
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "stair",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.75,
+          "y": 0.0
+        }
+      ],
+      "width": 1.2,
+      "risers": 18,
+      "riserHeight": 0.17,
+      "tread": 0.28,
+      "cut": 7,
+      "heightFromLevel": true,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "stair",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 4.0
+        }
+      ],
+      "bulges": [
+        0.41421356237309503,
+        0.0
+      ],
+      "width": 1.0,
+      "risers": 16,
+      "riserHeight": 0.19125,
+      "tread": 0.25,
+      "post": 0.3,
+      "heightFromLevel": true,
+      "arch": {
+        "level": "kat-1"
+      }
+    },
+    {
+      "kind": "stair",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 23.0,
+          "y": 0.0
+        }
+      ],
+      "width": 1.2,
+      "risers": 10,
+      "riserHeight": 0.17,
+      "tread": 0.3
+    }
+  ],
+  "uids": [
+    "0192f5a1-7240-7000-8000-000000000001",
+    "0192f5a1-7240-7000-8000-000000000002",
+    "0192f5a1-7240-7000-8000-000000000003"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

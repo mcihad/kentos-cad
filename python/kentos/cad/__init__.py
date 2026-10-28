@@ -2417,6 +2417,7 @@ __all__ = [
     "StackMode",
     "StackModeName",
     "StairEntity",
+    "StairRow",
     "StairsCreate",
     "StairsCreated",
     "StairsPlan",

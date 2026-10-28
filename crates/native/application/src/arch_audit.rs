@@ -2,7 +2,8 @@
 //! resolves it and, where a command plainly does, its call. Walls are checked level by level (walls of different
 //! levels never join, docs/adr/0639): the joins' issues are `cad.walls.joins`'s; a free end that stops short of another
 //! wall's body, or of another free end, is said. The other groups read the followers' stored `broken` fields, the
-//! spaces' rings and the numbers. Given an accessibility profile, the ramps are measured against it (docs/adr/0723 §4).
+//! spaces' rings and the numbers. Given profiles, the ramps and the stairs are measured against them (docs/adr/0723 §4,
+//! 0724 §2).
 //! It writes nothing. The shared cases are `fixtures/commands/v1/cad.arch.audit.json` and
 //! `cad.arch.audit.accessibility.json` (`scripts/fixtures/arch_audit_cases.py`, `ramp_access_cases.py`).
 
@@ -29,7 +30,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 10] = [
+const CODES: [(ArchAuditCheck, &[&str]); 11] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -58,6 +59,18 @@ const CODES: [(ArchAuditCheck, &[&str]); 10] = [
     (
         ArchAuditCheck::Accessibility,
         &[codes::RAMP_SLOPE_OVER_PROFILE, codes::RAMP_LONG_RUN_SLOPE, codes::RAMP_LANDING_SHORT, codes::RAMP_TURN_NARROW],
+    ),
+    (
+        ArchAuditCheck::Stairs,
+        &[
+            codes::STAIR_RISER_OVER_PROFILE,
+            codes::STAIR_TREAD_SHORT,
+            codes::STAIR_STEP_OVER_PROFILE,
+            codes::STAIR_WIDTH_NARROW,
+            codes::STAIR_LANDING_SHORT,
+            codes::STAIR_WINDER_NARROW,
+            codes::STAIR_RAILING_MISSING,
+        ],
     ),
 ];
 
@@ -883,11 +896,10 @@ impl Audit<'_> {
     /// The ramps measured against `profile` (docs/adr/0723 §4): too steep for their rise, a long run too steep, a landing
     /// too short, too narrow where they turn. The last two are fixed by `cad.arch.edit` unless locked; the first two
     /// need the ramp drawn again (longer, or with Rampa's En uzun kol).
-    fn accessibility(&self, profile: Option<&kentos_commands::AccessibilityProfile>) -> Vec<ArchAuditFinding> {
-        let Some(profile) = profile else {
+    fn accessibility(&self, profile: Option<&(String, kentos_commands::RampRules)>) -> Vec<ArchAuditFinding> {
+        let Some((profile_id, rules)) = profile else {
             return Vec::new();
         };
-        let rules = &profile.ramp;
         let n = |v: f64| format!("{v}");
         let mut out = Vec::new();
         for e in self.doc.entities() {
@@ -916,7 +928,7 @@ impl Audit<'_> {
                         format!(
                             "Rampayı uzatın ya da kot farkını azaltın; eğim en çok %{} olmalı ({}, mevzuat onayı değildir).",
                             n(max),
-                            profile.id
+                            profile_id
                         ),
                         vec![uid.clone()],
                         start,
@@ -994,19 +1006,168 @@ impl Audit<'_> {
     }
 }
 
-/// The accessibility profile asked, from the catalog (`invalid_arch_audit` for one it lacks).
-fn profile_of(input: &ArchAudit) -> Result<Option<kentos_commands::AccessibilityProfile>, Stop> {
-    let Some(id) = &input.profile else {
-        return Ok(None);
+impl Audit<'_> {
+    /// The stairs measured against `profile`'s stair rules (docs/adr/0724 §2): a riser too high, a tread too short, two
+    /// risers and a tread outside their range, a flight too narrow, a landing shorter than the flight is wide, a winding
+    /// stair's tread too narrow at its narrow end, a side without a railing. A flight's width, a landing and the
+    /// railings are fixed by `cad.arch.edit` unless locked; the others need the stair designed again.
+    fn stairs(&self, profile: Option<&(String, kentos_commands::StairRules)>) -> Vec<ArchAuditFinding> {
+        let Some((profile_id, rules)) = profile else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for e in self.doc.entities() {
+            let Entity::Stair(st) = e else { continue };
+            let x = &st.stair;
+            let shape = kentos_formats::arch_elements::core_stair(x);
+            let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else { continue };
+            let uid = self.uid_of(e);
+            let start = pts.first().copied().unwrap_or(V::new(0.0, 0.0));
+            let fixable = !self.locked(e);
+            let regulation = format!("{profile_id}, mevzuat onayı değildir");
+            let mut say = |code: &str, message: String, repair: String, at: V, fix: Option<ArchAuditFix>| {
+                out.push(finding(ArchAuditCheck::Stairs, code, message, repair, vec![uid.clone()], at, fix));
+            };
+            if x.riser_height > rules.riser + 1e-9 {
+                say(
+                    codes::STAIR_RISER_OVER_PROFILE,
+                    format!("Merdivenin rıhtı {} m; en çok {} m olmalı.", fixed(x.riser_height, 3), fixed(rules.riser, 2)),
+                    format!("Rıht sayısını artırın; merdiven uzar ({regulation})."),
+                    start,
+                    None,
+                );
+            }
+            if x.tread < rules.tread - 1e-9 {
+                say(
+                    codes::STAIR_TREAD_SHORT,
+                    format!("Merdivenin basamağı {} m; en az {} m olmalı.", fixed(x.tread, 3), fixed(rules.tread, 2)),
+                    format!("Basamağı derinleştirin; merdiven uzar ({regulation})."),
+                    start,
+                    None,
+                );
+            }
+            let step = 2.0 * x.riser_height + x.tread;
+            if step < rules.step[0] - 1e-9 || step > rules.step[1] + 1e-9 {
+                say(
+                    codes::STAIR_STEP_OVER_PROFILE,
+                    format!(
+                        "Merdivenin 2a+b'si {} m; {}–{} m olmalı.",
+                        fixed(step, 3),
+                        fixed(rules.step[0], 2),
+                        fixed(rules.step[1], 2)
+                    ),
+                    format!("Rıhtı ya da basamağı değiştirin ({regulation})."),
+                    start,
+                    None,
+                );
+            }
+            if x.width < rules.width - 1e-9 {
+                say(
+                    codes::STAIR_WIDTH_NARROW,
+                    format!("Merdivenin kolu {} m geniş; en az {} m olmalı.", fixed(x.width, 2), fixed(rules.width, 2)),
+                    format!("Merdiveni genişletin ({regulation})."),
+                    start,
+                    fixable.then(|| {
+                        fix(
+                            format!("Genişliği {} m yap", fixed(rules.width, 2)),
+                            "cad.arch.edit",
+                            json!({"uids": [uid.clone()], "operation": {"kind": "set", "width": rules.width}}),
+                        )
+                    }),
+                );
+            }
+            let walk = arch::Walk::curved(pts, stair.bulge);
+            if rules.landing_width
+                && let Some(&(a, b)) = arch::stair_landings(&walk, stair).first()
+                && stair.landing() < x.width - 1e-9
+            {
+                say(
+                    codes::STAIR_LANDING_SHORT,
+                    format!(
+                        "Merdivenin sahanlığı {} m; en az kol genişliği ({} m) kadar olmalı.",
+                        fixed(stair.landing(), 2),
+                        fixed(x.width, 2)
+                    ),
+                    format!("Sahanlığı kol genişliği kadar yapın ({regulation})."),
+                    walk.point((a + b) / 2.0).0,
+                    fixable.then(|| {
+                        fix(
+                            "Sahanlığı kol genişliği yap",
+                            "cad.arch.edit",
+                            json!({"uids": [uid.clone()], "operation": {"kind": "set", "landing": null}}),
+                        )
+                    }),
+                );
+            }
+            if let Some(inner) = arch::stair_measure(pts, stair).inner_tread
+                && inner < rules.winder - 1e-9
+            {
+                say(
+                    codes::STAIR_WINDER_NARROW,
+                    format!(
+                        "Döner merdivenin basamağı dar uçta {} m; en az {} m olmalı.",
+                        fixed(inner, 3),
+                        fixed(rules.winder, 2)
+                    ),
+                    format!("Yarıçapı büyütün ya da merdiveni daraltın ({regulation})."),
+                    start,
+                    None,
+                );
+            }
+            if rules.both_railings && x.railings != Some(kentos_commands::Railings::Both) {
+                let missing = match x.railings {
+                    Some(kentos_commands::Railings::Left) => "Merdivenin sağ yanında korkuluk yok",
+                    Some(kentos_commands::Railings::Right) => "Merdivenin sol yanında korkuluk yok",
+                    _ => "Merdivende korkuluk yok",
+                };
+                say(
+                    codes::STAIR_RAILING_MISSING,
+                    format!("{missing}; iki yanında olmalı."),
+                    format!("İki yanına korkuluk koyun ({regulation})."),
+                    start,
+                    fixable.then(|| {
+                        fix(
+                            "İki yana korkuluk koy",
+                            "cad.arch.edit",
+                            json!({"uids": [uid.clone()], "operation": {"kind": "set", "railings": "both"}}),
+                        )
+                    }),
+                );
+            }
+        }
+        out
+    }
+}
+
+/// The profiles asked, from the catalog: the ramp rules and the stair rules with their profiles' ids
+/// (`invalid_arch_audit` for one the catalog lacks, or a second with ramp or with stair rules).
+type ProfileRules = (Option<(String, kentos_commands::RampRules)>, Option<(String, kentos_commands::StairRules)>);
+
+fn profiles_of(input: &ArchAudit) -> Result<ProfileRules, Stop> {
+    let mut ramp = None;
+    let mut stair = None;
+    let refuse = |k: usize, words: String| {
+        Stop::failed(error(codes::INVALID_ARCH_AUDIT, words, Some(format!("profiles[{k}]"))))
     };
-    kentos_commands::accessibility_profile(id).map(Some).ok_or_else(|| {
-        let known: Vec<&str> = kentos_commands::ACCESSIBILITY_PROFILES.iter().map(|(i, _)| *i).collect();
-        Stop::failed(error(
-            codes::INVALID_ARCH_AUDIT,
-            format!("“{id}” erişilebilirlik profili yok; {} verin.", known.join(", ")),
-            Some("profile".into()),
-        ))
-    })
+    for (k, id) in input.profiles.iter().enumerate() {
+        let Some(p) = kentos_commands::arch_profile(id) else {
+            let known: Vec<&str> = kentos_commands::ARCH_PROFILES.iter().map(|(i, _)| *i).collect();
+            return Err(refuse(k, format!("“{id}” profili yok; şunlardan birini verin: {}.", known.join(", "))));
+        };
+        if let Some(r) = p.ramp {
+            if ramp.is_some() {
+                return Err(refuse(k, "Rampalar için bir profil verilir; ikinci rampa profilini kaldırın.".into()));
+            }
+            ramp = Some((p.id.clone(), r));
+        }
+        if let Some(s) = p.stair {
+            if stair.is_some() {
+                return Err(refuse(k, "Merdivenler için bir profil verilir; ikinci merdiven profilini kaldırın.".into()));
+            }
+            stair = Some((p.id.clone(), s));
+        }
+    }
+    Ok((ramp, stair))
 }
 
 /// The level a level finding's fix gives: `level`, the project's (`level_not_found`), or the ground level (the one at
@@ -1034,7 +1195,7 @@ fn fix_level<'a>(doc: &'a Document, input: &ArchAudit) -> Result<Option<&'a Arch
 
 fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
     let limits = limits(input)?;
-    let profile = profile_of(input)?;
+    let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
     let asked = |c: ArchAuditCheck| input.checks.is_empty() || input.checks.contains(&c);
@@ -1053,7 +1214,8 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
             ArchAuditCheck::Columns => audit.columns(),
             ArchAuditCheck::Viewmarks => audit.viewmarks(),
             ArchAuditCheck::Levels => audit.levels(level),
-            ArchAuditCheck::Accessibility => audit.accessibility(profile.as_ref()),
+            ArchAuditCheck::Accessibility => audit.accessibility(ramp_rules.as_ref()),
+            ArchAuditCheck::Stairs => audit.stairs(stair_rules.as_ref()),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.
@@ -1072,7 +1234,10 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ArchAudit) -> CommandResult<()> {
-    match limits(input).and_then(|_| fix_level(cx.doc, input).map(|_| ())) {
+    match limits(input)
+        .and_then(|_| profiles_of(input).map(|_| ()))
+        .and_then(|_| fix_level(cx.doc, input).map(|_| ()))
+    {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),

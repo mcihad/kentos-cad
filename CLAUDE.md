@@ -28,13 +28,24 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Merdiven: kat yüksekliği, yönetmelik profili, üst katta gösterim (28 Ekim 2026; [ADR0724](docs/adr/0724-stair-levels-profiles-upper-plan.md)).**
+  `cad.stairs.create`'in `heightFromLevel`'ı merdiveni katının yüksekliğiyle tasarlar; belge kat yüksekliği ya da rıht
+  sayısı değişince rıht yüksekliğini yazar (`level_marks.rs`, rıht sayısı korunur), KCAD 125 opt-in; `cad.arch.edit`
+  bağlar, `false`/kendi `riserHeight`'ı kaldırır. Döner merdivende merkez direği (`post`, araçta M). Profiller
+  `catalog/v1/arch-profiles/` (`kentos.arch-profile`; İmar Yönetmeliği md. 31'in konut/asansörsüz/diğer/daire içi
+  değerleri, mevzuat onayı değil); `cad.arch.audit`'in `profiles`'ı (bir rampa, bir merdiven) ve `stairs` grubu yedi
+  kodla, üçü Düzelt'li. Üst katta gösterim: alttaki katın kesmeli merdiveni etkin katta yukarıdan
+  (`stair_upper_pieces`, `LevelLooks.upper`, seçilmez); pafta haritası kendi katıyla ayrı depo, ekran yukarıdan
+  çizerken paftalar çizimin deposundan (`draws_otherwise`). Metraj `stairs` satırları ve Merdivenler sekmesi (yedi
+  sayfa). Gerçek PDF'te 1. kat paftası merdiveni yukarıdan çizer (`stair_levels.rs`, `pdftoppm`).
+
 - **Rampa: ara sahanlık, kata bağlı başlangıç, metraj, erişilebilirlik (28 Ekim 2026; [ADR0723](docs/adr/0723-ramp-landings-levels-accessibility.md)).**
   `cad.ramps.create`'in `maxRun`'ı aşan kola düz köşe ve sahanlık ekler (`geom::arch::ramp_with_landings`);
   `baseOffset` başlangıcı katın kotu + fark yapar, belge kat değişince yazar (`level_marks.rs`, etiketlerden önce),
   KCAD 124 opt-in; `cad.arch.edit` `baseOffset` bağlar, `base` ya da `null` bağı kaldırır. Rampa aracında En uzun
   kol (L) ve Başlangıç kotu (Z: boş/kat etkin kat, kat±fark, sayı kendi). Metraj `ramps` satırları (`ramp_measure`)
-  ve Rampalar sekmesi; `cad.arch.audit`'in `profile`'ı (`catalog/v1/accessibility/`, TS 9111 özeti; mevzuat
-  onayı değil) `accessibility` grubu: eğim bandı, uzun kol, kısa sahanlık ve dar dönüş, son ikisi Düzelt'li;
+  ve Rampalar sekmesi; `cad.arch.audit`'in profili (ADR 0724'ten beri `profiles`, `catalog/v1/arch-profiles/`, TS
+  9111 özeti; mevzuat onayı değil) `accessibility` grubu: eğim bandı, uzun kol, kısa sahanlık ve dar dönüş, son ikisi Düzelt'li;
   masaüstünde öntanımlı açık. Planda okun yanında eğim yazısı (DXF ve PDF de). Genişlik profili açık.
 
 - **Döşeme, balkon, teras (28 Ekim 2026; [ADR0722](docs/adr/0722-slabs.md)).**

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""ADR 0723 §4's shared cases: Mimari denetim's accessibility group (`cad.arch.audit` with `profile`), from the ADR's
+"""ADR 0723 §4's shared cases: Mimari denetim's accessibility group (`cad.arch.audit` with `profiles`), from the ADR's
 rules and the profile's values, without KentOS code.
 
 Writes fixtures/commands/v1/cad.arch.audit.accessibility.json; `--check` compares and writes nothing. Each case draws
 its ramps with `cad.ramps.create` on a drawing without levels (no other group finds anything there) and asks the audit.
 
-The rules, as ADR 0723 §4 gives them, with the profile `erisilebilirlik-rampa/1` (catalog/v1/accessibility):
+The rules, as ADR 0723 §4 gives them, with the profile `erisilebilirlik-rampa/1` (catalog/v1/arch-profiles; the input
+names it in `profiles` since ADR 0724 §2):
 
 - A ramp's slope as drawn (the rise's size over its sloped length, `ramp_geometry.py`) above the steepest its rise's
   size allows (the first band whose bound it does not pass; 0.15 m: %8, 0.50: %7, 1.00: %6, above: %5) is
@@ -16,7 +17,8 @@ The rules, as ADR 0723 §4 gives them, with the profile `erisilebilirlik-rampa/1
   the landing to 1.5 m with `cad.arch.edit`); a ramp that turns (its direction changes at an inner point; a straight
   corner does not) narrower than 1.5 m is `ramp_turn_narrow` (at its first turn; fixed by setting its width). On a
   locked layer there is no fix.
-- Order: the codes' order, then x, then y. No profile: nothing; an unknown one is refused.
+- Order: the codes' order, then x, then y. No ramp profile: nothing; an unknown one is refused at its place in
+  `profiles`, naming the catalog's profiles.
 """
 
 import argparse
@@ -30,7 +32,11 @@ import ramp_geometry as rg  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.arch.audit.accessibility.json"
 COMMAND = "cad.arch.audit"
-PROFILE = json.loads((ROOT / "catalog/v1/accessibility/erisilebilirlik-rampa-1.json").read_text("utf-8"))
+PROFILES = ROOT / "catalog/v1/arch-profiles"
+PROFILE = json.loads((PROFILES / "erisilebilirlik-rampa-1.json").read_text("utf-8"))
+# The catalog's profiles in its order (crates/shared/commands' ARCH_PROFILES), as the refusal names them.
+KNOWN = ["erisilebilirlik-rampa/1", "imar-merdiven-konut/1", "imar-merdiven-konut-asansorsuz/1", "imar-merdiven-diger/1",
+         "imar-merdiven-daire-ici/1"]
 RULES = PROFILE["ramp"]
 CODES = ["ramp_slope_over_profile", "ramp_long_run_slope", "ramp_landing_short", "ramp_turn_narrow"]
 FIRST = 2  # the setup holds one line; the first ramp made is 2
@@ -131,7 +137,7 @@ def create(ramps, layer_id="rampa"):
 
 
 def audit(found, inp=None, op="execute"):
-    inp = {"profile": PROFILE["id"], "checks": ["accessibility"]} if inp is None else inp
+    inp = {"profiles": [PROFILE["id"]], "checks": ["accessibility"]} if inp is None else inp
     result = {"status": "completed", "output": {"findings": found, "revision": "$current"}, "warnings": []}
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
@@ -148,7 +154,7 @@ def one(name, r, inp=None, locked=False):
     if locked:
         steps.append({"op": "execute", "command": "cad.layers.set",
                       "input": {"operation": "locked", "layer": "kilitli", "value": True}, "result": "$any"})
-    asked = inp is None or (inp.get("profile") is not None
+    asked = inp is None or (PROFILE["id"] in inp.get("profiles", [])
                             and (not inp.get("checks") or "accessibility" in inp["checks"]))
     steps.append(audit(findings([(FIRST, r, locked)]) if asked else [], inp))
     return {"name": name, "steps": steps}
@@ -180,12 +186,12 @@ def cases():
     out.append(one("profil verilmeyince erişilebilirlik bir şey bulmaz", ramp([(0, 0), (1.8, 0)], 1.5, 0.15),
                    inp={"checks": ["accessibility"]}))
     out.append(one("profil verilip grup sorulmayınca bulgu yok", ramp([(0, 0), (1.8, 0)], 1.5, 0.15),
-                   inp={"profile": PROFILE["id"], "checks": ["levels"]}))
+                   inp={"profiles": [PROFILE["id"]], "checks": ["levels"]}))
 
     # Every group asked (checks empty): only the accessibility group finds something in this drawing.
     r = ramp([(0, 0), (6, 0), (6, 6)], 1.2, 0.5)
     out.append({"name": "bütün gruplar profille: yalnız erişilebilirlik bulguları",
-                "steps": [create([r]), audit(findings([(FIRST, r, False)]), {"profile": PROFILE["id"]})]})
+                "steps": [create([r]), audit(findings([(FIRST, r, False)]), {"profiles": [PROFILE["id"]]})]})
     # Several ramps: the codes' order, then x, then y.
     rs = [ramp([(10, 0), (11.8, 0)], 1.5, 0.15), ramp([(0, 5), (6, 5), (6, 11)], 1.2, 0.5),
           ramp([(0, 0), (1.8, 0)], 1.5, 0.15)]
@@ -204,18 +210,18 @@ def cases():
                 "steps": [create([r]), audit(findings([(FIRST, r, False)]), op="plan")]})
     out.append({"name": "doğrula bir şey yazmaz", "steps": [create([r]), audit([], op="validate")]})
     out.append({"name": "katalogda olmayan profil reddedilir",
-                "steps": [create([r]), {"op": "execute", "command": COMMAND, "input": {"profile": "yok/1"},
+                "steps": [create([r]), {"op": "execute", "command": COMMAND, "input": {"profiles": ["yok/1"]},
                                         "result": {"status": "failed", "error": {
                                             "code": "invalid_arch_audit",
-                                            "message": f"“yok/1” erişilebilirlik profili yok; {PROFILE['id']} verin.",
-                                            "path": "profile"}},
+                                            "message": f"“yok/1” profili yok; şunlardan birini verin: {', '.join(KNOWN)}.",
+                                            "path": "profiles[0]"}},
                                         "expect": {"revision": "same"}}]})
     return out
 
 
 def document():
     note = ("ADR 0723 §4. Beklenenler scripts/fixtures/ramp_access_cases.py'nin ADR'den ve profilin değerlerinden "
-            "(catalog/v1/accessibility/erisilebilirlik-rampa-1.json) yazılmış kurallarından, KentOS kodu olmadan. "
+            "(catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json) yazılmış kurallarından, KentOS kodu olmadan. "
             "Kurulumdaki çizimde bir çizgi var, kat yok; rampalar 2'den başlar.")
     return {"format": "kentos.command-cases", "version": 1, "command": COMMAND, "commandVersion": 1,
             "title": "Mimari denetim: rampaların erişilebilirlik profili (eğim bandı, uzun kol, sahanlık, dönüş); düzeltme; retler",

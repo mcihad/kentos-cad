@@ -1801,8 +1801,22 @@ codes! {
     RAMP_LANDING_SHORT = "ramp_landing_short", Warning, false, "Rampanın sahanlığı erişilebilirlik profilinin en kısa sahanlığından kısa.";
     /// A ramp that turns, narrower than the profile's turning landing.
     RAMP_TURN_NARROW = "ramp_turn_narrow", Warning, false, "Yön değiştiren rampa erişilebilirlik profilinin dönüş sahanlığından dar.";
-    /// An audit threshold below zero, or an accessibility profile the catalog lacks.
-    INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; erişilebilirlik profili katalogda olmalı.";
+    /// A stair's riser higher than its profile allows (docs/adr/0724 §2).
+    STAIR_RISER_OVER_PROFILE = "stair_riser_over_profile", Warning, false, "Merdivenin rıhtı profilin en yüksek rıhtından yüksek.";
+    /// A stair's tread shorter than its profile allows.
+    STAIR_TREAD_SHORT = "stair_tread_short", Warning, false, "Merdivenin basamağı profilin en kısa basamağından kısa.";
+    /// Two risers and a tread (2a+b) outside the profile's range.
+    STAIR_STEP_OVER_PROFILE = "stair_step_over_profile", Warning, false, "Merdivenin 2a+b'si profilin aralığının dışında.";
+    /// A flight narrower than its profile allows.
+    STAIR_WIDTH_NARROW = "stair_width_narrow", Warning, false, "Merdivenin kolu profilin en dar kolundan dar.";
+    /// A landing shorter than the flight is wide.
+    STAIR_LANDING_SHORT = "stair_landing_short", Warning, false, "Merdivenin sahanlığı kol genişliğinden kısa.";
+    /// A winding stair's tread narrower at its narrow end than its profile allows.
+    STAIR_WINDER_NARROW = "stair_winder_narrow", Warning, false, "Döner merdivenin basamağı dar uçta profilin sınırından dar.";
+    /// A stair without a railing on a side its profile asks one on.
+    STAIR_RAILING_MISSING = "stair_railing_missing", Warning, false, "Merdivenin bir yanında korkuluk yok; profil iki yanında ister.";
+    /// An audit threshold below zero, a profile the catalog lacks, or two with ramp or with stair rules.
+    INVALID_ARCH_AUDIT = "invalid_arch_audit", Failed, false, "Denetim eşiği sıfır ya da daha büyük bir sayı olmalı; profil katalogda olmalı, rampa ve merdiven için birer profil verilir.";
 
     // ── Kat ver (docs/adr/0717) ─────────────────────────────────────────
     /// An object given a level that has no level of its own: an opening, a tag or a finish is on its object's level;

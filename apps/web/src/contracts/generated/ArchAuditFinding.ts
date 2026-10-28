@@ -12,7 +12,9 @@ export type ArchAuditFinding = { check: ArchAuditCheck,
  * `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
  * `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
  * `arch_dimension_broken`, `arch_column_grid_gone`, `arch_viewmark_target_gone`, `arch_level_missing`,
- * `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short` or `ramp_turn_narrow`.
+ * `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
+ * `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
+ * `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
  */
 code: string, 
 /**

@@ -34,6 +34,11 @@ tread: number,
  */
 height?: number, 
 /**
+ * True: its whole rise is its level's floor-to-floor height (docs/adr/0724 §1), drawn as `height` would be and
+ * followed whenever the level's height changes; needs its level (`arch.level`) with a height, not with `height`.
+ */
+heightFromLevel?: boolean, 
+/**
  * The riser height its count keeps under, with `height` only; absent: `DEFAULT_MAX_RISER`.
  */
 maxRiser?: number, 
@@ -56,4 +61,8 @@ cut?: number, numbering?: boolean,
 /**
  * Its railings' sides; absent: none (docs/adr/0705 §2).
  */
-railings?: Railings, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+railings?: Railings, 
+/**
+ * A curved stair's centre post, its diameter (docs/adr/0724 §3); absent: none.
+ */
+post?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };

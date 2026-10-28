@@ -319,6 +319,16 @@ pub struct StairFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub railings: Option<Railings>,
+    /// Its whole rise is its level's floor-to-floor height (docs/adr/0724 §1, schema 125): its riser height is that
+    /// height over its risers, written again whenever the level's height changes; needs its level.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub height_from_level: bool,
+    /// A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub post: Option<f64>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -555,12 +565,64 @@ impl StairFields {
                 format!("Kesme çizgisi {c}. rıhtta; 1 ile {} arasında olmalı.", self.risers),
             ));
         }
+        if let Some(found) = self.post_problem() {
+            return Some(found);
+        }
+        if self.height_from_level && self.arch.level.is_none() {
+            return Some((
+                "heightFromLevel".into(),
+                "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da bağı kaldırın."
+                    .into(),
+            ));
+        }
         None
     }
 
     /// Its landing's length: its own, else its width.
     pub fn landing(&self) -> f64 {
         self.landing.unwrap_or(self.width)
+    }
+
+    /// Its riser height read from its level among `levels` (docs/adr/0724 §1): the level's height over its risers;
+    /// none when its rise is not its level's, the project lacks the level or the level has no height.
+    pub fn level_riser(&self, levels: &[crate::ArchLevel]) -> Option<f64> {
+        if !self.height_from_level || self.risers == 0 {
+            return None;
+        }
+        let id = self.arch.level.as_deref()?;
+        let h = levels.iter().find(|l| l.id == id)?.height?;
+        (h.is_finite() && h > 0.0).then(|| h / f64::from(self.risers))
+    }
+
+    /// A curved stair's walking line's radius; none for a straight one.
+    fn radius(&self) -> Option<f64> {
+        let b = self.bulge();
+        if self.pts.len() != 2 || b == 0.0 || !b.is_finite() {
+            return None;
+        }
+        let (dx, dy) = (self.pts[1].x - self.pts[0].x, self.pts[1].y - self.pts[0].y);
+        Some((dx * dx + dy * dy).sqrt() * (1.0 + b * b) / (4.0 * b.abs()))
+    }
+
+    /// What is wrong with a centre post (docs/adr/0724 §3): only on a curved stair, its diameter above 0 and its radius
+    /// less than the stair's inner radius.
+    fn post_problem(&self) -> Problem {
+        let d = self.post?;
+        let bad = |words: String| Some(("post".to_owned(), words));
+        let Some(r) = self.radius() else {
+            return bad("Merkez direği yalnız döner merdivende olur.".into());
+        };
+        if !(d.is_finite() && d > 0.0) {
+            return bad(format!("Merkez direğinin çapı {d}; sıfırdan büyük, sonlu olmalı."));
+        }
+        let inner = r - self.width / 2.0;
+        if d / 2.0 >= inner - 1e-9 {
+            return bad(format!(
+                "Merkez direğinin yarıçapı {:.3} m; merdivenin iç yarıçapından ({inner:.3} m) küçük olmalı.",
+                d / 2.0
+            ));
+        }
+        None
     }
 
     /// Its arc's bulge (docs/adr/0709): the first of `bulges`; 0 for a straight stair.

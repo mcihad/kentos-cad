@@ -118,6 +118,8 @@ pub struct Spatial {
     /// The objects on a level other than the active one, whatever the view: a click takes the others first where
     /// objects lie over each other (docs/adr/0715 §2).
     elsewhere: HashSet<u32>,
+    /// The stairs put as the plan of the level above theirs shows them (docs/adr/0724 §4).
+    upper: HashSet<u32>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled in the
@@ -199,6 +201,13 @@ impl Spatial {
     /// What Kat görünümü hides and draws faint now, and its version: a new one whenever that changed.
     pub fn level_looks(&self) -> (u64, Arc<crate::level_view::LevelLooks>) {
         (self.level_version, Arc::clone(&self.level_looks))
+    }
+
+    /// Whether the store draws some objects otherwise than the drawing's own plan does: a sheet's map edited in place
+    /// (docs/adr/0716), or the stairs under the active level drawn from above (docs/adr/0724 §4). A sheet's map then
+    /// wants a store of its own.
+    pub fn draws_otherwise(&self) -> bool {
+        self.sheet_view.is_some() || !self.upper.is_empty()
     }
 
     /// Explicit command input for tools that query the same source through the public catalog.
@@ -331,18 +340,27 @@ impl Spatial {
             None => (self.level_view, self.active_level.clone()),
         };
         let looks = crate::level_view::looks(doc, view, active.as_deref());
+        self.sync_upper(doc, &looks.upper);
+        // What is faint and what is seen from above is snapped to, never picked.
+        let unpicked = |l: &crate::level_view::LevelLooks| {
+            l.faded
+                .iter()
+                .chain(&l.upper)
+                .map(|&id| f64::from(id))
+                .collect::<Vec<_>>()
+        };
         if self.sheet_view.is_some() {
             self.elsewhere.clear();
             let shown = crate::level_view::LevelLooks {
                 hidden: looks.hidden,
                 faded: looks.faded,
+                upper: looks.upper,
                 elsewhere: Vec::new(),
             };
             let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
             hidden.extend(shown.hidden.iter().map(|&id| f64::from(id)));
             self.store.set_phase_hidden(hidden);
-            self.store
-                .set_unpicked(shown.faded.iter().map(|&id| f64::from(id)));
+            self.store.set_unpicked(unpicked(&shown));
             if *self.level_looks != shown {
                 self.level_looks = Arc::new(shown);
                 self.level_version += 1;
@@ -353,19 +371,19 @@ impl Spatial {
         let shown = crate::level_view::LevelLooks {
             hidden: looks.hidden,
             faded: looks.faded,
+            upper: looks.upper,
             elsewhere: Vec::new(),
         };
         if *self.level_looks != shown {
             self.level_looks = Arc::new(shown);
             self.level_version += 1;
         }
-        if self.level_looks.faded.is_empty() {
+        if self.level_looks.faded.is_empty() && self.level_looks.upper.is_empty() {
             if !self.store.no_unpicked() {
                 self.store.set_unpicked(std::iter::empty());
             }
         } else {
-            self.store
-                .set_unpicked(self.level_looks.faded.iter().map(|&id| f64::from(id)));
+            self.store.set_unpicked(unpicked(&self.level_looks));
         }
         let view = doc
             .settings()
@@ -397,6 +415,45 @@ impl Spatial {
             .chain(levels)
             .collect();
         self.store.set_phase_hidden(hidden);
+    }
+
+    /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4) and those that
+    /// left it as their own level's plan does; a stair put again by a sync came back as its own plan's and is put
+    /// once more. Their labels' texts come again with them.
+    fn sync_upper(&mut self, doc: &Document, upper: &[u32]) {
+        let now: HashSet<u32> = upper.iter().copied().collect();
+        let is_upper = |store: &Store, id: u32| {
+            store
+                .get(f64::from(id))
+                .is_some_and(|it| matches!(&it.shape, Shape::Stair { stair, .. } if stair.upper))
+        };
+        let mut again: Vec<u32> = now
+            .iter()
+            .copied()
+            .filter(|&id| !is_upper(&self.store, id))
+            .collect();
+        again.extend(self.upper.iter().copied().filter(|id| !now.contains(id)));
+        self.upper = now;
+        if again.is_empty() {
+            return;
+        }
+        again.sort_unstable();
+        let scale = self.sheet_view.as_ref().map(|v| v.annotation_scale);
+        let entities: Vec<&Entity> = again.iter().filter_map(|&id| doc.get(Slot(id))).collect();
+        let upper = &self.upper;
+        let records: Vec<_> = entities
+            .iter()
+            .filter_map(|e| {
+                let (id, layer, label, mut shape) =
+                    kentos_native_application::viewport_scope::record_at(e, scale)?;
+                if let Shape::Stair { stair, .. } = &mut shape {
+                    stair.upper = upper.contains(&e.base().id);
+                }
+                Some((id, layer, label, shape))
+            })
+            .collect();
+        self.store.put_many(records);
+        self.sync_labels(doc, &entities, false);
     }
 
     /// Brings the store up to date with `doc`: the block definitions and the
