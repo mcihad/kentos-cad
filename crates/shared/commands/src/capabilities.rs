@@ -5328,8 +5328,8 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "file.import.block",
         refusals: &[
-            &["invalid_file_path"],
-            &["file_not_found", "import_unreadable"],
+            &["invalid_file_path", "invalid_block_card", "invalid_input"],
+            &["file_not_found", "import_unreadable", "unsupported_cad_version", "source_unit_unknown"],
             REVISION,
             &["nothing_to_import", "unknown_block", "block_refused"],
         ],

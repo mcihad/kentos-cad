@@ -270,6 +270,7 @@ __all__ = [
     "BlockRecord",
     "BlockReport",
     "BlockReportName",
+    "BlockSize",
     "BlockUnit",
     "BlockUnits",
     "BlockUnitsName",

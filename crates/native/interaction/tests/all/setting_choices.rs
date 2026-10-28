@@ -66,7 +66,7 @@ fn every_offered_choice_applies() {
             else {
                 continue;
             };
-            let label = row.label;
+            let label = row.label.clone();
             if NEEDS_MORE.contains(&(*tool, key, typed.as_str())) {
                 continue;
             }

@@ -586,13 +586,17 @@ pub enum BlockFileMode {
     Blocks,
 }
 
-/// Input of `file.import.block` v1 (docs/adr/0316 §3): a `.kcad` drawing (v2, or v1 JSON) taken in, as one undo
-/// step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the file; a name the drawing has
-/// gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name the drawing has is kept,
-/// or with `replace` redefined: every insert shows the file's). The layers the objects are on come with them by
-/// path. Refusals, in order: `invalid_file_path` (empty, relative), `file_not_found`, `import_unreadable`,
-/// `invalid_revision`, `revision_conflict`, `nothing_to_import` (no object a block may hold; no block of the names),
-/// `unknown_block` (a name the file has not), `block_refused` (the drawing's block rules), `layer_locked`.
+/// Input of `file.import.block` v1 (docs/adr/0316 §3, 0726 §2): a `.kcad` drawing (v2, or v1 JSON), a DXF or a DWG
+/// file taken in, as one undo step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the
+/// file; a name the drawing has gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name
+/// the drawing has is kept, or with `replace` redefined: every insert shows the file's). The layers the objects are
+/// on come with them by path. A CAD file's numbers are in the unit it names, or `sourceUnit`; one that names none
+/// without `sourceUnit` is refused, so no block comes in at a size nobody chose. `category` goes on the cards of the
+/// blocks taken that have none. Refusals, in order: `invalid_file_path` (empty, relative), `invalid_block_card`
+/// (`category`), `invalid_field` (`sourceUnit` for a KentOS drawing, which carries its unit), `file_not_found`,
+/// `import_unreadable`, `unsupported_cad_version`, `source_unit_unknown`, `invalid_revision`, `revision_conflict`,
+/// `nothing_to_import` (no object a block may hold; no block of the names), `unknown_block` (a name the file has
+/// not), `block_refused` (the drawing's block rules), `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -615,6 +619,16 @@ pub struct ImportBlock {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub replace: Option<bool>,
+    /// A DXF's or a DWG's unit (docs/adr/0726 §2): its numbers are read in it, whatever the file names; a file that
+    /// names none needs it. A KentOS drawing carries its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source_unit: Option<crate::document::DrawingUnit>,
+    /// The category written on the cards of the blocks taken that have none (docs/adr/0726 §1): a library's folders,
+    /// `/` between them (`Kitaplık/Mobilya`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub category: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -622,8 +636,30 @@ pub struct ImportBlock {
     pub expected_revision: Option<String>,
 }
 
+/// A block's size as `file.import.block` took it (docs/adr/0726 §2): the extent of what it draws at scale 1, its
+/// numbers metres (a unitless block's: drawing units).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockSize {
+    pub block: BlockId,
+    pub name: String,
+    /// The unit it was drawn in; absent: none named.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<crate::entity::BlockUnits>,
+    /// Along its x axis.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub width: f64,
+    /// Along its y axis.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
+}
+
 /// Output of `file.import.block` v1.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -642,6 +678,14 @@ pub struct BlockFileImported {
     /// The layers and groups the import opened.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub layers: u32,
+    /// The blocks added and redefined with their sizes, in the drawing's order (docs/adr/0726 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockSize>>", optional))]
+    pub sizes: Vec<BlockSize>,
+    /// A CAD file's unit as it was decided: named by the file or given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<crate::formats::UnitDecision>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

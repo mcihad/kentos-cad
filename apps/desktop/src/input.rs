@@ -830,7 +830,10 @@ impl App {
             && let Some(letter) = keys::option_letter(&press)
             && let Some(option) = self.session.prompt().option_for_key(&letter)
         {
-            return self.prompt_option(option.key);
+            // The drawing keeps the keyboard: the next letter is an option too (Blok ekle's B, B, A), a digit starts
+            // the value field; only an option chosen from the command bar hands it to the command line.
+            let _ = self.prompt_option(option.key);
+            return Task::none();
         }
         // 4. Shortcuts.
         if let Some(chord) = keys::chord(&press)

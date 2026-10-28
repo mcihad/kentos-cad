@@ -85,6 +85,7 @@ mod block_scenes;
 mod block_schedule;
 mod blocks;
 mod blocks_files;
+mod blocks_library;
 mod blocks_panel;
 mod bottom;
 mod calc;
@@ -479,6 +480,8 @@ mod stair_scenes;
 #[cfg(test)]
 mod grid_scenes;
 #[cfg(test)]
+mod block_library_scenes;
+#[cfg(test)]
 mod slab_scenes;
 #[cfg(test)]
 mod space_scenes;
@@ -567,6 +570,8 @@ fn main() -> iced::Result {
                 app.recent = recent::RecentFiles::open(&folder);
                 // Kaynaklar's folders, beside them (docs/adr/0199 §7).
                 app.sources.folders = sources::SourceFolders::open(&folder);
+                // Bloklar's libraries, beside them (docs/adr/0726 §1).
+                app.blocks_panel.library = blocks_library::Library::open(&folder);
                 // The Python tab's unsaved script, kept beside them (docs/adr/0136).
                 app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.

@@ -5070,6 +5070,40 @@ fn check(
                     }
                 }
             }
+            // Only the fields named of the drawing's block of each name (docs/adr/0726 §2): `$inserts` the names of the
+            // blocks its inserts place, in order; `$count` how many objects it holds.
+            "blockFields" => {
+                for (name, fields) in want.as_object().unwrap_or(&empty) {
+                    let b = doc
+                        .block_named(name)
+                        .ok_or(format!("{at}: “{name}” bloğu yok"))?;
+                    let got = serde_json::to_value(b).map_err(|e| format!("{at}: {e}"))?;
+                    for (k, v) in fields.as_object().unwrap_or(&empty) {
+                        let have = match k.as_str() {
+                            "$inserts" => json!(
+                                b.entities
+                                    .iter()
+                                    .filter_map(|e| match e {
+                                        kentos_commands::Entity::Insert(i) =>
+                                            doc.block(i.block).map(|d| d.name.clone()),
+                                        _ => None,
+                                    })
+                                    .collect::<Vec<_>>()
+                            ),
+                            "$count" => json!(b.entities.len()),
+                            _ => got.get(k).cloned().unwrap_or(Value::Null),
+                        };
+                        let what = format!("“{name}” bloğunun {k} alanı");
+                        match within {
+                            Some(w) if !close(&have, v, w) => {
+                                return Err(format!("{at}: {what} (±{w}): beklenen {v}, bulunan {have}"));
+                            }
+                            Some(_) => {}
+                            None => expect_same(&have, v, &what, at)?,
+                        }
+                    }
+                }
+            }
             // The layer tree, every node whole; `$layer` the one a command added (docs/adr/0208 §15).
             "layers" => {
                 let got =

@@ -386,11 +386,16 @@ impl App {
         };
         Task::perform(
             async move {
-                let file = rfd::AsyncFileDialog::new()
-                    .set_title(title)
-                    .add_filter("KentOS çizimi (.kcad)", &["kcad"])
-                    .pick_file()
-                    .await?;
+                let dialog = rfd::AsyncFileDialog::new().set_title(title);
+                // A block comes from a DWG or a DXF too (docs/adr/0726 §2).
+                let dialog = match purpose {
+                    Purpose::Block => dialog
+                        .add_filter("Çizimler (.kcad, .dwg, .dxf)", &["kcad", "dwg", "dxf"])
+                        .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                        .add_filter("AutoCAD (.dwg, .dxf)", &["dwg", "dxf"]),
+                    Purpose::Take => dialog.add_filter("KentOS çizimi (.kcad)", &["kcad"]),
+                };
+                let file = dialog.pick_file().await?;
                 Some(file.path().to_path_buf())
             },
             move |path| msg(Event::Picked(purpose, path)),
@@ -706,7 +711,7 @@ impl App {
 
     /// Dosyadan blok ekle (docs/adr/0193 §3): the drawing in `path` as one block through `file.import.block`
     /// (docs/adr/0316 §3), then Blok ekle with it.
-    fn insert_file_block(&mut self, path: &Path) -> Task<Message> {
+    pub(crate) fn insert_file_block(&mut self, path: &Path) -> Task<Message> {
         use kentos_commands::{BlockFileMode, CommandResult, ImportBlock};
         use kentos_native_application::{ExecutionContext, file_import_block};
         let locked = self.tree_locked();
@@ -719,6 +724,8 @@ impl App {
             name: None,
             names: None,
             replace: None,
+            source_unit: None,
+            category: None,
             expected_revision: None,
         };
         // A project whose layer tree is not ours to change takes no new layer.
@@ -733,6 +740,17 @@ impl App {
         let (output, warnings) =
             match file_import_block::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                 CommandResult::Completed { output, warnings } => (output, warnings),
+                // A DWG or a DXF naming no unit: its unit chosen in Bloklar › Kitaplık, where its sizes are said
+                // (docs/adr/0726 §2).
+                CommandResult::Failed { error } if error.code == kentos_commands::codes::SOURCE_UNIT_UNKNOWN => {
+                    self.warn(format!(
+                        "{BLOCK_TITLE}: {} Bloklar › Kitaplık'ta birimini seçip blokları oradan yerleştirin.",
+                        error.message
+                    ));
+                    self.show_blocks_panel();
+                    self.blocks_panel.library_shown = true;
+                    return self.blocks_library_event(crate::blocks_library::Event::Open(path.to_path_buf()));
+                }
                 CommandResult::Failed { error }
                 | CommandResult::Conflict { error }
                 | CommandResult::NeedsInput { error } => {

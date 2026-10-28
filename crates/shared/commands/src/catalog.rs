@@ -5466,9 +5466,11 @@ pub fn catalog() -> CommandCatalog {
             id: crate::FILE_IMPORT_BLOCK.into(),
             version: crate::FILE_IMPORT_BLOCK_VERSION,
             title: "Dosyadan blok al".into(),
-            summary: "path'teki .kcad çizimini (v2 ya da eski v1 JSON) bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. \
+            summary: "path'teki .kcad çizimini (v2 ya da eski v1 JSON), DXF ya da DWG dosyasını bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. \
                       mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur, adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. \
                       mode blocks: dosyanın names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün yerleştirmeleri yenisini gösterir. \
+                      DXF ve DWG'nin sayıları dosyanın bildirdiği birimde ya da sourceUnit'te (mm, cm, m, in, ft) okunur; birim bildirmeyen dosya sourceUnit'siz reddedilir (source_unit_unknown), blok kimsenin seçmediği bir boyda gelmez. KentOS çizimi birimini taşır, sourceUnit almaz. \
+                      category, alınan bloklardan kategorisi olmayanların kartına yazılır (kitaplığın klasörleri, “/” ile). Cevabın sizes'ı eklenen ve yeniden tanımlanan blokların en (x) ve boyunu (y) metre olarak verir; unit dosyanın birim kararıdır. \
                       plan okur, hiçbir şey yazmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Bloğu dosyaya yazmak file.export.block'tur."
                 .into(),
             aliases: vec!["insertfile".into()],
@@ -5492,6 +5494,11 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Ofis kitaplığından blokları yeniden tanımla".into(),
                     input: json!({ "path": "/tmp/ofis-bloklari.kcad", "mode": "blocks", "names": ["Kapı 90", "Pencere"], "replace": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Birim bildirmeyen DWG kitaplığından yatağı milimetre olarak al".into(),
+                    input: json!({ "path": "/tmp/mobilya/yatak-odasi.dwg", "mode": "blocks", "names": ["Yatak 90"], "sourceUnit": "mm", "category": "Kitaplık/Mobilya/yatak-odasi" }),
                     output: None,
                 },
             ],

@@ -30,6 +30,73 @@ pub(crate) fn contains_space_separator(doc: &kentos_domain::Document, id: kentos
     false
 }
 
+/// The box of what definition `block` draws placed at the origin at scale 1 with `values` (docs/adr/0726 §3): its
+/// pieces only, not its base point; none for one that draws nothing. `[min x, min y, max x, max y]`, relative to the
+/// base point.
+pub fn definition_box_in(
+    blocks: &Blocks,
+    font: kentos_geometry_core::text::Font,
+    block: kentos_commands::BlockId,
+    values: Option<&std::collections::BTreeMap<String, kentos_commands::ParamValue>>,
+) -> Option<[f64; 4]> {
+    let insert = kentos_geometry_core::entity::Shape::Insert {
+        params: values.and_then(kentos_formats::blocks::core_params),
+        block: block.to_text(),
+        p: kentos_geometry_core::Vec2::new(0.0, 0.0),
+        scale: 1.0,
+        y_scale: None,
+        rotation: 0.0,
+        mirror: None,
+        attrs: None,
+        places: None,
+        clip: None,
+    };
+    let mut out: Option<[f64; 4]> = None;
+    for piece in blocks.expand(&insert) {
+        if kentos_geometry_core::block::shows_nothing(&piece.shape) {
+            continue;
+        }
+        let b = kentos_geometry_core::entity::entity_bounds_in(&piece.shape, font);
+        if ![b.min_x, b.min_y, b.max_x, b.max_y]
+            .iter()
+            .all(|v| v.is_finite())
+        {
+            continue;
+        }
+        out = Some(match out {
+            None => [b.min_x, b.min_y, b.max_x, b.max_y],
+            Some(a) => [
+                a[0].min(b.min_x),
+                a[1].min(b.min_y),
+                a[2].max(b.max_x),
+                a[3].max(b.max_y),
+            ],
+        });
+    }
+    out
+}
+
+/// A dynamic block's values as the core draws them (docs/adr/0318 §3); none when there are none.
+pub fn core_params(
+    values: &std::collections::BTreeMap<String, kentos_commands::ParamValue>,
+) -> Option<kentos_geometry_core::entity::Params> {
+    kentos_formats::blocks::core_params(values)
+}
+
+/// [`definition_box_in`] with the drawing's definitions and typeface.
+pub fn definition_box(
+    doc: &kentos_domain::Document,
+    block: kentos_commands::BlockId,
+    values: Option<&std::collections::BTreeMap<String, kentos_commands::ParamValue>>,
+) -> Option<[f64; 4]> {
+    definition_box_in(
+        &core_blocks(doc.blocks()),
+        crate::geometry::drawing_font(doc.settings().drawing_font),
+        block,
+        values,
+    )
+}
+
 /// The drawing's definitions for the core.
 pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
     Blocks::new(

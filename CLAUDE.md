@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Blok kitaplığı: DWG/DXF klasörleri, gerçek boy ve birim (28 Ekim 2026; [ADR0726](docs/adr/0726-block-library-real-size.md)).**
+  Bloklar'da Bu çizim | Kitaplık: cihazın kitaplık klasörleri (`blok-kitapliklari.json`), alt klasörler kategori, çizimin
+  blokları resim, gerçek en × boy ve birimle; birim bildirmeyen DWG/DXF'te önce birim seçilir. `file.import.block` DWG
+  ve DXF okur (`cad_open::read_in`), `sourceUnit` (bildirmeyen dosya onsuz `source_unit_unknown`), `category`, cevapta
+  `sizes` ve `unit`. Blok ekle hayaletin yanında gerçek en × boyu, birimi ve dönüşü söyler, taban noktasını işaretler;
+  görünür ayarlarda dinamik bloğun satırları ve Varyant (V); Öznitelikler'de En × boy ve Bloğun birimi.
+
 - **Aks ve kolon: eğrisel ağ, kesik aks, hiza, L kolon (28 Ekim 2026; [ADR0725](docs/adr/0725-curved-grids-column-forms.md)).**
   `cad.grids.create`'in `radial`'ı radyal aksları (açılar iki yönde, toplamı tam turdan az) ve yayları
   (`[tan(süpürme/4), 0]`) yazar, yay kalan turun dörtte birinden fazla uzamaz; kesişim kolonları radyal yönde. Kesik aks

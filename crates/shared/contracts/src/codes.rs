@@ -1258,6 +1258,9 @@ codes! {
     CAD_FILE_TOO_LARGE = "cad_file_too_large", Failed, false, "CAD dosyası ya da aktarma verisi 256 MiB sınırını aşıyor; dosyayı bölün.";
     /// An import with no object to take: the file holds none, or every layer was left out.
     NOTHING_TO_IMPORT = "nothing_to_import", Failed, false, "Dosyada ya da seçilen katmanlarında alınacak nesne yok.";
+    /// A CAD file whose blocks are taken names no unit and none was given (`file.import.block`, docs/adr/0726 §2):
+    /// nothing comes in at a size nobody chose.
+    SOURCE_UNIT_UNKNOWN = "source_unit_unknown", Failed, false, "Dosya birimini bildirmiyor; blokların boyu bilinmeden alınmaz. Dosyanın birimini (sourceUnit: mm, cm, m, in, ft) verin.";
     /// The file declares no unit (or a code no one defines): its numbers were taken in the project's unit (docs/adr/0257 §1).
     UNIT_ASSUMED = "unit_assumed", Warning, false, "Dosya birim bildirmiyor; değerler ölçeklenmeden projenin biriminde (sistemli projede metre) sayıldı.";
     /// A project with a coordinate system read a file declaring another unit as metres.

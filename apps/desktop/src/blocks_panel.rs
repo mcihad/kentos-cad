@@ -59,6 +59,9 @@ pub struct PanelState {
     cards: bool,
     /// The category the list shows: a block of it or of one below it (none: every block).
     category: Option<String>,
+    /// The device's block libraries rather than the drawing's blocks (docs/adr/0726 §1).
+    pub(crate) library_shown: bool,
+    pub(crate) library: crate::blocks_library::Library,
 }
 
 /// What a point shown on the drawing is for.
@@ -113,6 +116,9 @@ pub enum Event {
     Cards(bool),
     /// The category the list shows (none: every one).
     Category(Option<String>),
+    /// Bu çizim or Kitaplık (docs/adr/0726 §1).
+    Source(bool),
+    Library(crate::blocks_library::Event),
 }
 
 fn msg(event: Event) -> Message {
@@ -249,6 +255,8 @@ impl App {
             Event::Schedule(id) => self.open_block_schedule(Some(id)),
             Event::Cards(on) => self.blocks_panel.cards = on,
             Event::Category(c) => self.blocks_panel.category = c,
+            Event::Source(library) => self.blocks_panel.library_shown = library,
+            Event::Library(e) => return self.blocks_library_event(e),
         }
         Task::none()
     }
@@ -485,6 +493,34 @@ impl App {
 
     /// The panel's body: the search box and the list.
     pub(crate) fn blocks_panel_view(&self) -> Element<'_, Message> {
+        // Bu çizim | Kitaplık (docs/adr/0726 §1), as AutoCAD's Blocks palette has Current Drawing and Libraries.
+        let shown = self.blocks_panel.library_shown;
+        let side = |library: bool, words: &'static str| {
+            button(
+                container(label::caption(words))
+                    .center_x(Fill),
+            )
+            .on_press(msg(Event::Source(library)))
+            .padding([3, 8])
+            .width(Fill)
+            .style(style::button::toggle(shown == library))
+        };
+        let source = container(row![side(false, "Bu çizim"), side(true, "Kitaplık")].spacing(4))
+            .padding(iced::Padding {
+                top: 6.0,
+                right: 8.0,
+                bottom: 0.0,
+                left: 8.0,
+            })
+            .width(Fill);
+        if shown {
+            return column![source, self.blocks_library_view()].into();
+        }
+        column![source, self.blocks_drawing_view()].into()
+    }
+
+    /// The drawing's blocks: the search with its buttons, the view bar and the rows or cards.
+    fn blocks_drawing_view(&self) -> Element<'_, Message> {
         let search = SearchBox::new(self.blocks_panel.query.clone(), "Blok ara", |t| {
             msg(Event::Search(t))
         })
@@ -1041,7 +1077,7 @@ pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
 }
 
 /// The picture's tile: the header's ground, its edge the accent on the block Blok ekle places next.
-fn thumb_tile(theme: &Theme, chosen: bool) -> container::Style {
+pub(crate) fn thumb_tile(theme: &Theme, chosen: bool) -> container::Style {
     let t = Tokens::of(theme);
     container::Style {
         background: Some(t.header.into()),
@@ -1057,8 +1093,8 @@ fn thumb_tile(theme: &Theme, chosen: bool) -> container::Style {
 /// A block's outline paths (`flags, n, x0, y0, …`; flags 0 open, 1 closed,
 /// 2 a mark) fitted into the canvas, north up, 3 pixels in from its edges;
 /// marks are small squares (the web's `drawThumb`).
-struct Thumb {
-    paths: Vec<f64>,
+pub(crate) struct Thumb {
+    pub(crate) paths: Vec<f64>,
 }
 
 impl<M> canvas::Program<M> for Thumb {

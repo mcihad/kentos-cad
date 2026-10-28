@@ -8,7 +8,8 @@ use kentos_commands::{WallStyleDef, fixed_width};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Setting {
     pub key: &'static str,
-    pub label: &'static str,
+    /// Its name: the tool's own words, or a block's parameter's (docs/adr/0726 §4).
+    pub label: std::borrow::Cow<'static, str>,
     pub value: String,
     pub choices: Vec<OptionChoice>,
     pub editable: bool,
@@ -20,10 +21,14 @@ pub struct Setting {
     pub toggle: bool,
 }
 impl Setting {
-    pub fn text(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
+    pub fn text(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        value: impl Into<String>,
+    ) -> Self {
         Self {
             key,
-            label,
+            label: label.into(),
             value: value.into(),
             choices: Vec::new(),
             editable: true,
@@ -32,7 +37,11 @@ impl Setting {
             toggle: false,
         }
     }
-    pub fn choice(key: &'static str, label: &'static str, choices: Vec<OptionChoice>) -> Self {
+    pub fn choice(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        choices: Vec<OptionChoice>,
+    ) -> Self {
         let value = choices
             .iter()
             .find(|c| c.checked)
@@ -40,7 +49,7 @@ impl Setting {
             .unwrap_or_default();
         Self {
             key,
-            label,
+            label: label.into(),
             value,
             choices,
             editable: true,
@@ -53,7 +62,7 @@ impl Setting {
         self.editable = false;
         self
     }
-    pub fn toggle(key: &'static str, label: &'static str, on: bool) -> Self {
+    pub fn toggle(key: &'static str, label: impl Into<std::borrow::Cow<'static, str>>, on: bool) -> Self {
         Self {
             toggle: true,
             ..Self::choice(
@@ -66,14 +75,22 @@ impl Setting {
             )
         }
     }
-    pub fn notice(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
+    pub fn notice(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        value: impl Into<String>,
+    ) -> Self {
         Self {
             note: true,
             warn: true,
             ..Self::text(key, label, value).read_only()
         }
     }
-    pub fn hint(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
+    pub fn hint(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        value: impl Into<String>,
+    ) -> Self {
         Self {
             note: true,
             ..Self::text(key, label, value).read_only()

@@ -415,12 +415,26 @@ impl Store {
         &self,
         block: &str,
         p: Vec2,
-        (scale, y): (f64, f64),
+        factors: (f64, f64),
         rotation: f64,
         mirror: bool,
     ) -> Vec<f64> {
+        self.insert_outlines_with(block, p, factors, rotation, mirror, None)
+    }
+
+    /// [`Store::insert_outlines_xy`] of a dynamic block's variant (docs/adr/0726 §4): Blok ekle's ghost of what it
+    /// places with its values.
+    pub fn insert_outlines_with(
+        &self,
+        block: &str,
+        p: Vec2,
+        (scale, y): (f64, f64),
+        rotation: f64,
+        mirror: bool,
+        params: Option<crate::entity::Params>,
+    ) -> Vec<f64> {
         let insert = Shape::Insert {
-            params: None,
+            params,
             block: block.to_owned(),
             p,
             scale,

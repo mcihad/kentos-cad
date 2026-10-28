@@ -876,7 +876,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ## 7. P1/P2 — eksik mimari eleman ve donatı araçları
 
-### ARCH-LIB-01 — Mobilya ve vitrifiye galerisi [~]
+### ARCH-LIB-01 — Mobilya ve vitrifiye galerisi [x]
 
 - [x] İçerik dilimi [ADR0702](../docs/adr/0702-furniture-and-fixture-library.md):
   KentOS kitaplığına gerçek boylu 21 blok (yatak, komodin, koltuk, kanepe, masalar,
@@ -885,7 +885,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   boyut parametreleri; Blok ekle'de Duvara hizala (H, yalnız duvarlı çizimde):
   taban yüzde, ön odaya dönük, dönüş “duvara göre”. Resimler
   `.run/shots/arac-mobilya-*`. DWG blok kategorisi, önizlemede en/boy etiketi
-  ve m/mm/DXF kabul matrisi açık.
+  ve m/mm/DXF kabul matrisi ADR0726'da.
+- [x] Kitaplık, gerçek boy, birim, varyant ve kabul [ADR0726](../docs/adr/0726-block-library-real-size.md):
+  Bloklar'da Bu çizim | Kitaplık (DWG/DXF/KCAD klasörleri, alt klasörler
+  kategori, blokların resmi, gerçek en × boyu ve birimi; birim bildirmeyen
+  dosyada önce birim); `file.import.block` DWG/DXF, `sourceUnit`
+  (`source_unit_unknown`), `category`, cevapta `sizes` ve `unit`; Blok ekle'de
+  hayaletin yanında gerçek en × boy, birim, dönüş ve ayna, taban işareti,
+  görünür ayarlarda dinamik bloğun satırları ve Varyant (V); Öznitelikler'de
+  En × boy ve Bloğun birimi. Kabul: m ve mm plan, DWG ikizi, iç içe sandalye,
+  aynalı ve dönük yatak 2,00 × 0,90 m, kaydet/aç, DXF bağımsız okuyucuyla.
+  30 + 25 ortak durum, etkileşim/masaüstü/başsız testleri, gerçek GUI
+  (`.run/shots/arac-kitaplik-*`, `arac-blok-ekle-*`, `arac-blok-oznitelik-boyut-*`).
 
 - Yatak, masa, sandalye, koltuk, dolap; klozet, lavabo, duş/küvet; evye, ocak,
   buzdolabı, çamaşır makinesi için gerçek boylu 2B kitaplık.
@@ -1260,6 +1271,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-28 | ARCH-LIB-01 / ADR0726 | Bloklar › Kitaplık (DWG/DXF/KCAD klasörleri, kategoriler, gerçek boy ve birim, birim bildirmeyen dosyada birim sorusu), `file.import.block`'un DWG/DXF okuması, `sourceUnit`, `category`, `sizes`, `unit`; Blok ekle'nin gerçek boy etiketi, taban işareti, görünür ayarları ve Varyant (V); Öznitelikler'de En × boy. 30 + 25 ortak durum, DWG ikizleri, başsız kabul matrisi (m/mm, iç içe, aynalı, kaydet/aç, DXF `--written`), etkileşim/masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-02 / ADR0723 | Ara sahanlık (`maxRun`), kata bağlı başlangıç (`baseOffset`, KCAD 124, izleyici), Metraj'da rampa satırları ve Rampalar sekmesi, Denetim'de erişilebilirlik profili (`erisilebilirlik-rampa/1`) ve Düzelt, planda eğim yazısı. 31+27+22+24 ortak durum, gerçek PDF, uygulama/alan/etkileşim/masaüstü (1356)/KCAD/Python (374)/MCP takımları, clippy, gerçek GUI. | [x] Bütün madde |

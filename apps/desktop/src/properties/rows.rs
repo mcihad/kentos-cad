@@ -2171,6 +2171,25 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .editor(number(Field::InsertTurn(slot))),
                 Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
+            // What it places, real size, and its block's unit (docs/adr/0726 §3): the insert's factors hold a
+            // unitless block's unit already.
+            if let Some(def) = doc.model.block(i.block) {
+                let values = (!i.parameters.is_empty()).then_some(&i.parameters);
+                if let Some([x0, y0, x1, y1]) =
+                    kentos_native_application::blocks::definition_box(&doc.model, i.block, values)
+                {
+                    let w = (x1 - x0) * i.scale.abs();
+                    let d = (y1 - y0) * i.y_scale.unwrap_or(i.scale).abs();
+                    geo.push(Row::text(
+                        "En × boy",
+                        format!("{} × {} {}", f.length_bare(w), f.length_bare(d), f.length_unit_label()),
+                    ));
+                }
+                geo.push(Row::text(
+                    "Bloğun birimi",
+                    kentos_interaction::block_insert::unit_words(def.units),
+                ));
+            }
         }
         // A picture's source, place, size, turn, see-through share, clip and mirror (docs/adr/0192 §4).
         Entity::Image(im) => {

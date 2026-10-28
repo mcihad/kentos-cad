@@ -157,12 +157,94 @@ NOTHING = {"ids": IDS, "canUndo": False, "canRedo": False, "dirty": False, "revi
 LEFT = [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]
 
 
-def done(block=None, added=(), changed=(), skipped=(), layers=0):
+def union(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return [min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])]
+
+
+def entity_box(by_id, e):
+    """An object's box (docs/adr/0726 §2): a line's ends, an arc's ends and the quadrant points it passes, a polygon's
+    corners, an insert's block placed at its point (these cases turn none); a text's is left out, and `sized` checks
+    that it lies inside."""
+    k = e["kind"]
+    if k == "line":
+        a, b = e["a"], e["b"]
+        return [min(a["x"], b["x"]), min(a["y"], b["y"]), max(a["x"], b["x"]), max(a["y"], b["y"])]
+    if k == "arc":
+        c, r, a0, a1 = e["c"], e["r"], e["a0"], e["a1"]
+        pts = [(c["x"] + r * math.cos(a0), c["y"] + r * math.sin(a0)), (c["x"] + r * math.cos(a1), c["y"] + r * math.sin(a1))]
+        span = (a1 - a0) % (2 * math.pi) or 2 * math.pi
+        for q in range(4):
+            if (q * math.pi / 2 - a0) % (2 * math.pi) <= span + 1e-12:
+                pts.append((c["x"] + r * [1, 0, -1, 0][q], c["y"] + r * [0, 1, 0, -1][q]))
+        return [min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts)]
+    if k == "polygon":
+        xs, ys = [q["x"] for q in e["pts"]], [q["y"] for q in e["pts"]]
+        return [min(xs), min(ys), max(xs), max(ys)]
+    if k == "insert":
+        assert e.get("rotation", 0) == 0 and not e.get("mirror"), "these cases turn no insert"
+        inner = block_box(by_id, by_id[e["block"]])
+        if inner is None:
+            return None
+        s, px, py = e["scale"], e["p"]["x"], e["p"]["y"]
+        return [px + s * inner[0], py + s * inner[1], px + s * inner[2], py + s * inner[3]]
+    if k == "text":
+        return None
+    raise ValueError(k)
+
+
+def block_box(by_id, b):
+    """A block's box at the origin at scale 1: its pieces about its base point."""
+    box = None
+    for e in b["entities"]:
+        box = union(box, entity_box(by_id, e))
+    if box is None:
+        return None
+    bx, by = b["base"]["x"], b["base"]["y"]
+    for e in b["entities"]:
+        if e["kind"] == "text":
+            assert box[0] < e["p"]["x"] < box[2] and box[1] < e["p"]["y"] < box[3] - e["height"], "a text inside"
+    return [box[0] - bx, box[1] - by, box[2] - bx, box[3] - by]
+
+
+def sized(after, base):
+    """The answer's sizes (docs/adr/0726 §2): the blocks `after` has that `base` has not (by id and name) or has
+    otherwise, in the drawing's order."""
+    by_id = {b["id"]: b for b in after["blocks"]}
+    before = {(b["id"], b["name"]): b for b in base["blocks"]}
+    out = []
+    for b in after["blocks"]:
+        if before.get((b["id"], b["name"])) == b:
+            continue
+        box = block_box(by_id, b)
+        if box is None:
+            continue
+        size = {"block": b["id"] if not b["id"].startswith("fresh:") else "$blockOf:" + b["name"], "name": b["name"]}
+        if "units" in b:
+            size["units"] = b["units"]
+        size["width"] = box[2] - box[0]
+        size["depth"] = box[3] - box[1]
+        out.append(size)
+    return out
+
+
+def done(block=None, added=(), changed=(), skipped=(), layers=0, after=None, planned=False, base=None):
     out = {"added": list(added), "changed": list(changed), "layers": layers, "revision": "$current"}
     if block is not None:
         out["block"] = block
     if skipped:
         out["skipped"] = list(skipped)
+    if after is not None:
+        # The new ids the case cannot know: the drawing's `$new`, by name, or anything in a plan.
+        sizes = sized(after, base or OURS)
+        for size in sizes:
+            if size["block"] == "$new":
+                size["block"] = "$any" if planned else "$blockOf:" + size["name"]
+        if sizes:
+            out["sizes"] = sizes
     # A drawing as one block leaves its table out (exchange_cases.file_block's `left`).
     return {"status": "completed", "output": out, "warnings": LEFT if block is not None else []}
 
@@ -199,7 +281,7 @@ new = after["blocks"][-1]
 nested = [b["id"] for b in after["blocks"][len(OURS["blocks"]):-1]]
 add("çizim tek blok olur: adı dosyanın adı, iç blokları ve katmanları yollarıyla; tek adımda geri alınır", [
     {"op": "execute", "input": {"path": FILE},
-     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after)),
+     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after), after=after),
      "expect": {"blocks": without_ids(after["blocks"]), "canUndo": True, "revision": "changed"}},
     {"op": "undo", "returns": "Dosyadan blok: ofis-bloklari.kcad", "expect": {"blocks": without_ids(OURS["blocks"])}},
 ])
@@ -207,18 +289,19 @@ assert new["name"] == "ofis-bloklari" and any(b["name"] == "Kapı 90 (2)" for b 
 after_named, _ = x.file_block(OURS, THEIRS, "Ofis")
 add("çizim tek blok olur: verilen adla", [
     {"op": "execute", "input": {"path": FILE, "name": "Ofis"},
-     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named)),
+     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named), after=after_named),
      "expect": {"blocks": without_ids(after_named["blocks"])}},
 ])
 after_taken, _ = x.file_block(OURS, THEIRS, "Kapı 90")
 add("çizimde olan ad “(2)” alır", [
     {"op": "execute", "input": {"path": FILE, "name": "Kapı 90"},
-     "result": done("$blockOf:Kapı 90 (3)", nested + ["$blockOf:Kapı 90 (3)"], layers=made_layers(after_taken)),
+     "result": done("$blockOf:Kapı 90 (3)", nested + ["$blockOf:Kapı 90 (3)"], layers=made_layers(after_taken),
+                    after=after_taken),
      "expect": {"blocks": without_ids(after_taken["blocks"])}},
 ], note="Dosyanın kendi Kapı 90'ı da gelir ve “Kapı 90 (2)” olur; yeni blok “(3)”.")
 add("plan okur, hiçbir şey yazmaz", [
     {"op": "plan", "input": {"path": FILE},
-     "result": done("$any", nested + ["$any"], layers=made_layers(after)), "expect": NOTHING},
+     "result": done("$any", nested + ["$any"], layers=made_layers(after), after=after, planned=True), "expect": NOTHING},
 ])
 
 # ── blocks: the file's blocks by name ────────────────────────────────────
@@ -231,58 +314,60 @@ def taken(names, same):
 after_pencere = taken(["Pencere"], "skip")
 add("bloklar adlarıyla: yeni ad eklenir, katmanı yoluyla gelir", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["Pencere"]},
-     "result": done(added=[PENCERE], layers=made_layers(after_pencere)),
+     "result": done(added=[PENCERE], layers=made_layers(after_pencere), after=after_pencere),
      "expect": {"blocks": without_ids(after_pencere["blocks"])}},
 ])
 after_skip = taken(["Kapı 90", "Pencere"], "skip")
 add("çizimde olan ad korunur ve söylenir", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["Kapı 90", "Pencere"]},
-     "result": done(added=[PENCERE], skipped=["Kapı 90"], layers=made_layers(after_skip)),
+     "result": done(added=[PENCERE], skipped=["Kapı 90"], layers=made_layers(after_skip), after=after_skip),
      "expect": {"blocks": without_ids(after_skip["blocks"])}},
 ])
 after_replace = taken(["Kapı 90"], "replace")
 add("replace: çizimdeki aynı adlı blok dosyanınkiyle yeniden tanımlanır, kimliği kalır; ad büyük harfle de bulunur", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["KAPI 90"], "replace": True},
-     "result": done(changed=[OUR_KAPI], layers=made_layers(after_replace)),
+     "result": done(changed=[OUR_KAPI], layers=made_layers(after_replace), after=after_replace),
      "expect": {"blocks": without_ids(after_replace["blocks"]), "blockIds": {"Kapı 90": OUR_KAPI}}},
 ])
 after_all = taken([b["name"] for b in THEIRS["blocks"]], "skip")
 add("adlar verilmezse bütün bloklar, yerleştirdikleriyle", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks"},
      "result": done(added=[b["id"] for b in after_all["blocks"] if b["id"] not in (OUR_KAPI,)],
-                    skipped=["Kapı 90"], layers=made_layers(after_all)),
+                    skipped=["Kapı 90"], layers=made_layers(after_all), after=after_all),
      "expect": {"blocks": without_ids(after_all["blocks"])}},
 ])
 after_all_r = taken([b["name"] for b in THEIRS["blocks"]], "replace")
 add("bütün bloklar, replace ile", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "replace": True},
      "result": done(added=[b["id"] for b in after_all_r["blocks"] if b["id"] != OUR_KAPI], changed=[OUR_KAPI],
-                    layers=made_layers(after_all_r)),
+                    layers=made_layers(after_all_r), after=after_all_r),
      "expect": {"blocks": without_ids(after_all_r["blocks"])}},
 ])
 
 after_lower = taken(["Pencere"], "skip")
 add("ad büyük küçük harfe bakmadan bulunur", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["PENCERE"]},
-     "result": done(added=diff(after_lower)[0], layers=made_layers(after_lower)),
+     "result": done(added=diff(after_lower)[0], layers=made_layers(after_lower), after=after_lower),
      "expect": {"blocks": without_ids(after_lower["blocks"])}},
 ])
 after_group = taken(["Kapı grubu"], "skip")
 add("iç blok getiren blok: çizimdeki aynı adlı iç blok korunur", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["Kapı grubu"]},
-     "result": done(added=diff(after_group)[0], changed=diff(after_group)[1], layers=made_layers(after_group)),
+     "result": done(added=diff(after_group)[0], changed=diff(after_group)[1], layers=made_layers(after_group),
+                    after=after_group),
      "expect": {"blocks": without_ids(after_group["blocks"])}},
 ])
 after_group_r = taken(["Kapı grubu"], "replace")
 add("iç blok getiren blok, replace ile: iç blok da dosyanınki olur", [
     {"op": "execute", "input": {"path": FILE, "mode": "blocks", "names": ["Kapı grubu"], "replace": True},
      "result": done(added=diff(after_group_r)[0], changed=diff(after_group_r)[1],
-                    layers=made_layers(after_group_r)),
+                    layers=made_layers(after_group_r), after=after_group_r),
      "expect": {"blocks": without_ids(after_group_r["blocks"])}},
 ])
 add("bloklar: plan yazmaz", [
     {"op": "plan", "input": {"path": FILE, "mode": "blocks", "names": ["Pencere"]},
-     "result": done(added=diff(after_pencere)[0], layers=made_layers(after_pencere)), "expect": NOTHING},
+     "result": done(added=diff(after_pencere)[0], layers=made_layers(after_pencere), after=after_pencere),
+     "expect": NOTHING},
 ])
 
 after_twice, _ = x.file_block(after, fresh(after, THEIRS), "ofis-bloklari")
@@ -290,14 +375,17 @@ after_twice = named(after_twice)
 nested_twice = [b["id"] for b in after_twice["blocks"][len(after["blocks"]):-1]]
 add("aynı dosya iki kez: ikinci blok “(2)” alır, iç blokları da yeniden gelir", [
     {"op": "execute", "input": {"path": FILE},
-     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after))},
+     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after),
+                    after=after)},
     {"op": "execute", "input": {"path": FILE},
-     "result": done("$blockOf:ofis-bloklari (2)", nested_twice + ["$blockOf:ofis-bloklari (2)"], layers=0),
+     "result": done("$blockOf:ofis-bloklari (2)", nested_twice + ["$blockOf:ofis-bloklari (2)"], layers=0,
+                    after=after_twice, base=after),
      "expect": {"blocks": without_ids(after_twice["blocks"])}},
 ])
 add("boş ad dosyanın adına döner", [
     {"op": "execute", "input": {"path": FILE, "name": "  "},
-     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after)),
+     "result": done("$blockOf:ofis-bloklari", nested + ["$blockOf:ofis-bloklari"], layers=made_layers(after),
+                    after=after),
      "expect": {"blocks": without_ids(after["blocks"])}},
 ])
 add("doğrulama dosyayı okur, hiçbir şey yazmaz", [
@@ -306,14 +394,16 @@ add("doğrulama dosyayı okur, hiçbir şey yazmaz", [
 ])
 add("geri alınan alma yinelenir", [
     {"op": "execute", "input": {"path": FILE, "name": "Ofis"},
-     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named))},
+     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named),
+                    after=after_named)},
     {"op": "undo", "returns": "Dosyadan blok: ofis-bloklari.kcad", "expect": {"blocks": without_ids(OURS["blocks"])}},
     {"op": "redo", "returns": "Dosyadan blok: ofis-bloklari.kcad",
      "expect": {"blocks": without_ids(after_named["blocks"]), "canRedo": False}},
 ])
 add("doğru sürümle yazılır", [
     {"op": "execute", "input": {"path": FILE, "name": "Ofis", "expectedRevision": "$current"},
-     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named))},
+     "result": done("$blockOf:Ofis", nested + ["$blockOf:Ofis"], layers=made_layers(after_named),
+                    after=after_named)},
 ])
 
 # ── Refusals ─────────────────────────────────────────────────────────────

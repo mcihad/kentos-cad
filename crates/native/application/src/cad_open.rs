@@ -32,6 +32,27 @@ pub struct Opened {
     pub unit: Option<kentos_commands::UnitDecision>,
 }
 
+/// Why a CAD file did not open: a code of the catalog's table and the words.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Refused {
+    pub code: &'static str,
+    pub message: String,
+}
+
+fn refused(code: &'static str, message: impl Into<String>) -> Refused {
+    Refused {
+        code,
+        message: message.into(),
+    }
+}
+
+/// What the drawing's own building refuses: the file's content does not fit.
+impl From<String> for Refused {
+    fn from(message: String) -> Self {
+        refused("import_unreadable", message)
+    }
+}
+
 /// Byte reading and cancellation belong to the host. This stage also runs off the UI thread.
 pub fn read(
     path: &Path,
@@ -39,41 +60,62 @@ pub fn read(
     format: Format,
     watch: &mut dyn Watch,
 ) -> Result<Opened, String> {
+    read_in(path, bytes, format, None, watch).map_err(|r| r.message)
+}
+
+/// [`read`] with the unit the file's numbers are in (`file_unit`, whatever the file names; docs/adr/0726 §2) and
+/// the refusal's code: `cad_file_too_large`, `cancelled`, `unsupported_cad_version` (a DWG's signature),
+/// `import_unreadable`.
+pub fn read_in(
+    path: &Path,
+    bytes: &[u8],
+    format: Format,
+    file_unit: Option<kentos_commands::FileUnit>,
+    watch: &mut dyn Watch,
+) -> Result<Opened, Refused> {
     if bytes.len() > kentos_formats::dxf::preflight::MAX_BYTES {
-        return Err("CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.".into());
+        return Err(refused(
+            "cad_file_too_large",
+            "CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.",
+        ));
     }
     if !watch.step(0, bytes.len() as u64) {
-        return Err(kentos_formats::watch::STOPPED.into());
+        return Err(refused("cancelled", kentos_formats::watch::STOPPED));
     }
     // A metric CAD template is the explicit fallback only when the source declares no known unit.
     // A declared source unit wins. No current project's units/scale/preferences participate.
     let options = DxfReadOptions {
         unit: Some(DrawingUnit::Mm),
+        file_unit,
         scale: Some(1.0),
         closed_polylines: kentos_commands::ClosedPolylines::Line,
         ..Default::default()
     };
     let read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
-        Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch),
-        Format::Dwg => {
-            kentos_dwg::read_watched(bytes, options, watch).map_err(|e| e.to_string())
-        }
-        Format::Ncz => kentos_ncz::read(bytes, &kentos_commands::NczReadOptions::default(), watch),
+        Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch)
+            .map_err(|e| refused("import_unreadable", e)),
+        Format::Dwg => kentos_dwg::read_watched(bytes, options, watch)
+            .map_err(|e| refused(e.code, e.message)),
+        Format::Ncz => kentos_ncz::read(bytes, &kentos_commands::NczReadOptions::default(), watch)
+            .map_err(|e| refused("import_unreadable", e)),
     };
     let mut result = read_at(&options, watch)?;
     if let Some(e) = kentos_formats::dxf::polyline_policy::refusal(
         result.report.notes.iter().chain(&result.report.skipped),
     ) {
-        return Err(format!(
-            "{} Kayıp seçeneklerini incelemek için İçe aktar kullanın.",
-            e.message
+        return Err(refused(
+            "import_unreadable",
+            format!(
+                "{} Kayıp seçeneklerini incelemek için İçe aktar kullanın.",
+                e.message
+            ),
         ));
     }
     if let Some((place, kind)) = import_apply::unusable(&result.entities) {
-        return Err(import_apply::unusable_text(place, kind));
+        return Err(refused("import_unreadable", import_apply::unusable_text(place, kind)));
     }
     if let Some(e) = import_apply::unusable_block(&result.blocks) {
-        return Err(e);
+        return Err(refused("import_unreadable", e));
     }
     let unit = match result.unit.as_ref().map(|u| u.used) {
         Some(1) => DrawingUnit::In,

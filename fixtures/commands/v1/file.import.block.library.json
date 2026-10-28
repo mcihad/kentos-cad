@@ -1,0 +1,2720 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.import.block",
+  "commandVersion": 1,
+  "title": "Dosyadan blok al: DXF ve DWG kitaplığı",
+  "note": "The shared cases of `file.import.block` from a DXF or DWG block library (docs/adr/0726 §2).\n\n    python3 scripts/fixtures/block_library_cases.py           # writes the files\n    python3 scripts/fixtures/block_library_cases.py --check   # writes nothing; compares\n\nWrites the library fixtures/blocks/v1/kitaplik (four DXF files, written here by hand from the DXF reference) and\nfixtures/commands/v1/file.import.block.library.json, with Python's standard library, no KentOS code. The DWG twins in\nfixtures/blocks/v1/kitaplik-dwg are the codec's (cargo run -p kentos-dwg --example corpus): their bytes are receipts,\ntheir cases the DXF's with the path changed (scripts/fixtures/dwg_import_command_cases.py does the same).\n\nThe rules, from ADR 0726 §2 and the ones it builds on (0257 a DXF's unit, 0315 §4 a block's unit, 0193 the\nexchange's `take` and `file_block`, 0316 §3 the command):\n\n- a file's numbers are in the unit it names ($INSUNITS) or `sourceUnit`, whatever it names; a file naming none without\n  `sourceUnit` is refused (`source_unit_unknown`), so no block comes in at a size nobody chose;\n- a block is in its record's unit (BLOCK_RECORD 70), else the file's; numbers turn into metres with the unit's exact\n  ratio, one multiplication then one division (dxf_units_cases.metres); an insert's factor, in the model or in a\n  definition, is multiplied by its owner's unit over its block's (ADR 0589);\n- `blocks`: the blocks named and those they place, in the file's order; a name the drawing has is kept (`skipped`),\n  or with `replace` redefined (its id stays, `changed`); `drawing`: the file's objects one block named after the file,\n  its unit the file's, its base the lower left of the objects' own boxes (an insert's: its point), the blocks they\n  place before it, the layers they are on with them by path;\n- `category` goes on the cards of those coming in that have none (version 1);\n- a block's size is the box of what it draws placed at the origin at scale 1, its pieces only (not its base point);\n- the reader's left-out objects (a 3DSOLID) are said (`objects_left_out`).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kitaplık",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "milimetre DXF'in blokları metre çizime: gerçek boyları, kilim kendi santimetresinde; tek adımda geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı DXF milimetre çizime: boylar metrede aynı, çizimin birimi değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kitaplık",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "yalnız adı verilen blok gelir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Yatak 90"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "kitaplığın kategorisi alınan blokların kartına yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "category": "Kitaplık/yatak-odasi/yatak-odasi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi/yatak-odasi",
+                  "version": 1
+                },
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi/yatak-odasi",
+                  "version": 1
+                },
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi/yatak-odasi",
+                  "version": 1
+                },
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimin tamamı tek blok: dosyanın birimiyle, taban noktası nesnelerin sol altı, iç bloklar önce",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "drawing"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim",
+                "$blockOf:yatak-odasi"
+              ],
+              "changed": [],
+              "layers": 1,
+              "revision": "$current",
+              "block": "$blockOf:yatak-odasi",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                },
+                {
+                  "block": "$blockOf:yatak-odasi",
+                  "name": "yatak-odasi",
+                  "units": "mm",
+                  "width": 2.0,
+                  "depth": 3.6
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "$inserts": []
+              },
+              "yatak-odasi": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": -1.0,
+                  "y": 0.0
+                },
+                "$count": 3,
+                "$inserts": [
+                  "Yatak 90",
+                  "Komodin",
+                  "Kilim"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimin tamamı adıyla ve kategorisiyle; MOBILYA katmanı çizimde varsa yeni katman açılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "drawing",
+            "category": "Kitaplık/yatak-odasi",
+            "name": "Yatak odası takımı"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim",
+                "$blockOf:Yatak odası takımı"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "block": "$blockOf:Yatak odası takımı",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                },
+                {
+                  "block": "$blockOf:Yatak odası takımı",
+                  "name": "Yatak odası takımı",
+                  "units": "mm",
+                  "width": 2.0,
+                  "depth": 3.6
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi",
+                  "version": 1
+                },
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi",
+                  "version": 1
+                },
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi",
+                  "version": 1
+                },
+                "$inserts": []
+              },
+              "Yatak odası takımı": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi",
+                  "version": 1
+                },
+                "base": {
+                  "x": -1.0,
+                  "y": 0.0
+                },
+                "$count": 3,
+                "$inserts": [
+                  "Yatak 90",
+                  "Komodin",
+                  "Kilim"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kitaplık",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mobilya",
+            "name": "MOBILYA",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "santimetre DXF'te masa dört sandalyesiyle: yerleştirdiği blok da gelir, ikisi ters dönük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yemek/yemek-takimi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Yemek masası"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Sandalye",
+                "$blockOf:Yemek masası"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Sandalye",
+                  "name": "Sandalye",
+                  "units": "cm",
+                  "width": 0.45,
+                  "depth": 0.5
+                },
+                {
+                  "block": "$blockOf:Yemek masası",
+                  "name": "Yemek masası",
+                  "units": "cm",
+                  "width": 1.6,
+                  "depth": 1.9
+                }
+              ],
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "declared",
+                "factor": 0.01,
+                "assumed": false,
+                "declared": 5
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Sandalye": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Yemek masası": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 5,
+                "$inserts": [
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yemek-takimi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "yemek takımı milimetre çizime tek blok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yemek/yemek-takimi.dxf",
+            "mode": "drawing"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Sandalye",
+                "$blockOf:Yemek masası",
+                "$blockOf:yemek-takimi"
+              ],
+              "changed": [],
+              "layers": 1,
+              "revision": "$current",
+              "block": "$blockOf:yemek-takimi",
+              "sizes": [
+                {
+                  "block": "$blockOf:Sandalye",
+                  "name": "Sandalye",
+                  "units": "cm",
+                  "width": 0.45,
+                  "depth": 0.5
+                },
+                {
+                  "block": "$blockOf:Yemek masası",
+                  "name": "Yemek masası",
+                  "units": "cm",
+                  "width": 1.6,
+                  "depth": 1.9
+                },
+                {
+                  "block": "$blockOf:yemek-takimi",
+                  "name": "yemek-takimi",
+                  "units": "cm",
+                  "width": 1.6,
+                  "depth": 1.9
+                }
+              ],
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "declared",
+                "factor": 0.01,
+                "assumed": false,
+                "declared": 5
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Sandalye": {
+                "units": "cm",
+                "card": null,
+                "$inserts": []
+              },
+              "Yemek masası": {
+                "units": "cm",
+                "card": null,
+                "$inserts": [
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye"
+                ]
+              },
+              "yemek-takimi": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "$count": 1,
+                "$inserts": [
+                  "Yemek masası"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yemek-takimi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kitaplık",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "birim bildirmeyen dosya seçilen milimetreyle: 38 × 55 cm; okunamayan 3DSOLID söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/islak-hacim/klozet.dxf",
+            "mode": "blocks",
+            "sourceUnit": "mm"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Klozet"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Klozet",
+                  "name": "Klozet",
+                  "units": "mm",
+                  "width": 0.38,
+                  "depth": 0.55
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "chosen",
+                "factor": 0.001,
+                "assumed": false
+              }
+            },
+            "warnings": [
+              {
+                "code": "objects_left_out",
+                "message": "Dosyanın okunamayan nesneleri alınmadı: 3DSOLID (1).",
+                "path": "path"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Klozet": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: klozet.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "birim bildirmeyen dosya santimetre seçilince on kat: seçilen birim neyse o",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/islak-hacim/klozet.dxf",
+            "mode": "blocks",
+            "sourceUnit": "cm"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Klozet"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Klozet",
+                  "name": "Klozet",
+                  "units": "cm",
+                  "width": 3.8,
+                  "depth": 5.5
+                }
+              ],
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "chosen",
+                "factor": 0.01,
+                "assumed": false
+              }
+            },
+            "warnings": [
+              {
+                "code": "objects_left_out",
+                "message": "Dosyanın okunamayan nesneleri alınmadı: 3DSOLID (1).",
+                "path": "path"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Klozet": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: klozet.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "inç DXF'in lavabosu: önündeki yay derinliği verir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/islak-hacim/lavabo.dxf",
+            "mode": "blocks"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Lavabo"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Lavabo",
+                  "name": "Lavabo",
+                  "units": "in",
+                  "width": 0.6096,
+                  "depth": 0.5588
+                }
+              ],
+              "unit": {
+                "used": 1,
+                "name": "inç",
+                "source": "declared",
+                "factor": 0.0254,
+                "assumed": false,
+                "declared": 1
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Lavabo": {
+                "units": "in",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: lavabo.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "dosyanın bildirdiği milimetre yerine seçilen santimetre: blokların boyu ona göre, kilim kendi biriminde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "sourceUnit": "cm"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "cm",
+                  "width": 9.0,
+                  "depth": 20.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "cm",
+                  "width": 5.0,
+                  "depth": 4.0
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "chosen",
+                "factor": 0.01,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde aynı adlı blok: korunur ve söylenir, öbürleri gelir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "skipped": [
+                "Yatak 90"
+              ],
+              "sizes": [
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Yatak 90": {
+                "card": null,
+                "$count": 1,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "blocks": [
+              {
+                "name": "Yatak 90",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "line",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "a": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "b": {
+                      "x": 1,
+                      "y": 0
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kitaplık",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+            "p": {
+              "x": 5,
+              "y": 5
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+            "name": "Yatak 90",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "replace ile çizimin yatağı dosyanınkiyle yeniden tanımlanır, kimliği kalır, kategori yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Yatak 90"
+            ],
+            "category": "Kitaplık/yatak-odasi",
+            "replace": true
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [],
+              "changed": [
+                "$blockOf:Yatak 90"
+              ],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": {
+                  "category": "Kitaplık/yatak-odasi",
+                  "version": 1
+                },
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "blocks": [
+              {
+                "name": "Yatak 90",
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "entities": [
+                  {
+                    "kind": "line",
+                    "id": 1,
+                    "layerId": "",
+                    "attrs": {},
+                    "a": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "b": {
+                      "x": 1,
+                      "y": 0
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kitaplık",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 2,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+            "p": {
+              "x": 5,
+              "y": 5
+            },
+            "scale": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7101",
+            "name": "Yatak 90",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "plan okur, hiçbir şey yazmaz; execute aynı cevabı verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Komodin"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$any",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Komodin"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Komodin"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "DWG ikizi: aynı bloklar, aynı boylar ve birim kararı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/yatak-odasi.dwg",
+            "mode": "blocks"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dwg",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "DWG ikizi tek blok olarak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/yatak-odasi.dwg",
+            "mode": "drawing"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Yatak 90",
+                "$blockOf:Komodin",
+                "$blockOf:Kilim",
+                "$blockOf:yatak-odasi"
+              ],
+              "changed": [],
+              "layers": 1,
+              "revision": "$current",
+              "block": "$blockOf:yatak-odasi",
+              "sizes": [
+                {
+                  "block": "$blockOf:Yatak 90",
+                  "name": "Yatak 90",
+                  "units": "mm",
+                  "width": 0.9,
+                  "depth": 2.0
+                },
+                {
+                  "block": "$blockOf:Komodin",
+                  "name": "Komodin",
+                  "units": "mm",
+                  "width": 0.5,
+                  "depth": 0.4
+                },
+                {
+                  "block": "$blockOf:Kilim",
+                  "name": "Kilim",
+                  "units": "cm",
+                  "width": 2.0,
+                  "depth": 1.4
+                },
+                {
+                  "block": "$blockOf:yatak-odasi",
+                  "name": "yatak-odasi",
+                  "units": "mm",
+                  "width": 2.0,
+                  "depth": 3.6
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4,
+                "blocks": [
+                  {
+                    "name": "Kilim",
+                    "code": 5
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Yatak 90": {
+                "units": "mm",
+                "card": null,
+                "$inserts": []
+              },
+              "Komodin": {
+                "units": "mm",
+                "card": null,
+                "$inserts": []
+              },
+              "Kilim": {
+                "units": "cm",
+                "card": null,
+                "$inserts": []
+              },
+              "yatak-odasi": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": -1.0,
+                  "y": 0.0
+                },
+                "$count": 3,
+                "$inserts": [
+                  "Yatak 90",
+                  "Komodin",
+                  "Kilim"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yatak-odasi.dwg",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "birim bildirmeyen DWG ikizi seçilen milimetreyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/klozet.dwg",
+            "mode": "blocks",
+            "sourceUnit": "mm"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Klozet"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Klozet",
+                  "name": "Klozet",
+                  "units": "mm",
+                  "width": 0.38,
+                  "depth": 0.55
+                }
+              ],
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "chosen",
+                "factor": 0.001,
+                "assumed": false
+              }
+            },
+            "warnings": [
+              {
+                "code": "objects_left_out",
+                "message": "Dosyanın okunamayan nesneleri alınmadı: 3DSOLID (1).",
+                "path": "path"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Klozet": {
+                "units": "mm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 3,
+                "$inserts": []
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: klozet.dwg",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "yemek takımının DWG ikizi: masa ve sandalyeleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/yemek-takimi.dwg",
+            "mode": "blocks",
+            "names": [
+              "Yemek masası"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$blockOf:Sandalye",
+                "$blockOf:Yemek masası"
+              ],
+              "changed": [],
+              "layers": 0,
+              "revision": "$current",
+              "sizes": [
+                {
+                  "block": "$blockOf:Sandalye",
+                  "name": "Sandalye",
+                  "units": "cm",
+                  "width": 0.45,
+                  "depth": 0.5
+                },
+                {
+                  "block": "$blockOf:Yemek masası",
+                  "name": "Yemek masası",
+                  "units": "cm",
+                  "width": 1.6,
+                  "depth": 1.9
+                }
+              ],
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "declared",
+                "factor": 0.01,
+                "assumed": false,
+                "declared": 5
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "blockFields": {
+              "Sandalye": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 2,
+                "$inserts": []
+              },
+              "Yemek masası": {
+                "units": "cm",
+                "card": null,
+                "base": {
+                  "x": 0,
+                  "y": 0
+                },
+                "$count": 5,
+                "$inserts": [
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye",
+                  "Sandalye"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dosyadan blok: yemek-takimi.dwg",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "blocks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "birim bildirmeyen dosya sourceUnit'siz: hiçbir şey alınmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/islak-hacim/klozet.dxf",
+            "mode": "blocks"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_unit_unknown",
+              "message": "klozet.dxf birimini bildirmiyor; blokların boyu bilinmeden alınmaz. Dosyanın birimini verin (sourceUnit: mm, cm, m, in, ft).",
+              "path": "sourceUnit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "birim bildirmeyen dosya tek blok olarak da reddedilir; doğrulama da aynı",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/islak-hacim/klozet.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_unit_unknown",
+              "message": "klozet.dxf birimini bildirmiyor; blokların boyu bilinmeden alınmaz. Dosyanın birimini verin (sourceUnit: mm, cm, m, in, ft).",
+              "path": "sourceUnit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "birim bildirmeyen DWG ikizi sourceUnit'siz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/klozet.dwg"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_unit_unknown",
+              "message": "klozet.dwg birimini bildirmiyor; blokların boyu bilinmeden alınmaz. Dosyanın birimini verin (sourceUnit: mm, cm, m, in, ft).",
+              "path": "sourceUnit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "KentOS çizimi birimini taşır: sourceUnit verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/ofis-bloklari.kcad",
+            "sourceUnit": "mm"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "ofis-bloklari.kcad bir KentOS çizimi; birimini kendisi taşır. sourceUnit yalnız DXF ve DWG dosyasında verilir.",
+              "path": "sourceUnit"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kategorinin boş parçası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "category": "Kitaplık//Mobilya"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_block_card",
+              "message": "Kategori kurallarına uymuyor: “Kitaplık//Mobilya” kategorisinin bir parçası boş; “/” iki ad arasında olur.",
+              "path": "category"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kategorinin başında boşluk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "category": " Mobilya"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_block_card",
+              "message": "Kategori kurallarına uymuyor: “ Mobilya” kategorisi boş ya da başında, sonunda boşluk var.",
+              "path": "category"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "göreli DXF yolu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "kitaplik/yatak-odasi.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "“kitaplik/yatak-odasi.dxf” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad).",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan DWG",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik-dwg/yok.dwg"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_not_found",
+              "message": "$any",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "desteklenmeyen DWG imzası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dwg/unsupported.dwg",
+            "sourceUnit": "mm"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unsupported_cad_version",
+              "message": "$any",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kesik DWG",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dwg/truncated.dwg",
+            "sourceUnit": "mm"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "import_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DXF'te olmayan blok adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:blocks/v1/kitaplik/yatak-odasi/yatak-odasi.dxf",
+            "mode": "blocks",
+            "names": [
+              "Yatak 90",
+              "Gardırop"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_block",
+              "message": "“Gardırop” bloğu yatak-odasi.dxf içinde yok.",
+              "path": "names[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

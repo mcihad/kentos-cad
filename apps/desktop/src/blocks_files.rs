@@ -415,6 +415,8 @@ impl App {
             name: None,
             names: Some(vec![name.clone()]),
             replace: Some(true),
+            source_unit: None,
+            category: None,
             expected_revision: None,
         };
         match file_import_block::execute(&mut ExecutionContext::new(&mut doc.model), input) {

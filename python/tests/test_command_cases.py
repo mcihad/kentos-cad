@@ -341,6 +341,22 @@ class Case:
                 # suppressed segments and broken sources (docs/adr/0695).
                 _, snapshot = _KCAD.read(self.doc.to_bytes())
                 same(snapshot.get("dimensionSets", []), self.fill(want, at), f"{at}: dimensionSets", within)
+            elif key == "blockFields":
+                # Only the fields named of each block by its name; `$inserts` the names of the blocks its inserts
+                # place, `$count` how many objects it has (docs/adr/0726 §2).
+                for name, fields in want.items():
+                    block = self.block_named(name)
+                    assert block is not None, f"{at}: no block {name}"
+                    data = block.to_json()
+                    for k, v in fields.items():
+                        if k == "$inserts":
+                            names = {b.id: b.to_json()["name"] for b in self.doc.blocks()}
+                            have = [names.get(e["block"]) for e in data.get("entities", []) if e.get("kind") == "insert"]
+                        elif k == "$count":
+                            have = len(data.get("entities", []))
+                        else:
+                            have = data.get(k)
+                        same(have, v, f"{at}: {name}.{k}", within)
             elif key == "blockIds":
                 for name, id in want.items():
                     block = self.block_named(name)

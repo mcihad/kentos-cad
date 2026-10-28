@@ -1141670,7 +1141670,7 @@
       "id": "file.import.block",
       "version": 1,
       "title": "Dosyadan blok al",
-      "summary": "path'teki .kcad çizimini (v2 ya da eski v1 JSON) bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur, adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. mode blocks: dosyanın names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün yerleştirmeleri yenisini gösterir. plan okur, hiçbir şey yazmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Bloğu dosyaya yazmak file.export.block'tur.",
+      "summary": "path'teki .kcad çizimini (v2 ya da eski v1 JSON), DXF ya da DWG dosyasını bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur, adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. mode blocks: dosyanın names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün yerleştirmeleri yenisini gösterir. DXF ve DWG'nin sayıları dosyanın bildirdiği birimde ya da sourceUnit'te (mm, cm, m, in, ft) okunur; birim bildirmeyen dosya sourceUnit'siz reddedilir (source_unit_unknown), blok kimsenin seçmediği bir boyda gelmez. KentOS çizimi birimini taşır, sourceUnit almaz. category, alınan bloklardan kategorisi olmayanların kartına yazılır (kitaplığın klasörleri, “/” ile). Cevabın sizes'ı eklenen ve yeniden tanımlanan blokların en (x) ve boyunu (y) metre olarak verir; unit dosyanın birim kararıdır. plan okur, hiçbir şey yazmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Bloğu dosyaya yazmak file.export.block'tur.",
       "aliases": [
         "insertfile"
       ],
@@ -1141701,11 +1141701,41 @@
                 "type": "string"
               }
             ]
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.import.block` v1 (docs/adr/0316 §3): a `.kcad` drawing (v2, or v1 JSON) taken in, as one undo\nstep “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the file; a name the drawing has\ngets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name the drawing has is kept,\nor with `replace` redefined: every insert shows the file's). The layers the objects are on come with them by\npath. Refusals, in order: `invalid_file_path` (empty, relative), `file_not_found`, `import_unreadable`,\n`invalid_revision`, `revision_conflict`, `nothing_to_import` (no object a block may hold; no block of the names),\n`unknown_block` (a name the file has not), `block_refused` (the drawing's block rules), `layer_locked`.",
+        "description": "Input of `file.import.block` v1 (docs/adr/0316 §3, 0726 §2): a `.kcad` drawing (v2, or v1 JSON), a DXF or a DWG\nfile taken in, as one undo step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the\nfile; a name the drawing has gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name\nthe drawing has is kept, or with `replace` redefined: every insert shows the file's). The layers the objects are\non come with them by path. A CAD file's numbers are in the unit it names, or `sourceUnit`; one that names none\nwithout `sourceUnit` is refused, so no block comes in at a size nobody chose. `category` goes on the cards of the\nblocks taken that have none. Refusals, in order: `invalid_file_path` (empty, relative), `invalid_block_card`\n(`category`), `invalid_field` (`sourceUnit` for a KentOS drawing, which carries its unit), `file_not_found`,\n`import_unreadable`, `unsupported_cad_version`, `source_unit_unknown`, `invalid_revision`, `revision_conflict`,\n`nothing_to_import` (no object a block may hold; no block of the names), `unknown_block` (a name the file has\nnot), `block_refused` (the drawing's block rules), `layer_locked`.",
         "properties": {
+          "category": {
+            "description": "The category written on the cards of the blocks taken that have none (docs/adr/0726 §1): a library's folders,\n`/` between them (`Kitaplık/Mobilya`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -1141745,6 +1141775,17 @@
               "boolean",
               "null"
             ]
+          },
+          "sourceUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingUnit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A DXF's or a DWG's unit (docs/adr/0726 §2): its numbers are read in it, whatever the file names; a file that\nnames none needs it. A KentOS drawing carries its own."
           }
         },
         "required": [
@@ -1141759,6 +1141800,194 @@
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "BlockSize": {
+            "description": "A block's size as `file.import.block` took it (docs/adr/0726 §2): the extent of what it draws at scale 1, its\nnumbers metres (a unitless block's: drawing units).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "depth": {
+                "description": "Along its y axis.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "name": {
+                "type": "string"
+              },
+              "units": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockUnits"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit it was drawn in; absent: none named."
+              },
+              "width": {
+                "description": "Along its x axis.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "block",
+              "name",
+              "width",
+              "depth"
+            ],
+            "type": "object"
+          },
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "BlockUnits": {
+            "description": "The unit a block was drawn in (docs/adr/0315 §4).",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m",
+                  "in",
+                  "ft"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "unitless",
+                "description": "Its numbers are the drawing's units: a 1 is a millimetre in a millimetre drawing, a metre in a metre one.",
+                "type": "string"
+              }
+            ]
+          },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1141800,12 +1142029,30 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "sizes": {
+            "description": "The blocks added and redefined with their sizes, in the drawing's order (docs/adr/0726 §2).",
+            "items": {
+              "$ref": "#/$defs/BlockSize"
+            },
+            "type": "array"
+          },
           "skipped": {
             "description": "The file's names the drawing has, kept as they are.",
             "items": {
               "type": "string"
             },
             "type": "array"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/UnitDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A CAD file's unit as it was decided: named by the file or given."
           }
         },
         "required": [
@@ -1141823,6 +1142070,194 @@
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "BlockSize": {
+            "description": "A block's size as `file.import.block` took it (docs/adr/0726 §2): the extent of what it draws at scale 1, its\nnumbers metres (a unitless block's: drawing units).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "depth": {
+                "description": "Along its y axis.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "name": {
+                "type": "string"
+              },
+              "units": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockUnits"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit it was drawn in; absent: none named."
+              },
+              "width": {
+                "description": "Along its x axis.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "block",
+              "name",
+              "width",
+              "depth"
+            ],
+            "type": "object"
+          },
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "BlockUnits": {
+            "description": "The unit a block was drawn in (docs/adr/0315 §4).",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m",
+                  "in",
+                  "ft"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "unitless",
+                "description": "Its numbers are the drawing's units: a 1 is a millimetre in a millimetre drawing, a metre in a metre one.",
+                "type": "string"
+              }
+            ]
+          },
+          "CadImportScale": {
+            "additionalProperties": false,
+            "description": "An explicit physical calibration; source_length is the raw CAD number, real_length is metres.",
+            "properties": {
+              "realLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "sourceLength": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "sourceLength",
+              "realLength"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "scaleReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CadImportScale"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1141864,12 +1142299,30 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "sizes": {
+            "description": "The blocks added and redefined with their sizes, in the drawing's order (docs/adr/0726 §2).",
+            "items": {
+              "$ref": "#/$defs/BlockSize"
+            },
+            "type": "array"
+          },
           "skipped": {
             "description": "The file's names the drawing has, kept as they are.",
             "items": {
               "type": "string"
             },
             "type": "array"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/UnitDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A CAD file's unit as it was decided: named by the file or given."
           }
         },
         "required": [
@@ -1141884,8 +1142337,12 @@
       "capabilities": {
         "refusals": [
           "invalid_file_path",
+          "invalid_block_card",
+          "invalid_input",
           "file_not_found",
           "import_unreadable",
+          "unsupported_cad_version",
+          "source_unit_unknown",
           "invalid_revision",
           "revision_conflict",
           "nothing_to_import",
@@ -1141914,6 +1142371,18 @@
             ],
             "path": "/tmp/ofis-bloklari.kcad",
             "replace": true
+          }
+        },
+        {
+          "title": "Birim bildirmeyen DWG kitaplığından yatağı milimetre olarak al",
+          "input": {
+            "category": "Kitaplık/Mobilya/yatak-odasi",
+            "mode": "blocks",
+            "names": [
+              "Yatak 90"
+            ],
+            "path": "/tmp/mobilya/yatak-odasi.dwg",
+            "sourceUnit": "mm"
           }
         }
       ]
@@ -1580848,6 +1581317,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosyada ya da seçilen katmanlarında alınacak nesne yok."
+    },
+    {
+      "code": "source_unit_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya birimini bildirmiyor; blokların boyu bilinmeden alınmaz. Dosyanın birimini (sourceUnit: mm, cm, m, in, ft) verin."
     },
     {
       "code": "unit_assumed",

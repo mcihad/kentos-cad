@@ -12081,14 +12081,18 @@ class BlockFileImported(_Model):
         layers: The layers and groups the import opened. Unit: count.
         revision: The document's revision after the write, as decimal text.
         block: `drawing`: the new block.
+        sizes: The blocks added and redefined with their sizes, in the drawing's order (docs/adr/0726 §2).
         skipped: The file's names the drawing has, kept as they are.
+        unit: A CAD file's unit as it was decided: named by the file or given.
     """
     added: list[str]
     changed: list[str]
     layers: int
     revision: str
     block: str | None | Unset = UNSET
+    sizes: list[BlockSize] | Unset = UNSET
     skipped: list[str] | Unset = UNSET
+    unit: UnitDecision | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -12098,8 +12102,12 @@ class BlockFileImported(_Model):
         out["revision"] = self.revision
         if self.block is not UNSET:
             out["block"] = self.block
+        if self.sizes is not UNSET:
+            out["sizes"] = [e0.to_json() for e0 in self.sizes]
         if self.skipped is not UNSET:
             out["skipped"] = list(self.skipped)
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else self.unit.to_json()
         return out
 
     @classmethod
@@ -12110,7 +12118,9 @@ class BlockFileImported(_Model):
             layers=data["layers"],
             revision=data["revision"],
             block=data.get("block", UNSET),
+            sizes=[BlockSize.from_json(e0) for e0 in data["sizes"]] if "sizes" in data else UNSET,
             skipped=list(data["skipped"]) if "skipped" in data else UNSET,
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else UnitDecision.from_json(data["unit"]),
         )
 
 
@@ -12167,6 +12177,42 @@ class BlockRecord(_Model):
         return cls(
             version=data["version"],
             block=BlockDefinition.from_json(data["block"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockSize(_Model):
+    """A block's size as `file.import.block` took it (docs/adr/0726 §2): the extent of what it draws at scale 1, its
+    numbers metres (a unitless block's: drawing units).
+    Attributes:
+        width: Along its x axis. Unit: m.
+        depth: Along its y axis. Unit: m.
+        units: The unit it was drawn in; absent: none named.
+    """
+    block: str
+    name: str
+    width: float
+    depth: float
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block
+        out["name"] = self.name
+        out["width"] = float(self.width)
+        out["depth"] = float(self.depth)
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockSize:
+        return cls(
+            block=data["block"],
+            name=data["name"],
+            width=float(data["width"]),
+            depth=float(data["depth"]),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
 
 
@@ -28512,30 +28558,42 @@ class ImpactOwn(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ImportBlock(_Model):
-    """Input of `file.import.block` v1 (docs/adr/0316 §3): a `.kcad` drawing (v2, or v1 JSON) taken in, as one undo
-    step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the file; a name the drawing has
-    gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name the drawing has is kept,
-    or with `replace` redefined: every insert shows the file's). The layers the objects are on come with them by
-    path. Refusals, in order: `invalid_file_path` (empty, relative), `file_not_found`, `import_unreadable`,
-    `invalid_revision`, `revision_conflict`, `nothing_to_import` (no object a block may hold; no block of the names),
-    `unknown_block` (a name the file has not), `block_refused` (the drawing's block rules), `layer_locked`.
+    """Input of `file.import.block` v1 (docs/adr/0316 §3, 0726 §2): a `.kcad` drawing (v2, or v1 JSON), a DXF or a DWG
+    file taken in, as one undo step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the
+    file; a name the drawing has gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name
+    the drawing has is kept, or with `replace` redefined: every insert shows the file's). The layers the objects are
+    on come with them by path. A CAD file's numbers are in the unit it names, or `sourceUnit`; one that names none
+    without `sourceUnit` is refused, so no block comes in at a size nobody chose. `category` goes on the cards of the
+    blocks taken that have none. Refusals, in order: `invalid_file_path` (empty, relative), `invalid_block_card`
+    (`category`), `invalid_field` (`sourceUnit` for a KentOS drawing, which carries its unit), `file_not_found`,
+    `import_unreadable`, `unsupported_cad_version`, `source_unit_unknown`, `invalid_revision`, `revision_conflict`,
+    `nothing_to_import` (no object a block may hold; no block of the names), `unknown_block` (a name the file has
+    not), `block_refused` (the drawing's block rules), `layer_locked`.
     Attributes:
         path: The drawing to read, an absolute path.
+        category: The category written on the cards of the blocks taken that have none (docs/adr/0726 §1): a library's folders,
+            `/` between them (`Kitaplık/Mobilya`).
         expected_revision: The document revision the input was prepared against, as decimal text.
         name: `drawing`: the block's name (absent: the file's name without its extension).
         names: `blocks`: the names to take (absent: every block of the file).
         replace: `blocks`: a name the drawing has is redefined from the file's block.
+        source_unit: A DXF's or a DWG's unit (docs/adr/0726 §2): its numbers are read in it, whatever the file names; a file that
+            names none needs it. A KentOS drawing carries its own.
     """
     path: str
+    category: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING
     name: str | None | Unset = UNSET
     names: list[str] | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
+    source_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.category is not UNSET:
+            out["category"] = self.category
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         out["mode"] = _enum_out(self.mode)
@@ -28545,17 +28603,21 @@ class ImportBlock(_Model):
             out["names"] = None if self.names is None else list(self.names)
         if self.replace is not UNSET:
             out["replace"] = self.replace
+        if self.source_unit is not UNSET:
+            out["sourceUnit"] = None if self.source_unit is None else _enum_out(self.source_unit)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ImportBlock:
         return cls(
             path=data["path"],
+            category=data.get("category", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             mode=_enum_in(BlockFileMode, data["mode"]) if "mode" in data else BlockFileMode.DRAWING,
             name=data.get("name", UNSET),
             names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
             replace=data.get("replace", UNSET),
+            source_unit=UNSET if "sourceUnit" not in data else None if data["sourceUnit"] is None else _enum_in(DrawingUnit, data["sourceUnit"]),
         )
 
 
@@ -80814,6 +80876,7 @@ __all__ = [
     "BlockRecord",
     "BlockReport",
     "BlockReportName",
+    "BlockSize",
     "BlockUnit",
     "BlockUnits",
     "BlockUnitsName",

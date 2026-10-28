@@ -137,6 +137,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   aksın ölçü yerleri (`start`, `end`, `mid`, `center`, `along`); ortak durumlar `cad.grids.create.radial.json`,
   `cad.columns.create.forms.json`, `cad.arch.edit.forms.json`, `cad.arch.audit.json`, `fixtures/subref/v1/cases.json`
   ve `fixtures/arch/v1/cases.json` ile sınanmalı.
+- ARCH-LIB-01 / ADR0726: Blok kitaplığı. Web'in Bloklar paneli Bu çizim | Kitaplık seçimini, DWG/DXF/KCAD klasörlerini
+  (alt klasörler kategori, dosyanın blokları resim, gerçek en × boy ve birimle), birim bildirmeyen dosyada birim
+  sorusunu ve Yerleştir'i sunmalı; işleyicisi `file.import.block`'un DWG/DXF okumasını, `sourceUnit`, `category`,
+  `sizes` ve `unit` cevabını taşımalı; Blok ekle hayaletin yanında gerçek en × boyu, birimi, dönüşü ve aynayı, taban
+  noktasını, görünür ayarlarda dinamik bloğun tablo/görünürlük/çevirme/uzunluk satırlarını ve Varyant (V)'yi
+  göstermeli; Öznitelikler yerleştirmenin En × boy'unu ve Bloğun birimi'ni yazmalı. Ortak durumlar
+  `file.import.block.library.json` ve `file.import.block.json` ile sınanmalı.
 - ARCH-STAIR-01 / ADR0724: Merdiven. Web'in merdiveni `heightFromLevel`'la (KCAD 125) katının yüksekliğine bağlanıp kat
   yüksekliği ya da rıht sayısı değişince rıht yüksekliğini izlemeli, döner merdivende `post`'la merkez direğini
   çizmeli (araçta Merkez direği (M), Öznitelikler'de Yükseklik: Kat yüksekliği/Kendi ve Merkez direği); kat

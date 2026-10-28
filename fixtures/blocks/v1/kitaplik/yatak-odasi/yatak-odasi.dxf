@@ -1,0 +1,374 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+4
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+  0
+LAYER
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+MOBILYA
+ 70
+0
+ 62
+3
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+BLOCK_RECORD
+  5
+100
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+Yatak 90
+  0
+BLOCK_RECORD
+  5
+101
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+Komodin
+  0
+BLOCK_RECORD
+  5
+102
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+Kilim
+ 70
+5
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+Yatak 90
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+Yatak 90
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+-450
+ 20
+0
+ 10
+450
+ 20
+0
+ 10
+450
+ 20
+2000
+ 10
+-450
+ 20
+2000
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+-350
+ 20
+100
+ 10
+350
+ 20
+100
+ 10
+350
+ 20
+450
+ 10
+-350
+ 20
+450
+  0
+LINE
+  8
+0
+ 10
+-450
+ 20
+600
+ 30
+0.0
+ 11
+450
+ 21
+600
+ 31
+0.0
+  0
+ENDBLK
+  8
+0
+  0
+BLOCK
+  8
+0
+  2
+Komodin
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+Komodin
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+500
+ 20
+0
+ 10
+500
+ 20
+400
+ 10
+0
+ 20
+400
+  0
+CIRCLE
+  8
+0
+ 10
+250
+ 20
+200
+ 30
+0.0
+ 40
+100
+  0
+ENDBLK
+  8
+0
+  0
+BLOCK
+  8
+0
+  2
+Kilim
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+Kilim
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+200
+ 20
+0
+ 10
+200
+ 20
+140
+ 10
+0
+ 20
+140
+  0
+LINE
+  8
+0
+ 10
+0
+ 20
+70
+ 30
+0.0
+ 11
+200
+ 21
+70
+ 31
+0.0
+  0
+ENDBLK
+  8
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+INSERT
+  8
+MOBILYA
+  2
+Yatak 90
+ 10
+0
+ 20
+0
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+INSERT
+  8
+MOBILYA
+  2
+Komodin
+ 10
+500
+ 20
+0
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+INSERT
+  8
+MOBILYA
+  2
+Kilim
+ 10
+-1000
+ 20
+2200
+ 30
+0.0
+ 41
+10
+ 42
+10
+ 43
+10
+ 50
+0
+  0
+ENDSEC
+  0
+EOF

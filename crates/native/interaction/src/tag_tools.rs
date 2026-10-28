@@ -653,7 +653,7 @@ impl Tool for TagAllTool {
     fn settings(&self, _: &Format) -> Vec<Setting> {
         let mut source = self.source.setting();
         source.key = "F";
-        source.label = "Kaynak katı";
+        source.label = "Kaynak katı".into();
         let mut out = vec![
             Setting::choice("E", "Mevcut etiket", self.choices("E")),
             source,

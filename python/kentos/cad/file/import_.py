@@ -18,6 +18,8 @@ from ..types import (  # noqa: F401
     ClosedPolylines,
     ClosedPolylinesName,
     CsvGeometryIn,
+    DrawingUnit,
+    DrawingUnitName,
     DxfImported,
     FileUnit,
     FileUnitName,
@@ -55,15 +57,21 @@ if TYPE_CHECKING:
 
 class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImported]):
     """``file.import.block`` v1. Dosyadan blok al: path'teki .kcad çizimini (v2 ya da eski
-    v1 JSON) bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”.
-    mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur,
-    adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt
-    köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. mode blocks: dosyanın
-    names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok
-    varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün
-    yerleştirmeleri yenisini gösterir. plan okur, hiçbir şey yazmaz. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
-    Bloğu dosyaya yazmak file.export.block'tur.
+    v1 JSON), DXF ya da DWG dosyasını bloklar olarak alır; tek geri alma adımı, adı
+    “Dosyadan blok: ad.kcad”. mode drawing (varsayılan): çizimin nesneleri (resim ve
+    tablo hariç) tek blok olur, adı name ya da dosyanın adı (çizimde varsa “(2)”), taban
+    noktası nesnelerin sol alt köşesi; iç bloklar ve nesnelerin katmanları yollarıyla
+    gelir. mode blocks: dosyanın names'teki (yoksa bütün) blokları, yerleştirdikleriyle
+    gelir; çizimde aynı adlı blok varsa korunur (skipped), replace ile dosyanınkiyle
+    yeniden tanımlanır ve bütün yerleştirmeleri yenisini gösterir. DXF ve DWG'nin
+    sayıları dosyanın bildirdiği birimde ya da sourceUnit'te (mm, cm, m, in, ft) okunur;
+    birim bildirmeyen dosya sourceUnit'siz reddedilir (source_unit_unknown), blok
+    kimsenin seçmediği bir boyda gelmez. KentOS çizimi birimini taşır, sourceUnit almaz.
+    category, alınan bloklardan kategorisi olmayanların kartına yazılır (kitaplığın
+    klasörleri, “/” ile). Cevabın sizes'ı eklenen ve yeniden tanımlanan blokların en (x)
+    ve boyunu (y) metre olarak verir; unit dosyanın birim kararıdır. plan okur, hiçbir
+    şey yazmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur. Bloğu dosyaya yazmak file.export.block'tur.
     """
     __slots__ = ()
     id = "file.import.block"
@@ -80,33 +88,45 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         /,
         *,
         path: str,
+        category: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING,
         name: str | None | Unset = UNSET,
         names: Sequence[str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
+        source_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> BlockFileImported:
-        """Dosyadan blok al: path'teki .kcad çizimini (v2 ya da eski v1 JSON) bloklar olarak
-        alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. mode drawing (varsayılan):
-        çizimin nesneleri (resim ve tablo hariç) tek blok olur, adı name ya da dosyanın adı
-        (çizimde varsa “(2)”), taban noktası nesnelerin sol alt köşesi; iç bloklar ve
-        nesnelerin katmanları yollarıyla gelir. mode blocks: dosyanın names'teki (yoksa
-        bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok varsa korunur
-        (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün yerleştirmeleri
-        yenisini gösterir. plan okur, hiçbir şey yazmaz. expectedRevision verilmişse ve
-        çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Bloğu dosyaya
-        yazmak file.export.block'tur.
+        """Dosyadan blok al: path'teki .kcad çizimini (v2 ya da eski v1 JSON), DXF ya da DWG
+        dosyasını bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”.
+        mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur,
+        adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt
+        köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. mode blocks: dosyanın
+        names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok
+        varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün
+        yerleştirmeleri yenisini gösterir. DXF ve DWG'nin sayıları dosyanın bildirdiği
+        birimde ya da sourceUnit'te (mm, cm, m, in, ft) okunur; birim bildirmeyen dosya
+        sourceUnit'siz reddedilir (source_unit_unknown), blok kimsenin seçmediği bir boyda
+        gelmez. KentOS çizimi birimini taşır, sourceUnit almaz. category, alınan bloklardan
+        kategorisi olmayanların kartına yazılır (kitaplığın klasörleri, “/” ile). Cevabın
+        sizes'ı eklenen ve yeniden tanımlanan blokların en (x) ve boyunu (y) metre olarak
+        verir; unit dosyanın birim kararıdır. plan okur, hiçbir şey yazmaz. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        Bloğu dosyaya yazmak file.export.block'tur.
 
         Args:
             doc: The drawing it works on.
             path: The drawing to read, an absolute path.
+            category: The category written on the cards of the blocks taken that have none (docs/adr/0726 §1): a library's folders,
+                `/` between them (`Kitaplık/Mobilya`).
             expected_revision: The document revision the input was prepared against, as decimal text.
             mode:
             name: `drawing`: the block's name (absent: the file's name without its extension).
             names: `blocks`: the names to take (absent: every block of the file).
             replace: `blocks`: a name the drawing has is redefined from the file's block.
+            source_unit: A DXF's or a DWG's unit (docs/adr/0726 §2): its numbers are read in it, whatever the file names; a file that
+                names none needs it. A KentOS drawing carries its own.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -121,11 +141,13 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         """
         return self.execute_input(doc, ImportBlock(
             path=path,
+            category=category,
             expected_revision=expected_revision,
             mode=mode,
             name=name,
             names=_opt(names, lambda x: list(x)),
             replace=replace,
+            source_unit=source_unit,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -134,22 +156,26 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         /,
         *,
         path: str,
+        category: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING,
         name: str | None | Unset = UNSET,
         names: Sequence[str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
+        source_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
     ) -> BlockFileImported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, ImportBlock(
             path=path,
+            category=category,
             expected_revision=expected_revision,
             mode=mode,
             name=name,
             names=_opt(names, lambda x: list(x)),
             replace=replace,
+            source_unit=source_unit,
         ))
 
     def validate(
@@ -158,22 +184,26 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         /,
         *,
         path: str,
+        category: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING,
         name: str | None | Unset = UNSET,
         names: Sequence[str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
+        source_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, ImportBlock(
             path=path,
+            category=category,
             expected_revision=expected_revision,
             mode=mode,
             name=name,
             names=_opt(names, lambda x: list(x)),
             replace=replace,
+            source_unit=source_unit,
         ))
 
     def answer(
@@ -182,11 +212,13 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         /,
         *,
         path: str,
+        category: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING,
         name: str | None | Unset = UNSET,
         names: Sequence[str] | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
+        source_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -198,11 +230,13 @@ class _FileImportBlock(LocalCommand[ImportBlock, BlockFileImported, BlockFileImp
         """
         return self.answer_input(doc, ImportBlock(
             path=path,
+            category=category,
             expected_revision=expected_revision,
             mode=mode,
             name=name,
             names=_opt(names, lambda x: list(x)),
             replace=replace,
+            source_unit=source_unit,
         ), op=op, request_id=request_id, expected=expected)
 
 

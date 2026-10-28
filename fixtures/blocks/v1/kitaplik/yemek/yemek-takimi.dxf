@@ -1,0 +1,310 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+5
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+  0
+LAYER
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+MOBILYA
+ 70
+0
+ 62
+3
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+BLOCK_RECORD
+  5
+100
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+Sandalye
+  0
+BLOCK_RECORD
+  5
+101
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+Yemek masası
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+Sandalye
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+Sandalye
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+-22.5
+ 20
+0
+ 10
+22.5
+ 20
+0
+ 10
+22.5
+ 20
+45
+ 10
+-22.5
+ 20
+45
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+-22.5
+ 20
+45
+ 10
+22.5
+ 20
+45
+ 10
+22.5
+ 20
+50
+ 10
+-22.5
+ 20
+50
+  0
+ENDBLK
+  8
+0
+  0
+BLOCK
+  8
+0
+  2
+Yemek masası
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+Yemek masası
+  0
+LWPOLYLINE
+  8
+0
+100
+AcDbEntity
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+-80
+ 20
+-45
+ 10
+80
+ 20
+-45
+ 10
+80
+ 20
+45
+ 10
+-80
+ 20
+45
+  0
+INSERT
+  8
+0
+  2
+Sandalye
+ 10
+-40
+ 20
+-95
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+INSERT
+  8
+0
+  2
+Sandalye
+ 10
+40
+ 20
+-95
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+INSERT
+  8
+0
+  2
+Sandalye
+ 10
+-40
+ 20
+95
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+180
+  0
+INSERT
+  8
+0
+  2
+Sandalye
+ 10
+40
+ 20
+95
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+180
+  0
+ENDBLK
+  8
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+INSERT
+  8
+MOBILYA
+  2
+Yemek masası
+ 10
+0
+ 20
+0
+ 30
+0.0
+ 41
+1
+ 42
+1
+ 43
+1
+ 50
+0
+  0
+ENDSEC
+  0
+EOF
