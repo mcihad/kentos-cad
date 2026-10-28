@@ -5,4 +5,8 @@ import type { OpeningDistance } from "./OpeningDistance";
 /**
  * An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.
  */
-export type OpeningDistances = { uid: string, edge: number, face: DimensionSetFace, start?: OpeningDistance, end?: OpeningDistance, };
+export type OpeningDistances = { uid: string, edge: number, face: DimensionSetFace, start?: OpeningDistance, end?: OpeningDistance, 
+/**
+ * The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1).
+ */
+startGrid?: OpeningDistance, endGrid?: OpeningDistance, };

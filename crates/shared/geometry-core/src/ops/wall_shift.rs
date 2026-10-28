@@ -58,7 +58,7 @@ fn inline() -> f64 {
 }
 
 /// A wall's level: walls join and face each other only on the same one (or both on none), as the joins say.
-pub(crate) fn level<'a>(w: &WallIn<'a>) -> Option<&'a str> {
+pub fn level<'a>(w: &WallIn<'a>) -> Option<&'a str> {
     match w.spec.arch.as_ref()?.get("level") {
         crate::api::json::Json::Str(id) => Some(id.as_str()),
         _ => None,
@@ -464,4 +464,214 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
         }
     }
     Ok(moved)
+}
+
+/// Wall `w`'s straight edge `k`: its axis at its middle (halfway between its faces) and its direction, where a grid
+/// is measured from (docs/adr/0728 §1).
+pub fn axis_middle(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<(Vec2, Vec2), String> {
+    let (a, u, n, l) = frame(walls, w, k)?;
+    let off = left_face(walls[w].spec) - walls[w].spec.width / 2.0;
+    Ok((along(along(a, u, l / 2.0), n, off), u))
+}
+
+/// Which end of an edge stays when its length changes (docs/adr/0728 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Anchor {
+    /// The edge's start stays; its end moves.
+    Start,
+    /// The edge's end stays; its start moves.
+    End,
+    /// Both move, half the change each.
+    Middle,
+}
+
+/// The length of wall `w`'s straight edge `k`; why none (no such edge, an arc).
+pub fn edge_length(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<f64, String> {
+    frame(walls, w, k).map(|(_, _, _, l)| l)
+}
+
+/// Whether the ends of wall `w`'s edge `k` (its start, its end) are its path's ends, the only ones a length moves.
+fn path_ends(walls: &[WallIn<'_>], w: usize, k: usize) -> [bool; 2] {
+    let me = &walls[w];
+    let n = me.pts.len();
+    if me.spec.closed || n < 2 {
+        return [false, false];
+    }
+    [k == 0, k + 2 == n]
+}
+
+/// Whether the ends of wall `w`'s edge `k` (its start, its end) can move when its length changes (docs/adr/0728 §3):
+/// its path's ends that are free, end to end with another wall in line or a corner's (that wall shifting); not one in
+/// another wall's body (a tee) or where more walls meet.
+pub fn free_ends(walls: &[WallIn<'_>], w: usize, k: usize) -> [bool; 2] {
+    let path = path_ends(walls, w, k);
+    let np = walls[w].pts.len();
+    [
+        path[0] && end_can_move(walls, w, 0, k),
+        path[1] && end_can_move(walls, w, 1, (k + 1) % np),
+    ]
+}
+
+/// Whether path end `end` (0 or 1) of wall `w`, at its `vertex`, can move along its edge: [`end_moved`]'s joins
+/// without the move.
+fn end_can_move(walls: &[WallIn<'_>], w: usize, end: usize, vertex: usize) -> bool {
+    if walls[w].spec.joins[end] == JoinMode::None {
+        return true;
+    }
+    let p = walls[w].pts[vertex];
+    match ends_at(walls, w, p) {
+        Ok(meeting) if meeting.is_empty() => host_at(walls, w, p).is_none(),
+        Ok(meeting) => meeting.len() == 1,
+        Err(_) => false,
+    }
+}
+
+/// Where a path end `vertex` (its path end `end`, 0 or 1) of wall `w` goes when moved `by` along the edge's `u`: the
+/// walls that change with it (`w` with that end moved, and what follows a corner).
+fn end_moved(
+    walls: &[WallIn<'_>],
+    w: usize,
+    end: usize,
+    vertex: usize,
+    u: Vec2,
+    by: f64,
+) -> Result<Vec<Moved>, String> {
+    let which = if end == 0 { "başı" } else { "sonu" };
+    let p = walls[w].pts[vertex];
+    let q = along(p, u, by);
+    let alone = |q: Vec2| {
+        let mut pts = walls[w].pts.to_vec();
+        pts[vertex] = q;
+        vec![Moved { wall: w, pts }]
+    };
+    if walls[w].spec.joins[end] == JoinMode::None {
+        return Ok(alone(q));
+    }
+    let meeting = ends_at(walls, w, p)?;
+    match meeting.as_slice() {
+        [] => match host_at(walls, w, p) {
+            Some(_) => Err(format!(
+                "Kenarın {which} başka bir duvarın gövdesine saplı (T); boyu değişince ondan kopar. O duvarı kaydırın ya da öbür ucu sabitleyin."
+            )),
+            None => Ok(alone(q)),
+        },
+        [one] if cross(u, one.dir).abs() <= inline() => {
+            // End to end in one line: the shared point moves, the other wall's end with it.
+            let mut out = alone(q);
+            let mut pts = walls[one.wall].pts.to_vec();
+            pts[one.vertex] = q;
+            out.push(Moved {
+                wall: one.wall,
+                pts,
+            });
+            Ok(out)
+        }
+        [one] => {
+            // A corner: the other wall's edge there shifts square to itself, the corner going along this edge.
+            let other = &walls[one.wall];
+            let edge = if one.vertex == 0 {
+                0
+            } else {
+                other.pts.len() - 2
+            };
+            let (_, _, n, _) = frame(walls, one.wall, edge)?;
+            let shift_by = dot(Vec2::new(u.x * by, u.y * by), n);
+            let moved = shift(walls, one.wall, edge, shift_by)?;
+            // This wall first.
+            let mut out: Vec<Moved> = moved.iter().filter(|m| m.wall == w).cloned().collect();
+            if out.is_empty() {
+                out = alone(q);
+            }
+            out.extend(moved.into_iter().filter(|m| m.wall != w));
+            Ok(out)
+        }
+        _ => Err(format!(
+            "Kenarın {which}nda birden çok duvar birleşiyor; boyu değişemiyor. Öbür ucu sabitleyin ya da birleşimi kaldırın."
+        )),
+    }
+}
+
+/// Wall `w`'s straight edge `k` made `length` long, `anchor` staying, and what is joined to its moving ends following
+/// (docs/adr/0728 §3); each wall that changed once, `w` first. Why not: the edge, a moving end that is not its path's
+/// end, a tee or a crowded end, a join that cannot follow, or an edge lost.
+pub fn lengthen(
+    walls: &[WallIn<'_>],
+    w: usize,
+    k: usize,
+    length: f64,
+    anchor: Anchor,
+) -> Result<Vec<Moved>, String> {
+    if !(length.is_finite() && length > JOIN_TOLERANCE) {
+        return Err(format!(
+            "Boy {length}; {JOIN_TOLERANCE} m'den uzun, sonlu bir uzunluk olmalı."
+        ));
+    }
+    let (_, u, _, l) = frame(walls, w, k)?;
+    let me = &walls[w];
+    let np = me.pts.len();
+    let change = length - l;
+    let free = path_ends(walls, w, k);
+    let moves: Vec<(usize, usize, f64)> = match anchor {
+        Anchor::Start => vec![(1, (k + 1) % np, change)],
+        Anchor::End => vec![(0, k, -change)],
+        Anchor::Middle => vec![(0, k, -change / 2.0), (1, (k + 1) % np, change / 2.0)],
+    };
+    let mut merged: Vec<Moved> = vec![Moved {
+        wall: w,
+        pts: me.pts.to_vec(),
+    }];
+    for (which, vertex, by) in moves {
+        if !free[which] {
+            return Err(format!(
+                "Kenarın {} duvarın köşesi; boy yalnız yolun ucundan değişir. Kenarı Kaydır'la oynatın ya da öbür ucu sabitleyin.",
+                if which == 0 { "başı" } else { "sonu" }
+            ));
+        }
+        let end = usize::from(vertex != 0);
+        for m in end_moved(walls, w, end, vertex, u, by)? {
+            let old = walls[m.wall].pts;
+            let at = match merged.iter().position(|x| x.wall == m.wall) {
+                Some(at) => at,
+                None => {
+                    merged.push(Moved {
+                        wall: m.wall,
+                        pts: old.to_vec(),
+                    });
+                    merged.len() - 1
+                }
+            };
+            let into = &mut merged[at];
+            for (i, p) in m.pts.iter().enumerate() {
+                if *p == old[i] {
+                    continue;
+                }
+                if into.pts[i] != old[i] && into.pts[i] != *p {
+                    return Err(
+                        "İki ucun izlediği duvarlar aynı köşeyi başka yerlere götürüyor; boyu bir ucu sabitleyerek değiştirin."
+                            .into(),
+                    );
+                }
+                into.pts[i] = *p;
+            }
+        }
+    }
+    // Every edge keeps a length and its way.
+    for m in &merged {
+        let old = walls[m.wall].pts;
+        let ne = edge_count(&walls[m.wall]);
+        for s in 0..ne {
+            let (i, j) = (s, (s + 1) % old.len());
+            if old[i] == m.pts[i] && old[j] == m.pts[j] {
+                continue;
+            }
+            let (p0, p1) = (m.pts[i], m.pts[j]);
+            if dist(p0, p1) <= JOIN_TOLERANCE || dot(sub(p1, p0), sub(old[j], old[i])) <= 0.0 {
+                return Err(format!(
+                    "Bu boy bir duvar kenarını yok ediyor ya da ters çeviriyor ({} m fark); daha küçük bir değişiklik yazın.",
+                    crate::display::fixed(change.abs(), 3)
+                ));
+            }
+        }
+    }
+    Ok(merged)
 }

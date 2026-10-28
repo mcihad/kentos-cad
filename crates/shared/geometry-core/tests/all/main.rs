@@ -87,5 +87,6 @@ mod arch;
 mod tags;
 mod viewmarks;
 mod wall_joins;
+mod wall_length;
 mod walls;
 mod view_links;

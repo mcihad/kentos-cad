@@ -670,6 +670,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             edge,
             side,
             distance,
+            to,
         } => {
             checks::finite(*distance, "Mesafe", "Sonlu bir uzunluk verin.", "operation.distance")?;
             if *distance < 0.0 {
@@ -679,7 +680,15 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     "operation.distance",
                 ));
             }
-            shifted(doc, &walls_found, *edge, Some((*side, *distance)), 0.0, &mut work)?;
+            shifted(doc, &walls_found, *edge, Some((*side, *distance, *to)), 0.0, &mut work)?;
+        }
+        WallsOperation::Length {
+            edge,
+            length,
+            anchor,
+        } => {
+            checks::finite(*length, "Boy", "Sonlu bir uzunluk verin.", "operation.length")?;
+            lengthened(doc, &walls_found, *edge, *length, *anchor, &mut work)?;
         }
     }
     // The openings go with the walls whose paths changed (docs/adr/0341 §3).
@@ -692,6 +701,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             | WallsOperation::Flip
             | WallsOperation::Shift { .. }
             | WallsOperation::Distance { .. }
+            | WallsOperation::Length { .. }
     ) {
         work.openings = carry(doc, &work);
     }
@@ -714,10 +724,15 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
         }
     }
     if let Some(name) = &work.blocked {
+        let what = if matches!(input.operation, WallsOperation::Length { .. }) {
+            "Boyun değişmesi"
+        } else {
+            "Kaydırma"
+        };
         return Err(fail(
             codes::LAYER_LOCKED,
             format!(
-                "Kaydırma “{name}” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın."
+                "{what} “{name}” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın."
             ),
             "operation",
         ));
@@ -726,12 +741,13 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
 }
 
 /// Kaydır and Mesafe (docs/adr/0710): the one wall's edge moved `by`, or by as much as makes the gap on `target`'s side
-/// its distance; the wall first in `work.updates`, the walls that followed after it.
+/// its distance (to its face, or from its axis to a grid, docs/adr/0728 §1); the wall first in `work.updates`, the
+/// walls that followed after it.
 fn shifted(
     doc: &Document,
     found: &[(usize, Slot, &WallEntity)],
     edge: Option<u32>,
-    target: Option<(kentos_commands::DimensionSetFace, f64)>,
+    target: Option<(kentos_commands::DimensionSetFace, f64, kentos_commands::DistanceTo)>,
     by: f64,
     work: &mut Work,
 ) -> Result<(), Stop> {
@@ -749,19 +765,34 @@ fn shifted(
     let gaps = wall_shift::gaps(&ins, 0, k).map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
     let by = match target {
         None => by,
-        Some((side, distance)) => {
+        Some((side, distance, to)) => {
             let left = side == kentos_commands::DimensionSetFace::Left;
-            let Some(g) = gaps[usize::from(!left)] else {
+            let gap = match to {
+                kentos_commands::DistanceTo::Face => gaps[usize::from(!left)].map(|g| g.distance),
+                kentos_commands::DistanceTo::Grid => {
+                    let grids = crate::grid_refs::Grids::of(doc);
+                    let (at, u) = wall_shift::axis_middle(&ins, 0, k)
+                        .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+                    kentos_geometry_core::ops::grid_ref::beside(&grids.ins(), wall_shift::level(&ins[0]), at, u)
+                        [usize::from(!left)]
+                    .map(|g| g.distance)
+                }
+            };
+            let Some(gap) = gap else {
+                let what = match to {
+                    kentos_commands::DistanceTo::Face => "duvar",
+                    kentos_commands::DistanceTo::Grid => "aks",
+                };
                 return Err(fail(
                     codes::INVALID_WALL,
                     format!(
-                        "Duvarın {} yanında ona paralel bir duvar yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
+                        "Duvarın {} yanında ona paralel bir {what} yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
                         if left { "sol" } else { "sağ" }
                     ),
-                    "operation.side",
+                    if to == kentos_commands::DistanceTo::Grid { "operation.to" } else { "operation.side" },
                 ));
             };
-            if left { g.distance - distance } else { distance - g.distance }
+            if left { gap - distance } else { distance - gap }
         }
     };
     if by.abs() <= wall_shift::TIE {
@@ -772,6 +803,62 @@ fn shifted(
         ));
     }
     let moved = wall_shift::shift(&ins, 0, k, by).map_err(|why| fail(codes::INVALID_WALL, why, "operation"))?;
+    for m in moved {
+        let s = walls.slots[m.wall];
+        let Some(Entity::Wall(w)) = doc.get(s) else { continue };
+        if m.wall != 0 && work.blocked.is_none() && doc.layers().is_locked(&w.base.layer_id) {
+            let id = &w.base.layer_id;
+            work.blocked = Some(doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str()).to_owned());
+        }
+        let mut out = w.clone();
+        out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+        let path = format!("uids[{at}]");
+        walls::valid(&out.wall, &path)?;
+        walls::drawable(&out.wall, &path)?;
+        work.updates.push((s, out));
+    }
+    work.named = Some(1);
+    Ok(())
+}
+
+/// Boy (docs/adr/0728 §3): the one wall's edge made `length` long, `anchor` staying; the wall first in `work.updates`,
+/// the walls that followed after it.
+fn lengthened(
+    doc: &Document,
+    found: &[(usize, Slot, &WallEntity)],
+    edge: Option<u32>,
+    length: f64,
+    anchor: kentos_commands::WallAnchor,
+    work: &mut Work,
+) -> Result<(), Stop> {
+    use kentos_geometry_core::ops::wall_shift;
+    let [(at, slot, wall)] = found else {
+        return Err(fail(
+            codes::INVALID_WALL,
+            "Boy tek duvarla çalışır; bir duvar verin.".into(),
+            "uids",
+        ));
+    };
+    let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
+    let ins = walls.ins();
+    let k = edge.unwrap_or(0) as usize;
+    let now = wall_shift::edge_length(&ins, 0, k).map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    if (length - now).abs() <= wall_shift::TIE {
+        return Err(fail(
+            codes::NOTHING_TO_SET,
+            "Kenar zaten bu boyda; değişecek bir şey yok.".into(),
+            "operation.length",
+        ));
+    }
+    let anchor = match anchor {
+        kentos_commands::WallAnchor::Start => wall_shift::Anchor::Start,
+        kentos_commands::WallAnchor::End => wall_shift::Anchor::End,
+        kentos_commands::WallAnchor::Middle => wall_shift::Anchor::Middle,
+    };
+    let moved = wall_shift::lengthen(&ins, 0, k, length, anchor).map_err(|why| {
+        let path = if why.starts_with("Boy ") { "operation.length" } else { "operation" };
+        fail(codes::INVALID_WALL, why, path)
+    })?;
     for m in moved {
         let s = walls.slots[m.wall];
         let Some(Entity::Wall(w)) = doc.get(s) else { continue };

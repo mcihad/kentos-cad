@@ -483,13 +483,17 @@ pub enum OpeningsOperation {
     },
     /// Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`
     /// from the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it
-    /// stays on its edge.
+    /// stays on its edge. With `to: grid` (docs/adr/0728 §1) the distance is from the opening's middle to the nearest
+    /// grid crossing the face on that side, which stays.
     Distance {
         side: WallEnd,
         #[serde(default)]
         face: crate::DimensionSetFace,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
+        #[serde(default, skip_serializing_if = "crate::DistanceTo::is_face")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<crate::DistanceTo>", optional))]
+        to: crate::DistanceTo,
     },
 }
 
@@ -594,6 +598,8 @@ pub enum OpeningReference {
     End,
     Opening { uid: String },
     Wall { uid: String },
+    /// A grid crossing the face, measured from the opening's middle (docs/adr/0728 §1).
+    Grid { uid: String },
 }
 
 /// One side's distance: net along the face, from the opening's jamb to the reference's point on the face.
@@ -629,6 +635,13 @@ pub struct OpeningDistances {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub end: Option<OpeningDistance>,
+    /// The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start_grid: Option<OpeningDistance>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end_grid: Option<OpeningDistance>,
 }
 
 /// Output of `cad.openings.distances` v1.

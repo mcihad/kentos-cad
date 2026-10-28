@@ -1,14 +1,17 @@
-//! Açıklığın geçici ölçüleri (docs/adr/0701): the one selected opening's distances to the nearest references on each
-//! side along its wall's face, drawn as dimensions over the drawing; the face is the one the pointer is by. A click on
-//! a number opens a text field at it with the value; Enter moves the opening by `cad.openings.edit`'s `distance`, the
-//! reference fixed, in one undo step; Esc leaves it as it was.
+//! Açıklığın geçici ölçüleri (docs/adr/0701, 0728): the one selected opening's distances to the nearest references on
+//! each side along its wall's face, drawn as dimensions over the drawing; the face is the one the pointer is by. A side
+//! with a grid crossing the face too has a small square at its reference: a click switches it to the grid (from the
+//! opening's middle) and back, the choice kept for the session. A click on a number opens a text field at it with the
+//! value; Enter moves the opening by `cad.openings.edit`'s `distance`, the reference fixed, in one undo step; Esc
+//! leaves it as it was.
 
-use kentos_commands::{DimensionSetFace, Entity, OpeningsEdit, OpeningsOperation, TextAlign, WallEnd};
+use kentos_commands::{DimensionSetFace, DistanceTo, Entity, OpeningsEdit, OpeningsOperation, TextAlign, WallEnd};
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::opening_distances::{Measured, measured};
 use kentos_native_application::{ExecutionContext, openings_edit};
 
 use crate::prompt::Prompt;
+use crate::temporary_refs::{Choices, Switch, other, shown};
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
 use crate::{Format, Level, Vec2, dimension_layout};
 
@@ -21,12 +24,13 @@ const GAP_PX: f64 = 22.0;
 /// How near a number a click takes it, logical pixels.
 const REACH_PX: [f64; 2] = [30.0, 12.0];
 
-/// One side's temporary dimension: its value and where its number stands.
+/// One side's temporary dimension: its value, where its number stands and what it measures to.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Side {
     pub start: bool,
     pub value: f64,
     pub text_at: Vec2,
+    pub to: DistanceTo,
 }
 
 /// The temporary dimensions of the selected opening, as last seen.
@@ -38,9 +42,11 @@ pub struct Overlay {
     measured: Option<u64>,
     faces: [Option<Measured>; 2],
     face: Option<DimensionSetFace>,
-    /// The view's scale the dimensions were drawn at.
+    /// The view's scale the dimensions were drawn at; none: to be drawn again (a choice changed).
     scale: Option<u64>,
     pub sides: Vec<Side>,
+    /// The squares that switch a side's reference, where they stand.
+    pub squares: Vec<(Vec2, Switch)>,
     pub preview: Preview,
 }
 
@@ -131,7 +137,7 @@ fn face_by(left: &Measured, right: &Measured, at: Vec2) -> DimensionSetFace {
 impl Overlay {
     /// Brought up to date for the selection, the pointer at `pointer` (none: the face as it was, else the left).
     /// The opening is measured once per revision; a pointer's move only picks the face.
-    pub fn see(&mut self, pointer: Option<Vec2>, cx: &Context<'_>) {
+    pub fn see(&mut self, pointer: Option<Vec2>, choices: &Choices, cx: &Context<'_>) {
         let Some((slot, uid)) = selected(cx) else {
             *self = Self::default();
             return;
@@ -156,6 +162,7 @@ impl Overlay {
         let face = match (pointer, &self.faces) {
             (_, [None, None]) => {
                 self.sides.clear();
+                self.squares.clear();
                 self.preview = Preview::default();
                 return;
             }
@@ -171,15 +178,24 @@ impl Overlay {
         self.face = Some(face);
         self.scale = Some(scale);
         self.sides.clear();
+        self.squares.clear();
         self.preview = Preview::default();
         let Some(m) = self.faces[usize::from(face == DimensionSetFace::Right)].clone() else {
             return;
         };
-        self.draw(&m, face, cx);
+        self.draw(&m, face, choices, cx);
     }
 
-    /// The dimensions of `m` on `face`, out of the wall by a few pixels, and the reference marks.
-    fn draw(&mut self, m: &Measured, face: DimensionSetFace, cx: &Context<'_>) {
+    /// Drawn again at the next look: a choice changed.
+    pub fn redraw(&mut self) {
+        self.scale = None;
+    }
+
+    /// The dimensions of `m` on `face` (each side's chosen reference), out of the wall by a few pixels, and the
+    /// reference marks.
+    fn draw(&mut self, m: &Measured, face: DimensionSetFace, choices: &Choices, cx: &Context<'_>) {
+        let Some(uid) = self.uid else { return };
+        let face_key = u32::from(face == DimensionSetFace::Right);
         let [a, b] = m.line;
         let l = (b.x - a.x).hypot(b.y - a.y);
         let u = ((b.x - a.x) / l, (b.y - a.y) / l);
@@ -191,11 +207,37 @@ impl Overlay {
         let gap = cx.view.world_length(GAP_PX);
         let height = cx.view.world_length(TEXT_PX);
         for start in [true, false] {
-            let (Some(value), Some(r)) = (m.distance(start), if start { m.start } else { m.end }) else {
+            let side = u32::from(!start);
+            let (face_ref, grid_ref) = if start {
+                (m.start, m.start_grid)
+            } else {
+                (m.end, m.end_grid)
+            };
+            let Some(kind) = shown(face_ref.is_some(), grid_ref.is_some(), choices.to(uid, face_key, side)) else {
                 continue;
             };
-            let jamb = v(m.jambs[usize::from(!start)].0);
+            // A face's from the jamb, a grid's from the opening's middle (docs/adr/0728 §1).
+            let (value, jamb, r) = match kind {
+                DistanceTo::Face => (m.distance(start), v(m.jambs[usize::from(!start)].0), face_ref),
+                DistanceTo::Grid => (m.grid_distance(start), v(m.middle_at()), grid_ref),
+            };
+            let (Some(value), Some(r)) = (value, r) else {
+                continue;
+            };
             let to = v(r.at);
+            // Two references: a square at this one switches to the other.
+            if face_ref.is_some() && grid_ref.is_some() {
+                self.preview.squares.push(to);
+                self.squares.push((
+                    to,
+                    Switch::Reference {
+                        uid,
+                        edge: face_key,
+                        side,
+                        to: other(kind),
+                    },
+                ));
+            }
             let along = (to.x - jamb.x, to.y - jamb.y);
             let length = along.0.hypot(along.1);
             // A dimension's offset is measured to the left of its first point → its second.
@@ -253,6 +295,7 @@ impl Overlay {
                 start,
                 value,
                 text_at,
+                to: kind,
             });
         }
     }
@@ -264,6 +307,7 @@ impl Overlay {
             uid: self.uid?,
             side: if side.start { WallEnd::Start } else { WallEnd::End },
             face: self.face?,
+            to: side.to,
             at: side.text_at,
             value: side.value,
             done: false,
@@ -277,6 +321,7 @@ pub struct OpeningDistance {
     uid: Uuid,
     side: WallEnd,
     face: DimensionSetFace,
+    to: DistanceTo,
     at: Vec2,
     value: f64,
     done: bool,
@@ -292,7 +337,12 @@ impl OpeningDistance {
             width_factor: 1.0,
             initial: Some(initial),
             placeholder: Some("Mesafe"),
-            hint: Some("Yeni mesafeyi yazın (90 cm, 0.9); Enter açıklığı taşır, Esc vazgeçer."),
+            hint: Some(match self.to {
+                DistanceTo::Face => "Yeni mesafeyi yazın (90 cm, 0.9); Enter açıklığı taşır, Esc vazgeçer.",
+                DistanceTo::Grid => {
+                    "Açıklığın ortasından aksa yeni mesafeyi yazın (0 ortayı aksa koyar); Enter açıklığı taşır, Esc vazgeçer."
+                }
+            }),
             empty: false,
             face: Default::default(),
         }));
@@ -353,6 +403,7 @@ impl Tool for OpeningDistance {
                 side: self.side,
                 face: self.face,
                 distance,
+                to: self.to,
             },
         };
         let result = openings_edit::execute(&mut ExecutionContext::new(cx.doc), input);
@@ -363,7 +414,11 @@ impl Tool for OpeningDistance {
                 "sondaki"
             };
             let shown = cx.format().length(distance);
-            cx.say(Level::Success, format!("Açıklık taşındı: {side} mesafesi {shown}."));
+            let what = match self.to {
+                DistanceTo::Face => "mesafesi",
+                DistanceTo::Grid => "aksa mesafesi",
+            };
+            cx.say(Level::Success, format!("Açıklık taşındı: {side} {what} {shown}."));
         }
         self.done = true;
     }

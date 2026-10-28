@@ -17,6 +17,11 @@ The rules, as ADR 0712 gives them:
   by more than 1e-9 m;
 - Mesafe moves the column's centre along side k's outward normal by the gap less the distance typed; one column, not
   tied to grids.
+
+ADR 0728 adds grids: a straight grid (no bulge) on the column's level or on none, its line endless, parallel to side k
+(within 0.001°), measured from the column's middle along the side's outward normal; one through the middle (within
+1e-9) counts on the lower of the two parallel sides (0 or 1). Each side's nearest, a tie to the grid first in the
+drawing. Mesafe `to: grid` moves the column along the side's outward normal by the grid gap less the distance.
 """
 
 import argparse
@@ -53,8 +58,8 @@ def column(id, at, width, layer="kolon", **extra):
     return {"kind": "column", "id": id, "layerId": layer, "attrs": {}, "at": P(*at), "width": width, **extra}
 
 
-def grid(id, pts, name):
-    return {"kind": "grid", "id": id, "layerId": "aks", "attrs": {}, "pts": [P(*p) for p in pts], "name": name}
+def grid(id, pts, name, **extra):
+    return {"kind": "grid", "id": id, "layerId": "aks", "attrs": {}, "pts": [P(*p) for p in pts], "name": name, **extra}
 
 
 ENTITIES = [
@@ -88,6 +93,17 @@ ENTITIES = [
     wall(23, [(0, 50), (6, 50)], justify="left"),
     column(24, (3, 52), 0.4),
     {"kind": "line", "id": 25, "layerId": "cizim", "attrs": {}, "a": P(0, 60), "b": P(4, 60)},
+    # F (ADR 0728): grids of no level, of the first floor and of the ground floor; columns of no level and of the
+    # first floor; a turned column with a grid turned with it; a grid of an arc.
+    column(26, (10, 70), 0.4),
+    grid(27, [(11.2, 60), (11.2, 90)], "B"),
+    grid(28, [(0, 71.5), (20, 71.5)], "2", arch={"level": "kat-1"}),
+    column(29, (10, 75), 0.4, arch={"level": "kat-1"}),
+    grid(30, [(0, 74), (20, 74)], "3", arch={"level": "zemin"}),
+    column(31, (30, 70), 0.4, rotation=math.pi / 6),
+    grid(32, [(30 - 5 * math.cos(math.pi / 6), 70.9 - 5 * math.sin(math.pi / 6)),
+              (30 + 5 * math.cos(math.pi / 6), 70.9 + 5 * math.sin(math.pi / 6))], "C"),
+    grid(33, [(0, 69.5), (20, 69.5)], "4", bulges=[0.3, 0.0]),
 ]
 SETTINGS = {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50,
             "workspace": "cad", "arch": {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
@@ -233,6 +249,38 @@ def gaps(state, k):
     return best
 
 
+def middle(c):
+    k = corners(c)
+    return ((k[0][0] + k[2][0]) / 2.0, (k[0][1] + k[2][1]) / 2.0)
+
+
+def straight_grids(state):
+    return [(i, xy(g["pts"][0]), xy(g["pts"][1]), level(g)) for i, g in sorted(state.items())
+            if g["kind"] == "grid" and len(g["pts"]) == 2 and not any(x != 0.0 for x in (g.get("bulges") or []))]
+
+
+def grid_gaps(state, k):
+    me = state[k]
+    at = middle(me)
+    best = [None] * 4
+    for side, (a, b) in enumerate(sides(me)):
+        uu = unit(a, b)
+        n = (uu[1], -uu[0])
+        for gid, ga, gb, glevel in straight_grids(state):
+            if glevel is not None and glevel != level(me):
+                continue
+            if abs(cross(uu, unit(ga, gb))) > PARALLEL:
+                continue
+            o = dot(sub(ga, at), n)
+            if o < -TIE or (o <= TIE and side >= 2):
+                continue
+            g = {"side": side, "target": "grid", "id": gid, "edge": 0, "distance": max(0.0, o), "from": at,
+                 "to": along(at, n, o)}
+            if best[side] is None or g["distance"] < best[side]["distance"] - TIE:
+                best[side] = g
+    return best
+
+
 def u(i):
     return f"$uidOf:{i}"
 
@@ -253,6 +301,10 @@ def answer(state, ids):
                 s["face"] = g["face"]
             s.update({"from": P(*g["from"]), "to": P(*g["to"])})
             item["sides"].append(s)
+        grids = [{"side": g["side"], "distance": g["distance"], "uid": u(g["id"]), "target": "grid", "edge": 0,
+                  "from": P(*g["from"]), "to": P(*g["to"])} for g in grid_gaps(state, i) if g is not None]
+        if grids:
+            item["grids"] = grids
         out.append(item)
     return {"columns": out, "revision": "$current"}
 
@@ -312,6 +364,9 @@ def distances_cases():
     ask("geçersiz kimlik reddedilir", {"uids": ["K-1"]})
     ask("çizimde olmayan kimlik reddedilir", {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]})
     ask("ikinci kimlik kolon değilse reddedilir", {"uids": [u(5), u(2)]})
+    ask("aks: katsız kolonda katsız akslar, 1. kat aksı sayılmaz, yay aks sayılmaz", {"uids": [u(26)]})
+    ask("aks: 1. kattaki kolonda kendi katının aksı ve katsız akslar, zemin kat aksı sayılmaz", {"uids": [u(29)]})
+    ask("aks: 30° dönük kolonda kendi dönüklüğündeki aks", {"uids": [u(31)]})
     return c
 
 
@@ -343,7 +398,12 @@ def edit(state, inp):
     side = op["side"]
     if side > 3:
         return refusal("invalid_column", f"Kolonun {side}. yanı yok; yanları 0 ile 3 arasında.", "operation.side"), None
-    g = gaps(state, i)[side]
+    if op.get("to", "face") == "grid":
+        g = grid_gaps(state, i)[side]
+        if g is None:
+            return refusal("invalid_column", "Kolonun bu yanına paralel bir aks yok; aksa mesafe ölçülemiyor.", "operation.to"), None
+    else:
+        g = gaps(state, i)[side]
     if g is None:
         return refusal("invalid_column", "Kolonun bu yanında ona paralel bir duvar ya da kolon yok; mesafe ölçülemiyor.", "operation.side"), None
     a, b = sides(c)[side]
@@ -378,8 +438,11 @@ def step(op, inp, non_finite=None):
     return s
 
 
-def distance_in(i, side, d):
-    return {"uids": [u(i)], "operation": {"kind": "distance", "side": side, "distance": d}}
+def distance_in(i, side, d, to=None):
+    op = {"kind": "distance", "side": side, "distance": d}
+    if to is not None:
+        op["to"] = to
+    return {"uids": [u(i)], "operation": op}
 
 
 def edit_cases():
@@ -403,6 +466,10 @@ def edit_cases():
         ("1. kattaki kolon kendi katının duvarına 1,00 m", distance_in(19, 3, 1.0)),
         ("sola hizalı duvara 0,50 m", distance_in(24, 0, 0.5)),
         ("mesafe sıfır: kolon duvara dayanır", distance_in(5, 3, 0.0)),
+        ("aksa mesafe: kolonun ortası sağındaki aksa 1,20'den 0,50 m'ye (aks yerinde)", distance_in(26, 1, 0.5, to="grid")),
+        ("aksa mesafe 0: kolonun ortası soldaki aksın üstüne", distance_in(26, 3, 0.0, to="grid")),
+        ("1. kattaki kolon kendi katının aksına 1,00 m (altında)", distance_in(29, 0, 1.0, to="grid")),
+        ("30° dönük kolon kendi dönüklüğündeki aksa 0,20 m", distance_in(31, 2, 0.2, to="grid")),
     ]:
         add(name, [step("execute", inp)])
     add("plan kolonu yazmadan gösterir", [step("plan", distance_in(5, 3, 1.5))])
@@ -418,12 +485,15 @@ def edit_cases():
         ("sonsuz mesafe reddedilir", distance_in(5, 0, 1.0), {"operation.distance": "NaN"}),
         ("mesafe zaten bu: yazılmaz", distance_in(5, 0, 1.7), None),
         ("kilitli katmandaki kolon kaydırılmaz", distance_in(22, 1, 1.0), None),
+        ("aksı olmayan yanda aksa mesafe reddedilir", distance_in(5, 0, 1.0, to="grid"), None),
+        ("aksa mesafe zaten bu: yazılmaz", distance_in(26, 1, 1.2, to="grid"), None),
+        ("olmayan yan aksa da reddedilir", distance_in(26, 5, 1.0, to="grid"), None),
     ]:
         add(name, [step("execute", inp, nf)])
     return c
 
 
-NOTE = "ADR 0712. Beklenenler scripts/fixtures/column_shift_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan."
+NOTE = "ADR 0712, 0728. Beklenenler scripts/fixtures/column_shift_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan."
 
 
 def document(command, title, cases):

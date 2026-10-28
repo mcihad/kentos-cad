@@ -19,7 +19,7 @@ walls: Array<Entity>,
  */
 added?: Array<Entity>, 
 /**
- * The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
+ * The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).
  */
 joined?: Array<Entity>, 
 /**

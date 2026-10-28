@@ -221,6 +221,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             side,
             face,
             distance,
+            to,
         } => {
             checks::finite(*distance, "Mesafe", "Sonlu bir sayı verin.", "operation.distance")?;
             if *distance < 0.0 {
@@ -234,13 +235,23 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             for (at, slot, o) in &list {
                 let path = format!("uids[{at}]");
                 let m = crate::opening_distances::measure(doc, *slot, &o.opening, *face, &path)?;
-                let Some(now) = m.distance(start) else {
+                let now = match to {
+                    kentos_commands::DistanceTo::Face => m.distance(start),
+                    // docs/adr/0728 §1: from its middle to the grid crossing the face.
+                    kentos_commands::DistanceTo::Grid => m.grid_distance(start),
+                };
+                let Some(now) = now else {
+                    let side = if start { "başında" } else { "sonunda" };
                     return Err(fail(
                         codes::INVALID_OPENING,
-                        format!(
-                            "Açıklığın {} bu yüzde referans yok: yüzün ucu açıklığın gerisinde kalıyor. Öbür yüzü ya da yanı seçin.",
-                            if start { "başında" } else { "sonunda" }
-                        ),
+                        match to {
+                            kentos_commands::DistanceTo::Face => format!(
+                                "Açıklığın {side} bu yüzde referans yok: yüzün ucu açıklığın gerisinde kalıyor. Öbür yüzü ya da yanı seçin."
+                            ),
+                            kentos_commands::DistanceTo::Grid => format!(
+                                "Açıklığın {side} bu yüzü kesen bir aks yok; aksa mesafe ölçülemiyor. Öbür yanı seçin ya da yüze ölçün."
+                            ),
+                        },
                         &path,
                     ));
                 };

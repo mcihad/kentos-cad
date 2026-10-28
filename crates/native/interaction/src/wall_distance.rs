@@ -1,28 +1,51 @@
-//! Duvarın geçici ölçüleri (docs/adr/0710): the one selected wall's clear distances on each side of the straight edge
-//! the pointer is nearest, each to the nearest parallel wall, drawn as dimensions across the gaps. A click on a number
-//! opens a text field at it with the value; Enter moves the edge by `cad.walls.edit`'s `distance`, the wall across
-//! fixed and what is joined following, in one undo step; Esc leaves it as it was.
+//! Duvarın geçici ölçüleri (docs/adr/0710, 0728): the one selected wall's clear distances on each side of the straight
+//! edge the pointer is nearest, each to the nearest parallel wall, drawn as dimensions across the gaps. A side with a
+//! parallel grid too has a small square at its reference: a click switches it to the grid (from the edge's axis) and
+//! back, the choice kept for the session. Along the edge, when an end of it is the path's, its length, the end that
+//! stays marked solid (a square at the other end, when it can stay instead, switches it). A click on a number opens a
+//! text field at it with the value; Enter moves the edge by `cad.walls.edit`'s `distance` (the wall or grid across
+//! fixed) or makes it the length by its `length` (the marked end fixed), what is joined following, in one undo step;
+//! Esc leaves it as it was.
 
-use kentos_commands::{DimensionSetFace, Entity, TextAlign, WallGaps, WallsEdit, WallsOperation};
+use kentos_commands::{
+    DimensionSetFace, DistanceTo, Entity, TextAlign, WallAnchor, WallFields, WallGaps, WallJustify, WallsEdit,
+    WallsOperation,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::{ExecutionContext, wall_distances, walls_edit};
 
 use crate::prompt::Prompt;
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
+use crate::temporary_refs::{Choices, Switch, other, shown};
+use crate::tool::{
+    Context, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange,
+};
 use crate::{Format, Level, Vec2, dimension_layout};
 
 pub const ID: &str = "wallDistance";
 pub const LABEL: &str = "Duvarın mesafesi";
+pub const LENGTH_ID: &str = "wallLength";
+pub const LENGTH_LABEL: &str = "Duvarın boyu";
 
 /// The numbers' height, logical pixels: readable at any zoom.
 const TEXT_PX: f64 = 12.0;
+/// The length's dimension out of the wall's face, logical pixels.
+const GAP_PX: f64 = 22.0;
 
-/// One side's temporary dimension: its side of the edge, its value and where its number stands.
+/// One side's temporary dimension: its side of the edge, its value, where its number stands, what it measures to.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Side {
     pub left: bool,
     pub value: f64,
     pub text_at: Vec2,
+    pub to: DistanceTo,
+}
+
+/// The edge's length dimension: its value, where its number stands and the end that stays.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Length {
+    pub value: f64,
+    pub text_at: Vec2,
+    pub anchor: WallAnchor,
 }
 
 /// The temporary dimensions of the selected wall, as last seen.
@@ -34,9 +57,12 @@ pub struct Overlay {
     measured: Option<u64>,
     edges: Vec<(Option<WallGaps>, [Vec2; 2])>,
     edge: Option<usize>,
-    /// The view's scale the dimensions were drawn at.
+    /// The view's scale the dimensions were drawn at; none: to be drawn again (a choice changed).
     scale: Option<u64>,
     pub sides: Vec<Side>,
+    pub length: Option<Length>,
+    /// The squares that switch a reference or the fixed end, where they stand.
+    pub squares: Vec<(Vec2, Switch)>,
     pub preview: Preview,
 }
 
@@ -68,10 +94,33 @@ fn off_segment(p: Vec2, [a, b]: [Vec2; 2]) -> f64 {
     (p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t))
 }
 
+/// A wall's faces as offsets to its path's left: its left face, its right face.
+fn faces(w: &WallFields) -> (f64, f64) {
+    let lf = w.offset
+        + match w.justify {
+            WallJustify::Left => 0.0,
+            WallJustify::Center => w.width / 2.0,
+            WallJustify::Right => w.width,
+        };
+    (lf, lf - w.width)
+}
+
+/// The end an edge keeps when its length changes: the one that cannot move, else the session's choice, else its start.
+pub fn anchor_of(start_free: bool, end_free: bool, chosen: Option<WallAnchor>) -> WallAnchor {
+    match (start_free, end_free) {
+        (true, true) => match chosen {
+            Some(WallAnchor::End) => WallAnchor::End,
+            _ => WallAnchor::Start,
+        },
+        (true, false) => WallAnchor::End,
+        _ => WallAnchor::Start,
+    }
+}
+
 impl Overlay {
     /// Brought up to date for the selection, the pointer at `pointer` (none: the edge as it was, else the first).
     /// The wall is measured once per revision; a pointer's move only picks the edge.
-    pub fn see(&mut self, pointer: Option<Vec2>, cx: &Context<'_>) {
+    pub fn see(&mut self, pointer: Option<Vec2>, choices: &Choices, cx: &Context<'_>) {
         let Some((slot, uid)) = selected(cx) else {
             *self = Self::default();
             return;
@@ -115,101 +164,240 @@ impl Overlay {
             None => self.edge.or_else(|| measured.first().copied()),
         };
         let Some(edge) = edge else {
-            self.sides.clear();
-            self.preview = Preview::default();
+            self.clear();
             return;
         };
         let scale = cx.view.world_length(1.0).to_bits();
-        if self.edge == Some(edge) && self.scale == Some(scale) && !self.preview.strokes.is_empty()
-        {
+        if self.edge == Some(edge) && self.scale == Some(scale) && !self.preview.strokes.is_empty() {
             return;
         }
         self.edge = Some(edge);
         self.scale = Some(scale);
-        self.sides.clear();
-        self.preview = Preview::default();
+        self.clear();
         if let Some(g) = self.edges[edge].0.clone() {
-            self.draw(&g, cx);
+            self.draw(&g, choices, cx);
         }
     }
 
-    /// The gaps of `g` drawn across them, and the walls measured to marked where they are met.
-    fn draw(&mut self, g: &WallGaps, cx: &Context<'_>) {
+    /// Drawn again at the next look: a choice changed.
+    pub fn redraw(&mut self) {
+        self.scale = None;
+    }
+
+    /// Whether anything is drawn.
+    pub fn shows(&self) -> bool {
+        !self.sides.is_empty() || self.length.is_some()
+    }
+
+    fn clear(&mut self) {
+        self.sides.clear();
+        self.length = None;
+        self.squares.clear();
+        self.preview = Preview::default();
+    }
+
+    /// A dimension from `from` to `to`, `offset` to its left, drawn in the snap tone: where its number stands.
+    fn dimension(&mut self, from: Vec2, to: Vec2, offset: f64, cx: &Context<'_>) -> Vec2 {
         let height = cx.view.world_length(TEXT_PX);
-        for (left, gap) in [(true, &g.left), (false, &g.right)] {
-            let Some(gap) = gap else { continue };
-            let (from, to) = (v(gap.from), v(gap.to));
-            let length = (to.x - from.x).hypot(to.y - from.y);
-            let text_at = Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0);
+        let entity = crate::opening_distance::dimension(from, to, offset, height);
+        let mut drawn =
+            crate::wall_dimensions::dimension_preview(&entity, &cx.format(), cx.doc.settings().drawing_font);
+        for s in &mut drawn.strokes {
+            s.tone = Tone::Snap;
+        }
+        self.preview.strokes.extend(drawn.strokes);
+        // The number over a mask of the view's ground: the line it stands on does not cross it.
+        self.preview
+            .texts
+            .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
+        dimension_layout(&entity).map_or(Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0), |l| l.text_at)
+    }
+
+    /// The gaps of `g` drawn across them (each side's chosen reference), the faces or grids met marked where they are
+    /// met; the edge's length along it.
+    fn draw(&mut self, g: &WallGaps, choices: &Choices, cx: &Context<'_>) {
+        let Some(uid) = self.uid else { return };
+        let height = cx.view.world_length(TEXT_PX);
+        for (left, face, grid) in [(true, &g.left, &g.left_grid), (false, &g.right, &g.right_grid)] {
+            let side = u32::from(!left);
+            let Some(to) = shown(face.is_some(), grid.is_some(), choices.to(uid, g.edge, side)) else {
+                continue;
+            };
+            let (from, at, value) = match (to, face, grid) {
+                (DistanceTo::Face, Some(f), _) => (v(f.from), v(f.to), f.distance),
+                (DistanceTo::Grid, _, Some(x)) => (v(x.from), v(x.to), x.distance),
+                _ => continue,
+            };
+            let length = (at.x - from.x).hypot(at.y - from.y);
+            let mut text_at = Vec2::new((from.x + at.x) / 2.0, (from.y + at.y) / 2.0);
             if length > 1e-9 {
-                let entity = crate::opening_distance::dimension(from, to, 0.0, height);
-                let mut drawn = crate::wall_dimensions::dimension_preview(
-                    &entity,
-                    &cx.format(),
-                    cx.doc.settings().drawing_font,
-                );
-                for s in &mut drawn.strokes {
-                    s.tone = Tone::Snap;
-                }
-                self.preview.strokes.extend(drawn.strokes);
-                // The number over a mask of the view's ground: the line it stands on does not cross it.
-                self.preview
-                    .texts
-                    .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
-                // The face met, marked across the measurement.
-                let (dx, dy) = ((to.x - from.x) / length, (to.y - from.y) / length);
+                text_at = self.dimension(from, at, 0.0, cx);
+                // The face or grid met, marked across the measurement.
+                let (dx, dy) = ((at.x - from.x) / length, (at.y - from.y) / length);
                 let n = (-dy * height * 0.8, dx * height * 0.8);
                 let mut mark = Stroke::solid(
-                    vec![
-                        Vec2::new(to.x - n.0, to.y - n.1),
-                        Vec2::new(to.x + n.0, to.y + n.1),
-                    ],
+                    vec![Vec2::new(at.x - n.0, at.y - n.1), Vec2::new(at.x + n.0, at.y + n.1)],
                     false,
                 );
                 mark.tone = Tone::Snap;
                 mark.width = 2.0;
                 self.preview.strokes.push(mark);
+            } else {
+                // On the grid: the number alone.
+                self.preview.texts.push(TextGhost {
+                    p: text_at,
+                    text: cx.format().length(0.0),
+                    height,
+                    rotation: 0.0,
+                    align: Some(kentos_geometry_core::text::TextAlign::MiddleCenter),
+                    mask: true,
+                    face: Default::default(),
+                    width_factor: 1.0,
+                });
             }
-            let text_at = match (length > 1e-9)
-                .then(|| crate::opening_distance::dimension(from, to, 0.0, height))
-                .as_ref()
-                .and_then(dimension_layout)
-            {
-                Some(layout) => layout.text_at,
-                None => text_at,
-            };
+            // Two references: a square at this one switches to the other.
+            if face.is_some() && grid.is_some() {
+                self.preview.squares.push(at);
+                self.squares.push((
+                    at,
+                    Switch::Reference {
+                        uid,
+                        edge: g.edge,
+                        side,
+                        to: other(to),
+                    },
+                ));
+            }
             self.sides.push(Side {
                 left,
-                value: gap.distance,
+                value,
                 text_at,
+                to,
             });
+        }
+        if let Some(l) = &g.length {
+            self.draw_length(g, l, choices, cx);
         }
     }
 
-    /// The text field of the side whose number is under the pointer.
-    pub fn at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<WallDistance> {
-        let side = crate::opening_distance::nearest_number(&self.sides, |s| s.text_at, screen, cx)?;
-        Some(WallDistance {
-            uid: self.uid?,
-            edge: self.edge? as u32,
-            side: if side.left {
-                DimensionSetFace::Left
+    /// The edge's length along it, out of the face where no gap is drawn (with both, beyond the longer one, whose number
+    /// stands farther out of the wall; neither, its right), the end that stays solid.
+    fn draw_length(&mut self, g: &WallGaps, l: &kentos_commands::WallLength, choices: &Choices, cx: &Context<'_>) {
+        let (Some(uid), Some(slot)) = (self.uid, self.slot) else { return };
+        let Some(Entity::Wall(w)) = cx.doc.get(slot) else { return };
+        let (lf, rf) = faces(&w.wall);
+        let gap = cx.view.world_length(GAP_PX);
+        let value = |left: bool| self.sides.iter().find(|s| s.left == left).map(|s| s.value);
+        let on_left = match (value(true), value(false)) {
+            (None, Some(_)) => true,
+            (Some(l), Some(r)) => l > r,
+            _ => false,
+        };
+        let offset = if on_left { lf + gap } else { rf - gap };
+        let (a, b) = (v(l.from), v(l.to));
+        let text_at = self.dimension(a, b, offset, cx);
+        let anchor = anchor_of(l.start_free, l.end_free, choices.anchor(uid, g.edge));
+        // The marks on the dimension line's ends, `offset` to the left of the edge, clear of the wall's own grips.
+        let length = (b.x - a.x).hypot(b.y - a.y);
+        let on_line = |p: Vec2| {
+            if length > 1e-12 {
+                Vec2::new(p.x - (b.y - a.y) / length * offset, p.y + (b.x - a.x) / length * offset)
             } else {
-                DimensionSetFace::Right
-            },
-            at: side.text_at,
-            value: side.value,
-            done: false,
+                p
+            }
+        };
+        let (fixed, free) = match anchor {
+            WallAnchor::End => (on_line(b), on_line(a)),
+            _ => (on_line(a), on_line(b)),
+        };
+        // The end that stays: a filled square; the one that can stay instead, a hollow 9 px one to click.
+        self.preview.markers.push(Marker {
+            at: fixed,
+            shape: MarkerShape::Square(3.5),
+            tone: Tone::Accent,
+        });
+        if l.start_free && l.end_free {
+            self.preview.squares.push(free);
+            self.squares.push((
+                free,
+                Switch::Anchor {
+                    uid,
+                    edge: g.edge,
+                    anchor: match anchor {
+                        WallAnchor::End => WallAnchor::Start,
+                        _ => WallAnchor::End,
+                    },
+                },
+            ));
+        }
+        self.length = Some(Length {
+            value: l.length,
+            text_at,
+            anchor,
+        });
+    }
+
+    /// The text field of the number under the pointer: a side's distance or the edge's length.
+    pub fn at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<Box<dyn Tool>> {
+        enum Number<'a> {
+            Side(&'a Side),
+            Length(&'a Length),
+        }
+        let mut numbers: Vec<(Vec2, Number<'_>)> = self.sides.iter().map(|s| (s.text_at, Number::Side(s))).collect();
+        if let Some(l) = &self.length {
+            numbers.push((l.text_at, Number::Length(l)));
+        }
+        let (_, number) = crate::opening_distance::nearest_number(&numbers, |n| n.0, screen, cx)?;
+        let (uid, edge) = (self.uid?, self.edge? as u32);
+        Some(match number {
+            Number::Side(side) => Box::new(WallDistance {
+                uid,
+                edge,
+                side: if side.left {
+                    DimensionSetFace::Left
+                } else {
+                    DimensionSetFace::Right
+                },
+                to: side.to,
+                at: side.text_at,
+                value: side.value,
+                done: false,
+            }),
+            Number::Length(l) => Box::new(WallLength {
+                uid,
+                edge,
+                anchor: l.anchor,
+                at: l.text_at,
+                value: l.value,
+                done: false,
+            }),
         })
     }
 }
 
-/// The text field over a number, and the move it writes.
+/// A text field's `ViewChange` at `at`, its value `initial`, saying `hint`.
+fn field(at: Vec2, initial: String, placeholder: &'static str, hint: &'static str, cx: &mut Context<'_>) {
+    cx.view_changes.push(ViewChange::Text(TextField {
+        at,
+        height: cx.view.world_length(14.0),
+        rotation: 0.0,
+        align: Some(TextAlign::MiddleCenter),
+        width_factor: 1.0,
+        initial: Some(initial),
+        placeholder: Some(placeholder),
+        hint: Some(hint),
+        empty: false,
+        face: Default::default(),
+    }));
+}
+
+/// The text field over a side's number, and the move it writes.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WallDistance {
     uid: Uuid,
     edge: u32,
     side: DimensionSetFace,
+    to: DistanceTo,
     at: Vec2,
     value: f64,
     done: bool,
@@ -217,18 +405,15 @@ pub struct WallDistance {
 
 impl WallDistance {
     fn field(&self, initial: String, cx: &mut Context<'_>) {
-        cx.view_changes.push(ViewChange::Text(TextField {
-            at: self.at,
-            height: cx.view.world_length(14.0),
-            rotation: 0.0,
-            align: Some(TextAlign::MiddleCenter),
-            width_factor: 1.0,
-            initial: Some(initial),
-            placeholder: Some("Mesafe"),
-            hint: Some("Yeni net mesafeyi yazın (2.40, 240 cm); Enter duvarı kaydırır, karşıdaki duvar yerinde kalır; Esc vazgeçer."),
-            empty: false,
-            face: Default::default(),
-        }));
+        let hint = match self.to {
+            DistanceTo::Face => {
+                "Yeni net mesafeyi yazın (2.40, 240 cm); Enter duvarı kaydırır, karşıdaki duvar yerinde kalır; Esc vazgeçer."
+            }
+            DistanceTo::Grid => {
+                "Duvarın ekseninden aksa yeni mesafeyi yazın (0 ekseni aksa koyar); Enter duvarı kaydırır, aks yerinde kalır; Esc vazgeçer."
+            }
+        };
+        field(self.at, initial, "Mesafe", hint, cx);
     }
 }
 
@@ -289,18 +474,23 @@ impl Tool for WallDistance {
                 edge: Some(self.edge),
                 side: self.side,
                 distance,
+                to: self.to,
             },
         };
         let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(done) = crate::points::written(result, cx) {
             let shown = cx.format().length(distance);
             let joined = done.joined.len();
+            let what = match self.to {
+                DistanceTo::Face => "net mesafe",
+                DistanceTo::Grid => "aksa mesafe",
+            };
             cx.say(
                 Level::Success,
                 if joined > 0 {
-                    format!("Duvar kaydırıldı: net mesafe {shown}; bağlı {joined} duvar izledi.")
+                    format!("Duvar kaydırıldı: {what} {shown}; bağlı {joined} duvar izledi.")
                 } else {
-                    format!("Duvar kaydırıldı: net mesafe {shown}.")
+                    format!("Duvar kaydırıldı: {what} {shown}.")
                 },
             );
         }
@@ -315,5 +505,128 @@ impl Tool for WallDistance {
     }
     fn preview(&self, _: &Format) -> Preview {
         Preview::default()
+    }
+}
+
+/// The text field over the edge's length, and the length it writes.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WallLength {
+    uid: Uuid,
+    edge: u32,
+    anchor: WallAnchor,
+    at: Vec2,
+    value: f64,
+    done: bool,
+}
+
+impl WallLength {
+    fn field(&self, initial: String, cx: &mut Context<'_>) {
+        let hint = match self.anchor {
+            WallAnchor::End => {
+                "Kenarın yeni boyunu yazın (4.20, 420 cm); Enter başını kaydırır, işaretli sonu yerinde kalır; Esc vazgeçer."
+            }
+            _ => "Kenarın yeni boyunu yazın (4.20, 420 cm); Enter sonunu kaydırır, işaretli başı yerinde kalır; Esc vazgeçer.",
+        };
+        field(self.at, initial, "Boy", hint, cx);
+    }
+}
+
+impl Tool for WallLength {
+    fn id(&self) -> &'static str {
+        LENGTH_ID
+    }
+    fn label(&self) -> &'static str {
+        LENGTH_LABEL
+    }
+    fn prompt(&self) -> Prompt {
+        Prompt::new(
+            LENGTH_LABEL,
+            "kenarın yeni boyunu yazın; Enter boyu değiştirir, Esc vazgeçer",
+        )
+    }
+    fn point_count(&self) -> usize {
+        0
+    }
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        let shown = cx.format().length(self.value);
+        self.field(shown, cx);
+        Flow::Stay
+    }
+    fn pointer_move(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
+    /// A click elsewhere leaves the field as Esc does.
+    fn pointer_down(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {
+        self.done = true;
+    }
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        self.text_typed(Some(text), cx);
+        true
+    }
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        Flow::Exit
+    }
+    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
+        self.done = true;
+        true
+    }
+    fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
+        let Some(text) = text else {
+            self.done = true;
+            return;
+        };
+        let Some(length) = cx.typed_length(text).filter(|d| d.is_finite()) else {
+            cx.say(
+                Level::Warn,
+                "Geçerli bir uzunluk yazın; örneğin 4.20, 420 cm ya da 4.2 m.",
+            );
+            self.field(text.to_owned(), cx);
+            return;
+        };
+        let input = WallsEdit {
+            uids: vec![self.uid.to_string()],
+            expected_revision: None,
+            operation: WallsOperation::Length {
+                edge: Some(self.edge),
+                length,
+                anchor: self.anchor,
+            },
+        };
+        let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(done) = crate::points::written(result, cx) {
+            let shown = cx.format().length(length);
+            let joined = done.joined.len();
+            cx.say(
+                Level::Success,
+                if joined > 0 {
+                    format!("Duvarın boyu {shown} oldu; bağlı {joined} duvar izledi.")
+                } else {
+                    format!("Duvarın boyu {shown} oldu.")
+                },
+            );
+        }
+        self.done = true;
+    }
+    fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
+        self.done = true;
+        true
+    }
+    fn finished(&self) -> bool {
+        self.done
+    }
+    fn preview(&self, _: &Format) -> Preview {
+        Preview::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_end_that_stays_is_the_one_that_cannot_move_else_the_choice_else_the_start() {
+        assert_eq!(anchor_of(true, true, None), WallAnchor::Start);
+        assert_eq!(anchor_of(true, true, Some(WallAnchor::End)), WallAnchor::End);
+        assert_eq!(anchor_of(true, true, Some(WallAnchor::Middle)), WallAnchor::Start, "not offered here");
+        assert_eq!(anchor_of(true, false, Some(WallAnchor::Start)), WallAnchor::End, "only its start moves");
+        assert_eq!(anchor_of(false, true, Some(WallAnchor::End)), WallAnchor::Start);
     }
 }

@@ -3,4 +3,4 @@
 /**
  * What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.
  */
-export type OpeningReference = { "kind": "end" } | { "kind": "opening", uid: string, } | { "kind": "wall", uid: string, };
+export type OpeningReference = { "kind": "end" } | { "kind": "opening", uid: string, } | { "kind": "wall", uid: string, } | { "kind": "grid", uid: string, };

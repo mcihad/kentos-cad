@@ -434,7 +434,7 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 out.push((*slot, Entity::Column(c)));
             }
         }
-        ArchOperation::Distance { side, distance } => {
+        ArchOperation::Distance { side, distance, to } => {
             // docs/adr/0712: one column, not tied to grids, moved square to a side.
             let [(at, slot, e, _)] = found.as_slice() else {
                 return Err(fail(
@@ -478,16 +478,37 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                     &format!("uids[{at}]"),
                 ));
             }
+            if *side > 3 {
+                return Err(fail(
+                    codes::INVALID_COLUMN,
+                    format!("Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."),
+                    "operation.side",
+                ));
+            }
             let around = crate::column_distances::Around::of(doc, *slot);
             let (walls, columns) = (around.walls(), around.columns());
-            let to = kentos_geometry_core::ops::column_shift::moved(
-                &walls,
-                &columns,
-                0,
-                *side as usize,
-                *distance,
-            )
-            .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.side"))?;
+            let to = match to {
+                kentos_commands::DistanceTo::Face => kentos_geometry_core::ops::column_shift::moved(
+                    &walls,
+                    &columns,
+                    0,
+                    *side as usize,
+                    *distance,
+                )
+                .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.side"))?,
+                kentos_commands::DistanceTo::Grid => {
+                    // docs/adr/0728 §1: from the column's middle to the nearest grid parallel to the side.
+                    let grids = crate::grid_refs::Grids::of(doc);
+                    kentos_geometry_core::ops::column_shift::moved_to_grid(
+                        &columns,
+                        &grids.ins(),
+                        0,
+                        *side as usize,
+                        *distance,
+                    )
+                    .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.to"))?
+                }
+            };
             let from = c.column.at;
             if (to.x - from.x).hypot(to.y - from.y) <= kentos_geometry_core::ops::wall_shift::TIE {
                 return Err(fail(

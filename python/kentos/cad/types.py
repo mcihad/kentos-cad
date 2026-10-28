@@ -1009,12 +1009,18 @@ ColumnBreakName = Literal["gridGone"]
 
 
 class ColumnGapTarget(_StrEnum):
-    """What a column's side is measured to."""
+    """What a column's side is measured to.
+
+    - ``wall``
+    - ``column``
+    - ``grid``: A grid parallel to the side, measured from the column's middle (docs/adr/0728 §1).
+    """
     WALL = "wall"
     COLUMN = "column"
+    GRID = "grid"
 
 
-ColumnGapTargetName = Literal["wall", "column"]
+ColumnGapTargetName = Literal["wall", "column", "grid"]
 """The names of :class:`ColumnGapTarget`, for a plain string."""
 
 
@@ -1444,6 +1450,18 @@ class DistanceAxis(_StrEnum):
 
 DistanceAxisName = Literal["aligned", "horizontal", "vertical"]
 """The names of :class:`DistanceAxis`, for a plain string."""
+
+
+class DistanceTo(_StrEnum):
+    """What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a
+    face's end), or the nearest grid, from the object's axis.
+    """
+    FACE = "face"
+    GRID = "grid"
+
+
+DistanceToName = Literal["face", "grid"]
+"""The names of :class:`DistanceTo`, for a plain string."""
 
 
 class DivideEnds(_StrEnum):
@@ -5783,6 +5801,22 @@ ViewMarkFormName = Literal["section", "elevation", "detail"]
 """The names of :class:`ViewMarkForm`, for a plain string."""
 
 
+class WallAnchor(_StrEnum):
+    """Which end of an edge stays when its length changes (docs/adr/0728 §3).
+
+    - ``start``: The edge's start stays, its end moves.
+    - ``end``: The edge's end stays, its start moves.
+    - ``middle``: Both ends move, half the change each.
+    """
+    START = "start"
+    END = "end"
+    MIDDLE = "middle"
+
+
+WallAnchorName = Literal["start", "end", "middle"]
+"""The names of :class:`WallAnchor`, for a plain string."""
+
+
 class WallCaps(_StrEnum):
     """Whether an open wall's ends are closed by a line across it."""
     CLOSED = "closed"
@@ -7588,6 +7622,7 @@ class OpeningReference(_Union):
     - :class:`EndOpeningReference` (``kind: end``)
     - :class:`OpeningOpeningReference` (``kind: opening``)
     - :class:`WallOpeningReference` (``kind: wall``)
+    - :class:`GridOpeningReference` (``kind: grid``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -8991,6 +9026,7 @@ class WallsOperation(_Union):
     - :class:`ResetJoinsWallsOperation` (``kind: resetJoins``)
     - :class:`ShiftWallsOperation` (``kind: shift``)
     - :class:`DistanceWallsOperation` (``kind: distance``)
+    - :class:`LengthWallsOperation` (``kind: length``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -15445,7 +15481,7 @@ class ColumnGap(_Model):
         side: The side: 0 below the centre, 1 right, 2 above, 3 left, as the column is turned. Unit: index.
         distance: Unit: length.
         uid: The object measured to, by its persistent id, and its kind.
-        edge: A wall's path edge, or a column's side. Unit: index.
+        edge: A wall's path edge, or a column's side; 0 for a grid. Unit: index.
         from_: Where it is measured, at the middle of where the two run side by side: on the column's side, on the face. Unit: length.
         to: Unit: length.
         face: A wall's face that faces the column; absent for a column.
@@ -15490,16 +15526,20 @@ class ColumnGap(_Model):
 class ColumnGaps(_Model):
     """A column's sides' clear distances; a side with nothing parallel facing it is absent.
     Attributes:
+        grids: Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1); a side without one is absent.
         tied: Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.
     """
     uid: str
     sides: list[ColumnGap]
+    grids: list[ColumnGap] | Unset = UNSET
     tied: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
         out["sides"] = [e0.to_json() for e0 in self.sides]
+        if self.grids is not UNSET:
+            out["grids"] = [e0.to_json() for e0 in self.grids]
         if self.tied is not UNSET:
             out["tied"] = self.tied
         return out
@@ -15509,6 +15549,7 @@ class ColumnGaps(_Model):
         return cls(
             uid=data["uid"],
             sides=[ColumnGap.from_json(e0) for e0 in data["sides"]],
+            grids=[ColumnGap.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
             tied=data.get("tied", UNSET),
         )
 
@@ -27763,6 +27804,39 @@ class GridEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class GridGap(_Model):
+    """A distance to a grid (docs/adr/0728 §1): from the object's axis to the nearest parallel (or, along an opening's
+    face, crossing) straight grid, square to it.
+    Attributes:
+        distance: Unit: length.
+        uid: The grid, by its persistent id.
+        from_: Where it is measured: on the object's axis, on the grid's line. Unit: length.
+        to: Unit: length.
+    """
+    distance: float
+    uid: str
+    from_: Vec2
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["uid"] = self.uid
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridGap:
+        return cls(
+            distance=float(data["distance"]),
+            uid=data["uid"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridSeries(_Model):
     """Parallel grids: the first from `from` to `to`, each next `spacings[i]` further to the `side`.
     Attributes:
@@ -39239,12 +39313,15 @@ class OpeningDistances(_Model):
     """An opening's two sides on a face of its wall's edge `edge`; a side without a reference is absent.
     Attributes:
         edge: Unit: count.
+        start_grid: The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1).
     """
     uid: str
     edge: int
     face: DimensionSetFace | DimensionSetFaceName
     end: OpeningDistance | None | Unset = UNSET
+    end_grid: OpeningDistance | None | Unset = UNSET
     start: OpeningDistance | None | Unset = UNSET
+    start_grid: OpeningDistance | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -39253,8 +39330,12 @@ class OpeningDistances(_Model):
         out["face"] = _enum_out(self.face)
         if self.end is not UNSET:
             out["end"] = None if self.end is None else self.end.to_json()
+        if self.end_grid is not UNSET:
+            out["endGrid"] = None if self.end_grid is None else self.end_grid.to_json()
         if self.start is not UNSET:
             out["start"] = None if self.start is None else self.start.to_json()
+        if self.start_grid is not UNSET:
+            out["startGrid"] = None if self.start_grid is None else self.start_grid.to_json()
         return out
 
     @classmethod
@@ -39264,7 +39345,9 @@ class OpeningDistances(_Model):
             edge=data["edge"],
             face=_enum_in(DimensionSetFace, data["face"]),
             end=UNSET if "end" not in data else None if data["end"] is None else OpeningDistance.from_json(data["end"]),
+            end_grid=UNSET if "endGrid" not in data else None if data["endGrid"] is None else OpeningDistance.from_json(data["endGrid"]),
             start=UNSET if "start" not in data else None if data["start"] is None else OpeningDistance.from_json(data["start"]),
+            start_grid=UNSET if "startGrid" not in data else None if data["startGrid"] is None else OpeningDistance.from_json(data["startGrid"]),
         )
 
 
@@ -63151,14 +63234,18 @@ class WallGap(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class WallGaps(_Model):
-    """A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.
+    """A wall's edge and its two sides' clear distances; a side without a parallel wall is absent. Each side's nearest
+    parallel grid from the edge's axis, and the edge's length when an end of it is the path's (docs/adr/0728).
     Attributes:
         edge: Unit: index.
     """
     uid: str
     edge: int
     left: WallGap | None | Unset = UNSET
+    left_grid: GridGap | None | Unset = UNSET
+    length: WallLength | None | Unset = UNSET
     right: WallGap | None | Unset = UNSET
+    right_grid: GridGap | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -63166,8 +63253,14 @@ class WallGaps(_Model):
         out["edge"] = self.edge
         if self.left is not UNSET:
             out["left"] = None if self.left is None else self.left.to_json()
+        if self.left_grid is not UNSET:
+            out["leftGrid"] = None if self.left_grid is None else self.left_grid.to_json()
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else self.length.to_json()
         if self.right is not UNSET:
             out["right"] = None if self.right is None else self.right.to_json()
+        if self.right_grid is not UNSET:
+            out["rightGrid"] = None if self.right_grid is None else self.right_grid.to_json()
         return out
 
     @classmethod
@@ -63176,7 +63269,10 @@ class WallGaps(_Model):
             uid=data["uid"],
             edge=data["edge"],
             left=UNSET if "left" not in data else None if data["left"] is None else WallGap.from_json(data["left"]),
+            left_grid=UNSET if "leftGrid" not in data else None if data["leftGrid"] is None else GridGap.from_json(data["leftGrid"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else WallLength.from_json(data["length"]),
             right=UNSET if "right" not in data else None if data["right"] is None else WallGap.from_json(data["right"]),
+            right_grid=UNSET if "rightGrid" not in data else None if data["rightGrid"] is None else GridGap.from_json(data["rightGrid"]),
         )
 
 
@@ -63283,6 +63379,41 @@ class WallJointMember(_Model):
         return cls(
             uid=data["uid"],
             end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallEnd, data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallLength(_Model):
+    """An edge's length (docs/adr/0728 §3): its baseline from its start to its end, and which ends a length can move (its
+    path's ends that are free, end to end with a wall in line or a corner's; not a tee or where more walls meet).
+    Attributes:
+        length: Unit: length.
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    length: float
+    from_: Vec2
+    to: Vec2
+    start_free: bool
+    end_free: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["startFree"] = self.start_free
+        out["endFree"] = self.end_free
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallLength:
+        return cls(
+            length=float(data["length"]),
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            start_free=data["startFree"],
+            end_free=data["endFree"],
         )
 
 
@@ -63603,7 +63734,7 @@ class WallsEdited(_Model):
         walls: The walls as written, in the input's order (Birleştir: the one they became).
         added: The new walls (Böl: each second part).
         followers: Derived source-following preview changes; absent when none. New identities are provisional.
-        joined: The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
+        joined: The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).
         removed: The walls gone, by their ids (Birleştir: all but the first).
     """
     walls: list[Entity]
@@ -64863,6 +64994,8 @@ class DetachArchOperation(ArchOperation):
 class DistanceArchOperation(ArchOperation):
     """Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,
     1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.
+    With `to: grid` (docs/adr/0728 §1) the distance is from the column's middle to the nearest grid parallel to
+    that side, which stays.
     Attributes:
         side: Unit: index.
         distance: Unit: length.
@@ -64870,11 +65003,14 @@ class DistanceArchOperation(ArchOperation):
     TAG_VALUE: ClassVar[str] = "distance"
     side: int
     distance: float
+    to: DistanceTo | DistanceToName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "distance"}
         out["side"] = self.side
         out["distance"] = float(self.distance)
+        if self.to is not UNSET:
+            out["to"] = _enum_out(self.to)
         return out
 
     @classmethod
@@ -64882,6 +65018,7 @@ class DistanceArchOperation(ArchOperation):
         return cls(
             side=data["side"],
             distance=float(data["distance"]),
+            to=_enum_in(DistanceTo, data["to"]) if "to" in data else UNSET,
         )
 
 
@@ -72956,6 +73093,24 @@ class WallOpeningReference(OpeningReference):
 
 
 @dataclass(kw_only=True, slots=True)
+class GridOpeningReference(OpeningReference):
+    """A grid crossing the face, measured from the opening's middle (docs/adr/0728 §1)."""
+    TAG_VALUE: ClassVar[str] = "grid"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "grid"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridOpeningReference:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
@@ -73210,7 +73365,8 @@ class CopyOpeningsOperation(OpeningsOperation):
 class DistanceOpeningsOperation(OpeningsOperation):
     """Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`
     from the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it
-    stays on its edge.
+    stays on its edge. With `to: grid` (docs/adr/0728 §1) the distance is from the opening's middle to the nearest
+    grid crossing the face on that side, which stays.
     Attributes:
         distance: Unit: length.
     """
@@ -73218,12 +73374,15 @@ class DistanceOpeningsOperation(OpeningsOperation):
     side: WallEnd | WallEndName
     distance: float
     face: DimensionSetFace | DimensionSetFaceName = DimensionSetFace.LEFT
+    to: DistanceTo | DistanceToName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "distance"}
         out["side"] = _enum_out(self.side)
         out["distance"] = float(self.distance)
         out["face"] = _enum_out(self.face)
+        if self.to is not UNSET:
+            out["to"] = _enum_out(self.to)
         return out
 
     @classmethod
@@ -73232,6 +73391,7 @@ class DistanceOpeningsOperation(OpeningsOperation):
             side=_enum_in(WallEnd, data["side"]),
             distance=float(data["distance"]),
             face=_enum_in(DimensionSetFace, data["face"]) if "face" in data else DimensionSetFace.LEFT,
+            to=_enum_in(DistanceTo, data["to"]) if "to" in data else UNSET,
         )
 
 
@@ -80622,7 +80782,8 @@ class ShiftWallsOperation(WallsOperation):
 @dataclass(kw_only=True, slots=True)
 class DistanceWallsOperation(WallsOperation):
     """Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to
-    the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.
+    the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays. With `to: grid` (docs/adr/0728
+    §1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.
     Attributes:
         distance: Unit: length.
         edge: Unit: index.
@@ -80631,6 +80792,7 @@ class DistanceWallsOperation(WallsOperation):
     side: DimensionSetFace | DimensionSetFaceName
     distance: float
     edge: int | None | Unset = UNSET
+    to: DistanceTo | DistanceToName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "distance"}
@@ -80638,6 +80800,8 @@ class DistanceWallsOperation(WallsOperation):
         out["distance"] = float(self.distance)
         if self.edge is not UNSET:
             out["edge"] = self.edge
+        if self.to is not UNSET:
+            out["to"] = _enum_out(self.to)
         return out
 
     @classmethod
@@ -80645,6 +80809,39 @@ class DistanceWallsOperation(WallsOperation):
         return cls(
             side=_enum_in(DimensionSetFace, data["side"]),
             distance=float(data["distance"]),
+            edge=data.get("edge", UNSET),
+            to=_enum_in(DistanceTo, data["to"]) if "to" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LengthWallsOperation(WallsOperation):
+    """Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,
+    `anchor` staying; a moving end must be the path's end. A corner's wall there shifts with it (Kaydır's rule), a
+    wall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.
+    Attributes:
+        length: Unit: length.
+        edge: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "length"
+    length: float
+    anchor: WallAnchor | WallAnchorName | Unset = UNSET
+    edge: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "length"}
+        out["length"] = float(self.length)
+        if self.anchor is not UNSET:
+            out["anchor"] = _enum_out(self.anchor)
+        if self.edge is not UNSET:
+            out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LengthWallsOperation:
+        return cls(
+            length=float(data["length"]),
+            anchor=_enum_in(WallAnchor, data["anchor"]) if "anchor" in data else UNSET,
             edge=data.get("edge", UNSET),
         )
 
@@ -81030,7 +81227,7 @@ _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through"
 _OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": SpacingOpeningArrayLayout, "fit": FitOpeningArrayLayout}
 
 
-_OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference}
+_OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference, "grid": GridOpeningReference}
 
 
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
@@ -81207,7 +81404,7 @@ _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMark
 _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
 
 
-_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation}
+_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation, "length": LengthWallsOperation}
 
 
 _XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "paths": PathsXrefsOperation, "underlay": UnderlayXrefsOperation, "bind": BindXrefsOperation}
@@ -81810,6 +82007,8 @@ __all__ = [
     "DistanceConstraintRule",
     "DistanceOffsetBy",
     "DistanceOpeningsOperation",
+    "DistanceTo",
+    "DistanceToName",
     "DistanceWallsOperation",
     "DistancesMeeting",
     "DistributePaperOp",
@@ -82149,6 +82348,8 @@ __all__ = [
     "GridBubblesName",
     "GridChoice",
     "GridEntity",
+    "GridGap",
+    "GridOpeningReference",
     "GridOrigin",
     "GridOriginName",
     "GridSeries",
@@ -82433,6 +82634,7 @@ __all__ = [
     "LengthPartitionExtent",
     "LengthStyle",
     "LengthStyleName",
+    "LengthWallsOperation",
     "LengthenChange",
     "LengthenEnd",
     "LengthenEndName",
@@ -83862,6 +84064,8 @@ __all__ = [
     "ViewsOp",
     "VisibilityBlockParameter",
     "VisibilityState",
+    "WallAnchor",
+    "WallAnchorName",
     "WallCaps",
     "WallCapsName",
     "WallComponent",
@@ -83885,6 +84089,7 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallLength",
     "WallOpeningReference",
     "WallPartitionPlan",
     "WallRectangleReference",

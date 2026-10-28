@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Geçici ölçünün kalanı: aksa mesafe, duvar boyu, iki aday (28 Ekim 2026; [ADR0728](docs/adr/0728-temporary-distances-grids-length-references.md)).**
+  Duvar, kolon ve açıklığın geçici ölçüsünde aks ikinci adaydır ve nesnenin ekseninden ölçülür (duvar kenarının iki
+  yüzünün ortası, kolonun ortası, pervazların ortası; düz aks, katında ya da katsız, sonsuz doğru; `ops::grid_ref`).
+  İki adaylı yanda referansın ucunda kare, basınca öbürüne geçer; seçim oturumundur (`temporary_refs::Choices`),
+  çizime yazılmaz. Kayabilen ucu olan kenarın boyu (yolun ucu; T ve çok duvarlı uç kaymaz, `free_ends`): sabit uç
+  dolu, `cad.walls.edit`'in `length`'i (`anchor`), köşedeki duvar Kaydır'la izler, uç uca duvar kısalır.
+  Düzenlemelerin `to`'su (`face`, `grid`); sorgularda `leftGrid`/`rightGrid`/`length`, `grids`, `startGrid`/`endGrid`.
+  Kilitli referans ölçer, yerinde kalır; dönük UCS ve büyük koordinatta aynı; Python/MCP aynı komutlar.
+
 - **Mutfak dizisi: L ve U, cihazlar, kalıcı dizi (28 Ekim 2026; [ADR0727](docs/adr/0727-kitchen-runs-corners-appliances-follow.md)).**
   `cad.casework.run`'ın `through`'u (en çok iki dik köşe), `corner` (kör, açık), `dishwasher`, `oven`, `fridge`,
   `perModule` (modülün eni ve kapısı); tezgâh tek alan, evye/ocak kesimleri; modüllerde Modül/Tür/Açılma. Dizi belgede

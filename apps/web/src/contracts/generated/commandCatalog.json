@@ -413371,6 +413371,14 @@
             ],
             "type": "string"
           },
+          "DistanceTo": {
+            "description": "What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a\nface's end), or the nearest grid, from the object's axis.",
+            "enum": [
+              "face",
+              "grid"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -413388,6 +413396,26 @@
               "y"
             ],
             "type": "object"
+          },
+          "WallAnchor": {
+            "description": "Which end of an edge stays when its length changes (docs/adr/0728 §3).",
+            "oneOf": [
+              {
+                "const": "start",
+                "description": "The edge's start stays, its end moves.",
+                "type": "string"
+              },
+              {
+                "const": "end",
+                "description": "The edge's end stays, its start moves.",
+                "type": "string"
+              },
+              {
+                "const": "middle",
+                "description": "Both ends move, half the change each.",
+                "type": "string"
+              }
+            ]
           },
           "WallCaps": {
             "description": "Whether an open wall's ends are closed by a line across it.",
@@ -413742,7 +413770,7 @@
                 "type": "object"
               },
               {
-                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays. With `to: grid` (docs/adr/0728\n§1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.",
                 "properties": {
                   "distance": {
                     "format": "double",
@@ -413764,12 +413792,46 @@
                   },
                   "side": {
                     "$ref": "#/$defs/DimensionSetFace"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/DistanceTo"
                   }
                 },
                 "required": [
                   "kind",
                   "side",
                   "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,\n`anchor` staying; a moving end must be the path's end. A corner's wall there shifts with it (Kaydır's rule), a\nwall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.",
+                "properties": {
+                  "anchor": {
+                    "$ref": "#/$defs/WallAnchor"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "length",
+                    "type": "string"
+                  },
+                  "length": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "length"
                 ],
                 "type": "object"
               }
@@ -424596,7 +424658,7 @@
             "description": "Derived source-following preview changes; absent when none. New identities are provisional."
           },
           "joined": {
-            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).",
+            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).",
             "items": {
               "$ref": "#/$defs/Entity"
             },
@@ -435425,7 +435487,7 @@
             "description": "Derived source-following preview changes; absent when none. New identities are provisional."
           },
           "joined": {
-            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).",
+            "description": "The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).",
             "items": {
               "$ref": "#/$defs/Entity"
             },
@@ -435658,6 +435720,14 @@
             ],
             "type": "string"
           },
+          "DistanceTo": {
+            "description": "What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a\nface's end), or the nearest grid, from the object's axis.",
+            "enum": [
+              "face",
+              "grid"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -435675,6 +435745,26 @@
               "y"
             ],
             "type": "object"
+          },
+          "WallAnchor": {
+            "description": "Which end of an edge stays when its length changes (docs/adr/0728 §3).",
+            "oneOf": [
+              {
+                "const": "start",
+                "description": "The edge's start stays, its end moves.",
+                "type": "string"
+              },
+              {
+                "const": "end",
+                "description": "The edge's end stays, its start moves.",
+                "type": "string"
+              },
+              {
+                "const": "middle",
+                "description": "Both ends move, half the change each.",
+                "type": "string"
+              }
+            ]
           },
           "WallCaps": {
             "description": "Whether an open wall's ends are closed by a line across it.",
@@ -436169,7 +436259,7 @@
                 "type": "object"
               },
               {
-                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays. With `to: grid` (docs/adr/0728\n§1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.",
                 "properties": {
                   "distance": {
                     "format": "double",
@@ -436191,12 +436281,46 @@
                   },
                   "side": {
                     "$ref": "#/$defs/DimensionSetFace"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/DistanceTo"
                   }
                 },
                 "required": [
                   "kind",
                   "side",
                   "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,\n`anchor` staying; a moving end must be the path's end. A corner's wall there shifts with it (Kaydır's rule), a\nwall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.",
+                "properties": {
+                  "anchor": {
+                    "$ref": "#/$defs/WallAnchor"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "length",
+                    "type": "string"
+                  },
+                  "length": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "length"
                 ],
                 "type": "object"
               }
@@ -436274,6 +436398,14 @@
             ],
             "type": "string"
           },
+          "DistanceTo": {
+            "description": "What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a\nface's end), or the nearest grid, from the object's axis.",
+            "enum": [
+              "face",
+              "grid"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -436291,6 +436423,26 @@
               "y"
             ],
             "type": "object"
+          },
+          "WallAnchor": {
+            "description": "Which end of an edge stays when its length changes (docs/adr/0728 §3).",
+            "oneOf": [
+              {
+                "const": "start",
+                "description": "The edge's start stays, its end moves.",
+                "type": "string"
+              },
+              {
+                "const": "end",
+                "description": "The edge's end stays, its start moves.",
+                "type": "string"
+              },
+              {
+                "const": "middle",
+                "description": "Both ends move, half the change each.",
+                "type": "string"
+              }
+            ]
           },
           "WallCaps": {
             "description": "Whether an open wall's ends are closed by a line across it.",
@@ -436785,7 +436937,7 @@
                 "type": "object"
               },
               {
-                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.",
+                "description": "Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to\nthe nearest parallel wall `distance` (`cad.walls.distances`); that wall stays. With `to: grid` (docs/adr/0728\n§1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.",
                 "properties": {
                   "distance": {
                     "format": "double",
@@ -436807,12 +436959,46 @@
                   },
                   "side": {
                     "$ref": "#/$defs/DimensionSetFace"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/DistanceTo"
                   }
                 },
                 "required": [
                   "kind",
                   "side",
                   "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,\n`anchor` staying; a moving end must be the path's end. A corner's wall there shifts with it (Kaydır's rule), a\nwall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.",
+                "properties": {
+                  "anchor": {
+                    "$ref": "#/$defs/WallAnchor"
+                  },
+                  "edge": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "length",
+                    "type": "string"
+                  },
+                  "length": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "length"
                 ],
                 "type": "object"
               }
@@ -436924,6 +437110,37 @@
             ],
             "type": "string"
           },
+          "GridGap": {
+            "description": "A distance to a grid (docs/adr/0728 §1): from the object's axis to the nearest parallel (or, along an opening's\nface, crossing) straight grid, square to it.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured: on the object's axis, on the grid's line.",
+                "x-unit": "length"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The grid, by its persistent id.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "distance",
+              "uid",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -436985,7 +437202,7 @@
             "type": "object"
           },
           "WallGaps": {
-            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.",
+            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent. Each side's nearest\nparallel grid from the edge's axis, and the edge's length when an end of it is the path's (docs/adr/0728).",
             "properties": {
               "edge": {
                 "format": "uint32",
@@ -437003,10 +437220,40 @@
                   }
                 ]
               },
+              "leftGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GridGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "length": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallLength"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "right": {
                 "anyOf": [
                   {
                     "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rightGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GridGap"
                   },
                   {
                     "type": "null"
@@ -437021,6 +437268,38 @@
             "required": [
               "uid",
               "edge"
+            ],
+            "type": "object"
+          },
+          "WallLength": {
+            "description": "An edge's length (docs/adr/0728 §3): its baseline from its start to its end, and which ends a length can move (its\npath's ends that are free, end to end with a wall in line or a corner's; not a tee or where more walls meet).",
+            "properties": {
+              "endFree": {
+                "type": "boolean"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "length": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "startFree": {
+                "type": "boolean"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "length",
+              "from",
+              "to",
+              "startFree",
+              "endFree"
             ],
             "type": "object"
           }
@@ -437056,6 +437335,37 @@
             ],
             "type": "string"
           },
+          "GridGap": {
+            "description": "A distance to a grid (docs/adr/0728 §1): from the object's axis to the nearest parallel (or, along an opening's\nface, crossing) straight grid, square to it.",
+            "properties": {
+              "distance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it is measured: on the object's axis, on the grid's line.",
+                "x-unit": "length"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The grid, by its persistent id.",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "distance",
+              "uid",
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -437117,7 +437427,7 @@
             "type": "object"
           },
           "WallGaps": {
-            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.",
+            "description": "A wall's edge and its two sides' clear distances; a side without a parallel wall is absent. Each side's nearest\nparallel grid from the edge's axis, and the edge's length when an end of it is the path's (docs/adr/0728).",
             "properties": {
               "edge": {
                 "format": "uint32",
@@ -437135,10 +437445,40 @@
                   }
                 ]
               },
+              "leftGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GridGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "length": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WallLength"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "right": {
                 "anyOf": [
                   {
                     "$ref": "#/$defs/WallGap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rightGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GridGap"
                   },
                   {
                     "type": "null"
@@ -437153,6 +437493,38 @@
             "required": [
               "uid",
               "edge"
+            ],
+            "type": "object"
+          },
+          "WallLength": {
+            "description": "An edge's length (docs/adr/0728 §3): its baseline from its start to its end, and which ends a length can move (its\npath's ends that are free, end to end with a wall in line or a corner's; not a tee or where more walls meet).",
+            "properties": {
+              "endFree": {
+                "type": "boolean"
+              },
+              "from": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "length": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "startFree": {
+                "type": "boolean"
+              },
+              "to": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "length",
+              "from",
+              "to",
+              "startFree",
+              "endFree"
             ],
             "type": "object"
           }
@@ -437253,7 +437625,7 @@
                 "x-unit": "length"
               },
               "edge": {
-                "description": "A wall's path edge, or a column's side.",
+                "description": "A wall's path edge, or a column's side; 0 for a grid.",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -437308,15 +437680,31 @@
           },
           "ColumnGapTarget": {
             "description": "What a column's side is measured to.",
-            "enum": [
-              "wall",
-              "column"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "wall",
+                  "column"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "grid",
+                "description": "A grid parallel to the side, measured from the column's middle (docs/adr/0728 §1).",
+                "type": "string"
+              }
+            ]
           },
           "ColumnGaps": {
             "description": "A column's sides' clear distances; a side with nothing parallel facing it is absent.",
             "properties": {
+              "grids": {
+                "description": "Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1); a side without one is absent.",
+                "items": {
+                  "$ref": "#/$defs/ColumnGap"
+                },
+                "type": "array"
+              },
               "sides": {
                 "items": {
                   "$ref": "#/$defs/ColumnGap"
@@ -437397,7 +437785,7 @@
                 "x-unit": "length"
               },
               "edge": {
-                "description": "A wall's path edge, or a column's side.",
+                "description": "A wall's path edge, or a column's side; 0 for a grid.",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -437452,15 +437840,31 @@
           },
           "ColumnGapTarget": {
             "description": "What a column's side is measured to.",
-            "enum": [
-              "wall",
-              "column"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "wall",
+                  "column"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "grid",
+                "description": "A grid parallel to the side, measured from the column's middle (docs/adr/0728 §1).",
+                "type": "string"
+              }
+            ]
           },
           "ColumnGaps": {
             "description": "A column's sides' clear distances; a side with nothing parallel facing it is absent.",
             "properties": {
+              "grids": {
+                "description": "Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1); a side without one is absent.",
+                "items": {
+                  "$ref": "#/$defs/ColumnGap"
+                },
+                "type": "array"
+              },
               "sides": {
                 "items": {
                   "$ref": "#/$defs/ColumnGap"
@@ -585042,7 +585446,7 @@
                 "type": "object"
               },
               {
-                "description": "Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,\n1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.",
+                "description": "Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,\n1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.\nWith `to: grid` (docs/adr/0728 §1) the distance is from the column's middle to the nearest grid parallel to\nthat side, which stays.",
                 "properties": {
                   "distance": {
                     "format": "double",
@@ -585058,6 +585462,9 @@
                     "minimum": 0,
                     "type": "integer",
                     "x-unit": "index"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/DistanceTo"
                   }
                 },
                 "required": [
@@ -585110,6 +585517,14 @@
                 "type": "string"
               }
             ]
+          },
+          "DistanceTo": {
+            "description": "What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a\nface's end), or the nearest grid, from the object's axis.",
+            "enum": [
+              "face",
+              "grid"
+            ],
+            "type": "string"
           },
           "GridBubbles": {
             "description": "Which ends of a grid carry a bubble.",
@@ -772213,6 +772628,14 @@
             ],
             "type": "string"
           },
+          "DistanceTo": {
+            "description": "What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a\nface's end), or the nearest grid, from the object's axis.",
+            "enum": [
+              "face",
+              "grid"
+            ],
+            "type": "string"
+          },
           "OpeningArrayLayout": {
             "description": "Placement of NEW copies; the source remains unchanged and is not counted.\nAll distances are metres along the whole host's analytic path. Every copy\nmust still fit on one edge; crossing a corner refuses the whole operation.",
             "oneOf": [
@@ -772740,7 +773163,7 @@
                 "type": "object"
               },
               {
-                "description": "Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`\nfrom the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it\nstays on its edge.",
+                "description": "Mesafeyle taşı (docs/adr/0701): each opening along its wall until its jamb on the wall's `face` is `distance`\nfrom the nearest reference before it (`side` start) or after it (end) on that face, the reference fixed; it\nstays on its edge. With `to: grid` (docs/adr/0728 §1) the distance is from the opening's middle to the nearest\ngrid crossing the face on that side, which stays.",
                 "properties": {
                   "distance": {
                     "format": "double",
@@ -772757,6 +773180,9 @@
                   },
                   "side": {
                     "$ref": "#/$defs/WallEnd"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/DistanceTo"
                   }
                 },
                 "required": [
@@ -794626,6 +795052,16 @@
                   }
                 ]
               },
+              "endGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -794638,6 +795074,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "startGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1)."
               },
               "uid": {
                 "type": "string"
@@ -794685,6 +795132,23 @@
                 "properties": {
                   "kind": {
                     "const": "wall",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A grid crossing the face, measured from the opening's middle (docs/adr/0728 §1).",
+                "properties": {
+                  "kind": {
+                    "const": "grid",
                     "type": "string"
                   },
                   "uid": {
@@ -794795,6 +795259,16 @@
                   }
                 ]
               },
+              "endGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "face": {
                 "$ref": "#/$defs/DimensionSetFace"
               },
@@ -794807,6 +795281,17 @@
                     "type": "null"
                   }
                 ]
+              },
+              "startGrid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The nearest grid crossing the face before (after) the opening's middle, from that middle (docs/adr/0728 §1)."
               },
               "uid": {
                 "type": "string"
@@ -794854,6 +795339,23 @@
                 "properties": {
                   "kind": {
                     "const": "wall",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A grid crossing the face, measured from the opening's middle (docs/adr/0728 §1).",
+                "properties": {
+                  "kind": {
+                    "const": "grid",
                     "type": "string"
                   },
                   "uid": {

@@ -54,6 +54,7 @@ fn a_selected_wall_shows_the_gap_to_the_wall_across_and_writes_nothing() {
     let before = b.doc.to_snapshot_v2();
     let numbers = b.session.temporary_numbers();
     assert_eq!(numbers.len(), 1, "inside only: nothing east of the room");
+    assert!(b.session.temporary_length().is_some(), "and the edge's length (docs/adr/0728)");
     let preview = b
         .session
         .preview(&Default::default())

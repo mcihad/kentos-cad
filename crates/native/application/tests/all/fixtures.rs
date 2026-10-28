@@ -1600,7 +1600,7 @@ impl Input for kentos_commands::WallsJoins {
 
 impl Input for kentos_commands::WallsEdit {
     /// `operation.width`, `operation.offset`, `operation.height`; `operation.at.x` and `.y` of Böl; `operation.by` of
-    /// Kaydır and `operation.distance` of Mesafe (docs/adr/0710).
+    /// Kaydır, `operation.distance` of Mesafe (docs/adr/0710) and `operation.length` of Boy (docs/adr/0728).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::WallsOperation;
         let c = match &mut self.operation {
@@ -1613,6 +1613,7 @@ impl Input for kentos_commands::WallsEdit {
             }
             WallsOperation::Shift { by, .. } => return (path == "operation.by").then_some(by),
             WallsOperation::Distance { distance, .. } => return (path == "operation.distance").then_some(distance),
+            WallsOperation::Length { length, .. } => return (path == "operation.length").then_some(length),
             WallsOperation::Set(c) => c,
             _ => return None,
         };

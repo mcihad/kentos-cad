@@ -1,5 +1,6 @@
 //! An opening's temporary distances (docs/adr/0701): along the face of its wall's edge, its jambs to the nearest
-//! reference before and after it (the face's corner or end, another opening's jamb, another wall's face crossing it).
+//! reference before and after it (the face's corner or end, another opening's jamb, another wall's face crossing it),
+//! and its middle to the nearest grid crossing the face on each side (docs/adr/0728).
 //! `cad.openings.distances` answers them; `cad.openings.edit`'s `distance` moves an opening to one, the reference
 //! fixed; the desktop's selection shows them. The shared cases are `fixtures/commands/v1/cad.openings.distances.json`
 //! and `cad.openings.edit.distance.json`.
@@ -43,6 +44,9 @@ pub struct Measured {
     pub jambs: [(Vec2, f64); 2],
     pub start: Option<Reference>,
     pub end: Option<Reference>,
+    /// The nearest grids crossing the face before and after its middle (docs/adr/0728 §1).
+    pub start_grid: Option<Reference>,
+    pub end_grid: Option<Reference>,
 }
 
 impl Measured {
@@ -52,6 +56,31 @@ impl Measured {
             self.start.map(|r| self.jambs[0].1 - r.s)
         } else {
             self.end.map(|r| r.s - self.jambs[1].1)
+        }
+    }
+
+    /// Where its middle stands on the face: half way between its jambs.
+    pub fn middle(&self) -> f64 {
+        (self.jambs[0].1 + self.jambs[1].1) / 2.0
+    }
+
+    /// The distance from its middle to the grid on `start`'s side (true) or the end's (docs/adr/0728 §1).
+    pub fn grid_distance(&self, start: bool) -> Option<f64> {
+        if start {
+            self.start_grid.map(|r| (self.middle() - r.s).max(0.0))
+        } else {
+            self.end_grid.map(|r| (r.s - self.middle()).max(0.0))
+        }
+    }
+
+    /// Its middle's point on the face.
+    pub fn middle_at(&self) -> Vec2 {
+        let [a, b] = self.line;
+        let length = (b.x - a.x).hypot(b.y - a.y);
+        let t = if length > 0.0 { self.middle() / length } else { 0.0 };
+        Vec2 {
+            x: a.x + (b.x - a.x) * t,
+            y: a.y + (b.y - a.y) * t,
         }
     }
 }
@@ -207,12 +236,40 @@ pub(crate) fn measure(
             y: a.y + u.1 * c.s,
         },
     };
+    // The grids crossing the face, from the opening's middle (docs/adr/0728 §1), on its wall's level.
+    let level = doc
+        .slot_of(host)
+        .and_then(|s| match doc.get(s) {
+            Some(Entity::Wall(w)) => w.wall.arch.level.clone(),
+            _ => None,
+        });
+    let grids = crate::grid_refs::Grids::of(doc);
+    let middle = (jambs[0].1 + jambs[1].1) / 2.0;
+    let [before, after] = kentos_geometry_core::ops::grid_ref::crossing_at(
+        &grids.ins(),
+        level.as_deref(),
+        core_point(a),
+        core_point(b),
+        middle,
+    );
+    let grid_reference = |g: kentos_geometry_core::ops::grid_ref::GridGap| {
+        let uid = grids.uid_of(doc, g.grid)?;
+        let s = (g.to.x - a.x) * u.0 + (g.to.y - a.y) * u.1;
+        Some(Reference {
+            kind: Kind::Grid,
+            uid: Some(uid),
+            s,
+            at: Vec2 { x: g.to.x, y: g.to.y },
+        })
+    };
     Ok(Measured {
         edge,
         face,
         line: [a, b],
         start: core::nearest(&candidates, jambs[0].1, true).map(reference),
         end: core::nearest(&candidates, jambs[1].1, false).map(reference),
+        start_grid: before.and_then(grid_reference),
+        end_grid: after.and_then(grid_reference),
         jambs,
     })
 }
@@ -224,16 +281,34 @@ fn described(m: &Measured, start: bool) -> Option<OpeningDistance> {
         distance: m.distance(start)?,
         from: m.jambs[usize::from(!start)].0,
         to: r.at,
-        reference: match (r.kind, r.uid) {
-            (Kind::Opening, Some(uid)) => OpeningReference::Opening {
-                uid: uid.to_string(),
-            },
-            (Kind::Wall, Some(uid)) => OpeningReference::Wall {
-                uid: uid.to_string(),
-            },
-            _ => OpeningReference::End,
-        },
+        reference: reference_of(r),
     })
+}
+
+/// The answer's grid on a side: from the opening's middle (docs/adr/0728 §1).
+fn described_grid(m: &Measured, start: bool) -> Option<OpeningDistance> {
+    let r = if start { m.start_grid } else { m.end_grid }?;
+    Some(OpeningDistance {
+        distance: m.grid_distance(start)?,
+        from: m.middle_at(),
+        to: r.at,
+        reference: reference_of(r),
+    })
+}
+
+fn reference_of(r: Reference) -> OpeningReference {
+    match (r.kind, r.uid) {
+        (Kind::Opening, Some(uid)) => OpeningReference::Opening {
+            uid: uid.to_string(),
+        },
+        (Kind::Wall, Some(uid)) => OpeningReference::Wall {
+            uid: uid.to_string(),
+        },
+        (Kind::Grid, Some(uid)) => OpeningReference::Grid {
+            uid: uid.to_string(),
+        },
+        _ => OpeningReference::End,
+    }
 }
 
 fn read(doc: &Document, input: &OpeningsDistancesInput) -> Result<OpeningsDistances, Stop> {
@@ -256,6 +331,8 @@ fn read(doc: &Document, input: &OpeningsDistancesInput) -> Result<OpeningsDistan
             face: input.face,
             start: described(&m, true),
             end: described(&m, false),
+            start_grid: described_grid(&m, true),
+            end_grid: described_grid(&m, false),
         });
     }
     Ok(OpeningsDistances {

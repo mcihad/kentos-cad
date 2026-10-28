@@ -239,6 +239,7 @@ mod standard_layer;
 pub mod station_labels;
 pub mod station_offset;
 pub mod stretch;
+pub mod temporary_refs;
 pub mod ucs_tool;
 /// Moved to the commands' crate, where `cad.styles.edit` writes through it (docs/adr/0248 §4).
 pub use kentos_native_application::style_tables;

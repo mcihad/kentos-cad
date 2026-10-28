@@ -309,6 +309,7 @@ pub(crate) fn title_of(command: &str) -> &str {
 fn field_name(key: &str) -> Option<&'static str> {
     Some(match key {
         "a" | "from" => "Başlangıç",
+        "anchor" => "Sabit uç",
         "b" | "to" => "Bitiş",
         "a0" => "Başlangıç açısı",
         "a1" => "Bitiş açısı",
@@ -493,6 +494,15 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
             }
             if key == "uid" {
                 return "1 nesne".to_owned();
+            }
+            // A temporary distance's reference and a length's fixed end (docs/adr/0728).
+            match (key, s.as_str()) {
+                ("to", "grid") => return "aks".to_owned(),
+                ("to", "face") => return "yüz".to_owned(),
+                ("anchor", "start") => return "baş".to_owned(),
+                ("anchor", "end") => return "son".to_owned(),
+                ("anchor", "middle") => return "orta".to_owned(),
+                _ => {}
             }
             let short: String = s.chars().take(40).collect();
             if short.chars().count() < s.chars().count() {

@@ -76,6 +76,7 @@ mod splitting;
 mod survey_points;
 mod symbols;
 mod templates;
+mod temporary_refs;
 mod text;
 mod text_file;
 mod time_version;

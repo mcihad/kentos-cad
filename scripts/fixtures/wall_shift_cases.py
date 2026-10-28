@@ -23,6 +23,19 @@ The rules, as ADR 0710 gives them:
 - Mesafe: Kaydır by the gap on that side less the distance (left), or the distance less the gap (right);
 - openings stay where they are: one on a wall whose path changed has its `at` read back from its jambs (the start
   moving along the wall shifts it), and its jambs written from its wall again.
+
+ADR 0728 adds, and writes cad.walls.edit.length.json:
+- grids: a straight grid (two points, no bulge) on the wall's level or on none, its line endless, parallel to the edge
+  (within 0.001°), measured from the edge's axis (half way between its faces) at its middle: to its left when the grid
+  is left of the axis or on it (within 1e-9), else to its right; each side's nearest, a tie to the grid first in the
+  drawing. Mesafe `to: grid` is Kaydır by the grid gap less the distance (left), the distance less it (right);
+- an edge's length when one of its ends can move (`startFree`, `endFree`): its open path's end, free, end to end with
+  another wall in line or a corner's; not a tee, not where more walls meet;
+- Boy: the edge made `length` long along its line, `anchor` (start: the start stays, end: the end stays, middle: both
+  move half). A moving end must be the path's end; its join `none`, or nothing there: it alone; one other wall's end
+  there in one line (within 1°): that end with it; one at an angle (a corner): that wall's edge there moved by Kaydır
+  so the corner goes along the edge; a wall's body there (a tee) or more walls: refused. Every edge that changed keeps
+  a length above 1 mm and its way.
 """
 
 import argparse
@@ -58,6 +71,13 @@ def uid(i):
     return f"0192f5a1-7100-7000-8000-{i:012x}"
 
 
+def grid(id, a, b, name, level=None, **extra):
+    g = {"kind": "grid", "id": id, "layerId": "aks", "attrs": {}, "pts": [P(*a), P(*b)], "name": name, **extra}
+    if level is not None:
+        g["arch"] = {"level": level}
+    return g
+
+
 def opening(id, host, at, width, place):
     return {"kind": "opening", "id": id, "layerId": "kapi", "attrs": {}, "host": uid(host), "at": at,
             "width": width, "form": "opening", "place": [P(*p) for p in place]}
@@ -65,7 +85,8 @@ def opening(id, host, at, width, place):
 
 SETTINGS = {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50,
             "workspace": "cad", "arch": {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
-                                                    {"id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0}]}}
+                                                    {"id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0},
+                                                    {"id": "kat-2", "name": "2. kat", "elevation": 6.0, "height": 3.0}]}}
 ENTITIES = [
     # Room A: four walls round 0..5 × 0..4, a partition standing in its south and north walls, two openings.
     wall(1, [(0, 0), (5, 0)]),
@@ -117,11 +138,29 @@ ENTITIES = [
     wall(38, [(0, 150), (4, 150)]),
     wall(39, [(0, 151), (4, 151 + 4 * math.tan(math.radians(0.01)))]),
     {"kind": "line", "id": 40, "layerId": "cizim", "attrs": {}, "a": P(0, 160), "b": P(4, 160)},
+    # Grids (ADR 0728), on 2. kat so that the walls above see none: a wall with grids on both sides and a wall beside
+    # it, a grid of another level nearer, a turned wall with a grid of no level, a grid on a wall's axis, a left wall.
+    wall(41, [(0, 170), (4, 170)], arch={"level": "kat-2"}),
+    grid(42, (-5, 172), (10, 172), "A", level="kat-2"),
+    grid(43, (-5, 168.5), (10, 168.5), "B", level="kat-2"),
+    grid(44, (-5, 173), (10, 173), "C", level="kat-2"),
+    grid(45, (-5, 171), (10, 171), "D", level="zemin"),
+    wall(46, [(0, 171.5), (4, 171.5)], arch={"level": "kat-2"}),
+    wall(47, [(20, 170), (20 + 4 * math.cos(math.radians(30)), 170 + 4 * math.sin(math.radians(30)))],
+         arch={"level": "kat-2"}),
+    grid(48, (20, 172), (20 + 9 * math.cos(math.radians(30)), 172 + 9 * math.sin(math.radians(30))), "E"),
+    grid(49, (20, 171), (20 + 9 * math.cos(math.radians(30)), 171 + 9 * math.sin(math.radians(30))), "F",
+         level="zemin"),
+    grid(50, (-5, 169.5), (10, 169.5), "G", level="kat-2", bulges=[0.2, 0.0]),
+    grid(51, (-5, 180), (10, 180), "H", level="kat-2"),
+    wall(52, [(0, 180), (4, 180)], arch={"level": "kat-2"}),
+    wall(53, [(0, 190), (4, 190)], justify="left", arch={"level": "kat-2"}),
+    grid(54, (-5, 191), (10, 191), "I", level="kat-2"),
 ]
 SETUP = {
     "format": "kentos.document", "version": 2, "name": "Duvar kaydırma", "settings": SETTINGS, "origin": P(0, 0),
     "layers": [wc.layer("duvar", "Duvar"), wc.layer("cizim", "Çizim"), wc.layer("kilitli", "Kilitli katman", locked=True),
-               wc.layer("kapi", "Kapı")],
+               wc.layer("kapi", "Kapı"), wc.layer("aks", "Aks")],
     "activeLayer": "duvar", "styles": {"items": [], "categories": []}, "entities": ENTITIES,
     "uids": [uid(e["id"]) for e in ENTITIES],
 }
@@ -401,6 +440,162 @@ def shift(state, first, k, by):
     return moved
 
 
+# ── Grids and length (ADR 0728) ───────────────────────────────────────────────────────────────────────────────────
+
+def grids_of(state):
+    """The drawing's straight grids in its order: (id, a, b, level)."""
+    out = []
+    for i in sorted(state):
+        g = state[i]
+        if g["kind"] != "grid" or len(g["pts"]) != 2 or any(x != 0.0 for x in (g.get("bulges") or [])):
+            continue
+        out.append((i, xy(g["pts"][0]), xy(g["pts"][1]), (g.get("arch") or {}).get("level")))
+    return out
+
+
+def axis_middle(w, k):
+    a, u, n, l = frame(w, k)
+    off = left_face(w) - w["width"] / 2.0
+    return along(along(a, u, l / 2.0), n, off), u
+
+
+def beside(state, lvl, at, u):
+    """Each side's nearest grid parallel to `u` from the axis through `at`: [left, right]."""
+    n = left(u)
+    best = [None, None]
+    for gid, a, b, glevel in grids_of(state):
+        if glevel is not None and glevel != lvl:
+            continue
+        v = unit(a, b)
+        if abs(cross(u, v)) > PARALLEL:
+            continue
+        o = dot(sub(a, at), n)
+        is_left = o >= -TIE
+        side = 0 if is_left else 1
+        d = max(0.0, o) if is_left else -o
+        if best[side] is None or d < best[side]["distance"] - TIE:
+            best[side] = {"grid": gid, "distance": d, "from": at, "to": along(at, n, o)}
+    return best
+
+
+def path_ends(w, k):
+    n = len(w["pts"])
+    if w.get("closed") or n < 2:
+        return [False, False]
+    return [k == 0, k + 2 == n]
+
+
+def end_can_move(state, first, end, vertex):
+    """A path end Boy can move: its join none, nothing there, one wall's end in line or at a corner; not a tee, not
+    where more walls meet, not by a joined wall's bulged end."""
+    me = state[first]
+    if joins(me, end) == "none":
+        return True
+    p = xy(me["pts"][vertex])
+    order = walls_of(state, first)
+    try:
+        meeting = ends_at(state, order, first, p)
+    except Refused:
+        return False
+    if not meeting:
+        return host_at(state, order, first, p) is None
+    return len(meeting) == 1
+
+
+def free_ends(state, first, k):
+    """The edge's ends a length can move (startFree, endFree)."""
+    me = state[first]
+    path = path_ends(me, k)
+    n = len(me["pts"])
+    return [path[0] and end_can_move(state, first, 0, k), path[1] and end_can_move(state, first, 1, (k + 1) % n)]
+
+
+def as_operation(fn, *args):
+    """A refusal inside Boy is the operation's, whatever path it had alone."""
+    try:
+        return fn(*args)
+    except Refused as r:
+        raise Refused("operation", r.message, r.code)
+
+
+def end_moved(state, first, end, vertex, u, by):
+    order = walls_of(state, first)
+    me = state[first]
+    p = xy(me["pts"][vertex])
+    q = along(p, u, by)
+    which = "başı" if end == 0 else "sonu"
+
+    def alone():
+        pts = [xy(x) for x in me["pts"]]
+        pts[vertex] = q
+        return {first: pts}
+    if joins(me, end) == "none":
+        return alone()
+    meeting = as_operation(ends_at, state, order, first, p)
+    if not meeting:
+        if host_at(state, order, first, p) is not None:
+            raise Refused("operation", f"Kenarın {which} başka bir duvarın gövdesine saplı (T); boyu değişince ondan kopar. O duvarı kaydırın ya da öbür ucu sabitleyin.")
+        return alone()
+    if len(meeting) == 1:
+        j, v, d = meeting[0]
+        if abs(cross(u, d)) <= INLINE:
+            out = alone()
+            pts = [xy(x) for x in state[j]["pts"]]
+            pts[v] = q
+            out[j] = pts
+            return out
+        other = state[j]
+        e = 0 if v == 0 else len(other["pts"]) - 2
+        _, _, n, _ = as_operation(frame, other, e)
+        moved = as_operation(shift, state, j, e, dot((u[0] * by, u[1] * by), n))
+        out = {first: moved[first]} if first in moved else alone()
+        for j2, pts in moved.items():
+            if j2 != first:
+                out[j2] = pts
+        return out
+    raise Refused("operation", f"Kenarın {which}nda birden çok duvar birleşiyor; boyu değişemiyor. Öbür ucu sabitleyin ya da birleşimi kaldırın.")
+
+
+def fixed3(v):
+    return f"{abs(v):.3f}"
+
+
+def lengthen(state, first, k, length, anchor):
+    """The walls that change, as {id: new points}, the one made `length` long first."""
+    if not (math.isfinite(length) and length > JOIN):
+        raise Refused("operation.length", f"Boy {num(length)}; {num(JOIN)} m'den uzun, sonlu bir uzunluk olmalı.")
+    me = state[first]
+    _, u, _, l = frame(me, k)
+    np_ = len(me["pts"])
+    change = length - l
+    free = path_ends(me, k)
+    moves = {"start": [(1, (k + 1) % np_, change)], "end": [(0, k, -change)],
+             "middle": [(0, k, -change / 2.0), (1, (k + 1) % np_, change / 2.0)]}[anchor]
+    merged = {first: [xy(x) for x in me["pts"]]}
+    for which, vertex, by in moves:
+        if not free[which]:
+            raise Refused("operation", f"Kenarın {['başı', 'sonu'][which]} duvarın köşesi; boy yalnız yolun ucundan değişir. Kenarı Kaydır'la oynatın ya da öbür ucu sabitleyin.")
+        end = 0 if vertex == 0 else 1
+        for j, pts in end_moved(state, first, end, vertex, u, by).items():
+            old = [xy(x) for x in state[j]["pts"]]
+            into = merged.setdefault(j, list(old))
+            for i, q in enumerate(pts):
+                if q == old[i]:
+                    continue
+                if into[i] != old[i] and into[i] != q:
+                    raise Refused("operation", "İki ucun izlediği duvarlar aynı köşeyi başka yerlere götürüyor; boyu bir ucu sabitleyerek değiştirin.")
+                into[i] = q
+    for j, new in merged.items():
+        old = [xy(x) for x in state[j]["pts"]]
+        for e in range(edges(state[j])):
+            i, i2 = e, (e + 1) % len(old)
+            if old[i] == new[i] and old[i2] == new[i2]:
+                continue
+            if dist(new[i], new[i2]) <= JOIN or dot(sub(new[i2], new[i]), sub(old[i2], old[i])) <= 0:
+                raise Refused("operation", f"Bu boy bir duvar kenarını yok ediyor ya da ters çeviriyor ({fixed3(change)} m fark); daha küçük bir değişiklik yazın.")
+    return merged
+
+
 # ── Openings: read back from their jambs, jambs from their wall (ADR 0341 §3) ──────────────────────────────────────
 
 def path_s(pts, q):
@@ -489,32 +684,51 @@ def edit(state, inp):
     if kind == "shift":
         if not math.isfinite(op["by"]):
             return refusal("not_finite", "Kaydırma sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir uzunluk verin.", "operation.by"), None
+    elif kind == "length":
+        if not math.isfinite(op["length"]):
+            return refusal("not_finite", "Boy sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir uzunluk verin.", "operation.length"), None
     else:
         if not math.isfinite(op["distance"]):
             return refusal("not_finite", "Mesafe sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir uzunluk verin.", "operation.distance"), None
         if op["distance"] < 0:
             return refusal("invalid_wall", f"Mesafe {num(op['distance'])}; sıfır ya da daha büyük olmalı.", "operation.distance"), None
     if len(named) != 1:
-        return refusal("invalid_wall", "Kaydır ve Mesafe tek duvarla çalışır; bir duvar verin.", "uids"), None
+        alone = "Boy tek duvarla çalışır; bir duvar verin." if kind == "length" else "Kaydır ve Mesafe tek duvarla çalışır; bir duvar verin."
+        return refusal("invalid_wall", alone, "uids"), None
     first = named[0][1]
     k = op.get("edge", 0)
     try:
-        g = gaps(state, first, k)
-        if kind == "shift":
-            by = op["by"]
+        if kind == "length":
+            _, _, _, now = frame(state[first], k)
+            if abs(op["length"] - now) <= TIE:
+                return refusal("nothing_to_set", "Kenar zaten bu boyda; değişecek bir şey yok.", "operation.length"), None
+            moved = lengthen(state, first, k, op["length"], op.get("anchor", "start"))
         else:
-            side = 0 if op["side"] == "left" else 1
-            if g[side] is None:
-                return refusal("invalid_wall", f"Duvarın {['sol', 'sağ'][side]} yanında ona paralel bir duvar yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.", "operation.side"), None
-            by = g[0]["distance"] - op["distance"] if side == 0 else op["distance"] - g[1]["distance"]
-        if abs(by) <= TIE:
-            return refusal("nothing_to_set", "Duvar zaten bu konumda; kaydırılacak bir şey yok.", "operation"), None
-        moved = shift(state, first, k, by)
+            g = gaps(state, first, k)
+            if kind == "shift":
+                by = op["by"]
+            else:
+                side = 0 if op["side"] == "left" else 1
+                to = op.get("to", "face")
+                if to == "grid":
+                    at, dirn = axis_middle(state[first], k)
+                    g = beside(state, level(state[first]), at, dirn)
+                if g[side] is None:
+                    what = "aks" if to == "grid" else "duvar"
+                    return refusal("invalid_wall", f"Duvarın {['sol', 'sağ'][side]} yanında ona paralel bir {what} yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
+                                   "operation.to" if to == "grid" else "operation.side"), None
+                by = g[0]["distance"] - op["distance"] if side == 0 else op["distance"] - g[1]["distance"]
+            if abs(by) <= TIE:
+                return refusal("nothing_to_set", "Duvar zaten bu konumda; kaydırılacak bir şey yok.", "operation"), None
+            moved = shift(state, first, k, by)
     except Refused as r:
         return refusal(r.code, r.message, r.path), None
+    if state[first]["layerId"] == "kilitli":
+        return refusal("layer_locked", "“Kilitli katman” katmanı kilitli; üzerindeki duvar düzenlenemez. Kilidi Katmanlar panelinden açın.", "uids[0]"), None
     blocked = next((state[j] for j in moved if j != first and state[j]["layerId"] == "kilitli"), None)
     if blocked is not None:
-        return refusal("layer_locked", "Kaydırma “Kilitli katman” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın.", "operation"), None
+        what = "Boyun değişmesi" if kind == "length" else "Kaydırma"
+        return refusal("layer_locked", f"{what} “Kilitli katman” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın.", "operation"), None
     changed = {j: dict(state[j], pts=[P(*p) for p in pts]) for j, pts in moved.items()}
     order = list(moved)
     walls_out = [changed[order[0]]]
@@ -569,10 +783,12 @@ def shift_in(i, by, edge=None):
     return {"uids": [u(i)], "operation": op}
 
 
-def distance_in(i, side, d, edge=None):
+def distance_in(i, side, d, edge=None, to=None):
     op = {"kind": "distance", "side": side, "distance": d}
     if edge is not None:
         op["edge"] = edge
+    if to is not None:
+        op["to"] = to
     return {"uids": [u(i)], "operation": op}
 
 
@@ -603,6 +819,11 @@ def edit_cases():
         ("birleşimi yok (none) olan uç dik kayar, köşedeki duvar izlemez", shift_in(28, 0.4)),
         ("sola hizalı duvarın sol yanındaki mesafe yüzünden ölçülür: 0,90 m'den 0,60 m'ye", distance_in(30, "left", 0.6)),
         ("Mesafe sağ yanda: sola hizalı duvarın sağ yüzünden 1,70 m'den 2,00 m'ye", distance_in(30, "right", 2.0)),
+        ("aksa mesafe: eksen sol yandaki aksa 2,00'dan 1,00 m'ye (duvar aksa yaklaşır, aks yerinde)", distance_in(41, "left", 1.0, to="grid")),
+        ("aksa mesafe sağ yanda: 1,50'den 2,50 m'ye", distance_in(41, "right", 2.5, to="grid")),
+        ("aksa mesafe 0: duvarın ekseni aksın üstüne", distance_in(46, "left", 0.0, to="grid")),
+        ("aksa mesafe: sola hizalı duvarın ekseni aksa 0,50 m", distance_in(53, "left", 0.5, to="grid")),
+        ("aksa mesafe 30° dönük duvarda", distance_in(47, "left", 1.0, to="grid")),
     ]:
         s, _ = step("execute", inp)
         add(name, [s])
@@ -624,9 +845,68 @@ def edit_cases():
         ("mesafe zaten bu: yazılmaz", distance_in(2, "left", 2.35), None),
         ("sonsuz kaydırma reddedilir", shift_in(2, 0.2), {"operation.by": "NaN"}),
         ("duvar olmayan nesne reddedilir", shift_in(40, 0.2), None),
+        ("aksı olmayan yanda aksa mesafe reddedilir", distance_in(2, "left", 1.0, to="grid"), None),
+        ("aksa mesafe zaten bu: yazılmaz", distance_in(41, "left", 2.0, to="grid"), None),
     ]:
         s, _ = step("execute", inp, non_finite=nf)
         add(name, [s])
+    return c
+
+
+def length_in(i, length, anchor=None, edge=None):
+    op = {"kind": "length", "length": length}
+    if anchor is not None:
+        op["anchor"] = anchor
+    if edge is not None:
+        op["edge"] = edge
+    return {"uids": [u(i)], "operation": op}
+
+
+def length_cases():
+    c = []
+
+    def add(name, steps):
+        assert name not in [x["name"] for x in c], name
+        c.append({"name": name, "steps": steps})
+    first, after = step("execute", length_in(1, 6.0))
+    add("odanın güney duvarı 5'ten 6 m'ye, başı sabit: doğu duvarı Kaydır'la dışa, kuzey duvarı uzar, kapı doğu duvarıyla gider, kuzeydeki boşluk yerinde; tek adım",
+        [first, {"op": "undo", "returns": STEP, "expect": {"ids": IDS, "canUndo": False, "canRedo": True,
+                                                           "revision": "changed",
+                                                           "entities": {str(i): BY_ID[i] for i in (1, 2, 3, 6, 7)}}}])
+    for name, inp, nf in [
+        ("tek başına duvar 3'ten 4,50 m'ye: sonu kayar", length_in(9, 4.5), None),
+        ("sonu sabit: başı kayar, 3'ten 2 m'ye", length_in(9, 2.0, anchor="end"), None),
+        ("ortadan: iki uç yarı yarıya, 3'ten 4 m'ye", length_in(9, 4.0, anchor="middle"), None),
+        ("güney duvarı 6 m'ye, sonu sabit: batı duvarı dışa kayar, kuzey duvarının sonu izler", length_in(1, 6.0, anchor="end"), None),
+        ("güney duvarı ortadan 7 m'ye: iki köşe duvarı birlikte kayar", length_in(1, 7.0, anchor="middle"), None),
+        ("güney duvarı 4 m'ye kısalır: doğu duvarı içe kayar", length_in(1, 4.0), None),
+        ("uç uca iki duvar: ortak nokta kayar, sonraki duvar kısalır", length_in(12, 4.0), None),
+        ("saplanan duvarın serbest ucu kayar", length_in(11, 4.0, anchor="end"), None),
+        ("L duvarın ilk kenarı: ucu kayar, köşesi sabit", length_in(21, 5.0, anchor="end", edge=0), None),
+        ("L duvarın ikinci kenarı: sonu kayar", length_in(21, 4.0, edge=1), None),
+        ("başka kattaki köşe duvarı izlemez: uç tek başına kayar", length_in(24, 5.0), None),
+        ("birleşimi yok (none) olan uç tek başına kayar", length_in(28, 5.0), None),
+        ("uç uca: sonraki duvarı yok eden boy reddedilir", length_in(12, 6.0), None),
+        ("saplı (T) uç kaymaz", length_in(11, 2.0), None),
+        ("ucunda iki duvar birleşen uç kaymaz", length_in(14, 4.0), None),
+        ("L duvarın köşesi kaymaz", length_in(21, 5.0, edge=0), None),
+        ("izleyen köşe duvarı kilitli katmanda: hiçbiri yazılmaz", length_in(22, 5.0), None),
+        ("kilitli katmandaki duvar reddedilir", length_in(23, 4.0, anchor="end"), None),
+        ("kapalı duvarın kenarının ucu yok", length_in(8, 6.0, edge=0), None),
+        ("yay kenar reddedilir", length_in(20, 5.0), None),
+        ("olmayan kenar reddedilir", length_in(9, 4.0, edge=3), None),
+        ("aynı boy yazılmaz", length_in(9, 3.0), None),
+        ("sıfır boy reddedilir", length_in(9, 0.0), None),
+        ("sonsuz boy reddedilir", length_in(9, 4.0), {"operation.length": "NaN"}),
+        ("iki duvar birden reddedilir", {"uids": [u(9), u(2)], "operation": {"kind": "length", "length": 4.0}}, None),
+        ("duvar olmayan nesne reddedilir", length_in(40, 4.0), None),
+    ]:
+        s, _ = step("execute", inp, non_finite=nf)
+        add(name, [s])
+    s, _ = step("plan", length_in(1, 6.0))
+    add("plan duvarı ve izleyenleri yazmadan gösterir", [s])
+    s, _ = step("validate", length_in(9, 4.5))
+    add("doğrula yazmaz", [s])
     return c
 
 
@@ -641,6 +921,16 @@ def distances_answer(state, ids, edge=None):
                 x = g[side]
                 item[key] = {"distance": x["distance"], "uid": u(x["wall"]), "edge": x["edge"],
                              "face": "left" if x["left"] else "right", "from": P(*x["from"]), "to": P(*x["to"])}
+        w = state[i]
+        at, dirn = axis_middle(w, k)
+        for x, key in zip(beside(state, level(w), at, dirn), ("leftGrid", "rightGrid")):
+            if x is not None:
+                item[key] = {"distance": x["distance"], "uid": u(x["grid"]), "from": P(*x["from"]), "to": P(*x["to"])}
+        free = free_ends(state, i, k)
+        if free[0] or free[1]:
+            pts = [xy(p) for p in w["pts"]]
+            a, b = pts[k], pts[(k + 1) % len(pts)]
+            item["length"] = {"length": dist(a, b), "from": P(*a), "to": P(*b), "startFree": free[0], "endFree": free[1]}
         out.append(item)
     return {"walls": out, "revision": "$current"}
 
@@ -671,7 +961,7 @@ def distances_cases():
         c.append({"name": name, "steps": [{"op": op, "input": inp, "result": result, "within": 1e-9, "expect": before()}]})
     ask("doğu duvarı: iç yanda bölmeye 2,35 m, dış yanda duvar yok", {"uids": [u(2)]})
     ask("batı duvarı: iç yanda bölmenin sol yüzüne 2,35 m", {"uids": [u(4)]})
-    ask("bölme: iki yanında odanın duvarlarına 2,35 m", {"uids": [u(5)]})
+    ask("bölme: iki yanında odanın duvarlarına 2,35 m; iki ucu da saplı (T), boy yok", {"uids": [u(5)]})
     ask("güney duvarı: dik bölme sayılmaz, kuzey duvarına 3,80 m", {"uids": [u(1)]})
     ask("kapalı dikdörtgen duvarın sağ kenarı kendi sol kenarına 4,80 m", {"uids": [u(8)], "edge": 1})
     ask("kapalı dikdörtgen duvarın alt kenarı: içte üst kenarına 3,80 m, dışta A odasının kuzey duvarına 5,80 m", {"uids": [u(8)], "edge": 0})
@@ -683,6 +973,18 @@ def distances_cases():
     ask("başka kattaki paralel duvar atlanır, aynı kattaki ölçülür", {"uids": [u(24)]})
     ask("L duvarın ikinci kenarı", {"uids": [u(21)], "edge": 1})
     ask("iki duvar birden", {"uids": [u(2), u(4)]})
+    ask("aks: duvarın ekseninden iki yandaki en yakın akslara (2,00 ve 1,50 m), yanındaki duvarın yüzü ayrıca; başka kattaki ve yay aks sayılmaz",
+        {"uids": [u(41)]})
+    ask("aks: yanındaki duvarın iki yanında akslar (0,50 ve 3,00 m)", {"uids": [u(46)]})
+    ask("aks: 30° dönük duvarda katsız aks her katta, başka kattaki yakın aks sayılmaz", {"uids": [u(47)]})
+    ask("aks duvarın ekseninde: sol yanda 0", {"uids": [u(52)]})
+    ask("aks: sola hizalı duvarın ekseni yüzlerinin ortası", {"uids": [u(53)]})
+    ask("boy: L duvarın ikinci kenarında yalnız sonu kayabilir", {"uids": [u(21)], "edge": 1})
+    ask("boy: kapalı duvarın kenarında boy yok", {"uids": [u(8)], "edge": 2})
+    ask("boy: başka duvarın gövdesine saplı (T) uç kaymaz, yalnız serbest ucu kayabilir", {"uids": [u(11)]})
+    ask("boy: üç duvarın birleştiği uç kaymaz", {"uids": [u(14)]})
+    ask("boy: uç uca duvarın ortak ucu kayabilir", {"uids": [u(12)]})
+    ask("boy: birleşimi yok (none) olan uç kayabilir", {"uids": [u(28)]})
     ask("plan aynı cevabı verir", {"uids": [u(2)]}, op="plan")
     ask("doğrula cevap vermez, yazmaz", {"uids": [u(2)]}, op="validate")
     ask("yay duvar reddedilir", {"uids": [u(20)]})
@@ -704,13 +1006,21 @@ NOTE = ("ADR 0710. Beklenenler scripts/fixtures/wall_shift_cases.py'nin ADR'den 
         "ortasından yeni yola okunur, pervazları duvardan yeniden yazılır.")
 
 
+NOTE_LENGTH = ("ADR 0728. Beklenenler scripts/fixtures/wall_shift_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; "
+               "köşedeki duvar ADR 0710'un Kaydır kuralıyla izler, birleşmeyen duvarların uyarıları wall_join_cases.py'nin kesirli "
+               "çözücüsünden. Açıklıkların at'ı pervazlarının ortasından yeni yola okunur.")
+
+
 def files():
     return {
         "cad.walls.distances.json": document(
             "cad.walls.distances", "Duvarın mesafeleri: iki yandaki en yakın paralel duvara net mesafe; kat, örtüşme, hiza; retler",
             NOTE, distances_cases()),
         "cad.walls.edit.shift.json": document(
-            "cad.walls.edit", "Kaydır ve Mesafe: kenar kendine dik kayar, köşeler, T'ler ve açıklıklar izler; retler", NOTE, edit_cases()),
+            "cad.walls.edit", "Kaydır ve Mesafe: kenar kendine dik kayar, köşeler, T'ler ve açıklıklar izler; aksa mesafe; retler", NOTE, edit_cases()),
+        "cad.walls.edit.length.json": document(
+            "cad.walls.edit", "Boy: kenar doğrultusunda uzar ya da kısalır, sabit uç açık; köşe duvarı Kaydır'la izler; retler",
+            NOTE_LENGTH, length_cases()),
     }
 
 

@@ -4,7 +4,7 @@
   "command": "cad.arch.edit",
   "commandVersion": 1,
   "title": "Kolonu mesafeyle kaydır: yanına dik, karşı yüz sabit; akslara bağlı, kilitli ve paralel yüzsüz retler",
-  "note": "ADR 0712. Beklenenler scripts/fixtures/column_shift_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
+  "note": "ADR 0712, 0728. Beklenenler scripts/fixtures/column_shift_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
   "setup": {
     "format": "kentos.document",
     "version": 2,
@@ -510,6 +510,138 @@
           "x": 4.0,
           "y": 60.0
         }
+      },
+      {
+        "kind": "column",
+        "id": 26,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 10.0,
+          "y": 70.0
+        },
+        "width": 0.4
+      },
+      {
+        "kind": "grid",
+        "id": 27,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 11.2,
+            "y": 60.0
+          },
+          {
+            "x": 11.2,
+            "y": 90.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 28,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 71.5
+          },
+          {
+            "x": 20.0,
+            "y": 71.5
+          }
+        ],
+        "name": "2",
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "column",
+        "id": 29,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 10.0,
+          "y": 75.0
+        },
+        "width": 0.4,
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 30,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 74.0
+          },
+          {
+            "x": 20.0,
+            "y": 74.0
+          }
+        ],
+        "name": "3",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "column",
+        "id": 31,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 30.0,
+          "y": 70.0
+        },
+        "width": 0.4,
+        "rotation": 0.5235987755982988
+      },
+      {
+        "kind": "grid",
+        "id": 32,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 25.669872981077805,
+            "y": 68.4
+          },
+          {
+            "x": 34.33012701892219,
+            "y": 73.4
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "grid",
+        "id": 33,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 69.5
+          },
+          {
+            "x": 20.0,
+            "y": 69.5
+          }
+        ],
+        "name": "4",
+        "bulges": [
+          0.3,
+          0.0
+        ]
       }
     ],
     "uids": [
@@ -537,7 +669,15 @@
       "0192f5a1-7112-7000-8000-000000000016",
       "0192f5a1-7112-7000-8000-000000000017",
       "0192f5a1-7112-7000-8000-000000000018",
-      "0192f5a1-7112-7000-8000-000000000019"
+      "0192f5a1-7112-7000-8000-000000000019",
+      "0192f5a1-7112-7000-8000-00000000001a",
+      "0192f5a1-7112-7000-8000-00000000001b",
+      "0192f5a1-7112-7000-8000-00000000001c",
+      "0192f5a1-7112-7000-8000-00000000001d",
+      "0192f5a1-7112-7000-8000-00000000001e",
+      "0192f5a1-7112-7000-8000-00000000001f",
+      "0192f5a1-7112-7000-8000-000000000020",
+      "0192f5a1-7112-7000-8000-000000000021"
     ]
   },
   "cases": [
@@ -603,7 +743,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "5": {
@@ -652,7 +800,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": true,
@@ -736,7 +892,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "5": {
@@ -820,7 +984,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "5": {
@@ -904,7 +1076,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "5": {
@@ -989,7 +1169,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "6": {
@@ -1075,7 +1263,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "7": {
@@ -1160,7 +1356,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "8": {
@@ -1245,7 +1449,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "10": {
@@ -1333,7 +1545,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "19": {
@@ -1420,7 +1640,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "24": {
@@ -1504,7 +1732,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "entities": {
               "5": {
@@ -1517,6 +1753,386 @@
                   "y": 2.0
                 },
                 "width": 0.4
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksa mesafe: kolonun ortası sağındaki aksa 1,20'den 0,50 m'ye (aks yerinde)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 1,
+              "distance": 0.5,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 26,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 10.7,
+                    "y": 70.0
+                  },
+                  "width": 0.4
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "entities": {
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 10.7,
+                  "y": 70.0
+                },
+                "width": 0.4
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksa mesafe 0: kolonun ortası soldaki aksın üstüne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 3,
+              "distance": 0.0,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 26,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 2.0,
+                    "y": 70.0
+                  },
+                  "width": 0.4
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "entities": {
+              "26": {
+                "kind": "column",
+                "id": 26,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 2.0,
+                  "y": 70.0
+                },
+                "width": 0.4
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kattaki kolon kendi katının aksına 1,00 m (altında)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:29"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 0,
+              "distance": 1.0,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 29,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 10.0,
+                    "y": 72.5
+                  },
+                  "width": 0.4,
+                  "arch": {
+                    "level": "kat-1"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "entities": {
+              "29": {
+                "kind": "column",
+                "id": 29,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 10.0,
+                  "y": 72.5
+                },
+                "width": 0.4,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "30° dönük kolon kendi dönüklüğündeki aksa 0,20 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:31"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 2,
+              "distance": 0.2,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 31,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 29.710288568297063,
+                    "y": 70.50179491924304
+                  },
+                  "width": 0.4,
+                  "rotation": 0.5235987755982988
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "entities": {
+              "31": {
+                "kind": "column",
+                "id": 31,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 29.710288568297063,
+                  "y": 70.50179491924304
+                },
+                "width": 0.4,
+                "rotation": 0.5235987755982988
               }
             },
             "canUndo": true,
@@ -1588,7 +2204,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1642,7 +2266,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1699,7 +2331,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1757,7 +2397,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1814,7 +2462,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1871,7 +2527,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1928,7 +2592,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -1985,7 +2657,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -2042,7 +2722,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -2102,7 +2790,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -2159,7 +2855,15 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }
@@ -2216,7 +2920,213 @@
               22,
               23,
               24,
-              25
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksı olmayan yanda aksa mesafe reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 0,
+              "distance": 1.0,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun bu yanına paralel bir aks yok; aksa mesafe ölçülemiyor.",
+              "path": "operation.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksa mesafe zaten bu: yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 1,
+              "distance": 1.2,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "Kolon zaten bu konumda; kaydırılacak bir şey yok.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan yan aksa da reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 5,
+              "distance": 1.0,
+              "to": "grid"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun 5. yanı yok; yanları 0 ile 3 arasında.",
+              "path": "operation.side"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "revision": "same"
           }

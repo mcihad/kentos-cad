@@ -1033,11 +1033,16 @@ pub enum ArchOperation {
     Detach,
     /// Mesafe (docs/adr/0712): one column, not tied to grids, moved square to its side `side` (0 below its centre,
     /// 1 right, 2 above, 3 left, as it is turned) until that side is `distance` from the face it faces, which stays.
+    /// With `to: grid` (docs/adr/0728 §1) the distance is from the column's middle to the nearest grid parallel to
+    /// that side, which stays.
     Distance {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         side: u32,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
+        #[serde(default, skip_serializing_if = "crate::DistanceTo::is_face")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<crate::DistanceTo>", optional))]
+        to: crate::DistanceTo,
     },
 }
 
@@ -1085,6 +1090,8 @@ pub struct ColumnsDistancesInput {
 pub enum ColumnGapTarget {
     Wall,
     Column,
+    /// A grid parallel to the side, measured from the column's middle (docs/adr/0728 §1).
+    Grid,
 }
 
 /// One side's clear distance: square to the side, to the nearest parallel face (a wall's facing face or another
@@ -1104,7 +1111,7 @@ pub struct ColumnGap {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
     pub target: ColumnGapTarget,
-    /// A wall's path edge, or a column's side.
+    /// A wall's path edge, or a column's side; 0 for a grid.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub edge: u32,
     /// A wall's face that faces the column; absent for a column.
@@ -1132,6 +1139,10 @@ pub struct ColumnGaps {
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub tied: bool,
     pub sides: Vec<ColumnGap>,
+    /// Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1); a side without one is absent.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ColumnGap>>", optional))]
+    pub grids: Vec<ColumnGap>,
 }
 
 /// Output of `cad.columns.distances` v1 (its plan's too).

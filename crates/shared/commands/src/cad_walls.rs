@@ -603,7 +603,8 @@ pub enum WallsOperation {
         by: f64,
     },
     /// Mesafe (docs/adr/0710): Kaydır by as much as makes the clear distance on `side` (the path's left or right) to
-    /// the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays.
+    /// the nearest parallel wall `distance` (`cad.walls.distances`); that wall stays. With `to: grid` (docs/adr/0728
+    /// §1) the distance is from the edge's axis to the nearest parallel grid on that side, which stays.
     Distance {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
@@ -612,7 +613,65 @@ pub enum WallsOperation {
         side: crate::DimensionSetFace,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
+        #[serde(default, skip_serializing_if = "DistanceTo::is_face")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<DistanceTo>", optional))]
+        to: DistanceTo,
     },
+    /// Boy (docs/adr/0728 §3): the straight edge `edge` (absent: the first) made `length` long along its line,
+    /// `anchor` staying; a moving end must be the path's end. A corner's wall there shifts with it (Kaydır's rule), a
+    /// wall end to end in one line shortens or lengthens with it; a tee or a crowded end is refused.
+    Length {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        edge: Option<u32>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        length: f64,
+        #[serde(default, skip_serializing_if = "WallAnchor::is_start")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<WallAnchor>", optional))]
+        anchor: WallAnchor,
+    },
+}
+
+/// What a temporary distance measures to (docs/adr/0728 §2): the nearest face (a wall's, a column's side, a jamb, a
+/// face's end), or the nearest grid, from the object's axis.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DistanceTo {
+    #[default]
+    Face,
+    Grid,
+}
+
+impl DistanceTo {
+    pub fn is_face(&self) -> bool {
+        *self == DistanceTo::Face
+    }
+}
+
+/// Which end of an edge stays when its length changes (docs/adr/0728 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallAnchor {
+    /// The edge's start stays, its end moves.
+    #[default]
+    Start,
+    /// The edge's end stays, its start moves.
+    End,
+    /// Both ends move, half the change each.
+    Middle,
+}
+
+impl WallAnchor {
+    pub fn is_start(&self) -> bool {
+        *self == WallAnchor::Start
+    }
 }
 
 /// Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
@@ -661,7 +720,7 @@ pub struct WallsEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
-    /// The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710).
+    /// The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub joined: Vec<Entity>,
@@ -804,7 +863,46 @@ pub struct WallGap {
     pub to: Vec2,
 }
 
-/// A wall's edge and its two sides' clear distances; a side without a parallel wall is absent.
+/// A distance to a grid (docs/adr/0728 §1): from the object's axis to the nearest parallel (or, along an opening's
+/// face, crossing) straight grid, square to it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GridGap {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    /// The grid, by its persistent id.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// Where it is measured: on the object's axis, on the grid's line.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+}
+
+/// An edge's length (docs/adr/0728 §3): its baseline from its start to its end, and which ends a length can move (its
+/// path's ends that are free, end to end with a wall in line or a corner's; not a tee or where more walls meet).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallLength {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: Vec2,
+    pub start_free: bool,
+    pub end_free: bool,
+}
+
+/// A wall's edge and its two sides' clear distances; a side without a parallel wall is absent. Each side's nearest
+/// parallel grid from the edge's axis, and the edge's length when an end of it is the path's (docs/adr/0728).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -821,6 +919,15 @@ pub struct WallGaps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<WallGap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub left_grid: Option<GridGap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub right_grid: Option<GridGap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub length: Option<WallLength>,
 }
 
 /// Output of `cad.walls.distances` v1.

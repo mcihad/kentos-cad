@@ -226,6 +226,7 @@ mod cad_source;
 pub mod file_import;
 pub mod file_import_dwg;
 pub mod geometry_store;
+pub(crate) mod grid_refs;
 pub mod viewport_scope;
 pub mod import_apply;
 pub mod layer_filter;

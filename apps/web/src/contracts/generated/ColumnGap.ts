@@ -17,7 +17,7 @@ side: number, distance: number,
  */
 uid: string, target: ColumnGapTarget, 
 /**
- * A wall's path edge, or a column's side.
+ * A wall's path edge, or a column's side; 0 for a grid.
  */
 edge: number, 
 /**

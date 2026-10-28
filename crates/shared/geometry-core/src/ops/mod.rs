@@ -34,6 +34,7 @@ pub mod generate;
 pub mod geocode;
 pub mod geoprocess;
 pub mod georef;
+pub mod grid_ref;
 pub mod grips;
 pub mod hatch_region;
 pub mod holes;

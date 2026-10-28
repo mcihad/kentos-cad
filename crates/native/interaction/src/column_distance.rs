@@ -1,14 +1,16 @@
-//! Kolonun geçici ölçüleri (docs/adr/0712): the one selected column's clear distances on its four sides, each to the
-//! nearest parallel face (a wall's or another column's), drawn as dimensions across the gaps. A click on a number opens
-//! a text field at it with the value; Enter moves the column square to that side by `cad.arch.edit`'s `distance`, the
-//! face across fixed, in one undo step; Esc leaves it as it was. A column tied to grids says why it does not move at
-//! the click, before anything is typed.
+//! Kolonun geçici ölçüleri (docs/adr/0712, 0728): the one selected column's clear distances on its four sides, each to
+//! the nearest parallel face (a wall's or another column's), drawn as dimensions across the gaps. A side with a parallel
+//! grid too has a small square at its reference: a click switches it to the grid (from the column's middle) and back,
+//! the choice kept for the session. A click on a number opens a text field at it with the value; Enter moves the
+//! column square to that side by `cad.arch.edit`'s `distance`, the face or grid across fixed, in one undo step; Esc
+//! leaves it as it was. A column tied to grids says why it does not move at the click, before anything is typed.
 
-use kentos_commands::{ArchEdit, ArchOperation, ColumnGaps, CommandResult, Entity, TextAlign};
+use kentos_commands::{ArchEdit, ArchOperation, ColumnGaps, CommandResult, DistanceTo, Entity, TextAlign};
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::{ExecutionContext, arch_edit, column_distances};
 
 use crate::prompt::Prompt;
+use crate::temporary_refs::{Choices, Switch, other, shown};
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
 use crate::{Format, Level, Vec2, dimension_layout};
 
@@ -18,12 +20,13 @@ pub const LABEL: &str = "Kolonun mesafesi";
 /// The numbers' height, logical pixels: readable at any zoom.
 const TEXT_PX: f64 = 12.0;
 
-/// One side's temporary dimension: its side, its value and where its number stands.
+/// One side's temporary dimension: its side, its value, where its number stands and what it measures to.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Side {
     pub side: u32,
     pub value: f64,
     pub text_at: Vec2,
+    pub to: DistanceTo,
 }
 
 /// The temporary dimensions of the selected column, as last seen.
@@ -33,8 +36,11 @@ pub struct Overlay {
     uid: Option<Uuid>,
     measured: Option<u64>,
     gaps: Option<ColumnGaps>,
+    /// The view's scale the dimensions were drawn at; none: to be drawn again (a choice changed).
     scale: Option<u64>,
     pub sides: Vec<Side>,
+    /// The squares that switch a side's reference, where they stand.
+    pub squares: Vec<(Vec2, Switch)>,
     pub preview: Preview,
 }
 
@@ -55,8 +61,9 @@ fn selected(cx: &Context<'_>) -> Option<(Slot, Uuid)> {
 }
 
 impl Overlay {
-    /// Brought up to date for the selection: measured once per revision, drawn again when the view's scale changes.
-    pub fn see(&mut self, cx: &Context<'_>) {
+    /// Brought up to date for the selection: measured once per revision, drawn again when the view's scale or a choice
+    /// changes.
+    pub fn see(&mut self, choices: &Choices, cx: &Context<'_>) {
         let Some((slot, uid)) = selected(cx) else {
             *self = Self::default();
             return;
@@ -74,17 +81,46 @@ impl Overlay {
             scale: Some(scale),
             ..Self::default()
         };
-        self.draw(cx);
+        self.draw(choices, cx);
     }
 
-    /// The gaps drawn across them, the faces met marked.
-    fn draw(&mut self, cx: &Context<'_>) {
-        let Some(gaps) = self.gaps.clone() else {
+    /// Drawn again at the next look: a choice changed.
+    pub fn redraw(&mut self) {
+        self.scale = None;
+    }
+
+    /// The gaps drawn across them (each side's chosen reference), the faces or grids met marked.
+    fn draw(&mut self, choices: &Choices, cx: &Context<'_>) {
+        let (Some(gaps), Some(uid)) = (self.gaps.clone(), self.uid) else {
             return;
         };
         let height = cx.view.world_length(TEXT_PX);
-        for gap in &gaps.sides {
+        for k in 0..4u32 {
+            let face = gaps.sides.iter().find(|g| g.side == k);
+            let grid = gaps.grids.iter().find(|g| g.side == k);
+            let Some(kind) = shown(face.is_some(), grid.is_some(), choices.to(uid, 0, k)) else {
+                continue;
+            };
+            let Some(gap) = (match kind {
+                DistanceTo::Face => face,
+                DistanceTo::Grid => grid,
+            }) else {
+                continue;
+            };
             let (from, to) = (v(gap.from), v(gap.to));
+            // Two references: a square at this one switches to the other.
+            if face.is_some() && grid.is_some() {
+                self.preview.squares.push(to);
+                self.squares.push((
+                    to,
+                    Switch::Reference {
+                        uid,
+                        edge: 0,
+                        side: k,
+                        to: other(kind),
+                    },
+                ));
+            }
             let length = (to.x - from.x).hypot(to.y - from.y);
             let mut text_at = Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0);
             if length > 1e-9 {
@@ -122,6 +158,7 @@ impl Overlay {
                 side: gap.side,
                 value: gap.distance,
                 text_at,
+                to: kind,
             });
         }
     }
@@ -132,6 +169,7 @@ impl Overlay {
         Some(ColumnDistance {
             uid: self.uid?,
             side: side.side,
+            to: side.to,
             at: side.text_at,
             value: side.value,
             tied: self.gaps.as_ref().is_some_and(|g| g.tied),
@@ -145,6 +183,7 @@ impl Overlay {
 pub struct ColumnDistance {
     uid: Uuid,
     side: u32,
+    to: DistanceTo,
     at: Vec2,
     value: f64,
     /// Tied to grids: the command's refusal is said at the click, no field opens.
@@ -159,6 +198,7 @@ impl ColumnDistance {
             operation: ArchOperation::Distance {
                 side: self.side,
                 distance,
+                to: self.to,
             },
             expected_revision: None,
         }
@@ -173,7 +213,14 @@ impl ColumnDistance {
             width_factor: 1.0,
             initial: Some(initial),
             placeholder: Some("Mesafe"),
-            hint: Some("Yeni net mesafeyi yazın (1.20, 120 cm); Enter kolonu kaydırır, karşıdaki yüz yerinde kalır; Esc vazgeçer."),
+            hint: Some(match self.to {
+                DistanceTo::Face => {
+                    "Yeni net mesafeyi yazın (1.20, 120 cm); Enter kolonu kaydırır, karşıdaki yüz yerinde kalır; Esc vazgeçer."
+                }
+                DistanceTo::Grid => {
+                    "Kolonun ortasından aksa yeni mesafeyi yazın (0 ortayı aksa koyar); Enter kolonu kaydırır, aks yerinde kalır; Esc vazgeçer."
+                }
+            }),
             empty: false,
             face: Default::default(),
         }));
@@ -237,7 +284,11 @@ impl Tool for ColumnDistance {
         let result = arch_edit::execute(&mut ExecutionContext::new(cx.doc), self.edit(distance));
         if crate::points::written(result, cx).is_some() {
             let shown = cx.format().length(distance);
-            cx.say(Level::Success, format!("Kolon kaydırıldı: net mesafe {shown}."));
+            let what = match self.to {
+                DistanceTo::Face => "net mesafe",
+                DistanceTo::Grid => "aksa mesafe",
+            };
+            cx.say(Level::Success, format!("Kolon kaydırıldı: {what} {shown}."));
         }
         self.done = true;
     }

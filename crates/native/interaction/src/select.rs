@@ -153,6 +153,8 @@ pub struct Select {
     wall_temporary: crate::wall_distance::Overlay,
     /// The one selected column's temporary distances (docs/adr/0712).
     column_temporary: crate::column_distance::Overlay,
+    /// Each side's reference and each edge's fixed end, as chosen in the session (docs/adr/0728 §2).
+    choices: crate::temporary_refs::Choices,
     pointer: Option<Vec2>,
 }
 
@@ -290,9 +292,9 @@ impl Select {
         let Some(start) = self.start else {
             // The selected opening's temporary dimensions on the face the pointer is by (docs/adr/0701).
             self.pointer = Some(p.raw);
-            self.temporary.see(self.pointer, cx);
-            self.wall_temporary.see(self.pointer, cx);
-            self.column_temporary.see(cx);
+            self.temporary.see(self.pointer, &self.choices, cx);
+            self.wall_temporary.see(self.pointer, &self.choices, cx);
+            self.column_temporary.see(&self.choices, cx);
             // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
             let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
@@ -419,21 +421,26 @@ impl Select {
         }
     }
 
-    /// Forgets a press in progress (a command started, a drawing opened).
+    /// Forgets a press in progress (a command started, a drawing opened); the references and fixed ends chosen on the
+    /// temporary dimensions stay for the session (docs/adr/0728 §2), across a number's own text field too.
     pub fn reset(&mut self) {
-        *self = Self::default();
+        let choices = std::mem::take(&mut self.choices);
+        *self = Self {
+            choices,
+            ..Self::default()
+        };
     }
 
     /// The temporary dimensions brought up to date for the selection (docs/adr/0701).
     pub fn see_temporary(&mut self, cx: &Context<'_>) {
         if self.grip.is_none() && self.param.is_none() {
-            self.temporary.see(self.pointer, cx);
-            self.wall_temporary.see(self.pointer, cx);
-            self.column_temporary.see(cx);
+            self.temporary.see(self.pointer, &self.choices, cx);
+            self.wall_temporary.see(self.pointer, &self.choices, cx);
+            self.column_temporary.see(&self.choices, cx);
         }
     }
 
-    /// Where the temporary dimensions' numbers stand (docs/adr/0701, 0710).
+    /// Where the temporary dimensions' side numbers stand (docs/adr/0701, 0710).
     pub fn temporary_numbers(&self) -> Vec<Vec2> {
         self.temporary
             .sides
@@ -442,6 +449,48 @@ impl Select {
             .chain(self.wall_temporary.sides.iter().map(|s| s.text_at))
             .chain(self.column_temporary.sides.iter().map(|s| s.text_at))
             .collect()
+    }
+
+    /// Where the selected wall's length number stands (docs/adr/0728 §3).
+    pub fn temporary_length(&self) -> Option<Vec2> {
+        self.wall_temporary.length.as_ref().map(|l| l.text_at)
+    }
+
+    /// Where the temporary dimensions' squares stand: those that switch a side's reference or an edge's fixed end
+    /// (docs/adr/0728 §2).
+    pub fn temporary_squares(&self) -> Vec<Vec2> {
+        self.temporary
+            .squares
+            .iter()
+            .chain(&self.wall_temporary.squares)
+            .chain(&self.column_temporary.squares)
+            .map(|(at, _)| *at)
+            .collect()
+    }
+
+    /// A click on a temporary dimension's square: its reference or fixed end switched for the session, drawn again;
+    /// whether one was there (docs/adr/0728 §2).
+    pub fn switch_at(&mut self, screen: [f64; 2], cx: &Context<'_>) -> bool {
+        if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
+            return false;
+        }
+        let squares: Vec<_> = self
+            .temporary
+            .squares
+            .iter()
+            .chain(&self.wall_temporary.squares)
+            .chain(&self.column_temporary.squares)
+            .copied()
+            .collect();
+        let Some(switch) = crate::temporary_refs::square_at(&squares, screen, cx) else {
+            return false;
+        };
+        switch.apply(&mut self.choices);
+        self.temporary.redraw();
+        self.wall_temporary.redraw();
+        self.column_temporary.redraw();
+        self.see_temporary(cx);
+        true
     }
 
     /// The text field of the temporary dimension whose number is under the pointer, to run (docs/adr/0701, 0710).
@@ -453,7 +502,7 @@ impl Select {
             return Some(Box::new(field));
         }
         if let Some(field) = self.wall_temporary.at(screen, cx) {
-            return Some(Box::new(field));
+            return Some(field);
         }
         self.column_temporary.at(screen, cx).map(|f| Box::new(f) as Box<dyn crate::tool::Tool>)
     }
@@ -813,7 +862,7 @@ impl Select {
                 if !self.temporary.sides.is_empty() {
                     return Some(self.temporary.preview.clone());
                 }
-                if !self.wall_temporary.sides.is_empty() {
+                if self.wall_temporary.shows() {
                     return Some(self.wall_temporary.preview.clone());
                 }
                 return (!self.column_temporary.sides.is_empty()).then(|| self.column_temporary.preview.clone());

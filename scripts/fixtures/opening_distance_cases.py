@@ -16,6 +16,12 @@ s = (p - A)·u, u = (B - A)/|B - A|:
   distances s0 - r and r - s1; on a tie the opening, then the wall, then the end, then the lower id;
 - `distance` moves each opening by (r + d) - s0 (start) or (r - d) - s1 (end) along its wall, the reference fixed; the
   move's rules are Taşı's (one edge within its ends, clear of the other openings), its refusals Taşı's words.
+
+ADR 0728 adds grids: a straight grid (no bulge) on the wall's level or on none, its line endless, crossing [A, B]
+(not parallel within 0.001°; the crossing within 1e-9 of the segment), measured from the opening's middle
+m = (s0 + s1) / 2: before when at or before it (1e-9), else after; each side's nearest, a tie to the grid first in the
+drawing; `startGrid`, `endGrid` from the middle's point to the crossing. `distance` with `to: grid` moves the opening
+by d - g (start) or g - d (end), the grid fixed.
 """
 
 import argparse
@@ -39,6 +45,13 @@ LINE = "0192f5a1-6000-7000-8000-000000000207"
 ORPHAN = "0192f5a1-6000-7000-8000-000000000208"
 GONE = "0192f5a1-6000-7000-8000-0000000002ff"
 MISSING = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+GRID_1 = "0192f5a1-6000-7000-8000-000000000211"
+GRID_2 = "0192f5a1-6000-7000-8000-000000000212"
+GRID_3 = "0192f5a1-6000-7000-8000-000000000213"
+GRID_4 = "0192f5a1-6000-7000-8000-000000000214"
+GRID_5 = "0192f5a1-6000-7000-8000-000000000215"
+GRID_6 = "0192f5a1-6000-7000-8000-000000000216"
+PARALLEL = 1.745_329_251_994_33e-5
 QUERY = "cad.openings.distances"
 EDIT = "cad.openings.edit"
 TIE = 1e-9
@@ -247,6 +260,28 @@ def room(rotate=0.0, origin=(0.0, 0.0), arched=False, locked=False, orphan=False
     return drawing(entities, uids, locked)
 
 
+def gridded(rotate=0.0, origin=(0.0, 0.0)):
+    """The room with grids across its bottom edge at x 1, 2 (through the door's middle) and 6.5, one of the ground
+    floor at x 1.8, one of an arc at x 2.2, one along the edge (parallel) and one past the room's west end."""
+    d = room(rotate=rotate, origin=origin)
+    c, s_ = math.cos(math.radians(rotate)), math.sin(math.radians(rotate))
+
+    def at(x, y):
+        return P(origin[0] + c * x - s_ * y, origin[1] + s_ * x + c * y)
+
+    def grid(id, uid, a, b, name, **extra):
+        d["entities"].append({"kind": "grid", "id": id, "layerId": "0", "attrs": {}, "pts": [at(*a), at(*b)],
+                              "name": name, **extra})
+        d["uids"].append(uid)
+    grid(7, GRID_1, (1.0, -2), (1.0, 8), "1")
+    grid(8, GRID_2, (2.0, -2), (2.0, 8), "2")
+    grid(9, GRID_3, (6.5, -2), (6.5, 8), "3")
+    grid(10, GRID_4, (1.8, -2), (1.8, 8), "4", arch={"level": "zemin"})
+    grid(11, GRID_5, (2.2, -2), (2.2, 8), "5", bulges=[0.2, 0.0])
+    grid(12, GRID_6, (-3.0, -1.0), (12.0, -1.0), "A")
+    return d
+
+
 def open_wall():
     """A 10 m open wall, a window 3 m from its start, a door in its middle; the window 4 m from the door's start
     jamb's reference."""
@@ -326,7 +361,37 @@ def distances(d, uid, side):
         return {"distance": s - c[2] if before else c[2] - s, "from": jamb, "to": to, "reference": ref}
     start = best([c for c in candidates if c[2] <= s0 + TIE], True)
     end = best([c for c in candidates if c[2] >= s1 - TIE], False)
-    return k, described(start, j0, s0, True), described(end, j1, s1, False), (s0, s1)
+    # Grids crossing the face, from the opening's middle (ADR 0728 §1).
+    mid = (s0 + s1) / 2
+    grids = [None, None]
+    level = (w.get("arch") or {}).get("level")
+    for u2, e in objects.items():
+        if e["kind"] != "grid" or len(e["pts"]) != 2 or any(x != 0.0 for x in (e.get("bulges") or [])):
+            continue
+        if (e.get("arch") or {}).get("level") not in (None, level):
+            continue
+        (vx, vy), _ = unit(e["pts"][0], e["pts"][1])
+        den = ux * vy - uy * vx
+        if abs(den) <= PARALLEL:
+            continue
+        cx, cy = e["pts"][0]["x"] - a["x"], e["pts"][0]["y"] - a["y"]
+        t = (cx * vy - cy * vx) / den
+        if not (-TIE <= t <= length + TIE):
+            continue
+        before = t <= mid + TIE
+        dd = max(0.0, mid - t) if before else t - mid
+        side = 0 if before else 1
+        if grids[side] is None or dd < grids[side][0] - TIE:
+            grids[side] = (dd, u2, t)
+    middle = P(a["x"] + (b["x"] - a["x"]) * (mid / length), a["y"] + (b["y"] - a["y"]) * (mid / length))
+
+    def grid_described(g):
+        if g is None:
+            return None
+        return {"distance": g[0], "from": middle, "to": P(a["x"] + ux * g[2], a["y"] + uy * g[2]),
+                "reference": {"kind": "grid", "uid": g[1]}}
+    return (k, described(start, j0, s0, True), described(end, j1, s1, False), (s0, s1),
+            grid_described(grids[0]), grid_described(grids[1]))
 
 
 def queried(d, uids, side="left"):
@@ -336,12 +401,16 @@ def queried(d, uids, side="left"):
         if isinstance(r, dict):
             r["error"]["path"] = f"uids[{at}]"
             return r
-        k, start, end, _ = r
+        k, start, end, _, start_grid, end_grid = r
         one = {"uid": u, "edge": k, "face": side}
         if start:
             one["start"] = start
         if end:
             one["end"] = end
+        if start_grid:
+            one["startGrid"] = start_grid
+        if end_grid:
+            one["endGrid"] = end_grid
         out.append(one)
     return completed({"openings": out, "revision": "$current"})
 
@@ -359,7 +428,7 @@ def stored(o):
     return {k: o[k] for k in ("kind", "id", "layerId", "attrs", "host", "at", "width", "form", "place", "broken") if k in o}
 
 
-def moved(d, uids, side, face_side, value):
+def moved(d, uids, side, face_side, value, to="face"):
     """The `distance` edit: (result, the drawing after) or (refusal, None)."""
     if not math.isfinite(value):
         return refusal("not_finite", "Mesafe sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.", "operation.distance"), None
@@ -373,10 +442,15 @@ def moved(d, uids, side, face_side, value):
         if isinstance(r, dict):
             r["error"]["path"] = f"uids[{at}]"
             return r, None
-        _, start, end, (s0, s1) = r
-        ref = start if side == "start" else end
+        _, start, end, (s0, s1), start_grid, end_grid = r
+        if to == "grid":
+            ref = start_grid if side == "start" else end_grid
+        else:
+            ref = start if side == "start" else end
         if ref is None:
             where = "başında" if side == "start" else "sonunda"
+            if to == "grid":
+                return refusal("invalid_opening", f"Açıklığın {where} bu yüzü kesen bir aks yok; aksa mesafe ölçülemiyor. Öbür yanı seçin ya da yüze ölçün.", f"uids[{at}]"), None
             return refusal("invalid_opening", f"Açıklığın {where} bu yüzde referans yok: yüzün ucu açıklığın gerisinde kalıyor. Öbür yüzü ya da yanı seçin.", f"uids[{at}]"), None
         # The reference stays: the jamb goes to it plus (start) or less (end) the distance.
         by = (value - ref["distance"]) if side == "start" else (ref["distance"] - value)
@@ -442,6 +516,16 @@ def query_cases():
     orphan = room(orphan=True)
     out.append(case("Ret: duvarı olmayan açıklık", orphan, [{"op": "execute", "input": {"uids": [DOOR, ORPHAN]}, "result": queried(orphan, [DOOR, ORPHAN]),
                                                             "expect": {"ids": [e["id"] for e in orphan["entities"]], "revision": "same"}}]))
+    g = gridded()
+    out.append(case("Aks: kapının ortası aksın üstünde (başta 0), sonda 4,50 m; başka kattaki, yay ve paralel aks sayılmaz", g,
+                    [query_step(g, {"uids": [DOOR]}, queried(g, [DOOR]))]))
+    out.append(case("Aks: pencerenin ortasından başta 4 m, sonda 0,50 m", g, [query_step(g, {"uids": [WINDOW]}, queried(g, [WINDOW]))]))
+    out.append(case("Aks: dış yüzde de ortadan aynı mesafeler", g,
+                    [query_step(g, {"uids": [DOOR, WINDOW], "face": "right"}, queried(g, [DOOR, WINDOW], "right"))]))
+    out.append(case("Aks: sağ kenardaki kapının yüzünü aks kesmez", g, [query_step(g, {"uids": [DOOR2]}, queried(g, [DOOR2]))]))
+    g2 = gridded(rotate=30.0, origin=(500000.0, 4400000.0))
+    out.append(case("Aks: dönük ve büyük koordinatlı odada aynı mesafeler", g2,
+                    [query_step(g2, {"uids": [DOOR, WINDOW]}, queried(g2, [DOOR, WINDOW]))]))
     ids = [1, 2, 3, 4, 5, 6]
     for name, inp, res in (
         ("Ret: açıklık verilmedi", {"uids": []}, refusal("no_entities", "Ölçülecek açıklık verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids")),
@@ -455,7 +539,7 @@ def query_cases():
 
 def edit_step(d, inp, op="execute"):
     o = inp["operation"]
-    result, after = moved(d, inp["uids"], o["side"], o.get("face", "left"), o["distance"])
+    result, after = moved(d, inp["uids"], o["side"], o.get("face", "left"), o["distance"], o.get("to", "face"))
     ids = [e["id"] for e in d["entities"]]
     s = {"op": op, "input": inp, "result": result, "within": 1e-9}
     if after is None or op != "execute":
@@ -472,8 +556,10 @@ def edit_cases():
     out = []
     d = room()
 
-    def one(name, d, uids, side, value, face="left", undo=False, op="execute"):
+    def one(name, d, uids, side, value, face="left", undo=False, op="execute", to=None):
         inp = {"uids": uids, "operation": {"kind": "distance", "side": side, "face": face, "distance": value}}
+        if to is not None:
+            inp["operation"]["to"] = to
         step, after = edit_step(d, inp, op)
         steps = [step]
         if undo and after is not None:
@@ -510,6 +596,14 @@ def edit_cases():
     locked = room(locked=True)
     one("Ret: kilitli katmandaki açıklık", locked, [DOOR], "start", 1.0)
     one("Ret: duvarı olmayan açıklık taşınmaz", room(orphan=True), [ORPHAN], "start", 1.0)
+    g = gridded()
+    one("Aksa mesafe: kapının ortası aksın 50 cm ötesine, aks yerinde", g, [DOOR], "start", 0.5, to="grid", undo=True)
+    one("Aksa mesafe: pencerenin ortası sonraki aksın üstüne", g, [WINDOW], "end", 0.0, to="grid")
+    one("Aksa mesafe dış yüzde: pencere önceki aksa 3,50 m", g, [WINDOW], "start", 3.5, face="right", to="grid")
+    g2 = gridded(rotate=30.0, origin=(500000.0, 4400000.0))
+    one("Aksa mesafe dönük ve büyük koordinatlı odada", g2, [DOOR], "end", 4.0, to="grid")
+    one("Ret: aksı olmayan yanda aksa mesafe", g, [DOOR2], "start", 1.0, to="grid")
+    one("Ret: aksa mesafe pencereye bindirir", g, [DOOR], "end", 0.3, to="grid")
     return out
 
 
@@ -531,7 +625,7 @@ def document(command, title, cases):
         if c["setup"] == common:
             c.pop("setup")
     return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
-            "note": "ADR 0701. Bağımsız yüz/pervaz hesabı (scripts/fixtures/opening_distance_cases.py); KentOS kodu çalıştırılmaz.",
+            "note": "ADR 0701, 0728. Bağımsız yüz/pervaz ve aks hesabı (scripts/fixtures/opening_distance_cases.py); KentOS kodu çalıştırılmaz.",
             "setup": common, "cases": cases}
 
 

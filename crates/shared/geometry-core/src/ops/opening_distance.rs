@@ -9,12 +9,14 @@ use crate::vec2::Vec2;
 /// Slack, metres: a reference at a jamb (a touching opening) counts on that side.
 pub const TIE: f64 = 1e-9;
 
-/// What a reference is; on a tie the opening comes first, then the wall, then the face's end.
+/// What a reference is; on a tie the opening comes first, then the wall, then the face's end. A grid is measured from
+/// the opening's middle, apart from the others (docs/adr/0728 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Kind {
     Opening,
     Wall,
     End,
+    Grid,
 }
 
 /// A reference along the face: its kind, its owner's order key (an object's id as a big-endian number; 0 for an

@@ -88,6 +88,18 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   işleyicisi ve Mutfak dizisi aracı (baş, son, taraf; Otomatik evye/ocak;
   blokların Genişlik'iyle açılmış önizleme) `cad.casework.run.json` ile
   sınanmalı.
+- ARCH-EDIT-01 / ADR0728: Geçici ölçünün kalanı. Web'in seçili duvarı, kolonu ve açıklığı her yanda yüzü ve aksı
+  aday olarak bilmeli (aks nesnenin ekseninden: duvar kenarının iki yüzünün ortası, kolonun ortası, açıklığın iki
+  pervazının ortası); bir yanda iki aday varsa referansın ucunda kare, basınca öbürüne geçer, seçim oturumda kalır
+  (çizime yazılmaz, yazı alanı açılıp kapansa da durur). Kenarın kayabilen ucu varsa (yolun ucu; T ve çok duvarlı uç
+  kaymaz) boyu, iki yanda ölçü varsa uzun olanın yanında: sabit uç ölçü çizgisinin ucunda dolu kare, öbür ucun karesi
+  sabiti değiştirir; yazınca `cad.walls.edit`'in `length`'i (`edge`, `length`, `anchor`: start, end, middle; köşedeki
+  duvar Kaydır'la izler, uç uca duvar kısalır ya da uzar, T ve çok duvarlı uç ret). Düzenlemelerin `to`'su (`face`,
+  `grid`): `cad.walls.edit`'in `distance`'ı, `cad.arch.edit`'in ve `cad.openings.edit`'in `distance`'ı; sorguların
+  `leftGrid`, `rightGrid`, `length`'i (`cad.walls.distances`; `startFree`/`endFree` kayabilen uçlar), `grids`'i
+  (`cad.columns.distances`), `startGrid`, `endGrid`'i (`cad.openings.distances`). `cad.walls.edit.length.json`,
+  `cad.walls.edit.shift.json`, `cad.walls.distances.json`, `cad.columns.distances.json`, `cad.arch.edit.distance.json`,
+  `cad.openings.distances.json` ve `cad.openings.edit.distance.json` ile sınanmalı.
 - ARCH-LIB-02 / ADR0727: Mutfak dizisi L ve U, köşeler, cihazlar, tezgâh kesimleri, kalıcı dizi. Web'in belgesi
   `casework` kayıtlarını (KCAD 127) okuyup yazmalı ve izleyicisi (`follow_casework`: bağlı duvar değişince yeniden
   kurma, `wallGone`/`notBuilt`, bütün üyeler birlikte taşınınca taşınma, bütün üyeler silinince kaydın gitmesi) ile

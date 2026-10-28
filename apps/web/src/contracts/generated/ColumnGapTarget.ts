@@ -3,4 +3,4 @@
 /**
  * What a column's side is measured to.
  */
-export type ColumnGapTarget = "wall" | "column";
+export type ColumnGapTarget = "wall" | "column" | "grid";

@@ -195,3 +195,43 @@ pub fn moved(
     let n = Vec2::new(u.y, -u.x);
     Ok(along(me.at, n, g.distance - distance))
 }
+
+/// The middle of column `k`'s box, where a grid is measured from (docs/adr/0728 §1).
+pub fn middle(c: &ColumnIn<'_>) -> Vec2 {
+    let k = column_box(c.at, c.spec);
+    Vec2::new((k[0].x + k[2].x) / 2.0, (k[0].y + k[2].y) / 2.0)
+}
+
+/// The nearest grid parallel to each of column `k`'s sides, from its middle along the side's outward normal.
+pub fn grid_gaps(
+    columns: &[ColumnIn<'_>],
+    grids: &[crate::ops::grid_ref::GridIn<'_>],
+    k: usize,
+) -> [Option<crate::ops::grid_ref::GridGap>; 4] {
+    let Some(me) = columns.get(k) else {
+        return [None; 4];
+    };
+    crate::ops::grid_ref::around(grids, me.level, middle(me), &sides(me))
+}
+
+/// Column `k`'s reference point once its middle is `distance` from the nearest grid parallel to side `side`, the grid
+/// fixed; why not (no such side, no grid there).
+pub fn moved_to_grid(
+    columns: &[ColumnIn<'_>],
+    grids: &[crate::ops::grid_ref::GridIn<'_>],
+    k: usize,
+    side: usize,
+    distance: f64,
+) -> Result<Vec2, String> {
+    if side > 3 {
+        return Err(format!("Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."));
+    }
+    let me = columns.get(k).ok_or_else(|| "Kolon yok.".to_owned())?;
+    let Some(g) = grid_gaps(columns, grids, k)[side] else {
+        return Err("Kolonun bu yanına paralel bir aks yok; aksa mesafe ölçülemiyor.".into());
+    };
+    let (a, b) = sides(me)[side];
+    let u = unit(a, b).ok_or_else(|| "Kolonun bu yanı sıfır uzunlukta.".to_owned())?;
+    let n = Vec2::new(u.y, -u.x);
+    Ok(along(me.at, n, g.distance - distance))
+}

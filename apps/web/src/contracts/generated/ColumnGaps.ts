@@ -8,4 +8,8 @@ export type ColumnGaps = { uid: string,
 /**
  * Whether it stands where two grids cross (tied to them): it moves with them, not by a distance.
  */
-tied?: boolean, sides: Array<ColumnGap>, };
+tied?: boolean, sides: Array<ColumnGap>, 
+/**
+ * Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1); a side without one is absent.
+ */
+grids?: Array<ColumnGap>, };

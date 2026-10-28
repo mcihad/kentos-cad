@@ -1393,6 +1393,11 @@ impl Session {
             return;
         }
         let depth = self.parents.len();
+        // A click on a temporary dimension's square switches its reference or fixed end (docs/adr/0728 §2).
+        if self.tool.is_none() && !p.shift && self.select.switch_at(p.screen, cx) {
+            self.pick_pressed = true;
+            return;
+        }
         // A click on a temporary dimension's number opens its text field (docs/adr/0701).
         if self.tool.is_none()
             && !p.shift
@@ -1850,6 +1855,22 @@ impl Session {
             return Vec::new();
         }
         self.select.temporary_numbers()
+    }
+
+    /// Where the selected wall's length number stands, while no tool runs (docs/adr/0728 §3).
+    pub fn temporary_length(&self) -> Option<Vec2> {
+        if self.tool.is_some() {
+            return None;
+        }
+        self.select.temporary_length()
+    }
+
+    /// Where the temporary dimensions' squares stand, those that switch a reference or a fixed end (docs/adr/0728).
+    pub fn temporary_squares(&self) -> Vec<Vec2> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.temporary_squares()
     }
 
     /// What to draw over the drawing while a tool runs, or a grip moves.

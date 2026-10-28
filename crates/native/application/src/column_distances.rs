@@ -1,6 +1,6 @@
 //! A column's temporary distances (docs/adr/0712): on each of its four sides, the clear distance to the nearest
-//! parallel face, a wall's or another column's (`cad.columns.distances`); `cad.arch.edit`'s `distance` moves the column
-//! square to a side. The core's `ops::column_shift` is the rule; this reads the drawing for it. The shared cases are
+//! parallel face, a wall's or another column's, and from its middle to the nearest parallel grid (docs/adr/0728)
+//! (`cad.columns.distances`); `cad.arch.edit`'s `distance` moves the column square to a side. The core's `ops::column_shift` is the rule; this reads the drawing for it. The shared cases are
 //! `fixtures/commands/v1/cad.columns.distances.json` and `cad.arch.edit.distance.json`.
 
 use kentos_commands::{
@@ -141,10 +141,30 @@ pub fn gaps_of(doc: &Document, slot: Slot) -> Result<ColumnGaps, String> {
             }
         })
         .collect();
+    // Each side's nearest parallel grid, from the column's middle (docs/adr/0728 §1).
+    let grid_lines = crate::grid_refs::Grids::of(doc);
+    let grids = column_shift::grid_gaps(&columns, &grid_lines.ins(), 0)
+        .into_iter()
+        .enumerate()
+        .filter_map(|(side, g)| {
+            let g = grid_lines.described(doc, &g?)?;
+            Some(ColumnGap {
+                side: side as u32,
+                distance: g.distance,
+                uid: g.uid,
+                target: ColumnGapTarget::Grid,
+                edge: 0,
+                face: None,
+                from: g.from,
+                to: g.to,
+            })
+        })
+        .collect();
     Ok(ColumnGaps {
         uid: uid(slot),
         tied: c.column.grids.is_some(),
         sides,
+        grids,
     })
 }
 

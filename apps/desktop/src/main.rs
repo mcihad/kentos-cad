@@ -80,6 +80,8 @@ mod furniture_scenes;
 #[cfg(test)]
 mod casework_scenes;
 #[cfg(test)]
+mod temporary_scenes;
+#[cfg(test)]
 mod arch_audit_scenes;
 mod block_editor;
 #[cfg(test)]
