@@ -106,6 +106,7 @@ impl Document {
             requests,
             arrays,
             dimension_sets,
+            casework,
             constraints,
             ..
         } = snapshot;
@@ -135,6 +136,13 @@ impl Document {
                 return Err(why);
             }
             doc.arrays = arrays.into_iter().map(Arc::new).collect();
+        }
+        if !casework.is_empty() {
+            let list: Vec<&kentos_contracts::CaseworkRecord> = casework.iter().collect();
+            if let Some(why) = doc.casework_refused(&list) {
+                return Err(why);
+            }
+            doc.casework = casework.into_iter().map(Arc::new).collect();
         }
         if !constraints.is_empty() {
             if let Some(why) = doc.constraints_refused(&constraints) {
@@ -190,6 +198,7 @@ impl Document {
             sheets: parts.sheets.map(Arc::new),
             arrays: Vec::new(),
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
             constraints: Default::default(),
             layers: LayerTree::new(layers, &active_layer),
             store,
@@ -268,6 +277,7 @@ impl Document {
                 .iter()
                 .map(|set| (**set).clone())
                 .collect(),
+            casework: self.casework.iter().map(|r| (**r).clone()).collect(),
         };
         (head, objects)
     }
@@ -304,6 +314,7 @@ impl Document {
             requests: Vec::new(),
             arrays: Vec::new(),
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
         }
     }
 

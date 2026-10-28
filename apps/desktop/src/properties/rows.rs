@@ -19,6 +19,7 @@ use super::{Event, Field, Spot};
 
 mod arch;
 pub(crate) mod attachments;
+pub(crate) mod casework;
 pub(crate) mod cloud;
 mod dimension;
 mod dimension_set;
@@ -2276,6 +2277,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             rows: geo,
         });
     }
+    // The kitchen run the object is part of (docs/adr/0727 §6).
+    let in_run = casework::section(doc, slot, locked);
+    let run_member = in_run.is_some();
+    sections.extend(in_run);
     // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
     // its order, with what the insert shows (its value, else the default).
     let tags: Vec<(String, String)> = match e {
@@ -2358,6 +2363,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         .iter()
         .filter(|(key, _)| !tags.iter().any(|(tag, _)| tag == *key))
         .filter(|(key, _)| !fields.iter().any(|f| f.name == **key))
+        // A run's data is its run's: its section edits it (docs/adr/0727 §5).
+        .filter(|(key, _)| !(run_member && matches!(key.as_str(), "Modül" | "Tür" | "Açılma")))
         .collect();
     if !others.is_empty() {
         sections.push(Section {

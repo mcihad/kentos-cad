@@ -88,6 +88,17 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   işleyicisi ve Mutfak dizisi aracı (baş, son, taraf; Otomatik evye/ocak;
   blokların Genişlik'iyle açılmış önizleme) `cad.casework.run.json` ile
   sınanmalı.
+- ARCH-LIB-02 / ADR0727: Mutfak dizisi L ve U, köşeler, cihazlar, tezgâh kesimleri, kalıcı dizi. Web'in belgesi
+  `casework` kayıtlarını (KCAD 127) okuyup yazmalı ve izleyicisi (`follow_casework`: bağlı duvar değişince yeniden
+  kurma, `wallGone`/`notBuilt`, bütün üyeler birlikte taşınınca taşınma, bütün üyeler silinince kaydın gitmesi) ile
+  sahiplik denetimini (`casework_owned`) taşımalı; `cad.casework.run`'ın `through`, `corner`, `dishwasher`, `oven`,
+  `fridge`, `perModule`'ü, `casework_clash` ve kör köşedeki evye, ocak ya da bulaşık makinesinin
+  `casework_blind_corner` uyarısı (modülün `blind`'i), `cad.casework.edit` (module, recipe, release) ve
+  `cad.casework.query` işleyicileri; Mutfak dizisi aracının Biçim (Düz, L, U; köşe dikliğe izdüşer), Köşe, Bulaşık
+  makinesi, Fırın ve Buzdolabı ayarları (Otomatik kör modülü atlar; kapı çakışması önizlemenin etiketinde);
+  Öznitelikler'de Mutfak dizisi bölümü (Dizi, Köşe, Tezgâh derinliği, Üst dolap, Fırın, Buzdolabı, Modül, Tür, Modül
+  eni, Açılma; Dizinin tamamını seç, Bırak, Sil). Ortak durumlar `cad.casework.run.json`, `cad.casework.edit.json`,
+  `cad.casework.query.json`; bulutta proje meta `casework` (göç 0035).
 - ARCH-ELEM-03 / ADR0707: `cad.grids.create`'in `system`'i (aks ağı ve
   kesişim kolonları). Web'in Aks ağı aracı (imleçle gelen ağ, İki nokta,
   “3*6” aralıklar) ve işleyicisi `cad.grids.create.system.json` ile sınanmalı.

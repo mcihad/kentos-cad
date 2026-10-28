@@ -173,6 +173,10 @@ class Case:
                 self.revisions[step["as"]] = self.doc.revision
             elif op == "captureUid":
                 self.uids[step["as"]] = self.slots()[step["id"]].uid
+            elif op == "captureCasework":
+                # A kitchen run's id, by its place in the drawing's runs (docs/adr/0727 §6).
+                _, snapshot = _KCAD.read(self.doc.to_bytes())
+                self.uids[step["as"]] = snapshot["casework"][step.get("index", 0)]["id"]
             elif op == "copyFile":
                 # A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538).
                 assert step["to"].startswith("$tmp:"), f"{at}: “to” is not a $tmp: file"
@@ -341,6 +345,11 @@ class Case:
                 # suppressed segments and broken sources (docs/adr/0695).
                 _, snapshot = _KCAD.read(self.doc.to_bytes())
                 same(snapshot.get("dimensionSets", []), self.fill(want, at), f"{at}: dimensionSets", within)
+            elif key == "casework":
+                # The drawing's kitchen runs in order, each without its id (docs/adr/0727 §5).
+                _, snapshot = _KCAD.read(self.doc.to_bytes())
+                got = [{k: v for k, v in r.items() if k != "id"} for r in snapshot.get("casework", [])]
+                same(got, self.fill(want, at), f"{at}: casework", within)
             elif key == "blockFields":
                 # Only the fields named of each block by its name; `$inserts` the names of the blocks its inserts
                 # place, `$count` how many objects it has (docs/adr/0726 §2).

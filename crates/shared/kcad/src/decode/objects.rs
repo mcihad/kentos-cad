@@ -258,6 +258,8 @@ pub(super) struct Features {
     stair_levels: bool,
     /// Schema 126: a grid's `ends`, a column's `anchor`, an L column (docs/adr/0725).
     grid_column_forms: bool,
+    /// Schema 127: the kitchen runs (docs/adr/0727).
+    pub(super) casework: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -467,6 +469,7 @@ impl Features {
             ramp_levels: schema >= crate::SCHEMA_WITH_RAMP_LEVELS,
             stair_levels: schema >= crate::SCHEMA_WITH_STAIR_LEVELS,
             grid_column_forms: schema >= crate::SCHEMA_WITH_GRID_COLUMN_FORMS,
+            casework: schema >= crate::SCHEMA_WITH_CASEWORK,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

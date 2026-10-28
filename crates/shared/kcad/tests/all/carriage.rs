@@ -278,6 +278,7 @@ fn every_part_of_the_snapshot_is_carried_alone() {
     let _ = |s: DocumentSnapshotV2| {
         let DocumentSnapshotV2 {
             dimension_sets: _,
+            casework: _,
             format: _,
             version: _,
             name: _,

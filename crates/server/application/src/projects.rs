@@ -260,6 +260,23 @@ pub fn check_constraints(set: &kentos_contracts::ConstraintSet, path: &str) -> A
     }
 }
 
+/// A project's kitchen runs by the contract's rules (`casework_problem`, docs/adr/0727 §5), refused at their place
+/// under `path`; the objects and walls they name are the document's.
+pub fn check_casework(runs: &[kentos_contracts::CaseworkRecord], path: &str) -> AppResult<()> {
+    match kentos_contracts::casework_problem(runs) {
+        Some((i, why)) => Err(AppError::invalid_at(format!("{path}[{i}]"), why)),
+        None => Ok(()),
+    }
+}
+
+/// The kitchen runs as a column holds them: none when there are none.
+pub(crate) fn casework_value(runs: &[kentos_contracts::CaseworkRecord]) -> AppResult<Option<Value>> {
+    if runs.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(json(&runs)?))
+}
+
 /// Architectural dimension recipes are never pruned during transfer: broken hosts remain repairable.
 pub fn check_dimension_sets(sets: &[kentos_contracts::DimensionSet], path: &str) -> AppResult<()> {
     match kentos_contracts::dimension_sets_problem(sets) {
@@ -502,6 +519,7 @@ pub async fn create(
     check_constraints(&input.constraints, "constraints")?;
     check_dimension_sets(&input.dimension_sets, "dimensionSets")?;
     check_dimension_layers(&input.dimension_sets, &input.layers, "dimensionSets")?;
+    check_casework(&input.casework, "casework")?;
     if input
         .dimension_sets
         .iter()
@@ -537,8 +555,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage, sheets, arrays, constraints, dimension_sets)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19, $20)",
+                                     description, project_type, tags, storage, sheets, arrays, constraints, dimension_sets, casework)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -560,6 +578,7 @@ pub async fn create(
     .bind(arrays_value(&input.arrays)?)
     .bind(constraints_value(&input.constraints)?)
     .bind(dimension_sets_value(&input.dimension_sets)?)
+    .bind(casework_value(&input.casework)?)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
@@ -655,7 +674,8 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
                 p.deleted_at is not null, p.storage, p.sheets,
-                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints, 'dimensionSets', p.dimension_sets)
+                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints, 'dimensionSets', p.dimension_sets,
+                                   'casework', p.casework)
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -694,6 +714,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     let arrays = part("arrays", &mut meta_parts);
     let constraints = part("constraints", &mut meta_parts);
     let dimension_sets = part("dimensionSets", &mut meta_parts);
+    let casework = part("casework", &mut meta_parts);
     if deleted {
         return Err(gone(&name));
     }
@@ -728,6 +749,11 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
             .map_err(bad)?
             .unwrap_or_default(),
         dimension_sets: dimension_sets
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?
+            .unwrap_or_default(),
+        casework: casework
             .map(serde_json::from_value)
             .transpose()
             .map_err(bad)?

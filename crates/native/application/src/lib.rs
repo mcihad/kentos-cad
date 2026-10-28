@@ -288,6 +288,8 @@ pub mod spaces_number;
 pub mod arch_elements;
 pub mod arch_edit;
 pub mod casework_run;
+pub mod casework_edit;
+pub use casework_edit::query as casework_query;
 pub mod legends;
 pub mod levels_assign;
 mod library_symbols;
@@ -843,10 +845,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_ARCH_AUDIT,
         kentos_commands::CAD_ARCH_AUDIT_VERSION,
     ),
-    // Mutfak dizisi ([`casework_run`], docs/adr/0706).
+    // Mutfak dizisi ([`casework_run`], docs/adr/0706, 0727).
     (
         kentos_commands::CAD_CASEWORK_RUN,
         kentos_commands::CAD_CASEWORK_RUN_VERSION,
+    ),
+    // Mutfak dizisini düzenle ve oku ([`casework_edit`], docs/adr/0727 §6).
+    (
+        kentos_commands::CAD_CASEWORK_EDIT,
+        kentos_commands::CAD_CASEWORK_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_CASEWORK_QUERY,
+        kentos_commands::CAD_CASEWORK_QUERY_VERSION,
     ),
     // Kat ver ([`levels_assign`], docs/adr/0717).
     (

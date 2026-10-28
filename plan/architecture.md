@@ -908,7 +908,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: m/mm proje, dış DWG bloğu, iç içe INSERT, aynalı yerleşim, gerçek
   ölçüm, blok özellikleri, kaydet/aç ve DXF görünüşü.
 
-### ARCH-LIB-02 — Mutfak/dolap dizisi ve tezgâh [~]
+### ARCH-LIB-02 — Mutfak/dolap dizisi ve tezgâh [x]
 
 - [x] Düz dizi dilimi [ADR0706](../docs/adr/0706-kitchen-casework-runs.md):
   `cad.casework.run` çizgi boyunca modül enli dolaplar, 0,90 m evye modülü,
@@ -919,6 +919,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kendi bloğu), araç testleri, Python/MCP, gerçek GUI resimleri
   (`.run/shots/arac-mutfak-*`). Köşe/L-U tek komut, cihaz modülleri, tezgâh
   deliği ve duvar izleme açık.
+- [x] Kalan bütün alt maddeler ve kabul [ADR0727](../docs/adr/0727-kitchen-runs-corners-appliances-follow.md):
+  L ve U dizi tek komutla (`through`, en çok iki dik köşe; kör ya da açık köşe, köşe dolgusu), bulaşık makinesi,
+  ocağın altında fırın, yolun başında ya da sonunda buzdolabı, modülün kendi eni ve kapısının açılması
+  (`perModule`; 0,60'tan geniş çift kapı), tezgâh tek alan ve evye/ocak kesimleri, modüllerin Modül/Tür/Açılma
+  öznitelikleri. Kör köşede önü kapanan modül (`blind`): orada evye, ocak ya da bulaşık makinesi
+  `casework_blind_corner` ile söylenir, araçta Otomatik onu atlar (gerçek GUI'de bulundu). Dizi belgede kayıt (KCAD 127, opt-in): tarif, kolların duvar yüzü bağları ve kalıcı üyeler; bağlı
+  duvar değişince aynı adımda yeniden kurulur, duvar silinince `wallGone`, kurulamazsa `notBuilt`, bütün üyeler
+  birlikte taşınınca dizi de taşınır; üye diziden ayrı değiştirilemez (`casework_owned`). `cad.casework.edit`
+  (modül, tarif, bırak) ve `cad.casework.query`; kapı önü ve alçak pencere uyarısı (`casework_clash`). Araçta Biçim
+  Düz/L/U ve köşe dikliğe izdüşer; Öznitelikler'de Mutfak dizisi bölümü. Kabul: toplam uzunluk ve modül dağılımı,
+  dar köşe ve negatif kalan retleri, çakışma, tek modül düzenleme ve kaynak duvar taşınması ortak durumlarda
+  (80 + 39 + 22, bağımsız Python başvurusu), Rust ve Python'da; bulut ve sunucuda proje meta (göç 0035).
 
 - Düz/L/U dizi; modül eni/adet, köşe çözümü, tezgâh derinliği; evye/ocak boşluğu,
   dolap açılma yönü ve yerleşim duvarına göre konum.
@@ -1271,6 +1283,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DOC-03 / ADR0703 | `cad.arch.audit` ve Denetim sekmesi: bul-yakınlaş-Düzelt-yeniden denetle-Geri al; 35 ortak durum, Python/MCP, resimler. | [~] İlk dilim; istisna ve merdiven denetimi açık |
 | 2026-10-27 | ARCH-STAIR-01 / ADR0704 | Yükseklikten rıht sayısı, kesme yüksekliği, son kol rıhtlara göre; dar U'da tek sahanlık; kesmenin üstü kesikli. 30+14 ortak durum, 3 araç testi, Python/MCP, clippy; gerçek GUI resimleri. | [~] Tasarım dilimi; kat görünümü ve döner merdiven açık |
 | 2026-10-27 | ARCH-STAIR-02 / ADR0705 | Eğimden rampa (son kol eğime göre), sahanlıklar bir kez, merdiven/rampa korkuluğu (KCAD 115); 38+28 durum, KCAD/Python/araç testleri, gerçek GUI resimleri. | [~] Eğim/korkuluk dilimi; ara sahanlık ve profil açık |
+| 2026-10-28 | ARCH-LIB-02 / ADR0727 | Mutfak dizisi L ve U (kör/açık köşe), bulaşık makinesi, fırın, buzdolabı, modülün kendi eni ve kapısı, tezgâh kesimleri, Modül/Tür/Açılma; kalıcı dizi (KCAD 127) duvarı izler, kopar, nesneleriyle taşınır, sahiplik (`casework_owned`); `cad.casework.edit`/`query`, `casework_clash`, kör köşedeki cihaz `casework_blind_corner`; araçta Biçim (Otomatik kör modülü atlar), Öznitelikler'de Mutfak dizisi. 80 + 39 + 22 ortak durum (Rust, Python), KCAD, bulut meta ve göç 0035, araç ve masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-LIB-01 / ADR0726 | Bloklar › Kitaplık (DWG/DXF/KCAD klasörleri, kategoriler, gerçek boy ve birim, birim bildirmeyen dosyada birim sorusu), `file.import.block`'un DWG/DXF okuması, `sourceUnit`, `category`, `sizes`, `unit`; Blok ekle'nin gerçek boy etiketi, taban işareti, görünür ayarları ve Varyant (V); Öznitelikler'de En × boy. 30 + 25 ortak durum, DWG ikizleri, başsız kabul matrisi (m/mm, iç içe, aynalı, kaydet/aç, DXF `--written`), etkileşim/masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-STAIR-01 / ADR0724 | Kata bağlı merdiven yüksekliği (`heightFromLevel`, KCAD 125, izleyici), merkez direği (`post`), İmar Yönetmeliği md. 31 profilleri ve Denetim'in `stairs` grubu (`profiles`), üst katta yukarıdan gösterim (ekran ve pafta), Metraj'da merdiven satırları ve Merdivenler sekmesi. 34+33+21 ortak durum, çekirdek üst kat/direk durumları, gerçek PDF (`pdftoppm`), uygulama/alan/etkileşim/komut/sözleşme/geometri/KCAD/başsız/pafta takımları, gerçek GUI. | [x] Bütün madde |

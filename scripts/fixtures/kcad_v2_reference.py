@@ -2182,6 +2182,8 @@ def document(d):
             "sheets": (sheets, False),
             "arrays": (assoc_arrays, False),
             "dimensionSets": (opaque, False),
+            # Schema 127 (docs/adr/0727 §5): the kitchen runs, as their JSON.
+            "casework": (opaque, False),
             # Schema 73 (docs/adr/0334): the constraints and the parameter table, as their JSON.
             "constraints": (opaque, False),
             "requests": (requests, False),
@@ -2196,7 +2198,12 @@ def document(d):
     assert d.get("constraints", {None: None}), "boş kısıt kümesi yazılmaz"
     sets = d.get("dimensionSets") or []
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)))
+    assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
+    schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if d.get("casework"):
+        # A kitchen run (docs/adr/0727 §5).
+        schema = max(schema, 127)
+    return root(cmap(body), version=uint(schema))
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False, has_constraints=False, has_dimension_sets=False):
@@ -2909,7 +2916,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-127.kcad"] = container(root(cmap(parts), version=uint(127)))
+    files["schema-version-128.kcad"] = container(root(cmap(parts), version=uint(128)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5000,6 +5007,24 @@ def build():
     columns_bad("blank", lambda src: src.update(columns=["Tarih", "  "]))
     columns_bad("eleven", lambda src: src.update(columns=[f"S{k}" for k in range(11)]))
     columns_bad("type", lambda src: src.update(columns="Tarih"))
+    # Schema 127 (docs/adr/0727 §5): an L kitchen run tied to its two walls, with its wall cabinets and a dishwasher,
+    # its objects and the blocks it brought.
+    cw = load("casework.json")
+    cp = document(cw)
+    assert cp.count(b"\x67version\x18\x7f") == 1
+    out["casework.kcad"] = container(cp)
+    out["broken/casework-in-schema-126.kcad"] = container(cp.replace(b"\x67version\x18\x7f", b"\x67version\x18\x7e"))
+    def casework_bad(name, change):
+        d = copy.deepcopy(cw)
+        change(d["casework"])
+        out["broken/casework-" + name + ".kcad"] = container(document(d))
+    casework_bad("twice", lambda runs: runs.append(copy.deepcopy(runs[0])))
+    casework_bad("ties-short", lambda runs: runs[0]["ties"].pop())
+    casework_bad("member-twice", lambda runs: runs[0]["members"].append(copy.deepcopy(runs[0]["members"][0])))
+    casework_bad("expected-revision", lambda runs: runs[0]["recipe"].update(expectedRevision="3"))
+    casework_bad("three-corners", lambda runs: runs[0]["recipe"].update(through=[{"x": 0.0, "y": 3.0}] * 3))
+    casework_bad("unknown", lambda runs: runs[0].update(unknown=True))
+    casework_bad("empty-layer", lambda runs: runs[0]["recipe"].update(layerId=""))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

@@ -75,6 +75,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "subnetwork_dirty",
     // Every write that touches the routes or the events of a link that keeps them on their routes (docs/adr/0569 §3).
     "events_dirty",
+    // Every write that changes or removes a kitchen run's object apart from its run (docs/adr/0727 §5).
+    "casework_owned",
 ];
 
 /// The revision's two, every writing command's.
@@ -1925,7 +1927,19 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.casework.run",
         refusals: &[&["not_finite", "invalid_casework", "invalid_line_weight"], REVISION, LAYER],
-        warnings: &["layer_hidden", "casework_filler"],
+        warnings: &["layer_hidden", "casework_filler", "casework_blind_corner", "casework_clash"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.casework.edit",
+        refusals: &[&["casework_not_found", "not_finite", "invalid_casework"], REVISION, LAYER],
+        warnings: &["layer_hidden", "casework_filler", "casework_blind_corner", "casework_clash"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.casework.query",
+        refusals: &[&["casework_not_found"]],
+        warnings: &[],
         targets: none,
     },
     Entry {

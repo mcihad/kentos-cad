@@ -99,6 +99,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
     }
     DocumentSnapshotV2 {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         format: "kentos.document".into(),
         version: 2,

@@ -2,6 +2,7 @@
 import type { AssocArray } from "./AssocArray";
 import type { BlockDefinition } from "./BlockDefinition";
 import type { Bounds } from "./Bounds";
+import type { CaseworkRecord } from "./CaseworkRecord";
 import type { ConstraintSet } from "./ConstraintSet";
 import type { DimensionSet } from "./DimensionSet";
 import type { Entity } from "./Entity";
@@ -64,6 +65,10 @@ arrays?: Array<AssocArray>,
  * Absent/empty keeps the previous document encoding unchanged.
  */
 dimensionSets?: Array<DimensionSet>, 
+/**
+ * The kitchen runs (docs/adr/0727 §5), in the order they were made; none when the drawing has none.
+ */
+casework?: Array<CaseworkRecord>, 
 /**
  * The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
  * has none.

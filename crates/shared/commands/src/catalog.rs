@@ -4241,7 +4241,12 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_CASEWORK_RUN.into(),
             version: crate::CAD_CASEWORK_RUN_VERSION,
             title: "Mutfak dizisi".into(),
-            summary: "Düz mutfak dizisi yazar (docs/adr/0706); tek geri alma adımı “Mutfak dizisi”. from→to dolapların sırtının dayandığı çizgidir (duvarın yüzü), side çizginin hangi yanında durdukları (left, right; yok: left).                       Alt dolaplar module eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) baştan dizilir; sink (1'den başlayan modül sırası) evye modülüdür, 0.90 m, üstünde Evye; cooktop modülün üstünde Ocak. Çizgiden artan kısım sonda dolgu olur (casework_filler).                       Tezgâh (alan) bütün çizgiyi depth derinliğinde (0.30–1.20 m; yok: 0.60) örter; upper true üst dolapları ekler. Çizimde adı olan blok olduğu gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks); dolabın eni Genişlik parametresidir.                       Plan yazacaklarını, modülleri ve dolguyu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+            summary: "Düz, L ya da U mutfak dizisi yazar (docs/adr/0706, 0727); tek geri alma adımı “Mutfak dizisi”. from, through (en çok iki dik köşe) ve to dolapların sırtının dayandığı yoldur (duvarın yüzü), side yolun hangi yanında durdukları (left, right; yok: left); köşeler dolapların yanına döner. \
+                      Köşe kör (corner blind, öntanımlı: sonraki kol köşeden tezgâh derinliği + 5 cm sonra başlar, köşe dolgusuyla) ya da açıktır (open: iki kol da köşeden tezgâh derinliği kadar uzakta durur). İlk kol köşesine dayanır, dolgusu başında; öbür kollar baştan dizilir, dolguları sonunda (casework_filler). Kör köşeye bir dolap derinliği kadar giren modül kördür (modüllerde blind: önünü sonraki kolun dolapları kapatır); orada evye, ocak ya da bulaşık makinesi uyarılır (casework_blind_corner). \
+                      Alt dolaplar module eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) dizilir; sink, cooktop ve dishwasher 1'den başlayan modül sırasıdır: evye 0.90 m modül, bulaşık makinesi ve fırın 0.60 m; oven true ocağın modülüne fırın koyar; fridge (start, end) yolun başına ya da sonuna 0.60 m buzdolabı yeri ayırır. perModule bir modülün kendi enini ve kapısının açıldığı yanı (left, right) verir; 0.60'tan geniş dolap çift kapılıdır. \
+                      Tezgâh (alan) bütün kolları depth derinliğinde (0.30–1.20 m; yok: 0.60) tek parça örter, evye ve ocak için kesimleriyle; upper true üst dolapları ekler. Dolaplar Modül, Tür ve Açılma öznitelikleriyle yazılır. Çizimde adı olan blok olduğu gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks); dolabın eni Genişlik parametresidir. \
+                      Kolun ucu bir duvarın düz yüzündeyse dizi o yüze bağlanır ve duvarı izler; önüne gelen kapı ve alçak pencere uyarılır (casework_clash). Dizi kaydıyla tutulur: nesneleri cad.casework.edit ile düzenlenir. \
+                      Plan yazacaklarını, modülleri, kolları ve dolguyu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -4255,28 +4260,123 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::CaseworkBuilt>(),
             plan: Some(schema::<crate::CaseworkPlan>()),
             capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "3,20 m duvar boyunca: evye ikinci, ocak dördüncü modülde".into(),
+                    input: json!({
+                        "layerId": "mutfak",
+                        "from": { "x": 0.0, "y": 0.0 },
+                        "to": { "x": 3.2, "y": 0.0 },
+                        "sink": 2,
+                        "cooktop": 4
+                    }),
+                    output: Some(json!({
+                        "run": "0192f5a1-7270-7000-8000-000000000001",
+                        "uids": [
+                            "0192f5a1-7040-7000-8000-000000000001", "0192f5a1-7040-7000-8000-000000000002",
+                            "0192f5a1-7040-7000-8000-000000000003", "0192f5a1-7040-7000-8000-000000000004",
+                            "0192f5a1-7040-7000-8000-000000000005", "0192f5a1-7040-7000-8000-000000000006",
+                            "0192f5a1-7040-7000-8000-000000000007", "0192f5a1-7040-7000-8000-000000000008"
+                        ],
+                        "ids": [2, 3, 4, 5, 6, 7, 8, 9],
+                        "blocks": ["Alt dolap", "Evye", "Ocak"],
+                        "modules": [
+                            { "number": 1, "kind": "base", "start": 0.0, "width": 0.6, "hand": "left" },
+                            { "number": 2, "kind": "sink", "start": 0.6, "width": 0.9, "hand": "double" },
+                            { "number": 3, "kind": "base", "start": 1.5, "width": 0.6, "hand": "left" },
+                            { "number": 4, "kind": "cooktop", "start": 2.1, "width": 0.6, "hand": "left" }
+                        ],
+                        "legs": [{ "length": 3.2, "start": 0.0, "end": 3.2, "filler": 0.5 }],
+                        "filler": 0.5,
+                        "revision": "3"
+                    })),
+                },
+                CommandExample {
+                    title: "Odanın köşesinde L dizi: kuzey duvarı boyunca köşeye, sonra batı duvarı boyunca".into(),
+                    input: json!({
+                        "layerId": "mutfak",
+                        "from": { "x": 2.4, "y": 3.0 },
+                        "through": [{ "x": 0.0, "y": 3.0 }],
+                        "to": { "x": 0.0, "y": 0.6 },
+                        "sink": 2,
+                        "cooktop": 5,
+                        "dishwasher": 3
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_CASEWORK_EDIT.into(),
+            version: crate::CAD_CASEWORK_EDIT_VERSION,
+            title: "Mutfak dizisini düzenle".into(),
+            summary: "Mutfak dizisini yeniden dizer ya da bırakır (docs/adr/0727 §6). run dizinin kimliği ya da bir nesnesinin kalıcı kimliğidir. \
+                      edit kind module: bir modülün kendi eni (width), kapısının açıldığı yan (hand) ve ne taşıdığı (holds: base, sink, cooktop, dishwasher); width ve hand verilmezse modülün kendi değerleri kalkar. kind recipe: dizinin bütün tarifi (cad.casework.run'ın girdisi). Dizi yeniden dizilir: nesneler dizideki yerleriyle (modül, evye, ocak, dolgu, köşe, üst dolap, tezgâh) yerinde güncellenir, artık olmayanlar silinir, yenileri eklenir; tek geri alma adımı “Mutfak dizisini düzenle”. \
+                      kind release: dizinin kaydı kalkar, nesneleri olduğu gibi kalır (“Mutfak dizisini bırak”). \
+                      Modül düzenlemesinin retleri edit, tarifinkiler edit.recipe yolundadır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CaseworkEdit>(),
+            output: schema::<crate::CaseworkBuilt>(),
+            plan: Some(schema::<crate::CaseworkPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Birinci modül 75 cm olur, sağdan açılır".into(),
+                    input: json!({
+                        "run": "0192f5a1-7270-7000-8000-000000000001",
+                        "edit": { "kind": "module", "module": 1, "width": 0.75, "hand": "right" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Üçüncü modül bulaşık makinesi olur".into(),
+                    input: json!({
+                        "run": "0192f5a1-7040-7000-8000-000000000003",
+                        "edit": { "kind": "module", "module": 3, "holds": "dishwasher" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Diziyi bırak: nesneler kalır".into(),
+                    input: json!({
+                        "run": "0192f5a1-7270-7000-8000-000000000001",
+                        "edit": { "kind": "release" }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_CASEWORK_QUERY.into(),
+            version: crate::CAD_CASEWORK_QUERY_VERSION,
+            title: "Mutfak dizilerini sorgula".into(),
+            summary: "Çizimin mutfak dizilerini okur (docs/adr/0727 §6); hiçbir şey yazmaz. run verilirse yalnız o dizi (dizinin kimliği ya da bir nesnesinin kalıcı kimliği). \
+                      Her dizi için tarifi, kolları (boy, dolapların başı ve sonu, dolgu, bağlı duvar), modülleri (sıra, tür, baş, en, kol, kapının açılması), buzdolabının yeri, toplam dolgu, nesneleri dizideki yerleriyle, çizimde artık olmayan nesneleri (missing) ve dizinin neden koptuğu (broken: wallGone duvarı silindi, notBuilt yeni yolunda dizilemedi)."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CaseworkQuery>(),
+            output: schema::<crate::CaseworkRuns>(),
+            plan: Some(schema::<crate::CaseworkRuns>()),
+            capabilities: None,
             examples: vec![CommandExample {
-                title: "3,20 m duvar boyunca: evye ikinci, ocak dördüncü modülde".into(),
-                input: json!({
-                    "layerId": "mutfak",
-                    "from": { "x": 0.0, "y": 0.0 },
-                    "to": { "x": 3.2, "y": 0.0 },
-                    "sink": 2,
-                    "cooktop": 4
-                }),
-                output: Some(json!({
-                    "uids": ["0192f5a1-7040-7000-8000-000000000001"],
-                    "ids": [1],
-                    "blocks": ["Alt dolap", "Evye", "Ocak"],
-                    "modules": [
-                        { "kind": "base", "start": 0.0, "width": 0.6 },
-                        { "kind": "sink", "start": 0.6, "width": 0.9 },
-                        { "kind": "base", "start": 1.5, "width": 0.6 },
-                        { "kind": "cooktop", "start": 2.1, "width": 0.6 }
-                    ],
-                    "filler": 0.5,
-                    "revision": "3"
-                })),
+                title: "Çizimin bütün dizileri".into(),
+                input: json!({}),
+                output: Some(json!({ "runs": [], "revision": "3" })),
             }],
         },
         CommandDescriptor {
@@ -11152,6 +11252,12 @@ mod tests {
                     crate::CAD_CASEWORK_RUN => {
                         serde_json::from_value::<crate::CaseworkRun>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_CASEWORK_EDIT => {
+                        serde_json::from_value::<crate::CaseworkEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_CASEWORK_QUERY => {
+                        serde_json::from_value::<crate::CaseworkQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -12233,6 +12339,10 @@ mod tests {
                         }
                         crate::CAD_CASEWORK_RUN => {
                             serde_json::from_value::<crate::CaseworkBuilt>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_CASEWORK_QUERY => {
+                            serde_json::from_value::<crate::CaseworkRuns>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

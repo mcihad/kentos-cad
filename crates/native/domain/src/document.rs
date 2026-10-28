@@ -50,6 +50,8 @@ pub struct Document {
     pub(crate) arrays: Vec<Arc<kentos_contracts::AssocArray>>,
     /// Persistent architectural dimension recipes; the visible members are ordinary dimensions.
     pub(crate) dimension_sets: Vec<Arc<kentos_contracts::DimensionSet>>,
+    /// The kitchen runs (docs/adr/0727, casework.rs): each one's recipe, walls and objects.
+    pub(crate) casework: Vec<Arc<kentos_contracts::CaseworkRecord>>,
     /// The constraints and the parameter table (docs/adr/0334, constraints.rs), one shared value an edit replaces.
     pub(crate) constraints: Arc<kentos_contracts::ConstraintSet>,
     pub(crate) layers: LayerTree,
@@ -258,6 +260,7 @@ impl Document {
             blocks: self.blocks.clone(),
             arrays: self.arrays.clone(),
             dimension_sets: self.dimension_sets.clone(),
+            casework: self.casework.clone(),
             constraints: self.constraints.clone(),
             project_id: self.project_id,
             migrated_from: self.migrated_from.clone(),

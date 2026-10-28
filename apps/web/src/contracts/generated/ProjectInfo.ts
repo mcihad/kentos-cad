@@ -2,6 +2,7 @@
 import type { AssocArray } from "./AssocArray";
 import type { BlockRecord } from "./BlockRecord";
 import type { Bounds } from "./Bounds";
+import type { CaseworkRecord } from "./CaseworkRecord";
 import type { ConstraintSet } from "./ConstraintSet";
 import type { DimensionSet } from "./DimensionSet";
 import type { LayerNode } from "./LayerNode";
@@ -39,6 +40,10 @@ arrays?: Array<AssocArray>,
  * Persistent architectural dimension recipes; older responses without this field have none.
  */
 dimensionSets?: Array<DimensionSet>, 
+/**
+ * A database project's kitchen runs (docs/adr/0727 §5); an older server's answer without them has none.
+ */
+casework?: Array<CaseworkRecord>, 
 /**
  * A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
  * none.

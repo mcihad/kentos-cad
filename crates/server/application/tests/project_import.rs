@@ -248,6 +248,7 @@ async fn an_import_needs_the_right_project_rights_and_upload() {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         name: "Dosya".into(),
         settings: s.settings,

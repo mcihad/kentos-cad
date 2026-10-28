@@ -28,6 +28,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mutfak dizisi: L ve U, cihazlar, kalıcı dizi (28 Ekim 2026; [ADR0727](docs/adr/0727-kitchen-runs-corners-appliances-follow.md)).**
+  `cad.casework.run`'ın `through`'u (en çok iki dik köşe), `corner` (kör, açık), `dishwasher`, `oven`, `fridge`,
+  `perModule` (modülün eni ve kapısı); tezgâh tek alan, evye/ocak kesimleri; modüllerde Modül/Tür/Açılma. Dizi belgede
+  kayıttır (`casework`, KCAD 127 opt-in): tarif, kolların duvar yüzü bağları, üyeler; `follow_casework` bağlı duvar
+  değişince aynı adımda yeniden dizer (`wallGone`, `notBuilt`), bütün üyeler birlikte taşınınca diziyi taşır; üye
+  diziden ayrı değişmez (`casework_owned`, protokol kodu). `cad.casework.edit` (module, recipe, release),
+  `cad.casework.query`, `casework_clash`; kör köşede önü kapanan modül (`blind`) ve oradaki evye/ocak/bulaşık
+  makinesi `casework_blind_corner`. Araçta Biçim (B: Düz/L/U, köşe dikliğe izdüşer), Otomatik kör modülü atlar;
+  Öznitelikler'de Mutfak dizisi bölümü. Bulutta proje meta (göç 0035).
+
 - **Blok kitaplığı: DWG/DXF klasörleri, gerçek boy ve birim (28 Ekim 2026; [ADR0726](docs/adr/0726-block-library-real-size.md)).**
   Bloklar'da Bu çizim | Kitaplık: cihazın kitaplık klasörleri (`blok-kitapliklari.json`), alt klasörler kategori, çizimin
   blokları resim, gerçek en × boy ve birimle; birim bildirmeyen DWG/DXF'te önce birim seçilir. `file.import.block` DWG

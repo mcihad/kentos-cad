@@ -125,6 +125,7 @@ async fn project_of(
         &ayse,
         ProjectCreate {
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
             constraints: Default::default(),
             name: name.into(),
             settings: doc.settings.clone(),

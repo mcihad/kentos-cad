@@ -172,6 +172,8 @@ struct Meta {
     sheets: Option<Arc<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300 §5), shared with the drawing's.
     arrays: Vec<Arc<kentos_contracts::AssocArray>>,
+    /// The kitchen runs (docs/adr/0727 §5), shared with the drawing's.
+    casework: Vec<Arc<kentos_contracts::CaseworkRecord>>,
     dimension_sets: Vec<Arc<kentos_contracts::DimensionSet>>,
     /// The constraints and parameters (docs/adr/0336 §3).
     constraints: kentos_contracts::ConstraintSet,
@@ -186,6 +188,7 @@ impl Meta {
             styles: doc.styles().clone(),
             sheets: doc.sheets_shared().cloned(),
             arrays: doc.arrays().to_vec(),
+            casework: doc.casework().to_vec(),
             dimension_sets: doc.dimension_sets().to_vec(),
             constraints: doc.constraints().clone(),
         }
@@ -213,6 +216,9 @@ impl Meta {
         }
         if doc.arrays() != self.arrays.as_slice() {
             patch.arrays = Some(doc.arrays().iter().map(|a| (**a).clone()).collect());
+        }
+        if doc.casework() != self.casework.as_slice() {
+            patch.casework = Some(doc.casework().iter().map(|r| (**r).clone()).collect());
         }
         if doc.dimension_sets() != self.dimension_sets.as_slice() {
             patch.dimension_sets = Some(

@@ -106,6 +106,7 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
     s.settings.workspace = Some(kentos_commands::Workspace::Gis);
     ProjectInfo {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         blocks: Vec::new(),
         id: PROJECT.into(),

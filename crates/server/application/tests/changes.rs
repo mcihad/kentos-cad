@@ -58,6 +58,7 @@ async fn new_project(db: &TestDb, who: &Access) -> Uuid {
     let s = sample();
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         name: "Örnek".into(),
         settings: s.settings,

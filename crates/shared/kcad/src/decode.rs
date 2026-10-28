@@ -292,6 +292,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut arrays_ = None;
     let mut constraints_ = None;
     let mut dimension_sets_ = None;
+    let mut casework_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
@@ -317,6 +318,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                     index,
                 )?)
             }
+            "casework" if has.casework => casework_ = Some(casework(r)?),
             "homeView" => home_view = Some(bounds(r)?),
             "requests" if has.requests => requests_ = Some(requests::requests(r)?),
             "settings" => settings_ = Some(settings(r, has)?),
@@ -363,6 +365,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     };
     Ok(DocumentSnapshotV2 {
         dimension_sets: dimension_sets_.unwrap_or_default(),
+        casework: casework_.unwrap_or_default(),
         constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -382,6 +385,26 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         requests: requests_.unwrap_or_default(),
         arrays,
     })
+}
+
+/// The kitchen runs (schema 127, docs/adr/0727 §5): the contract's JSON in the writer's canonical form, held to its
+/// rules.
+fn casework(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::CaseworkRecord>, KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let runs: Vec<kentos_contracts::CaseworkRecord> = serde_json::from_value(value.clone())
+        .map_err(|e| r.fail_at(Code::BadValue, at, &format!("mutfak dizileri okunamadı: {e}")))?;
+    if runs.is_empty() || serde_json::to_value(&runs).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "mutfak dizisi listesi boş ya da yazıcının kanonik biçiminde değil",
+        ));
+    }
+    if let Some((index, why)) = kentos_contracts::casework_problem(&runs) {
+        return Err(r.fail_at(Code::BadValue, at, &format!("casework[{index}]: {why}")));
+    }
+    Ok(runs)
 }
 
 fn dimension_sets(

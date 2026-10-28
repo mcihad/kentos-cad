@@ -229,6 +229,20 @@ pub(crate) enum Op {
         before: Arc<AssocArray>,
         after: Arc<AssocArray>,
     },
+    /// A kitchen run added at `index` of the list (casework.rs, docs/adr/0727 §5), its inverse, and the same run (its
+    /// id) before and after.
+    CaseworkAdd {
+        index: usize,
+        run: Arc<kentos_contracts::CaseworkRecord>,
+    },
+    CaseworkRemove {
+        index: usize,
+        run: Arc<kentos_contracts::CaseworkRecord>,
+    },
+    CaseworkUpdate {
+        before: Arc<kentos_contracts::CaseworkRecord>,
+        after: Arc<kentos_contracts::CaseworkRecord>,
+    },
     DimensionSetAdd {
         index: usize,
         set: Arc<kentos_contracts::DimensionSet>,
@@ -476,6 +490,18 @@ impl Op {
                 array: array.clone(),
             },
             Op::ArrayUpdate { before, after } => Op::ArrayUpdate {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::CaseworkAdd { index, run } => Op::CaseworkRemove {
+                index: *index,
+                run: run.clone(),
+            },
+            Op::CaseworkRemove { index, run } => Op::CaseworkAdd {
+                index: *index,
+                run: run.clone(),
+            },
+            Op::CaseworkUpdate { before, after } => Op::CaseworkUpdate {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -969,6 +995,10 @@ impl Document {
         // Then: the openings with their walls (docs/adr/0341 §3), before the texts linked to them.
         let openings = self.follow_openings(ops);
         ops.extend(openings);
+        // Then: the kitchen runs with their walls and objects (docs/adr/0727 §5), before what follows their objects
+        // (tags, hatches, dimensions, schedules).
+        let casework = self.follow_casework(ops);
+        ops.extend(casework);
         // Settle grid-driven columns before a space reads their physical
         // footprints (ADR 0672); tags and schedules see both in the same step.
         let columns = self.follow_columns(ops);
@@ -1134,6 +1164,9 @@ impl Document {
                 | Op::ArrayAdd { .. }
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
+                | Op::CaseworkAdd { .. }
+                | Op::CaseworkRemove { .. }
+                | Op::CaseworkUpdate { .. }
                 | Op::DimensionSetAdd { .. }
                 | Op::DimensionSetRemove { .. }
                 | Op::DimensionSetUpdate { .. }
@@ -1233,6 +1266,20 @@ impl Document {
                 matches!(
                     op,
                     Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. }
+                )
+            })
+        };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
+    }
+
+    /// Drops the undo and redo steps that change a kitchen run: another editor's runs came (docs/adr/0727 §5).
+    pub(crate) fn forget_casework_history(&mut self) {
+        let touches = |step: &Step| {
+            step.ops.iter().any(|op| {
+                matches!(
+                    op,
+                    Op::CaseworkAdd { .. } | Op::CaseworkRemove { .. } | Op::CaseworkUpdate { .. }
                 )
             })
         };
@@ -1360,6 +1407,10 @@ impl Document {
             }
             Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. } => {
                 self.apply_array_op(op);
+                return;
+            }
+            Op::CaseworkAdd { .. } | Op::CaseworkRemove { .. } | Op::CaseworkUpdate { .. } => {
+                self.apply_casework_op(op);
                 return;
             }
             Op::DimensionSetAdd { .. }

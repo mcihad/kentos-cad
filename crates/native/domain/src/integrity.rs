@@ -36,6 +36,8 @@ impl Document {
     /// What the step reported would leave broken; none when nothing.
     pub fn faults(&self, report: &StepReport) -> Vec<Fault> {
         let mut out = self.dimension_set_faults(report);
+        // A kitchen run's objects are its own (docs/adr/0727 §5).
+        out.extend(self.casework_faults(report));
         let cached: std::collections::HashSet<_> =
             report.dimension_set_cached.iter().copied().collect();
         // A Veri girişi's project (docs/adr/0411 §5): existing records' attributes alone.

@@ -25,6 +25,7 @@ fn create() -> ProjectCreate {
         sheets: None,
         arrays: Vec::new(),
         dimension_sets: d.dimension_sets,
+        casework: d.casework,
         constraints: Default::default(),
         description: None,
         project_type: None,

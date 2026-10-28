@@ -30,6 +30,8 @@ COMMANDS: dict[str, Any] = {
     "cad.blocks.proxy": blocks.proxy,
     "cad.blocks.query": blocks.query,
     "cad.blocks.replace": blocks.replace,
+    "cad.casework.edit": casework.edit,
+    "cad.casework.query": casework.query,
     "cad.casework.run": casework.run,
     "cad.changeset.apply": changeset.apply,
     "cad.circle.create": circle.create,

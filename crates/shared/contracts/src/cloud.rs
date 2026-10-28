@@ -488,6 +488,13 @@ pub struct ProjectCreate {
         ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
     )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
+    /// The project's kitchen runs (docs/adr/0727 §5); absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
+    )]
+    pub casework: Vec<crate::casework::CaseworkRecord>,
     /// The project's constraints and parameters (docs/adr/0336 §3); absent: none.
     #[serde(
         default,
@@ -562,6 +569,13 @@ pub struct ProjectInfo {
         ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
     )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
+    /// A database project's kitchen runs (docs/adr/0727 §5); an older server's answer without them has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
+    )]
+    pub casework: Vec<crate::casework::CaseworkRecord>,
     /// A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
     /// none.
     #[serde(
@@ -812,6 +826,14 @@ pub struct ProjectPatch {
         ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
     )]
     pub dimension_sets: Option<Vec<crate::dimension_set::DimensionSet>>,
+    /// The kitchen runs, whole (docs/adr/0727 §5); an empty list: none any more. Held to the contract's rules
+    /// (`casework_problem`) but for the objects and walls they name, which the document keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
+    )]
+    pub casework: Option<Vec<crate::casework::CaseworkRecord>>,
     /// The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
     /// contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]

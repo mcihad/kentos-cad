@@ -1,5 +1,7 @@
-//! `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706): a straight run of kitchen base cabinets along a wall's
-//! line, its sink and cooktop modules, a countertop over it and, if asked, wall cabinets above, as one undo step.
+//! `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706, 0727): base cabinets along a straight, L or U path, their
+//! sink, cooktop and appliances, a countertop cut for the sink and the cooktop and, if asked, wall cabinets above, as
+//! one undo step, kept as the drawing's run; `cad.casework.edit` changes or releases a run and `cad.casework.query`
+//! reads them. The run's recipe and record are `kentos-contracts`' (`casework.rs`).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -7,127 +9,25 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::entity::{Entity, Vec2};
+use crate::entity::Entity;
+use crate::{
+    CaseworkBreak, CaseworkDoor, CaseworkFridge, CaseworkLeg, CaseworkMember, CaseworkModule, CaseworkModuleKind,
+    CaseworkRun,
+};
 
 /// The command's name.
 pub const CAD_CASEWORK_RUN: &str = "cad.casework.run";
 /// Its version.
 pub const CAD_CASEWORK_RUN_VERSION: u32 = 1;
-/// A base cabinet's width when none is given (docs/adr/0706 §1): KentOS's default, the library's 60 cm.
-pub const DEFAULT_CASEWORK_MODULE: f64 = 0.60;
-/// The countertop's depth when none is given.
-pub const DEFAULT_CASEWORK_DEPTH: f64 = 0.60;
-/// The sink module's width: the library's 80 cm sink on a 90 cm base cabinet.
-pub const CASEWORK_SINK_MODULE: f64 = 0.90;
+/// The run's edit (docs/adr/0727 §6).
+pub const CAD_CASEWORK_EDIT: &str = "cad.casework.edit";
+pub const CAD_CASEWORK_EDIT_VERSION: u32 = 1;
+/// The runs read (docs/adr/0727 §6).
+pub const CAD_CASEWORK_QUERY: &str = "cad.casework.query";
+pub const CAD_CASEWORK_QUERY_VERSION: u32 = 1;
 
-/// Which side of its line `from`→`to` a run stands on, as one walks from `from` (the room's side).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub enum CaseworkSide {
-    #[default]
-    Left,
-    Right,
-}
-
-/// Input of `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706): base cabinets of `module` width from `from`
-/// toward `to` along the line where their backs stand (a wall's face), on its `side`; the sink's module (`sink`,
-/// 1-based) 0.90 m wide, the cooktop's (`cooktop`) the run's width; what is left at its end a filler. The countertop
-/// covers the whole line, `depth` deep; `upper` adds wall cabinets over the modules. KentOS's library blocks (Alt
-/// dolap, Evye, Ocak, Üst dolap) are brought in the same step when the drawing has none of their names; a block of
-/// the drawing by that name is used as it is, its width parameter “Genişlik” set.
-///
-/// Refusals, in this order: `not_finite`, `invalid_casework` (a run with no length, a module or depth out of their
-/// ranges, a run shorter than a module, a sink or cooktop module outside the run or both in one, a block without
-/// its width parameter), `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
-/// `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warnings: `layer_hidden`,
-/// `casework_filler`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct CaseworkRun {
-    /// The layer the run goes on, a layer's id.
-    pub layer_id: String,
-    /// Where the run starts, on the line its backs stand on.
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub from: Vec2,
-    /// Where the line ends: the run is at most this long.
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub to: Vec2,
-    /// The side it stands on; absent: left.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub side: Option<CaseworkSide>,
-    /// A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub module: Option<f64>,
-    /// The countertop's depth, from 0.30 to 1.20 m; absent: 0.60.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub depth: Option<f64>,
-    /// The sink's module, counted from `from` (1 the first); absent: none.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
-    pub sink: Option<u32>,
-    /// The cooktop's module; absent: none.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
-    pub cooktop: Option<u32>,
-    /// Wall cabinets over the modules.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub upper: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub color: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
-    pub line_weight: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
-    pub expected_revision: Option<String>,
-}
-
-/// What a module of the run is.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub enum CaseworkModuleKind {
-    Base,
-    Sink,
-    Cooktop,
-}
-
-/// One module of a run, along its line from `from`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct CaseworkModule {
-    pub kind: CaseworkModuleKind,
-    /// Where it starts along the line.
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub start: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
-    pub width: f64,
-}
-
-/// Plan of `cad.casework.run`: the objects it would write (`id` 0), the library blocks it would bring by name, its
-/// modules and the filler at its end (0: none).
+/// Plan of `cad.casework.run` (and of an edit that lays a run anew): the objects it would write (`id` 0), the library
+/// blocks it would bring by name, its modules, legs, fridge and fillers (0: none).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -137,26 +37,134 @@ pub struct CaseworkPlan {
     pub entities: Vec<Entity>,
     pub blocks: Vec<String>,
     pub modules: Vec<CaseworkModule>,
+    pub legs: Vec<CaseworkLeg>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fridge: Option<CaseworkFridge>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub filler: f64,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
 
-/// Output of `cad.casework.run`: the objects written, in the plan's order.
+/// Output of `cad.casework.run` and of `cad.casework.edit`: the run's id, its objects in the plan's order, the library
+/// blocks brought, its modules, legs, fridge and fillers; a released run's objects and `released`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CaseworkBuilt {
+    pub run: String,
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
     pub blocks: Vec<String>,
     pub modules: Vec<CaseworkModule>,
+    pub legs: Vec<CaseworkLeg>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fridge: Option<CaseworkFridge>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub filler: f64,
+    /// The run was released: its objects stay, no longer a run.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub released: bool,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+// ── cad.casework.edit and cad.casework.query ───────────────────────────────
+
+/// What `cad.casework.edit` changes (docs/adr/0727 §6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CaseworkChange {
+    /// A module's own values become `width` and `hand` (absent: the run's); `holds`, when given, what it holds.
+    Module {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        module: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        width: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        hand: Option<CaseworkDoor>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        holds: Option<CaseworkModuleKind>,
+    },
+    /// The run laid anew by this recipe (its objects kept by their places in it).
+    Recipe { recipe: Box<CaseworkRun> },
+    /// The run released: its objects stay, no longer a run.
+    Release,
+}
+
+/// Input of `cad.casework.edit` v1: the run (its id, or the persistent id of one of its objects) and the change, as
+/// one undo step. Refusals: `casework_not_found`, a recipe's (`recipe.` before its path) and the revision's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CaseworkEdit {
+    pub run: String,
+    pub edit: CaseworkChange,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Input of `cad.casework.query` v1: one run (its id or one of its objects') or, absent, every run.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CaseworkQuery {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub run: Option<String>,
+}
+
+/// A run as `cad.casework.query` reads it: the module table and what keeps it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CaseworkInfo {
+    pub id: String,
+    pub recipe: CaseworkRun,
+    pub legs: Vec<CaseworkLeg>,
+    pub modules: Vec<CaseworkModule>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fridge: Option<CaseworkFridge>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub filler: f64,
+    pub members: Vec<CaseworkMember>,
+    /// Its objects the drawing no longer holds, by persistent id.
+    pub missing: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub broken: Option<CaseworkBreak>,
+}
+
+/// Output of `cad.casework.query`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CaseworkRuns {
+    pub runs: Vec<CaseworkInfo>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

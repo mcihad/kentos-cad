@@ -157,6 +157,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::ramp_scenes::pointed());
     all.extend(crate::stair_scenes::pointed());
     all.extend(crate::grid_scenes::pointed());
+    all.extend(crate::casework_scenes::pointed());
     all.extend(crate::block_library_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
@@ -573,6 +574,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::block_attr_scenes::scenes());
     all.extend(crate::block_dynamic_scenes::scenes());
     all.extend(crate::furniture_scenes::scenes());
+    all.extend(crate::casework_scenes::scenes());
     all.extend(crate::arch_audit_scenes::scenes());
     all.extend(crate::dimension_follow_scenes::scenes());
     all.extend(crate::dimension_option_scenes::scenes());

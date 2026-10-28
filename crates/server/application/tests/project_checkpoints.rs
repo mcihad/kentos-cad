@@ -307,6 +307,7 @@ async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access, na
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         name: name.into(),
         settings: s.settings,
@@ -554,6 +555,7 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
     unlock(&mut unlocked);
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         name: "Ada 5".into(),
         settings: source.settings.clone(),

@@ -175,6 +175,13 @@ pub struct ArrayId(pub [u8; 16]);
 #[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct DimensionSetId(pub [u8; 16]);
 
+/// A kitchen run's persistent id (docs/adr/0727 §5): given when the run is made (UUIDv7), kept while it is edited and
+/// follows its walls.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct CaseworkId(pub [u8; 16]);
+
 /// A constraint's persistent id (docs/adr/0334): given when the constraint is made (UUIDv7), kept while it holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -186,6 +193,7 @@ uuid_impls!(ProjectId);
 uuid_impls!(BlockId);
 uuid_impls!(ArrayId);
 uuid_impls!(DimensionSetId);
+uuid_impls!(CaseworkId);
 uuid_impls!(ConstraintId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
@@ -428,6 +436,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
     } = snapshot;
     Ok(DocumentSnapshotV2 {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,

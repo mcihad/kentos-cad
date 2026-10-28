@@ -31,6 +31,7 @@ fn opened(storage: ProjectStorage) -> Opened {
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
             constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
@@ -177,6 +178,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
         .append(&BaseStep {
             meta: Some(BaseMeta {
                 dimension_sets: Vec::new(),
+                casework: Vec::new(),
                 constraints: Default::default(),
                 version: "6".into(),
                 name: "Ada 5".into(),

@@ -528,6 +528,7 @@ impl Replica {
                         snapshot.styles = m.styles;
                         snapshot.sheets = m.sheets;
                         snapshot.arrays = m.arrays;
+                        snapshot.casework = m.casework;
                         snapshot.constraints = m.constraints;
                         snapshot.dimension_sets = m.dimension_sets;
                     }
@@ -572,6 +573,7 @@ impl Replica {
             info.styles = snapshot.styles.clone();
             info.sheets = snapshot.sheets.clone();
             info.arrays = snapshot.arrays.clone();
+            info.casework = snapshot.casework.clone();
             info.constraints = snapshot.constraints.clone();
             info.dimension_sets = snapshot.dimension_sets.clone();
             info.meta_version = head.meta_version;

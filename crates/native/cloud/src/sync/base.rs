@@ -45,6 +45,9 @@ pub struct BaseMeta {
     /// The associative arrays (docs/adr/0300 §5); a copy written before them has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub arrays: Vec<kentos_contracts::AssocArray>,
+    /// The kitchen runs (docs/adr/0727 §5); a copy written before them has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub casework: Vec<kentos_contracts::CaseworkRecord>,
     #[serde(
         default,
         rename = "dimensionSets",
@@ -175,6 +178,12 @@ impl ProjectSync {
                     .iter()
                     .map(|a| (**a).clone())
                     .collect(),
+                casework: self
+                    .meta_base
+                    .casework
+                    .iter()
+                    .map(|r| (**r).clone())
+                    .collect(),
                 constraints: self.meta_base.constraints.clone(),
                 dimension_sets: self
                     .meta_base
@@ -245,6 +254,12 @@ impl ProjectSync {
                     .arrays
                     .iter()
                     .map(|a| (**a).clone())
+                    .collect(),
+                casework: self
+                    .meta_base
+                    .casework
+                    .iter()
+                    .map(|r| (**r).clone())
                     .collect(),
             },
             versions,

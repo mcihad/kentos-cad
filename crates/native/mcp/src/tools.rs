@@ -695,6 +695,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).
             | "cad.arrays.edit"
+            // It lays a kitchen run anew: its objects changed, removed or added (docs/adr/0727 §6).
+            | "cad.casework.edit"
             // A solve moves the constrained objects; remove takes constraints away (docs/adr/0335).
             | "cad.constraints.edit"
             // A parameter's new value moves the constrained objects; remove takes one away (docs/adr/0336).

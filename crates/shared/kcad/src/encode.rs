@@ -331,10 +331,11 @@ impl<'d> Encoder<'d> {
             + usize::from(doc.sheets.is_some())
             + usize::from(!doc.requests.is_empty())
             + usize::from(!doc.dimension_sets.is_empty())
+            + usize::from(!doc.casework.is_empty())
             + usize::from(!doc.constraints.is_empty());
         self.open(7 + optional, true)?;
-        // name (4), arrays blocks layers origin sheets styles (6), entities homeView requests settings (8),
-        // projectId (9), activeLayer constraints (11), migratedFrom (12).
+        // name (4), arrays blocks layers origin sheets styles (6), casework entities homeView requests settings (8),
+        // projectId (9), activeLayer constraints (11), migratedFrom (12), dimensionSets (13).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
         if !doc.arrays.is_empty() {
@@ -365,6 +366,18 @@ impl<'d> Encoder<'d> {
             e.close();
             Ok(())
         })?;
+        // Schema 127 (docs/adr/0727): the kitchen runs, written whole and held to the contract's rules.
+        if !doc.casework.is_empty() {
+            self.key("casework");
+            self.at(Seg::Name("casework"), |e| {
+                if let Some((index, why)) = kentos_contracts::casework_problem(&doc.casework) {
+                    return Err(e.fail(Code::BadValue, &format!("[{index}]: {why}")));
+                }
+                let value = serde_json::to_value(&doc.casework)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         self.key("entities");
         self.at(Seg::Name("entities"), |e| e.objects(doc))?;
         if let Some(b) = &doc.home_view {
@@ -1976,6 +1989,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 127 (docs/adr/0727): the kitchen runs.
+    if !doc.casework.is_empty() {
+        return crate::SCHEMA_WITH_CASEWORK;
+    }
     // Schema 126 (docs/adr/0725): a gapped grid, an anchored or an L column.
     if objs.iter().any(|e| match e {
         Entity::Grid(g) => g.grid.ends.is_some(),

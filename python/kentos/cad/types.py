@@ -759,19 +759,109 @@ CalloutKindName = Literal["straight", "manhattan"]
 """The names of :class:`CalloutKind`, for a plain string."""
 
 
+class CaseworkBreak(_StrEnum):
+    """Why a run did not follow its walls: one is gone, or the path they give lays no run."""
+    WALL_GONE = "wallGone"
+    NOT_BUILT = "notBuilt"
+
+
+CaseworkBreakName = Literal["wallGone", "notBuilt"]
+"""The names of :class:`CaseworkBreak`, for a plain string."""
+
+
+class CaseworkCorner(_StrEnum):
+    """How a run turns a corner (docs/adr/0727 §1): the leg before keeps the corner (a blind corner, a 5 cm filler after
+    it), or both legs stop a cabinet's depth from it (an open corner, its square a filler).
+    """
+    BLIND = "blind"
+    OPEN = "open"
+
+
+CaseworkCornerName = Literal["blind", "open"]
+"""The names of :class:`CaseworkCorner`, for a plain string."""
+
+
+class CaseworkDoor(_StrEnum):
+    """The side a single door hinges on, as one faces the cabinet."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+CaseworkDoorName = Literal["left", "right"]
+"""The names of :class:`CaseworkDoor`, for a plain string."""
+
+
+class CaseworkEnd(_StrEnum):
+    """An end of a run's path."""
+    START = "start"
+    END = "end"
+
+
+CaseworkEndName = Literal["start", "end"]
+"""The names of :class:`CaseworkEnd`, for a plain string."""
+
+
+class CaseworkFace(_StrEnum):
+    """A wall's face, relative to its path's direction."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+CaseworkFaceName = Literal["left", "right"]
+"""The names of :class:`CaseworkFace`, for a plain string."""
+
+
+class CaseworkHand(_StrEnum):
+    """A module's door: single, hinged on a side, or double (wider than 0.60 m)."""
+    LEFT = "left"
+    RIGHT = "right"
+    DOUBLE = "double"
+
+
+CaseworkHandName = Literal["left", "right", "double"]
+"""The names of :class:`CaseworkHand`, for a plain string."""
+
+
 class CaseworkModuleKind(_StrEnum):
-    """What a module of the run is."""
+    """What a module of the run holds."""
     BASE = "base"
     SINK = "sink"
     COOKTOP = "cooktop"
+    DISHWASHER = "dishwasher"
 
 
-CaseworkModuleKindName = Literal["base", "sink", "cooktop"]
+CaseworkModuleKindName = Literal["base", "sink", "cooktop", "dishwasher"]
 """The names of :class:`CaseworkModuleKind`, for a plain string."""
 
 
+class CaseworkPart(_StrEnum):
+    """What an object of a run is in it.
+
+    - ``fridge``
+    - ``module``: A module's floor unit: a base cabinet, the dishwasher, the oven.
+    - ``sink``: The sink on its module.
+    - ``cooktop``: The cooktop on its module.
+    - ``upper``: A wall cabinet over a module.
+    - ``filler``: A leg's filler.
+    - ``corner``: A corner's filler.
+    - ``counter``: The countertop.
+    """
+    FRIDGE = "fridge"
+    MODULE = "module"
+    SINK = "sink"
+    COOKTOP = "cooktop"
+    UPPER = "upper"
+    FILLER = "filler"
+    CORNER = "corner"
+    COUNTER = "counter"
+
+
+CaseworkPartName = Literal["fridge", "module", "sink", "cooktop", "upper", "filler", "corner", "counter"]
+"""The names of :class:`CaseworkPart`, for a plain string."""
+
+
 class CaseworkSide(_StrEnum):
-    """Which side of its line `from`→`to` a run stands on, as one walks from `from` (the room's side)."""
+    """Which side of its path a run stands on, as one walks from `from` (the room's side)."""
     LEFT = "left"
     RIGHT = "right"
 
@@ -6212,6 +6302,28 @@ class CadElement(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CadElement:
         return _variant(_CAD_ELEMENT, "CadElement", "kind", data).from_json(data)
+
+
+class CaseworkChange(_Union):
+    """What `cad.casework.edit` changes (docs/adr/0727 §6).
+
+    One of:
+
+    - :class:`ModuleCaseworkChange` (``kind: module``)
+    - :class:`RecipeCaseworkChange` (``kind: recipe``)
+    - :class:`ReleaseCaseworkChange` (``kind: release``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkChange:
+        return _variant(_CASEWORK_CHANGE, "CaseworkChange", "kind", data).from_json(data)
 
 
 class Cell(_Union):
@@ -13169,87 +13281,329 @@ class CadParameter(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CaseworkBuilt(_Model):
-    """Output of `cad.casework.run`: the objects written, in the plan's order.
+    """Output of `cad.casework.run` and of `cad.casework.edit`: the run's id, its objects in the plan's order, the library
+    blocks brought, its modules, legs, fridge and fillers; a released run's objects and `released`.
     Attributes:
         ids: Unit: id.
         filler: Unit: length.
+        released: The run was released: its objects stay, no longer a run.
     """
+    run: str
     uids: list[str]
     ids: list[int]
     blocks: list[str]
     modules: list[CaseworkModule]
+    legs: list[CaseworkLeg]
     filler: float
     revision: str
+    fridge: CaseworkFridge | None | Unset = UNSET
+    released: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        out["run"] = self.run
         out["uids"] = list(self.uids)
         out["ids"] = list(self.ids)
         out["blocks"] = list(self.blocks)
         out["modules"] = [e0.to_json() for e0 in self.modules]
+        out["legs"] = [e0.to_json() for e0 in self.legs]
         out["filler"] = float(self.filler)
         out["revision"] = self.revision
+        if self.fridge is not UNSET:
+            out["fridge"] = None if self.fridge is None else self.fridge.to_json()
+        if self.released is not UNSET:
+            out["released"] = self.released
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CaseworkBuilt:
         return cls(
+            run=data["run"],
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             blocks=list(data["blocks"]),
             modules=[CaseworkModule.from_json(e0) for e0 in data["modules"]],
+            legs=[CaseworkLeg.from_json(e0) for e0 in data["legs"]],
             filler=float(data["filler"]),
             revision=data["revision"],
+            fridge=UNSET if "fridge" not in data else None if data["fridge"] is None else CaseworkFridge.from_json(data["fridge"]),
+            released=data.get("released", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkEdit(_Model):
+    """Input of `cad.casework.edit` v1: the run (its id, or the persistent id of one of its objects) and the change, as
+    one undo step. Refusals: `casework_not_found`, a recipe's (`recipe.` before its path) and the revision's.
+    """
+    run: str
+    edit: CaseworkChange
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["run"] = self.run
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkEdit:
+        return cls(
+            run=data["run"],
+            edit=CaseworkChange.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkFridge(_Model):
+    """The fridge's place: along its leg, from the leg's start.
+    Attributes:
+        start: Unit: length.
+        width: Unit: length.
+        leg: Unit: index.
+    """
+    start: float
+    width: float
+    leg: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = float(self.start)
+        out["width"] = float(self.width)
+        if self.leg is not UNSET:
+            out["leg"] = self.leg
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkFridge:
+        return cls(
+            start=float(data["start"]),
+            width=float(data["width"]),
+            leg=data.get("leg", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkInfo(_Model):
+    """A run as `cad.casework.query` reads it: the module table and what keeps it.
+    Attributes:
+        filler: Unit: length.
+        missing: Its objects the drawing no longer holds, by persistent id.
+    """
+    id: str
+    recipe: CaseworkRun
+    legs: list[CaseworkLeg]
+    modules: list[CaseworkModule]
+    filler: float
+    members: list[CaseworkMember]
+    missing: list[str]
+    broken: CaseworkBreak | CaseworkBreakName | None | Unset = UNSET
+    fridge: CaseworkFridge | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["recipe"] = self.recipe.to_json()
+        out["legs"] = [e0.to_json() for e0 in self.legs]
+        out["modules"] = [e0.to_json() for e0 in self.modules]
+        out["filler"] = float(self.filler)
+        out["members"] = [e0.to_json() for e0 in self.members]
+        out["missing"] = list(self.missing)
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.fridge is not UNSET:
+            out["fridge"] = None if self.fridge is None else self.fridge.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkInfo:
+        return cls(
+            id=data["id"],
+            recipe=CaseworkRun.from_json(data["recipe"]),
+            legs=[CaseworkLeg.from_json(e0) for e0 in data["legs"]],
+            modules=[CaseworkModule.from_json(e0) for e0 in data["modules"]],
+            filler=float(data["filler"]),
+            members=[CaseworkMember.from_json(e0) for e0 in data["members"]],
+            missing=list(data["missing"]),
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(CaseworkBreak, data["broken"]),
+            fridge=UNSET if "fridge" not in data else None if data["fridge"] is None else CaseworkFridge.from_json(data["fridge"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkLeg(_Model):
+    """One leg of a run: its length, the span its modules and filler take, its filler and the wall it stands on.
+    Attributes:
+        length: Unit: length.
+        start: Unit: length.
+        end: Unit: length.
+        filler: What its modules leave of its span (0: none). Unit: length.
+        wall: The wall whose face it stands on, by its persistent id; absent: none.
+    """
+    length: float
+    start: float
+    end: float
+    filler: float
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["start"] = float(self.start)
+        out["end"] = float(self.end)
+        out["filler"] = float(self.filler)
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkLeg:
+        return cls(
+            length=float(data["length"]),
+            start=float(data["start"]),
+            end=float(data["end"]),
+            filler=float(data["filler"]),
+            wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkMember(_Model):
+    """An object of a run: its persistent id, its part and, for modules, uppers, fillers and corners, its number (a
+    module's, a leg's from 0, a corner's from 1).
+    Attributes:
+        index: Unit: index.
+    """
+    uid: str
+    part: CaseworkPart | CaseworkPartName
+    index: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["part"] = _enum_out(self.part)
+        if self.index is not UNSET:
+            out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkMember:
+        return cls(
+            uid=data["uid"],
+            part=_enum_in(CaseworkPart, data["part"]),
+            index=data.get("index", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class CaseworkModule(_Model):
-    """One module of a run, along its line from `from`.
+    """One module of a run, along its leg from the leg's start.
     Attributes:
-        start: Where it starts along the line. Unit: length.
+        number: Its number, from `from` along the path. Unit: index.
+        start: Where it starts along its leg. Unit: length.
         width: Unit: length.
+        blind: In a blind corner: the next leg's cabinets stand before part of its front (docs/adr/0727 §1).
+        hand: Its door; an appliance has none.
+        leg: Its leg, from 0; absent: the first. Unit: index.
+        oven: The cooktop's module with an oven under it.
     """
+    number: int
     kind: CaseworkModuleKind | CaseworkModuleKindName
     start: float
     width: float
+    blind: bool | None | Unset = UNSET
+    hand: CaseworkHand | CaseworkHandName | None | Unset = UNSET
+    leg: int | None | Unset = UNSET
+    oven: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        out["number"] = self.number
         out["kind"] = _enum_out(self.kind)
         out["start"] = float(self.start)
         out["width"] = float(self.width)
+        if self.blind is not UNSET:
+            out["blind"] = self.blind
+        if self.hand is not UNSET:
+            out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.leg is not UNSET:
+            out["leg"] = self.leg
+        if self.oven is not UNSET:
+            out["oven"] = self.oven
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CaseworkModule:
         return cls(
+            number=data["number"],
             kind=_enum_in(CaseworkModuleKind, data["kind"]),
             start=float(data["start"]),
             width=float(data["width"]),
+            blind=data.get("blind", UNSET),
+            hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(CaseworkHand, data["hand"]),
+            leg=data.get("leg", UNSET),
+            oven=data.get("oven", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkModuleSetting(_Model):
+    """A module's own values (docs/adr/0727 §2): its width instead of the run's default, its door's hand.
+    Attributes:
+        module: The module, counted from `from` along the path (1 the first). Unit: index.
+        hand: Its door's hinge; a double door (over 0.60 m) and an appliance have none.
+        width: Its width, one of the cabinet block's widths. Unit: length.
+    """
+    module: int
+    hand: CaseworkDoor | CaseworkDoorName | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["module"] = self.module
+        if self.hand is not UNSET:
+            out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkModuleSetting:
+        return cls(
+            module=data["module"],
+            hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(CaseworkDoor, data["hand"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class CaseworkPlan(_Model):
-    """Plan of `cad.casework.run`: the objects it would write (`id` 0), the library blocks it would bring by name, its
-    modules and the filler at its end (0: none).
+    """Plan of `cad.casework.run` (and of an edit that lays a run anew): the objects it would write (`id` 0), the library
+    blocks it would bring by name, its modules, legs, fridge and fillers (0: none).
     Attributes:
         filler: Unit: length.
     """
     entities: list[Entity]
     blocks: list[str]
     modules: list[CaseworkModule]
+    legs: list[CaseworkLeg]
     filler: float
     revision: str
+    fridge: CaseworkFridge | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["entities"] = [e0.to_json() for e0 in self.entities]
         out["blocks"] = list(self.blocks)
         out["modules"] = [e0.to_json() for e0 in self.modules]
+        out["legs"] = [e0.to_json() for e0 in self.legs]
         out["filler"] = float(self.filler)
         out["revision"] = self.revision
+        if self.fridge is not UNSET:
+            out["fridge"] = None if self.fridge is None else self.fridge.to_json()
         return out
 
     @classmethod
@@ -13258,35 +13612,99 @@ class CaseworkPlan(_Model):
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
             blocks=list(data["blocks"]),
             modules=[CaseworkModule.from_json(e0) for e0 in data["modules"]],
+            legs=[CaseworkLeg.from_json(e0) for e0 in data["legs"]],
             filler=float(data["filler"]),
             revision=data["revision"],
+            fridge=UNSET if "fridge" not in data else None if data["fridge"] is None else CaseworkFridge.from_json(data["fridge"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkQuery(_Model):
+    """Input of `cad.casework.query` v1: one run (its id or one of its objects') or, absent, every run."""
+    run: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.run is not UNSET:
+            out["run"] = self.run
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkQuery:
+        return cls(
+            run=data.get("run", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkRecord(_Model):
+    """A kitchen run as the drawing keeps it (docs/adr/0727 §5): its recipe (`cad.casework.run`'s input without an
+    expected revision), each leg's wall face (none: it stands free), its objects and why it no longer follows.
+    """
+    id: str
+    recipe: CaseworkRun
+    ties: list[CaseworkTie | None]
+    members: list[CaseworkMember]
+    broken: CaseworkBreak | CaseworkBreakName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["recipe"] = self.recipe.to_json()
+        out["ties"] = [None if e0 is None else e0.to_json() for e0 in self.ties]
+        out["members"] = [e0.to_json() for e0 in self.members]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkRecord:
+        return cls(
+            id=data["id"],
+            recipe=CaseworkRun.from_json(data["recipe"]),
+            ties=[None if e0 is None else CaseworkTie.from_json(e0) for e0 in data["ties"]],
+            members=[CaseworkMember.from_json(e0) for e0 in data["members"]],
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(CaseworkBreak, data["broken"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class CaseworkRun(_Model):
-    """Input of `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706): base cabinets of `module` width from `from`
-    toward `to` along the line where their backs stand (a wall's face), on its `side`; the sink's module (`sink`,
-    1-based) 0.90 m wide, the cooktop's (`cooktop`) the run's width; what is left at its end a filler. The countertop
-    covers the whole line, `depth` deep; `upper` adds wall cabinets over the modules. KentOS's library blocks (Alt
-    dolap, Evye, Ocak, Üst dolap) are brought in the same step when the drawing has none of their names; a block of
-    the drawing by that name is used as it is, its width parameter “Genişlik” set.
+    """Input of `cad.casework.run` v1 (“Mutfak dizisi”, docs/adr/0706, 0727): base cabinets along the path where their
+    backs stand (a wall's face): `from`, the corners `through` (none: straight, one: an L, two: a U), `to`, on its
+    `side`; modules of `module` width numbered from `from`, the sink's module (`sink`) 0.90 m, the cooktop's
+    (`cooktop`) at least 0.60 m, the dishwasher's (`dishwasher`) and the oven under the cooktop (`oven`) 0.60 m, a
+    module's own width and door (`perModule`); the fridge at an end (`fridge`); what is left on a leg a filler. The
+    countertop covers the path but the fridge, `depth` deep, mitred at the corners, cut for the sink and the cooktop;
+    `upper` adds wall cabinets over the modules. KentOS's library blocks (Alt dolap, Evye, Ocak, Bulaşık makinesi,
+    Fırın, Buzdolabı, Üst dolap) are brought in the same step when the drawing has none of their names. The run is
+    kept as the drawing's record (`casework`): its legs tied to the wall faces they stand on, it follows them.
 
-    Refusals, in this order: `not_finite`, `invalid_casework` (a run with no length, a module or depth out of their
-    ranges, a run shorter than a module, a sink or cooktop module outside the run or both in one, a block without
-    its width parameter), `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
-    `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warnings: `layer_hidden`,
-    `casework_filler`.
+    Refusals, in this order: `not_finite`, `invalid_casework` (too many corners, a leg with no length, a depth out of
+    its range, a corner not square or turning away from the cabinets, a module's own values given twice, a block
+    without its width parameter, a width not one of the cabinet's, a leg too short for a module, a sink, cooktop,
+    dishwasher or module's values outside the run, two of them in one module, an oven without a cooktop, an
+    appliance's width, a door given an appliance or a double door, a sink or cooktop that does not fit its module or
+    the countertop, the wall cabinet's widths), `invalid_line_weight`, `invalid_revision`, `revision_conflict`,
+    `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warnings: `layer_hidden`,
+    `casework_filler`, `casework_blind_corner`, `casework_clash`.
     Attributes:
         layer_id: The layer the run goes on, a layer's id.
         from_: Where the run starts, on the line its backs stand on. Unit: length.
-        to: Where the line ends: the run is at most this long. Unit: length.
+        to: Where its path ends. Unit: length.
         cooktop: The cooktop's module; absent: none. Unit: index.
+        corner: How it turns its corners; absent: blind.
         depth: The countertop's depth, from 0.30 to 1.20 m; absent: 0.60. Unit: length.
+        dishwasher: The dishwasher's module; absent: none. Unit: index.
+        fridge: The fridge at an end of the path; absent: none.
         line_weight: Unit: paper-mm.
         module: A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60. Unit: length.
+        oven: An oven under the cooktop.
+        per_module: Modules' own widths and doors.
         side: The side it stands on; absent: left.
         sink: The sink's module, counted from `from` (1 the first); absent: none. Unit: index.
+        through: Its corners in order: one an L, two a U; absent: a straight run. Unit: length.
         upper: Wall cabinets over the modules.
     """
     layer_id: str
@@ -13294,12 +13712,18 @@ class CaseworkRun(_Model):
     to: Vec2
     color: str | None | Unset = UNSET
     cooktop: int | None | Unset = UNSET
+    corner: CaseworkCorner | CaseworkCornerName | None | Unset = UNSET
     depth: float | None | Unset = UNSET
+    dishwasher: int | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     module: float | None | Unset = UNSET
+    oven: bool | None | Unset = UNSET
+    per_module: list[CaseworkModuleSetting] | None | Unset = UNSET
     side: CaseworkSide | CaseworkSideName | None | Unset = UNSET
     sink: int | None | Unset = UNSET
+    through: list[Vec2] | None | Unset = UNSET
     upper: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13311,18 +13735,30 @@ class CaseworkRun(_Model):
             out["color"] = self.color
         if self.cooktop is not UNSET:
             out["cooktop"] = self.cooktop
+        if self.corner is not UNSET:
+            out["corner"] = None if self.corner is None else _enum_out(self.corner)
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
+        if self.dishwasher is not UNSET:
+            out["dishwasher"] = self.dishwasher
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.fridge is not UNSET:
+            out["fridge"] = None if self.fridge is None else _enum_out(self.fridge)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.module is not UNSET:
             out["module"] = None if self.module is None else float(self.module)
+        if self.oven is not UNSET:
+            out["oven"] = self.oven
+        if self.per_module is not UNSET:
+            out["perModule"] = None if self.per_module is None else [e0.to_json() for e0 in self.per_module]
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
         if self.sink is not UNSET:
             out["sink"] = self.sink
+        if self.through is not UNSET:
+            out["through"] = None if self.through is None else [_vec2_out(e0) for e0 in self.through]
         if self.upper is not UNSET:
             out["upper"] = self.upper
         return out
@@ -13335,13 +13771,65 @@ class CaseworkRun(_Model):
             to=Vec2.from_json(data["to"]),
             color=data.get("color", UNSET),
             cooktop=data.get("cooktop", UNSET),
+            corner=UNSET if "corner" not in data else None if data["corner"] is None else _enum_in(CaseworkCorner, data["corner"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            dishwasher=data.get("dishwasher", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            fridge=UNSET if "fridge" not in data else None if data["fridge"] is None else _enum_in(CaseworkEnd, data["fridge"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             module=UNSET if "module" not in data else None if data["module"] is None else float(data["module"]),
+            oven=data.get("oven", UNSET),
+            per_module=UNSET if "perModule" not in data else None if data["perModule"] is None else [CaseworkModuleSetting.from_json(e0) for e0 in data["perModule"]],
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(CaseworkSide, data["side"]),
             sink=data.get("sink", UNSET),
+            through=UNSET if "through" not in data else None if data["through"] is None else [Vec2.from_json(e0) for e0 in data["through"]],
             upper=data.get("upper", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkRuns(_Model):
+    """Output of `cad.casework.query`."""
+    runs: list[CaseworkInfo]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["runs"] = [e0.to_json() for e0 in self.runs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkRuns:
+        return cls(
+            runs=[CaseworkInfo.from_json(e0) for e0 in data["runs"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CaseworkTie(_Model):
+    """The wall face edge a leg stands on (docs/adr/0727 §5).
+    Attributes:
+        edge: The face's edge, from 0 along the wall's path. Unit: index.
+    """
+    wall: str
+    edge: int
+    face: CaseworkFace | CaseworkFaceName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall
+        out["edge"] = self.edge
+        out["face"] = _enum_out(self.face)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CaseworkTie:
+        return cls(
+            wall=data["wall"],
+            edge=data["edge"],
+            face=_enum_in(CaseworkFace, data["face"]),
         )
 
 
@@ -45495,6 +45983,7 @@ class ProjectCreate(_Model):
     Attributes:
         origin: Unit: length.
         arrays: The project's associative arrays (docs/adr/0300); absent: none.
+        casework: The project's kitchen runs (docs/adr/0727 §5); absent: none.
         constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
         description: The catalog's description (docs/adr/0028); absent: none.
         dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
@@ -45512,6 +46001,7 @@ class ProjectCreate(_Model):
     active_layer: str
     styles: ProjectStyles
     arrays: list[AssocArray] | Unset = UNSET
+    casework: list[CaseworkRecord] | Unset = UNSET
     constraints: ConstraintSet | Unset = UNSET
     description: str | None | Unset = UNSET
     dimension_sets: list[DimensionSet] | Unset = UNSET
@@ -45531,6 +46021,8 @@ class ProjectCreate(_Model):
         out["styles"] = self.styles.to_json()
         if self.arrays is not UNSET:
             out["arrays"] = [e0.to_json() for e0 in self.arrays]
+        if self.casework is not UNSET:
+            out["casework"] = [e0.to_json() for e0 in self.casework]
         if self.constraints is not UNSET:
             out["constraints"] = self.constraints.to_json()
         if self.description is not UNSET:
@@ -45559,6 +46051,7 @@ class ProjectCreate(_Model):
             active_layer=data["activeLayer"],
             styles=ProjectStyles.from_json(data["styles"]),
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
+            casework=[CaseworkRecord.from_json(e0) for e0 in data["casework"]] if "casework" in data else UNSET,
             constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
             description=data.get("description", UNSET),
             dimension_sets=[DimensionSet.from_json(e0) for e0 in data["dimensionSets"]] if "dimensionSets" in data else UNSET,
@@ -45796,6 +46289,7 @@ class ProjectInfo(_Model):
         blocks: A database project's block definitions with their versions
             (docs/adr/0144 §5), in the order they were made. An older server's
             answer without them has none.
+        casework: A database project's kitchen runs (docs/adr/0727 §5); an older server's answer without them has none.
         constraints: A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
             none.
         dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
@@ -45824,6 +46318,7 @@ class ProjectInfo(_Model):
     event_cursor: str
     arrays: list[AssocArray] | Unset = UNSET
     blocks: list[BlockRecord] | Unset = UNSET
+    casework: list[CaseworkRecord] | Unset = UNSET
     constraints: ConstraintSet | Unset = UNSET
     dimension_sets: list[DimensionSet] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
@@ -45852,6 +46347,8 @@ class ProjectInfo(_Model):
             out["arrays"] = [e0.to_json() for e0 in self.arrays]
         if self.blocks is not UNSET:
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.casework is not UNSET:
+            out["casework"] = [e0.to_json() for e0 in self.casework]
         if self.constraints is not UNSET:
             out["constraints"] = self.constraints.to_json()
         if self.dimension_sets is not UNSET:
@@ -45884,6 +46381,7 @@ class ProjectInfo(_Model):
             event_cursor=data["eventCursor"],
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            casework=[CaseworkRecord.from_json(e0) for e0 in data["casework"]] if "casework" in data else UNSET,
             constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
             dimension_sets=[DimensionSet.from_json(e0) for e0 in data["dimensionSets"]] if "dimensionSets" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
@@ -46075,6 +46573,8 @@ class ProjectPatch(_Model):
     Attributes:
         arrays: The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's
             rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
+        casework: The kitchen runs, whole (docs/adr/0727 §5); an empty list: none any more. Held to the contract's rules
+            (`casework_problem`) but for the objects and walls they name, which the document keeps.
         constraints: The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
             contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
         dimension_sets: Architectural dimension recipes, whole; an empty list explicitly removes all recipes.
@@ -46085,6 +46585,7 @@ class ProjectPatch(_Model):
     """
     active_layer: str | None | Unset = UNSET
     arrays: list[AssocArray] | None | Unset = UNSET
+    casework: list[CaseworkRecord] | None | Unset = UNSET
     constraints: ConstraintSet | None | Unset = UNSET
     dimension_sets: list[DimensionSet] | None | Unset = UNSET
     layers: list[LayerNode] | None | Unset = UNSET
@@ -46099,6 +46600,8 @@ class ProjectPatch(_Model):
             out["activeLayer"] = self.active_layer
         if self.arrays is not UNSET:
             out["arrays"] = None if self.arrays is None else [e0.to_json() for e0 in self.arrays]
+        if self.casework is not UNSET:
+            out["casework"] = None if self.casework is None else [e0.to_json() for e0 in self.casework]
         if self.constraints is not UNSET:
             out["constraints"] = None if self.constraints is None else self.constraints.to_json()
         if self.dimension_sets is not UNSET:
@@ -46120,6 +46623,7 @@ class ProjectPatch(_Model):
         return cls(
             active_layer=data.get("activeLayer", UNSET),
             arrays=UNSET if "arrays" not in data else None if data["arrays"] is None else [AssocArray.from_json(e0) for e0 in data["arrays"]],
+            casework=UNSET if "casework" not in data else None if data["casework"] is None else [CaseworkRecord.from_json(e0) for e0 in data["casework"]],
             constraints=UNSET if "constraints" not in data else None if data["constraints"] is None else ConstraintSet.from_json(data["constraints"]),
             dimension_sets=UNSET if "dimensionSets" not in data else None if data["dimensionSets"] is None else [DimensionSet.from_json(e0) for e0 in data["dimensionSets"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else [LayerNode.from_json(e0) for e0 in data["layers"]],
@@ -65414,6 +65918,72 @@ class CircleCadElement(CadElement):
 
 
 @dataclass(kw_only=True, slots=True)
+class ModuleCaseworkChange(CaseworkChange):
+    """A module's own values become `width` and `hand` (absent: the run's); `holds`, when given, what it holds.
+    Attributes:
+        module: Unit: index.
+        width: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "module"
+    module: int
+    hand: CaseworkDoor | CaseworkDoorName | None | Unset = UNSET
+    holds: CaseworkModuleKind | CaseworkModuleKindName | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "module"}
+        out["module"] = self.module
+        if self.hand is not UNSET:
+            out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.holds is not UNSET:
+            out["holds"] = None if self.holds is None else _enum_out(self.holds)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModuleCaseworkChange:
+        return cls(
+            module=data["module"],
+            hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(CaseworkDoor, data["hand"]),
+            holds=UNSET if "holds" not in data else None if data["holds"] is None else _enum_in(CaseworkModuleKind, data["holds"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecipeCaseworkChange(CaseworkChange):
+    """The run laid anew by this recipe (its objects kept by their places in it)."""
+    TAG_VALUE: ClassVar[str] = "recipe"
+    recipe: CaseworkRun
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "recipe"}
+        out["recipe"] = self.recipe.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecipeCaseworkChange:
+        return cls(
+            recipe=CaseworkRun.from_json(data["recipe"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReleaseCaseworkChange(CaseworkChange):
+    """The run released: its objects stay, no longer a run."""
+    TAG_VALUE: ClassVar[str] = "release"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "release"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReleaseCaseworkChange:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class AnyCell(Cell):
     TAG_VALUE: ClassVar[str] = "any"
 
@@ -80313,6 +80883,9 @@ _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": 
 _CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement}
 
 
+_CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
+
+
 _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": CodeCell}
 
 
@@ -80917,14 +81490,39 @@ __all__ = [
     "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",
+    "CaseworkBreak",
+    "CaseworkBreakName",
     "CaseworkBuilt",
+    "CaseworkChange",
+    "CaseworkCorner",
+    "CaseworkCornerName",
+    "CaseworkDoor",
+    "CaseworkDoorName",
+    "CaseworkEdit",
+    "CaseworkEnd",
+    "CaseworkEndName",
+    "CaseworkFace",
+    "CaseworkFaceName",
+    "CaseworkFridge",
+    "CaseworkHand",
+    "CaseworkHandName",
+    "CaseworkInfo",
+    "CaseworkLeg",
+    "CaseworkMember",
     "CaseworkModule",
     "CaseworkModuleKind",
     "CaseworkModuleKindName",
+    "CaseworkModuleSetting",
+    "CaseworkPart",
+    "CaseworkPartName",
     "CaseworkPlan",
+    "CaseworkQuery",
+    "CaseworkRecord",
     "CaseworkRun",
+    "CaseworkRuns",
     "CaseworkSide",
     "CaseworkSideName",
+    "CaseworkTie",
     "Cell",
     "CellField",
     "CellFormula",
@@ -81970,6 +82568,7 @@ __all__ = [
     "MirrorTransform",
     "ModeConstraintEdit",
     "ModelLayerPaperPlotTarget",
+    "ModuleCaseworkChange",
     "MosaicOrder",
     "MosaicOrderName",
     "MosaicResolution",
@@ -82565,6 +83164,7 @@ __all__ = [
     "RayEntityGeometry",
     "ReadableShapeWork",
     "ReboundSpacesOperation",
+    "RecipeCaseworkChange",
     "ReconcileConflict",
     "ReconcileCounts",
     "ReconcileGroup",
@@ -82626,6 +83226,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "ReleaseCaseworkChange",
     "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",

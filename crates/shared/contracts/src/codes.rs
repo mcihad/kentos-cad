@@ -1728,9 +1728,17 @@ codes! {
     /// Given risers above the given highest riser (docs/adr/0704 §1).
     STAIR_RISER_HIGH = "stair_riser_high", Warning, false, "Verilen rıht sayısıyla rıht, verilen en yüksek rıhttan yüksek; rıht sayısını artırın ya da hesaplatın.";
     /// A kitchen run's fields that do not make one (docs/adr/0706 §1).
-    INVALID_CASEWORK = "invalid_casework", Failed, false, "Mutfak dizisinin alanları bir dizi tanımlamıyor: uzunluğu olan çizgi, kitaplığın modül eni, 0,30–1,20 m tezgâh derinliği, dizinin içinde ayrı evye ve ocak modülü.";
-    /// What is left at a kitchen run's end after its modules (docs/adr/0706 §1).
-    CASEWORK_FILLER = "casework_filler", Warning, false, "Modüllerden sonra dizinin sonunda dolgu kalıyor; modül enini ya da dizinin boyunu değiştirerek kapatılabilir.";
+    INVALID_CASEWORK = "invalid_casework", Failed, false, "Mutfak dizisinin alanları bir dizi tanımlamıyor: uzunluğu olan kollar, dik köşeler, kitaplığın modül enleri, 0,30–1,20 m tezgâh derinliği, dizinin içinde ayrı evye, ocak ve bulaşık makinesi modülü, modülüne ve tezgâha sığan evye ve ocak.";
+    /// What is left on a kitchen run's leg after its modules (docs/adr/0706 §1, 0727 §1).
+    CASEWORK_FILLER = "casework_filler", Warning, false, "Modüllerden sonra kolda dolgu kalıyor; modül enini ya da kolun boyunu değiştirerek kapatılabilir.";
+    /// A sink, cooktop or dishwasher in a kitchen run's blind corner (docs/adr/0727 §1).
+    CASEWORK_BLIND_CORNER = "casework_blind_corner", Warning, false, "Evye, ocak ya da bulaşık makinesi kör köşedeki modülde; önünü öbür kolun dolapları kapatıyor. Başka modüle alın ya da köşeyi açık yapın.";
+    /// A leg of a kitchen run in front of a door, a passage or a low window of its wall (docs/adr/0727 §2).
+    CASEWORK_CLASH = "casework_clash", Warning, false, "Dizinin bir kolu duvarının kapısının, boşluğunun ya da denizliği tezgâhtan alçak penceresinin önüne geliyor.";
+    /// A kitchen run the drawing does not keep (docs/adr/0727 §6).
+    CASEWORK_NOT_FOUND = "casework_not_found", Failed, false, "Verilen kimlik çizimdeki bir mutfak dizisinin ya da bir nesnesinin değil.";
+    /// A kitchen run's object changed or removed apart from its run (docs/adr/0727 §5).
+    CASEWORK_OWNED = "casework_owned", Failed, false, "Mutfak dizisinin nesnesinin şekli, katmanı, rengi ve dizinin verisi dizinindir; diziyi düzenleyin ya da bırakın, dizinin tamamını silin.";
     /// A ramp's given slope not its rise over its sloped length.
     RAMP_SLOPE_MISMATCH = "ramp_slope_mismatch", Warning, false, "Rampanın verilen eğimi yüksekliğinin eğimli uzunluğuna oranından 0,1 puandan çok farklı.";
     /// A ramp whose landings take its whole length.

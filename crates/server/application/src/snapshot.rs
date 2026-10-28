@@ -45,6 +45,8 @@ pub struct DrawingMeta {
     /// The associative arrays (docs/adr/0300).
     pub arrays: Vec<kentos_contracts::AssocArray>,
     pub dimension_sets: Vec<kentos_contracts::DimensionSet>,
+    /// The kitchen runs (docs/adr/0727 §5).
+    pub casework: Vec<kentos_contracts::CaseworkRecord>,
     /// The constraints and parameters (docs/adr/0336 §3).
     pub constraints: kentos_contracts::ConstraintSet,
 }
@@ -62,6 +64,7 @@ impl DrawingMeta {
             sheets: doc.sheets.clone(),
             arrays: doc.arrays.clone(),
             dimension_sets: doc.dimension_sets.clone(),
+            casework: doc.casework.clone(),
             constraints: doc.constraints.clone(),
         }
     }
@@ -197,9 +200,7 @@ type SnapshotRow = (
     String,
     bool,
     Option<Value>,
-    Option<Value>,
-    Option<Value>,
-    Option<Value>,
+    Value,
 );
 
 /// The drawing of the project in scope, its data revision and its event
@@ -213,7 +214,9 @@ pub async fn read(
         "select p.name, p.settings, p.layers, p.active_layer, p.origin_x, p.origin_y, p.home_view, p.styles, p.data_revision,
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.storage, p.deleted_at is not null, p.sheets, p.arrays, p.constraints, p.dimension_sets
+                p.storage, p.deleted_at is not null, p.sheets,
+                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints, 'dimensionSets', p.dimension_sets,
+                                   'casework', p.casework)
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -234,10 +237,16 @@ pub async fn read(
         storage,
         deleted,
         sheets,
-        arrays,
-        constraints,
-        dimension_sets,
+        mut meta_parts,
     ) = row.ok_or_else(not_found)?;
+    // The arrays, constraints, dimension recipes and kitchen runs, read as one object (a row of sixteen columns at
+    // most).
+    let part =
+        |name: &str, parts: &mut Value| Some(parts.get_mut(name)?.take()).filter(|v| !v.is_null());
+    let arrays = part("arrays", &mut meta_parts);
+    let constraints = part("constraints", &mut meta_parts);
+    let dimension_sets = part("dimensionSets", &mut meta_parts);
+    let casework = part("casework", &mut meta_parts);
     if deleted {
         return Err(gone(&name));
     }
@@ -291,8 +300,16 @@ pub async fn read(
         .map_err(bad)?
         .unwrap_or_default();
     crate::projects::check_dimension_sets(&dimension_sets, "dimensionSets")?;
+    // The kitchen runs as written: a run whose objects another editor removed stays, its objects missing.
+    let casework: Vec<kentos_contracts::CaseworkRecord> = casework
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(bad)?
+        .unwrap_or_default();
+    crate::projects::check_casework(&casework, "casework")?;
     let doc = DocumentSnapshotV2 {
         dimension_sets,
+        casework,
         constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,

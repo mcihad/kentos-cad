@@ -180,6 +180,10 @@ impl Meta {
                 Some(arrays) => arrays.iter().cloned().map(std::sync::Arc::new).collect(),
                 None => self.arrays.clone(),
             },
+            casework: match &patch.casework {
+                Some(runs) => runs.iter().cloned().map(std::sync::Arc::new).collect(),
+                None => self.casework.clone(),
+            },
             dimension_sets: match &patch.dimension_sets {
                 Some(sets) => sets.iter().cloned().map(std::sync::Arc::new).collect(),
                 None => self.dimension_sets.clone(),
@@ -545,6 +549,7 @@ impl ProjectSync {
                 styles: Some(after.styles),
                 sheets: Some(after.sheets.as_deref().cloned()),
                 arrays: Some(after.arrays.iter().map(|a| (**a).clone()).collect()),
+                casework: Some(after.casework.iter().map(|r| (**r).clone()).collect()),
                 constraints: Some(after.constraints),
                 dimension_sets: Some(
                     after

@@ -27,6 +27,7 @@
 
 mod annotative;
 pub mod arrays;
+pub mod casework;
 pub mod constraints;
 mod constraint_follow;
 pub mod audit;

@@ -406,6 +406,8 @@ SCHEMA_WITH_STAIR_LEVELS = 125
 # Schema 126 (docs/adr/0725): a grid's `ends` (a gapped grid's end segments on paper, mm), a column's `anchor` (which
 # of its box's nine points its `at` is) and an L column (`lShape`, its `legs`).
 SCHEMA_WITH_GRID_COLUMN_FORMS = 126
+# Schema 127 (docs/adr/0727): the drawing's kitchen runs (`casework`), written only when it has one.
+SCHEMA_WITH_CASEWORK = 127
 COLUMN_ANCHORS = ("center", "left", "right", "bottom", "top", "bottomLeft", "bottomRight", "topLeft", "topRight")
 MAX_SLAB_THICKNESS = 5.0
 MAX_SLAB_OFFSET = 100.0
@@ -658,7 +660,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3178,6 +3180,7 @@ class _Schema:
         self.ramp_levels = version >= SCHEMA_WITH_RAMP_LEVELS
         self.stair_levels = version >= SCHEMA_WITH_STAIR_LEVELS
         self.grid_column_forms = version >= SCHEMA_WITH_GRID_COLUMN_FORMS
+        self.casework = version >= SCHEMA_WITH_CASEWORK
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -3252,6 +3255,7 @@ class _Schema:
                 **({"arrays": (self.arrays_, False)} if self.arrays else {}),
                 **({"constraints": (self.constraints_, False)} if self.constraints else {}),
                 **({"dimensionSets": (self.dimension_sets_, False)} if self.dimension_sets else {}),
+                **({"casework": (self.casework_, False)} if self.casework else {}),
             }
         )(v)
         # Schema 53's rules (docs/adr/0300 §1), once the blocks and the objects are known.
@@ -3319,9 +3323,96 @@ class _Schema:
             out["constraints"] = d["constraints"]
         if "dimensionSets" in d:
             out["dimensionSets"] = d["dimensionSets"]
+        if "casework" in d:
+            out["casework"] = d["casework"]
         if "requests" in d:
             out["requests"] = d["requests"]
         return out
+
+    def casework_(self, v):
+        """Schema 127 (docs/adr/0727 §5): the kitchen runs, the contract's JSON: each run's id, its recipe (the command's
+        input without an expected revision), a wall face tie or null for each leg, its objects by persistent id with
+        their part and number, why it broke. At most 10 000 runs and 10 000 objects a run, an object in one run."""
+        try:
+            return self.casework_checked(v)
+        except KcadError as error:
+            raise KcadError("bad_value", error.message) from error
+
+    def casework_checked(self, v):
+        def uid(value):
+            value = self.text(value)
+            if not UUID_TEXT.fullmatch(value) or value == "00000000-0000-0000-0000-000000000000":
+                self.fail("bad_value", "mutfak dizisinin kimliği dolu, küçük harfli UUID olmalı")
+            return value
+
+        def nonempty(check):
+            def read(value):
+                result = self.array(check)(value)
+                if not result:
+                    self.fail("bad_value", "boş isteğe bağlı liste yazılmaz")
+                return result
+            return read
+
+        def finite(value):
+            value = self.float(value)
+            if not math.isfinite(value):
+                self.fail("bad_value", "sayı sonlu olmalı")
+            return value
+
+        def point(value):
+            return self.fields({"x": (finite, True), "y": (finite, True)})(value)
+
+        setting = self.fields({
+            "module": (self.uint(32), True), "width": (finite, False),
+            "hand": (self.enum(("left", "right")), False),
+        })
+        recipe = self.fields({
+            "layerId": (self.text, True), "from": (point, True), "through": (nonempty(point), False),
+            "to": (point, True), "side": (self.enum(("left", "right")), False), "module": (finite, False),
+            "depth": (finite, False), "corner": (self.enum(("blind", "open")), False),
+            "sink": (self.uint(32), False), "cooktop": (self.uint(32), False), "dishwasher": (self.uint(32), False),
+            "oven": (self.bool, False), "fridge": (self.enum(("start", "end")), False),
+            "perModule": (nonempty(setting), False), "upper": (self.bool, False), "color": (self.text, False),
+            "lineWeight": (finite, False),
+        })
+        tie_fields = self.fields({
+            "wall": (uid, True), "edge": (self.uint(32), True), "face": (self.enum(("left", "right")), True),
+        })
+
+        def tie(value):
+            return None if value is None else tie_fields(value)
+
+        member = self.fields({
+            "uid": (uid, True),
+            "part": (self.enum(("module", "sink", "cooktop", "fridge", "upper", "filler", "corner", "counter")), True),
+            "index": (self.uint(32), False),
+        })
+        runs = nonempty(self.fields({
+            "id": (uid, True), "recipe": (recipe, True), "ties": (self.array(tie), True),
+            "members": (self.array(member), True), "broken": (self.enum(("wallGone", "notBuilt")), False),
+        }))(v)
+        if len(runs) > 10000:
+            self.fail("bad_value", "çok fazla mutfak dizisi")
+        ids, members = set(), set()
+        for run in runs:
+            if run["id"] in ids:
+                self.fail("bad_value", "mutfak dizisinin kimliği yineleniyor")
+            ids.add(run["id"])
+            r = run["recipe"]
+            if not r["layerId"]:
+                self.fail("bad_value", "mutfak dizisinin katmanı boş")
+            corners = len(r.get("through", []))
+            if corners > 2:
+                self.fail("bad_value", "mutfak dizisi en çok iki köşelidir")
+            if len(run["ties"]) != corners + 1:
+                self.fail("bad_value", "mutfak dizisinin her kolunun bir duvar bağı yeri olmalı")
+            if len(run["members"]) > 10000:
+                self.fail("bad_value", "mutfak dizisinin nesne sınırı aşıldı")
+            for m in run["members"]:
+                if m["uid"] in members:
+                    self.fail("bad_value", "mutfak dizisinin nesnesi iki dizide")
+                members.add(m["uid"])
+        return runs
 
     def dimension_sets_(self, v):
         """Schema 113: JSON-shaped ids/points, recipes and stable ordinary member ids.

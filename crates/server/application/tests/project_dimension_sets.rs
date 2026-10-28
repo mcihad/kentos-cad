@@ -30,6 +30,7 @@ fn create(source: &DocumentSnapshotV2) -> ProjectCreate {
         sheets: None,
         arrays: Vec::new(),
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         description: None,
         project_type: None,

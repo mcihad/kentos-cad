@@ -748,6 +748,9 @@ pub struct Memory {
     pub casework_module: f64,
     pub casework_depth: f64,
     pub casework_upper: bool,
+    /// Mutfak dizisi's Biçim (corners: 0 straight, 1 an L, 2 a U) and Köşe (docs/adr/0727 §7).
+    pub casework_corners: u8,
+    pub casework_corner: kentos_commands::CaseworkCorner,
     /// Aks ağı's spacings across x and y, its extension (metres), its columns and their width and depth
     /// (docs/adr/0707).
     pub grid_system_x: Values,
@@ -1173,6 +1176,8 @@ impl Default for Memory {
             casework_module: kentos_commands::DEFAULT_CASEWORK_MODULE,
             casework_depth: kentos_commands::DEFAULT_CASEWORK_DEPTH,
             casework_upper: false,
+            casework_corners: 0,
+            casework_corner: kentos_commands::CaseworkCorner::Blind,
             grid_system_x: Values::default(),
             grid_system_y: Values::default(),
             grid_system_extension: kentos_commands::DEFAULT_GRID_EXTENSION,

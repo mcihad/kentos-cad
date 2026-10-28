@@ -252,14 +252,18 @@ def entity_box(e):
 
 
 def block_box(b):
-    """A block's box at the origin, scale 1, its parameters' defaults: what it draws (texts left out)."""
+    """A block's box at the origin, scale 1, its parameters' defaults, relative to its base point: what it draws (texts
+    left out)."""
     out = None
     for e in b.get("entities", []):
         x = entity_box(e)
         if x is None:
             continue
         out = x if out is None else [min(out[0], x[0]), min(out[1], x[1]), max(out[2], x[2]), max(out[3], x[3])]
-    return out
+    if out is None:
+        return None
+    base = b.get("base", {"x": 0.0, "y": 0.0})
+    return [out[0] - base["x"], out[1] - base["y"], out[2] - base["x"], out[3] - base["y"]]
 
 
 def unit_factor(b, unit):
@@ -392,11 +396,12 @@ def run(drawing, inp, library):
         return invalid("“Alt dolap” bloğunun “Genişlik” parametresi yok; dizi modülün enini bu parametreyle verir.",
                        "module")
     rule = width.get("rule", {})
-    why = number_problem(rule, module)
+    unit = drawing.get("unit", "m")
+    # The width parameter's rule is in the block's numbers (a unitless block's the drawing's unit's).
+    cab_factor = unit_factor(cabinet, unit)
+    why = number_problem(rule, module / cab_factor)
     if why:
         return invalid(f"Modül eni {num(module)} m; “Alt dolap” bloğunun eni için {why}.", "module")
-    unit = drawing.get("unit", "m")
-    cab_factor = unit_factor(cabinet, unit)
     cab_box = block_box(cabinet)
     cab_depth = cab_box[3] * cab_factor
     sink, cooktop = inp.get("sink"), inp.get("cooktop")
@@ -406,7 +411,7 @@ def run(drawing, inp, library):
     where = {m["module"]: i for i, m in enumerate(own)}
     for i, m in enumerate(own):
         if m.get("width") is not None:
-            why = number_problem(rule, m["width"])
+            why = number_problem(rule, m["width"] / cab_factor)
             if why:
                 return invalid(f"{m['module']}. modülün eni {num(m['width'])} m; “Alt dolap” bloğunun eni için "
                                f"{why}.", f"perModule[{i}].width")
@@ -425,7 +430,7 @@ def run(drawing, inp, library):
     for key, whose, w in (("sink", "Evye", SINK_WIDTH), ("cooktop", "Ocak", max(module, APPLIANCE))):
         k = inp.get(key)
         if k is not None and not (k in given and given[k].get("width") is not None) and not (key == "cooktop" and oven):
-            why = number_problem(rule, w)
+            why = number_problem(rule, w / cab_factor)
             if why:
                 return invalid(f"{whose} modülü {num(w)} m; “Alt dolap” bloğunun eni için {why}.", key)
     spans = []
@@ -533,8 +538,9 @@ def run(drawing, inp, library):
         for _, _, _, w in placed:
             if w not in widths_seen:
                 widths_seen.append(w)
+        ufac = unit_factor(ub, unit)
         for w in widths_seen:
-            why = number_problem(up.get("rule", {}), w)
+            why = number_problem(up.get("rule", {}), w / ufac)
             if why:
                 return invalid(f"Üst dolap {num(w)} m; “Üst dolap” bloğunun eni için {why}.", "upper")
         upper = (ub, up)
@@ -587,6 +593,14 @@ def run(drawing, inp, library):
     washer = definition("Bulaşık makinesi") if dishwasher is not None else None
     ovenb = definition("Fırın") if oven else None
     fridgeb = definition("Buzdolabı") if fridge is not None else None
+
+    def blind_by(j, start, w):
+        # The leg before a blind corner keeps the corner: the next leg's cabinets stand before its last cabinet depth.
+        if corner != "blind" or j + 1 >= n:
+            return 0.0
+        end = frames[j].length
+        return min(start + w, end) - max(start, end - cab_depth)
+
     for i, j, start, w in placed:
         f = frames[j]
         if i == dishwasher:
@@ -614,6 +628,8 @@ def run(drawing, inp, library):
             m["hand"] = hand
         if oven and i == cooktop:
             m["oven"] = True
+        if blind_by(j, start, w) > SLACK:
+            m["blind"] = True
         b.modules.append(m)
     holes = []
     for key, name, blk, fac, j, at_s, at_t, (a0, a1, t0, t1) in fixtures:
@@ -646,6 +662,18 @@ def run(drawing, inp, library):
             message = f"{j + 1}. kolda {fixed(leftover, 3)} m dolgu kalıyor."
             path = "from" if j == 0 else leg_path(j, n)
         b.warnings.append({"code": "casework_filler", "message": message, "path": path})
+    cook = "ocağın önünde durulamaz, fırının kapağı açılamaz" if oven else "ocağın önünde durulamaz"
+    for key, what in (("sink", "evyenin önünde durulamaz"), ("cooktop", cook),
+                      ("dishwasher", "bulaşık makinesinin kapağı açılamaz")):
+        k = inp.get(key)
+        if k is None:
+            continue
+        _, j, start, w = by_index[k]
+        over = blind_by(j, start, w)
+        if over > SLACK:
+            words = (f"{k}. modül kör köşede: önünün {fixed(over, 3)} m'sini {j + 2}. kolun dolapları kapatıyor; "
+                     f"{what}. Başka bir modül seçin ya da köşeyi açık yapın.")
+            b.warnings.append({"code": "casework_blind_corner", "message": words, "path": key})
     for k in range(1, n):
         f = frames[k]
         if corner == "blind":
@@ -749,8 +777,8 @@ def followed_path(recipe, ties, changed):
         den = u1[0] * u2[1] - u1[1] * u2[0]
         if abs(den) < 1e-12:
             return None
-        a2 = {"x": p2["x"] + u2[0], "y": p2["y"] + u2[1]}
-        corners.append(intersect(p1, {"x": p1["x"] + u1[0], "y": p1["y"] + u1[1]}, p2, a2))
+        t = ((p2["x"] - p1["x"]) * u2[1] - (p2["y"] - p1["y"]) * u2[0]) / den
+        corners.append({"x": p1["x"] + u1[0] * t, "y": p1["y"] + u1[1] * t})
     first_len = Frame(pts[0], pts[1], True).length
     last_len = Frame(pts[-2], pts[-1], True).length
     u0, ul = lines[0][1], lines[-1][1]
@@ -800,3 +828,30 @@ def edited_module(recipe, module, width=None, hand=None, holds=None):
         if r.get("cooktop") is None:
             r.pop("oven", None)
     return r
+
+
+def moved_path(recipe, before_counter, after_counter):
+    """The run's path moved and turned as its countertop was (its first two corners, before and after); None for a
+    scale, a mirror or no move."""
+    b, a = before_counter, after_counter
+    p0, p1, q0, q1 = b[0], b[1], a[0], a[1]
+    lb = math.hypot(p1["x"] - p0["x"], p1["y"] - p0["y"])
+    la = math.hypot(q1["x"] - q0["x"], q1["y"] - q0["y"])
+    if not lb > SLACK or abs(la - lb) > 1e-9 * max(lb, 1.0):
+        return None
+
+    def signed(pts):
+        n = len(pts)
+        return sum(pts[i]["x"] * pts[(i + 1) % n]["y"] - pts[(i + 1) % n]["x"] * pts[i]["y"] for i in range(n))
+    if (signed(b) > 0) != (signed(a) > 0):
+        return None
+    turn = math.atan2(q1["y"] - q0["y"], q1["x"] - q0["x"]) - math.atan2(p1["y"] - p0["y"], p1["x"] - p0["x"])
+    sin, cos = math.sin(turn), math.cos(turn)
+    if abs(q0["x"] - p0["x"]) <= SLACK and abs(q0["y"] - p0["y"]) <= SLACK and abs(sin) <= SLACK:
+        return None
+    pts = [recipe["from"]] + list(recipe.get("through") or []) + [recipe["to"]]
+    out = []
+    for p in pts:
+        dx, dy = p["x"] - p0["x"], p["y"] - p0["y"]
+        out.append({"x": q0["x"] + dx * cos - dy * sin, "y": q0["y"] + dx * sin + dy * cos})
+    return out

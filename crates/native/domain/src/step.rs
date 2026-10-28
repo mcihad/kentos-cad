@@ -171,6 +171,8 @@ pub struct StepReport {
     pub blocks: IdChanges<BlockId>,
     /// The associative arrays it added, changed or removed (docs/adr/0300).
     pub arrays: IdChanges<kentos_contracts::ArrayId>,
+    /// The kitchen runs it added, changed or removed (docs/adr/0727 §5).
+    pub casework: IdChanges<kentos_contracts::CaseworkId>,
     pub dimension_sets: IdChanges<kentos_contracts::DimensionSetId>,
     /// Forbidden user writes found before source reconciliation; checked by the atomic seal.
     pub dimension_set_violations: Vec<Uuid>,
@@ -703,6 +705,9 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
             Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
             Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
+            Op::CaseworkAdd { run, .. } => report.casework.add(run.id),
+            Op::CaseworkRemove { run, .. } => report.casework.remove(run.id),
+            Op::CaseworkUpdate { after, .. } => report.casework.change(after.id),
             Op::DimensionSetAdd { set, .. } => report.dimension_sets.add(set.id),
             Op::DimensionSetRemove { set, .. } => report.dimension_sets.remove(set.id),
             Op::DimensionSetUpdate { after, .. } => report.dimension_sets.change(after.id),

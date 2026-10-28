@@ -1,39 +1,11 @@
-//! A straight kitchen run's modules (docs/adr/0706 §1): base cabinets of one width along a line from its start, the
-//! sink's module its own width, what is left of the line a filler at its end; and where a point of the run lies.
+//! A kitchen run's leg frame (docs/adr/0706, 0727): where a point of a leg lies, along its line and into the run's side.
+//! How a run lays its modules is the document's rule (`kentos_domain::casework`).
 
 use crate::jsmath::{atan2, js_hypot};
 use crate::vec2::Vec2;
 
-/// The slack of the module count: a line a hair short of a whole module still holds it.
+/// A line shorter than this has no length.
 const SLACK: f64 = 1e-9;
-
-/// How many modules a line of `length` holds: base cabinets `module` wide, one of them `sink` wide when a sink is
-/// asked for; 0 when not even one fits.
-pub fn module_count(length: f64, module: f64, sink: Option<f64>) -> usize {
-    if !(length.is_finite() && module > 0.0) {
-        return 0;
-    }
-    match sink {
-        Some(s) if length + SLACK < s => 0,
-        Some(s) => ((length - s) / module + SLACK).floor() as usize + 1,
-        None => (length / module + SLACK).floor() as usize,
-    }
-}
-
-/// The modules' starts and widths along the line: `count` of them, the `sink`-th (1-based) `sink`'s width.
-pub fn module_spans(count: usize, module: f64, sink: Option<(usize, f64)>) -> Vec<(f64, f64)> {
-    let mut out = Vec::with_capacity(count);
-    let mut at = 0.0;
-    for i in 1..=count {
-        let w = match sink {
-            Some((k, width)) if k == i => width,
-            _ => module,
-        };
-        out.push((at, w));
-        at += w;
-    }
-    out
-}
 
 /// A run's frame: its line's start, its unit direction, the unit normal toward its side and its length; none for a
 /// line with no length.

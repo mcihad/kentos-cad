@@ -133,6 +133,11 @@ pub enum Event {
     /// A live wall dimension chain's selection, layout or recipe action.
     DimensionSet(Slot, &'static str),
     DimensionSetValue(Slot, &'static str, String),
+    /// A kitchen run's action (docs/adr/0727 §6): Dizinin tamamını seç, Diziyi bırak, Dizinin tamamını sil.
+    Casework(Slot, &'static str),
+    /// A kitchen run's value: the object's module's width, door or kind, or the run's corner, wall cabinets, oven or
+    /// fridge, through `cad.casework.edit`.
+    CaseworkValue(Slot, &'static str, String),
     /// A dimension edit through `cad.dimensions.edit` (docs/adr/0321 §4): its options, its value home, its breaks off.
     DimensionEdit(Vec<Slot>, DimensionOp),
     /// Stile döndür (docs/adr/0322 §5): the objects take their style's values again.
@@ -208,6 +213,8 @@ pub enum Field {
     PointY(Slot),
     DimensionOffset(Slot),
     DimensionSetGap(Slot),
+    /// A kitchen run's countertop depth (docs/adr/0727 §6), in the drawing's unit.
+    CaseworkDepth(Slot),
     DimensionHeight(Slot),
     /// A dimension's own text; empty, the measured value again.
     DimensionText(Slot),
@@ -654,6 +661,21 @@ impl App {
             self.selection.set([slot]);
             return;
         }
+        if let Event::Casework(slot, "select") = event {
+            let Some(model) = self.document.as_ref().map(|doc| &doc.model) else {
+                return;
+            };
+            let Some((run, _)) = model.uid(slot).and_then(|uid| model.casework_member(uid)) else {
+                return;
+            };
+            let slots: Vec<_> = run
+                .members
+                .iter()
+                .filter_map(|m| model.slot_of(kentos_domain::Uuid::from_bytes(m.uid.0)))
+                .collect();
+            self.selection.set(slots);
+            return;
+        }
         if let Event::DimensionSet(slot, action @ ("select" | "row" | "source")) = event {
             let Some(model) = self.document.as_ref().map(|doc| &doc.model) else {
                 return;
@@ -872,6 +894,8 @@ impl App {
             }
             Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
             Event::DimensionSet(slot, action) => dimension_set_action(model, slot, action),
+            Event::Casework(slot, action) => casework_action(model, slot, action),
+            Event::CaseworkValue(slot, field, value) => casework_value(model, slot, field, &value),
             Event::DimensionSetValue(slot, field, value) => {
                 if matches!(field, "dimensionStyle" | "layerId") {
                     let mut operation = serde_json::json!({"kind":"set"});
@@ -959,6 +983,103 @@ impl App {
             self.warn(text);
         }
     }
+}
+
+/// A kitchen run changed through `cad.casework.edit` (docs/adr/0727 §6): its refusal or warnings, said.
+fn casework_edit(model: &mut kentos_domain::Document, slot: Slot, edit: serde_json::Value) -> Vec<String> {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let Some(uid) = model.uid(slot) else {
+        return Vec::new();
+    };
+    let input = serde_json::json!({
+        "run": uid.to_string(),
+        "edit": edit,
+        "expectedRevision": model.revision().to_string(),
+    });
+    said(registry::run(&mut ExecutionContext::new(model), "cad.casework.edit", CallOp::Execute, input))
+}
+
+/// A command's answer as what the panel says: its warnings, or why it wrote nothing.
+fn said(answer: Result<serde_json::Value, kentos_native_application::registry::Unrun>) -> Vec<String> {
+    match answer {
+        Ok(value) if value["status"] == "completed" => value["warnings"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|w| w["message"].as_str().map(str::to_owned))
+            .collect(),
+        Ok(value) => vec![
+            value["error"]["message"]
+                .as_str()
+                .unwrap_or("Mutfak dizisi değiştirilemedi; katman kilitlerini kontrol edin.")
+                .into(),
+        ],
+        Err(error) => vec![error.message],
+    }
+}
+
+/// Diziyi bırak and Dizinin tamamını sil.
+fn casework_action(model: &mut kentos_domain::Document, slot: Slot, action: &str) -> Vec<String> {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    match action {
+        "release" => casework_edit(model, slot, serde_json::json!({"kind": "release"})),
+        "delete" => {
+            let Some((run, _)) = model.uid(slot).and_then(|uid| model.casework_member(uid)) else {
+                return Vec::new();
+            };
+            let uids: Vec<String> = run.members.iter().map(|m| m.uid.to_text()).collect();
+            let input = serde_json::json!({"uids": uids, "expectedRevision": model.revision().to_string()});
+            said(registry::run(&mut ExecutionContext::new(model), "cad.entities.delete", CallOp::Execute, input))
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// A run's value picked: the object's module's width, door or kind (its other own value kept), or the recipe's.
+fn casework_value(model: &mut kentos_domain::Document, slot: Slot, field: &str, value: &str) -> Vec<String> {
+    use serde_json::json;
+    let Some((run, member)) = model.uid(slot).and_then(|uid| model.casework_member(uid)) else {
+        return Vec::new();
+    };
+    let (recipe, module) = (run.recipe.clone(), member.index);
+    let (own_width, own_hand) = match module {
+        Some(k) => (rows::casework::own_width(&recipe, k), rows::casework::own_hand(&recipe, k)),
+        None => (None, None),
+    };
+    let edit = match (field, module) {
+        ("width", Some(k)) => {
+            let Ok(width) = value.parse::<f64>() else {
+                return Vec::new();
+            };
+            // A cabinet wider than 0.60 m takes a double door: its hinge goes.
+            let hand = own_hand.filter(|_| width <= kentos_commands::CASEWORK_APPLIANCE + 1e-9);
+            json!({"kind": "module", "module": k, "width": width, "hand": hand})
+        }
+        ("hand", Some(k)) => json!({"kind": "module", "module": k, "hand": value, "width": own_width}),
+        ("holds", Some(k)) => {
+            // An appliance (a dishwasher, an oven's cooktop) has no width or door of its own.
+            let appliance = value == "dishwasher" || (value == "cooktop" && recipe.oven == Some(true));
+            if appliance {
+                json!({"kind": "module", "module": k, "holds": value})
+            } else {
+                json!({"kind": "module", "module": k, "holds": value, "width": own_width, "hand": own_hand})
+            }
+        }
+        ("corner" | "fridge", _) => {
+            let mut r = serde_json::to_value(&recipe).unwrap_or_default();
+            r[field] = if value == "none" { serde_json::Value::Null } else { json!(value) };
+            json!({"kind": "recipe", "recipe": r})
+        }
+        ("upper" | "oven", _) => {
+            let mut r = serde_json::to_value(&recipe).unwrap_or_default();
+            r[field] = json!(value == "true");
+            json!({"kind": "recipe", "recipe": r})
+        }
+        _ => return Vec::new(),
+    };
+    casework_edit(model, slot, edit)
 }
 
 /// A member points at its recipe; the shared command owns all edits and undo.
@@ -1088,6 +1209,23 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             Some(f.to_metres(web_number(text)))
         }
     };
+    if let Field::CaseworkDepth(slot) = field {
+        let Some(recipe) = model
+            .uid(*slot)
+            .and_then(|uid| model.casework_member(uid))
+            .map(|(run, _)| run.recipe.clone())
+        else {
+            return Vec::new();
+        };
+        return match length(text) {
+            Some(depth) if depth.is_finite() => {
+                let mut r = serde_json::to_value(&recipe).unwrap_or_default();
+                r["depth"] = serde_json::json!(depth);
+                casework_edit(model, *slot, serde_json::json!({"kind": "recipe", "recipe": r}))
+            }
+            _ => vec!["Tezgâhın derinliğini girin; örneğin 65 cm.".into()],
+        };
+    }
     if let Field::DimensionSetGap(slot) = field {
         let typed = text.trim().strip_suffix("mm").unwrap_or(text.trim()).trim();
         return match kentos_geometry_core::tools::point_text::parse_number(typed) {
@@ -1704,7 +1842,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionRound(_)
         | Field::DimensionTolerance(..)
         | Field::DimensionLevelOffset(_) => return Vec::new(),
-        Field::DimensionSetGap(_) => return Vec::new(),
+        Field::DimensionSetGap(_) | Field::CaseworkDepth(_) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

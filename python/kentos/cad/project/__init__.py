@@ -13,6 +13,7 @@ from ..types import (  # noqa: F401
     AssocArray,
     BlockChange,
     Bounds,
+    CaseworkRecord,
     CommitResult,
     ConstraintSet,
     DimensionSet,
@@ -276,6 +277,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
         active_layer: str,
         styles: ProjectStyles,
         arrays: Sequence[AssocArray] | Unset = UNSET,
+        casework: Sequence[CaseworkRecord] | Unset = UNSET,
         constraints: ConstraintSet | Unset = UNSET,
         description: str | None | Unset = UNSET,
         dimension_sets: Sequence[DimensionSet] | Unset = UNSET,
@@ -303,6 +305,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             active_layer:
             styles:
             arrays: The project's associative arrays (docs/adr/0300); absent: none.
+            casework: The project's kitchen runs (docs/adr/0727 §5); absent: none.
             constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
             description: The catalog's description (docs/adr/0028); absent: none.
             dimension_sets: Persistent architectural dimension recipes; older responses without this field have none.
@@ -334,6 +337,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             active_layer=active_layer,
             styles=styles,
             arrays=_opt(arrays, lambda x: list(x)),
+            casework=_opt(casework, lambda x: list(x)),
             constraints=constraints,
             description=description,
             dimension_sets=_opt(dimension_sets, lambda x: list(x)),

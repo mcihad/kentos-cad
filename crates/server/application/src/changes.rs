@@ -1140,6 +1140,10 @@ pub(crate) async fn commit_in(
     if let Some(sets) = &patch.dimension_sets {
         crate::projects::check_dimension_sets(sets, "project.dimensionSets")?;
     }
+    // So do the kitchen runs, but for the objects and walls they name (docs/adr/0727 §5).
+    if let Some(runs) = &patch.casework {
+        crate::projects::check_casework(runs, "project.casework")?;
+    }
     // So do the constraints, but for the objects they name (docs/adr/0336 §3).
     if let Some(set) = &patch.constraints {
         crate::projects::check_constraints(set, "project.constraints")?;
@@ -1644,6 +1648,7 @@ pub(crate) async fn commit_in(
             arrays = case when $13 then $14 else arrays end,
             constraints = case when $15 then $16 else constraints end,
             dimension_sets = case when $17 then $18 else dimension_sets end,
+            casework = case when $19 then $20 else casework end,
             catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
@@ -1686,6 +1691,8 @@ pub(crate) async fn commit_in(
     )
     .bind(patch.dimension_sets.is_some())
     .bind(patch.dimension_sets.as_deref().map(crate::projects::dimension_sets_value).transpose()?.flatten())
+    .bind(patch.casework.is_some())
+    .bind(patch.casework.as_deref().map(crate::projects::casework_value).transpose()?.flatten())
     .fetch_one(&mut **tx)
     .await?;
     // The project row has been locked since the revision was read: created objects carry this commit's.

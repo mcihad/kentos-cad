@@ -174,6 +174,7 @@ fn opened(n: usize) -> Opened {
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {
         dimension_sets: Vec::new(),
+        casework: Vec::new(),
         constraints: Default::default(),
         format: "kentos.document".into(),
         version: 2,
@@ -203,6 +204,7 @@ fn opened(n: usize) -> Opened {
         project,
         info: ProjectInfo {
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
             constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,

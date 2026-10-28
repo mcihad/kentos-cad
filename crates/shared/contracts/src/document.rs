@@ -1011,6 +1011,13 @@ pub struct DocumentSnapshotV2 {
         ts(optional, as = "Option<Vec<crate::dimension_set::DimensionSet>>")
     )]
     pub dimension_sets: Vec<crate::dimension_set::DimensionSet>,
+    /// The kitchen runs (docs/adr/0727 §5), in the order they were made; none when the drawing has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::casework::CaseworkRecord>>")
+    )]
+    pub casework: Vec<crate::casework::CaseworkRecord>,
     /// The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
     /// has none.
     #[serde(

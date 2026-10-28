@@ -27,7 +27,10 @@ Araştırma (üretici belgeleri; yerelde çalıştırılmadı):
   (ADR 0706'da da): tezgâh dolaplardan türer, evye sembolü delik açar.
 - [Home Designer — Planning a Kitchen Work Area](https://www.homedesignersoftware.com/support/article/KB-00844/planning-a-kitchen-work-area.pdf):
   bulaşık makinesi evyenin yanında, ocak ve evyenin iki yanında tezgâh; KentOS bunu öneri olarak alır, kural olarak
-  değil (NKBA kılavuzunun özgün metni burada okunmadı; ölçüleri ergonomi standardı diye sunulmaz).
+  değil. [NKBA Kitchen Planning Guidelines](https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf),
+  Guideline 13 (önerilen): bulaşık makinesinin yakın kenarı evyenin kenarından en çok 914 mm, kenarıyla ona dik duran
+  dolap ve tezgâh arasında en az 533 mm durma yeri. Ölçüleri ergonomi standardı diye sunulmaz, denetlenmez; yalnız
+  önü kapanan kör modül söylenir (§1).
 
 KentOS kararı: köşe Chief Architect'teki gibi öntanımlı **kör köşe**, istenirse **açık köşe**; dolgular görünür ve
 söylenir (ADR 0706); tezgâh dizinin tek alanı, köşede gönyeli, evye ve ocak kesimleri evyenin ve ocağın bloğundan
@@ -46,6 +49,13 @@ yerleştirme ve alanlardır; kayıt duvarın yüzüne bağlıdır ve duvar deği
   modülünde), sonraki kol köşeden dolap derinliği + 5 cm'de başlar; arada 5 cm'lik köşe dolgusu. Açık köşede iki kol
   da köşeden dolap derinliği uzakta durur, köşe karesi dolgudur. Dolap derinliği Alt dolap bloğunun kutusunun
   derinliğidir (kitaplığınki 0,60 m).
+- **Kör modül:** kör köşeye giren kolun köşeden bir dolap derinliği içindeki modülü kördür (çıktıda `blind`): önünü
+  sonraki kolun dolapları kapatır. Evye, ocak (fırınıyla) ya da bulaşık makinesi orada olursa uyarı
+  `casework_blind_corner` (modül, kapanan boy, hangi kol); yazılır ama önünde durulamaz, kapağı açılamaz.
+  [NKBA Kitchen Planning Guideline 13](https://kb.nkba.org/uploads/2022/05/Kitchen-Planning-Guidelines.pdf)
+  bulaşık makinesinin kenarıyla ona dik duran dolap ve tezgâh arasında en az 533 mm (21″) durma yeri önerir; kör
+  modüldeki makinede bu yer eksidir. KentOS yalnız önü kapanan modülü söyler (Sınırlar). Gerçek GUI'de U mutfağın
+  Otomatik bulaşık makinesi bu modüle düşünce bulundu.
 - Modüller `from`'dan yol boyunca 1'den numaralanır ve sırayla sığdıkça dizilir (1e-9 payla). L ve U'nun ilk kolu
   köşesinden geriye dizilir (dolgusu dizinin başında), öbür kollar başlarından (dolgusu sonlarında).
 - Bir kolun kullanılabilir boyu bir modüle yetmezse ret: dar köşe ve **negatif kalan** (kolun numarası ve kalan boyla).
@@ -98,29 +108,79 @@ yeniden kurmada korunur.
 
 ### 6. `cad.casework.edit` ve `cad.casework.query`
 
-- `cad.casework.edit` v1: `run` (dizinin kimliği ya da bir üyesinin kalıcı kimliği) ve işlem:
-  `module` (modülün eni, açılması ve türü: `base`, `sink`, `cooktop`, `dishwasher`; `null` öntanımlıya döner),
-  `set` (dizinin değerleri: modül eni, derinlik, köşe, evye, ocak, bulaşık makinesi, fırın, buzdolabı, üst dolap,
-  renk, çizgi kalınlığı) ve `release` (dizi bırakılır, nesneler bağımsız kalır). Tek geri alma adımı (“Mutfak
-  dizisini düzenle”, “Mutfak dizisini bırak”). Retler: `casework_not_found` ve yeniden kurmanın retleri.
+- `cad.casework.edit` v1: `run` (dizinin kimliği ya da bir üyesinin kalıcı kimliği) ve `edit`:
+  `module` (bir modülün kendi eni `width` ve açılması `hand`, ikisi de yoksa modülün kendi değerleri kalkar; `holds`
+  ne taşıdığı: `base`, `sink`, `cooktop`, `dishwasher`; ocağı kalkan dizinin fırını da kalkar), `recipe` (dizinin
+  bütün tarifi: `cad.casework.run`'ın girdisi; derinlik, köşe, cihazlar, buzdolabı, üst dolap, renk ve kalınlık
+  böyle değişir) ve `release` (dizi bırakılır, nesneler bağımsız kalır). Tek geri alma adımı (“Mutfak dizisini
+  düzenle”, “Mutfak dizisini bırak”). Retler: `casework_not_found` (`run`), yeniden kurmanın retleri (modül
+  düzenlemesinde yol `edit`, tarifte `edit.recipe.` ve tarifin yolu; modül düzenlemesinin uyarıları da `edit`'te) ve
+  beklenen sürüm.
 - `cad.casework.query` v1: salt okunur; dizilerin (ya da birinin) kimliği, kolları (boy, dolgu, bağlı duvar),
-  modülleri (numara, kol, tür, başlangıç, en, açılma, fırın), buzdolabı, kırıklığı ve eksik üyeleri.
+  modülleri (numara, kol, tür, başlangıç, en, açılma, fırın, kör), buzdolabı, kırıklığı ve eksik üyeleri.
 
 ### 7. Araç ve Öznitelikler
 
-Mutfak dizisi aracının **Biçim**'i Düz, L, U: köşeler tıklanır (L bir, U iki), son nokta ve yan; Enter gösterilen
-yolla yazar. Görünür ayarlar: Biçim, Köşe (Kör, Açık), Bulaşık makinesi (Yok, Otomatik: evyenin yanındaki modül, ya
-da modül), Fırın, Buzdolabı (Yok, Başta, Sonda). Önizleme komutun planıdır. Dizinin bir nesnesi seçilince
-Öznitelikler'de Mutfak dizisi bölümü: dizinin değerleri ve seçili modülün en, tür ve açılması (`cad.casework.edit`),
-Bırak.
+Mutfak dizisi aracının **Biçim**'i (B) Düz, L, U: köşeler tıklanır (L bir, U iki); her köşe ve son nokta önceki kola dik
+gelir (imleç dikliğe izdüşer). Düz dizi son noktadan sonra yanın tıklanmasıyla, L ve U son noktanın tıklanmasıyla
+döndüğü yanda yazılır; Enter gösterilen yolla yazar. Görünür ayarlar: Biçim, Köşe (Kör, Açık), Bulaşık makinesi (Yok,
+Otomatik: evyenin yanındaki modül, ya da modül), Fırın, Buzdolabı (Yok, Başta, Sonda). Otomatik evye, ocak ve bulaşık
+makinesi kör modülü atlar (evye ikinci modülden sonraki ilk açık modüle geçer); elle kör modüle konan cihaz ve kolun
+önüne geldiği kapı ya da alçak pencere (`casework_clash`) önizlemenin etiketinde ve yazınca söylenir. Önizleme komutun
+planıdır. Dizinin bir nesnesi seçilince Öznitelikler'de Mutfak dizisi bölümü: Dizi (Düz/L/U ve modül sayısı; Dizinin
+tamamını seç, Diziyi bırak, Dizinin tamamını sil), durum (kırık dizide), Köşe, Tezgâh derinliği, Üst dolap, Fırın,
+Buzdolabı, Dolgu ve seçili modülün sırası (kör köşedeyse söylenir), Tür, Modül eni (cihazın eni yalnız gösterilir) ve
+Açılma; her değişiklik `cad.casework.edit` ile tek adım. Dizinin verisi (Modül, Tür, Açılma) Öznitelik bilgileri'nde
+ayrıca düzenlenmez.
 
 ## Sınırlar
 
 - Köşe dolabının kendi bloğu (karusel, köşe çekmecesi) yok: kör köşe Alt dolap'ın uzantısıdır, açık köşe dolgu.
+- NKBA'nın bulaşık makinesi için 533 mm durma yeri ve evyeye 914 mm önerisi denetlenmez; yalnız kör köşede önü kapanan
+  modüldeki evye, ocak ve bulaşık makinesi söylenir.
 - Uzun dolap (fırın kolonu, buzdolabı kabini), süpürgelik, tezgâh arkası, 3B ve kotlar açık.
 - Dik olmayan köşe ve eğri duvar boyunca dizi açık; yalnız düz yüz kenarına bağlanır.
+- Modüller kola 1e-9 payla sığar. Kenetsiz tıklamanın ekran yuvarlaması (yaklaşık 10⁻⁷ m) tam sığan bir modülü
+  sonraki kola atabilir (gerçek GUI resimlerinde görüldü); kesin ölçülü dizi yazılan noktayla, yazılan uzunlukla ya
+  da duvar köşesine kenetle çizilir. Pay büyütülmedi (CLAUDE.md §23.3).
 - Kapı önü uyarısı yalnız bağlı duvarın açıklıklarına bakar; kolon ve başka nesneyle çakışma denetlenmez.
+- Sunucu dizilerin sözleşme kurallarını denetler (`casework_problem`); adlandırdıkları nesnelerin ve duvarların
+  projede olduğunu denetlemez, onları belge tutar. Komut protokolünün durum damgaları dizileri ayrıca saymaz; beklenen
+  sürüm yeter.
+- Dizinin bütün nesneleri birlikte taşınır ya da döndürülürse dizi de gider; ölçekleme ve aynalama dizinin ölçüsünü
+  ve yanını bozacağından sahiplik onu reddeder (dizi düzenlenir ya da bırakılır). Bağlı duvar ölçeklenir ya da
+  aynalanırsa dizi duvarın yeni yüzüne göre yeniden dizilir.
 
 ## Doğrulama
 
-(Uygulama bitince doldurulur.)
+- Ortak durumlar KentOS kodu olmadan yazılmış bağımsız başvurudan (`scripts/fixtures/casework_model.py`,
+  `casework_cases.py --check`): `cad.casework.run` 80 (düz, L, U, kör ve açık köşe, kör modüldeki bulaşık makinesi, evye
+  ve fırınlı ocak uyarısı ve açık köşedeki karşılığı, cihazlar, buzdolabı, modülün kendi eni ve kapısı, çizimin kendi
+  blokları, birimsiz blok, kapı ve alçak pencere uyarısı, dar köşe ve negatif kalan dahil 42 ret), `cad.casework.edit`
+  39 (modül, tarif, bırak; kör modüle konan bulaşık makinesi; duvarı taşınan L ve U, düz dizi, silinen duvar, bütün
+  nesneleriyle taşınan dizi, tek nesneye ve tezgâha `casework_owned`, bütün nesneleri silinen dizi, geri alma, sürüm),
+  `cad.casework.query` 22. Rust'ta (`every_command_case`) ve Python'un tipli katmanında aynı sonuç; yetenek testi
+  (`casework_owned` protokol kodu).
+- KCAD şema 127: `casework.kcad` bağımsız yazıcıyla (başvurunun L dizisi, iki duvar bağı, üst dolap, bulaşık
+  makinesi), 8 bozuk örnek; `tools/kcad/kcad.py` ve Rust kodeki aynı sonucu verir, Rust aynı baytları yazar; taşıma
+  testi; `schema-version-128.kcad`.
+- Etkileşim: düz dizi, yazılan uzunluk ve ayarlar, kısa dizi, L (köşe dikliğe izdüşer, döndüğü yanda yazılır), U (açık
+  köşe, fırın, buzdolabı), Otomatik'in kör modülü atlaması ve elle kör modüle konan cihazın etiketi, kapı çakışmasının
+  önizlemenin etiketinde ve yazınca söylenmesi, noktaları yazılan L'nin yazdığı diziyle söylenmesi; 65 + 796
+  etkileşim testi.
+- Masaüstü (`casework_scenes`, resimlerin sahneleri testte de): L iki duvara bağlı ve kör köşe dolgusu, açık köşe;
+  U'da Otomatik evye 2. ve bulaşık makinesi 1. modülde, kör modüllerde yalnız düz dolap, batı kolunda dolgu yok;
+  Modül eni 90 cm; kuzey duvar 40 cm taşınınca dizi izler (doğu kolu boyunu korur); kapı çakışması önizlemede, yazınca
+  günlükte; Öznitelikler'in bölümü sorgunun modülleriyle, Tezgâh derinliği, Diziyi bırak ve Dizinin tamamını sil.
+  Sekiz gerçek GUI resmi `.run/shots/arac-mutfak-*` (1440×900 ve 1100×650, açık ve koyu).
+- Gerçek GUI'de bulunup düzeltilenler: U'nun Otomatik bulaşık makinesi kör köşedeki modüle düşüyordu (kör modül, §1);
+  son noktası yazılan dizinin başarı iletisi önizlemenin eski planını anlatıyordu (artık yazılan dizinin
+  çıktısından); kapı çakışması yalnız yazınca günlükteydi (artık önizlemenin etiketinde de); resimlerde kenetsiz
+  tıklamanın yuvarlaması tam sığan modülü sonraki kola atıyordu (sahneler noktaları yazar; Sınırlar).
+- Sunucu, geçici PostGIS'te: `project_casework` (diziler nesneleri ve bloklarıyla yazılır, projenin bilgisinde ve
+  `.kcad` görüntüsünde döner, projeyle kopyalanır, sözleşmeyi bozan reddedilir, boş liste kaldırır) ve
+  kentos-application'ın 33 test ikilisi (`backup` Homebrew libpq'nun `pg_dump`'ıyla); kentos-api 65 + 21 + 10
+  (`job_run_db` dahil). Komut geçmişinin Python çağrıları (11 735, `history_calls.py`) SDK'yla aynı.
+- Takımlar: alan, etkileşim, uygulama (67 + 243), KCAD (6 + 232), bulut (107 + 4 + 2), sözleşmeler (1081 + 33),
+  komutlar (922), başsız (11 + 6 + 65), MCP, Python SDK'sı (374); manifest, SDK, şerit ve KCAD üreteçleri güncel;
+  değişen crate'lerde clippy `-D warnings`.

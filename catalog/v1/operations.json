@@ -1940,7 +1940,7 @@
       "via": [
         "cad.casework.run"
       ],
-      "note": "Çizginin başı ve sonu, yan, modül eni, derinlik, evye ve ocak modülü ve üst dolap komuta verilir; modüller, dolgu, tezgâh ve kitaplık blokları komutun hesabı, önizleme aynı planı okur (ADR 0706)."
+      "note": "Yolun noktaları (Düz, L, U), yan, köşe, modül eni, derinlik, evye, ocak, bulaşık makinesi, fırın, buzdolabı ve üst dolap komuta verilir; köşeler, modüller, dolgu, tezgâh ve kesimleri, duvar bağları ve kitaplık blokları komutun hesabı, önizleme aynı planı okur (ADR 0706, 0727)."
     },
     "tool.gridNumber": {
       "level": "semantic",

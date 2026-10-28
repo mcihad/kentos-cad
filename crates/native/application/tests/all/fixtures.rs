@@ -76,7 +76,7 @@ use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_normalize,
-    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, casework_run, array, blocks_define,
+    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, casework_edit, casework_query, casework_run, array, blocks_define,
     blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
     entities_fillet, entities_order, entities_pick, entities_relate, entities_select, entities_trim,
@@ -164,6 +164,7 @@ const STEP_KEYS: &[&str] = &[
     "relaxConstraints",
     "from",
     "to",
+    "index",
 ];
 
 /// JSON equality with numbers compared as numbers (the file's `1` is the document's `1.0`);
@@ -1532,8 +1533,22 @@ impl Input for kentos_commands::OpeningsDistancesInput {
 }
 
 impl Input for kentos_commands::CaseworkRun {
-    /// `from.x` and `.y`, `to.x` and `.y`, `module`, `depth`, `lineWeight` (docs/adr/0706).
+    /// `from.x` and `.y`, `through[i].x` and `.y`, `to.x` and `.y`, `module`, `depth`, `perModule[i].width`,
+    /// `lineWeight` (docs/adr/0706, 0727).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if let Some(rest) = path.strip_prefix("through[") {
+            let (i, axis) = rest.split_once("].")?;
+            let p = self.through.as_mut()?.get_mut(i.parse::<usize>().ok()?)?;
+            return match axis {
+                "x" => Some(&mut p.x),
+                "y" => Some(&mut p.y),
+                _ => None,
+            };
+        }
+        if let Some(rest) = path.strip_prefix("perModule[") {
+            let i = rest.strip_suffix("].width")?;
+            return self.per_module.as_mut()?.get_mut(i.parse::<usize>().ok()?)?.width.as_mut();
+        }
         match path {
             "from.x" => Some(&mut self.from.x),
             "from.y" => Some(&mut self.from.y),
@@ -1544,6 +1559,25 @@ impl Input for kentos_commands::CaseworkRun {
             "lineWeight" => self.line_weight.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::CaseworkEdit {
+    /// `edit.width` of a module edit; a recipe's numbers after `edit.recipe.` (docs/adr/0727 §6).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match &mut self.edit {
+            kentos_commands::CaseworkChange::Module { width, .. } if path == "edit.width" => width.as_mut(),
+            kentos_commands::CaseworkChange::Recipe { recipe } => {
+                recipe.number(path.strip_prefix("edit.recipe.")?)
+            }
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::CaseworkQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -4140,6 +4174,12 @@ fn run_op(
         kentos_commands::CAD_CASEWORK_RUN => {
             run!(casework_run, kentos_commands::CaseworkRun)
         }
+        kentos_commands::CAD_CASEWORK_EDIT => {
+            run!(casework_edit, kentos_commands::CaseworkEdit)
+        }
+        kentos_commands::CAD_CASEWORK_QUERY => {
+            run!(casework_query, kentos_commands::CaseworkQuery)
+        }
         kentos_commands::CAD_NORTH_CREATE => run!(north, kentos_commands::NorthCreate),
         kentos_commands::CAD_REVISIONS_MARK => run!(revisions, kentos_commands::RevisionsMark),
         kentos_commands::CAD_LEGENDS_MATERIALS => run!(legends, kentos_commands::LegendsMaterials),
@@ -4745,6 +4785,16 @@ fn run_step(
                 .ok_or(format!("{at}: {id:?} nesnesi yok"))?;
             state.uids.insert(name.to_owned(), uid);
         }
+        // A kitchen run's id, by its place in the drawing's runs (docs/adr/0727 §6): `$uid:name` fills it.
+        "captureCasework" => {
+            let name = step["as"].as_str().ok_or(format!("{at}: “as” yok"))?;
+            let index = step["index"].as_u64().unwrap_or(0) as usize;
+            let run = doc
+                .casework()
+                .get(index)
+                .ok_or(format!("{at}: {index}. mutfak dizisi yok"))?;
+            state.uids.insert(name.to_owned(), Uuid::from_bytes(run.id.0));
+        }
         // A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538): a
         // fixture's bytes over a `$tmp:` file.
         "copyFile" => {
@@ -5019,6 +5069,30 @@ fn check(
                     .collect::<Outcome<_>>()?;
                 let wanted = block_ids(want, doc, state, at)?;
                 expect_same(&json!(got), &wanted, "ilişkili diziler", at)?;
+            }
+            // The drawing's kitchen runs in order, each without its id (a UUIDv7); its objects and walls by `$uidOf:N`
+            // (docs/adr/0727 §5).
+            "casework" => {
+                let got: Vec<Value> = doc
+                    .casework()
+                    .iter()
+                    .map(|r| {
+                        let mut v = serde_json::to_value(&**r).map_err(|e| format!("{at}: {e}"))?;
+                        if let Some(fields) = v.as_object_mut() {
+                            fields.remove("id");
+                        }
+                        Ok(v)
+                    })
+                    .collect::<Outcome<_>>()?;
+                let got = json!(got);
+                let wanted = fill(want, doc, state, at)?;
+                match within {
+                    Some(w) if !close(&got, &wanted, w) => {
+                        return Err(format!("{at}: mutfak dizileri (±{w}): beklenen {wanted}, bulunan {got}"));
+                    }
+                    Some(_) => {}
+                    None => expect_same(&got, &wanted, "mutfak dizileri", at)?,
+                }
             }
             // An external reference's source by its name, without its objects' ids (docs/adr/0351 §2: a PDF's
             // objects are numbered from their content).

@@ -22,6 +22,8 @@
 //! steps that change a definition that differs now, or that place or hold
 //! one that is gone, are dropped.
 //!
+//! Kitchen runs (docs/adr/0727 §5) come as the whole list too, the ones the contract's rules hold.
+//!
 //! Associative arrays (docs/adr/0300 §5) come as the whole list too; the
 //! drawing keeps those its blocks and objects can hold (an array whose block
 //! is gone dropped, an item whose insert is gone removed, an array that
@@ -55,6 +57,9 @@ pub struct ExternalMeta {
     pub arrays: Option<Vec<AssocArray>>,
     /// Architectural automatic dimension recipes, whole; missing hosts retain their recipe and warning.
     pub dimension_sets: Option<Vec<kentos_contracts::DimensionSet>>,
+    /// The kitchen runs (docs/adr/0727 §5), whole; none: they stay. A run that breaks the contract's rules is left
+    /// out; a run whose objects are gone stays, its objects missing.
+    pub casework: Option<Vec<kentos_contracts::CaseworkRecord>>,
     /// The constraints and parameters (docs/adr/0336 §3), whole; none: they stay.
     pub constraints: Option<kentos_contracts::ConstraintSet>,
 }
@@ -267,6 +272,9 @@ impl Document {
             if let Some(sets) = meta.dimension_sets {
                 self.take_dimension_sets(&sets);
             }
+            if let Some(runs) = meta.casework {
+                self.take_casework(&runs);
+            }
         }
         self.forget_history_of(&slots, &named);
         self.normalize_dimension_set_sources();
@@ -314,6 +322,26 @@ impl Document {
             .collect();
         self.arrays = next;
         self.forget_array_history();
+    }
+
+    /// Takes another editor's kitchen runs, those the contract's rules hold; when they differ, the steps that change a
+    /// run are dropped.
+    fn take_casework(&mut self, runs: &[kentos_contracts::CaseworkRecord]) {
+        let mut kept: Vec<kentos_contracts::CaseworkRecord> = runs.to_vec();
+        while let Some((i, _)) = kentos_contracts::casework_problem(&kept) {
+            kept.remove(i);
+        }
+        if self.casework.len() == kept.len() && self.casework.iter().zip(&kept).all(|(a, b)| **a == *b) {
+            return;
+        }
+        self.casework = kept
+            .into_iter()
+            .map(|r| match self.casework.iter().find(|w| ***w == r) {
+                Some(was) => was.clone(),
+                None => Arc::new(r),
+            })
+            .collect();
+        self.forget_casework_history();
     }
 
     fn take_dimension_sets(&mut self, sets: &[kentos_contracts::DimensionSet]) {

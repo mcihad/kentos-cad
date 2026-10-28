@@ -108,6 +108,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
     let constraints = kentos_contracts::constraints_kept(&info.constraints, &present);
     DocumentSnapshotV2 {
         dimension_sets: info.dimension_sets.clone(),
+        casework: info.casework.clone(),
         constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -315,6 +316,7 @@ mod tests {
         let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
         ProjectInfo {
             dimension_sets: Vec::new(),
+            casework: Vec::new(),
             constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
