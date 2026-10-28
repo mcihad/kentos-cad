@@ -1195,6 +1195,10 @@ def load() -> tuple[dict, dict[str, dict]]:
             raise Fail(f"{name}: two different schemas under one name")
         schemas[name] = body
 
+    # The file's definitions are the catalog's, once each (docs/adr/0731); a schema of a version 1 catalog
+    # carries its own.
+    for name, d in catalog.get("$defs", {}).items():
+        put(name, d)
     for c in catalog["commands"]:
         for side in ("input", "output", "plan"):
             s = c.get(side)

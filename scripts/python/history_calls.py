@@ -116,7 +116,11 @@ def input_schema(command: str) -> dict[str, Any]:
     global _SCHEMAS
     if _SCHEMAS is None:
         path = Path(__file__).resolve().parents[2] / "apps/web/src/contracts/generated/commandCatalog.json"
-        _SCHEMAS = {c["id"]: c["input"] for c in json.loads(path.read_text())["commands"]}
+        catalog = json.loads(path.read_text())
+        # Each input with the catalog's definitions it names by `#/$defs/…` (docs/adr/0731).
+        defs = catalog.get("$defs", {})
+        _SCHEMAS = {c["id"]: {**c["input"], "$defs": {**defs, **c["input"].get("$defs", {})}}
+                    for c in catalog["commands"]}
     return _SCHEMAS[command]
 
 

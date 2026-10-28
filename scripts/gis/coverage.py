@@ -240,7 +240,9 @@ def command_rows(catalog: dict) -> list[dict]:
     for c in catalog["commands"]:
         e = ev.get(c["id"])
         options = []
-        for ch in choices(c.get("input", {})):
+        # The input's definitions are the catalog's (docs/adr/0731).
+        schema = c.get("input", {})
+        for ch in choices({**schema, "$defs": {**catalog.get("$defs", {}), **schema.get("$defs", {})}}):
             key, value = ch["key"], json.dumps(ch["value"])
             hit = bool(e) and (key, value) in e["pairs"]
             if not hit and ch.get("default") and e:

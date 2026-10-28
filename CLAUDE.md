@@ -52,6 +52,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Düzenlemelerin `to`'su (`face`, `grid`); sorgularda `leftGrid`/`rightGrid`/`length`, `grids`, `startGrid`/`endGrid`.
   Kilitli referans ölçer, yerinde kalır; dönük UCS ve büyük koordinatta aynı; Python/MCP aynı komutlar.
 
+- **Komut kataloğu dosyasında paylaşılan tanımlar (28 Ekim 2026; [ADR 0731](docs/adr/0731-command-catalog-shared-definitions.md)).**
+  `commandCatalog.json` kataloğun 2. sürümüdür: şemaların `$defs`'i kataloğun üst düzey `$defs`'inde, her tanım bir kez
+  (`CommandCatalog::shared`); 56,6 MB → 4,25 MB, büyüme tür sayısıyla. Bellekteki `catalog()` (MCP, başsız sunucu, Python'un
+  yerli modülü) her şemayı yine kendi `$defs`'iyle verir. Dosyayı okuyan betik tanımları kökten alır (`sdk.py`, `coverage.py`,
+  `history_calls.py`); şemayı tek başına isteyen `standalone`'ın kuralını uygular.
+
 - **Mutfak dizisi: L ve U, cihazlar, kalıcı dizi (28 Ekim 2026; [ADR0727](docs/adr/0727-kitchen-runs-corners-appliances-follow.md)).**
   `cad.casework.run`'ın `through`'u (en çok iki dik köşe), `corner` (kör, açık), `dishwasher`, `oven`, `fridge`,
   `perModule` (modülün eni ve kapısı); tezgâh tek alan, evye/ocak kesimleri; modüllerde Modül/Tür/Açılma. Dizi belgede

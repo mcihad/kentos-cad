@@ -16,7 +16,13 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 pub const CATALOG_FORMAT: &str = "kentos.commands";
+/// Each schema carries the definitions it names in its own `$defs`: the catalog as `catalog()` builds it, every
+/// schema whole by itself (an MCP tool's, a Python command's).
 pub const CATALOG_VERSION: u32 = 1;
+/// The schemas' definitions are the catalog's, once each, in its top-level `$defs` (docs/adr/0731): the file
+/// `commandCatalog.json`. A schema's `#/$defs/Name` names one there, as JSON Schema reads a reference in a schema
+/// embedded in a document without an `$id` of its own.
+pub const CATALOG_SHARED_VERSION: u32 = 2;
 
 /// Every product command, as `catalog()` builds it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -26,7 +32,8 @@ pub const CATALOG_VERSION: u32 = 1;
 pub struct CommandCatalog {
     #[cfg_attr(feature = "ts", ts(type = "\"kentos.commands\""))]
     pub format: String,
-    #[cfg_attr(feature = "ts", ts(type = "1"))]
+    /// 1: every schema with its own `$defs`; 2: the schemas' definitions in the catalog's `$defs` (docs/adr/0731).
+    #[cfg_attr(feature = "ts", ts(type = "1 | 2"))]
     pub version: u32,
     pub commands: Vec<CommandDescriptor>,
     /// What every code of the commands' answers means (docs/adr/0253 §7).
@@ -43,6 +50,123 @@ pub struct CommandCatalog {
     /// parts it writes and how the cloud carries them (docs/adr/0314 §2).
     #[serde(default)]
     pub effects: Vec<crate::change_effects::CatalogEffect>,
+    /// Version 2 (docs/adr/0731): every definition a schema names by `#/$defs/Name`, once; empty in version 1.
+    #[serde(default, rename = "$defs", skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
+    pub defs: std::collections::BTreeMap<String, serde_json::Value>,
+}
+
+/// The schemas of a command: its input's, its output's and its plan's.
+fn schemas_mut(d: &mut CommandDescriptor) -> impl Iterator<Item = &mut serde_json::Value> {
+    [Some(&mut d.input), Some(&mut d.output), d.plan.as_mut()]
+        .into_iter()
+        .flatten()
+}
+
+/// The definitions `schema` names by `#/$defs/Name`, and those they name, from `defs`, in their names' order: the
+/// names it reaches that `defs` lacks too, so a reader can say which.
+fn reached<'a>(
+    schema: &'a serde_json::Value,
+    defs: &'a std::collections::BTreeMap<String, serde_json::Value>,
+) -> std::collections::BTreeMap<&'a str, Option<&'a serde_json::Value>> {
+    use serde_json::Value;
+    let mut out = std::collections::BTreeMap::new();
+    let mut stack = vec![schema];
+    while let Some(node) = stack.pop() {
+        match node {
+            Value::Object(map) => {
+                for (key, value) in map {
+                    match (key.as_str(), value) {
+                        ("$defs", _) => {}
+                        ("$ref", Value::String(r)) => {
+                            if let Some(name) = r.strip_prefix("#/$defs/")
+                                && !out.contains_key(name)
+                            {
+                                let def = defs.get(name);
+                                out.insert(name, def);
+                                stack.extend(def);
+                            }
+                        }
+                        _ => stack.push(value),
+                    }
+                }
+            }
+            Value::Array(items) => stack.extend(items),
+            _ => {}
+        }
+    }
+    out
+}
+
+impl CommandCatalog {
+    /// The catalog with its schemas' definitions hoisted into its own `$defs`, each once (version 2,
+    /// docs/adr/0731): what `commandCatalog.json` holds. Err names a definition two schemas give different
+    /// bodies under one name (two types of one name: the file could not say both).
+    pub fn shared(&self) -> Result<CommandCatalog, String> {
+        let mut out = self.clone();
+        for d in &mut out.commands {
+            let id = d.id.clone();
+            for schema in schemas_mut(d) {
+                let Some(serde_json::Value::Object(defs)) =
+                    schema.as_object_mut().and_then(|s| s.remove("$defs"))
+                else {
+                    continue;
+                };
+                for (name, body) in defs {
+                    match out.defs.get(&name) {
+                        Some(known) if *known != body => {
+                            return Err(format!(
+                                "{id}: “{name}” is defined twice with different bodies; give one of the types another name"
+                            ));
+                        }
+                        Some(_) => {}
+                        None => {
+                            out.defs.insert(name, body);
+                        }
+                    }
+                }
+            }
+        }
+        out.version = CATALOG_SHARED_VERSION;
+        Ok(out)
+    }
+
+    /// `schema`, one of this catalog's commands' schemas, whole by itself: with the definitions of the catalog's
+    /// `$defs` it reaches, as its own `$defs` (none when it reaches none), the inverse of [`Self::shared`]. Err
+    /// names a definition the catalog lacks.
+    pub fn standalone(&self, schema: &serde_json::Value) -> Result<serde_json::Value, String> {
+        let reached = reached(schema, &self.defs);
+        let mut defs = serde_json::Map::new();
+        for (name, def) in reached {
+            let def = def.ok_or_else(|| format!("“{name}” is not among the catalog's definitions"))?;
+            defs.insert(name.to_owned(), def.clone());
+        }
+        let mut out = schema.clone();
+        if let Some(map) = out.as_object_mut() {
+            map.remove("$defs");
+            if !defs.is_empty() {
+                map.insert("$defs".into(), serde_json::Value::Object(defs));
+            }
+        }
+        Ok(out)
+    }
+
+    /// The catalog with every schema whole by itself (version 1), from either version: each schema's definitions
+    /// back in its own `$defs`.
+    pub fn standalone_all(&self) -> Result<CommandCatalog, String> {
+        if self.defs.is_empty() {
+            return Ok(self.clone());
+        }
+        let mut out = self.clone();
+        for d in &mut out.commands {
+            for schema in schemas_mut(d) {
+                *schema = self.standalone(schema)?;
+            }
+        }
+        out.defs.clear();
+        out.version = CATALOG_VERSION;
+        Ok(out)
+    }
 }
 
 /// A unit the schemas' `x-unit` names and what it means.

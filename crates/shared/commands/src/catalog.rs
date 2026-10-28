@@ -4,7 +4,9 @@
 //! `cargo test -p kentos-commands` compares the catalog with
 //! `apps/web/src/contracts/generated/commandCatalog.json` and fails on a
 //! difference; after a deliberate change, `KENTOS_WRITE_CATALOG=1` rewrites
-//! the file (read the diff before committing).
+//! the file (read the diff before committing). The file holds the catalog's
+//! shared form (`CommandCatalog::shared`, docs/adr/0731): each definition once,
+//! in its top-level `$defs`.
 
 pub use kentos_contracts::catalog::*;
 
@@ -8985,6 +8987,7 @@ pub fn catalog() -> CommandCatalog {
     CommandCatalog {
         format: CATALOG_FORMAT.into(),
         version: CATALOG_VERSION,
+        defs: Default::default(),
         commands,
         codes: crate::codes::CODES
             .iter()
@@ -12353,11 +12356,52 @@ mod tests {
         }
     }
 
+    /// The file's form (docs/adr/0731): the schemas' definitions once, in the catalog's `$defs`; each schema read
+    /// back whole is the one the catalog builds, so nothing is lost on the way.
+    #[test]
+    fn the_shared_catalog_gives_back_every_schema() {
+        let c = catalog();
+        let shared = c.shared().unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(shared.version, CATALOG_SHARED_VERSION);
+        assert!(!shared.defs.is_empty());
+        for (whole, part) in c.commands.iter().zip(&shared.commands) {
+            for (a, b) in [
+                (Some(&whole.input), Some(&part.input)),
+                (Some(&whole.output), Some(&part.output)),
+                (whole.plan.as_ref(), part.plan.as_ref()),
+            ] {
+                let (Some(a), Some(b)) = (a, b) else {
+                    assert_eq!(a.is_some(), b.is_some(), "{}", whole.id);
+                    continue;
+                };
+                assert!(b.get("$defs").is_none(), "{}: a schema keeps its $defs", whole.id);
+                assert_eq!(
+                    &shared.standalone(b).unwrap_or_else(|e| panic!("{}: {e}", whole.id)),
+                    a,
+                    "{}: the schema read back from the shared catalog",
+                    whole.id
+                );
+            }
+        }
+        assert_eq!(shared.standalone_all().unwrap_or_else(|e| panic!("{e}")), c);
+        // Every definition is some schema's: the file carries no orphan.
+        let mut used = std::collections::BTreeSet::new();
+        for d in &c.commands {
+            for s in [Some(&d.input), Some(&d.output), d.plan.as_ref()].into_iter().flatten() {
+                for name in s.get("$defs").and_then(serde_json::Value::as_object).into_iter().flatten() {
+                    used.insert(name.0.clone());
+                }
+            }
+        }
+        assert_eq!(used, shared.defs.keys().cloned().collect());
+    }
+
     #[test]
     fn generated_catalog_file_is_current() {
+        let shared = catalog().shared().unwrap_or_else(|e| panic!("{e}"));
         let text = format!(
             "{}\n",
-            serde_json::to_string_pretty(&catalog()).expect("the catalog serializes")
+            serde_json::to_string_pretty(&shared).expect("the catalog serializes")
         );
         let path = catalog_file();
         if std::env::var("KENTOS_WRITE_CATALOG").as_deref() == Ok("1") {

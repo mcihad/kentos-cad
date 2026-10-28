@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0731: `commandCatalog.json` kataloğun paylaşılan biçimidir (sürüm 2): şemaların tanımları kataloğun üst düzey
+  `$defs`'inde, her biri bir kez. Web dönüşünde bir şemayı tek başına isteyen okuyucu (doğrulayıcı, form) tanımları oradan
+  alır (`CommandCatalog::standalone`'ın kuralı); `registry.test.ts` yalnız kimlik, sürüm ve ev sahibini okur.
 - ARCH-DIM-01 / ADR0700: ölçü tarifinin `edge`'i (kapalı ya da çok kenarlı
   duvarın düz kenarı) ve `cad.dimensionsets.create`'in `edge`/`around`
   girdileri, çıktının `sets`'i; KCAD şema 114. Web dönüşünde komutun

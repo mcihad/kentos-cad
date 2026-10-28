@@ -7,7 +7,11 @@ import type { CommandDescriptor } from "./CommandDescriptor";
 /**
  * Every product command, as `catalog()` builds it.
  */
-export type CommandCatalog = { format: "kentos.commands", version: 1, commands: Array<CommandDescriptor>, 
+export type CommandCatalog = { format: "kentos.commands", 
+/**
+ * 1: every schema with its own `$defs`; 2: the schemas' definitions in the catalog's `$defs` (docs/adr/0731).
+ */
+version: 1 | 2, commands: Array<CommandDescriptor>, 
 /**
  * What every code of the commands' answers means (docs/adr/0253 §7).
  */
@@ -25,4 +29,8 @@ units: Array<CatalogUnit>,
  * What a change of looks and styles does: its undo, whether it makes the drawing unsaved, the project's
  * parts it writes and how the cloud carries them (docs/adr/0314 §2).
  */
-effects: Array<CatalogEffect>, };
+effects: Array<CatalogEffect>, 
+/**
+ * Version 2 (docs/adr/0731): every definition a schema names by `#/$defs/Name`, once; empty in version 1.
+ */
+$defs?: Record<string, unknown>, };
