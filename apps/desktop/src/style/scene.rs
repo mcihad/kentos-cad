@@ -113,7 +113,8 @@ pub struct StyledCache {
     /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
     /// composition's place in the scene, the mask's place in it and the source layer's id.
     label_masks: Vec<(usize, usize, String)>,
-    /// The view the walls were drawn at (docs/adr/0339 §4): when the store's changes, their parts again.
+    /// The view the walls were drawn at (docs/adr/0339 §4): when the view's changes (the store's, or the drawing
+    /// area's own, docs/adr/0696's 29 October addendum), their parts again.
     wall_view: Option<kentos_geometry_core::geom::wall::View>,
     /// The view's theme the layers were shown with (docs/adr/0523 §1).
     theme: Option<kentos_commands::LayerState>,
@@ -326,6 +327,7 @@ impl StyledCache {
             doc.layers().nodes(),
             None,
             store,
+            None,
             library,
             look,
             view,
@@ -336,7 +338,8 @@ impl StyledCache {
     }
 
     /// [`StyledCache::scene`] of a view with a theme (docs/adr/0523 §1): the layers shown, frozen and styled as
-    /// `nodes` (the themed tree's) say.
+    /// `nodes` (the themed tree's) say; the walls at `walls`, a view's own detail (docs/adr/0696's 29 October
+    /// addendum), none: the store's.
     #[allow(clippy::too_many_arguments)]
     pub fn scene_themed(
         &mut self,
@@ -345,6 +348,7 @@ impl StyledCache {
         nodes: &[LayerNode],
         theme: Option<&kentos_commands::LayerState>,
         store: &Store,
+        walls: Option<kentos_geometry_core::geom::wall::View>,
         library: &StyleLibrary,
         look: &Look,
         view: &Bounds,
@@ -355,6 +359,7 @@ impl StyledCache {
         // Nothing it depends on changed: the frame costs a comparison (a pan, a zoom within a step).
         let generation = doc.generation();
         let q = quarter_scale(px_per_m);
+        let walls = walls.unwrap_or_else(|| store.wall_view());
         if self.drawing == Some(drawing)
             && self.generation == Some(generation)
             && self.look.as_ref() == Some(look)
@@ -362,7 +367,7 @@ impl StyledCache {
             && self.scene.under == under
             && self.clip.is_some_and(|c| !clip_stale(view, &c))
             && self.window == store.time_window()
-            && self.wall_view == Some(store.wall_view())
+            && self.wall_view == Some(walls)
             && self.theme.as_ref() == theme
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
         {
@@ -428,7 +433,7 @@ impl StyledCache {
             self.blocks = doc.blocks().to_vec();
         }
         // The walls' detail or scale changed (docs/adr/0339 §4): the parts holding a wall again.
-        if self.wall_view != Some(store.wall_view()) {
+        if self.wall_view != Some(walls) {
             if !all && self.wall_view.is_some() {
                 for e in doc.entities() {
                     if let Entity::Wall(_) = e
@@ -439,7 +444,7 @@ impl StyledCache {
                     }
                 }
             }
-            self.wall_view = Some(store.wall_view());
+            self.wall_view = Some(walls);
         }
         // Zaman sürgüsü (docs/adr/0210 §6): a temporal layer shows the objects the slider's window
         // shows; when the window moves, the parts whose objects come or go are built again.
@@ -665,7 +670,11 @@ impl StyledCache {
                         .cloned()
                         .unwrap_or_else(|| id.to_owned())
                 },
-                view: look.view_build,
+                // A view's own walls when the store draws them otherwise (docs/adr/0696's 29 October addendum).
+                view: kentos_native_style::View {
+                    walls: (walls != store.wall_view()).then_some(walls),
+                    ..look.view_build
+                },
                 frame: framed.map(|f| f.1.clone()),
                 // A renderer's classes were made from the values in the project's unit (docs/adr/0165 §2).
                 reading_unit: look.reading_unit,

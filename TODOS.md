@@ -112,6 +112,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   tarif Kaydır), Öznitelikler'de aynı satırlar ve Yazıları tarife döndür. `cad.dimensionsets.create.layout.json`,
   `cad.dimensionsets.edit.layout.json`, `cad.entities.transform.recipes.json` ve `cad.entities.array.recipes.json` ile
   sınanmalı.
+- ARCH-DIM-01 / ADR0696: Modelde yakınlaştırmaya göre duvar ayrıntısı ve 29 Ekim eki. Web'in modeli otomatik ayrıntıyı
+  kameranın ekran paydasından seçmeli (`walls::screen_view`'un 1:30/1:75 eşikleri ve %10 dönüş aralığı; gezinirken
+  sabit, durulunca), pafta ve PDF haritanın ölçeğiyle (`view_at`) kalmalı. Web'in bölünmüş görünümü yok (CBS-19'un
+  satırları); gelince her görünüm duvarları kendi kamerasının ayrıntısıyla çizmeli: etkin görünüm deponun, öbürleri
+  deponun birleşmiş duvarlarından (`Store::expanded_at`, WASM'den), stil çekirdeğinin `View.walls`'ıyla; etkin görünüm
+  değişince çizdiği ayrıntı depoya geçmeli; Kaydırmalı karşılaştır'da öbür görünüm etkinin ayrıntısıyla; açık proje
+  ayrıntısı bütün görünümlerin. Web'in WebGPU'su paylaşılan `fill.wgsl`'i okur; WebGL2'nin GLSL ikizi
+  (`webgl2/styledShaders.ts`) sıfır genişlikli yoğun taramada bir cihaz pikseli kapsamını aynı kuralla korumalı.
 - ARCH-EDIT-01 / ADR0728: Geçici ölçünün kalanı. Web'in seçili duvarı, kolonu ve açıklığı her yanda yüzü ve aksı
   aday olarak bilmeli (aks nesnenin ekseninden: duvar kenarının iki yüzünün ortası, kolonun ortası, açıklığın iki
   pervazının ortası); bir yanda iki aday varsa referansın ucunda kare, basınca öbürüne geçer, seçim oturumda kalır

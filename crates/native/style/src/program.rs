@@ -419,9 +419,7 @@ pub fn layer_call(
         | Entity::Ramp(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) = e
-            && let Some(x) = store
-                .get(f64::from(base.id))
-                .and_then(|item| item.expanded.as_deref())
+            && let Some(x) = opts.view.expanded(store, f64::from(base.id))
         {
             for (i, shape) in x.shapes.iter().enumerate() {
                 // A part that follows a layer takes that layer's (docs/adr/0260 §1, 0315 §2): its own, or on the

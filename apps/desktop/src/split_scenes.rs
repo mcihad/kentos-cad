@@ -13,6 +13,13 @@
 //! KENTOS_SHOTS_ONLY=bolunmus-uc,bolunmus-dort,bolunmus-secim-revizyon cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! and each view's own walls' detail (docs/adr/0696's 29 October addendum): the room at 1:100 far, near and close in
+//! three views, schematic, standard and detailed; the close one pressed, the active one, each as it was:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bolunmus-duvar-ayrintisi,bolunmus-duvar-ayrintisi-etkin cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use iced::Point;
@@ -58,8 +65,36 @@ fn uid(app: &App, slot: u32) -> String {
         .to_string()
 }
 
+/// The door-and-window room at 1:100, its walls' detail by the view (Proje ayarları › Mimari: Otomatik), in three
+/// views: the active one far (1:150, schematic: the bodies filled), the next near on the inner wall's tee (1:50,
+/// standard: the brick hatched), the last close on the bottom left door (1:15, detailed: the plaster, its frame).
+fn three_details(app: &mut App) {
+    use crate::tools_scenes::{E, N};
+    crate::opening_scenes::room(app, 100.0);
+    run(app, "view.split");
+    run(app, "view.splitAdd");
+    let centre = |x: f64, y: f64| kentos_render_wgpu::Vec2::new(E + x, N + y);
+    app.viewport.camera.zoom_to_screen_scale(150.0);
+    app.viewport.camera.center_on(centre(3.5, 2.5));
+    if let Some(split) = app.split.as_mut() {
+        for (i, scale, at) in [(0, 50.0, centre(4.2, 0.6)), (1, 15.0, centre(1.6, 0.3))] {
+            let camera = &mut split.others[i].viewport.camera;
+            camera.zoom_to_screen_scale(scale);
+            camera.center_on(at);
+        }
+    }
+    let _ = app.update(Message::DialogClosed);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("bolunmus-duvar-ayrintisi", three_details),
+        // The close view pressed: the active one now, the store at its detail; the far and near ones as they were.
+        ("bolunmus-duvar-ayrintisi-etkin", |app| {
+            three_details(app);
+            app.activate_other(1);
+            let _ = app.update(Message::DialogClosed);
+        }),
         // 2015 in the other view, the slider's 2024 in the active one: parcel 101 whole on the right, split on the left.
         ("bolunmus-zaman", |app| {
             split(app);

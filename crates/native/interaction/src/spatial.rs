@@ -162,6 +162,18 @@ impl Spatial {
         let previous = self
             .screen_wall_scale
             .map(|_| self.store.wall_view().detail);
+        self.set_screen_wall_scale_from(doc, scale, previous);
+    }
+
+    /// [`Spatial::set_screen_wall_scale`] from `previous`, the detail the view drew last: a view of a split area made
+    /// the active one goes on from its own detail, not the one the store showed for the view before it
+    /// (docs/adr/0696's 29 October addendum).
+    pub fn set_screen_wall_scale_from(
+        &mut self,
+        doc: &Document,
+        scale: Option<f64>,
+        previous: Option<kentos_geometry_core::geom::wall::Detail>,
+    ) {
         self.screen_wall_scale = scale.filter(|scale| scale.is_finite() && *scale > 0.0);
         let view = match (self.wall_scale, self.screen_wall_scale) {
             (Some(scale), _) => kentos_native_application::walls::view_at(doc.settings(), scale),

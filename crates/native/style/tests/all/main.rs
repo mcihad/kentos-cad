@@ -16,3 +16,4 @@ mod table_lines;
 mod tally;
 mod template_form;
 mod units;
+mod wall_views;

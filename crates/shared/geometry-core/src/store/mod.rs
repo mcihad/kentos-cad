@@ -652,12 +652,17 @@ impl Store {
     /// around the pieces and the insertion point (a snap point and its grip);
     /// any other object its own box.
     fn expansion(&self, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
+        self.expansion_in(shape, self.wall_view)
+    }
+
+    /// `expansion` with the walls and the architectural objects drawn at `view` (docs/adr/0339 §4).
+    fn expansion_in(&self, shape: &Shape, view: crate::geom::wall::View) -> (Option<Arc<Expanded>>, Bounds) {
         let b = entity_bounds_in(shape, self.font);
         let pieces = match shape {
             Shape::Insert { .. } => self.blocks.expand(shape),
             // A wall's faces, ends, lines and hatches at the view's detail; one that cannot be drawn its path
             // (docs/adr/0339 §1).
-            Shape::Wall { pts, bulges, wall } => crate::geom::wall::pieces(pts, bulges.as_deref(), wall, self.wall_view)
+            Shape::Wall { pts, bulges, wall } => crate::geom::wall::pieces(pts, bulges.as_deref(), wall, view)
                 .unwrap_or_else(|_| {
                     vec![crate::block::Piece {
                         shape: crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),
@@ -671,10 +676,10 @@ impl Store {
                 }),
             // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2).
             Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-                crate::geom::arch::pieces(shape, self.wall_view.scale)
+                crate::geom::arch::pieces(shape, view.scale)
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2).
-            Shape::Space { parts, space } => self.space_pieces(parts, space, true),
+            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view.scale),
             // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2); a flue's cross, and the outline of one
             // plan does not cut dashed (docs/adr/0719 §2).
             Shape::Opening { place, opening, .. } => crate::geom::opening::pieces(place, opening)
@@ -698,14 +703,15 @@ impl Store {
     }
 
     /// Pieces as an object's expansion, its box grown around them.
-    /// A space's rings and, when `label`, its label at the view's scale (docs/adr/0342 §2).
+    /// A space's rings and, when `label`, its label at the view's `scale` (docs/adr/0342 §2).
     fn space_pieces(
         &self,
         parts: &[crate::geom::arrangement::Area],
         space: &crate::geom::space::Spec,
         label: bool,
+        scale: f64,
     ) -> Vec<crate::block::Piece> {
-        crate::geom::space::pieces_with(parts, space, self.wall_view.scale, label)
+        crate::geom::space::pieces_with(parts, space, scale, label)
             .into_iter()
             .map(|shape| crate::block::Piece {
                 shape,
@@ -722,13 +728,46 @@ impl Store {
     /// `expansion` of the object `id`: a space that has a tag draws no label of its own (docs/adr/0344's 27 October
     /// addendum).
     pub(super) fn expansion_of(&self, id: f64, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
+        self.expansion_of_in(id, shape, self.wall_view)
+    }
+
+    /// `expansion_of` at `view`.
+    pub(super) fn expansion_of_in(
+        &self,
+        id: f64,
+        shape: &Shape,
+        view: crate::geom::wall::View,
+    ) -> (Option<Arc<Expanded>>, Bounds) {
         match shape {
             Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(self.space_pieces(parts, space, false), b)
+                self.expanded_of(self.space_pieces(parts, space, false, view.scale), b)
             }
-            _ => self.expansion(shape),
+            _ => self.expansion_in(shape, view),
         }
+    }
+
+    /// Object `id`'s pieces as a view drawing the walls at `view` shows them (docs/adr/0696's 29 October addendum):
+    /// another view of a split drawing area with a detail of its own. The store's own when `view` is its view or the
+    /// object does not depend on it; a wall pieced from its joined drawing, nothing joined again. None for an object
+    /// without pieces.
+    pub fn expanded_at(&self, id: f64, view: crate::geom::wall::View) -> Option<Arc<Expanded>> {
+        let it = self.get(id)?;
+        let depends = matches!(
+            it.shape,
+            Shape::Wall { .. }
+                | Shape::Space { .. }
+                | Shape::Grid { .. }
+                | Shape::Column { .. }
+                | Shape::Stair { .. }
+                | Shape::Ramp { .. }
+                | Shape::Tag { .. }
+                | Shape::ViewMark { .. }
+        );
+        if view == self.wall_view || !depends {
+            return it.expanded.clone();
+        }
+        self.wall_expansion_in(id, &it.shape, view).0
     }
 
     fn expanded_of(&self, pieces: Vec<crate::block::Piece>, b: Bounds) -> (Option<Arc<Expanded>>, Bounds) {

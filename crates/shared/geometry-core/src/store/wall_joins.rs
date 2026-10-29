@@ -125,12 +125,23 @@ impl Store {
 
     /// A wall's pieces at the view from its joined drawing; one not yet joined (or that cannot be drawn) as on its own.
     pub(super) fn wall_expansion(&self, id: f64, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
+        self.wall_expansion_in(id, shape, self.wall_view)
+    }
+
+    /// `wall_expansion` at `view`: the same joined drawing pieced at another detail (docs/adr/0696's 29 October
+    /// addendum).
+    pub(super) fn wall_expansion_in(
+        &self,
+        id: f64,
+        shape: &Shape,
+        view: wall::View,
+    ) -> (Option<Arc<Expanded>>, Bounds) {
         match (shape, self.wall_drawn.get(&id.to_bits())) {
             (Shape::Wall { pts, wall, .. }, Some(d)) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(wall::pieces_of(d, pts, wall, self.wall_view), b)
+                self.expanded_of(wall::pieces_of(d, pts, wall, view), b)
             }
-            _ => self.expansion_of(id, shape),
+            _ => self.expansion_of_in(id, shape, view),
         }
     }
 

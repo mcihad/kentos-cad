@@ -40,7 +40,9 @@ fn clock() -> Duration {
 }
 
 impl App {
-    /// Camera detail is a model-view choice. Paper maps keep their own view and scale.
+    /// Camera detail is a model-view choice. Paper maps keep their own view and scale. Each view of a split area draws
+    /// the walls at its own camera's detail; the active view's is the store's, which it picks and snaps at, and a view
+    /// keeps its detail while it moves (docs/adr/0696 and its 29 October addendum).
     pub(crate) fn follow_wall_view(&mut self) {
         let Some(doc) = &self.document else {
             return;
@@ -48,21 +50,67 @@ impl App {
         let model = !self.sheet_tab
             && self.sheets.model_scope().is_none()
             && doc.model.settings().workspace == Some(kentos_commands::Workspace::Cad);
-        if model
-            && doc
-                .model
-                .settings()
-                .arch
-                .as_ref()
-                .and_then(|arch| arch.detail)
-                .is_none()
+        let automatic = doc
+            .model
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|arch| arch.detail)
+            .is_none();
+        // A view just made the active one brings the detail it drew.
+        let brought = self.viewport.wall_view.take();
+        let keep = model
+            && automatic
+            && brought.is_none()
             && self.viewport.moving()
-            && self.spatial.has_screen_wall_scale()
-        {
-            return;
+            && self.spatial.has_screen_wall_scale();
+        if !keep {
+            let scale = model.then(|| self.viewport.camera.screen_scale());
+            match brought {
+                Some(view) => {
+                    self.spatial
+                        .set_screen_wall_scale_from(&doc.model, scale, Some(view.detail))
+                }
+                None => self.spatial.set_screen_wall_scale(&doc.model, scale),
+            }
         }
-        let scale = model.then(|| self.viewport.camera.screen_scale());
-        self.spatial.set_screen_wall_scale(&doc.model, scale);
+        let active = self.spatial.store().wall_view();
+        let Some(split) = self.split.as_mut() else {
+            return;
+        };
+        let swipe = split.swipe.is_some();
+        for o in &mut split.others {
+            // A revision is drawn by its own settings (split_revision.rs).
+            let settings = o
+                .revision
+                .as_ref()
+                .map_or(doc.model.settings(), |r| r.doc.model.settings());
+            let own = o.viewport.wall_view;
+            o.viewport.wall_view = if !model {
+                None
+            } else if swipe {
+                // Compared over the active view at its scale (docs/adr/0523 §3): the active view's detail, so the
+                // divider never parts two details.
+                let mut view = kentos_native_application::walls::view_of(settings);
+                if settings
+                    .arch
+                    .as_ref()
+                    .and_then(|arch| arch.detail)
+                    .is_none()
+                {
+                    view.detail = active.detail;
+                }
+                Some(view)
+            } else if own.is_some() && o.viewport.moving() {
+                own
+            } else {
+                Some(kentos_native_application::walls::screen_view(
+                    settings,
+                    o.viewport.camera.screen_scale(),
+                    own.map(|view| view.detail),
+                ))
+            };
+        }
     }
 
     pub(crate) fn navigation_command(&mut self, id: &'static str) -> Task<Message> {

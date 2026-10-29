@@ -937,6 +937,9 @@ impl App {
         std::mem::swap(&mut split.active_at, &mut other.place);
         self.viewport.other = None;
         other.viewport.other = Some(i);
+        // Each goes on at the walls' detail it drew (docs/adr/0696's 29 October addendum): the one made active brings
+        // its own to the store (`follow_wall_view`), the other keeps the store's.
+        other.viewport.wall_view = Some(self.spatial.store().wall_view());
         other.viewport.cursor = None;
         // The marks of the pointer were the other view's.
         self.snap = None;

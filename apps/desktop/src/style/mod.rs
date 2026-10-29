@@ -148,6 +148,8 @@ impl Styles {
                 area_edges: settings.bool("graphics.areaEdges"),
                 // The drawing area puts its map's system in (docs/adr/0583 §3).
                 map: None,
+                // A view of a split area puts its own walls in (docs/adr/0696's 29 October addendum).
+                walls: None,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

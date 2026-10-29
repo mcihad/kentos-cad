@@ -19,6 +19,8 @@ mod dimension_set_sheet_tests;
 #[cfg(test)]
 mod symbols_sheet_tests;
 #[cfg(test)]
+mod wall_detail_sheet_tests;
+#[cfg(test)]
 mod text_outputs_tests;
 mod address;
 #[cfg(test)]
@@ -399,6 +401,8 @@ mod split_many_tests;
 #[cfg(test)]
 mod split_tests;
 mod split_view;
+#[cfg(test)]
+mod split_wall_tests;
 mod start;
 #[cfg(test)]
 mod stationing_scenes;

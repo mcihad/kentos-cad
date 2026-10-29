@@ -450,8 +450,9 @@ pub struct LayerObjects<'a> {
 }
 
 /// What Görünüm kipleri leave out of a layer (docs/adr/0195 §1): the fills
-/// and hatches of closed objects (pictures stay), the edges of areas; and the
-/// map's system the layer is drawn in (docs/adr/0583 §3), none: the project's.
+/// and hatches of closed objects (pictures stay), the edges of areas; the
+/// map's system the layer is drawn in (docs/adr/0583 §3), none: the project's;
+/// and the walls' view it is drawn at, none: the store's.
 #[derive(Clone, Copy, Debug)]
 pub struct View {
     /// Explicit physical CAD output precision; screen/unit choices keep their existing geometry.
@@ -459,12 +460,16 @@ pub struct View {
     pub fills: bool,
     pub area_edges: bool,
     pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    /// A view of a split drawing area that draws the walls at a detail of its own (docs/adr/0696's 29 October
+    /// addendum): the walls' and the architectural objects' pieces at it; none, the store's.
+    pub walls: Option<kentos_geometry_core::geom::wall::View>,
 }
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
         self.plot_precision == o.plot_precision && self.fills == o.fills
             && self.area_edges == o.area_edges
+            && self.walls == o.walls
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -482,11 +487,24 @@ impl Default for View {
             fills: true,
             area_edges: true,
             map: None,
+            walls: None,
         }
     }
 }
 
 impl View {
+    /// Object `id`'s pieces as the view draws them: the store's, or at the view's own walls.
+    pub fn expanded(
+        self,
+        store: &Store,
+        id: f64,
+    ) -> Option<std::sync::Arc<kentos_geometry_core::store::Expanded>> {
+        match self.walls {
+            Some(walls) => store.expanded_at(id, walls),
+            None => store.get(id).and_then(|item| item.expanded.clone()),
+        }
+    }
+
     /// What of `shape` is left out: its fills (a closed object's: an area, a
     /// circle, a hatch, a closed curve), its strokes (an area's edges).
     fn hides(self, shape: &Shape) -> (bool, bool) {
@@ -659,8 +677,16 @@ pub fn build_layer_in(
         let Some(item) = store.get(id) else {
             continue;
         };
-        // An insert: its pieces, each with its own simple look (docs/adr/0144).
-        let pieces = item.expanded.as_ref().map(|x| {
+        // An insert: its pieces, each with its own simple look (docs/adr/0144); a wall's at the view's walls.
+        let at_view;
+        let expanded = match view.walls {
+            Some(_) => {
+                at_view = view.expanded(store, id);
+                at_view.as_ref()
+            }
+            None => item.expanded.as_ref(),
+        };
+        let pieces = expanded.map(|x| {
             let sets = o.pieces.get(piece_at..piece_at + x.shapes.len());
             piece_at += x.shapes.len();
             (x, sets)

@@ -353,6 +353,10 @@ pub struct Viewport {
     themed: RefCell<Option<KeptTheme>>,
     /// The time the view shows (docs/adr/0576 §1): the slider's, or a moment of its own.
     pub(crate) time: crate::split_view::ViewTime,
+    /// The walls' view a view of the split area that is not the active one draws: its own camera's detail
+    /// (docs/adr/0696's 29 October addendum); none, the store's (the active view picks and snaps at it). The active
+    /// view holds one only from the press that made it active to the next message, which takes it as its detail.
+    pub(crate) wall_view: Option<kentos_geometry_core::geom::wall::View>,
 }
 
 type KeptTheme = (
@@ -466,6 +470,7 @@ impl Viewport {
             theme: None,
             themed: RefCell::new(None),
             time: crate::split_view::ViewTime::Follow,
+            wall_view: None,
         }
     }
 
@@ -833,6 +838,7 @@ impl Viewport {
             nodes,
             self.theme.as_ref(),
             s.spatial.store(),
+            self.wall_view,
             &s.styles.library,
             &look,
             &self.camera.visible_bounds(),

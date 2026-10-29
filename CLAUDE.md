@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Görünüş başına duvar ayrıntısı ve taze PDF matrisi (29 Ekim 2026; [ADR0696 eki](docs/adr/0696-model-wall-detail-and-dense-hairlines.md)).**
+  Bölünmüş görünümün her görünümü duvarları kendi kamerasının ayrıntısıyla çizer (Revit'in görünüş Detail Level'ı,
+  Archicad'in pencere başına yapı gösterimi): depo etkin görünümün açılımını tutar (seçme, kenet), öbürleri deponun
+  birleşmiş duvarlarından kendi `wall::View`'larında (`Store::expanded_at`); stil çekirdeğinin `View.walls`'ı geometriyi
+  de parça stillerini de o görünüşten okutur. %10 dönüş aralığı görünüş başına; etkinleşen görünüm ayrıntısını depoya
+  taşır (`set_screen_wall_scale_from`), Kaydırmalı karşılaştır etkinin ayrıntısı, açık proje ayrıntısı hepsinin; kalıcı
+  alan yok. Pafta/PDF `view_at`: Dış duvar 25'in 1:20/1:50/1:100/1:200 haritaları masaüstünde ve başsız kitapta
+  ayrıntılı/uygulama/şematik/şematik, model 1:15'te de (`wall_detail_sheet_tests`, `pdftoppm`). ARCH-DIM-01 [x].
+
 - **Ölçü dizisinin kalanı: pafta ölçekleri, sığmayan yazı, yuvarlama, kopya (29 Ekim 2026; [ADR0730](docs/adr/0730-dimension-set-sheets-text-rounding-copy.md)).**
   Tarifin `scales`'ı (pafta ölçekleri) üyelerin `annotative`'ini tarifin hesabıyla yazar: her ölçekte sıra başvuru
   çizgisinden `s/P` katı uzakta (`ops::dimension_layout::scaled_offset`), kâğıtta her paftada aynı; temsiller tarifindir.
@@ -329,7 +338,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Açık Şematik/Uygulama/Ayrıntılı seçimi korunur; otomatikte model alanı
   kameranın ekran paydasıyla 1:30/1:75 eşiklerini kullanır. `plotScale`,
   yazı, ölçü ve geometri değişmez; yoğun sıfır genişlikli GPU taraması
-  düzeltildi. Nihai özellik kabulü verilmedi.
+  düzeltildi. Kabul 29 Ekim ekiyle (bölünmüş görünüm, PDF matrisi; yukarıda).
 
 - **Kalıcı ilişkili duvar ölçü dizileri (27 Ekim 2026; [ADR0695](docs/adr/0695-associative-wall-dimension-sets.md)).**
   `cad.dimensionsets.*`: tek düz duvarın yüzünde açıklık uçları/merkezleri,
