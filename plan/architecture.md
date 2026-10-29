@@ -1151,7 +1151,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   gömülü yazı tipleri (`pdftotext`, `pdffonts`), silinen pafta; Python/MCP; gerçek GUI
   (`arac-isaret-*`). Pafta başına revizyon çizelgesi ve proje revizyon tablosu açık.
 
-### ARCH-DOC-02 — Çizelge ve metraj iş akışı [~]
+### ARCH-DOC-02 — Çizelge ve metraj iş akışı [x]
 
 - [x] Gerçek CSV takip kusuru [ADR 0681](../docs/adr/0681-selected-quantity-csv.md):
   CSV açık sekmeyi, XLSX/ODS üç tabloyu yazar; mevcut kat süzgeci korunur.
@@ -1160,16 +1160,21 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   üç sayfa/600 veri satırı. İptal, gerçek geçmiş, KCAD yeniden açma ve bütün
   model korunumu bağımsız okuyucuyla doğrulandı. Üç desktop testi ve clippy/build,
   [17 ham görüntü/gerçek çıktılar](../docs/baseline/2026-10-26-architecture-quantity-export/README.md).
-- [ ] Mevcut ham hesap değerleri 15 anlamlı basamağı aşınca kitap yazıcısı
-  metin tutup bildirir. Kullanıcı alanını koruma ile hesaplanan metrajın
-  kontrollü sayı/yuvarlama tercihi tasarlansın; geometri hesabı veya kaynak
-  değerler sessizce yuvarlanmasın. Bu CSV düzeltmesi o politikayı değiştirmez.
-- Kapı/pencere, mahal kaplama, duvar ve donatı çizelgesi; kat/evre/tip filtresi,
-  toplam ve gruplanmış satır. Mevcut canlı kaynaklı tablo korunur.
-- Kullanıcı alanı ile hesaplanan alanı ayır; bir hücreyi değiştirmek kaynak
-  nesneye yazacaksa hangi nesneleri değiştirdiğini göster.
-- Kabul: duvar/kapı/mahal düzenleme, birim/yuvarlama, boş veri, çoklu kat,
-  kilitli kaynak ve CSV/XLSX/PDF dışa verme.
+- [x] Sayı politikası [ADR 0733](../docs/adr/0733-schedules-fixtures-finishes-groups-export.md) §7:
+  kitap ve dosya öntanımlı olarak gösterilen değeri (projenin basamaklarıyla),
+  Tam sayılar seçilince 15 anlamlı basamağa kadar ham değeri sayı olarak yazar;
+  geometri ve kaynak değer yuvarlanmaz. Metraj'da ve Dosyaya yaz'da aynı seçim.
+- [x] Donatı (`of: fixtures`, yerleştirmenin katı ve evresi, KCAD 131) ve mahal
+  kaplaması (süpürgelik kaplaması ve kapı boşlukları düşülmüş boyu) çizelgeleri;
+  tür süzgeci, sıralama sütununda grup başlığı ve ara toplam; kapı/pencere, duvar,
+  kolon çizelgeleri ve canlı kaynaklı tablo korunur (ADR 0733 §1–§4).
+- [x] Çizelge ayarları penceresi (sütunlar ve sırası, süzgeç, sıralama, grup,
+  toplam, önizlenen satır sayısı); hesaplanan sütun gri, kullanıcının yazdığı
+  sütun nesneye yazılır; Tabloyu düzenle hücrenin ne olduğunu ve hangi nesnelere
+  yazacağını söyler; `cad.schedules.query` sütun ve satır rollerini verir (§5, §6).
+- [x] Dışa verme: `file.export.table` (CSV, XLSX, ODS; gruplar, Tam sayılar),
+  Python/MCP aynı komut; PDF pafta yolundan (§7). Kabul: 66 bağımsız ortak durum,
+  KCAD 131 örnekleri, gerçek GUI (kilitli satır, boş veri, çoklu kat dahil).
 
 ### ARCH-DOC-03 — Mimari proje denetimi [x]
 
@@ -1359,3 +1364,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-27 | ARCH-DIM-01 / ADR0711 | İç ölçü zinciri: kesen çizgi, duvar yüzleri/bütün katmanlar, kolon kenar/merkez, toplam, kat; `cross` kuralı (KCAD 118) ile duvar kayınca değer, uzayınca çizgi yerinde; duvar yüzü ve kolonda `along`/`center` yerleri. 44 durum, Python/MCP, 5+4 test, gerçek GUI resimleri. | [x] Kesen çizgi alt maddesi; kalıcı üyelik açık |
 | 2026-10-28 | ARCH-DOC-01 / ADR0721 | Mimari işaretler: görünüm işareti paftanın çizim numarasını okur (A-101 → A-201, kopya, silinen pafta `targetGone`); kata bağlı kot (KCAD 121); kuzey oku (plan/coğrafi/açı); revizyon bulutu + üçgen ve Tarih/Açıklama sütunlu Revizyon listesi (KCAD 122); malzeme lejandı. İncelemede bulunan hata: stil verilen duvarın iç ölçü zinciri kopuyordu, düzeltildi. 27+35+20 yeni komut durumu, 6 tablo + 3 iç zincir durumu; PDF `pdftotext`/`pdffonts`; Python/MCP; masaüstü 1354, Python 374; gerçek GUI `arac-isaret-*`. | [x] Madde tamam; pafta başına revizyon çizelgesi açık |
 | 2026-10-28 | ARCH-ELEM-01 / ADR0722 | Döşeme, balkon, teras: duvarların dış yüzünden ya da odadan döşeme, kenar ötelemesi ve dört başarısızlığı, serbest kenarda korkuluk/parapet, Kes/Ekle (ıslak hacim, avlu, şaft); Metraj'da döşeme net alanı/hacmi, süpürgelik ve kaplama geçişleri. 47+38 ortak durum, KCAD 123, DXF, Python/MCP, gerçek GUI resimleri. | [x] |
+| 2026-10-29 | ARCH-DOC-02 / ADR0733 | Donatı ve kaplama çizelgeleri, yerleştirmenin katı (KCAD 131), tür süzgeci, grup başlığı ve ara toplam, Çizelge ayarları, hücre açıklaması, `cad.schedules.query`, `file.export.table` (CSV/XLSX/ODS, Tam sayılar). 66 bağımsız ortak durum, Python 375, gerçek GUI 28 ham görüntü; donatının mahali GUI'de bulunan kusurla bloğun çiziminin ortasından. | [x] Kapandı; donatının en/boy sütunu ve web açık |

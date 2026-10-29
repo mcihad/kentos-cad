@@ -110,6 +110,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   satır seçimi, Düzelt (n) tek `cad.changeset.apply` ile, düzeltmenin çizimde önizlemesi (okuma kopyası; silinen tehlike
   renginde), satırın sağ tık menüsü ve not sorusu, Kapsam, İstisnalar ve Eşikler menüleri. `cad.arch.audit.json` ve
   `cad.arch.exceptions.json` ile sınanmalı.
+- ARCH-DOC-02 / ADR0733: Çizelge ve metraj iş akışının kalanı. Web'in belgesi blok yerleştirmesinin `arch`'ını (kat,
+  evre; KCAD 131, tipli sütunlarda yerleştirmenin 5. isteğe bağlı alanı), mahal kaplamasının `base`'ini ve çizelge
+  kaynağının `of: fixtures`'ını, yeni alanlarını, `filter.types`'ını, `sort[].header`/`footer`'ını okuyup yazmalı;
+  çizelgenin satırlarını, başlık ve ara toplam satırlarını, satır başına `members`'ı ve gri hesaplanan sütunları
+  ortak kurallarla (WASM) çizmeli; donatının mahali bloğun çiziminin ortasından. `cad.schedules.query`, ara toplam
+  satırının reddi (`schedule_summary_row`), Çizelge ayarları penceresi, Tabloyu düzenle'nin hücre açıklaması, Kaplama
+  ve Donatı çizelgesi araçları, Blok ekle'nin Kat'ı, `cad.levels.assign`'ın yerleştirmesi, Metraj'ın Tam sayıları ve
+  tablonun dosyaya yazılması (`file.export.table`: CSV, XLSX, ODS; tarayıcıda indirme) web'de yok.
 - ARCH-DIM-01 / ADR0730: Ölçü dizisinin kalanı. Web'in belgesi tarifin `scales`, `tight`'ını ve üyenin `shift`'ini (KCAD
   129) okuyup yazmalı; planlayıcı her pafta ölçeğinde sıraları başvuru çizgisinden `s/P` katı uzaklıkta kurup üyelerin
   `annotative`'ini yazmalı (ortak kural `ops::dimension_layout::scaled_offset`, `kentos_formats::dimension_spans::scales_agree`),

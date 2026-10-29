@@ -1943,6 +1943,7 @@ impl App {
             Asking::ArchTemplate => self.architecture_template_view(),
             Asking::WallJoins => self.wall_joins_view(),
             Asking::TagsCheck => self.tags_check_view(),
+            Asking::Schedule | Asking::ScheduleExport => self.schedule_view(),
             Asking::ViewRefs => self.view_refs_view(),
             Asking::SheetSet => self.sheet_set_view(),
             Asking::Xrefs => self.xrefs_view(),

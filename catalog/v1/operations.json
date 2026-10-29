@@ -2007,6 +2007,20 @@
       ],
       "note": "Tür, grup, toplam, sıra ve tıklanan köşe komuta verilir; satırlar komutun ve belgenin hesabı, önizleme planından (ADR 0344 §3, §5)."
     },
+    "tool.scheduleFinishes": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Mahal kaplama çizelgesi: kaplama sütunları, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §3, §5)."
+    },
+    "tool.scheduleFixtures": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Donatı çizelgesi: blok yerleştirmeleri, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §2, §5)."
+    },
     "tool.scheduleSpaces": {
       "level": "semantic",
       "via": [

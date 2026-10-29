@@ -28,6 +28,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Çizelgenin kalanı: donatı, kaplama, gruplar, ayarlar, dosya (29 Ekim 2026; [ADR0733](docs/adr/0733-schedules-fixtures-finishes-groups-export.md)).**
+  Blok yerleştirmesinin `arch`'ı (kat, evre; KCAD 131 opt-in, tipli sütunlarda 5. alan): Blok ekle etkin katı yazar,
+  mutfak modülü duvarının katını alır, `cad.levels.assign` yerleştirmeyi kabul eder, kat ve evre görünümü izler.
+  Çizelgenin `of: fixtures`'ı (Tür, Kategori: kartın, Mahal: bloğun çiziminin ortası, Kat, Adet; dış başvuru blokları
+  sayılmaz), mahalin kaplama alanları ve `finishes.base`, Süpürgelik boyu (`kentos_domain::passages`, Metraj'la aynı),
+  `filter.types`, `sort[].header`/`footer` (grup başlığı satır boyunca, ara toplam “‹değer› toplamı”); `members` başlıktan
+  sonraki her satır için (başlık/ara toplam boş), ara toplam satırı düzenlenmez (`schedule_summary_row`). Salt okunur
+  `cad.schedules.query` (sütunların yazılırlığı, satır rolleri), `file.export.table` (CSV/XLSX/ODS, gruplar, Tam sayılar:
+  15 anlamlı basamak). Çizelge ayarları penceresi, Dosyaya yaz, Tabloyu düzenle'de hücre açıklaması, Kaplama ve Donatı
+  çizelgesi araçları, Metraj'da Tam sayılar. 66 bağımsız ortak durum (`schedule_extras_cases.py`).
+
 - **Mimari denetimin kalanı: kapsam, kalıcı istisna, yeni denetimler, toplu düzeltme (29 Ekim 2026; [ADR0732](docs/adr/0732-architectural-audit-scope-exceptions-fixes.md)).**
   Bulgunun kalıcı `key`'i (`kod:kimlikler`, uç adı, `#n`); `cad.arch.audit`'in `within`'i (katlar, nesneler; açıklığın
   katı duvarından), `minLength`, `exceptions` (hide/show/only), cevabın `outside`, `excepted`, `stale`'i. İstisna proje

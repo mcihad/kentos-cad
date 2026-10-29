@@ -527,6 +527,10 @@ pub struct BlocksInsert {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parameters: Option<std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>>,
     /// The document revision the input was prepared against, as decimal text.
+    /// Its level and phase (docs/adr/0733 §1): a fixture's, as a level view reads it; absent: on no level.
+    #[serde(default, skip_serializing_if = "crate::ArchInfo::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::ArchInfo>", optional))]
+    pub arch: crate::ArchInfo,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

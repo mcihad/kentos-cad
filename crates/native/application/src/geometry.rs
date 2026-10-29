@@ -1686,6 +1686,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             rotation,
             mirror,
         } => Entity::Insert(InsertEntity {
+            arch: Default::default(),
             clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),

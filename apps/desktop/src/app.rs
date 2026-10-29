@@ -255,6 +255,10 @@ pub enum Dialog {
     WallStyles,
     /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
     WallJoins,
+    /// Çizelge ayarları and Çizelgeyi dosyaya yaz (schedule_window.rs, docs/adr/0733 §5, §7); the window is
+    /// `App::schedule`.
+    Schedule,
+    ScheduleExport,
     /// Etiketleri denetle (tags_check.rs, docs/adr/0344 §2); the window is `App::tags_check`.
     TagsCheck,
     /// Başvurular (viewmark_refs.rs, docs/adr/0345 §3); the window is `App::view_refs`.
@@ -573,6 +577,7 @@ pub enum Message {
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
     TagsCheck(crate::tags_check::Event),
+    Schedule(crate::schedule_window::Event),
     ViewRefs(crate::viewmark_refs::Event),
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
@@ -1100,6 +1105,8 @@ pub struct App {
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
     pub(crate) tags_check: Option<crate::tags_check::Window>,
+    /// Çizelge ayarları's and Dosyaya yaz's window (schedule_window.rs, docs/adr/0733 §5).
+    pub(crate) schedule: Option<crate::schedule_window::Window>,
     /// Başvurular' window (viewmark_refs.rs, docs/adr/0345 §3).
     pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
     pub(crate) sheet_set: Option<crate::sheet_set::Window>,
@@ -1461,6 +1468,7 @@ impl App {
             wall_styles: None,
             wall_joins: None,
             tags_check: None,
+            schedule: None,
             view_refs: None,
             sheet_set: None,
             xrefs: Default::default(),
@@ -2074,6 +2082,7 @@ impl App {
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
+            Message::Schedule(event) => return self.schedule_event(event),
             Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),

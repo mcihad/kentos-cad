@@ -76,6 +76,7 @@ mod tag_follow;
 pub mod viewmark_follow;
 pub mod level_marks;
 pub mod schedules;
+pub mod passages;
 mod linked;
 mod patch;
 mod snapshot;

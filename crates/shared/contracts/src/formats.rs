@@ -224,7 +224,9 @@ use crate::layer::LineType;
 ///    schema 103; in the typed columns a raster's option 6, the table as one JSON text. The web's copy stays 53.
 /// 98 (docs/adr/0722): the slab: `.kcad` document schema 123's `slab` kind; in the typed columns kind 30, its fields as
 ///    one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 98;
+/// 99 (docs/adr/0733 §1): a block insert's `arch` (level and phase): `.kcad` document schema 131; in the typed columns
+///    an insert's option 5, its arch as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 99;
 
 // ── Every import ────────────────────────────────────────────────────────
 

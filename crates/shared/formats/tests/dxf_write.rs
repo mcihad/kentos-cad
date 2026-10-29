@@ -1619,6 +1619,7 @@ fn block_id(n: u8) -> BlockId {
 
 fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Entity {
     Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

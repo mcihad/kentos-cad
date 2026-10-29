@@ -19,6 +19,8 @@ pub const FILE_EXPORT_PDF_VERSION: u32 = 1;
 
 /// A block, or objects, as a drawing file of its own (WBLOCK, docs/adr/0316 §3).
 pub const FILE_EXPORT_BLOCK: &str = "file.export.block";
+pub const FILE_EXPORT_TABLE: &str = "file.export.table";
+pub const FILE_EXPORT_TABLE_VERSION: u32 = 1;
 pub const FILE_EXPORT_BLOCK_VERSION: u32 = 1;
 
 /// The commands that write files, by name and version: the headless host
@@ -46,6 +48,7 @@ pub const FILE_COMMANDS: &[(&str, u32)] = &[
     (crate::FILE_EXPORT_ATLAS, crate::FILE_EXPORT_ATLAS_VERSION),
     (crate::FILE_EXPORT_GIS, crate::FILE_EXPORT_GIS_VERSION),
     (crate::FILE_PACKAGE, crate::FILE_PACKAGE_VERSION),
+    (FILE_EXPORT_TABLE, FILE_EXPORT_TABLE_VERSION),
 ];
 
 /// Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their
@@ -219,4 +222,62 @@ mod tests {
         assert!(pdf.overwrite);
         assert_eq!(pdf.sheets.as_deref(), Some(&["s1".to_owned()][..]));
     }
+}
+
+/// How `file.export.table` writes a schedule's worked-out numbers (docs/adr/0733 §7).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TableNumbers {
+    /// As the table shows them, with the project's decimals.
+    #[default]
+    Shown,
+    /// Read again from the drawing and rounded to 15 significant digits (what a spreadsheet keeps).
+    Exact,
+}
+
+/// Input of `file.export.table` v1 (docs/adr/0733 §7): a table's cells (a schedule's, a block schedule's, a file's or
+/// one written by hand) as CSV, XLSX or ODS. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_uid`,
+/// `entity_not_found`, `not_a_table`, `file_unwritable`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExportTable {
+    /// An absolute path ending `.csv`, `.xlsx` or `.ods`; its ending gives the format.
+    pub path: String,
+    /// The table, by its persistent id.
+    pub uid: String,
+    /// A schedule's headings, subtotals and total too (its data rows always); absent: true.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub groups: Option<bool>,
+    #[serde(default)]
+    pub numbers: TableNumbers,
+    /// Write over the file when it is there.
+    #[serde(default)]
+    pub overwrite: bool,
+}
+
+/// What `file.export.table` wrote (or with `plan` would write).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TableExported {
+    pub path: String,
+    /// Rows written after the first (the columns' names).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub columns: u32,
+    pub numbers: TableNumbers,
+    /// What the writer says of the numbers (written as text past 15 significant digits, rounded as shown …).
+    pub notes: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: u64,
 }

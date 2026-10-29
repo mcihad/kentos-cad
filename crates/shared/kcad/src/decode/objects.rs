@@ -266,6 +266,9 @@ pub(super) struct Features {
     pub(super) dimension_set_scales: bool,
     /// Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
     pub(super) audit_exceptions: bool,
+    /// Schema 131 (docs/adr/0733): a block insert's level and phase, a space's skirting finish, a schedule's fixtures,
+    /// new fields, type filter, headings and subtotals.
+    pub(super) fixtures: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -479,6 +482,7 @@ impl Features {
             dimension_set_spans: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SPANS,
             dimension_set_scales: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SCALES,
             audit_exceptions: schema >= crate::SCHEMA_WITH_AUDIT_EXCEPTIONS,
+            fixtures: schema >= crate::SCHEMA_WITH_FIXTURES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -648,6 +652,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.block_cards && key == "attributePlaces")
                     || (has.dynamic_blocks && key == "parameters")
                     || (has.clipping && key == "clipping")
+                    || (has.fixtures && key == "arch")
             }
             Kind::Leader => {
                 matches!(
@@ -1386,6 +1391,9 @@ pub(super) fn object(
                 if !has.space_sources && (value.get("sources").is_some() || value.get("broken").and_then(serde_json::Value::as_str)==Some("sourceUnavailable")) {
                     return Err(r.fail_at(Code::UnknownField,at,"mahalın seçilmiş kaynakları şema 110'dan beri yazılır"));
                 }
+                if !has.fixtures && value.get("finishes").and_then(|f| f.get("base")).is_some() {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalin süpürgelik kaplaması şema 131'den beri yazılır"));
+                }
                 if !has.space_voids && value.get("void").is_some() {
                     return Err(r.fail_at(Code::UnknownField,at,"mahalın boşluk işareti (void) şema 116'dan beri yazılır"));
                 }
@@ -1559,9 +1567,10 @@ pub(super) fn object(
                 }
                 f.wall_cleanup = Some(false);
             }
+            // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
             "arch" => {
-                let (v, at): (kentos_contracts::ArchInfo, usize) =
-                    json_part(r, "duvarın mimari bilgisi")?;
+                let what = if kind == Kind::Insert { "yerleştirmenin katı ve evresi" } else { "duvarın mimari bilgisi" };
+                let (v, at): (kentos_contracts::ArchInfo, usize) = json_part(r, what)?;
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş mimari bilgi yazılmaz"));
                 }
@@ -1677,6 +1686,17 @@ pub(super) fn object(
                 // Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects too.
                 let schedule = matches!(v, TableSource::Blocks { .. })
                     || (has.tags && matches!(v, TableSource::Schedule { .. }));
+                // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
+                if !has.fixtures
+                    && matches!(&v, TableSource::Schedule { of, columns, filter, sort, .. }
+                        if kentos_contracts::schedule_extras(*of, columns, filter.as_ref(), sort))
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "çizelgenin donatısı, yeni alanları, tür süzgeci, başlığı ve ara toplamı şema 131'den beri yazılır",
+                    ));
+                }
                 // Schema 122 (docs/adr/0721 §4): a block schedule's further columns.
                 if !has.schedule_columns && matches!(&v, TableSource::Blocks { columns, .. } if !columns.is_empty()) {
                     return Err(r.fail_at(
@@ -2592,6 +2612,7 @@ fn build(
             }
             Entity::Insert(InsertEntity {
                 clipping: f.clipping.take(),
+                arch: f.wall_arch.take().unwrap_or_default(),
                 parameters: f.parameters.take().unwrap_or_default(),
                 attribute_places: f.attribute_places.take().unwrap_or_default(),
                 base,

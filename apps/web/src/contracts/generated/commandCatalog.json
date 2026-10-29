@@ -19833,7 +19833,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,\n`schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`, `invalid_revision`,\n`revision_conflict`, `layer_locked`.",
+        "description": "Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,\n`schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -19928,6 +19928,7 @@
           "not_schedule",
           "cell_out_of_range",
           "cell_computed",
+          "schedule_summary_row",
           "schedule_group_number",
           "invalid_cell_value",
           "invalid_schedule",
@@ -19968,6 +19969,129 @@
               "group": true,
               "kind": "set"
             },
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.schedules.query",
+      "version": 1,
+      "title": "Çizelgeyi oku",
+      "summary": "Bir çizelgenin (uid) sütunlarını ve satırlarını okur, yazmaz. columns: başlık (birimiyle), alan, editable (hücresi satırın nesnelerine yazılır: numara, tür, genişlik, denizlik, lento, ad, kullanım, etiket, kalınlık, kaplamalar, öznitelik) ya da hesaplanır, summed (gruplu satır, ara toplam ve toplam toplar). rows: tablodaki sırası (cad.schedules.edit'in row'u), rolü (heading başlık, data nesnelerin satırı, header grup başlığı, footer ara toplam, total genel toplam), hücreleri ve veri satırının nesneleri (kalıcı kimlikler, çizimin sırasıyla): düzenlenen bir hücre bu nesnelere yazılır. Başlık ve ara toplam satırının nesnesi yoktur.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.schedules.query` v1 (docs/adr/0733 §6), read-only: a schedule's columns and rows as they stand.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`.",
+        "properties": {
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid"
+        ],
+        "title": "SchedulesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.schedules.query` v1.",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ScheduleColumnInfo"
+            },
+            "type": "array"
+          },
+          "of": {
+            "$ref": "#/$defs/ScheduleOf"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ScheduleRowInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "of",
+          "columns",
+          "rows",
+          "revision"
+        ],
+        "title": "SchedulesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.schedules.query` v1.",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/ScheduleColumnInfo"
+            },
+            "type": "array"
+          },
+          "of": {
+            "$ref": "#/$defs/ScheduleOf"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ScheduleRowInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "of",
+          "columns",
+          "rows",
+          "revision"
+        ],
+        "title": "SchedulesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "table"
+            ],
+            "refusedWith": "not_schedule"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_schedule"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Hangi hücre hangi kapılara yazılır",
+          "input": {
             "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70"
           }
         }
@@ -21040,7 +21164,8 @@
               "stair",
               "ramp",
               "slab",
-              "polyline"
+              "polyline",
+              "insert"
             ],
             "refusedWith": "not_levelled",
             "note": "Çoklu çizgi yalnız mahal ayırıcıysa kat alır."
@@ -29992,6 +30117,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.blocks.insert` v1 (docs/adr/0315 §4): an insert of a block, named by its id or its name, at `at`\non `layerId`. Everything it depends on is here (TODOS.md CMD-07): Blok ekle gives the active layer, the current\ncolour, its scale, turn and mirror, the values asked.\n\nThe insert's factors: `scale` (absent: 1) and `yScale` (absent: `scale`), times the unit's factor: a unitless\nblock takes the drawing's unit (a 1 of it is a millimetre in a millimetre drawing); a real-size block keeps\nits size (factor 1) and, drawn in another unit than the drawing's, is said so (`block_units_differ`).\n\nAttribute values are the given ones by tag (an attribute left out shows its default); a tag the block does\nnot have is refused. `attrs` are the insert's other data (an object template's, a GIS record's), not checked\nagainst the block's tags; a value under a tag of both is the attribute's.\n\nRefusals, in this order: `no_block` (neither `block` nor `name`), `not_finite` (`at`, then `rotation`),\n`invalid_scale` (`scale`, `yScale`: positive and finite); `invalid_revision`, `revision_conflict` (status\n`conflict`); `unknown_block` (no such id or name, Turkish case folded); `unknown_tag`; `layer_not_found`,\n`not_a_layer`, `layer_locked`; on the desktop `slots_exhausted`. Warnings: `layer_hidden`, `block_units_differ`.",
         "properties": {
+          "arch": {
+            "$ref": "#/$defs/ArchInfo",
+            "description": "The document revision the input was prepared against, as decimal text.\nIts level and phase (docs/adr/0733 §1): a fixture's, as a level view reads it; absent: on no level."
+          },
           "at": {
             "$ref": "#/$defs/Vec2",
             "description": "Where its base point goes.",
@@ -30036,7 +30165,6 @@
             ]
           },
           "expectedRevision": {
-            "description": "The document revision the input was prepared against, as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
               "string",
@@ -30203,6 +30331,7 @@
           "derived_parameter",
           "invalid_parameter_value",
           "slots_exhausted",
+          "level_not_found",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -59049,6 +59178,179 @@
       ]
     },
     {
+      "id": "file.export.table",
+      "version": 1,
+      "title": "Tabloyu dosyaya yaz",
+      "summary": "Bir tablonun (uid: mimari çizelge, blok çizelgesi, dosyadan ya da elle yazılmış tablo) hücrelerini yolun uzantısına göre CSV, XLSX ya da ODS olarak yazar; ilk satır sütunların adları. Çizelge belgenin şimdi yazdığı gibidir: groups (varsayılan true) grup başlıklarını, ara toplamları ve genel toplamı da yazar, false yalnız veri satırlarını. numbers shown (varsayılan) sayıları çizelgede görüldüğü gibi projenin basamağıyla, exact hesaplanan sayıları çizimden yeniden okuyup 15 anlamlı basamağa yuvarlayarak yazar; nesnelere yazılan sütunlar (numara, ad, tür, kaplama, öznitelik) iki kipte de yazıldığı gibidir, yuvarlanmaz. Cevabın notes'u kipi ve yazıcının dediklerini (15 basamağı aşan değer metin yazıldı gibi) söyler. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "tabloyaz"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.export.table` v1 (docs/adr/0733 §7): a table's cells (a schedule's, a block schedule's, a file's or\none written by hand) as CSV, XLSX or ODS. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_uid`,\n`entity_not_found`, `not_a_table`, `file_unwritable`.",
+        "properties": {
+          "groups": {
+            "description": "A schedule's headings, subtotals and total too (its data rows always); absent: true.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "numbers": {
+            "$ref": "#/$defs/TableNumbers",
+            "default": "shown"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the file when it is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.csv`, `.xlsx` or `.ods`; its ending gives the format.",
+            "type": "string"
+          },
+          "uid": {
+            "description": "The table, by its persistent id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "uid"
+        ],
+        "title": "ExportTable",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.table` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "description": "What the writer says of the numbers (written as text past 15 significant digits, rounded as shown …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "numbers": {
+            "$ref": "#/$defs/TableNumbers"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Rows written after the first (the columns' names).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "columns",
+          "numbers",
+          "notes",
+          "bytes"
+        ],
+        "title": "TableExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.table` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "description": "What the writer says of the numbers (written as text past 15 significant digits, rounded as shown …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "numbers": {
+            "$ref": "#/$defs/TableNumbers"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Rows written after the first (the columns' names).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "columns",
+          "numbers",
+          "notes",
+          "bytes"
+        ],
+        "title": "TableExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_table",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kapı çizelgesini Excel'e, ara toplamlarıyla",
+          "input": {
+            "overwrite": true,
+            "path": "/veri/kapilar.xlsx",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",
@@ -67371,6 +67673,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Gruplu satır birden çok nesnedir; aynı numara hepsine yazılmaz. Grubu kaldırıp tek tek numaralayın."
+    },
+    {
+      "code": "schedule_summary_row",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizelgenin grup başlığı ya da ara toplam satırı nesnelerin değil; düzenlenmez."
     },
     {
       "code": "invalid_cell_value",
@@ -92684,6 +92992,10 @@
     "InsertEntity": {
       "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity, shapes keeping their kind, unless the insert\nhas a y factor of its own (docs/adr/0315 §3): then an affine, a circle\nbecoming the exact ellipse of its image. The insert's own attributes\ncarry the values of the definition's attribute definitions.",
       "properties": {
+        "arch": {
+          "$ref": "#/$defs/ArchInfo",
+          "description": "Its level and phase (docs/adr/0733 §1): a fixture's (furniture, a sanitary fixture, a kitchen module), as a\nlevel view, a sheet's map and a phase view read them; absent: on no level, shown on every one (`.kcad` schema\n131)."
+        },
         "attachments": {
           "description": "The photos and documents it carries, in their order (docs/adr/0225\n§1); none on a block's objects.",
           "items": {
@@ -117729,6 +118041,39 @@
       ],
       "type": "object"
     },
+    "ScheduleColumnInfo": {
+      "description": "A schedule's column as `cad.schedules.query` reads it.",
+      "properties": {
+        "attr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "editable": {
+          "description": "A cell of it is written to its row's objects (`cad.schedules.edit`'s `cell`); otherwise it is worked out.",
+          "type": "boolean"
+        },
+        "field": {
+          "$ref": "#/$defs/ScheduleField"
+        },
+        "heading": {
+          "description": "Its heading, with its unit when it has one.",
+          "type": "string"
+        },
+        "summed": {
+          "description": "A grouped row, a subtotal and the total add it up.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "heading",
+        "field",
+        "editable",
+        "summed"
+      ],
+      "type": "object"
+    },
     "ScheduleField": {
       "description": "What one column of a schedule reads.",
       "oneOf": [
@@ -117753,13 +118098,36 @@
             "tag",
             "place",
             "length",
-            "thickness"
+            "thickness",
+            "baseFinish",
+            "wallFinish",
+            "ceilingFinish"
           ],
           "type": "string"
         },
         {
           "const": "attr",
           "description": "The attribute the column's `attr` names.",
+          "type": "string"
+        },
+        {
+          "const": "floorFinish",
+          "description": "A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.",
+          "type": "string"
+        },
+        {
+          "const": "baseboard",
+          "description": "A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).",
+          "type": "string"
+        },
+        {
+          "const": "category",
+          "description": "A fixture's block's category path (docs/adr/0317 §4).",
+          "type": "string"
+        },
+        {
+          "const": "space",
+          "description": "The space a fixture stands in, on its level: its number and name.",
           "type": "string"
         }
       ]
@@ -117806,19 +118174,38 @@
             "array",
             "null"
           ]
+        },
+        "types": {
+          "description": "Their types (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's\nblock name.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
         }
       },
       "type": "object"
     },
     "ScheduleOf": {
       "description": "What a schedule lists.",
-      "enum": [
-        "openings",
-        "spaces",
-        "columns",
-        "walls"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "openings",
+            "spaces",
+            "columns",
+            "walls"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "fixtures",
+          "description": "The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).",
+          "type": "string"
+        }
+      ]
     },
     "ScheduleOperation": {
       "description": "What `cad.schedules.edit` does.",
@@ -117910,6 +118297,72 @@
         }
       ]
     },
+    "ScheduleRowInfo": {
+      "description": "A schedule's row as `cad.schedules.query` reads it.",
+      "properties": {
+        "cells": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "members": {
+          "description": "A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is\nwritten to; none for the other rows.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "role": {
+          "$ref": "#/$defs/ScheduleRowRole"
+        },
+        "row": {
+          "description": "The table's own row index (`cad.schedules.edit`'s `row`).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "row",
+        "role",
+        "cells",
+        "members"
+      ],
+      "type": "object"
+    },
+    "ScheduleRowRole": {
+      "description": "What a schedule's row is (docs/adr/0733 §4).",
+      "oneOf": [
+        {
+          "enum": [
+            "total"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "heading",
+          "description": "The columns' headings (row 0).",
+          "type": "string"
+        },
+        {
+          "const": "data",
+          "description": "Objects' row.",
+          "type": "string"
+        },
+        {
+          "const": "header",
+          "description": "A group's value before it.",
+          "type": "string"
+        },
+        {
+          "const": "footer",
+          "description": "A group's subtotal after it.",
+          "type": "string"
+        }
+      ]
+    },
     "ScheduleSort": {
       "additionalProperties": false,
       "description": "A sort key: a column by its index, in order or reversed.",
@@ -117921,6 +118374,14 @@
           "x-unit": "index"
         },
         "descending": {
+          "type": "boolean"
+        },
+        "footer": {
+          "description": "A subtotal row after each such group: “‹value› toplamı” and the summed columns' sums.",
+          "type": "boolean"
+        },
+        "header": {
+          "description": "A heading row before each group of rows alike in this column: its value, across the row (docs/adr/0733 §4).",
           "type": "boolean"
         }
       },
@@ -121479,8 +121940,15 @@
     },
     "SpaceFinishes": {
       "additionalProperties": false,
-      "description": "A space's finishes: its floor's, walls' and ceiling's.",
+      "description": "A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).",
       "properties": {
+        "base": {
+          "description": "The skirting's finish (`.kcad` schema 131).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "ceiling": {
           "type": [
             "string",
@@ -125836,6 +126304,21 @@
         {
           "const": "none",
           "description": "None: the words alone.",
+          "type": "string"
+        }
+      ]
+    },
+    "TableNumbers": {
+      "description": "How `file.export.table` writes a schedule's worked-out numbers (docs/adr/0733 §7).",
+      "oneOf": [
+        {
+          "const": "shown",
+          "description": "As the table shows them, with the project's decimals.",
+          "type": "string"
+        },
+        {
+          "const": "exact",
+          "description": "Read again from the drawing and rounded to 15 significant digits (what a spreadsheet keeps).",
           "type": "string"
         }
       ]

@@ -5,7 +5,7 @@ import type { ScheduleOperation } from "./ScheduleOperation";
  * Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.
  *
  * Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
- * `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`, `invalid_revision`,
- * `revision_conflict`, `layer_locked`.
+ * `schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,
+ * `invalid_revision`, `revision_conflict`, `layer_locked`.
  */
 export type SchedulesEdit = { uid: string, operation: ScheduleOperation, expectedRevision?: string, };

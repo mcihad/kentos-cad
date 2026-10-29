@@ -17,11 +17,12 @@ use crate::codes;
 
 pub const STEP: &str = "Kat ver";
 
-/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a stair, a ramp or a
-/// room separator.
+/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a stair, a ramp, a room
+/// separator or a block insert (a fixture, docs/adr/0733 §1).
 pub fn levelled(e: &Entity) -> bool {
     match e {
-        Entity::Wall(_)
+        Entity::Insert(_)
+        | Entity::Wall(_)
         | Entity::Space(_)
         | Entity::Slab(_)
         | Entity::Grid(_)
@@ -39,7 +40,8 @@ pub fn levelled(e: &Entity) -> bool {
 pub fn lacks_level(e: &Entity, levels: &[ArchLevel]) -> bool {
     !levels.is_empty()
         && levelled(e)
-        && !matches!(e, Entity::Grid(_))
+        // A grid may serve every level; a block may be a drawing aid (a title block, a north arrow).
+        && !matches!(e, Entity::Grid(_) | Entity::Insert(_))
         && e.own_level().is_none_or(|id| !levels.iter().any(|l| l.id == id))
 }
 
@@ -54,6 +56,7 @@ fn level_mut(e: &mut Entity) -> Option<&mut Option<String>> {
         Entity::Stair(x) => Some(&mut x.stair.arch.level),
         Entity::Ramp(x) => Some(&mut x.ramp.arch.level),
         Entity::Polyline(p) => p.space_separator.as_mut().map(|a| &mut a.level),
+        Entity::Insert(x) => Some(&mut x.arch.level),
         _ => None,
     }
 }

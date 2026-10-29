@@ -841,6 +841,26 @@ pub fn export_gml(
 
 /// The XYZ file of the layers: the file to write, its bytes, the answer and the warnings (docs/adr/0545).
 type XyzMade = (PathBuf, Vec<u8>, kentos_commands::XyzExported, Vec<CommandWarning>);
+type TableMade = (PathBuf, Vec<u8>, kentos_commands::TableExported, Vec<CommandWarning>);
+
+fn table(doc: &Document, input: &kentos_commands::ExportTable) -> Result<TableMade, Refused> {
+    let (path, _) = target(&input.path, input.overwrite)?;
+    let made = kentos_native_application::table_export::export(doc, input)
+        .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let mut output = made.output;
+    output.path = path.display().to_string();
+    Ok((path, made.bytes, output, Vec::new()))
+}
+
+/// The table written whole, as `file.export.table` writes it (docs/adr/0733 §7).
+pub fn export_table(
+    doc: &Document,
+    input: &kentos_commands::ExportTable,
+) -> Result<(kentos_commands::TableExported, Vec<CommandWarning>), Refused> {
+    let (path, bytes, output, warnings) = table(doc, input)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
 
 fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
@@ -1371,6 +1391,39 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
             }
         });
     }
+    if command == kentos_commands::FILE_EXPORT_TABLE {
+        let typed: kentos_commands::ExportTable = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, bytes, output, warnings) = match table(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: sha256_hex(&bytes),
+                    }),
+                )
+            }
+        });
+    }
     if command == kentos_commands::FILE_EXPORT_XYZ {
         let typed: kentos_commands::ExportXyz = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -1641,6 +1694,7 @@ fn version_of(command: &str) -> u32 {
         kentos_commands::FILE_EXPORT_PARQUET => kentos_commands::FILE_EXPORT_PARQUET_VERSION,
         kentos_commands::FILE_EXPORT_GML => kentos_commands::FILE_EXPORT_GML_VERSION,
         kentos_commands::FILE_EXPORT_XYZ => kentos_commands::FILE_EXPORT_XYZ_VERSION,
+        kentos_commands::FILE_EXPORT_TABLE => kentos_commands::FILE_EXPORT_TABLE_VERSION,
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
         kentos_commands::FILE_EXPORT_GIS => kentos_commands::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
@@ -1692,6 +1746,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         }
         kentos_commands::FILE_EXPORT_XYZ => {
             serde_json::from_value::<kentos_commands::ExportXyz>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_EXPORT_TABLE => {
+            serde_json::from_value::<kentos_commands::ExportTable>(input.clone())
                 .map_err(text)
                 .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
         }

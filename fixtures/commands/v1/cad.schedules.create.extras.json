@@ -1,0 +1,4381 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.schedules.create",
+  "commandVersion": 1,
+  "title": "Donatı ve kaplama çizelgesi, tür süzgeci, başlık ve ara toplam; retler",
+  "note": "ADR 0733 §2–§6. Beklenenler scripts/fixtures/schedule_extras_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; mahaller dikdörtgen, kapısız (süpürgelik boyu çevre). Kurulumda 9 nesne var; yeni nesne 10'dan başlar. Çizelgenin satır ve sütun boyları yazı tiplerinin ölçüsündendir, burada denetlenmez ($any).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Donatı ve kaplama çizelgeleri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "donati",
+        "name": "Donatı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizelge",
+        "name": "Çizelge",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizelge",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b1",
+        "name": "Koltuk",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ],
+        "card": {
+          "category": "Mobilya/Oturma",
+          "version": 1
+        }
+      },
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b2",
+        "name": "Lavabo",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ],
+        "card": {
+          "category": "Vitrifiye/Lavabo",
+          "version": 1
+        }
+      },
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b3",
+        "name": "Antet",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "kind": "space",
+        "id": 1,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Parke",
+          "wall": "Boya",
+          "ceiling": "Alçı",
+          "base": "Ahşap"
+        },
+        "usage": "Oturma"
+      },
+      {
+        "kind": "space",
+        "id": 2,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "102",
+        "name": "Banyo",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Seramik",
+          "wall": "Seramik"
+        },
+        "usage": "Islak"
+      },
+      {
+        "kind": "space",
+        "id": 3,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "201",
+        "name": "Oda",
+        "arch": {
+          "level": "kat-1"
+        },
+        "finishes": {
+          "floor": "Laminat"
+        },
+        "usage": "Yatak"
+      },
+      {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "donati",
+        "attrs": {
+          "Renk": "Gri"
+        },
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 2.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b2",
+        "p": {
+          "x": 6.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b3",
+        "p": {
+          "x": 20.0,
+          "y": 20.0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "kilitli",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b2",
+        "p": {
+          "x": 6.0,
+          "y": 2.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Donatı çizelgesi: blok yerleştirmeleri, tür, kategori, mahal, kat, adet",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "201 Oda",
+                    "1. kat",
+                    "1"
+                  ],
+                  [
+                    "Antet",
+                    "",
+                    "",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:7"
+                    ],
+                    [
+                      "$uidOf:8"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: aynı türler bir satır, genel toplam",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "type"
+              },
+              {
+                "field": "category"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "group": true,
+            "total": true,
+            "sort": [
+              {
+                "column": 0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Adet"
+                  ],
+                  [
+                    "Antet",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "3"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "2"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0
+                    }
+                  ],
+                  "group": true,
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:8"
+                    ],
+                    [
+                      "$uidOf:4",
+                      "$uidOf:5",
+                      "$uidOf:7"
+                    ],
+                    [
+                      "$uidOf:6",
+                      "$uidOf:9"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: yalnız zemin kat",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "levels": [
+                "zemin"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "filter": {
+                    "levels": [
+                      "zemin"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: tür süzgeci Koltuk",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Koltuk"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "201 Oda",
+                    "1. kat",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "filter": {
+                    "types": [
+                      "Koltuk"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:7"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: tür süzgeci iki tür",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Lavabo",
+                "Antet"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  [
+                    "Antet",
+                    "",
+                    "",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "filter": {
+                    "types": [
+                      "Lavabo",
+                      "Antet"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:8"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: evre Yeni",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "phases": [
+                "new"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "filter": {
+                    "phases": [
+                      "new"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:6"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: mahale göre grup başlığı",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "101 Salon",
+                    "",
+                    ""
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "",
+                    ""
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "201 Oda",
+                    "",
+                    ""
+                  ],
+                  [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "(boş)",
+                    "",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "header": true
+                    }
+                  ],
+                  "members": [
+                    [],
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ]
+                  ]
+                },
+                "merges": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  }
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 5,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 5,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 8,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 8,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: mahale göre ara toplam ve genel toplam",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "footer": true
+                    }
+                  ],
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ],
+                    []
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 3,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 11,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: başlık ve ara toplam birlikte",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "101 Salon",
+                    "",
+                    ""
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "102 Banyo",
+                    "",
+                    ""
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "201 Oda",
+                    "",
+                    ""
+                  ],
+                  [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "(boş)",
+                    "",
+                    ""
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "header": true,
+                      "footer": true
+                    }
+                  ],
+                  "total": true,
+                  "members": [
+                    [],
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ],
+                    []
+                  ]
+                },
+                "merges": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  },
+                  {
+                    "row": 12,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3
+                  }
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 11,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 12,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 14,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 10,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 13,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 13,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 13,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 15,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: kata, sonra türe göre iç içe ara toplamlar",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              },
+              {
+                "column": 1,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Kat",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Koltuk toplamı",
+                    "1"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Koltuk toplamı",
+                    "2"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Lavabo toplamı",
+                    "2"
+                  ],
+                  [
+                    "Zemin kat toplamı",
+                    "",
+                    "4"
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Antet toplamı",
+                    "1"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "footer": true
+                    },
+                    {
+                      "column": 1,
+                      "footer": true
+                    }
+                  ],
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ],
+                    [],
+                    []
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 3,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 12,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 13,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 7,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 11,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 11,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 11,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 14,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: gruplu ve ara toplamlı",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "group": true,
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              },
+              {
+                "column": 1
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Kat",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Koltuk",
+                    "2"
+                  ],
+                  [
+                    "Zemin kat",
+                    "Lavabo",
+                    "2"
+                  ],
+                  [
+                    "Zemin kat toplamı",
+                    "",
+                    "4"
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "footer": true
+                    },
+                    {
+                      "column": 1
+                    }
+                  ],
+                  "group": true,
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [
+                      "$uidOf:4",
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:6",
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ],
+                    []
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: azalan sırayla ara toplam",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "descending": true,
+                "footer": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "descending": true,
+                      "footer": true
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ],
+                    [],
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [],
+                    [
+                      "$uidOf:8"
+                    ],
+                    []
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 10,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 2,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 9,
+                    "col": 2,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: blok özniteliği sütunu",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "type"
+              },
+              {
+                "field": "attr",
+                "attr": "Renk"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Renk"
+                  ],
+                  [
+                    "Koltuk",
+                    "Gri"
+                  ],
+                  [
+                    "Koltuk",
+                    ""
+                  ],
+                  [
+                    "Lavabo",
+                    ""
+                  ],
+                  [
+                    "Koltuk",
+                    ""
+                  ],
+                  [
+                    "Antet",
+                    ""
+                  ],
+                  [
+                    "Lavabo",
+                    ""
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "attr",
+                      "attr": "Renk"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:4"
+                    ],
+                    [
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:7"
+                    ],
+                    [
+                      "$uidOf:8"
+                    ],
+                    [
+                      "$uidOf:9"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: hiç satırı yok",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Dolap"
+              ]
+            },
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "",
+                    "",
+                    "0"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "fixtures",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "category"
+                    },
+                    {
+                      "field": "space"
+                    },
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "filter": {
+                    "types": [
+                      "Dolap"
+                    ]
+                  },
+                  "total": true
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donatı çizelgesi: yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal kaplama çizelgesi: döşeme, süpürgelik, duvar, tavan, alan, süpürgelik boyu",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "baseboard"
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Alan (m²)",
+                    "Süpürgelik boyu (m)"
+                  ],
+                  [
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "Ahşap",
+                    "Boya",
+                    "Alçı",
+                    "20.00",
+                    "18.000"
+                  ],
+                  [
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "",
+                    "Seramik",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  [
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "",
+                    "",
+                    "",
+                    "20.00",
+                    "18.000"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "52.00",
+                    "50.000"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "spaces",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "name"
+                    },
+                    {
+                      "field": "floorFinish"
+                    },
+                    {
+                      "field": "baseFinish"
+                    },
+                    {
+                      "field": "wallFinish"
+                    },
+                    {
+                      "field": "ceilingFinish"
+                    },
+                    {
+                      "field": "area"
+                    },
+                    {
+                      "field": "baseboard"
+                    }
+                  ],
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:1"
+                    ],
+                    [
+                      "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:3"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 7,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 8,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal çizelgesi: kullanım süzgeci",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "baseboard"
+              }
+            ],
+            "filter": {
+              "types": [
+                "Islak",
+                "Yatak"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Alan (m²)",
+                    "Süpürgelik boyu (m)"
+                  ],
+                  [
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "",
+                    "Seramik",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  [
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "",
+                    "",
+                    "",
+                    "20.00",
+                    "18.000"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "spaces",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "name"
+                    },
+                    {
+                      "field": "floorFinish"
+                    },
+                    {
+                      "field": "baseFinish"
+                    },
+                    {
+                      "field": "wallFinish"
+                    },
+                    {
+                      "field": "ceilingFinish"
+                    },
+                    {
+                      "field": "area"
+                    },
+                    {
+                      "field": "baseboard"
+                    }
+                  ],
+                  "filter": {
+                    "types": [
+                      "Islak",
+                      "Yatak"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:3"
+                    ]
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 7,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal kaplama çizelgesi: kata göre başlık ve ara toplam",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "area"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Kat",
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Alan (m²)"
+                  ],
+                  [
+                    "1. kat",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "1. kat",
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "20.00"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "",
+                    "",
+                    "20.00"
+                  ],
+                  [
+                    "Zemin kat",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "Zemin kat",
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "20.00"
+                  ],
+                  [
+                    "Zemin kat",
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "12.00"
+                  ],
+                  [
+                    "Zemin kat toplamı",
+                    "",
+                    "",
+                    "",
+                    "32.00"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "",
+                    "",
+                    "52.00"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "spaces",
+                  "columns": [
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "name"
+                    },
+                    {
+                      "field": "floorFinish"
+                    },
+                    {
+                      "field": "area"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "header": true,
+                      "footer": true
+                    }
+                  ],
+                  "total": true,
+                  "members": [
+                    [],
+                    [
+                      "$uidOf:3"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:1"
+                    ],
+                    [
+                      "$uidOf:2"
+                    ],
+                    []
+                  ]
+                },
+                "merges": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5
+                  }
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  },
+                  {
+                    "row": 3,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  },
+                  {
+                    "row": 4,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  },
+                  {
+                    "row": 7,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  },
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 4,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 5,
+                    "col": 4,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal kaplama çizelgesi: döşemeye göre ara toplam, boş değerin toplamı",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "area"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Süpürgelik",
+                    "Alan (m²)"
+                  ],
+                  [
+                    "Ahşap",
+                    "20.00"
+                  ],
+                  [
+                    "Ahşap toplamı",
+                    "20.00"
+                  ],
+                  [
+                    "",
+                    "12.00"
+                  ],
+                  [
+                    "",
+                    "20.00"
+                  ],
+                  [
+                    "(boş) toplamı",
+                    "32.00"
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "right"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "spaces",
+                  "columns": [
+                    {
+                      "field": "baseFinish"
+                    },
+                    {
+                      "field": "area"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "footer": true
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:1"
+                    ],
+                    [],
+                    [
+                      "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:3"
+                    ],
+                    []
+                  ]
+                },
+                "styles": [
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 2,
+                    "bold": true
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 2,
+                    "bold": true
+                  },
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 3,
+                    "col": 1,
+                    "rows": 2,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kategori mahal çizelgesinde okunmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "category"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_schedule",
+              "message": "“Kategori” mahal çizelgesinde okunmaz.",
+              "path": "columns[0].field"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: döşeme kaplaması donatı çizelgesinde okunmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "floorFinish"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_schedule",
+              "message": "“Döşeme” donatı çizelgesinde okunmaz.",
+              "path": "columns[0].field"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: boş tür adı",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                " "
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_schedule",
+              "message": "Tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir.",
+              "path": "filter.types[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

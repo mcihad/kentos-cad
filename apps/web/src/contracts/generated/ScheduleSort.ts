@@ -3,4 +3,12 @@
 /**
  * A sort key: a column by its index, in order or reversed.
  */
-export type ScheduleSort = { column: number, descending?: boolean, };
+export type ScheduleSort = { column: number, descending?: boolean, 
+/**
+ * A heading row before each group of rows alike in this column: its value, across the row (docs/adr/0733 §4).
+ */
+header?: boolean, 
+/**
+ * A subtotal row after each such group: “‹value› toplamı” and the summed columns' sums.
+ */
+footer?: boolean, };

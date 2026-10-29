@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    ArchInfo,
     AttributeDefinition,
     AttributeFilter,
     BlockDefined,
@@ -712,6 +713,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         *,
         at: Vec2Like,
         layer_id: str,
+        arch: ArchInfo | Unset = UNSET,
         attributes: Mapping[str, str] | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
@@ -744,11 +746,13 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
             doc: The drawing it works on.
             at: Where its base point goes. Unit: length.
             layer_id: The layer it goes on, a layer's id.
+            arch: The document revision the input was prepared against, as decimal text.
+                Its level and phase (docs/adr/0733 §1): a fixture's, as a level view reads it; absent: on no level.
             attributes: Its attribute values by tag.
             attrs: Its other data (an object template's), under the attribute values.
             block: The block, by id.
             color: Its own colour (absent: its layer's).
-            expected_revision: The document revision the input was prepared against, as decimal text.
+            expected_revision:
             label: Its label.
             mirror: Mirrored in its x axis, before the turn.
             name: The block, by name, when `block` is absent (Turkish case folded).
@@ -772,6 +776,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         return self.execute_input(doc, BlocksInsert(
             at=Vec2.of(at),
             layer_id=layer_id,
+            arch=arch,
             attributes=_opt(attributes, lambda x: dict(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             block=block,
@@ -794,6 +799,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         *,
         at: Vec2Like,
         layer_id: str,
+        arch: ArchInfo | Unset = UNSET,
         attributes: Mapping[str, str] | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
@@ -814,6 +820,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         return self.plan_input(doc, BlocksInsert(
             at=Vec2.of(at),
             layer_id=layer_id,
+            arch=arch,
             attributes=_opt(attributes, lambda x: dict(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             block=block,
@@ -836,6 +843,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         *,
         at: Vec2Like,
         layer_id: str,
+        arch: ArchInfo | Unset = UNSET,
         attributes: Mapping[str, str] | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
@@ -856,6 +864,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         return self.validate_input(doc, BlocksInsert(
             at=Vec2.of(at),
             layer_id=layer_id,
+            arch=arch,
             attributes=_opt(attributes, lambda x: dict(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             block=block,
@@ -878,6 +887,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         *,
         at: Vec2Like,
         layer_id: str,
+        arch: ArchInfo | Unset = UNSET,
         attributes: Mapping[str, str] | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
@@ -903,6 +913,7 @@ class _BlocksInsert(LocalCommand[BlocksInsert, BlockInserted, BlocksInsertPlan])
         return self.answer_input(doc, BlocksInsert(
             at=Vec2.of(at),
             layer_id=layer_id,
+            arch=arch,
             attributes=_opt(attributes, lambda x: dict(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             block=block,

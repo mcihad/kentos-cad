@@ -149,10 +149,11 @@ fn create_check(
     Ok((warnings, doc.table_worked_out(&table)))
 }
 
+/// Its data rows: those with objects (a heading's and a subtotal's have none, docs/adr/0733 §4).
 fn rows_of(t: &TableEntity) -> u32 {
     match &t.source {
         Some(TableSource::Schedule { members, .. }) => {
-            u32::try_from(members.len()).unwrap_or(u32::MAX)
+            u32::try_from(members.iter().filter(|m| !m.is_empty()).count()).unwrap_or(u32::MAX)
         }
         _ => 0,
     }
@@ -264,9 +265,9 @@ fn schedule_at(doc: &Document, uid: &str) -> Result<(Slot, TableEntity), Stop> {
     }
 }
 
-/// Whether a column of a schedule of `of` is edited in it.
+/// Whether a column of a schedule of `of` is edited in it: a wall's type is its style, a fixture's its block's name.
 pub fn editable(of: ScheduleOf, field: ScheduleField) -> bool {
-    field.editable() && !(field == ScheduleField::Type && of == ScheduleOf::Walls)
+    field.edits_in(of) && !(field == ScheduleField::Type && of == ScheduleOf::Walls)
 }
 
 fn bad_value(words: String) -> Stop {
@@ -328,6 +329,11 @@ fn written(
         (Entity::Space(s), F::Number) => s.space.number = text(),
         (Entity::Space(s), F::Name) => s.space.name = text(),
         (Entity::Space(s), F::Usage) => s.space.usage = text(),
+        // Its finishes (docs/adr/0733 §3).
+        (Entity::Space(s), F::FloorFinish) => s.space.finishes.floor = text(),
+        (Entity::Space(s), F::BaseFinish) => s.space.finishes.base = text(),
+        (Entity::Space(s), F::WallFinish) => s.space.finishes.wall = text(),
+        (Entity::Space(s), F::CeilingFinish) => s.space.finishes.ceiling = text(),
         (Entity::Column(c), F::Tag) => c.column.tag = text(),
         (Entity::Column(c), F::Type) => c.column.kind = text(),
         (Entity::Column(c), F::Width) => c.column.width = length_of(doc, value, true)?,
@@ -412,6 +418,14 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 ));
             }
             let row_members = &members[r - 1];
+            // A heading's or a subtotal's row has no objects (docs/adr/0733 §4).
+            if row_members.is_empty() {
+                return Err(fail(
+                    codes::SCHEDULE_SUMMARY_ROW,
+                    format!("Çizelgenin {row}. satırı bir grup başlığı ya da ara toplam; düzenlenmez."),
+                    "operation.row",
+                ));
+            }
             if c.field == ScheduleField::Number && row_members.len() > 1 {
                 return Err(fail(
                     codes::SCHEDULE_GROUP_NUMBER,
@@ -575,5 +589,84 @@ pub mod edit {
             },
             warnings,
         }
+    }
+}
+
+/// `cad.schedules.query` v1 (docs/adr/0733 §6): a schedule's columns (written to their objects or worked out, summed)
+/// and its rows (heading, data, header, footer, total; a data row's objects), read-only.
+pub mod query {
+    use super::*;
+    use kentos_commands::{ScheduleColumnInfo, ScheduleRowInfo, ScheduleRowRole, SchedulesQueried, SchedulesQuery};
+
+    fn read(doc: &Document, input: &SchedulesQuery) -> Result<SchedulesQueried, Stop> {
+        let (_, t) = schedule_at(doc, &input.uid)?;
+        let Some(TableSource::Schedule { of, columns, total, members, .. }) = &t.source else {
+            return Err(fail(codes::NOT_SCHEDULE, "Tablo bir mimari çizelge değil.".into(), "uid"));
+        };
+        let heads: std::collections::BTreeSet<u32> = t.merges.iter().map(|m| m.row).collect();
+        let n = t.cells.len();
+        let rows = t
+            .cells
+            .iter()
+            .enumerate()
+            .map(|(i, cells)| {
+                let in_members = i.checked_sub(1).and_then(|k| members.get(k));
+                let role = if i == 0 {
+                    ScheduleRowRole::Heading
+                } else if *total && i + 1 == n {
+                    ScheduleRowRole::Total
+                } else if in_members.is_some_and(|m| !m.is_empty()) {
+                    ScheduleRowRole::Data
+                } else if heads.contains(&(i as u32)) {
+                    ScheduleRowRole::Header
+                } else {
+                    ScheduleRowRole::Footer
+                };
+                ScheduleRowInfo {
+                    row: i as u32,
+                    role,
+                    cells: cells.clone(),
+                    members: if role == ScheduleRowRole::Data { in_members.cloned().unwrap_or_default() } else { Vec::new() },
+                }
+            })
+            .collect();
+        Ok(SchedulesQueried {
+            of: *of,
+            columns: columns
+                .iter()
+                .map(|c| ScheduleColumnInfo {
+                    heading: doc.schedule_heading(c),
+                    field: c.field,
+                    attr: c.attr.clone(),
+                    editable: editable(*of, c.field),
+                    summed: c.field.summed(),
+                })
+                .collect(),
+            rows,
+            revision: doc.revision().to_string(),
+        })
+    }
+
+    pub fn validate(cx: &ExecutionContext<'_>, input: &SchedulesQuery) -> CommandResult<()> {
+        match read(cx.doc, input) {
+            Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+            Err(stop) => stop.into(),
+        }
+    }
+
+    pub fn plan(cx: &ExecutionContext<'_>, input: &SchedulesQuery) -> CommandResult<SchedulesQueried> {
+        plan_in(cx.doc, input)
+    }
+
+    pub fn plan_in(doc: &Document, input: &SchedulesQuery) -> CommandResult<SchedulesQueried> {
+        match read(doc, input) {
+            Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+            Err(stop) => stop.into(),
+        }
+    }
+
+    /// Read-only: the same answer as the plan.
+    pub fn execute(cx: &mut ExecutionContext<'_>, input: SchedulesQuery) -> CommandResult<SchedulesQueried> {
+        plan_in(cx.doc, &input)
     }
 }

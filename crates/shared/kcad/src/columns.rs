@@ -42,7 +42,7 @@
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any, its overrides as a JSON list if any (option 14), its scales as JSON if any (option 15) |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule, 3 and 4 the pair rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1); its options, moved value, breaks, overrides and scales as one JSON text if more (bit 29) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer (empty for a face's tie), islands (i) and cutouts (k) ids (UUID text) if tied, then schema 69's boundary and the tie's bounds as one JSON object if any (docs/adr/0328) |
-//! | insert | | p, scale, rotation | block (its id as UUID text) |
+//! | insert | | p, scale, rotation | block (its id as UUID text); its moved attributes, parameters, clipping and level and phase (`arch`, option 5, docs/adr/0733 §1) as their texts if any |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any, its scales as JSON if any (option 4) |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet, then schema 68's styles, formulas, fields, link and block schedule as one JSON object if any (docs/adr/0327) |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
@@ -1310,6 +1310,7 @@ impl Packer {
                 attribute_places,
                 parameters,
                 clipping,
+                arch,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*scale, *rotation]);
@@ -1339,6 +1340,11 @@ impl Packer {
                 if let Some(c) = clipping {
                     flags |= OPT[4];
                     self.text(&serde_json::to_string(c).unwrap_or_default());
+                }
+                // Its level and phase (docs/adr/0733 §1): their JSON text.
+                if !arch.is_empty() {
+                    flags |= OPT[5];
+                    self.text(&serde_json::to_string(arch).unwrap_or_default());
                 }
             }
             Entity::Image(ImageEntity {
@@ -2227,8 +2233,8 @@ fn allowed(kind: u8) -> u32 {
         // and bounds (docs/adr/0328).
         12 => OPT[..7].iter().fold(0, |m, b| m | b),
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
-        // parameter values (docs/adr/0318 §3), its clipping (docs/adr/0351 §1).
-        13 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4],
+        // parameter values (docs/adr/0318 §3), its clipping (docs/adr/0351 §1), its level and phase (docs/adr/0733 §1).
+        13 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184); schema 68's cells
         // (docs/adr/0327).
         15 => OPT[..12].iter().fold(0, |m, b| m | b),
@@ -3648,7 +3654,19 @@ fn geometry(
             } else {
                 None
             };
+            let arch = if has(5) {
+                let text = c.text(|| place("arch"))?;
+                let arch: kentos_contracts::ArchInfo =
+                    serde_json::from_str(&text).map_err(|_| broken("yerleştirmenin katı ve evresi okunamadı"))?;
+                if arch.is_empty() {
+                    return Err(broken("boş kat ve evre"));
+                }
+                arch
+            } else {
+                Default::default()
+            };
             Entity::Insert(InsertEntity {
+                arch,
                 clipping,
                 parameters,
                 attribute_places,

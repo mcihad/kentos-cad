@@ -1,0 +1,428 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Donatı ve kaplama çizelgeleri",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 3.0,
+                "y": 0.0
+              },
+              {
+                "x": 3.0,
+                "y": 2.5
+              },
+              {
+                "x": 0.0,
+                "y": 2.5
+              }
+            ]
+          }
+        }
+      ],
+      "seed": {
+        "x": 1.5,
+        "y": 1.25
+      },
+      "number": "Z-01",
+      "name": "Banyo",
+      "usage": "Islak hacim",
+      "arch": {
+        "level": "zemin",
+        "phase": "new"
+      },
+      "height": 2.8,
+      "finishes": {
+        "floor": "Seramik",
+        "wall": "Seramik",
+        "ceiling": "Alçı",
+        "base": "Seramik süpürgelik"
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a1-7330-7000-8000-0000000000a1",
+      "p": {
+        "x": 0.5,
+        "y": 2.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+        "level": "zemin",
+        "phase": "new"
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a1-7330-7000-8000-0000000000a2",
+      "p": {
+        "x": 2.2,
+        "y": 0.2
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a1-7330-7000-8000-0000000000a1",
+      "p": {
+        "x": 10.0,
+        "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    },
+    {
+      "kind": "table",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 5.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "height": 0.125,
+      "rows": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "columns": [
+        0.8,
+        0.8,
+        1.2,
+        0.8,
+        0.5
+      ],
+      "cells": [
+        [
+          "Tür",
+          "Kategori",
+          "Mahal",
+          "Kat",
+          "Adet"
+        ],
+        [
+          "Vitrifiye",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Klozet",
+          "Vitrifiye",
+          "Z-01 Banyo",
+          "Zemin kat",
+          "1"
+        ],
+        [
+          "Lavabo",
+          "Vitrifiye",
+          "Z-01 Banyo",
+          "Zemin kat",
+          "1"
+        ],
+        [
+          "Vitrifiye toplamı",
+          "",
+          "",
+          "",
+          "2"
+        ],
+        [
+          "Toplam",
+          "",
+          "",
+          "",
+          "2"
+        ]
+      ],
+      "merges": [
+        {
+          "row": 1,
+          "col": 0,
+          "rows": 1,
+          "cols": 5
+        }
+      ],
+      "aligns": [
+        "left",
+        "left",
+        "left",
+        "left",
+        "right"
+      ],
+      "header": true,
+      "source": {
+        "kind": "schedule",
+        "of": "fixtures",
+        "columns": [
+          {
+            "field": "type"
+          },
+          {
+            "field": "category"
+          },
+          {
+            "field": "space"
+          },
+          {
+            "field": "level"
+          },
+          {
+            "field": "count",
+            "title": "Adet"
+          }
+        ],
+        "filter": {
+          "levels": [
+            "zemin"
+          ],
+          "types": [
+            "Lavabo",
+            "Klozet"
+          ]
+        },
+        "sort": [
+          {
+            "column": 1,
+            "header": true,
+            "footer": true
+          },
+          {
+            "column": 0
+          }
+        ],
+        "group": true,
+        "total": true,
+        "members": [
+          [],
+          [
+            "0192f5a1-7330-7000-8000-000000000003"
+          ],
+          [
+            "0192f5a1-7330-7000-8000-000000000002"
+          ],
+          []
+        ]
+      },
+      "styles": [
+        {
+          "row": 1,
+          "col": 0,
+          "rows": 1,
+          "cols": 5,
+          "bold": true
+        },
+        {
+          "row": 4,
+          "col": 0,
+          "rows": 1,
+          "cols": 5,
+          "bold": true
+        },
+        {
+          "row": 5,
+          "col": 0,
+          "rows": 1,
+          "cols": 5,
+          "bold": true
+        }
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a1-7330-7000-8000-000000000001",
+    "0192f5a1-7330-7000-8000-000000000002",
+    "0192f5a1-7330-7000-8000-000000000003",
+    "0192f5a1-7330-7000-8000-000000000004",
+    "0192f5a1-7330-7000-8000-000000000005"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a1-7330-7000-8000-0000000000a1",
+      "name": "Lavabo",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 0.6,
+              "y": 0.0
+            },
+            {
+              "x": 0.6,
+              "y": 0.45
+            },
+            {
+              "x": 0.0,
+              "y": 0.45
+            }
+          ],
+          "closed": true
+        }
+      ],
+      "card": {
+        "category": "Vitrifiye",
+        "version": 1
+      }
+    },
+    {
+      "id": "0192f5a1-7330-7000-8000-0000000000a2",
+      "name": "Klozet",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 0.4,
+              "y": 0.0
+            },
+            {
+              "x": 0.4,
+              "y": 0.7
+            },
+            {
+              "x": 0.0,
+              "y": 0.7
+            }
+          ],
+          "closed": true
+        }
+      ],
+      "card": {
+        "category": "Vitrifiye",
+        "version": 1
+      }
+    }
+  ]
+}

@@ -3894,6 +3894,32 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A schedule's columns and rows read back (docs/adr/0733 §6).
+        CommandDescriptor {
+            id: crate::CAD_SCHEDULES_QUERY.into(),
+            version: crate::CAD_SCHEDULES_QUERY_VERSION,
+            title: "Çizelgeyi oku".into(),
+            summary: "Bir çizelgenin (uid) sütunlarını ve satırlarını okur, yazmaz. columns: başlık (birimiyle), alan, editable (hücresi satırın nesnelerine yazılır: numara, tür, genişlik, denizlik, lento, ad, kullanım, etiket, kalınlık, kaplamalar, öznitelik) ya da hesaplanır, summed (gruplu satır, ara toplam ve toplam toplar). \
+                      rows: tablodaki sırası (cad.schedules.edit'in row'u), rolü (heading başlık, data nesnelerin satırı, header grup başlığı, footer ara toplam, total genel toplam), hücreleri ve veri satırının nesneleri (kalıcı kimlikler, çizimin sırasıyla): düzenlenen bir hücre bu nesnelere yazılır. Başlık ve ara toplam satırının nesnesi yoktur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SchedulesQuery>(),
+            output: schema::<crate::SchedulesQueried>(),
+            plan: Some(schema::<crate::SchedulesQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Hangi hücre hangi kapılara yazılır".into(),
+                input: json!({ "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_OPENINGS_CREATE.into(),
             version: crate::CAD_OPENINGS_CREATE_VERSION,
@@ -10373,6 +10399,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // A table's cells as a workbook (docs/adr/0733 §7).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_TABLE.into(),
+            version: crate::FILE_EXPORT_TABLE_VERSION,
+            title: "Tabloyu dosyaya yaz".into(),
+            summary: "Bir tablonun (uid: mimari çizelge, blok çizelgesi, dosyadan ya da elle yazılmış tablo) hücrelerini yolun uzantısına göre CSV, XLSX ya da ODS olarak yazar; ilk satır sütunların adları. \
+                      Çizelge belgenin şimdi yazdığı gibidir: groups (varsayılan true) grup başlıklarını, ara toplamları ve genel toplamı da yazar, false yalnız veri satırlarını. \
+                      numbers shown (varsayılan) sayıları çizelgede görüldüğü gibi projenin basamağıyla, exact hesaplanan sayıları çizimden yeniden okuyup 15 anlamlı basamağa yuvarlayarak yazar; nesnelere yazılan sütunlar (numara, ad, tür, kaplama, öznitelik) iki kipte de yazıldığı gibidir, yuvarlanmaz. \
+                      Cevabın notes'u kipi ve yazıcının dediklerini (15 basamağı aşan değer metin yazıldı gibi) söyler. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["tabloyaz".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportTable>(),
+            output: schema::<crate::TableExported>(),
+            plan: Some(schema::<crate::TableExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kapı çizelgesini Excel'e, ara toplamlarıyla".into(),
+                input: json!({ "path": "/veri/kapilar.xlsx", "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70", "overwrite": true }),
+                output: None,
+            }],
+        },
         // The atlas of a sheet as a PDF with a page for each object (docs/adr/0534).
         CommandDescriptor {
             id: crate::FILE_EXPORT_ATLAS.into(),
@@ -11773,6 +11827,12 @@ mod tests {
                     }
                     crate::FILE_EXPORT_XYZ => {
                         serde_json::from_value::<crate::ExportXyz>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_TABLE => {
+                        serde_json::from_value::<crate::ExportTable>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SCHEDULES_QUERY => {
+                        serde_json::from_value::<crate::SchedulesQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_SLD => {
                         serde_json::from_value::<crate::ExportSld>(e.input.clone()).map(|_| ())

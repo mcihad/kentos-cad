@@ -1890,6 +1890,7 @@ fn arrayed(doc: &mut Document, array: bool) -> kentos_contracts::AssocArray {
         let mut base = point(0.0).base().clone();
         base.label = None;
         Entity::Insert(InsertEntity {
+            arch: Default::default(),
             clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),

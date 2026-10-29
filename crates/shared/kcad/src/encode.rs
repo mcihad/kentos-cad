@@ -1989,6 +1989,23 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 131 (docs/adr/0733): a block insert's level and phase, a space's skirting finish, a schedule's fixtures,
+    // new fields, type filter, headings or subtotals.
+    let fixtures = |es: Objs<'_>| {
+        es.iter().any(|e| match e {
+            Entity::Insert(i) => !i.arch.is_empty(),
+            Entity::Space(s) => s.space.finishes.base.is_some(),
+            Entity::Table(t) => matches!(
+                &t.source,
+                Some(kentos_contracts::TableSource::Schedule { of, columns, filter, sort, .. })
+                    if kentos_contracts::schedule_extras(*of, columns, filter.as_ref(), sort)
+            ),
+            _ => false,
+        })
+    };
+    if fixtures(objs) || doc.blocks.iter().any(|b| fixtures(Objs::Plain(&b.entities))) {
+        return crate::SCHEMA_WITH_FIXTURES;
+    }
     // Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
     if doc
         .settings

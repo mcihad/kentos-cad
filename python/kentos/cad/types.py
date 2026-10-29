@@ -4866,7 +4866,14 @@ class ScheduleField(_StrEnum):
     - ``place``
     - ``length``
     - ``thickness``
+    - ``baseFinish``
+    - ``wallFinish``
+    - ``ceilingFinish``
     - ``attr``: The attribute the column's `attr` names.
+    - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
+    - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
+    - ``category``: A fixture's block's category path (docs/adr/0317 §4).
+    - ``space``: The space a fixture stands in, on its level: its number and name.
     """
     NUMBER = "number"
     TYPE = "type"
@@ -4888,23 +4895,58 @@ class ScheduleField(_StrEnum):
     PLACE = "place"
     LENGTH = "length"
     THICKNESS = "thickness"
+    BASE_FINISH = "baseFinish"
+    WALL_FINISH = "wallFinish"
+    CEILING_FINISH = "ceilingFinish"
     ATTR = "attr"
+    FLOOR_FINISH = "floorFinish"
+    BASEBOARD = "baseboard"
+    CATEGORY = "category"
+    SPACE = "space"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "attr", "floorFinish", "baseboard", "category", "space"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
 class ScheduleOf(_StrEnum):
-    """What a schedule lists."""
+    """What a schedule lists.
+
+    - ``openings``
+    - ``spaces``
+    - ``columns``
+    - ``walls``
+    - ``fixtures``: The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).
+    """
     OPENINGS = "openings"
     SPACES = "spaces"
     COLUMNS = "columns"
     WALLS = "walls"
+    FIXTURES = "fixtures"
 
 
-ScheduleOfName = Literal["openings", "spaces", "columns", "walls"]
+ScheduleOfName = Literal["openings", "spaces", "columns", "walls", "fixtures"]
 """The names of :class:`ScheduleOf`, for a plain string."""
+
+
+class ScheduleRowRole(_StrEnum):
+    """What a schedule's row is (docs/adr/0733 §4).
+
+    - ``total``
+    - ``heading``: The columns' headings (row 0).
+    - ``data``: Objects' row.
+    - ``header``: A group's value before it.
+    - ``footer``: A group's subtotal after it.
+    """
+    TOTAL = "total"
+    HEADING = "heading"
+    DATA = "data"
+    HEADER = "header"
+    FOOTER = "footer"
+
+
+ScheduleRowRoleName = Literal["total", "heading", "data", "header", "footer"]
+"""The names of :class:`ScheduleRowRole`, for a plain string."""
 
 
 class SchemaKind(_StrEnum):
@@ -5510,6 +5552,20 @@ class TableGrid(_StrEnum):
 
 TableGridName = Literal["outer", "rows", "none"]
 """The names of :class:`TableGrid`, for a plain string."""
+
+
+class TableNumbers(_StrEnum):
+    """How `file.export.table` writes a schedule's worked-out numbers (docs/adr/0733 §7).
+
+    - ``shown``: As the table shows them, with the project's decimals.
+    - ``exact``: Read again from the drawing and rounded to 15 significant digits (what a spreadsheet keeps).
+    """
+    SHOWN = "shown"
+    EXACT = "exact"
+
+
+TableNumbersName = Literal["shown", "exact"]
+"""The names of :class:`TableNumbers`, for a plain string."""
 
 
 class TableRefresh(_StrEnum):
@@ -13113,11 +13169,12 @@ class BlocksInsert(_Model):
     Attributes:
         at: Where its base point goes. Unit: length.
         layer_id: The layer it goes on, a layer's id.
+        arch: The document revision the input was prepared against, as decimal text.
+            Its level and phase (docs/adr/0733 §1): a fixture's, as a level view reads it; absent: on no level.
         attributes: Its attribute values by tag.
         attrs: Its other data (an object template's), under the attribute values.
         block: The block, by id.
         color: Its own colour (absent: its layer's).
-        expected_revision: The document revision the input was prepared against, as decimal text.
         label: Its label.
         mirror: Mirrored in its x axis, before the turn.
         name: The block, by name, when `block` is absent (Turkish case folded).
@@ -13129,6 +13186,7 @@ class BlocksInsert(_Model):
     """
     at: Vec2
     layer_id: str
+    arch: ArchInfo | Unset = UNSET
     attributes: dict[str, str] | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     block: str | None | Unset = UNSET
@@ -13147,6 +13205,8 @@ class BlocksInsert(_Model):
         out: dict[str, Any] = {}
         out["at"] = _vec2_out(self.at)
         out["layerId"] = self.layer_id
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
         if self.attributes is not UNSET:
             out["attributes"] = None if self.attributes is None else dict(self.attributes)
         if self.attrs is not UNSET:
@@ -13180,6 +13240,7 @@ class BlocksInsert(_Model):
         return cls(
             at=Vec2.from_json(data["at"]),
             layer_id=data["layerId"],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attributes=UNSET if "attributes" not in data else None if data["attributes"] is None else dict(data["attributes"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             block=data.get("block", UNSET),
@@ -24253,6 +24314,44 @@ class ExportSld(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportTable(_Model):
+    """Input of `file.export.table` v1 (docs/adr/0733 §7): a table's cells (a schedule's, a block schedule's, a file's or
+    one written by hand) as CSV, XLSX or ODS. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_uid`,
+    `entity_not_found`, `not_a_table`, `file_unwritable`.
+    Attributes:
+        path: An absolute path ending `.csv`, `.xlsx` or `.ods`; its ending gives the format.
+        uid: The table, by its persistent id.
+        groups: A schedule's headings, subtotals and total too (its data rows always); absent: true.
+        overwrite: Write over the file when it is there.
+    """
+    path: str
+    uid: str
+    groups: bool | None | Unset = UNSET
+    numbers: TableNumbers | TableNumbersName = TableNumbers.SHOWN
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["uid"] = self.uid
+        if self.groups is not UNSET:
+            out["groups"] = self.groups
+        out["numbers"] = _enum_out(self.numbers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportTable:
+        return cls(
+            path=data["path"],
+            uid=data["uid"],
+            groups=data.get("groups", UNSET),
+            numbers=_enum_in(TableNumbers, data["numbers"]) if "numbers" in data else TableNumbers.SHOWN,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportXyz(_Model):
     """Input of `file.export.xyz` v1: the layers' positions as text lines `X Y Z` at `path` (UTF-8, LF lines; X east and Y
     north in the project's system, as GDAL's XYZ driver and point cloud tools read them; the file names no system, the
@@ -30634,6 +30733,9 @@ class InsertEntity(Entity):
         p: Where the definition's base point goes. Unit: length.
         scale: Positive and finite; 1 is the definition's size. With `yScale`, the factor along the definition's x axis. Unit: 1.
         rotation: Radians, counter-clockwise from east. Unit: rad.
+        arch: Its level and phase (docs/adr/0733 §1): a fixture's (furniture, a sanitary fixture, a kitchen module), as a
+            level view, a sheet's map and a phase view read them; absent: on no level, shown on every one (`.kcad` schema
+            131).
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         attribute_places: Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
@@ -30675,6 +30777,7 @@ class InsertEntity(Entity):
     p: Vec2
     scale: float
     rotation: float
+    arch: ArchInfo | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     attribute_places: dict[str, Vec2] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
@@ -30703,6 +30806,8 @@ class InsertEntity(Entity):
         out["p"] = _vec2_out(self.p)
         out["scale"] = float(self.scale)
         out["rotation"] = float(self.rotation)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.attribute_places is not UNSET:
@@ -30751,6 +30856,7 @@ class InsertEntity(Entity):
             p=Vec2.from_json(data["p"]),
             scale=float(data["scale"]),
             rotation=float(data["rotation"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             attribute_places={k0: Vec2.from_json(e0) for k0, e0 in data["attributePlaces"].items()} if "attributePlaces" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
@@ -51824,17 +51930,55 @@ class ScheduleColumn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ScheduleColumnInfo(_Model):
+    """A schedule's column as `cad.schedules.query` reads it.
+    Attributes:
+        heading: Its heading, with its unit when it has one.
+        editable: A cell of it is written to its row's objects (`cad.schedules.edit`'s `cell`); otherwise it is worked out.
+        summed: A grouped row, a subtotal and the total add it up.
+    """
+    heading: str
+    field: ScheduleField | ScheduleFieldName
+    editable: bool
+    summed: bool
+    attr: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["heading"] = self.heading
+        out["field"] = _enum_out(self.field)
+        out["editable"] = self.editable
+        out["summed"] = self.summed
+        if self.attr is not UNSET:
+            out["attr"] = self.attr
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleColumnInfo:
+        return cls(
+            heading=data["heading"],
+            field=_enum_in(ScheduleField, data["field"]),
+            editable=data["editable"],
+            summed=data["summed"],
+            attr=data.get("attr", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ScheduleFilter(_Model):
     """Which objects a schedule lists: those of every list given.
     Attributes:
         forms: An openings schedule's forms.
         layers: Their layers' ids.
         levels: Their levels' ids (an opening's its wall's).
+        types: Their types (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
+            block name.
     """
     forms: list[OpeningForm | OpeningFormName] | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     levels: list[str] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
+    types: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -51846,6 +51990,8 @@ class ScheduleFilter(_Model):
             out["levels"] = None if self.levels is None else list(self.levels)
         if self.phases is not UNSET:
             out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
+        if self.types is not UNSET:
+            out["types"] = None if self.types is None else list(self.types)
         return out
 
     @classmethod
@@ -51855,6 +52001,38 @@ class ScheduleFilter(_Model):
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
+            types=UNSET if "types" not in data else None if data["types"] is None else list(data["types"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScheduleRowInfo(_Model):
+    """A schedule's row as `cad.schedules.query` reads it.
+    Attributes:
+        row: The table's own row index (`cad.schedules.edit`'s `row`). Unit: index.
+        members: A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is
+            written to; none for the other rows.
+    """
+    row: int
+    role: ScheduleRowRole | ScheduleRowRoleName
+    cells: list[str]
+    members: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["role"] = _enum_out(self.role)
+        out["cells"] = list(self.cells)
+        out["members"] = list(self.members)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleRowInfo:
+        return cls(
+            row=data["row"],
+            role=_enum_in(ScheduleRowRole, data["role"]),
+            cells=list(data["cells"]),
+            members=list(data["members"]),
         )
 
 
@@ -51863,15 +52041,23 @@ class ScheduleSort(_Model):
     """A sort key: a column by its index, in order or reversed.
     Attributes:
         column: Unit: index.
+        footer: A subtotal row after each such group: “‹value› toplamı” and the summed columns' sums.
+        header: A heading row before each group of rows alike in this column: its value, across the row (docs/adr/0733 §4).
     """
     column: int
     descending: bool | Unset = UNSET
+    footer: bool | Unset = UNSET
+    header: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["column"] = self.column
         if self.descending is not UNSET:
             out["descending"] = self.descending
+        if self.footer is not UNSET:
+            out["footer"] = self.footer
+        if self.header is not UNSET:
+            out["header"] = self.header
         return out
 
     @classmethod
@@ -51879,6 +52065,8 @@ class ScheduleSort(_Model):
         return cls(
             column=data["column"],
             descending=data.get("descending", UNSET),
+            footer=data.get("footer", UNSET),
+            header=data.get("header", UNSET),
         )
 
 
@@ -51987,8 +52175,8 @@ class SchedulesEdit(_Model):
     """Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.
 
     Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
-    `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`, `invalid_revision`,
-    `revision_conflict`, `layer_locked`.
+    `schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,
+    `invalid_revision`, `revision_conflict`, `layer_locked`.
     """
     uid: str
     operation: ScheduleOperation
@@ -52055,6 +52243,52 @@ class SchedulesPlan(_Model):
         return cls(
             table=Entity.from_json(data["table"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesQueried(_Model):
+    """Output of `cad.schedules.query` v1."""
+    of: ScheduleOf | ScheduleOfName
+    columns: list[ScheduleColumnInfo]
+    rows: list[ScheduleRowInfo]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["of"] = _enum_out(self.of)
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesQueried:
+        return cls(
+            of=_enum_in(ScheduleOf, data["of"]),
+            columns=[ScheduleColumnInfo.from_json(e0) for e0 in data["columns"]],
+            rows=[ScheduleRowInfo.from_json(e0) for e0 in data["rows"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesQuery(_Model):
+    """Input of `cad.schedules.query` v1 (docs/adr/0733 §6), read-only: a schedule's columns and rows as they stand.
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`.
+    """
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesQuery:
+        return cls(
+            uid=data["uid"],
         )
 
 
@@ -56010,13 +56244,19 @@ class SpaceFields(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SpaceFinishes(_Model):
-    """A space's finishes: its floor's, walls' and ceiling's."""
+    """A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).
+    Attributes:
+        base: The skirting's finish (`.kcad` schema 131).
+    """
+    base: str | None | Unset = UNSET
     ceiling: str | None | Unset = UNSET
     floor: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.base is not UNSET:
+            out["base"] = self.base
         if self.ceiling is not UNSET:
             out["ceiling"] = self.ceiling
         if self.floor is not UNSET:
@@ -56028,6 +56268,7 @@ class SpaceFinishes(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SpaceFinishes:
         return cls(
+            base=data.get("base", UNSET),
             ceiling=data.get("ceiling", UNSET),
             floor=data.get("floor", UNSET),
             wall=data.get("wall", UNSET),
@@ -59717,6 +59958,44 @@ class TableEntity(Entity):
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TableExported(_Model):
+    """What `file.export.table` wrote (or with `plan` would write).
+    Attributes:
+        rows: Rows written after the first (the columns' names). Unit: count.
+        columns: Unit: count.
+        notes: What the writer says of the numbers (written as text past 15 significant digits, rounded as shown …).
+        bytes: Unit: bytes.
+    """
+    path: str
+    rows: int
+    columns: int
+    numbers: TableNumbers | TableNumbersName
+    notes: list[str]
+    bytes: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["rows"] = self.rows
+        out["columns"] = self.columns
+        out["numbers"] = _enum_out(self.numbers)
+        out["notes"] = list(self.notes)
+        out["bytes"] = self.bytes
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableExported:
+        return cls(
+            path=data["path"],
+            rows=data["rows"],
+            columns=data["columns"],
+            numbers=_enum_in(TableNumbers, data["numbers"]),
+            notes=list(data["notes"]),
+            bytes=data["bytes"],
         )
 
 
@@ -82710,6 +82989,7 @@ __all__ = [
     "ExportReport",
     "ExportShp",
     "ExportSld",
+    "ExportTable",
     "ExportXyz",
     "ExpressionPaperGridLabelFormat",
     "ExtendWallsOperation",
@@ -84081,12 +84361,16 @@ __all__ = [
     "ScenariosEdited",
     "ScheduleCell",
     "ScheduleColumn",
+    "ScheduleColumnInfo",
     "ScheduleField",
     "ScheduleFieldName",
     "ScheduleFilter",
     "ScheduleOf",
     "ScheduleOfName",
     "ScheduleOperation",
+    "ScheduleRowInfo",
+    "ScheduleRowRole",
+    "ScheduleRowRoleName",
     "ScheduleSort",
     "ScheduleTableSource",
     "SchedulesCreate",
@@ -84094,6 +84378,8 @@ __all__ = [
     "SchedulesEdit",
     "SchedulesEdited",
     "SchedulesPlan",
+    "SchedulesQueried",
+    "SchedulesQuery",
     "SchemaDescribe",
     "SchemaDescribed",
     "SchemaItem",
@@ -84407,8 +84693,11 @@ __all__ = [
     "TableEdit",
     "TableEntity",
     "TableEntityGeometry",
+    "TableExported",
     "TableGrid",
     "TableGridName",
+    "TableNumbers",
+    "TableNumbersName",
     "TablePaperItemKind",
     "TableRefresh",
     "TableRefreshName",

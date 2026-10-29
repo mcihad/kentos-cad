@@ -417,6 +417,10 @@ SCHEMA_WITH_DIMENSION_SET_SCALES = 129
 # Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions in the architectural settings (`auditExceptions`), written
 # only when a project has one.
 SCHEMA_WITH_AUDIT_EXCEPTIONS = 130
+# Schema 131 (docs/adr/0733): a block insert's level and phase (`arch`), a space's skirting finish (`finishes.base`) and a
+# schedule's fixtures, new fields, type filter, headings and subtotals, written only when one is.
+SCHEMA_WITH_FIXTURES = 131
+SCHEDULE_EXTRA_FIELDS = ("floorFinish", "baseFinish", "wallFinish", "ceilingFinish", "baseboard", "category", "space")
 COLUMN_ANCHORS = ("center", "left", "right", "bottom", "top", "bottomLeft", "bottomRight", "topLeft", "topRight")
 MAX_SLAB_THICKNESS = 5.0
 MAX_SLAB_OFFSET = 100.0
@@ -669,7 +673,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3193,6 +3197,7 @@ class _Schema:
         self.dimension_set_spans = version >= SCHEMA_WITH_DIMENSION_SET_SPANS
         self.dimension_set_scales = version >= SCHEMA_WITH_DIMENSION_SET_SCALES
         self.audit_exceptions = version >= SCHEMA_WITH_AUDIT_EXCEPTIONS
+        self.fixtures = version >= SCHEMA_WITH_FIXTURES
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -7465,11 +7470,24 @@ class _Schema:
             if x is not True:
                 self.fail("bad_value", "false yazılmaz; varsayılandır")
             return x
-        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS), True), "title": (self.text, False), "attr": (self.text, False)})
+        # Schema 131 (docs/adr/0733): the fixtures, the new fields, a type filter, headings and subtotals.
+        extra = self.fixtures
+
+        def type_name(v):
+            # A type's name: one line, not blank, at most 200 letters (docs/adr/0733 §4).
+            t = self.text(v)
+            if not t.strip() or any(unicodedata.category(c) == "Cc" for c in t) or len(t) > 200:
+                self.fail("bad_value", "tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir")
+            return t
+        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS + (SCHEDULE_EXTRA_FIELDS if extra else ())), True),
+                              "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
-                           "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False)})
-        sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False)})
-        d = self.fields({"kind": (self.enum(("schedule",)), True), "of": (self.enum(("openings", "spaces", "columns", "walls")), True),
+                           "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),
+                           **({"types": (self.array(type_name), False)} if extra else {})})
+        sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False),
+                            **({"header": (true_only, False), "footer": (true_only, False)} if extra else {})})
+        kinds = ("openings", "spaces", "columns", "walls") + (("fixtures",) if extra else ())
+        d = self.fields({"kind": (self.enum(("schedule",)), True), "of": (self.enum(kinds), True),
                          "columns": (self.array(column), True), "filter": (flt, False), "sort": (self.array(sort), False),
                          "group": (true_only, False), "total": (true_only, False),
                          "members": (self.array(self.array(self.text)), False)})(v)
@@ -8191,7 +8209,9 @@ class _Schema:
             "arch": (self.arch_info, False),
             "height": (self.float, False),
             "finishes": (self.fields({"floor": (text_not_blank, False), "wall": (text_not_blank, False),
-                                      "ceiling": (text_not_blank, False)}), False),
+                                      "ceiling": (text_not_blank, False),
+                                      # Schema 131 (docs/adr/0733 §3): the skirting's finish.
+                                      **({"base": (text_not_blank, False)} if self.fixtures else {})}), False),
             "broken": (self.enum(("lostEnclosure", "noFreeArea", "invalidBoundarySource", "sourceUnavailable") if self.space_sources else ("lostEnclosure", "noFreeArea", "invalidBoundarySource") if self.space_columns else ("lostEnclosure",)), False),
         }
         if self.space_columns:
@@ -8506,6 +8526,13 @@ class _Schema:
                     bad("Rampanın başlangıç kotu kata göre verildi ama rampanın katı yok.")
             if "landing" in f:
                 positive(f["landing"], "Sahanlığın boyu")
+
+    def not_empty_arch(self, v):
+        """A block insert's level and phase (schema 131, docs/adr/0733 §1): an architectural information, never empty."""
+        a = self.arch_info(v)
+        if not a:
+            self.fail("bad_value", "boş mimari bilgi yazılmaz")
+        return a
 
     def arch_info(self, v):
         return self.fields({"level": (self.text, False), "phase": (self.enum(ARCH_PHASES), False),
@@ -9136,7 +9163,9 @@ ENTITY_KINDS = {
                          **({"yScale": (s.y_scale, False)} if s.block_extras else {}),
                          **({"attributePlaces": (s.attribute_places, False)} if s.block_cards else {}),
                          **({"parameters": (s.param_values, False)} if s.dynamic_blocks else {}),
-                         **({"clipping": (s.insert_clipping, False)} if s.clipping else {})},
+                         **({"clipping": (s.insert_clipping, False)} if s.clipping else {}),
+                         # Schema 131 (docs/adr/0733 §1): its level and phase, no field when none.
+                         **({"arch": (lambda x: s.not_empty_arch(x), False)} if s.fixtures else {})},
     # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
     # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
     "table": lambda s: {

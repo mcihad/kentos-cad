@@ -1,0 +1,3801 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.schedules.query",
+  "commandVersion": 1,
+  "title": "Çizelgeyi oku: sütunların düzenlenebilirliği, satırların rolü ve nesneleri; retler",
+  "note": "ADR 0733 §2–§6. Beklenenler scripts/fixtures/schedule_extras_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; mahaller dikdörtgen, kapısız (süpürgelik boyu çevre). Kurulumda 9 nesne var; yeni nesne 10'dan başlar. Çizelgenin satır ve sütun boyları yazı tiplerinin ölçüsündendir, burada denetlenmez ($any).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Donatı ve kaplama çizelgeleri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "donati",
+        "name": "Donatı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizelge",
+        "name": "Çizelge",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizelge",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b1",
+        "name": "Koltuk",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ],
+        "card": {
+          "category": "Mobilya/Oturma",
+          "version": 1
+        }
+      },
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b2",
+        "name": "Lavabo",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ],
+        "card": {
+          "category": "Vitrifiye/Lavabo",
+          "version": 1
+        }
+      },
+      {
+        "id": "0192f5a1-7330-7000-8000-0000000000b3",
+        "name": "Antet",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "kind": "space",
+        "id": 1,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Parke",
+          "wall": "Boya",
+          "ceiling": "Alçı",
+          "base": "Ahşap"
+        },
+        "usage": "Oturma"
+      },
+      {
+        "kind": "space",
+        "id": 2,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "102",
+        "name": "Banyo",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Seramik",
+          "wall": "Seramik"
+        },
+        "usage": "Islak"
+      },
+      {
+        "kind": "space",
+        "id": 3,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "201",
+        "name": "Oda",
+        "arch": {
+          "level": "kat-1"
+        },
+        "finishes": {
+          "floor": "Laminat"
+        },
+        "usage": "Yatak"
+      },
+      {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "donati",
+        "attrs": {
+          "Renk": "Gri"
+        },
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 2.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b2",
+        "p": {
+          "x": 6.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "kat-1"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "donati",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b3",
+        "p": {
+          "x": 20.0,
+          "y": 20.0
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "kilitli",
+        "attrs": {},
+        "block": "0192f5a1-7330-7000-8000-0000000000b2",
+        "p": {
+          "x": 6.0,
+          "y": 2.0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "arch": {
+          "level": "zemin"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Oku: Donatı çizelgesi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "201 Oda",
+                    "1. kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "Antet",
+                    "",
+                    "",
+                    "",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Donatı çizelgesi, gruplu ve toplamlı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "group": true,
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "3"
+                  ],
+                  "members": [
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "2"
+                  ],
+                  "members": [
+                    "$uidOf:6",
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "6"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahale göre grup başlıkları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "header",
+                  "cells": [
+                    "101 Salon",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "header",
+                  "cells": [
+                    "102 Banyo",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 7,
+                  "role": "header",
+                  "cells": [
+                    "201 Oda",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 8,
+                  "role": "data",
+                  "cells": [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 9,
+                  "role": "header",
+                  "cells": [
+                    "(boş)",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 10,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahale göre ara toplamlar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "footer",
+                  "cells": [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "footer",
+                  "cells": [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 7,
+                  "role": "data",
+                  "cells": [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 8,
+                  "role": "footer",
+                  "cells": [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 9,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 10,
+                  "role": "footer",
+                  "cells": [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Başlık, ara toplam ve genel toplam",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "header",
+                  "cells": [
+                    "101 Salon",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "footer",
+                  "cells": [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 5,
+                  "role": "header",
+                  "cells": [
+                    "102 Banyo",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 7,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 8,
+                  "role": "footer",
+                  "cells": [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 9,
+                  "role": "header",
+                  "cells": [
+                    "201 Oda",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 10,
+                  "role": "data",
+                  "cells": [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 11,
+                  "role": "footer",
+                  "cells": [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 12,
+                  "role": "header",
+                  "cells": [
+                    "(boş)",
+                    "",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 13,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 14,
+                  "role": "footer",
+                  "cells": [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 15,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "",
+                    "6"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: İç içe ara toplamlar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "footer": true
+              },
+              {
+                "column": 1,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Kat",
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "footer",
+                  "cells": [
+                    "",
+                    "Koltuk toplamı",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 3,
+                  "role": "footer",
+                  "cells": [
+                    "1. kat toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "footer",
+                  "cells": [
+                    "",
+                    "Koltuk toplamı",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 7,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 8,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 9,
+                  "role": "footer",
+                  "cells": [
+                    "",
+                    "Lavabo toplamı",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 10,
+                  "role": "footer",
+                  "cells": [
+                    "Zemin kat toplamı",
+                    "",
+                    "4"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 11,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 12,
+                  "role": "footer",
+                  "cells": [
+                    "",
+                    "Antet toplamı",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 13,
+                  "role": "footer",
+                  "cells": [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 14,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "",
+                    "6"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Yalnız zemin kat",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "levels": [
+                "zemin"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 4,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Mobilya/Oturma",
+                    "101 Salon",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Tür süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Lavabo"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 2,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Satırsız çizelge",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Dolap"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Satırsız çizelge, toplamlı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "types": [
+                "Dolap"
+              ]
+            },
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "",
+                    "",
+                    "",
+                    "0"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Öznitelik sütunu düzenlenir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "type"
+              },
+              {
+                "field": "attr",
+                "attr": "Renk"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Renk",
+                  "field": "attr",
+                  "attr": "Renk",
+                  "editable": true,
+                  "summed": false
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Renk"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "Gri"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    ""
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    ""
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    ""
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "Antet",
+                    ""
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    ""
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahal kaplama çizelgesi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "baseboard"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "spaces",
+              "columns": [
+                {
+                  "heading": "No",
+                  "field": "number",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Ad",
+                  "field": "name",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Döşeme",
+                  "field": "floorFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Süpürgelik",
+                  "field": "baseFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Duvar kaplaması",
+                  "field": "wallFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Tavan",
+                  "field": "ceilingFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Alan (m²)",
+                  "field": "area",
+                  "editable": false,
+                  "summed": true
+                },
+                {
+                  "heading": "Süpürgelik boyu (m)",
+                  "field": "baseboard",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Alan (m²)",
+                    "Süpürgelik boyu (m)"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "Ahşap",
+                    "Boya",
+                    "Alçı",
+                    "20.00",
+                    "18.000"
+                  ],
+                  "members": [
+                    "$uidOf:1"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "",
+                    "Seramik",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  "members": [
+                    "$uidOf:2"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "",
+                    "",
+                    "",
+                    "20.00",
+                    "18.000"
+                  ],
+                  "members": [
+                    "$uidOf:3"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahal kaplama çizelgesi, toplamlı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "baseboard"
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "spaces",
+              "columns": [
+                {
+                  "heading": "No",
+                  "field": "number",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Ad",
+                  "field": "name",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Döşeme",
+                  "field": "floorFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Süpürgelik",
+                  "field": "baseFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Duvar kaplaması",
+                  "field": "wallFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Tavan",
+                  "field": "ceilingFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Alan (m²)",
+                  "field": "area",
+                  "editable": false,
+                  "summed": true
+                },
+                {
+                  "heading": "Süpürgelik boyu (m)",
+                  "field": "baseboard",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Alan (m²)",
+                    "Süpürgelik boyu (m)"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "Ahşap",
+                    "Boya",
+                    "Alçı",
+                    "20.00",
+                    "18.000"
+                  ],
+                  "members": [
+                    "$uidOf:1"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "",
+                    "Seramik",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  "members": [
+                    "$uidOf:2"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "",
+                    "",
+                    "",
+                    "20.00",
+                    "18.000"
+                  ],
+                  "members": [
+                    "$uidOf:3"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "52.00",
+                    "50.000"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahal çizelgesi, kata göre başlık ve ara toplam",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "area"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true,
+                "footer": true
+              }
+            ],
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "spaces",
+              "columns": [
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Alan (m²)",
+                  "field": "area",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Kat",
+                    "Alan (m²)"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "header",
+                  "cells": [
+                    "1. kat",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "1. kat",
+                    "20.00"
+                  ],
+                  "members": [
+                    "$uidOf:3"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "footer",
+                  "cells": [
+                    "1. kat toplamı",
+                    "20.00"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 4,
+                  "role": "header",
+                  "cells": [
+                    "Zemin kat",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "20.00"
+                  ],
+                  "members": [
+                    "$uidOf:1"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "12.00"
+                  ],
+                  "members": [
+                    "$uidOf:2"
+                  ]
+                },
+                {
+                  "row": 7,
+                  "role": "footer",
+                  "cells": [
+                    "Zemin kat toplamı",
+                    "32.00"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 8,
+                  "role": "total",
+                  "cells": [
+                    "Toplam",
+                    "52.00"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahal çizelgesi, kullanım süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "baseboard"
+              }
+            ],
+            "filter": {
+              "types": [
+                "Oturma"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "spaces",
+              "columns": [
+                {
+                  "heading": "No",
+                  "field": "number",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Ad",
+                  "field": "name",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Döşeme",
+                  "field": "floorFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Süpürgelik",
+                  "field": "baseFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Duvar kaplaması",
+                  "field": "wallFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Tavan",
+                  "field": "ceilingFinish",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Alan (m²)",
+                  "field": "area",
+                  "editable": false,
+                  "summed": true
+                },
+                {
+                  "heading": "Süpürgelik boyu (m)",
+                  "field": "baseboard",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Alan (m²)",
+                    "Süpürgelik boyu (m)"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "Ahşap",
+                    "Boya",
+                    "Alçı",
+                    "20.00",
+                    "18.000"
+                  ],
+                  "members": [
+                    "$uidOf:1"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Mahal çizelgesi, gruplu kullanım",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "usage"
+              },
+              {
+                "field": "count"
+              },
+              {
+                "field": "area"
+              }
+            ],
+            "group": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "spaces",
+              "columns": [
+                {
+                  "heading": "Kullanım",
+                  "field": "usage",
+                  "editable": true,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                },
+                {
+                  "heading": "Alan (m²)",
+                  "field": "area",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Kullanım",
+                    "Adet",
+                    "Alan (m²)"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Oturma",
+                    "1",
+                    "20.00"
+                  ],
+                  "members": [
+                    "$uidOf:1"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Islak",
+                    "1",
+                    "12.00"
+                  ],
+                  "members": [
+                    "$uidOf:2"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Yatak",
+                    "1",
+                    "20.00"
+                  ],
+                  "members": [
+                    "$uidOf:3"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Başlıklı sütun",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "type",
+                "title": "Donatı"
+              },
+              {
+                "field": "count",
+                "title": "Sayı"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Donatı",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Sayı",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Donatı",
+                    "Sayı"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "data",
+                  "cells": [
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Azalan sıra ve ara toplam",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "columns": [
+              {
+                "field": "space"
+              },
+              {
+                "field": "type"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "descending": true,
+                "footer": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Mahal",
+                    "Tür",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "201 Oda",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 2,
+                  "role": "footer",
+                  "cells": [
+                    "201 Oda toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 3,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "102 Banyo",
+                    "Lavabo",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                },
+                {
+                  "row": 5,
+                  "role": "footer",
+                  "cells": [
+                    "102 Banyo toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 6,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:4"
+                  ]
+                },
+                {
+                  "row": 7,
+                  "role": "data",
+                  "cells": [
+                    "101 Salon",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:5"
+                  ]
+                },
+                {
+                  "row": 8,
+                  "role": "footer",
+                  "cells": [
+                    "101 Salon toplamı",
+                    "",
+                    "2"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 9,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "Antet",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:8"
+                  ]
+                },
+                {
+                  "row": 10,
+                  "role": "footer",
+                  "cells": [
+                    "(boş) toplamı",
+                    "",
+                    "1"
+                  ],
+                  "members": []
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Evre süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "phases": [
+                "new"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:6"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oku: Katmana göre süzgeç",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "fixtures",
+            "filter": {
+              "layers": [
+                "kilitli"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "rows": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:10"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "of": "fixtures",
+              "columns": [
+                {
+                  "heading": "Tür",
+                  "field": "type",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kategori",
+                  "field": "category",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Mahal",
+                  "field": "space",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Kat",
+                  "field": "level",
+                  "editable": false,
+                  "summed": false
+                },
+                {
+                  "heading": "Adet",
+                  "field": "count",
+                  "editable": false,
+                  "summed": true
+                }
+              ],
+              "rows": [
+                {
+                  "row": 0,
+                  "role": "heading",
+                  "cells": [
+                    "Tür",
+                    "Kategori",
+                    "Mahal",
+                    "Kat",
+                    "Adet"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 1,
+                  "role": "data",
+                  "cells": [
+                    "Lavabo",
+                    "Vitrifiye/Lavabo",
+                    "102 Banyo",
+                    "Zemin kat",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:9"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: geçersiz kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“yok” geçerli bir nesne kimliği değil; küçük harfli, tireli bir UUID verin.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "0192f5a1-7330-7000-8000-0000000000ff"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a1-7330-7000-8000-0000000000ff” kimlikli nesne çizimde yok. Var olan bir çizelgenin kimliğini verin.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: çizelge olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.schedules.query",
+          "input": {
+            "uid": "$uidOf:4"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_schedule",
+              "message": "Nesne bir mimari çizelge değil; Çizelge ile yerleştirilen bir tablonun kimliğini verin.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

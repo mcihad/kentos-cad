@@ -226,7 +226,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "tek parçalı",
         ),
-        ("broken/schema-version-131.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-132.kcad", Code::SchemaVersion, ""),
     ] {
         let err = refused(file);
         assert_eq!(err.code, code, "{file}: {err}");

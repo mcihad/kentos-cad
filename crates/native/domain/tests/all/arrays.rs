@@ -36,6 +36,7 @@ const BLOCK: BlockId = BlockId([7; 16]);
 
 fn insert(x: f64) -> Entity {
     Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

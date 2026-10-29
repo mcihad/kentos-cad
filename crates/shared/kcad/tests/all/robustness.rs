@@ -703,6 +703,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
 fn insert(rng: &mut Rng, layer: &str, block: BlockId) -> Entity {
     let scale = rng.float().abs();
     Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

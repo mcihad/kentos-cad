@@ -167,6 +167,7 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
     {
         return Err(invalid_scale("Y ölçeği", "yScale"));
     }
+    crate::walls::level_known(doc, &input.arch, "arch.level")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let Some(block) = named_block(doc, input) else {
         let what = match (&input.block, &input.name) {
@@ -249,6 +250,7 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         }
     };
     let insert = Entity::Insert(InsertEntity {
+        arch: input.arch.clone(),
         clipping: None,
         parameters,
         attribute_places: Default::default(),

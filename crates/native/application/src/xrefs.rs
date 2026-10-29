@@ -295,6 +295,7 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
                 .unwrap_or(wanted);
             let id = BlockId(*kentos_domain::Uuid::now_v7().as_bytes());
             let insert = InsertEntity {
+                arch: Default::default(),
                 clipping: None,
                 parameters: Default::default(),
                 attribute_places: Default::default(),
