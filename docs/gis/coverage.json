@@ -41117,8 +41117,8 @@
   {
    "id": "surface.colorRelief",
    "title": "Renkli kabartma",
-   "cases": 6,
-   "command": 6,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "colors",
