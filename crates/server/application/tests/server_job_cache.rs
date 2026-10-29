@@ -255,6 +255,22 @@ async fn an_export_takes_the_artifact_of_the_same_state() {
     // The owner designs forms: another reach, so the editors' file is not theirs.
     let owners = exported(&db, &store, &owner, "e-8", false).await;
     assert_eq!(owners.cached_from, None);
+    // The gain as the operator reads it (docs/adr/0744 §1): four built, three taken, their bytes.
+    let m = kentos_application::job_upkeep::metrics(&db.owner)
+        .await
+        .unwrap();
+    let gain = m
+        .cache
+        .iter()
+        .find(|c| c.kind == "project.export")
+        .expect("the exports' gain");
+    assert_eq!((gain.built, gain.taken), (4, 3), "{gain:?}");
+    let size: i64 = built.artifact.as_ref().unwrap().size.parse().unwrap();
+    assert_eq!(gain.taken_bytes, 3 * size);
+    assert!(
+        gain.built_seconds.is_some() && gain.saved_seconds().is_some(),
+        "{gain:?}"
+    );
 }
 
 /// The timings of docs/adr/0739 (release build, the test database): an export of 50 000 points built, taken from the

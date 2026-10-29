@@ -89,6 +89,28 @@ pub struct JobMetrics {
     pub oldest_queued_seconds: Option<f64>,
     /// The organisations with queued or running jobs: (tenant id, queued, running), the busiest first.
     pub tenants: Vec<(Uuid, i64, i64)>,
+    /// What the result cache gained in the last 24 hours, by job kind (docs/adr/0744 §1).
+    pub cache: Vec<CacheGain>,
+}
+
+/// A job kind's cached results in the last 24 hours: built, taken from an earlier job, their average times from start
+/// to finish and the bytes taken.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CacheGain {
+    pub kind: String,
+    pub built: i64,
+    pub taken: i64,
+    pub built_seconds: Option<f64>,
+    pub taken_seconds: Option<f64>,
+    pub taken_bytes: i64,
+}
+
+impl CacheGain {
+    /// The time the taken jobs did not spend building: each would have taken the built ones' average.
+    pub fn saved_seconds(&self) -> Option<f64> {
+        let built = self.built_seconds?;
+        Some((built - self.taken_seconds.unwrap_or(0.0)).max(0.0) * self.taken as f64)
+    }
 }
 
 /// Reads the queue's numbers (`kentosd jobs`).
@@ -109,6 +131,25 @@ pub async fn metrics(pool: &PgPool) -> AppResult<JobMetrics> {
         sqlx::query_as("select tenant_id, queued, running from kentos.job_load()")
             .fetch_all(pool)
             .await?;
+    type Row = (String, i64, i64, Option<f64>, Option<f64>, i64);
+    let cache: Vec<Row> = sqlx::query_as(
+        "select kind, built, taken, built_seconds, taken_seconds, taken_bytes from kentos.job_cache_metrics()",
+    )
+    .fetch_all(pool)
+    .await?;
+    let cache = cache
+        .into_iter()
+        .map(
+            |(kind, built, taken, built_seconds, taken_seconds, taken_bytes)| CacheGain {
+                kind,
+                built,
+                taken,
+                built_seconds,
+                taken_seconds,
+                taken_bytes,
+            },
+        )
+        .collect();
     Ok(JobMetrics {
         queued,
         running,
@@ -117,5 +158,6 @@ pub async fn metrics(pool: &PgPool) -> AppResult<JobMetrics> {
         cancelled_24h,
         oldest_queued_seconds: oldest,
         tenants,
+        cache,
     })
 }

@@ -442,6 +442,20 @@ pub fn jobs_report(m: &kentos_application::job_upkeep::JobMetrics) -> String {
     for (tenant, queued, running) in &m.tenants {
         out.push_str(&format!("kurum\t{tenant}\t{queued}\t{running}\n"));
     }
+    // The result cache's gain (docs/adr/0744 §1): kind, built, taken, the averages, the bytes taken, the time saved.
+    let seconds = |s: Option<f64>| s.map_or_else(|| "-".to_owned(), |s| format!("{s:.2}"));
+    for c in &m.cache {
+        out.push_str(&format!(
+            "önbellek\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+            c.kind,
+            c.built,
+            c.taken,
+            seconds(c.built_seconds),
+            seconds(c.taken_seconds),
+            c.taken_bytes,
+            seconds(c.saved_seconds())
+        ));
+    }
     out
 }
 
@@ -542,7 +556,7 @@ mod tests {
 
     #[test]
     fn the_jobs_report_has_counts_and_ids_only() {
-        use kentos_application::job_upkeep::JobMetrics;
+        use kentos_application::job_upkeep::{CacheGain, JobMetrics};
         let tenant = uuid::Uuid::nil();
         let report = jobs_report(&JobMetrics {
             queued: 3,
@@ -552,11 +566,19 @@ mod tests {
             cancelled_24h: 0,
             oldest_queued_seconds: Some(41.6),
             tenants: vec![(tenant, 3, 1)],
+            cache: vec![CacheGain {
+                kind: "project.export".into(),
+                built: 2,
+                taken: 5,
+                built_seconds: Some(4.5),
+                taken_seconds: Some(0.25),
+                taken_bytes: 5_000_000,
+            }],
         });
         assert_eq!(
             report,
             format!(
-                "sırada\t3\nçalışan\t1\nson_24_saatte_düşen\t2\nson_24_saatte_biten\t9\nson_24_saatte_durdurulan\t0\nen_eski_bekleyen_saniye\t42\nkurum\t{tenant}\t3\t1\n"
+                "sırada\t3\nçalışan\t1\nson_24_saatte_düşen\t2\nson_24_saatte_biten\t9\nson_24_saatte_durdurulan\t0\nen_eski_bekleyen_saniye\t42\nkurum\t{tenant}\t3\t1\nönbellek\tproject.export\t2\t5\t4.50\t0.25\t5000000\t21.25\n"
             )
         );
         let empty = jobs_report(&JobMetrics {
@@ -567,6 +589,7 @@ mod tests {
             cancelled_24h: 0,
             oldest_queued_seconds: None,
             tenants: vec![],
+            cache: vec![],
         });
         assert!(empty.contains("en_eski_bekleyen_saniye\t-\n"));
     }
