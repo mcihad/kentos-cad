@@ -583,6 +583,16 @@ codes! {
     UNKNOWN_LOCATOR = "unknown_locator", Failed, false, "Projede bu kimlikte adres verisi yok.";
     /// A check of a project that defines no address data (docs/adr/0579).
     NO_ADDRESS_DATA = "no_address_data", Failed, false, "Projede adres verisi yok; önce Adres verisi penceresinde ya da cad.addresses.define ile tanımlayın.";
+    /// An address register not given, or given both as a file and as a layer (docs/adr/0736).
+    REGISTER_MISSING = "register_missing", Failed, false, "Karşılaştırılacak adres kaydını verin: bir tablo dosyası (path) ya da çizimin bir katmanı (layer), ikisinden biri.";
+    /// Address data whose doors name no code field: nothing to compare (docs/adr/0736).
+    NO_ADDRESS_CODES = "no_address_codes", Failed, false, "Adres verisinin kapılarında adres kodu alanı yok; Adres verisi penceresinde kapıların Adres kodu alanını seçin.";
+    /// A register file that does not read as a table, has no rows, or no sheet of the name given (docs/adr/0736).
+    REGISTER_UNREADABLE = "register_unreadable", Failed, false, "Adres kaydı tablo olarak okunamadı; nedeni iletide.";
+    /// A register column named that the register does not have (docs/adr/0736).
+    REGISTER_COLUMN_MISSING = "register_column_missing", Failed, false, "Adres kaydında verilen sütun yok; iletide kaydın sütunları sayılır.";
+    /// A register with more rows than are read: the first ones were compared (docs/adr/0736).
+    REGISTER_CUT = "register_cut", Warning, false, "Adres kaydının ilk 250 000 satırı karşılaştırıldı; gerisi okunmadı.";
 
     // ── Offset, trim, extend, fillet, chamfer (docs/adr/0246, 0250) ─────
     /// An offset distance not above zero.

@@ -1922,6 +1922,7 @@ impl App {
             Asking::Networks => self.networks_view(),
             Asking::AddressData => self.address_data_view(),
             Asking::AddressProviders => self.address_providers_view(),
+            Asking::AddressCompare => self.address_compare_view(),
             Asking::TimeLayer => self.time_layer_view(),
             Asking::Sensors => self.sensors_view(),
             Asking::Scenario => self.scenario_view(),

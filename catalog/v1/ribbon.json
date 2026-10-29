@@ -881,6 +881,7 @@
       ],
       "overflow": [
        "address.data",
+       "address.compare",
        "address.providers"
       ]
      }
@@ -3161,6 +3162,7 @@
        }
       ],
       "overflow": [
+       "address.compare",
        "address.providers"
       ]
      },

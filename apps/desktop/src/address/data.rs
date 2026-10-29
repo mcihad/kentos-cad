@@ -176,7 +176,7 @@ fn field_of(names: &[String], k: usize, current: &str) -> String {
 
 impl App {
     /// The layers the window lists, by id with their paths.
-    fn address_layers(&self) -> Vec<(String, String)> {
+    pub(super) fn address_layers(&self) -> Vec<(String, String)> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -189,7 +189,7 @@ impl App {
     }
 
     /// A layer's attribute names.
-    fn address_fields(&self, layer: &str) -> Vec<String> {
+    pub(super) fn address_fields(&self, layer: &str) -> Vec<String> {
         self.document
             .as_ref()
             .map(|d| kentos_native_application::addresses::field_names(&d.model, layer))

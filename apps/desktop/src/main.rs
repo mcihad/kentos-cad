@@ -345,6 +345,8 @@ mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
 #[cfg(test)]
+mod address_compare_scenes;
+#[cfg(test)]
 mod data_profile_tests;
 #[cfg(test)]
 mod profile_scenes;

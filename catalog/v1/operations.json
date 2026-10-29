@@ -1086,6 +1086,14 @@
     "address.providers": {
       "level": "host"
     },
+    "address.compare": {
+      "level": "semantic",
+      "via": [
+        "cad.addresses.compare",
+        "cad.changeset.apply"
+      ],
+      "note": "Karşılaştırma cad.addresses.compare'in cevabıdır; Farkları kayıttan yaz kapılara cad.entities.set çağrılarını tek cad.changeset.apply ile yazar (ADR 0736)."
+    },
     "tool.constraint": {
       "level": "semantic",
       "via": [

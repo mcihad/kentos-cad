@@ -6304,6 +6304,44 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Adres kaydıyla karşılaştır (docs/adr/0736), held together by fixtures/commands/v1/cad.addresses.compare.json.
+        CommandDescriptor {
+            id: crate::CAD_ADDRESSES_COMPARE.into(),
+            version: crate::CAD_ADDRESSES_COMPARE_VERSION,
+            title: "Adres kaydıyla karşılaştır".into(),
+            summary: "Projenin adres verisinin (locator; verilmezse ilki) kapılarını bir adres kaydıyla (kurumun ya da Ulusal Adres Veri Tabanı'nın adres kodu tablosu, UAVT) karşılaştırır; çizimi değiştirmez. \
+                      Kayıt bir tablo dosyası (register.path: CSV ya da metin, XLSX, ODS; register.sheet çalışma kitabının sayfası) ya da çizimin bir katmanıdır (register.layer: nesnelerin öznitelikleri sütunlar, noktası yeri); ilk satır sütunları adlandırır. \
+                      register.code adres kodunun sütunudur; street, door, neighbourhood, district, x ve y verildikleri yerde karşılaştırılır (mahalle ve ilçe yalnız kapılarda o alan varsa; x ve y projenin koordinatlarında). \
+                      Bulgular: kodu kayıtta olmayan kapı (unregisteredDoors); kodu bir satırın ama adresi başka yazılan kapı (differences: yol, kapı no, mahalle, ilçe; adresin anahtarlarıyla karşılaştırılır, “Atatürk Blv.” ile “ATATÜRK BULVARI” aynıdır, yolun türü ikisi de söylüyorsa); satırın yerinden tolerance metreden (varsayılan 10) uzak kapı (distances); \
+                      kodu hiçbir kapıda olmayan ve yolunda o numarada kapı bulunmayan kayıt adresleri (undrawnAddresses: bir binanın birden çok bağımsız bölümü tek adres, kodlarıyla); kayıtta birden çok satırdaki kod (registerRepeats: kapı ilk satırla karşılaştırılır). \
+                      Her liste önce sayısını, sonra ilk limit tanesini (1–10 000, varsayılan 100) kapıların kalıcı kimlikleriyle, kayıt satırlarını sıra numaralarıyla (katmanda nesnelerin kimlikleriyle de) verir. \
+                      Retler: invalid_limit, invalid_tolerance, register_missing, invalid_input, no_address_data, unknown_locator, no_address_codes, invalid_file_path, file_not_found, register_unreadable, layer_not_found, register_column_missing. Uyarı: register_cut (250 000 satırdan çok)."
+                .into(),
+            aliases: vec!["adreskaydi".into(), "uavtkarsilastir".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::AddressesCompare>(),
+            output: schema::<crate::AddressesCompared>(),
+            plan: Some(schema::<crate::AddressesCompared>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Belediyenin UAVT tablosuyla karşılaştır".into(),
+                    input: json!({ "register": { "path": "/kayit/uavt.csv", "code": "ADRES_NO", "street": "YOL", "door": "DIS_KAPI", "neighbourhood": "MAHALLE", "x": "X", "y": "Y" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Çizimdeki kayıt katmanıyla, 25 m toleransla".into(),
+                    input: json!({ "register": { "layer": "kayit", "code": "UAVT", "street": "YOL_ADI", "door": "KAPI_NO" }, "tolerance": 25.0 }),
+                    output: None,
+                },
+            ],
+        },
         // Adres yazılışlarını düzelt (docs/adr/0647 §2), held together by fixtures/commands/v1/cad.addresses.normalize.json.
         CommandDescriptor {
             id: crate::CAD_ADDRESSES_NORMALIZE.into(),
@@ -11560,6 +11598,10 @@ mod tests {
                     }
                     crate::CAD_ADDRESSES_CHECK => {
                         serde_json::from_value::<crate::AddressesCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ADDRESSES_COMPARE => {
+                        serde_json::from_value::<crate::AddressesCompare>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ADDRESSES_NORMALIZE => {
                         serde_json::from_value::<crate::AddressesNormalize>(e.input.clone())

@@ -216,6 +216,8 @@ pub enum Dialog {
     AddressData,
     /// Adres sağlayıcıları (address/providers.rs, docs/adr/0229 §13); the window is `App::address.providers`.
     AddressProviders,
+    /// Adres kaydıyla karşılaştır (address/compare.rs, docs/adr/0736); the window is `App::address.compare`.
+    AddressCompare,
     /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
     TimeLayer,
     /// Sensör gözlemleri (temporal/sensors.rs, docs/adr/0646 §6); the window is `App::time.sensors`.
@@ -2887,6 +2889,7 @@ impl App {
             "address.search" => return self.open_address_search(),
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
+            "address.compare" => return self.open_address_compare(),
             // docs/adr/0583: a layer's source system and the map's.
             "layer.crs" => self.layer_crs_run(false),
             "layer.reproject" => self.layer_crs_run(true),

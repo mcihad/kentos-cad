@@ -150,6 +150,18 @@ AddressNameName = Literal["street", "neighbourhood", "district"]
 """The names of :class:`AddressName`, for a plain string."""
 
 
+class AddressPart(_StrEnum):
+    """A part of an address the register writes."""
+    STREET = "street"
+    DOOR = "door"
+    NEIGHBOURHOOD = "neighbourhood"
+    DISTRICT = "district"
+
+
+AddressPartName = Literal["street", "door", "neighbourhood", "district"]
+"""The names of :class:`AddressPart`, for a plain string."""
+
+
 class AddressesDefineOperation(_StrEnum):
     """What `cad.addresses.define` does.
 
@@ -9329,6 +9341,65 @@ class AddressCodeRepeat(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddressDifference(_Model):
+    """A door that writes its address otherwise than its row (`row`: from 1).
+    Attributes:
+        row: Unit: index.
+    """
+    uid: str
+    code: str
+    row: int
+    parts: list[AddressPartDifference]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["code"] = self.code
+        out["row"] = self.row
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressDifference:
+        return cls(
+            uid=data["uid"],
+            code=data["code"],
+            row=data["row"],
+            parts=[AddressPartDifference.from_json(e0) for e0 in data["parts"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressDistance(_Model):
+    """A door farther from its row's position than the tolerance.
+    Attributes:
+        row: Unit: index.
+        distance: Unit: m.
+    """
+    uid: str
+    code: str
+    row: int
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["code"] = self.code
+        out["row"] = self.row
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressDistance:
+        return cls(
+            uid=data["uid"],
+            code=data["code"],
+            row=data["row"],
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressLocator(_Model):
     """A project's address data (docs/adr/0229 §2).
     Attributes:
@@ -9428,6 +9499,118 @@ class AddressNormalized(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddressPartDifference(_Model):
+    """A part a door writes otherwise than its row: both texts as written."""
+    part: AddressPart | AddressPartName
+    drawing: str
+    register: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["part"] = _enum_out(self.part)
+        out["drawing"] = self.drawing
+        out["register"] = self.register
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressPartDifference:
+        return cls(
+            part=_enum_in(AddressPart, data["part"]),
+            drawing=data["drawing"],
+            register=data["register"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressRegister(_Model):
+    """Where the register is and which of its columns say what: a table file (`path`, a workbook's `sheet`) or a layer of
+    the drawing (`layer`, its attributes the columns), exactly one of them. The code's column is needed; the others are
+    compared where they are named (a neighbourhood or district only when the address data's doors have that field too).
+    `x` and `y` are the position in the project's coordinates; a layer's point is its position when they are not named.
+    Attributes:
+        code: The column of the address code.
+        layer: A layer of the drawing by its id.
+        path: A CSV or text table, an XLSX or an ODS file: absolute, or from the drawing's folder.
+        sheet: A workbook's sheet by its name; none: its first.
+    """
+    code: str
+    district: str | None | Unset = UNSET
+    door: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    neighbourhood: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    sheet: str | None | Unset = UNSET
+    street: str | None | Unset = UNSET
+    x: str | None | Unset = UNSET
+    y: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        if self.district is not UNSET:
+            out["district"] = self.district
+        if self.door is not UNSET:
+            out["door"] = self.door
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.neighbourhood is not UNSET:
+            out["neighbourhood"] = self.neighbourhood
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        if self.street is not UNSET:
+            out["street"] = self.street
+        if self.x is not UNSET:
+            out["x"] = self.x
+        if self.y is not UNSET:
+            out["y"] = self.y
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressRegister:
+        return cls(
+            code=data["code"],
+            district=data.get("district", UNSET),
+            door=data.get("door", UNSET),
+            layer=data.get("layer", UNSET),
+            neighbourhood=data.get("neighbourhood", UNSET),
+            path=data.get("path", UNSET),
+            sheet=data.get("sheet", UNSET),
+            street=data.get("street", UNSET),
+            x=data.get("x", UNSET),
+            y=data.get("y", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressRegisterRepeat(_Model):
+    """A code on more than one row of the register (and, for a layer, the rows' objects).
+    Attributes:
+        rows: Unit: index.
+    """
+    code: str
+    rows: list[int]
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["rows"] = list(self.rows)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressRegisterRepeat:
+        return cls(
+            code=data["code"],
+            rows=list(data["rows"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressRepeat(_Model):
     """A door number one street has more than once.
     Attributes:
@@ -9479,6 +9662,69 @@ class AddressSpelling(_Model):
             district=data["district"],
             written=[AddressWritten.from_json(e0) for e0 in data["written"]],
             uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressUndrawn(_Model):
+    """An address of the register no door has: its first row's texts, its codes and rows (and, for a layer, the rows'
+    objects).
+    Attributes:
+        rows: Unit: index.
+    """
+    street: str
+    door: str
+    neighbourhood: str
+    codes: list[str]
+    rows: list[int]
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["street"] = self.street
+        out["door"] = self.door
+        out["neighbourhood"] = self.neighbourhood
+        out["codes"] = list(self.codes)
+        out["rows"] = list(self.rows)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressUndrawn:
+        return cls(
+            street=data["street"],
+            door=data["door"],
+            neighbourhood=data["neighbourhood"],
+            codes=list(data["codes"]),
+            rows=list(data["rows"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressUnregistered(_Model):
+    """A door whose code no row of the register has."""
+    uid: str
+    code: str
+    street: str
+    door: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["code"] = self.code
+        out["street"] = self.street
+        out["door"] = self.door
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressUnregistered:
+        return cls(
+            uid=data["uid"],
+            code=data["code"],
+            street=data["street"],
+            door=data["door"],
         )
 
 
@@ -9636,6 +9882,129 @@ class AddressesChecked(_Model):
             neighbourhood_spellings=[AddressNameSpelling.from_json(e0) for e0 in data["neighbourhoodSpellings"]],
             districts_spelled=data["districtsSpelled"],
             district_spellings=[AddressNameSpelling.from_json(e0) for e0 in data["districtSpellings"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesCompare(_Model):
+    """Input of `cad.addresses.compare` v1: the address data of `locator` (else the project's first) compared with
+    `register`; a door `tolerance` metres or more from its row's position is said (default 10, at most 10 000); each
+    list cut at `limit` (1–10 000, default 100). `drawing` is the drawing's own file, for a register path given from its
+    folder.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `invalid_tolerance`, `register_missing`
+    (no path and no layer, or both), `no_address_data`, `unknown_locator`, `no_address_codes` (the address data's doors
+    have no code field), `invalid_file_path`, `file_not_found`, `register_unreadable` (the file does not read as a table,
+    has no rows, or no sheet of that name), `layer_not_found`, `register_column_missing`. Warning: `register_cut` (the
+    register had more rows than are read: 250 000).
+    Attributes:
+        limit: Unit: count.
+        tolerance: Unit: m.
+    """
+    register: AddressRegister
+    drawing: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    locator: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["register"] = self.register.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.locator is not UNSET:
+            out["locator"] = self.locator
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesCompare:
+        return cls(
+            register=AddressRegister.from_json(data["register"]),
+            drawing=data.get("drawing", UNSET),
+            limit=data.get("limit", UNSET),
+            locator=data.get("locator", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesCompared(_Model):
+    """Output (and plan) of `cad.addresses.compare` v1: the counts, then each list's count and its first `limit`.
+    Attributes:
+        doors: The address data's doors, those with a code, and those whose code the register has. Unit: count.
+        coded: Unit: count.
+        matched: Unit: count.
+        rows: The register's rows read with a code, and those without one (left out). Unit: count.
+        uncoded_rows: Unit: count.
+        unregistered: Unit: count.
+        differing: Unit: count.
+        distant: Unit: count.
+        undrawn: Unit: count.
+        repeated: Unit: count.
+    """
+    locator: str
+    doors: int
+    coded: int
+    matched: int
+    rows: int
+    uncoded_rows: int
+    unregistered: int
+    unregistered_doors: list[AddressUnregistered]
+    differing: int
+    differences: list[AddressDifference]
+    distant: int
+    distances: list[AddressDistance]
+    undrawn: int
+    undrawn_addresses: list[AddressUndrawn]
+    repeated: int
+    register_repeats: list[AddressRegisterRepeat]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["locator"] = self.locator
+        out["doors"] = self.doors
+        out["coded"] = self.coded
+        out["matched"] = self.matched
+        out["rows"] = self.rows
+        out["uncodedRows"] = self.uncoded_rows
+        out["unregistered"] = self.unregistered
+        out["unregisteredDoors"] = [e0.to_json() for e0 in self.unregistered_doors]
+        out["differing"] = self.differing
+        out["differences"] = [e0.to_json() for e0 in self.differences]
+        out["distant"] = self.distant
+        out["distances"] = [e0.to_json() for e0 in self.distances]
+        out["undrawn"] = self.undrawn
+        out["undrawnAddresses"] = [e0.to_json() for e0 in self.undrawn_addresses]
+        out["repeated"] = self.repeated
+        out["registerRepeats"] = [e0.to_json() for e0 in self.register_repeats]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesCompared:
+        return cls(
+            locator=data["locator"],
+            doors=data["doors"],
+            coded=data["coded"],
+            matched=data["matched"],
+            rows=data["rows"],
+            uncoded_rows=data["uncodedRows"],
+            unregistered=data["unregistered"],
+            unregistered_doors=[AddressUnregistered.from_json(e0) for e0 in data["unregisteredDoors"]],
+            differing=data["differing"],
+            differences=[AddressDifference.from_json(e0) for e0 in data["differences"]],
+            distant=data["distant"],
+            distances=[AddressDistance.from_json(e0) for e0 in data["distances"]],
+            undrawn=data["undrawn"],
+            undrawn_addresses=[AddressUndrawn.from_json(e0) for e0 in data["undrawnAddresses"]],
+            repeated=data["repeated"],
+            register_repeats=[AddressRegisterRepeat.from_json(e0) for e0 in data["registerRepeats"]],
             revision=data["revision"],
         )
 
@@ -82394,16 +82763,27 @@ __all__ = [
     "AddSlabsOperation",
     "AddVariantPaperOp",
     "AddressCodeRepeat",
+    "AddressDifference",
+    "AddressDistance",
     "AddressLocator",
     "AddressName",
     "AddressNameName",
     "AddressNameSpelling",
     "AddressNormalized",
+    "AddressPart",
+    "AddressPartDifference",
+    "AddressPartName",
+    "AddressRegister",
+    "AddressRegisterRepeat",
     "AddressRepeat",
     "AddressSpelling",
+    "AddressUndrawn",
+    "AddressUnregistered",
     "AddressWritten",
     "AddressesCheck",
     "AddressesChecked",
+    "AddressesCompare",
+    "AddressesCompared",
     "AddressesDefine",
     "AddressesDefineOperation",
     "AddressesDefineOperationName",

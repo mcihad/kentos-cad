@@ -50,6 +50,7 @@ use kentos_commands::{DimensionSetsCreateInput, DimensionSetsEditInput, Dimensio
 use crate::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 
 use crate::addresses_check;
+use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
 use crate::donut_create;
@@ -117,6 +118,7 @@ use crate::{stac_prepare, stac_search};
 use crate::{subnetworks, subnetworks_update};
 use crate::{topology_check, topology_exceptions};
 use kentos_commands::AddressesCheck;
+use kentos_commands::AddressesCompare;
 use kentos_commands::AddressesNormalize;
 use kentos_commands::DrawingCompare;
 use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
@@ -386,6 +388,7 @@ macro_rules! by_command {
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
             kentos_commands::CAD_ADDRESSES_CHECK => $then!(addresses_check, AddressesCheck),
+            kentos_commands::CAD_ADDRESSES_COMPARE => $then!(addresses_compare, AddressesCompare),
             kentos_commands::CAD_ADDRESSES_NORMALIZE => {
                 $then!(addresses_normalize, AddressesNormalize)
             }

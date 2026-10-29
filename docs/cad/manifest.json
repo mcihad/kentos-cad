@@ -20,6 +20,23 @@
  },
  "rows": [
   {
+   "id": "address.compare",
+   "kind": "command",
+   "title": "Adres kaydıyla karşılaştır…",
+   "level": "semantic",
+   "via": [
+    "cad.addresses.compare",
+    "cad.changeset.apply"
+   ],
+   "operation": null,
+   "python": "kentos.cad.addresses.compare, kentos.cad.changeset.apply",
+   "mcp": "cad.addresses.compare, cad.changeset.apply",
+   "note": "Karşılaştırma cad.addresses.compare'in cevabıdır; Farkları kayıttan yaz kapılara cad.entities.set çağrılarını tek cad.changeset.apply ile yazar (ADR 0736).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "address.data",
    "kind": "command",
    "title": "Adres verisi…",

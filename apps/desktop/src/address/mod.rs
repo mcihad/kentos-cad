@@ -20,6 +20,7 @@
 //! same as İşlemler's Adresleri eşle and Konumlara adres yaz. The view is
 //! `view.rs`.
 
+pub(crate) mod compare;
 pub(crate) mod data;
 pub(crate) mod engine;
 pub(crate) mod online;
@@ -168,6 +169,8 @@ pub enum Event {
     Data(data::Event),
     /// Adres sağlayıcıları's window.
     Providers(providers::Event),
+    /// Adres kaydıyla karşılaştır's window.
+    Compare(compare::Event),
 }
 
 /// What a locator was last built from: its definition, the drawing's change mark, the objects it read and its
@@ -204,6 +207,8 @@ pub(crate) struct State {
     pub(crate) wanted: Vec<Vec2>,
     pub(crate) data: Option<data::Window>,
     pub(crate) providers: Option<providers::Window>,
+    /// Adres kaydıyla karşılaştır's window (compare.rs, docs/adr/0736).
+    pub(crate) compare: Option<compare::Window>,
 }
 
 fn filters_of(def: &AddressLocator, doc: &Document) -> Vec<Option<kentos_commands::LayerFilter>> {
@@ -329,6 +334,7 @@ impl App {
             Event::OpenProviders => return self.open_address_providers(),
             Event::Data(e) => return self.address_data_event(e),
             Event::Providers(e) => return self.address_providers_event(e),
+            Event::Compare(e) => return self.address_compare_event(e),
         }
         Task::none()
     }

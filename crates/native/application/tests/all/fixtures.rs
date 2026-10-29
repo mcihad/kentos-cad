@@ -76,7 +76,8 @@ use kentos_native_application::standards::{apply as standards_apply, check as st
 use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_normalize,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_compare,
+    addresses_normalize,
     adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, casework_edit, casework_query, casework_run, array, blocks_define,
     blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
@@ -3377,6 +3378,12 @@ impl Input for kentos_commands::AddressesCheck {
     }
 }
 
+impl Input for kentos_commands::AddressesCompare {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for AddressesDefine {
     /// `locator.reach` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4410,6 +4417,9 @@ fn run_op(
         kentos_commands::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
         kentos_commands::CAD_ADDRESSES_CHECK => {
             run!(addresses_check, kentos_commands::AddressesCheck)
+        }
+        kentos_commands::CAD_ADDRESSES_COMPARE => {
+            run!(addresses_compare, kentos_commands::AddressesCompare)
         }
         kentos_commands::CAD_ADDRESSES_NORMALIZE => {
             run!(addresses_normalize, kentos_commands::AddressesNormalize)

@@ -3438,6 +3438,28 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Adres kaydıyla karşılaştır (docs/adr/0736): read only.
+    Entry {
+        id: "cad.addresses.compare",
+        refusals: &[
+            &[
+                "invalid_limit",
+                "invalid_tolerance",
+                "register_missing",
+                "invalid_input",
+            ],
+            &["no_address_data", "unknown_locator", "no_address_codes"],
+            &[
+                "invalid_file_path",
+                "file_not_found",
+                "register_unreadable",
+                "layer_not_found",
+                "register_column_missing",
+            ],
+        ],
+        warnings: &["register_cut"],
+        targets: none,
+    },
     // Adres yazılışlarını düzelt (docs/adr/0647 §2).
     Entry {
         id: "cad.addresses.normalize",

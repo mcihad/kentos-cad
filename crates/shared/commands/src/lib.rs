@@ -108,6 +108,7 @@ pub mod cad_tables;
 pub mod cad_tags;
 pub mod cad_templates;
 pub mod cad_texts;
+pub mod cad_addresses_compare;
 pub mod cad_addresses_normalize;
 pub mod cad_sensors;
 pub mod cad_time;
@@ -124,6 +125,7 @@ pub mod capabilities;
 pub mod catalog;
 
 pub use cad_addresses::*;
+pub use cad_addresses_compare::*;
 pub use cad_addresses_normalize::*;
 pub use cad_sensors::*;
 pub use cad_annotations::*;

@@ -18,7 +18,7 @@ use crate::checks::{Stop, error};
 use crate::codes;
 
 /// The objects' persistent ids by their places in the drawing's order (a door's `order`).
-fn uids_by_place(doc: &Document) -> HashMap<u32, String> {
+pub(crate) fn uids_by_place(doc: &Document) -> HashMap<u32, String> {
     doc.entities_with_uids()
         .filter_map(|(uid, e)| {
             let place = doc.place(Slot(e.base().id))?;

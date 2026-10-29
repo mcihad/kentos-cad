@@ -6,7 +6,8 @@
 //! (`locator`) and asked by address (`forward`) or by place (`reverse`);
 //! an address is written back as text (`format`). `fields` guesses which
 //! attributes say what from their names; `check` counts what a locator
-//! holds and what it left out. The online providers' requests and answers
+//! holds and what it left out; `register` compares its doors with an
+//! address register (docs/adr/0736). The online providers' requests and answers
 //! are the services core's (`kentos_services::geocode`), scored by the same
 //! rules. The independent reference is `scripts/fixtures/geocode_cases.py`
 //! (fixtures/geocode/v1/cases.json).
@@ -18,6 +19,7 @@ pub mod format;
 pub mod forward;
 pub mod locator;
 pub mod parse;
+pub mod register;
 pub mod reverse;
 pub mod similar;
 

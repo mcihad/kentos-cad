@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod address_spellings;
+mod addresses_compare;
 mod array_assoc;
 mod audit_cmd;
 mod gpkg_tiles_files;

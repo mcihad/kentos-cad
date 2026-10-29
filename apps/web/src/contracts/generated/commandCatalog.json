@@ -32323,6 +32323,368 @@
       ]
     },
     {
+      "id": "cad.addresses.compare",
+      "version": 1,
+      "title": "Adres kaydıyla karşılaştır",
+      "summary": "Projenin adres verisinin (locator; verilmezse ilki) kapılarını bir adres kaydıyla (kurumun ya da Ulusal Adres Veri Tabanı'nın adres kodu tablosu, UAVT) karşılaştırır; çizimi değiştirmez. Kayıt bir tablo dosyası (register.path: CSV ya da metin, XLSX, ODS; register.sheet çalışma kitabının sayfası) ya da çizimin bir katmanıdır (register.layer: nesnelerin öznitelikleri sütunlar, noktası yeri); ilk satır sütunları adlandırır. register.code adres kodunun sütunudur; street, door, neighbourhood, district, x ve y verildikleri yerde karşılaştırılır (mahalle ve ilçe yalnız kapılarda o alan varsa; x ve y projenin koordinatlarında). Bulgular: kodu kayıtta olmayan kapı (unregisteredDoors); kodu bir satırın ama adresi başka yazılan kapı (differences: yol, kapı no, mahalle, ilçe; adresin anahtarlarıyla karşılaştırılır, “Atatürk Blv.” ile “ATATÜRK BULVARI” aynıdır, yolun türü ikisi de söylüyorsa); satırın yerinden tolerance metreden (varsayılan 10) uzak kapı (distances); kodu hiçbir kapıda olmayan ve yolunda o numarada kapı bulunmayan kayıt adresleri (undrawnAddresses: bir binanın birden çok bağımsız bölümü tek adres, kodlarıyla); kayıtta birden çok satırdaki kod (registerRepeats: kapı ilk satırla karşılaştırılır). Her liste önce sayısını, sonra ilk limit tanesini (1–10 000, varsayılan 100) kapıların kalıcı kimlikleriyle, kayıt satırlarını sıra numaralarıyla (katmanda nesnelerin kimlikleriyle de) verir. Retler: invalid_limit, invalid_tolerance, register_missing, invalid_input, no_address_data, unknown_locator, no_address_codes, invalid_file_path, file_not_found, register_unreadable, layer_not_found, register_column_missing. Uyarı: register_cut (250 000 satırdan çok).",
+      "aliases": [
+        "adreskaydi",
+        "uavtkarsilastir"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.addresses.compare` v1: the address data of `locator` (else the project's first) compared with\n`register`; a door `tolerance` metres or more from its row's position is said (default 10, at most 10 000); each\nlist cut at `limit` (1–10 000, default 100). `drawing` is the drawing's own file, for a register path given from its\nfolder.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `invalid_tolerance`, `register_missing`\n(no path and no layer, or both), `no_address_data`, `unknown_locator`, `no_address_codes` (the address data's doors\nhave no code field), `invalid_file_path`, `file_not_found`, `register_unreadable` (the file does not read as a table,\nhas no rows, or no sheet of that name), `layer_not_found`, `register_column_missing`. Warning: `register_cut` (the\nregister had more rows than are read: 250 000).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "register": {
+            "$ref": "#/$defs/AddressRegister"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "register"
+        ],
+        "title": "AddressesCompare",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.addresses.compare` v1: the counts, then each list's count and its first `limit`.",
+        "properties": {
+          "coded": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "differences": {
+            "items": {
+              "$ref": "#/$defs/AddressDifference"
+            },
+            "type": "array"
+          },
+          "differing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/$defs/AddressDistance"
+            },
+            "type": "array"
+          },
+          "distant": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "doors": {
+            "description": "The address data's doors, those with a code, and those whose code the register has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "registerRepeats": {
+            "items": {
+              "$ref": "#/$defs/AddressRegisterRepeat"
+            },
+            "type": "array"
+          },
+          "repeated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "The register's rows read with a code, and those without one (left out).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uncodedRows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "undrawn": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "undrawnAddresses": {
+            "items": {
+              "$ref": "#/$defs/AddressUndrawn"
+            },
+            "type": "array"
+          },
+          "unregistered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unregisteredDoors": {
+            "items": {
+              "$ref": "#/$defs/AddressUnregistered"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "locator",
+          "doors",
+          "coded",
+          "matched",
+          "rows",
+          "uncodedRows",
+          "unregistered",
+          "unregisteredDoors",
+          "differing",
+          "differences",
+          "distant",
+          "distances",
+          "undrawn",
+          "undrawnAddresses",
+          "repeated",
+          "registerRepeats",
+          "revision"
+        ],
+        "title": "AddressesCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.addresses.compare` v1: the counts, then each list's count and its first `limit`.",
+        "properties": {
+          "coded": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "differences": {
+            "items": {
+              "$ref": "#/$defs/AddressDifference"
+            },
+            "type": "array"
+          },
+          "differing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/$defs/AddressDistance"
+            },
+            "type": "array"
+          },
+          "distant": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "doors": {
+            "description": "The address data's doors, those with a code, and those whose code the register has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "registerRepeats": {
+            "items": {
+              "$ref": "#/$defs/AddressRegisterRepeat"
+            },
+            "type": "array"
+          },
+          "repeated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "The register's rows read with a code, and those without one (left out).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uncodedRows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "undrawn": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "undrawnAddresses": {
+            "items": {
+              "$ref": "#/$defs/AddressUndrawn"
+            },
+            "type": "array"
+          },
+          "unregistered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unregisteredDoors": {
+            "items": {
+              "$ref": "#/$defs/AddressUnregistered"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "locator",
+          "doors",
+          "coded",
+          "matched",
+          "rows",
+          "uncodedRows",
+          "unregistered",
+          "unregisteredDoors",
+          "differing",
+          "differences",
+          "distant",
+          "distances",
+          "undrawn",
+          "undrawnAddresses",
+          "repeated",
+          "registerRepeats",
+          "revision"
+        ],
+        "title": "AddressesCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_limit",
+          "invalid_tolerance",
+          "register_missing",
+          "invalid_input",
+          "no_address_data",
+          "unknown_locator",
+          "no_address_codes",
+          "invalid_file_path",
+          "file_not_found",
+          "register_unreadable",
+          "layer_not_found",
+          "register_column_missing"
+        ],
+        "warnings": [
+          "register_cut"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Belediyenin UAVT tablosuyla karşılaştır",
+          "input": {
+            "register": {
+              "code": "ADRES_NO",
+              "door": "DIS_KAPI",
+              "neighbourhood": "MAHALLE",
+              "path": "/kayit/uavt.csv",
+              "street": "YOL",
+              "x": "X",
+              "y": "Y"
+            }
+          }
+        },
+        {
+          "title": "Çizimdeki kayıt katmanıyla, 25 m toleransla",
+          "input": {
+            "register": {
+              "code": "UAVT",
+              "door": "KAPI_NO",
+              "layer": "kayit",
+              "street": "YOL_ADI"
+            },
+            "tolerance": 25.0
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.addresses.normalize",
       "version": 1,
       "title": "Adres yazılışlarını düzelt",
@@ -64412,6 +64774,36 @@
       "meaning": "Projede adres verisi yok; önce Adres verisi penceresinde ya da cad.addresses.define ile tanımlayın."
     },
     {
+      "code": "register_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karşılaştırılacak adres kaydını verin: bir tablo dosyası (path) ya da çizimin bir katmanı (layer), ikisinden biri."
+    },
+    {
+      "code": "no_address_codes",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adres verisinin kapılarında adres kodu alanı yok; Adres verisi penceresinde kapıların Adres kodu alanını seçin."
+    },
+    {
+      "code": "register_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adres kaydı tablo olarak okunamadı; nedeni iletide."
+    },
+    {
+      "code": "register_column_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adres kaydında verilen sütun yok; iletide kaydın sütunları sayılır."
+    },
+    {
+      "code": "register_cut",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Adres kaydının ilk 250 000 satırı karşılaştırıldı; gerisi okunmadı."
+    },
+    {
       "code": "invalid_distance",
       "kind": "failed",
       "retryable": false,
@@ -69403,6 +69795,65 @@
       ],
       "type": "object"
     },
+    "AddressDifference": {
+      "description": "A door that writes its address otherwise than its row (`row`: from 1).",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/AddressPartDifference"
+          },
+          "type": "array"
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "code",
+        "row",
+        "parts"
+      ],
+      "type": "object"
+    },
+    "AddressDistance": {
+      "description": "A door farther from its row's position than the tolerance.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "code",
+        "row",
+        "distance"
+      ],
+      "type": "object"
+    },
     "AddressLocator": {
       "description": "A project's address data (docs/adr/0229 §2).",
       "properties": {
@@ -69538,6 +69989,135 @@
       ],
       "type": "object"
     },
+    "AddressPart": {
+      "description": "A part of an address the register writes.",
+      "enum": [
+        "street",
+        "door",
+        "neighbourhood",
+        "district"
+      ],
+      "type": "string"
+    },
+    "AddressPartDifference": {
+      "description": "A part a door writes otherwise than its row: both texts as written.",
+      "properties": {
+        "drawing": {
+          "type": "string"
+        },
+        "part": {
+          "$ref": "#/$defs/AddressPart"
+        },
+        "register": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "part",
+        "drawing",
+        "register"
+      ],
+      "type": "object"
+    },
+    "AddressRegister": {
+      "additionalProperties": false,
+      "description": "Where the register is and which of its columns say what: a table file (`path`, a workbook's `sheet`) or a layer of\nthe drawing (`layer`, its attributes the columns), exactly one of them. The code's column is needed; the others are\ncompared where they are named (a neighbourhood or district only when the address data's doors have that field too).\n`x` and `y` are the position in the project's coordinates; a layer's point is its position when they are not named.",
+      "properties": {
+        "code": {
+          "description": "The column of the address code.",
+          "type": "string"
+        },
+        "district": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "door": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "description": "A layer of the drawing by its id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "neighbourhood": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "A CSV or text table, an XLSX or an ODS file: absolute, or from the drawing's folder.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheet": {
+          "description": "A workbook's sheet by its name; none: its first.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "street": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "x": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "y": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "AddressRegisterRepeat": {
+      "description": "A code on more than one row of the register (and, for a layer, the rows' objects).",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "rows": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "rows"
+      ],
+      "type": "object"
+    },
     "AddressRepeat": {
       "description": "A door number one street has more than once.",
       "properties": {
@@ -69593,6 +70173,73 @@
         "district",
         "written",
         "uids"
+      ],
+      "type": "object"
+    },
+    "AddressUndrawn": {
+      "description": "An address of the register no door has: its first row's texts, its codes and rows (and, for a layer, the rows'\nobjects).",
+      "properties": {
+        "codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "door": {
+          "type": "string"
+        },
+        "neighbourhood": {
+          "type": "string"
+        },
+        "rows": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "street": {
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "street",
+        "door",
+        "neighbourhood",
+        "codes",
+        "rows"
+      ],
+      "type": "object"
+    },
+    "AddressUnregistered": {
+      "description": "A door whose code no row of the register has.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "door": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "code",
+        "street",
+        "door"
       ],
       "type": "object"
     },

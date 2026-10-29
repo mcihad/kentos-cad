@@ -11,6 +11,7 @@ from . import addresses, annotations, arc, arch, areas, arrays, assets, attachme
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
+    "cad.addresses.compare": addresses.compare,
     "cad.addresses.define": addresses.define,
     "cad.addresses.normalize": addresses.normalize,
     "cad.annotations.scales": annotations.scales,

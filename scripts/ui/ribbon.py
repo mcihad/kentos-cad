@@ -196,7 +196,7 @@ CAD = [
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos")],
           overflow=["layer.info"]),
         P("Adres", "addressSearch", [S("address.search"), S("address.reverse")],
-          overflow=["address.data", "address.providers"]),
+          overflow=["address.data", "address.compare", "address.providers"]),
     ]),
     T("annotate", "Açıklama", [
         P("Yazı", "text", [L("tool.text"), S("tool.mtext"), SP("textAlong"), S("tool.placeTextFile"),
@@ -370,7 +370,8 @@ GIS = [
             S("scenario.compare"), S("data.compare")],
           overflow=["time.sensors", "tool.timeVersion", "tool.timeEnd", "time.compare", "scenario.show",
             "scenario.base", "scenario.apply"]),
-        P("Adres", "addressSearch", [S("address.reverse"), S("address.data")], overflow=["address.providers"]),
+        P("Adres", "addressSearch", [S("address.reverse"), S("address.data")],
+          overflow=["address.compare", "address.providers"]),
         P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus")]),
     ]),
     survey_tab(False),

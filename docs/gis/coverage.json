@@ -21,6 +21,24 @@
    "kinds": []
   },
   {
+   "id": "cad.addresses.compare",
+   "title": "Adres kaydıyla karşılaştır",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.addresses.compare.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.addresses.define",
    "title": "Adres verisi",
    "effect": "document",
