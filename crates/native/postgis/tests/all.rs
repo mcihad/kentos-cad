@@ -2336,3 +2336,108 @@ fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
         eprintln!("{layer}: {} satır PostGIS'ten geri okundu", rows.len());
     }
 }
+
+/// A page a database does not give (docs/adr/0740 §1): its table renamed (`table_not_found`, linked again), its
+/// server not answering (`source_unreachable`, asked again); the same question asked again once it is back goes on
+/// from its cursor: the pages are the table's rows in key order, none twice, none skipped. A copy of the order cases'
+/// table, so theirs stays as it is.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_page_lost_with_its_table_or_its_server_goes_on_from_its_cursor() {
+    use kentos_native_application::sources::trouble::Trouble;
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    let Ok(password) = std::env::var("PGPASSWORD") else {
+        return;
+    };
+    kentos_postgis::register();
+    let sql = |statements: &[&'static str]| {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("runtime");
+        runtime.block_on(async {
+            use sqlx::{Connection, Executor};
+            use std::str::FromStr;
+            let options = sqlx::postgres::PgConnectOptions::from_str(&url)
+                .expect("url")
+                .password(&password);
+            let mut conn = sqlx::postgres::PgConnection::connect_with(&options)
+                .await
+                .expect("owner");
+            for s in statements {
+                conn.execute(*s).await.expect(s);
+            }
+        });
+    };
+    sql(&[
+        "DROP TABLE IF EXISTS sira.sorun",
+        "DROP TABLE IF EXISTS sira.sorun_eski",
+        "CREATE TABLE sira.sorun AS SELECT * FROM sira.olay",
+        "ALTER TABLE sira.sorun ADD PRIMARY KEY (fid)",
+    ]);
+    // An address of the same database whose port nothing listens on.
+    let closed = {
+        let port = std::net::TcpListener::bind("127.0.0.1:0")
+            .and_then(|l| l.local_addr())
+            .expect("a free port")
+            .port();
+        let at = url.find('@').map_or(0, |i| i + 1);
+        let slash = url[at..].find('/').map_or(url.len(), |i| at + i);
+        let host = &url[at..slash];
+        let host = host.rsplit_once(':').map_or(host, |(h, _)| h);
+        format!("{}{host}:{port}{}", &url[..at], &url[slash..])
+    };
+    let mut d = doc();
+    let ask = |d: &mut Document, address: &str, cursor: &Value| {
+        let mut input =
+            json!({ "path": address, "table": "sira.sorun", "limit": 700, "fields": ["ad"] });
+        if !cursor.is_null() {
+            input["cursor"] = cursor.clone();
+        }
+        run(d, "cad.sources.query", CallOp::Execute, input)
+    };
+    let keys_of = |a: &Value| -> Vec<i64> {
+        a["output"]["rows"]
+            .as_array()
+            .expect("rows")
+            .iter()
+            .map(|r| r["key"].as_i64().expect("a key"))
+            .collect()
+    };
+    let mut keys = Vec::new();
+    let first = ask(&mut d, &url, &Value::Null);
+    ok(&first);
+    keys.extend(keys_of(&first));
+    let next = first["output"]["next"].clone();
+    // The table renamed under the question: not there, nothing read; renamed back, the page goes on.
+    sql(&["ALTER TABLE sira.sorun RENAME TO sorun_eski"]);
+    let refused = ask(&mut d, &url, &next);
+    assert_eq!(refused["status"], "failed", "{refused}");
+    let code = refused["error"]["code"].as_str().expect("a code");
+    assert_eq!(code, "table_not_found", "{refused}");
+    assert_eq!(Trouble::of(code), Some(Trouble::Relink));
+    sql(&["ALTER TABLE sira.sorun_eski RENAME TO sorun"]);
+    let second = ask(&mut d, &url, &next);
+    ok(&second);
+    keys.extend(keys_of(&second));
+    let next = second["output"]["next"].clone();
+    // The server not answering: asked again once it does, the page goes on.
+    let refused = ask(&mut d, &closed, &next);
+    let code = refused["error"]["code"].as_str().expect("a code");
+    assert_eq!(code, "source_unreachable", "{refused}");
+    assert_eq!(Trouble::of(code), Some(Trouble::Retry));
+    let mut next = next;
+    loop {
+        let page = ask(&mut d, &url, &next);
+        ok(&page);
+        keys.extend(keys_of(&page));
+        next = page["output"]["next"].clone();
+        if next.is_null() {
+            break;
+        }
+    }
+    assert_eq!(keys, (1..=2400).collect::<Vec<i64>>());
+    sql(&["DROP TABLE sira.sorun"]);
+}

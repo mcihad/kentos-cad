@@ -4,12 +4,14 @@
 
 use std::path::PathBuf;
 
-use kentos_commands::{CallOp, CommandResult, QueryScope, SourcesQuery};
+use kentos_commands::{CallOp, QueryScope, SourcesQuery};
+use kentos_native_application::sources::trouble::Trouble;
 use kentos_native_application::{ExecutionContext, registry};
 
 use super::Event;
 use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, scratch};
+use crate::source_trouble::Refused;
 
 const LAYER: &str = "import-nokta";
 
@@ -55,19 +57,19 @@ fn answer(app: &mut App) {
         statistics: Some(vec![field.clone()]),
         ..SourcesQuery::default()
     };
-    let told = match kentos_native_application::sources_query::ask_source(
-        doc.settings(),
-        link.kind,
-        &link.path,
-        &link.table,
-        LAYER,
-        &input,
-        doc.revision().to_string(),
-        &|| false,
-    ) {
-        CommandResult::Completed { output, .. } => Ok(output),
-        other => Err(format!("{other:?}")),
-    };
+    let told = Refused::of(
+        kentos_native_application::sources_query::ask_source(
+            doc.settings(),
+            link.kind,
+            &link.path,
+            &link.table,
+            LAYER,
+            &input,
+            doc.revision().to_string(),
+            &|| false,
+        ),
+        "durduruldu",
+    );
     ev(
         app,
         Event::WholeAnswered(LAYER.into(), field, Box::new(told)),
@@ -105,12 +107,84 @@ fn the_whole_source_is_asked_for_the_chosen_field() {
     // An answer for another field is not this one's.
     ev(
         &mut app,
-        Event::WholeAnswered(LAYER.into(), "no".into(), Box::new(Err("başka".into()))),
+        Event::WholeAnswered(
+            LAYER.into(),
+            "no".into(),
+            Box::new(Err(Refused {
+                code: "x".into(),
+                why: "başka".into(),
+            })),
+        ),
     );
     assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_ok));
     // Çalışma kopyası leaves it.
     ev(&mut app, Event::Scope(false));
     assert!(app.charts.whole.answer.is_none() && app.charts.whole.asked.is_none());
+}
+
+/// A source that could not be read (docs/adr/0740 §2): the refusal is kept with what helps; Yeniden dene asks again
+/// once the file is back, and a relinked layer asks again by itself.
+#[test]
+fn a_source_not_read_is_said_and_asked_again() {
+    let mut app = scene("istatistik-sorun");
+    let file = std::path::PathBuf::from(
+        &app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .sources[0]
+            .path,
+    );
+    let away = file.with_file_name("uzakta.gpkg");
+    std::fs::rename(&file, &away).expect("moved away");
+    ev(&mut app, Event::Field("kot".into()));
+    ev(&mut app, Event::Scope(true));
+    answer(&mut app);
+    let refused = app
+        .charts
+        .whole
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect_err("refused");
+    assert_eq!(refused.code, "file_not_found");
+    assert_eq!(refused.way(), Some(Trouble::Relink));
+    // Back: Yeniden dene asks the same field again.
+    std::fs::rename(&away, &file).expect("moved back");
+    ev(&mut app, Event::WholeRetry);
+    assert!(app.charts.whole.running.is_some());
+    answer(&mut app);
+    let told = app
+        .charts
+        .whole
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("read");
+    assert_eq!(told.total, Some(250));
+    // Moved for good: relinked to the new place, the question is asked again by itself.
+    let moved = file.with_file_name("yeni.gpkg");
+    std::fs::rename(&file, &moved).expect("moved");
+    ev(&mut app, Event::WholeRetry);
+    answer(&mut app);
+    assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_err));
+    let id = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .sources[0]
+        .id
+        .clone();
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        id,
+        Some(moved),
+    )));
+    assert!(app.charts.whole.running.is_some(), "asked again");
+    answer(&mut app);
+    assert!(app.charts.whole.answer.as_ref().is_some_and(Result::is_ok));
 }
 
 #[test]
@@ -169,5 +243,21 @@ fn screens() {
         picture(&mut app, "okunuyor");
         answer(&mut app);
         picture(&mut app, "tumu");
+        // The source moved away: why, and the way out (docs/adr/0740 §2).
+        let file = std::path::PathBuf::from(
+            &app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .settings()
+                .sources[0]
+                .path,
+        );
+        let away = file.with_file_name("uzakta.gpkg");
+        std::fs::rename(&file, &away).expect("moved away");
+        ev(&mut app, Event::WholeRetry);
+        answer(&mut app);
+        picture(&mut app, "okunamadi");
+        std::fs::rename(&away, &file).expect("moved back");
     }
 }

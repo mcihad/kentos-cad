@@ -162,6 +162,7 @@ mod drawing_menus;
 mod data_profile;
 mod subnetworks_window;
 mod source_status;
+mod source_trouble;
 mod drawing_standard;
 #[cfg(test)]
 mod edge_shift_scenes;

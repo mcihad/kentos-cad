@@ -3,18 +3,22 @@
 //! layer's source for the chosen field's statistics over its every row
 //! (`cad.sources.query` with `scope: source`), on a thread of its own with
 //! Durdur; the drawing does not wait for it. The answer is kept for the layer
-//! and the field it was asked for.
+//! and the field it was asked for. A source that could not be read says why
+//! with the one way out `source_trouble` says (docs/adr/0740 §2): Yeniden dene
+//! asks again, Yeniden bağla… links the layer to its file's new place and then
+//! asks again.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use iced::Task;
 use iced::futures::channel::oneshot;
-use kentos_commands::{CommandResult, QueryScope, SourcesQueried, SourcesQuery};
+use kentos_commands::{QueryScope, SourcesQueried, SourcesQuery};
 use kentos_interaction::Level;
 
 use super::Event;
 use crate::app::{App, Message};
+use crate::source_trouble::Refused;
 
 /// The words.
 pub mod texts {
@@ -50,8 +54,8 @@ pub(crate) struct Whole {
     pub asked: Option<(String, String)>,
     /// The question running: its stop.
     pub running: Option<Arc<AtomicBool>>,
-    /// The last answer, for `asked`.
-    pub answer: Option<Result<SourcesQueried, String>>,
+    /// The last answer, for `asked`: the source's, or its refusal.
+    pub answer: Option<Result<SourcesQueried, Refused>>,
 }
 
 impl App {
@@ -128,20 +132,30 @@ impl App {
                 revision,
                 &|| stop.load(Ordering::Relaxed),
             );
-            let _ = done.send(match answer {
-                CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } => Err(error.message),
-                CommandResult::Cancelled => Err(texts::STOPPED.to_owned()),
-                other => Err(format!("{other:?}")),
-            });
+            let _ = done.send(Refused::of(answer, texts::STOPPED));
         });
         Task::perform(wait, move |answer| {
             Message::Statistics(Event::WholeAnswered(
                 want.0.clone(),
                 want.1.clone(),
-                Box::new(answer.unwrap_or_else(|_| Err(texts::STOPPED.to_owned()))),
+                Box::new(answer.unwrap_or_else(|_| {
+                    Err(Refused {
+                        code: "cancelled".into(),
+                        why: texts::STOPPED.to_owned(),
+                    })
+                })),
             ))
         })
+    }
+
+    /// Kaynağın tümü's question asked again (docs/adr/0740 §2): the source refused it, or the layer was relinked.
+    pub(crate) fn stats_whole_retry(&mut self) -> Task<Message> {
+        if let Some(stop) = self.charts.whole.running.take() {
+            stop.store(true, Ordering::Relaxed);
+        }
+        self.charts.whole.asked = None;
+        self.charts.whole.answer = None;
+        self.stats_whole()
     }
 
     pub(crate) fn stats_whole_event(&mut self, event: Event) -> Task<Message> {
@@ -157,11 +171,12 @@ impl App {
                 self.stats_whole_stop();
                 self.say(Level::Info, texts::STOPPED);
             }
+            Event::WholeRetry => return self.stats_whole_retry(),
             Event::WholeAnswered(layer, field, answer) => {
                 if self.charts.whole.asked.as_ref() == Some(&(layer, field)) {
                     self.charts.whole.running = None;
-                    if let Err(why) = answer.as_ref() {
-                        self.say(Level::Warn, why.clone());
+                    if let Err(r) = answer.as_ref() {
+                        self.say(Level::Warn, r.why.clone());
                     }
                     self.charts.whole.answer = Some(*answer);
                 }

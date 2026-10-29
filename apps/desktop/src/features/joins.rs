@@ -178,7 +178,32 @@ impl App {
             })
             .collect();
         let info: Element<'_, Message> = match &r.broken {
-            Some(why) => label::body(why.clone()).style(style::text::warning).into(),
+            // A source's table that could not be read says why, with Yeniden dene when asking again may help
+            // (docs/adr/0740 §2; a table not where the view says is set in Birleşik görünümler…).
+            Some(why) => {
+                let way = r.refused.clone().and_then(|code| {
+                    crate::source_trouble::way_out(
+                        &crate::source_trouble::Refused {
+                            code,
+                            why: why.clone(),
+                        },
+                        None,
+                        msg(Event::JoinRetry),
+                    )
+                });
+                row![
+                    container(
+                        label::body(why.clone())
+                            .style(style::text::warning)
+                            .wrapping(Wrapping::WordOrGlyph)
+                    )
+                    .width(Fill)
+                ]
+                .extend(way)
+                .spacing(8)
+                .align_y(Center)
+                .into()
+            }
             None if sums.is_empty() => label::muted(Self::join_report(&r, &with)).into(),
             None => tip(
                 label::muted(format!(

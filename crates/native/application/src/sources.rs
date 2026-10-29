@@ -39,6 +39,7 @@ pub mod reconcile;
 pub mod relate;
 mod relations;
 mod together;
+pub mod trouble;
 
 /// Coordinates of an object and its row agree within this (m): the geometry kernel's tolerance.
 const SAME: f64 = 1e-6;

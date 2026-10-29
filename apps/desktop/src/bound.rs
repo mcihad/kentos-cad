@@ -106,8 +106,12 @@ impl App {
                 );
             }
             Event::Relinked(id, Some(path)) => {
-                self.bound_relink(&id, &path);
+                let layers = self.bound_relink(&id, &path);
                 self.refresh_source_status();
+                // What the moved file did not give is asked again (docs/adr/0740 §2).
+                let again: Vec<Task<Message>> =
+                    layers.iter().map(|l| self.source_back(l)).collect();
+                return Task::batch(again);
             }
             Event::Relinked(_, None) => {}
             Event::Write(layer) => match self.bound_at_hand(layer) {
@@ -154,41 +158,66 @@ impl App {
         Task::none()
     }
 
-    /// Relinks a bound layer to the file picked: the same file in its new place (`cad.sources.edit`'s `relink`).
-    fn bound_relink(&mut self, id: &str, path: &std::path::Path) {
-        let Some(link) = self.document.as_ref().and_then(|d| {
-            d.model
-                .settings()
-                .sources
-                .iter()
-                .find(|s| s.id == id)
-                .cloned()
-        }) else {
-            return;
+    /// Relinks a bound layer to the file picked: the same file in its new place (`cad.sources.edit`'s `relink`). The
+    /// other layers bound to the same file follow it there, each relinked by the same command, as QGIS's and ArcGIS
+    /// Pro's repair of a data source mends every layer of the moved file (docs/adr/0740 §2). The layers relinked.
+    fn bound_relink(&mut self, id: &str, path: &std::path::Path) -> Vec<String> {
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
         };
-        let name = self.bound_name(&link.layer);
-        let Some(doc) = self.document.as_mut() else {
-            return;
+        let links = &doc.model.settings().sources;
+        let Some(link) = links.iter().find(|s| s.id == id).cloned() else {
+            return Vec::new();
         };
-        let input = SourcesEdit {
-            edit: SourcesEditOp::Relink {
-                id: id.to_owned(),
-                path: path.display().to_string(),
-            },
-        };
-        match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-            CommandResult::Completed { .. } => self.announce(
-                Level::Success,
-                format!(
-                    "“{name}” katmanı {} dosyasına yeniden bağlandı.",
-                    file_name(&path.display().to_string())
-                ),
-            ),
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => self.announce(Level::Error, error.message),
-            _ => {}
+        let others: Vec<SourceLink> = links
+            .iter()
+            .filter(|s| s.id != id && s.kind == link.kind && s.path == link.path)
+            .cloned()
+            .collect();
+        let file = file_name(&path.display().to_string());
+        let mut relinked = Vec::new();
+        for (k, l) in std::iter::once(link).chain(others).enumerate() {
+            let Some(doc) = self.document.as_mut() else {
+                break;
+            };
+            let input = SourcesEdit {
+                edit: SourcesEditOp::Relink {
+                    id: l.id.clone(),
+                    path: path.display().to_string(),
+                },
+            };
+            match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                CommandResult::Completed { .. } => relinked.push(l.layer),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    // The layer asked for is said as an error and nothing else is tried; another of the file only
+                    // stays as it was, said.
+                    if k == 0 {
+                        self.announce(Level::Error, error.message);
+                        return relinked;
+                    }
+                    let name = self.bound_name(&l.layer);
+                    self.announce(
+                        Level::Warn,
+                        format!("“{name}” katmanı yeniden bağlanmadı: {}", error.message),
+                    );
+                }
+                _ => {}
+            }
         }
+        if let Some(first) = relinked.first() {
+            let name = self.bound_name(first);
+            let words = match relinked.len() {
+                1 => format!("“{name}” katmanı {file} dosyasına yeniden bağlandı."),
+                n => format!(
+                    "“{name}” katmanı ve aynı dosyaya bağlı {} katman daha {file} dosyasına yeniden bağlandı.",
+                    n - 1
+                ),
+            };
+            self.announce(Level::Success, words);
+        }
+        relinked
     }
 
     /// The bound layers of `link`'s file that the project's relations tie to its layer (as parent or child), once each.

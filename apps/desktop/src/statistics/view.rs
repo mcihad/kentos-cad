@@ -272,7 +272,24 @@ impl App {
         }
         let answer = match &w.answer {
             None => return Some(note(whole_texts::READING.to_owned())),
-            Some(Err(why)) => return Some(note(why.clone())),
+            // Why the source did not answer, with what helps (docs/adr/0740 §2).
+            Some(Err(r)) => {
+                let link = self.stats_bound();
+                let way = crate::source_trouble::way_out(r, link.as_ref(), msg(Event::WholeRetry));
+                return Some(
+                    column![
+                        head,
+                        label::caption(r.why.clone())
+                            .style(style::text::warning)
+                            .wrapping(iced::widget::text::Wrapping::WordOrGlyph),
+                    ]
+                    .extend(way)
+                    .spacing(8)
+                    .padding([8, 12])
+                    .width(Fill)
+                    .into(),
+                );
+            }
             Some(Ok(a)) => a,
         };
         let line = |k: &'static str, v: String| -> Element<'a, Message> {

@@ -23009,7 +23009,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 555,
+   "cases": 560,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -23021,6 +23021,7 @@
     "fixtures/commands/v1/cad.sources.edit.json",
     "fixtures/commands/v1/cad.sources.query.json",
     "fixtures/commands/v1/cad.sources.query.time.json",
+    "fixtures/commands/v1/cad.sources.query.trouble.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.dims.json",
@@ -23076,11 +23077,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 127,
+   "cases": 190,
    "files": [
     "fixtures/commands/v1/cad.sources.query.json",
     "fixtures/commands/v1/cad.sources.query.order.json",
     "fixtures/commands/v1/cad.sources.query.time.json",
+    "fixtures/commands/v1/cad.sources.query.trouble.json",
     "fixtures/commands/v1/cad.sources.sync.neighbours.json"
    ],
    "options": [

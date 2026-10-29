@@ -11,6 +11,10 @@
 //! - The rows are the source's, read only here: a row the working copy holds selects its object when pressed; one it
 //!   does not hold is muted. Edits are made in Çalışma kopyası.
 //! - The line over the rows says how many were read of how many, who ordered them and where the filter was checked.
+//! - A page the source does not give (a file moved or deleted, a table gone, a connection dropped, docs/adr/0740) leaves
+//!   the pages read in the table and says which page and why, with the one way out `source_trouble` says: Yeniden dene
+//!   asks it again from the same cursor, Yeniden bağla… links the layer to the file's new place and then asks it again.
+//!   A page stopped with Durdur is asked again with Sürdür.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -20,9 +24,7 @@ use iced::futures::channel::oneshot;
 use iced::widget::text::Wrapping;
 use iced::widget::{button, row};
 use iced::{Center, Element, Length};
-use kentos_commands::{
-    CommandResult, QueryOrder, QueryScope, SourceLink, SourcesQueried, SourcesQuery, js_trim,
-};
+use kentos_commands::{QueryOrder, QueryScope, SourceLink, SourcesQueried, SourcesQuery, js_trim};
 use kentos_domain::Uuid;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::segmented::Segmented;
@@ -32,6 +34,8 @@ use kentos_ui::{label, style};
 
 use super::{Event, texts};
 use crate::app::{App, Message};
+use crate::source_trouble::{self, Refused};
+use kentos_native_application::sources::trouble::Trouble;
 
 /// The words.
 pub mod words {
@@ -44,6 +48,12 @@ pub mod words {
     pub const STOP: &str = "Durdur";
     pub const STOPPED: &str = "Kaynağın okunması durduruldu.";
     pub const NO_ROWS: &str = "Kaynakta soruya uyan kayıt yok.";
+    /// docs/adr/0740 §2: a page stopped; Sürdür asks it again.
+    pub const STOPPED_HERE: &str = "Okuma durduruldu; okunan sayfalar tabloda.";
+    /// docs/adr/0740 §2: a page the source did not give.
+    pub fn missed(page: usize, why: &str) -> String {
+        format!("Sayfa {page} okunamadı: {why}")
+    }
     pub const CHANGED: &str =
         "Kaynak ilk sayfa okunduğundan beri değişti; ilk sayfa yeniden okundu.";
     pub const BY_KEY: &str = "anahtar sırasıyla";
@@ -100,7 +110,12 @@ pub(crate) struct WholePane {
     /// The first page's total and stamp.
     total: Option<u64>,
     stamp: Option<String>,
-    pub problem: Option<String>,
+    /// The page the source did not give: its number and the refusal (docs/adr/0740 §2); the pages read stay.
+    pub missed: Option<(usize, Refused)>,
+    /// How many pages of the question were read.
+    pub pages: usize,
+    /// A page was being read when Durdur was pressed: Sürdür asks it again.
+    pub stopped: bool,
 }
 
 /// Messages of Kaynağın tümü.
@@ -112,11 +127,13 @@ pub enum WholeEvent {
     Sort(usize),
     More,
     Stop,
+    /// The question last asked again, as it was: a page the source did not give or one stopped (docs/adr/0740 §2).
+    Retry,
     /// A row pressed.
     Press(usize),
-    /// A page's answer: the question's number, whether it goes after the rows read, and the answer (a code and
-    /// words when refused).
-    Answered(u64, bool, Box<Result<SourcesQueried, (String, String)>>),
+    /// A page's answer: the question's number, whether it goes after the rows read, and the answer (the command's
+    /// refusal when refused).
+    Answered(u64, bool, Box<Result<SourcesQueried, Refused>>),
 }
 
 fn msg(e: WholeEvent) -> Message {
@@ -172,15 +189,11 @@ impl App {
         let Some(layer) = self.features.whole.layer.clone() else {
             return Task::none();
         };
-        let (Some(link), Some(doc)) = (self.whole_link(Some(&layer)), self.document.as_ref())
-        else {
+        let Some(link) = self.whole_link(Some(&layer)) else {
             return Task::none();
         };
         let time = self.source_time(&layer);
         let p = &mut self.features.whole;
-        if let Some(stop) = p.running.take() {
-            stop.store(true, Ordering::Relaxed);
-        }
         let cursor = if more {
             match p.last.as_ref().and_then(|l| l.next.clone()) {
                 Some(next) => Some(next),
@@ -191,11 +204,9 @@ impl App {
             p.last = None;
             p.total = None;
             p.stamp = None;
+            p.pages = 0;
             None
         };
-        p.problem = None;
-        p.ticket += 1;
-        let ticket = p.ticket;
         let filter = js_trim(&self.features.filter).to_owned();
         let input = SourcesQuery {
             layer: Some(link.layer.clone()),
@@ -213,8 +224,37 @@ impl App {
         };
         // A temporal layer's rows at the slider's time (docs/adr/0595 §4).
         let input = SourcesQuery { time, ..input };
+        self.whole_send(more, input)
+    }
+
+    /// Asks the question last asked again, as it was (docs/adr/0740 §2): a page the source did not give, or one
+    /// stopped, from the same cursor and of the same file; the pages read stay.
+    pub(crate) fn whole_retry(&mut self) -> Task<Message> {
+        match self.features.whole.asked.clone() {
+            Some((_, more, input)) => self.whole_send(more, input),
+            None => self.whole_ask(false),
+        }
+    }
+
+    /// Sends a page's question to the source on a thread of its own.
+    fn whole_send(&mut self, more: bool, input: SourcesQuery) -> Task<Message> {
+        let Some(layer) = self.features.whole.layer.clone() else {
+            return Task::none();
+        };
+        let (Some(link), Some(doc)) = (self.whole_link(Some(&layer)), self.document.as_ref())
+        else {
+            return Task::none();
+        };
         let settings = doc.model.settings().clone();
         let revision = doc.model.revision().to_string();
+        let p = &mut self.features.whole;
+        if let Some(stop) = p.running.take() {
+            stop.store(true, Ordering::Relaxed);
+        }
+        p.missed = None;
+        p.stopped = false;
+        p.ticket += 1;
+        let ticket = p.ticket;
         let stop = Arc::new(AtomicBool::new(false));
         p.running = Some(stop.clone());
         p.asked = Some((ticket, more, input.clone()));
@@ -230,22 +270,18 @@ impl App {
                 revision,
                 &|| stop.load(Ordering::Relaxed),
             );
-            let _ = done.send(match answer {
-                CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } => {
-                    Err((error.code, error.message))
-                }
-                CommandResult::Cancelled => Err(("cancelled".into(), words::STOPPED.into())),
-                other => Err((String::new(), format!("{other:?}"))),
-            });
+            let _ = done.send(Refused::of(answer, words::STOPPED));
         });
         Task::perform(wait, move |answer| {
             msg(WholeEvent::Answered(
                 ticket,
                 more,
-                Box::new(
-                    answer.unwrap_or_else(|_| Err(("cancelled".into(), words::STOPPED.into()))),
-                ),
+                Box::new(answer.unwrap_or_else(|_| {
+                    Err(Refused {
+                        code: "cancelled".into(),
+                        why: words::STOPPED.into(),
+                    })
+                })),
             ))
         })
     }
@@ -265,7 +301,9 @@ impl App {
                 let p = &mut self.features.whole;
                 p.rows.clear();
                 p.last = None;
-                p.problem = None;
+                p.missed = None;
+                p.stopped = false;
+                p.pages = 0;
                 if !on {
                     p.layer = None;
                     return Task::none();
@@ -293,8 +331,11 @@ impl App {
                 return self.whole_ask(false);
             }
             WholeEvent::More => return self.whole_ask(true),
+            WholeEvent::Retry => return self.whole_retry(),
             WholeEvent::Stop => {
+                let reading = self.features.whole.running.is_some();
                 self.whole_stop();
+                self.features.whole.stopped = reading;
                 self.say(kentos_interaction::Level::Info, words::STOPPED);
             }
             WholeEvent::Press(i) => {
@@ -321,19 +362,23 @@ impl App {
                         if !more {
                             p.total = page.total;
                             p.stamp = page.stamp.clone();
+                            p.pages = 0;
                         }
+                        p.pages += 1;
                         p.rows.extend(page.rows.iter().cloned());
                         p.last = Some(page);
                     }
                     // The file changed between pages: its first page again, said.
-                    Err((code, _)) if code == "source_changed" && more => {
+                    Err(r) if more && r.way() == Some(Trouble::Changed) => {
                         self.say(kentos_interaction::Level::Warn, words::CHANGED);
                         return self.whole_ask(false);
                     }
-                    Err((code, _)) if code == "cancelled" => {}
-                    Err((_, why)) => {
-                        self.features.whole.problem = Some(why.clone());
-                        self.say(kentos_interaction::Level::Warn, why);
+                    Err(r) if r.code == "cancelled" => {}
+                    // The pages read stay; the page and why are said, with what helps (docs/adr/0740 §2).
+                    Err(r) => {
+                        let page = self.features.whole.pages + 1;
+                        self.say(kentos_interaction::Level::Warn, words::missed(page, &r.why));
+                        self.features.whole.missed = Some((page, r));
                     }
                 }
             }
@@ -450,9 +495,13 @@ impl App {
                 TableLine::new(cells).on_press(msg(WholeEvent::Press(i)))
             })
             .empty(if p.running.is_some() {
-                words::READING
+                words::READING.to_owned()
+            } else if let Some((page, r)) = &p.missed {
+                words::missed(*page, &r.why)
+            } else if p.stopped {
+                words::STOPPED.to_owned()
             } else {
-                words::NO_ROWS
+                words::NO_ROWS.to_owned()
             });
         table.into()
     }
@@ -460,14 +509,23 @@ impl App {
 
 impl App {
     /// The foot under the source's rows: how many were read of how many, who ordered them, where the filter was
-    /// checked; Sonraki sayfa, or Durdur while a page is read.
+    /// checked; Sonraki sayfa, or Durdur while a page is read; a page not read says why with its way out, a stopped
+    /// one Sürdür (docs/adr/0740 §2).
     pub(crate) fn whole_foot<'a>(&self) -> Element<'a, Message> {
         let p = &self.features.whole;
         let mut words = row![label::caption(self.whole_report()).style(style::text::muted)]
             .spacing(8)
             .align_y(Center);
-        if let Some(why) = &p.problem {
-            words = words.push(label::caption(why.clone()).style(style::text::warning));
+        // With no row read the table's own line says it; the foot keeps the count and the way out.
+        if let Some((page, r)) = p.missed.as_ref().filter(|_| !p.rows.is_empty()) {
+            words = words.push(
+                label::caption(words::missed(*page, &r.why))
+                    .style(style::text::warning)
+                    .wrapping(Wrapping::WordOrGlyph)
+                    .width(Length::Fill),
+            );
+        } else if p.stopped && !p.rows.is_empty() {
+            words = words.push(label::caption(words::STOPPED_HERE).style(style::text::muted));
         }
         let end: Option<Element<'a, Message>> = if p.running.is_some() {
             Some(
@@ -481,6 +539,17 @@ impl App {
                 .spacing(6)
                 .align_y(Center)
                 .into(),
+            )
+        } else if let Some((_, r)) = &p.missed {
+            let link = self.whole_link(p.layer.as_deref());
+            source_trouble::way_out(r, link.as_ref(), msg(WholeEvent::Retry))
+        } else if p.stopped {
+            Some(
+                button(label::caption(source_trouble::GO_ON))
+                    .on_press(msg(WholeEvent::Retry))
+                    .padding([2, 8])
+                    .style(style::button::ghost)
+                    .into(),
             )
         } else if p.last.as_ref().is_some_and(|l| l.next.is_some()) {
             Some(

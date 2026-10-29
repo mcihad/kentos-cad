@@ -130,6 +130,9 @@ fn columns_of<'d>(
 /// A view read whole: its columns, every row, how the records met and the sums; or why it is broken.
 pub struct JoinRead {
     pub broken: Option<String>,
+    /// The code of the refusal of a source's table that could not be read (docs/adr/0740 §1: what helps it is
+    /// `sources::trouble::Trouble::of`'s); none when the view is read or broken for another reason.
+    pub refused: Option<String>,
     pub columns: Vec<JoinColumn>,
     pub rows: Vec<JoinRow>,
     pub report: JoinReport,
@@ -139,6 +142,7 @@ pub struct JoinRead {
 fn broken(why: String) -> JoinRead {
     JoinRead {
         broken: Some(why),
+        refused: None,
         columns: Vec::new(),
         rows: Vec::new(),
         report: JoinReport::default(),
@@ -176,7 +180,11 @@ struct Staged {
 }
 
 /// The source's table read whole, or why it cannot be.
-fn stage_source(doc: &Document, src: &kentos_commands::JoinSource) -> Result<Staged, String> {
+/// The source's table read, or why not: the refusal's code (none when stopped) and the words.
+fn stage_source(
+    doc: &Document,
+    src: &kentos_commands::JoinSource,
+) -> Result<Staged, (Option<String>, String)> {
     let from = crate::sources_query::StageFrom::Table {
         address: &src.path,
         table: &src.table,
@@ -188,11 +196,14 @@ fn stage_source(doc: &Document, src: &kentos_commands::JoinSource) -> Result<Sta
             fields: staging.fields.unwrap_or_default(),
             stamp: answer.stamp,
         }),
-        Err(Some(e)) => Err(format!(
-            "Görünümün kaynak tablosu “{}” okunamadı: {} Görünüm satır vermez; eski bir okuma gösterilmez.",
-            src.table, e.message
+        Err(Some(e)) => Err((
+            Some(e.code),
+            format!(
+                "Görünümün kaynak tablosu “{}” okunamadı: {} Görünüm satır vermez; eski bir okuma gösterilmez.",
+                src.table, e.message
+            ),
         )),
-        Err(None) => Err("Kaynak tablosunun okunuşu durduruldu.".into()),
+        Err(None) => Err((None, "Kaynak tablosunun okunuşu durduruldu.".into())),
     }
 }
 
@@ -220,7 +231,12 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     let staged = match &v.source {
         Some(src) => match stage_source(doc, src) {
             Ok(s) => Some(s),
-            Err(why) => return broken(why),
+            Err((code, why)) => {
+                return JoinRead {
+                    refused: code,
+                    ..broken(why)
+                };
+            }
         },
         None => None,
     };
@@ -545,6 +561,7 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     }
     JoinRead {
         broken: None,
+        refused: None,
         columns,
         rows,
         report,

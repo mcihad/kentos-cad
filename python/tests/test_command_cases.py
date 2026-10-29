@@ -193,6 +193,12 @@ class Case:
                 target = Path(paths(step["to"]))
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(paths(step["from"]), target)
+            elif op == "moveFile":
+                # A file moved, deleted or put back between two steps (a source not where its link says, docs/adr/0740).
+                assert step["from"].startswith("$tmp:") and step["to"].startswith("$tmp:"), f"{at}: not $tmp: files"
+                target = Path(paths(step["to"]))
+                target.parent.mkdir(parents=True, exist_ok=True)
+                os.replace(paths(step["from"]), target)
             elif op == "captureBlock":
                 block = self.block_named(step["name"])
                 assert block is not None, f"{at}: no block {step['name']}"

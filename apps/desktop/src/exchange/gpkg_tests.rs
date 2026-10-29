@@ -489,6 +489,48 @@ fn a_part_of_a_table_is_bound_from_the_view() {
     );
 }
 
+/// Two layers of one file moved (docs/adr/0740 §2): relinking one relinks the other to the same new place, as QGIS's
+/// and ArcGIS Pro's repair of a data source mends every layer of the moved file; one step each, said once.
+#[test]
+fn the_layers_of_a_moved_file_are_bound_again_together() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let dir = scratch("gpkg-relink-together");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    for table in ["parsel", "nokta"] {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.sources.edit",
+            CallOp::Execute,
+            serde_json::json!({ "edit": { "kind": "link", "path": file.display().to_string(), "table": table } }),
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let moved = dir.join("tasindi").join("kadastro.gpkg");
+    std::fs::create_dir_all(moved.parent().expect("a folder")).expect("a folder");
+    std::fs::rename(&file, &moved).expect("moved");
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        "kaynak-1".into(),
+        Some(moved.clone()),
+    )));
+    for layer in ["import-parsel", "import-nokta"] {
+        assert_eq!(
+            app.bound_link(layer).expect("bound").path,
+            moved.display().to_string(),
+            "{layer}"
+        );
+    }
+    assert!(
+        says(&app, "ve aynı dosyaya bağlı 1 katman daha"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+}
+
 #[test]
 fn a_moved_file_is_bound_again_and_a_package_is_said() {
     // docs/adr/0506: Kaynak ▸ Yeniden bağla takes the same file in its new place, refuses another; Paketle's answer

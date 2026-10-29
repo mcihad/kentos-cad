@@ -1,15 +1,18 @@
 //! Kaynağın tümü (docs/adr/0591 §4): a layer bound by a part shows its source's every row, ordered by the source or
 //! here, a page at a time; Sonraki sayfa goes on where the last page ended; a row the part holds selects its object.
+//! A page the source does not give leaves the pages read and is asked again from its cursor (docs/adr/0740 §2).
 
 use std::path::PathBuf;
 
-use kentos_commands::{CallOp, CommandResult};
+use kentos_commands::CallOp;
+use kentos_native_application::sources::trouble::Trouble;
 use kentos_native_application::{ExecutionContext, registry};
 
 use super::Event;
 use super::whole::{PAGE, WholeEvent};
 use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, scratch};
+use crate::source_trouble::Refused;
 
 const LAYER: &str = "import-olay";
 
@@ -46,23 +49,33 @@ pub(crate) fn answer(app: &mut App) {
     let (ticket, more, input) = app.features.whole.asked.clone().expect("a question");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let link = doc.settings().sources[0].clone();
-    let told = match kentos_native_application::sources_query::ask_source(
-        doc.settings(),
-        link.kind,
-        &link.path,
-        &link.table,
-        LAYER,
-        &input,
-        doc.revision().to_string(),
-        &|| false,
-    ) {
-        CommandResult::Completed { output, .. } => Ok(output),
-        CommandResult::Failed { error } | CommandResult::Conflict { error } => {
-            Err((error.code, error.message))
-        }
-        other => Err((String::new(), format!("{other:?}"))),
-    };
+    let told = Refused::of(
+        kentos_native_application::sources_query::ask_source(
+            doc.settings(),
+            link.kind,
+            &link.path,
+            &link.table,
+            LAYER,
+            &input,
+            doc.revision().to_string(),
+            &|| false,
+        ),
+        "durduruldu",
+    );
     ev(app, WholeEvent::Answered(ticket, more, Box::new(told)));
+}
+
+/// The bound file's path.
+fn file_of(app: &App) -> PathBuf {
+    PathBuf::from(
+        &app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .sources[0]
+            .path,
+    )
 }
 
 fn keys(app: &App) -> Vec<i64> {
@@ -166,12 +179,127 @@ fn an_older_answer_is_dropped_and_a_bad_filter_is_said() {
     let _ = app.update(Message::Features(Event::Filter("puan >".into())));
     ev(
         &mut app,
-        WholeEvent::Answered(old, false, Box::new(Err(("x".into(), "eski".into())))),
+        WholeEvent::Answered(
+            old,
+            false,
+            Box::new(Err(Refused {
+                code: "x".into(),
+                why: "eski".into(),
+            })),
+        ),
     );
-    assert!(app.features.whole.problem.is_none(), "eski cevap alındı");
+    assert!(app.features.whole.missed.is_none(), "eski cevap alındı");
     answer(&mut app);
-    let why = app.features.whole.problem.clone().expect("a problem");
-    assert!(why.starts_with("Süzgeç:"), "{why}");
+    let (page, r) = app.features.whole.missed.clone().expect("a problem");
+    assert_eq!(page, 1);
+    assert!(r.why.starts_with("Süzgeç:"), "{}", r.why);
+    // A filter that does not compile is helped by another filter, not by asking again.
+    assert_eq!(r.way(), None);
+}
+
+/// A page the source does not give (docs/adr/0740 §2): the pages read stay, the page is said with its way out, and
+/// the same question asked again once the file is back goes on from its cursor: the rows are the table's in key
+/// order, none twice, none skipped. The first page refused says so in place of the rows; Durdur's page is asked again
+/// with Sürdür.
+#[test]
+fn a_page_not_read_stays_said_and_is_asked_again() {
+    let mut app = scene("tablo-tumu-sorun");
+    let file = file_of(&app);
+    let away = file.with_file_name("uzakta.gpkg");
+    ev(&mut app, WholeEvent::Toggle(true));
+    answer(&mut app);
+    assert_eq!(app.features.whole.pages, 1);
+    std::fs::rename(&file, &away).expect("moved away");
+    ev(&mut app, WholeEvent::More);
+    let (_, _, asked) = app.features.whole.asked.clone().expect("a question");
+    answer(&mut app);
+    let (page, r) = app.features.whole.missed.clone().expect("not read");
+    assert_eq!((page, r.code.as_str()), (2, "file_not_found"));
+    assert_eq!(r.way(), Some(Trouble::Relink));
+    assert_eq!(
+        app.features.whole.rows.len(),
+        PAGE as usize,
+        "the first page stays"
+    );
+    assert!(
+        app.features
+            .whole
+            .last
+            .as_ref()
+            .is_some_and(|l| l.next.is_some())
+    );
+    // Back: the same question, the same cursor and stamp.
+    std::fs::rename(&away, &file).expect("moved back");
+    ev(&mut app, WholeEvent::Retry);
+    let (_, more, again) = app.features.whole.asked.clone().expect("asked again");
+    assert!(more);
+    assert_eq!(again, asked);
+    assert!(app.features.whole.missed.is_none());
+    answer(&mut app);
+    assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
+    assert_eq!(app.features.whole.pages, 2);
+    // The first page refused: nothing read, said in place of the rows.
+    ev(&mut app, WholeEvent::Toggle(false));
+    std::fs::rename(&file, &away).expect("moved away");
+    ev(&mut app, WholeEvent::Toggle(true));
+    answer(&mut app);
+    assert!(app.features.whole.rows.is_empty());
+    assert_eq!(
+        app.features
+            .whole
+            .missed
+            .as_ref()
+            .map(|(p, r)| (*p, r.code.clone())),
+        Some((1, "file_not_found".into()))
+    );
+    std::fs::rename(&away, &file).expect("moved back");
+    ev(&mut app, WholeEvent::Retry);
+    answer(&mut app);
+    assert_eq!(app.features.whole.rows.len(), PAGE as usize);
+    // Durdur: the page is not read and Sürdür asks it again.
+    ev(&mut app, WholeEvent::More);
+    let (_, _, stopped) = app.features.whole.asked.clone().expect("a question");
+    ev(&mut app, WholeEvent::Stop);
+    assert!(app.features.whole.stopped && app.features.whole.running.is_none());
+    ev(&mut app, WholeEvent::Retry);
+    let (_, _, again) = app.features.whole.asked.clone().expect("asked again");
+    assert_eq!(again, stopped);
+    assert!(!app.features.whole.stopped);
+    answer(&mut app);
+    assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
+}
+
+/// A bound layer whose file moved (docs/adr/0740 §2): its page is refused; Yeniden bağla… links the layer to the
+/// file's new place and asks the page again, which goes on from its cursor there.
+#[test]
+fn a_relinked_layer_asks_again_what_its_file_did_not_give() {
+    let mut app = scene("tablo-tumu-yeniden-bagla");
+    let file = file_of(&app);
+    let moved = file.with_file_name("tasindi.gpkg");
+    ev(&mut app, WholeEvent::Toggle(true));
+    answer(&mut app);
+    std::fs::rename(&file, &moved).expect("moved");
+    ev(&mut app, WholeEvent::More);
+    answer(&mut app);
+    assert!(app.features.whole.missed.is_some());
+    let id = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .sources[0]
+        .id
+        .clone();
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        id,
+        Some(moved.clone()),
+    )));
+    assert_eq!(file_of(&app), moved, "relinked");
+    assert!(app.features.whole.running.is_some(), "asked again");
+    answer(&mut app);
+    assert!(app.features.whole.missed.is_none());
+    assert_eq!(keys(&app), (1..=2 * i64::from(PAGE)).collect::<Vec<_>>());
 }
 
 #[test]
@@ -224,6 +352,26 @@ fn whole_screens() {
         ev(&mut app, WholeEvent::More);
         answer(&mut app);
         picture(&mut app, "4-burada-suzgec");
+        // A page the moved file did not give, the first page refused, a page stopped (docs/adr/0740 §2).
+        let _ = app.update(Message::Features(Event::Filter(String::new())));
+        ev(&mut app, WholeEvent::Sort(0));
+        answer(&mut app);
+        let file = file_of(&app);
+        let away = file.with_file_name("uzakta.gpkg");
+        std::fs::rename(&file, &away).expect("moved away");
+        ev(&mut app, WholeEvent::More);
+        answer(&mut app);
+        picture(&mut app, "6-sayfa-okunamadi");
+        ev(&mut app, WholeEvent::Toggle(false));
+        ev(&mut app, WholeEvent::Toggle(true));
+        answer(&mut app);
+        picture(&mut app, "7-ilk-sayfa");
+        std::fs::rename(&away, &file).expect("moved back");
+        ev(&mut app, WholeEvent::Retry);
+        answer(&mut app);
+        ev(&mut app, WholeEvent::More);
+        ev(&mut app, WholeEvent::Stop);
+        picture(&mut app, "8-durduruldu");
         // The slider's time on the layer (docs/adr/0595 §4): the rows of its month, asked of the source.
         let _ = app.update(Message::Features(Event::Filter(String::new())));
         let doc = &mut app.document.as_mut().expect("a drawing").model;

@@ -4871,6 +4871,21 @@ fn run_step(
             }
             std::fs::copy(&from, &to).map_err(|e| format!("{at}: {from}: {e}"))?;
         }
+        // A file moved, deleted or put back between two steps (a source that is not where its link says, docs/adr/0740):
+        // a `$tmp:` file renamed to another `$tmp:` path, its time and bytes kept.
+        "moveFile" => {
+            let from = step["from"].as_str().ok_or(format!("{at}: “from” yok"))?;
+            let to = step["to"].as_str().ok_or(format!("{at}: “to” yok"))?;
+            if !from.starts_with("$tmp:") || !to.starts_with("$tmp:") {
+                return Err(format!("{at}: “from” ve “to” $tmp: dosyaları olmalı"));
+            }
+            let (from, to) = (with_fixtures(from), with_fixtures(to));
+            if let Some(folder) = std::path::Path::new(&to).parent() {
+                std::fs::create_dir_all(folder)
+                    .map_err(|e| format!("{at}: {}: {e}", folder.display()))?;
+            }
+            std::fs::rename(&from, &to).map_err(|e| format!("{at}: {from}: {e}"))?;
+        }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }
     check(

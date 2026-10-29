@@ -83,8 +83,14 @@ pub enum Event {
     Scope(bool),
     /// Durdur: the source's question stops.
     WholeStop,
-    /// The source's answer for a layer and a field.
-    WholeAnswered(String, String, Box<Result<kentos_commands::SourcesQueried, String>>),
+    /// Yeniden dene: the question the source refused asked again (docs/adr/0740 §2).
+    WholeRetry,
+    /// The source's answer for a layer and a field, or its refusal.
+    WholeAnswered(
+        String,
+        String,
+        Box<Result<kentos_commands::SourcesQueried, crate::source_trouble::Refused>>,
+    ),
 }
 
 /// Göster's rows as they depend on the selection and the view.
@@ -296,7 +302,10 @@ impl App {
                 return iced::clipboard::write(text);
             }
             Event::Count => self.count_summaries(),
-            e @ (Event::Scope(_) | Event::WholeStop | Event::WholeAnswered(..)) => {
+            e @ (Event::Scope(_)
+            | Event::WholeStop
+            | Event::WholeRetry
+            | Event::WholeAnswered(..)) => {
                 return self.stats_whole_event(e);
             }
         }

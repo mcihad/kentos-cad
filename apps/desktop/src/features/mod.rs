@@ -201,6 +201,8 @@ pub enum Event {
     JoinCancel,
     /// Dışa aktar ▾ on a join view: its rows in a workbook (docs/adr/0632 §3).
     JoinExport(kentos_commands::WorkbookFormat),
+    /// Yeniden dene on a view whose source's table could not be read: read again (docs/adr/0740 §2).
+    JoinRetry,
 }
 
 /// The rows as worked out for a drawing, a selection, the view and a query.
@@ -587,6 +589,7 @@ impl App {
             | Event::JoinEnter
             | Event::JoinCancel
             | Event::JoinExport(_) => return self.join_event(event),
+            Event::JoinRetry => self.features.changed(),
             Event::Sort(column) => {
                 let Some(doc) = &self.document else {
                     return Task::none();
