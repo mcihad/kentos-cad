@@ -110,6 +110,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   satır seçimi, Düzelt (n) tek `cad.changeset.apply` ile, düzeltmenin çizimde önizlemesi (okuma kopyası; silinen tehlike
   renginde), satırın sağ tık menüsü ve not sorusu, Kapsam, İstisnalar ve Eşikler menüleri. `cad.arch.audit.json` ve
   `cad.arch.exceptions.json` ile sınanmalı.
+- ARCH-DRAW-02 / ADR0734: Yaylı kaynak ve sınırla ölçülü bölme. Web'in `cad.walls.partition` işleyicisi yaylı kaynak
+  ve sınır kenarını reddetmemeli: bölme aynı merkezli yay (ortak çekirdeğin `geom::wall_partition`'ı, WASM), planın
+  `sourceFaceBulge`'u ile kesikli yaylı kaynak yüz; Ölçülü bölme aracı yayı çizildiği yerden seçmeli, yanı içte/dışta
+  izlemeli. `cad.walls.partition.arcs.json` ile sınanmalı.
 - ARCH-DOC-02 / ADR0733: Çizelge ve metraj iş akışının kalanı. Web'in belgesi blok yerleştirmesinin `arch`'ını (kat,
   evre; KCAD 131, tipli sütunlarda yerleştirmenin 5. isteğe bağlı alanı), mahal kaplamasının `base`'ini ve çizelge
   kaynağının `of: fixtures`'ını, yeni alanlarını, `filter.types`'ını, `sort[].header`/`footer`'ını okuyup yazmalı;

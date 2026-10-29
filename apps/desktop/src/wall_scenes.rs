@@ -30,6 +30,7 @@
 //! ```text
 //! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
+//! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
 //! ```
 //!
 //! Test code only.
@@ -548,6 +549,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("mimari-arac-ayarlari", architecture_options),
         ("mimari-bolme-onizleme", partition_preview),
         ("mimari-bolme-buyuk-yazi", partition_large_text),
+        ("mimari-bolme-yay", partition_arc),
+        ("mimari-bolme-yay-arasi", partition_arc_between),
         ("duvar-dikdortgen-onizleme", rectangle_drawing),
         ("duvar-dikdortgen-yazildi", rectangle_written),
         ("duvar-dikdortgen-boyutlar", rectangle_dimensions),
@@ -598,6 +601,65 @@ fn partition_preview(app: &mut App) {
     });
     click(app, [4.0, 0.0]);
     hover(app, [4.0, 3.0]);
+}
+/// A quarter ring of 25 cm wall of radius 8 m about the plan's corner and two radial walls at 15° and 75°, with
+/// Ölçülü bölme started at 150 mm (docs/adr/0734).
+fn curved(app: &mut App) {
+    let mut o = Objects::new();
+    let quarter = (std::f64::consts::PI / 8.0).tan();
+    let at = |r: f64, deg: f64| {
+        crate::furniture_scenes::xy(r * deg.to_radians().cos(), r * deg.to_radians().sin())
+    };
+    o.push(
+        "duvar",
+        json!({"kind": "wall", "pts": [at(8.0, 0.0), at(8.0, 90.0)], "bulges": [quarter, 0.0], "width": 0.25,
+               "justify": "center"}),
+    );
+    for deg in [15.0, 75.0] {
+        o.push(
+            "duvar",
+            json!({"kind": "wall", "pts": [at(2.0, deg), at(10.0, deg)], "width": 0.15, "justify": "center"}),
+        );
+    }
+    open_edited(app, o, |d| {
+        d["layers"] = json!([crate::tools_scenes::layer("duvar", "Duvar", "fg", 0.5)]);
+        d["activeLayer"] = json!("duvar");
+        d["settings"]["plotScale"] = json!(100.0);
+    });
+    make_cad(app);
+    fit(app, 10.0, 10.0);
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallPartition");
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallPartition",
+        key: "E",
+        value: "150mm".into(),
+    });
+}
+/// The arc picked as the source, the pointer inside: the concentric partition and its clear distance.
+fn partition_arc(app: &mut App) {
+    curved(app);
+    let m = 8.0 * std::f64::consts::FRAC_1_SQRT_2;
+    click(app, [m, m]);
+    hover(app, [5.5, 0.6]);
+}
+/// İki duvar arasında: the arc, then the two radial walls; the partition written between them.
+fn partition_arc_between(app: &mut App) {
+    curved(app);
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallPartition",
+        key: "B",
+        value: "between".into(),
+    });
+    let m = 8.0 * std::f64::consts::FRAC_1_SQRT_2;
+    click(app, [m, m]);
+    for deg in [15.0f64, 75.0] {
+        click(app, [6.0 * deg.to_radians().cos(), 6.0 * deg.to_radians().sin()]);
+    }
+    // Placed on the inside: the written wall between the two radial walls.
+    click(app, [5.5, 0.6]);
+    hover(app, [11.0, 10.0]);
 }
 fn partition_large_text(app: &mut App) {
     let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);

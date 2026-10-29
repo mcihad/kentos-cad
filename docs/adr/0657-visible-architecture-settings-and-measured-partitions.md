@@ -58,6 +58,8 @@ Python `cad.walls.partition`, headless ve MCP aynı uygulayıcıyı kullanır.
   İki yönde uzunluğun yarısı her yandadır. Kaynak segmentin boyunu aşma açıkça reddedilir.
 - İlk dilim düz kaynak ve düz sınırlar içindir. Seçilen yay segmenti `invalid_wall`
   ile açıkça reddedilir; sessiz düzleştirme yoktur.
+  29 Ekim eki: [ADR 0734](0734-measured-partitions-on-arc-edges.md) yaylı kaynak ve sınırı alır (aynı merkezli
+  yay); bu ret kalktı.
 - Hedef kilitliyse yazılmaz. Kilitli kaynak/sınır yalnız okunabilir; değiştirilmez.
   Eksik kimlik, geçersiz stil/boy, revision çatışması atomiktir.
 - Plan `WallPartitionPlan` döndürür: mevcut WallsPlan, kaynak yüzü, ölçü çizgisi,

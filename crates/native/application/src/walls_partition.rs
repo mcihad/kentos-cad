@@ -1,4 +1,4 @@
-//! `cad.walls.partition`: explicit straight source/limits and measured face/axis spacing.
+//! `cad.walls.partition`: explicit source/limits and measured face/axis spacing; straight or arc edges (docs/adr/0734).
 use crate::{
     ExecutionContext,
     checks::{self, Stop, error},
@@ -63,22 +63,24 @@ fn edge(doc: &Document, r: &WallEdgeRef, path: &str) -> Result<Edge, Stop> {
             path,
         ));
     }
-    if w.wall
+    // An arc edge partitions concentrically and limits as its arc (docs/adr/0734).
+    let bulge = w
+        .wall
         .bulges
         .as_ref()
         .and_then(|b| b.get(r.edge))
-        .is_some_and(|b| *b != 0.0)
-    {
-        return Err(fail(
-            "Bu araç düz duvar kenarları içindir; yaylı kenar seçilemez.",
-            path,
-        ));
-    }
+        .copied()
+        .unwrap_or(0.0);
     let a = w.wall.pts[r.edge];
     let b = w.wall.pts[(r.edge + 1) % w.wall.pts.len()];
     Ok(Edge {
         a: kentos_geometry_core::Vec2::new(a.x, a.y),
         b: kentos_geometry_core::Vec2::new(b.x, b.y),
+        bulge: if kentos_geometry_core::geom::bulge::is_arc_bulge(bulge) {
+            bulge
+        } else {
+            0.0
+        },
         left: wall::left_face(&kentos_formats::walls::spec(&w.wall)),
         width: w.wall.width,
     })
@@ -168,6 +170,7 @@ fn request(
         .iter()
         .map(|p| Vec2 { x: p.x, y: p.y })
         .collect();
+    new.bulges = (placement.bulge != 0.0).then(|| vec![placement.bulge]);
     new.justify = Some(WallJustify::Center);
     Ok((request, placement))
 }
@@ -181,6 +184,7 @@ pub fn plan_in(doc: &Document, input: &WallsPartition) -> CommandResult<WallPart
             output: WallPartitionPlan {
                 wall: output,
                 source_face: placement.face.map(|p| Vec2 { x: p.x, y: p.y }),
+                source_face_bulge: (placement.face_bulge != 0.0).then_some(placement.face_bulge),
                 dimension: placement.dimension.map(|p| Vec2 { x: p.x, y: p.y }),
                 clear_distance: placement.clear,
                 axis_distance: placement.axis,

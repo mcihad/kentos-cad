@@ -26513,8 +26513,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 108,
+   "cases": 140,
    "files": [
+    "fixtures/commands/v1/cad.walls.partition.arcs.json",
     "fixtures/commands/v1/cad.walls.partition.json"
    ],
    "options": [
@@ -26536,12 +26537,12 @@
     {
      "key": "direction",
      "value": "backward",
-     "covered": false
+     "covered": true
     },
     {
      "key": "direction",
      "value": "both",
-     "covered": false
+     "covered": true
     },
     {
      "key": "direction",
@@ -26601,17 +26602,17 @@
     {
      "key": "kind",
      "value": "between",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
      "value": "length",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
      "value": "source",
-     "covered": false
+     "covered": true
     },
     {
      "key": "lineType",

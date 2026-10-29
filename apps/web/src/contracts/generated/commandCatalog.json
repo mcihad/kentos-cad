@@ -8157,7 +8157,7 @@
       "id": "cad.walls.partition",
       "version": 1,
       "title": "Ölçülü bölme duvar",
-      "summary": "Düz bir kaynak duvar kenarından açık net yüzler arası veya eksen mesafesiyle paralel bölme üretir. source kalıcı duvar kimliği ve sıfır tabanlı kenarıdır; side kaynak yolunun sol/sağıdır. extent source kaynak uçlarını, between seçilen iki duvar kenarının merkez çizgilerini, length kaynak boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar metredir. wall normal WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts ile verilir, yol ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yaylı referanslar reddedilir. Yazmayan plan gövde, kaynak yüz ve net/eksen mesafelerini gösterir. Tek sıradan duvar, tek geri alma ve journal adımıdır.",
+      "summary": "Düz ya da yaylı bir kaynak duvar kenarından açık net yüzler arası veya eksen mesafesiyle bölme üretir: düz kenarda paralel düz, yaylı kenarda aynı merkezli yay. source kalıcı duvar kimliği ve sıfır tabanlı kenarıdır; side kaynak yolunun sol/sağıdır (saat yönü tersine yayda sol merkeze doğrudur). extent source kaynak uçlarını (yayda merkezden izdüşümleriyle), between seçilen iki düz ya da yaylı duvar kenarının merkez çizgilerini (kaynağın ortasına en yakın buluşma), length bölmenin kendi ekseni boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar metredir. wall normal WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts ile verilir, yol, büküm ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yayın merkezine ulaşan bölme, ulaşılmayan ve aynı merkezli sınır reddedilir. Yazmayan plan gövde, kaynak yüz (yayda sourceFaceBulge) ve net/eksen mesafelerini gösterir. Tek sıradan duvar, tek geri alma ve journal adımıdır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -8282,6 +8282,15 @@
             "minItems": 2,
             "type": "array",
             "x-unit": "length"
+          },
+          "sourceFaceBulge": {
+            "description": "The source face's arc between its two points on an arc source edge (tan of a quarter of its sweep,\ncounter-clockwise positive); absent on a straight one (docs/adr/0734).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
           },
           "wall": {
             "$ref": "#/$defs/WallsPlan"

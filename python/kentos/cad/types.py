@@ -64201,12 +64201,15 @@ class WallPartitionPlan(_Model):
         dimension: Unit: length.
         clear_distance: Unit: length.
         axis_distance: Unit: length.
+        source_face_bulge: The source face's arc between its two points on an arc source edge (tan of a quarter of its sweep,
+            counter-clockwise positive); absent on a straight one (docs/adr/0734). Unit: 1.
     """
     wall: WallsPlan
     source_face: list[Vec2]
     dimension: list[Vec2]
     clear_distance: float
     axis_distance: float
+    source_face_bulge: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -64215,6 +64218,8 @@ class WallPartitionPlan(_Model):
         out["dimension"] = [_vec2_out(e0) for e0 in self.dimension]
         out["clearDistance"] = float(self.clear_distance)
         out["axisDistance"] = float(self.axis_distance)
+        if self.source_face_bulge is not UNSET:
+            out["sourceFaceBulge"] = None if self.source_face_bulge is None else float(self.source_face_bulge)
         return out
 
     @classmethod
@@ -64225,6 +64230,7 @@ class WallPartitionPlan(_Model):
             dimension=[Vec2.from_json(e0) for e0 in data["dimension"]],
             clear_distance=float(data["clearDistance"]),
             axis_distance=float(data["axisDistance"]),
+            source_face_bulge=UNSET if "sourceFaceBulge" not in data else None if data["sourceFaceBulge"] is None else float(data["sourceFaceBulge"]),
         )
 
 

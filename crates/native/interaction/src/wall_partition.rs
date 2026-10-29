@@ -98,8 +98,13 @@ impl Partition {
                     w.wall.pts.get((r.edge + 1) % w.wall.pts.len()),
                 )
             {
+                let bulge = edge_bulge(&w.wall, r.edge);
                 self.drawn.strokes.push(
-                    Stroke::solid(vec![Vec2::new(a.x, a.y), Vec2::new(b.x, b.y)], false).width(2.0),
+                    Stroke::solid(
+                        edge_points(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y), bulge, cx),
+                        false,
+                    )
+                    .width(2.0),
                 );
             }
         }
@@ -115,8 +120,9 @@ impl Partition {
                 self.drawn.areas = drawn.areas;
                 self.drawn.strokes.extend(drawn.strokes);
                 let map = |p: kentos_commands::Vec2| Vec2::new(p.x, p.y);
+                let [face_a, face_b] = output.source_face.map(map);
                 self.drawn.strokes.push(Stroke::dashed(
-                    output.source_face.map(map).to_vec(),
+                    edge_points(face_a, face_b, output.source_face_bulge.unwrap_or(0.0), cx),
                     false,
                     [4.0, 4.0],
                 ));
@@ -188,20 +194,15 @@ impl Partition {
                     pts.len().saturating_sub(1)
                 };
                 let map = |p: kentos_commands::Vec2| Vec2::new(p.x, p.y);
-                let edge = (0..count).min_by(|a, b| {
-                    kentos_geometry_core::geometry::dist_to_segment(
+                let far = |i: usize| {
+                    edge_distance(
                         p.raw,
-                        map(pts[*a]),
-                        map(pts[(*a + 1) % pts.len()]),
+                        map(pts[i]),
+                        map(pts[(i + 1) % pts.len()]),
+                        edge_bulge(&w.wall, i),
                     )
-                    .total_cmp(
-                        &kentos_geometry_core::geometry::dist_to_segment(
-                            p.raw,
-                            map(pts[*b]),
-                            map(pts[(*b + 1) % pts.len()]),
-                        ),
-                    )
-                })?;
+                };
+                let edge = (0..count).min_by(|a, b| far(*a).total_cmp(&far(*b)))?;
                 let layer = cx
                     .doc
                     .layers()
@@ -229,6 +230,19 @@ impl Partition {
         };
         let pts = &w.wall.pts;
         let (a, b) = (pts.get(r.edge)?, pts.get((r.edge + 1) % pts.len())?);
+        if let Some(arc) = kentos_geometry_core::geom::bulge::bulge_arc(
+            Vec2::new(a.x, a.y),
+            Vec2::new(b.x, b.y),
+            edge_bulge(&w.wall, r.edge),
+        ) {
+            // A counter-clockwise arc's left is its inside (docs/adr/0734).
+            let inside = (p.x - arc.c.x).hypot(p.y - arc.c.y) < arc.r;
+            return Some(if inside == (arc.sweep > 0.0) {
+                PartitionSide::Left
+            } else {
+                PartitionSide::Right
+            });
+        }
         let cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
         (cross != 0.0).then_some(if cross > 0.0 {
             PartitionSide::Left
@@ -279,7 +293,7 @@ impl Tool for Partition {
         let step = if self.ask.is_some() {
             "ayar değerini yazın"
         } else if self.source.is_none() {
-            "referans alınacak düz duvar kenarını seçin"
+            "referans alınacak düz ya da yaylı duvar kenarını seçin"
         } else if self.mode == 1 && self.limits.is_empty() {
             "bölmenin ulaşacağı ilk sınır duvarının kenarını seçin"
         } else if self.mode == 1 && self.limits.len() == 1 {
@@ -335,7 +349,10 @@ impl Tool for Partition {
                     self.limits.push(r.clone());
                 }
             } else {
-                cx.say(Level::Warn, "Bir duvarın düz kenarına tıklayın.");
+                cx.say(
+                    Level::Warn,
+                    "Bir duvarın düz ya da yaylı kenarına tıklayın.",
+                );
             }
             self.see(cx);
         } else {
@@ -587,5 +604,43 @@ impl Tool for Partition {
         };
         self.see(cx);
         took
+    }
+}
+
+/// The bulge of a wall's edge `i`; 0 straight.
+fn edge_bulge(w: &kentos_commands::WallFields, i: usize) -> f64 {
+    w.bulges
+        .as_ref()
+        .and_then(|b| b.get(i))
+        .copied()
+        .filter(|b| kentos_geometry_core::geom::bulge::is_arc_bulge(*b))
+        .unwrap_or(0.0)
+}
+
+/// An edge as drawn: its chord, or its arc within half a pixel.
+fn edge_points(a: Vec2, b: Vec2, bulge: f64, cx: &Context<'_>) -> Vec<Vec2> {
+    kentos_geometry_core::tessellate::bulge_path(
+        &[a, b],
+        Some(&[bulge]),
+        false,
+        cx.view.world_length(0.5),
+    )
+}
+
+/// How far `p` is from an edge: its segment, or its arc.
+fn edge_distance(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
+    match kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge) {
+        None => kentos_geometry_core::geometry::dist_to_segment(p, a, b),
+        Some(arc) => {
+            let along = (arc.sweep.signum() * ((p.y - arc.c.y).atan2(p.x - arc.c.x) - arc.a0))
+                .rem_euclid(2.0 * std::f64::consts::PI);
+            if along <= arc.sweep.abs() {
+                ((p.x - arc.c.x).hypot(p.y - arc.c.y) - arc.r).abs()
+            } else {
+                (p.x - a.x)
+                    .hypot(p.y - a.y)
+                    .min((p.x - b.x).hypot(p.y - b.y))
+            }
+        }
     }
 }

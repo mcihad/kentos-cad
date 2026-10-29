@@ -859,16 +859,20 @@ joins = _WallsJoins()
 
 
 class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPlan]):
-    """``cad.walls.partition`` v1. Ölçülü bölme duvar: Düz bir kaynak duvar kenarından açık
-    net yüzler arası veya eksen mesafesiyle paralel bölme üretir. source kalıcı duvar
-    kimliği ve sıfır tabanlı kenarıdır; side kaynak yolunun sol/sağıdır. extent source
-    kaynak uçlarını, between seçilen iki duvar kenarının merkez çizgilerini, length
-    kaynak boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar metredir. wall normal
-    WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir
-    NewWall, boş pts ile verilir, yol ve eksen hizası komutla hesaplanır. Kaynak ve
-    sınırlar okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yaylı
-    referanslar reddedilir. Yazmayan plan gövde, kaynak yüz ve net/eksen mesafelerini
-    gösterir. Tek sıradan duvar, tek geri alma ve journal adımıdır.
+    """``cad.walls.partition`` v1. Ölçülü bölme duvar: Düz ya da yaylı bir kaynak duvar
+    kenarından açık net yüzler arası veya eksen mesafesiyle bölme üretir: düz kenarda
+    paralel düz, yaylı kenarda aynı merkezli yay. source kalıcı duvar kimliği ve sıfır
+    tabanlı kenarıdır; side kaynak yolunun sol/sağıdır (saat yönü tersine yayda sol
+    merkeze doğrudur). extent source kaynak uçlarını (yayda merkezden izdüşümleriyle),
+    between seçilen iki düz ya da yaylı duvar kenarının merkez çizgilerini (kaynağın
+    ortasına en yakın buluşma), length bölmenin kendi ekseni boyunca anchor ve boy/yönü
+    kullanır. Tüm uzunluklar metredir. wall normal WallsCreate
+    katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts
+    ile verilir, yol, büküm ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar
+    okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yayın merkezine
+    ulaşan bölme, ulaşılmayan ve aynı merkezli sınır reddedilir. Yazmayan plan gövde,
+    kaynak yüz (yayda sourceFaceBulge) ve net/eksen mesafelerini gösterir. Tek sıradan
+    duvar, tek geri alma ve journal adımıdır.
     """
     __slots__ = ()
     id = "cad.walls.partition"
@@ -893,16 +897,20 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> WallsCreated:
-        """Ölçülü bölme duvar: Düz bir kaynak duvar kenarından açık net yüzler arası veya eksen
-        mesafesiyle paralel bölme üretir. source kalıcı duvar kimliği ve sıfır tabanlı
-        kenarıdır; side kaynak yolunun sol/sağıdır. extent source kaynak uçlarını, between
-        seçilen iki duvar kenarının merkez çizgilerini, length kaynak boyunca anchor ve
-        boy/yönü kullanır. Tüm uzunluklar metredir. wall normal WallsCreate
-        katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts
-        ile verilir, yol ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar okunur,
-        değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yaylı referanslar
-        reddedilir. Yazmayan plan gövde, kaynak yüz ve net/eksen mesafelerini gösterir. Tek
-        sıradan duvar, tek geri alma ve journal adımıdır.
+        """Ölçülü bölme duvar: Düz ya da yaylı bir kaynak duvar kenarından açık net yüzler
+        arası veya eksen mesafesiyle bölme üretir: düz kenarda paralel düz, yaylı kenarda
+        aynı merkezli yay. source kalıcı duvar kimliği ve sıfır tabanlı kenarıdır; side
+        kaynak yolunun sol/sağıdır (saat yönü tersine yayda sol merkeze doğrudur). extent
+        source kaynak uçlarını (yayda merkezden izdüşümleriyle), between seçilen iki düz ya
+        da yaylı duvar kenarının merkez çizgilerini (kaynağın ortasına en yakın buluşma),
+        length bölmenin kendi ekseni boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar
+        metredir. wall normal WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını
+        taşır; tam bir NewWall, boş pts ile verilir, yol, büküm ve eksen hizası komutla
+        hesaplanır. Kaynak ve sınırlar okunur, değiştirilmez veya silinmez; kilitli
+        referanslar okunabilir. Yayın merkezine ulaşan bölme, ulaşılmayan ve aynı merkezli
+        sınır reddedilir. Yazmayan plan gövde, kaynak yüz (yayda sourceFaceBulge) ve
+        net/eksen mesafelerini gösterir. Tek sıradan duvar, tek geri alma ve journal
+        adımıdır.
 
         Args:
             doc: The drawing it works on.

@@ -425,7 +425,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   düzenleme ve undo, kayıt/açma doğrulandı. Ortak gezinmenin tam GUI tabanı
   ARCH-BASE-01'de, kare zamanı ve büyük belge işi ARCH-PERF-01'de açık kalır.
 
-### ARCH-DRAW-02 — Ölçülü bölme duvar [x] düz ilk dilim
+### ARCH-DRAW-02 — Ölçülü bölme duvar [x] düz ve yaylı dilim
 
 - Bir mevcut duvar yüzünden net uzaklıkla paralel bölme; başlangıç/bitişi seçilen
   sınırlarla önizlemeli bulma. İç açıklık ile eksen aralığı ayrı seçenek olsun.
@@ -442,7 +442,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   48→24 m² mahal; tek sağ tuş onayı ve 48→24 undo/redo görüldü.
   Diğer kabuller ve bağımsız 90 durumun kapsamı
   [kabul kaydında](../docs/baseline/2026-10-24-architecture-tools/README.md).
-- [ ] Yaylı kaynak/sınır dilimi: yaylı kenar şimdilik açıklamalı reddedilir.
+- [x] Yaylı kaynak/sınır dilimi ([ADR 0734](../docs/adr/0734-measured-partitions-on-arc-edges.md)): yaylı kaynağın
+  bölmesi aynı merkezli yay (Revit CreateOffset), net uzaklık yüzler arasında radyal; kaynak uçları, bölmenin kendi
+  ekseninde boy, düz ya da yaylı iki sınır (kaynağın ortasına en yakın buluşma); merkezi aşan, ulaşılmayan ve aynı
+  merkezli sınır reddedilir. Plan `sourceFaceBulge`; araç yayı çizildiği yerden seçer, yanı içte/dışta izler. 22 bağımsız
+  yay durumu + 90 düz durum, çekirdek ve etkileşim testleri, gerçek GUI.
 - [ ] Kaynak düzenlenince uzaklığı koruyan kalıcı kısıt: ayrı veri modeli ve
   çakışma çözümü gerekir. Bu teslimde oluşan nesne normal, düzenlenebilir duvardır.
 
@@ -1365,3 +1369,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-28 | ARCH-DOC-01 / ADR0721 | Mimari işaretler: görünüm işareti paftanın çizim numarasını okur (A-101 → A-201, kopya, silinen pafta `targetGone`); kata bağlı kot (KCAD 121); kuzey oku (plan/coğrafi/açı); revizyon bulutu + üçgen ve Tarih/Açıklama sütunlu Revizyon listesi (KCAD 122); malzeme lejandı. İncelemede bulunan hata: stil verilen duvarın iç ölçü zinciri kopuyordu, düzeltildi. 27+35+20 yeni komut durumu, 6 tablo + 3 iç zincir durumu; PDF `pdftotext`/`pdffonts`; Python/MCP; masaüstü 1354, Python 374; gerçek GUI `arac-isaret-*`. | [x] Madde tamam; pafta başına revizyon çizelgesi açık |
 | 2026-10-28 | ARCH-ELEM-01 / ADR0722 | Döşeme, balkon, teras: duvarların dış yüzünden ya da odadan döşeme, kenar ötelemesi ve dört başarısızlığı, serbest kenarda korkuluk/parapet, Kes/Ekle (ıslak hacim, avlu, şaft); Metraj'da döşeme net alanı/hacmi, süpürgelik ve kaplama geçişleri. 47+38 ortak durum, KCAD 123, DXF, Python/MCP, gerçek GUI resimleri. | [x] |
 | 2026-10-29 | ARCH-DOC-02 / ADR0733 | Donatı ve kaplama çizelgeleri, yerleştirmenin katı (KCAD 131), tür süzgeci, grup başlığı ve ara toplam, Çizelge ayarları, hücre açıklaması, `cad.schedules.query`, `file.export.table` (CSV/XLSX/ODS, Tam sayılar). 66 bağımsız ortak durum, Python 375, gerçek GUI 28 ham görüntü; donatının mahali GUI'de bulunan kusurla bloğun çiziminin ortasından. | [x] Kapandı; donatının en/boy sütunu ve web açık |
+| 2026-10-29 | ARCH-DRAW-02 / ADR0734 | Yaylı kaynak ve sınırla ölçülü bölme: aynı merkezli yay, net/eksen uzaklık radyal, kaynak uçları / bölmenin ekseninde boy / düz ya da yaylı iki sınır; merkezi aşan, ulaşılmayan, aynı merkezli sınır reddi; plan `sourceFaceBulge`; araç yayı çizildiği yerden seçer, içte/dışta yanı izler. 22 bağımsız yay durumu (50 basamak) + 90 düz, çekirdek yüz testi, etkileşim testi, Python/MCP, gerçek GUI. | [x] Yaylı dilim; kalıcı kısıt açık |

@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Yaylı kaynak ve sınırla ölçülü bölme (29 Ekim 2026; [ADR0734](docs/adr/0734-measured-partitions-on-arc-edges.md)).**
+  `cad.walls.partition` yaylı kenarı artık reddetmez: bölme kaynağın merkezinde aynı merkezli yaydır (Revit'in
+  CreateOffset'i), `r_p = r − sgn(θ)·öteleme` (saat yönü tersine yayın solu merkeze doğru), net/eksen uzaklık radyal.
+  `length` bölmenin kendi ekseni boyunca; `between` düz ya da yaylı sınırların eksenleriyle, kaynağın ortasına en yakın
+  buluşma. Merkezi aşan bölme, ulaşılmayan ve aynı merkezli sınır atomik ret. Plan `sourceFaceBulge`; araç yayı
+  çizildiği yerden seçer, yanı içte/dışta izler. 22 bağımsız yay durumu (50 basamak) + 90 düz, gerçek GUI.
+
 - **Çizelgenin kalanı: donatı, kaplama, gruplar, ayarlar, dosya (29 Ekim 2026; [ADR0733](docs/adr/0733-schedules-fixtures-finishes-groups-export.md)).**
   Blok yerleştirmesinin `arch`'ı (kat, evre; KCAD 131 opt-in, tipli sütunlarda 5. alan): Blok ekle etkin katı yazar,
   mutfak modülü duvarının katını alır, `cad.levels.assign` yerleştirmeyi kabul eder, kat ve evre görünümü izler.
