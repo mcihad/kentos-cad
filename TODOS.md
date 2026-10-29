@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0747: Öznitelikler'in satırı üzerine gelince bütünüyle aydınlanır, değeri düzenlenirken solunda 2 px vurgu
+  çubuğu; hücre ve liste değer sütununu doldurur, üç tür değerin yazısı aynı hizada, boş değer soluk “—”.
 - ADR 0746: pencereler kenarından ve köşesinden boyutlandırılır, başlıktaki düğme ya da çift tıkla tam ekran (arkadaki
   pencere eksi 16 px), boy pencere başına kullanıcının tarayıcısında tutulur (masaüstünde `pencereler.json`); formun
   sayfaları boyu verilmiş pencerede kalan yeri alır.

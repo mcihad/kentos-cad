@@ -30,12 +30,15 @@ use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::elided::Elided;
+use crate::widget::sheet_row::SheetRow;
 use crate::widget::{Menu, MenuButton, Responsive};
 
 const KEY_WIDTH: f32 = 112.0;
 /// A sheet's row and section header heights, 12 px body text (the web's `--row-h`, 30 px).
 const SHEET_ROW: f32 = 28.0;
 const SHEET_SECTION: f32 = 30.0;
+/// A cell's frame in a row: the row's height less 2 px above and below (12 px body text).
+pub const CELL: f32 = 24.0;
 /// The label column's share of the width, in hundredths (the web's 42 %).
 const LABEL_SHARE: u16 = 42;
 
@@ -229,16 +232,48 @@ impl<'a, Message: Clone + 'a> PropertySheet<'a, Message> {
     }
 }
 
-fn sheet_row<'a, Message: 'a>(key: Fragment<'a>, value: Element<'a, Message>, style: typography::Typography) -> Element<'a, Message> {
-    iced::widget::column![
-        row![
-            container(label::muted(key).font(style.ui()).size(style.body()).wrapping(iced::widget::text::Wrapping::None))
-                .width(Length::FillPortion(LABEL_SHARE)).padding([0, 8]).clip(true),
-            container(value).width(Length::FillPortion(100-LABEL_SHARE)).padding([0, 8]),
-        ].height(style.scaled(SHEET_ROW)).align_y(Center),
-        soft_rule(),
-    ].into()
+/// A row: its key and its value, lit under the pointer, marked while its value is edited (docs/adr/0747). The value
+/// cell keeps `VALUE_PAD` to its edges: a cell's frame (a text, a number, a list) fills the rest, its text at
+/// `VALUE_TEXT` from the cell's edge as a read-only value's.
+fn sheet_row<'a, Message: 'a>(
+    key: Fragment<'a>,
+    value: Element<'a, Message>,
+    style: typography::Typography,
+) -> Element<'a, Message> {
+    let height = style.scaled(SHEET_ROW);
+    SheetRow::new(
+        iced::widget::column![
+            row![
+                container(
+                    label::muted(key)
+                        .font(style.ui())
+                        .size(style.body())
+                        .wrapping(iced::widget::text::Wrapping::None)
+                )
+                .width(Length::FillPortion(LABEL_SHARE))
+                .padding([0, 8])
+                .clip(true),
+                container(value)
+                    .width(Length::FillPortion(100 - LABEL_SHARE))
+                    .padding([0.0, VALUE_PAD]),
+            ]
+            .height(height)
+            .align_y(Center),
+            soft_rule(),
+        ],
+        height,
+    )
+    .into()
 }
+
+/// The value cell's inset from the row's edges: a cell's frame fills the rest.
+pub const VALUE_PAD: f32 = 3.0;
+
+/// Where a value's text starts in its frame: a read-only value's, a cell's and a list's text line up.
+pub const VALUE_TEXT: f32 = 11.0;
+
+/// A unit's distance to the cell's right edge.
+pub const UNIT_PAD: f32 = 6.0;
 
 fn measurement_view<'a, Message: 'a>(key: &str, value: &str, unit: &str, width: f32, style: typography::Typography) -> Element<'a, Message> {
     use iced::widget::text::Wrapping;
@@ -293,9 +328,11 @@ pub fn value<'a, Message: 'a>(
             typography::ui()
         })
         .width(Fill);
-    let mut content = row![container(text).padding([0, 6]).width(Fill)].align_y(Center);
+    let mut content = row![container(text).padding([0.0, VALUE_TEXT]).width(Fill)].align_y(Center);
     if let Some(unit) = unit {
-        content = content.push(label::caption(unit).style(style::text::muted));
+        content = content.push(
+            container(label::caption(unit).style(style::text::muted)).padding([0.0, UNIT_PAD]),
+        );
     }
     content.into()
 }
@@ -337,10 +374,16 @@ fn choice_with<'a, Message: Clone + 'a>(
                 .width(Fill),
         )
         .push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
+    // The frame fills the cell (its text where a read-only value's is); the chevron at the cell's right edge.
     MenuButton::new(
         container(face)
-            .padding([0, 5])
-            .height(typography::scaled(22.0))
+            .padding(iced::Padding {
+                top: 0.0,
+                bottom: 0.0,
+                left: VALUE_TEXT,
+                right: UNIT_PAD,
+            })
+            .height(typography::scaled(CELL))
             .align_y(Center)
             .width(Fill),
         menu,

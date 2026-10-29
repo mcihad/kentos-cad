@@ -57,6 +57,7 @@ pub mod pairs;
 pub mod progress;
 pub mod properties;
 pub mod property_grid;
+pub mod sheet_row;
 pub mod python;
 pub mod query_builder;
 pub mod radial;

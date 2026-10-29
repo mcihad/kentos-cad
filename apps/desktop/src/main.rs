@@ -210,6 +210,10 @@ mod label_picture;
 #[cfg(test)]
 mod label_probe;
 #[cfg(test)]
+mod inspector_probe;
+#[cfg(test)]
+mod inspector_screens;
+#[cfg(test)]
 mod label_scenes;
 mod labelling;
 mod labels;

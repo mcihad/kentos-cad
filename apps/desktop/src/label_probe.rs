@@ -93,20 +93,31 @@ fn working_view(snapshot: &mut Snapshot, app: &mut App) {
 }
 
 /// The file `KENTOS_PROBE_FILE` names open in a window of 1440 × 900, settled; none named, none.
-fn opened() -> Option<(Snapshot, App)> {
+pub(crate) fn opened() -> Option<(Snapshot, App)> {
     let Some(path) = std::env::var_os("KENTOS_PROBE_FILE") else {
         println!("KENTOS_PROBE_FILE verilmedi");
         return None;
     };
     let path = std::path::PathBuf::from(path);
     let data = std::fs::read(&path).expect("the file reads");
-    let format = kentos_native_application::cad_open::Format::of(&path).expect("a CAD file");
-    let mut watch = kentos_formats::watch::Steps(|_, _| true);
     let t = Instant::now();
-    let opened = kentos_native_application::cad_open::read(&path, &data, format, &mut watch)
-        .expect("it opens");
+    // A project of KentOS's own, or a CAD file opened as a drawing.
+    let doc = if path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("kcad"))
+    {
+        let snapshot = kentos_kcad::decode(&data)
+            .map_err(|e| e.message)
+            .expect("decodes");
+        crate::document::Document::from_v2(snapshot, None).expect("opens")
+    } else {
+        let format = kentos_native_application::cad_open::Format::of(&path).expect("a CAD file");
+        let mut watch = kentos_formats::watch::Steps(|_, _| true);
+        let opened = kentos_native_application::cad_open::read(&path, &data, format, &mut watch)
+            .expect("it opens");
+        crate::document::Document::of_model(opened.document)
+    };
     println!("açılış: {:.0} ms", t.elapsed().as_secs_f64() * 1000.0);
-    let doc = crate::document::Document::of_model(opened.document);
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     let mut app = app_with_drawing();
     update(&mut app, Message::Opened(Some(Ok(Box::new(doc)))));

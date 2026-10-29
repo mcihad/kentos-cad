@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Öznitelikler'in satırları ve hücreleri (29 Ekim 2026; [ADR0747](docs/adr/0747-inspector-rows-and-cells.md)).**
+  KentOS UI'ın `SheetRow`'u satırı birim yapar: üzerine gelince bütün satır aydınlanır, değeri düzenlenirken solunda
+  2 px vurgu çubuğu (satırın içindeki odaklı metin girişinden). Hücre ve liste değer sütununu doldurur (`VALUE_PAD` 3,
+  `CELL` 24), üç tür değerin yazısı aynı hizada (`VALUE_TEXT` 11), birim kenardan `UNIT_PAD`; `EditCell` her
+  yerleşimde yeniden kurulduğu için iced'in “devre dışı” saydığı değeri artık metin renginde, boş değer soluk “—”.
+  Sahibin 71 820 nesnelik çiziminde harf başına süre `inspector_probe.rs` ile ölçülür.
+
 - **Boyutlanan ve boyunu hatırlayan pencereler (29 Ekim 2026; [ADR0746](docs/adr/0746-resizable-remembered-dialogs.md)).**
   KentOS UI'ın her `Dialog`'u `Sizable` ile kenarından ve köşesinden boyutlandırılır, başlıktaki düğme ya da çift tıkla
   tam ekran olur (arkadaki pencere eksi 16 px); boy anahtarıyla (öntanımlı başlık, `Dialog::key`) `sizable::sizes`'ta,

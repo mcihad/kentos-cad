@@ -69,7 +69,10 @@ impl<'a, Message: Clone + 'a> EditCell<'a, Message> {
     pub fn new(value: impl Into<String>, on_commit: impl Fn(String) -> Message + 'a) -> Self {
         let value = value.into();
         Self {
-            parts: [field(&value, false).into(), unit_text(String::new()).into()],
+            parts: [
+                field(&value, false, true).into(),
+                unit_text(String::new()).into(),
+            ],
             value,
             on_commit: Box::new(on_commit),
             numeric: false,
@@ -97,14 +100,16 @@ impl<'a, Message: Clone + 'a> EditCell<'a, Message> {
             self.value.as_str()
         };
         self.parts = [
-            field(content, self.numeric).into(),
+            field(content, self.numeric, !state.editing).into(),
             unit_text(self.unit.clone()).into(),
         ];
     }
 }
 
-fn field<'a>(content: &str, numeric: bool) -> Field<'a> {
-    text_input("", content)
+/// The cell's text input. `resting`: not being edited: an empty value shows a faint “—” (as an empty list does), so
+/// the row reads as a field with no value (docs/adr/0747).
+fn field<'a>(content: &str, numeric: bool, resting: bool) -> Field<'a> {
+    text_input(if resting { "—" } else { "" }, content)
         .on_input(Edit::Input)
         .on_submit(Edit::Submit)
         .font(if numeric {
@@ -113,8 +118,24 @@ fn field<'a>(content: &str, numeric: bool) -> Field<'a> {
             typography::ui()
         })
         .size(typography::body())
-        .padding([0, 5])
-        .style(style::field::bare_input)
+        // Its text where a read-only value's is, in a frame filling the cell (docs/adr/0747).
+        .padding(iced::Padding {
+            top: 0.0,
+            bottom: 0.0,
+            left: crate::widget::property_grid::VALUE_TEXT,
+            right: 5.0,
+        })
+        // The input is made again at each layout, so it has seen no event yet: iced draws such an input as disabled
+        // (its value in the muted tone). The cell's value is the drawing's, in the text tone (docs/adr/0747).
+        .style(|theme: &Theme, status| {
+            style::field::bare_input(
+                theme,
+                match status {
+                    text_input::Status::Disabled => text_input::Status::Active,
+                    status => status,
+                },
+            )
+        })
 }
 
 fn unit_text<'a>(symbol: String) -> Text<'a> {
@@ -164,8 +185,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         let unit = self.parts[1]
             .as_widget_mut()
             .layout(&mut children[1], renderer, &unbounded);
+        // The unit keeps its distance to the cell's right edge, as a read-only value's.
+        let unit_pad = crate::widget::property_grid::UNIT_PAD;
         let suffix = if unit.size().width > 0.0 {
-            unit.size().width + GAP
+            unit.size().width + GAP + unit_pad
         } else {
             0.0
         };
@@ -181,8 +204,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
             size,
             vec![
                 field.clone().move_to(Point::new(0.0, middle(&field))),
-                unit.clone()
-                    .move_to(Point::new(size.width - unit.size().width, middle(&unit))),
+                unit.clone().move_to(Point::new(
+                    size.width - unit.size().width - unit_pad,
+                    middle(&unit),
+                )),
             ],
         )
     }
