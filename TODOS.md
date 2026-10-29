@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0746: pencereler kenarından ve köşesinden boyutlandırılır, başlıktaki düğme ya da çift tıkla tam ekran (arkadaki
+  pencere eksi 16 px), boy pencere başına kullanıcının tarayıcısında tutulur (masaüstünde `pencereler.json`); formun
+  sayfaları boyu verilmiş pencerede kalan yeri alır.
 - ADR 0731: `commandCatalog.json` kataloğun paylaşılan biçimidir (sürüm 2): şemaların tanımları kataloğun üst düzey
   `$defs`'inde, her biri bir kez. Web dönüşünde bir şemayı tek başına isteyen okuyucu (doğrulayıcı, form) tanımları oradan
   alır (`CommandCatalog::standalone`'ın kuralı); `registry.test.ts` yalnız kimlik, sürüm ve ev sahibini okur.

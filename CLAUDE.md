@@ -28,6 +28,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Boyutlanan ve boyunu hatırlayan pencereler (29 Ekim 2026; [ADR0746](docs/adr/0746-resizable-remembered-dialogs.md)).**
+  KentOS UI'ın her `Dialog`'u `Sizable` ile kenarından ve köşesinden boyutlandırılır, başlıktaki düğme ya da çift tıkla
+  tam ekran olur (arkadaki pencere eksi 16 px); boy anahtarıyla (öntanımlı başlık, `Dialog::key`) `sizable::sizes`'ta,
+  masaüstünde `pencereler.json`'da (`dialog_sizes.rs`). Boyu verilmiş kutuda `Fit` kalan yeri son esnek gövdeye verir;
+  Formla düzenle (760 × 460) ve Formlar'ın bölmeleri kalan yeri alır. `Dialog::fixed()` boyutlanmaz.
+
 - **PostGIS'te geography ve geometrisiz tablo (29 Ekim 2026; [ADR0745](docs/adr/0745-postgis-geography-and-empty-geometry.md)).**
   `geography` sütunu katalogda ve bağlamada okunur (`sütun::geometry`, sistemsiz 4326), salt okunur; bütün satırları
   geometrisiz tablo `rows_without_geometry` uyarısıyla bağlanır, masaüstünün bildirimi uyarıyı gövdesinde yazar.
